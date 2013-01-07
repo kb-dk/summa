@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
@@ -476,5 +477,12 @@ public class QueryOptions implements Serializable {
             System.arraycopy(attributes, 0, newAttributes, 0, attributes.length-1);
             attributes = newAttributes;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "QueryOptions(deleted=" + deletedFilter + ", indexable=" + indexableFilter + ", childDepth=" + childDepth
+               + ", parentHeight=" + parentHeight + ", #meta=" + (meta == null ? 0 : meta.size()) + ", attributes="
+                + Strings.join(attributes, ", ") + ")";
     }
 }

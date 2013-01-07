@@ -2000,7 +2000,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         Record r;
-        if (!cursor.hasNext() || ((r = cursor.next()) == null)) {
+        if (!cursor.hasNext() || (r = cursor.next()) == null) {
             cursor.close();
             iterators.remove(cursor.getKey());
             throw new NoSuchElementException("Iterator " + iteratorKey + " depleted");
@@ -2115,6 +2115,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param options The query options to filter out records.
      * @throws IOException If error occur while flushing.
      */
+    @SuppressWarnings("ThrowInsideCatchBlockWhichIgnoresCaughtException")
     @Override
     // TODO: Race conditions in FacetTest indicates that flush is guaranteed to have written everything before returning
     public synchronized void flushAll(List<Record> recs, QueryOptions options) throws IOException {
@@ -2151,7 +2152,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 setBaseStatisticInvalid(base, conn);
             }
             // TODO Introduce time-based logging on info
-            log.debug("Flushed " + recs.size() + " in " + ((System.nanoTime() - start) / 1000000D) + "ms");
+            log.debug("Flushed " + recs.size() + " in " + (System.nanoTime() - start) / 1000000D + "ms");
         } catch (SQLException e) {
             error = e.getMessage();
             throw new IOException(String.format("flushAll(%d records): Failed to flush %s: %s", recs.size(),
@@ -2163,8 +2164,8 @@ public abstract class DatabaseStorage extends StorageBase {
                     log.debug("Commiting transaction of " + recs.size() + " records");
                     start = System.nanoTime();
                     conn.commit();
-                    log.debug("Transaction of " + recs.size() + " records completed in " + ((System.nanoTime() - start)
-                                                                                            / 1000000D) + "ms");
+                    log.debug("Transaction of " + recs.size() + " records completed in " + (System.nanoTime() - start)
+                                                                                            / 1000000D + "ms");
                     if (isDebug) {
                         for (Record r : recs) {
                             // It may seem dull to iterate over all records
@@ -2531,7 +2532,9 @@ public abstract class DatabaseStorage extends StorageBase {
         long start = System.currentTimeMillis();
         log.info("Clearing base '" + base + "'");
 
-        int _ID = 1, _MTIME = 2, _DELETED = 3;
+        final int _ID = 1;
+        final int _MTIME = 2;
+        final int _DELETED = 3;
         String sql = "SELECT id, mtime, deleted " + " FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ?" + " AND "
                      + MTIME_COLUMN + " > ?" + " AND " + MTIME_COLUMN + " < ?" + " AND " + DELETED_COLUMN + " = 0";
         if (usePagingModel) {
@@ -2685,8 +2688,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getBatchJob(options, base);
-        PreparedStatement stmt = conn.prepareStatement(handle.getSql(), ResultSet.TYPE_FORWARD_ONLY,
-                                                       ResultSet.CONCUR_READ_ONLY);
+        PreparedStatement stmt = conn.prepareStatement(
+                handle.getSql(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 /*        String sql = "SELECT " + allColumns
                 + " FROM " + RECORDS
                 + " WHERE ( mtime<? AND mtime>? )";
@@ -3033,7 +3036,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private void createNewRecordWithConnection(Record record, QueryOptions options,
                                                Connection conn) throws IOException, SQLException {
         if (log.isTraceEnabled()) {
-            log.debug("Creating: " + record.getId());
+            log.trace("Creating: " + record.getId());
         }
 
         // TODO: Use handle directly
@@ -3666,11 +3669,11 @@ public abstract class DatabaseStorage extends StorageBase {
             /* Treat empty strings as nulls because we inject empty strings in
              * the result set when we are doing lazy relation lookups */
             if (newParent != null && !"".equals(newParent)) {
-                parentIds = parentIds != null ? (parentIds + ";" + newParent) : newParent;
+                parentIds = parentIds != null ? parentIds + ";" + newParent : newParent;
             }
 
             if (newChild != null && !"".equals(newChild)) {
-                childIds = childIds != null ? (childIds + ";" + newChild) : newChild;
+                childIds = childIds != null ? childIds + ";" + newChild : newChild;
             }
 
             if (log.isTraceEnabled()) {
@@ -3902,7 +3905,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 results.close();
             }
         }
-        log.debug(String.format("Extracted storage stats in %sms", (System.currentTimeMillis() - startTime)));
+        log.debug(String.format("Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
         return stats;
     }
 
@@ -4034,7 +4037,13 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             result.close();
         }
-        log.debug(String.format("Extracted storage stats in %sms", (System.currentTimeMillis() - startTime)));
+        log.debug(String.format("Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
         return stats;
+    }
+
+    @Override
+    public String toString() {
+        return "DatabaseStorage(#iterators=" + iterators.size() + ", useLazyRelations=" + useLazyRelations +
+               ", usePagingModel=" + usePagingModel + ", pageSize=" + pageSize + ')';
     }
 }

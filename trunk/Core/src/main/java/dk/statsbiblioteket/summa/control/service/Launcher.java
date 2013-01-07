@@ -52,6 +52,7 @@ public class Launcher {
      * Main method for launching a service.
      * @param args Commandline arguments, these are not used.
      */
+    @SuppressWarnings("ObjectToString")
     public static void main(String[] args) {
         Log log = LogFactory.getLog(Launcher.class);
         Thread.setDefaultUncaughtExceptionHandler(new LoggingExceptionHandler(

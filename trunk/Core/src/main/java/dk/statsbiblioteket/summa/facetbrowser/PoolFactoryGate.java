@@ -28,7 +28,6 @@ import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -119,7 +118,7 @@ public class PoolFactoryGate {
             }
             return new SimplePair<CollectorPool, TagCollector>(collectorPool, tagCollector);
         } catch (OutOfMemoryError e) {
-            Writer writer = new StringWriter(1000);
+            StringWriter writer = new StringWriter(1000);
             PrintWriter pw = new PrintWriter(writer);
             e.printStackTrace(pw);
             pw.flush();

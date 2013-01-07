@@ -66,6 +66,11 @@ public class SummaSearcherDummy implements SummaSearcher {
     public void close() throws IOException {
         log.info ("Got close request (" + closeCount++ + ")");
     }
+
+    @Override
+    public String toString() {
+        return "SummaSearcherDummy";
+    }
 }
 
 

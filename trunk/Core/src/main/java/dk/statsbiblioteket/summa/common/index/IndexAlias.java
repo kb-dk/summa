@@ -205,8 +205,9 @@ public final class IndexAlias implements Comparable {
                + (lang == null ? "" : " lang=\"" + lang + "\"")
                + "/>\n";
     }
+
+    @Override
+    public String toString() {
+        return "IndexAlias(name='" + name + '\'' + ", lang='" + lang + '\'' + ")";
+    }
 }
-
-
-
-

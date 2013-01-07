@@ -40,7 +40,8 @@ public class Core {
     // The last trace
     private String lastTrace;
 
-    private String header, prompt;
+    private String header;
+    private String prompt;
     // The {@link ShellContext} implementation used.
     private ShellContext shellCtx;
     // The {@link CommandLineParser} used.
@@ -395,6 +396,7 @@ public class Core {
      *         non-zero some error occurred and the caller must understand the
      *         error code in its current context.
      */
+    @SuppressWarnings("ObjectToString")
     public int run(Script script) {
         int returnVal = 0;
         Iterator<String> scriptIter = null;

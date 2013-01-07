@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
  * IMPORTANT: Due to problems with releasing JDBC, the tests cannot be run
  * in succession, but must be started one at a time in their own JVM.
  */
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@SuppressWarnings({"DuplicateStringLiteralInspection", "ObjectToString"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")

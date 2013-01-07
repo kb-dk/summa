@@ -294,6 +294,7 @@ public class LuceneIndexDescriptor
         return queryAnalyzer;
     }
 
+    @SuppressWarnings("ObjectToString")
     private void createAnalyzers() {
         log.debug("createAnalyzers called");
         Map<String, Analyzer> indexAnalyzers = new HashMap<String, Analyzer>();
@@ -319,8 +320,9 @@ public class LuceneIndexDescriptor
     public List<String> getMoreLikethisFields() {
         return moreLikethisFields;
     }
+
+    @Override
+    public String toString() {
+        return "LuceneIndexDescriptor(" + super.toString() + ")";
+    }
 }
-
-
-
-

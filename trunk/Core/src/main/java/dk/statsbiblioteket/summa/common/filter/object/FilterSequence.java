@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSuppor
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -180,5 +181,9 @@ public class FilterSequence implements ObjectFilter {
     public void remove() {
         lastFilter.remove();
     }
-}
 
+    @Override
+    public String toString() {
+        return "FilterSequence(filters=" + Strings.join(filters, ", ") + ')';
+    }
+}

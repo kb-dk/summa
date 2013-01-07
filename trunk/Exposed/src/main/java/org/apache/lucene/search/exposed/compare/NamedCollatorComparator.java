@@ -31,6 +31,7 @@ public class NamedCollatorComparator implements NamedComparator {
   private final Collator collator;
   private final String id;
 
+  @SuppressWarnings("ObjectToString")
   public NamedCollatorComparator(Collator collator) {
     this.collator = collator;
     id = "Collator(" + collator.toString() + ")";

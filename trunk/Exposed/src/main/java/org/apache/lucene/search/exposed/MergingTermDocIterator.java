@@ -201,6 +201,7 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
     }
   }
 
+  @SuppressWarnings("ObjectToString")
   private ExposedTuple pop() throws IOException {
     currentIndex = pq.pop();
     if (currentIndex == -1) {

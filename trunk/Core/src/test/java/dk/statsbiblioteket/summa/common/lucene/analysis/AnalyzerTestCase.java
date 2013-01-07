@@ -95,6 +95,7 @@ public class AnalyzerTestCase extends TestCase {
         }
     }
 
+    @SuppressWarnings("ObjectToString")
     protected List<String> getTerms(TokenStream tokens) throws IOException {
         List<String> result = new ArrayList<String>();
         while (tokens.incrementToken()) {

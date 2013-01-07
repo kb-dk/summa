@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
@@ -833,5 +834,14 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
                 throw new ConfigurationException("Unable to insert index description in sub configuration", e);
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "IndexDescriptor(absoluteLocation=" + absoluteLocation
+               + ", listener:" + (listener == null ? "none" : "present")
+               + ", defaultFields=" + Strings.join(defaultFields, ", ")
+                + ", defaultOperator=" + defaultOperator + ", #fields=" + allFields.size()
+                + ", #groups=" + groups.size() + ")";
     }
 }

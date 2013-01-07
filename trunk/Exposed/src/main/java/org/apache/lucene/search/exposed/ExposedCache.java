@@ -139,11 +139,13 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
   }
 
   /**
-   * Purges all entries with connections to the given index reader. For exposed
-   * structures that means all structures except the ones that are
-   * FieldTermProviders not relying on the given index reader.
+   * Purges all entries with connections to the given index reader.
+   * For exposed structures that means all structures except the
+   * ones that are FieldTermProviders not relying on the given index
+   * reader.
    * @param r the reader to purge.
    */
+  @SuppressWarnings({"UseOfSystemOutOrSystemErr", "ObjectToString"})
   public synchronized void purge(IndexReader r) {
     if (ExposedSettings.debug) {
       System.out.println("ExposedCache.purge(" + r + ") called");

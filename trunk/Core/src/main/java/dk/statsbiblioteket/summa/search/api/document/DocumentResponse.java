@@ -99,6 +99,13 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     public static class Record implements Serializable {
         private static final long serialVersionUID = 48785612L;
         private float score;
+
+        @Override
+        public String toString() {
+            return "Record(id='" + id + "', sortValue='" + sortValue + "', source='" + source + "', score=" + score
+                   + ", #fields=" + fields.size() + ')';
+        }
+
         private final float originalScore;
         private String sortValue;
         private String id;

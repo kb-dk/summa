@@ -55,4 +55,9 @@ public class FieldSeparatingAnalyzer extends Analyzer {
     public void close() {
         underlyingAnalyzer.close();
     }
+
+    @Override
+    public String toString() {
+        return "FieldSeparatingAnalyzer";
+    }
 }
