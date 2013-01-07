@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
@@ -44,7 +44,7 @@ import java.util.Arrays;
  * IMPORTANT: Due to problems with releasing JDBC, the tests cannot be run
  * in succession, but must be started one at a time in their own JVM.
  */
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@SuppressWarnings({"DuplicateStringLiteralInspection", "ObjectToString"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")

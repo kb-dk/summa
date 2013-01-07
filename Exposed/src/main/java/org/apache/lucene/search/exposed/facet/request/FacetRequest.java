@@ -393,4 +393,15 @@ public class FacetRequest {
     this.stringQuery = query;
   }
 
+  @Override
+  public String toString() {
+    return "FacetRequest(query='" + stringQuery + "', order=" + order
+           + ", reverse=" + reverse + ", locale='" + locale + "'"
+           + ", maxTags=" + maxTags + ", minCount=" + minCount
+           + ", offset=" + offset + ", prefix='" + prefix + "'"
+           + ", hierarchical=" + hierarchical
+           + ", delimiter='" + delimiter + "'"
+           + ", levels=" + levels + ", startPath='" + startPath + "'"
+           + ", groups=" + groups + ')';
+    }
 }

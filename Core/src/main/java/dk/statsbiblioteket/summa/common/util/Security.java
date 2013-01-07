@@ -33,6 +33,7 @@ public class Security {
     /**
      * Creates an allow-all if no manager is present.
      */
+    @SuppressWarnings("ObjectToString")
     public static void checkSecurityManager() {
         if (System.getSecurityManager() == null) {
             log.warn("No security manager found. Setting allow-all security manager");

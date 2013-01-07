@@ -537,7 +537,7 @@ public class ResponseMerger implements Configurable {
         // Generate semi-random insertion-points from firstInsertPos to topX
         // We want the order to be the same between searches so we seed
         // by hashing query
-        Random random = new Random((request.getString(DocumentKeys.SEARCH_QUERY, "N/A")).hashCode() << 12);
+        Random random = new Random(request.getString(DocumentKeys.SEARCH_QUERY, "N/A").hashCode() << 12);
         List<Boolean> insertionPoints = new ArrayList<Boolean>(topX);
         for (int i = firstInsertPos ; i < topX ; i++) {
             insertionPoints.add(i-firstInsertPos < needed);

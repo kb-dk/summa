@@ -20,8 +20,8 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -31,6 +31,7 @@ import java.io.InputStream;
  * Simple wrapper for an InputStream that provides callback when the inner
  * stream is depleted or closed.
  */
+@SuppressWarnings("ObjectToString")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")

@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * Creates an index with fagref pseudodata, taxing the facet builder.
  */
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@SuppressWarnings({"DuplicateStringLiteralInspection", "ObjectToString"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")

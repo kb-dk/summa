@@ -95,6 +95,7 @@ public abstract class ReusableSortComparator extends FieldComparatorSource {
      *
      * @param collator The collator to use for sorting.
      */
+    @SuppressWarnings("ObjectToString")
     public ReusableSortComparator(Collator collator) {
         log.debug("Creating ReusableSortComparator with custom Collator " + collator);
         this.collator = collator;

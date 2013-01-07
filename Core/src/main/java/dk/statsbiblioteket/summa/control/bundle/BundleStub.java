@@ -289,8 +289,11 @@ public class BundleStub {
     public String getBundleDir() {
         return bundleDir.getAbsolutePath();
     }
+
+    @Override
+    public String toString() {
+        return "BundleStub(bundleDir=" + bundleDir + ", mainJar=" + mainJar + ", bundleId='" + bundleId + "'" +
+               ", instanceId='" + instanceId + "'" + ", mainClass='" + mainClass + "'" + ", #libs=" + libs.size() +
+               ", #jvmArgs=" + jvmArgs.size() + ")";
+    }
 }
-
-
-
-

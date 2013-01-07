@@ -139,6 +139,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         /* Set up a thread reporting errors back to us */
         //noinspection DuplicateStringLiteralInspection
         runningThread = new Thread(new Runnable() {
+            @SuppressWarnings("ObjectToString")
             @Override
             public void run() {
                 log.trace("run() entered");
@@ -380,8 +381,6 @@ public abstract class ThreadedStreamParser implements StreamParser {
 
     @Override
     public String toString() {
-        //noinspection DuplicateStringLiteralInspection
-        return "ThreadedStreamParser(" + queue.size() + " payloads queued)";
+        return "ThreadedStreamParser#" + getClass().getSimpleName() + "(" + queue.size() + "payloads queued)";
     }
 }
-

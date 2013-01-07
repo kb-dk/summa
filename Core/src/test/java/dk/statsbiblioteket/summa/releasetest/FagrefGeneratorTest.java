@@ -14,34 +14,27 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import dk.statsbiblioteket.summa.control.service.FilterService;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
-import dk.statsbiblioteket.summa.ingest.source.RecordGenerator;
+import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.io.StringWriter;
-
+import dk.statsbiblioteket.summa.control.service.FilterService;
+import dk.statsbiblioteket.summa.ingest.source.RecordGenerator;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-/**
- *
- */
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+@SuppressWarnings({"DuplicateStringLiteralInspection", "ObjectToString", "UseOfSystemOutOrSystemErr"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -52,6 +45,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         super(name);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void setUp() throws Exception {
         super.setUp();
@@ -82,7 +76,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         profiler.setBpsSpan(100);
         profiler.setExpectedTotal(RUNS);
         RecordGenerator generator = createGenerator();
-        for (int i = 0; i < RUNS ; i++) {
+        for (int i = 0; i < RUNS; i++) {
             generator.next();
             profiler.beat();
         }
@@ -93,19 +87,15 @@ public class FagrefGeneratorTest extends NoExitTestCase {
 
     private RecordGenerator createGenerator() {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set("firstname", new ArrayList<String>(
-                Arrays.asList("Hans", "Jens", "Ole", "Jesper", "Kaj", "Søren",
-                              "Benny", "Børge", "M'Bala", "Mikkel", "Thomas")));
-        conf.set("surname", new ArrayList<String>(
-                Arrays.asList("Jensen", "Hansen", "Sørensen", "Karlsson",
-                              "Primbulus", "Sølvtromme", "Kobberhammer",
-                              "Guldskovl", "de Trix", "And")));
-        conf.set("areaOfExpertise", new ArrayList<String>(
-                Arrays.asList("Guld", "Biologi", "Omnilogi", "Østindien",
-                              "Vestpakistan", "USA", "Æbler", "Blommer",
-                              "Pærer", "Datalogi", "Astrofysik", "Astrologi",
-                              "Astronomi", "Tryllebær", "Tegneserier",
-                              "Palæontologi", "Drømme", "Kaslafniansk")));
+        conf.set("firstname", new ArrayList<String>(Arrays.asList("Hans", "Jens", "Ole", "Jesper", "Kaj", "Søren",
+                                                                  "Benny", "Børge", "M'Bala", "Mikkel", "Thomas")));
+        conf.set("surname", new ArrayList<String>(Arrays.asList(
+                "Jensen", "Hansen", "Sørensen", "Karlsson", "Primbulus", "Sølvtromme", "Kobberhammer",
+                "Guldskovl", "de Trix", "And")));
+        conf.set("areaOfExpertise", new ArrayList<String>(Arrays.asList(
+                "Guld", "Biologi", "Omnilogi", "Østindien", "Vestpakistan", "USA", "Æbler", "Blommer", "Pærer",
+                "Datalogi", "Astrofysik", "Astrologi", "Astronomi", "Tryllebær", "Tegneserier", "Palæontologi",
+                "Drømme", "Kaslafniansk")));
         conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE_LOCATION, "integration/generator/fagref_template.xml");
         return new RecordGenerator(conf);
     }
@@ -126,7 +116,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE);
         log.info("Finished starting Storage in " + storageProfiler.getSpendTime());
         Configuration conf = ReleaseHelper.loadGeneralConfiguration(
-            STORAGE, "integration/generator/generator_configuration.xml");
+                STORAGE, "integration/generator/generator_configuration.xml");
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
                 set(RecordGenerator.CONF_RECORDS, RECORDS);
@@ -156,7 +146,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         };
         indexProfiler.setExpectedTotal(RECORDS);
         Configuration indexConf = IndexTest.loadFagrefProperties(
-            STORAGE, "integration/search/FacetTest_IndexConfiguration.xml");
+                STORAGE, "integration/search/FacetTest_IndexConfiguration.xml");
         // Facets are no longer defined as part of indexing
 /*        Configuration facetConf =
                 indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
@@ -167,30 +157,21 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         */
         IndexTest.updateIndex(indexConf);
         indexProfiler.setBeats(RECORDS);
-        log.info("Finished requesting and indexing " + RECORDS + " Records. "
-                 + indexProfiler);
+        log.info("Finished requesting and indexing " + RECORDS + " Records. " + indexProfiler);
 
         storage.close();
     }
 
-    private void extendFacets(Configuration facetConf, String name,
-                              List<String> fields) throws Exception {
-        List<Configuration> facets =
-                facetConf.getSubConfigurations(IndexDescriptor.CONF_DESCRIPTOR);
-        List<Configuration> newFacets =
-                facetConf.createSubConfigurations(
-                        IndexDescriptor.CONF_DESCRIPTOR, facets.size() + 1);
-        for (int i = 0 ; i < facets.size() ; i++) {
-            newFacets.get(i).set(
-                    FacetStructure.CONF_FACET_NAME,
-                    facets.get(i).get(FacetStructure.CONF_FACET_NAME));
-            newFacets.get(i).set(
-                    FacetStructure.CONF_FACET_FIELDS,
-                    facets.get(i).get(FacetStructure.CONF_FACET_FIELDS));
+/*    private void extendFacets(Configuration facetConf, String name, List<String> fields) throws Exception {
+        List<Configuration> facets = facetConf.getSubConfigurations(IndexDescriptor.CONF_DESCRIPTOR);
+        List<Configuration> newFacets = facetConf.createSubConfigurations(
+                IndexDescriptor.CONF_DESCRIPTOR, facets.size() + 1);
+        for (int i = 0; i < facets.size(); i++) {
+            newFacets.get(i).set(FacetStructure.CONF_FACET_NAME, facets.get(i).get(FacetStructure.CONF_FACET_NAME));
+            newFacets.get(i).set(FacetStructure.CONF_FACET_FIELDS, facets.get(i).get(FacetStructure.CONF_FACET_FIELDS));
         }
-        newFacets.get(newFacets.size() - 1).set(
-                FacetStructure.CONF_FACET_NAME, name);
-        newFacets.get(newFacets.size() - 1).setStrings(
-                FacetStructure.CONF_FACET_FIELDS , fields);
+        newFacets.get(newFacets.size() - 1).set(FacetStructure.CONF_FACET_NAME, name);
+        newFacets.get(newFacets.size() - 1).setStrings(FacetStructure.CONF_FACET_FIELDS, fields);
     }
+    */
 }

@@ -384,5 +384,16 @@ public class TermStatQueryRewriter implements Configurable {
         public String getID() {
             return id;
         }
+
+        @Override
+        public String toString() {
+            return "TermStatQueryRewriter#Target(" + id + ", termStatFile=" + termstatLocation + ")";
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "TermStatQueryRewriter(enabled=" + enabled + ", #targets=" + targets.size()
+               + ", lowercase=" + lowercase + ')';
     }
 }

@@ -478,12 +478,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         log.debug("MoreLikeThis created for reader for '" + location + "'");
     }
 
+    @SuppressWarnings("ObjectToString")
     @Override
     public void managedClose() {
         log.trace("close called");
         if (searcher != null) {
             try {
-                log.debug("Closing down Searcher " + searcher.getIndexReader());
+                log.debug("Closing down Searcher by closing IndexReader " + searcher.getIndexReader());
                 searcher.getIndexReader().close();
                 log.info("Successfully closed down IndexReader " + searcher.getIndexReader());
             } catch (IOException e) {

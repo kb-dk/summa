@@ -86,6 +86,12 @@ public class SearchNodeDummy extends SearchNodeImpl {
 
         responses.add(new DummyResponse(id, warmupCount, openCount, closeCount, searchCount++));
     }
+
+    @Override
+    public String toString() {
+        return "SearchNodeDummy(id='" + id + "', warmupCount=" + warmupCount + ", openCount=" + openCount
+               + ", closeCount=" + closeCount + ", searchCount=" + searchCount + ')';
+    }
 }
 
 

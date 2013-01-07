@@ -36,20 +36,18 @@ import java.nio.CharBuffer;
 public class LoggingReader extends Reader {
     private Reader source;
 
+    @SuppressWarnings("ObjectToString")
     public LoggingReader(Log log, String message, Reader source) {
-        System.out.println("***");
         if (!log.isTraceEnabled()) {
             this.source = source;
             return;
         }
-        System.out.println("+++");
         try {
             String content = Strings.flush(source);
-            System.out.println("----");
             this.source = new StringReader(content);
             log.trace(message + content);
         } catch (IOException e) {
-            throw new RuntimeException("Unable to flush Reader " + source);
+            throw new RuntimeException("Unable to flush Reader " + source, e);
         }
     }
 

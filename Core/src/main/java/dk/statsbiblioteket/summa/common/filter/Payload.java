@@ -262,6 +262,7 @@ public class Payload {
      * @param stream the stream to assign.
      * @param record the record to assign.
      */
+    @SuppressWarnings("ObjectToString")
     private void assignIfValid(InputStream stream, Record record) {
         if (stream == null && record == null) {
             throw new IllegalStateException("Either stream or record must be defined");

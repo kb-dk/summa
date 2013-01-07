@@ -156,6 +156,7 @@ public class FieldTermProvider extends TermProviderImpl {
       return new BytesRef(bytes, 0, br.length);
   }
 
+  @SuppressWarnings("ObjectToString")
   @Override
   public DocsEnum getDocsEnum(long ordinal, DocsEnum reuse) throws IOException {
     if (termsEnum == null) {
