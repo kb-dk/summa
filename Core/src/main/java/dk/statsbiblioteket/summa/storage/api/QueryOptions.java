@@ -483,6 +483,6 @@ public class QueryOptions implements Serializable {
     public String toString() {
         return "QueryOptions(deleted=" + deletedFilter + ", indexable=" + indexableFilter + ", childDepth=" + childDepth
                + ", parentHeight=" + parentHeight + ", #meta=" + (meta == null ? 0 : meta.size()) + ", attributes="
-                + Strings.join(attributes, ", ") + ")";
+                + (attributes == null ? "none" : Strings.join(attributes, ", ")) + ")";
     }
 }

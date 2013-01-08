@@ -24,6 +24,8 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -40,6 +42,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+@SuppressWarnings("UseOfSystemOutOrSystemErr")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "mke, hbk")
@@ -317,8 +320,43 @@ public class StorageTool {
         System.err.flush();
         System.out.println(result);
         System.out.flush();
-        System.err.println(String.format("----------\nRan job '%s' in %sms", jobName,
-                                         (System.currentTimeMillis() - start)));
+        System.err.println(String.format("----------\nRan job '%s' in %sms",
+                                         jobName, System.currentTimeMillis() - start));
+        return 1;
+    }
+
+    /**
+     * This action performs a full backup of the storage.
+     *
+     * @param argv   The destination for the backup..
+     * @param writer The storage writer client.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
+     * @throws IOException If error occur while communicating to storage.
+     */
+    private static int actionBackup(String[] argv, StorageWriterClient writer) throws IOException {
+
+        if (argv.length < 2) {
+            System.err.println("You must provide a destination for the backup");
+            return 1;
+        }
+
+        String destination = argv[1];
+
+        long start = System.currentTimeMillis();
+        // Yes, this is a giant hack
+        QueryOptions options = new QueryOptions();
+        options.meta(DatabaseStorage.INTERNAL_JOB_NAME, H2Storage.JOB_BACKUP);
+        options.meta(H2Storage.JOB_BACKUP_DESTINATION, destination);
+
+        String result = writer.batchJob(DatabaseStorage.INTERNAL_BATCH_JOB, null, 0, Long.MAX_VALUE, options);
+
+        // We flush() the streams in order not to interweave the output
+        System.err.println("Result:\n----------");
+        System.err.flush();
+        System.out.println(result);
+        System.out.flush();
+        System.err.println(String.format("----------\nPerformed backup in %sms",
+                                         System.currentTimeMillis() - start));
         return 1;
     }
 
@@ -406,12 +444,13 @@ public class StorageTool {
      */
     private static void printUsage() {
         System.err.println("USAGE:\n\t" + "storage-tool.sh <action> [arg]...");
-        System.err.println("Actions:\n" + "\tget  <record_id>\n" + "\tpeek [base] [max_count=5]\n"
-                           + "\ttouch <record_id> [record_id...]\n" + "\txslt <record_id> <xslt_url>\n"
-                           + "\tdump [base]     (dump storage on stdout)\n"
-                           + "\tclear base     (clear all records from base)\n" + "\tholdings\n"
-                           + "\tbatchjob <jobname> [base] [minMtime] " + "[maxMtime]   "
-                           + "(empty base string means all bases)");
+        System.err.println(
+                "Actions:\n" + "\tget  <record_id>\n" + "\tpeek [base] [max_count=5]\n"
+                + "\ttouch <record_id> [record_id...]\n" + "\txslt <record_id> <xslt_url>\n"
+                + "\tdump [base]     (dump storage on stdout)\n"
+                + "\tclear base      (clear all records from base)\n" + "\tholdings\n"
+                + "\tbatchjob <jobname> [base] [minMtime] " + "[maxMtime]   (empty base string means all bases)\n"
+                + "\tbackup destination (full copy of the running storage at the point of command execution)\n");
     }
 
     /**
@@ -475,6 +514,8 @@ public class StorageTool {
             exitCode = actionHoldings(reader);
         } else if ("batchjob".equals(action)) {
             exitCode = actionBatchJob(args, writer);
+        } else if ("backup".equals(action)) {
+            exitCode = actionBackup(args, writer);
         } else {
             System.err.println("Unknown action '" + action + "'");
             printUsage();

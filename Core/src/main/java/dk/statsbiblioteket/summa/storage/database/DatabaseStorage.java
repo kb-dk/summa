@@ -53,10 +53,20 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te, teg, mke")
 public abstract class DatabaseStorage extends StorageBase {
-    /**
-     * Log instance.
-     */
     private static Log log = LogFactory.getLog(DatabaseStorage.class);
+
+    /**
+     * Internal batch jobs are basically a hack. If {@link #batchJob} is called with INTERNAL_BATCH_JOB as job name,
+     * the query options must contain the parameter {@link #INTERNAL_JOB_NAME} and the method
+     * {@link #handleInternalBatchJob} will be called.
+     */
+    public static final String INTERNAL_BATCH_JOB = "_internal_";
+
+    /**
+     * The name of the internal job to execute.
+     */
+    public static final String INTERNAL_JOB_NAME = "jobname";
+
     /**
      * Key for ID in a record.
      */
@@ -2641,11 +2651,30 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public synchronized String batchJob(String jobName, String base, long minMtime, long maxMtime,
                                         QueryOptions options) throws IOException {
-        log.info(String.format("\n  Batch job: %s\n  Base: %s\n  Min mtime: %s\n  Max mtime: %s\n  Query options: "
-                               + "%s", jobName, base, minMtime, maxMtime, options));
+        long start = System.currentTimeMillis();
+        if (INTERNAL_BATCH_JOB.equals(jobName)) {
+            jobName = options.meta(INTERNAL_JOB_NAME);
+            if (jobName == null) {
+                throw new IllegalArgumentException("The QueryOptions.meta-property " + INTERNAL_JOB_NAME
+                                                   + " must be specified for internal jobs");
+            }
+            log.info(String.format(
+                    "Starting internal batch job: %s, Base: %s, Min mtime: %s, Max mtime: %s, Query options: %s",
+                    jobName, base, minMtime, maxMtime, options));
+            String result;
+            if ((result = handleInternalBatchJob(jobName, base, minMtime, maxMtime, options)) == null) {
+                log.info(String.format("Batch job %s completed in %ds",
+                                       jobName, (System.currentTimeMillis() - start) / 1000));
+            } else {
+                log.error("Unknown internal batch job " + jobName + " ");
+            }
+            return result;
+        }
+
+        log.info(String.format("\n  Batch job: %s\n  Base: %s\n  Min mtime: %s\n  Max mtime: %s\n  Query options: %s",
+                               jobName, base, minMtime, maxMtime, options));
         Connection conn = null;
 
-        long start = System.currentTimeMillis();
         try {
             conn = getDefaultConnection();
             String result = batchJobWithConnection(jobName, base, minMtime, maxMtime, options, conn);
@@ -2658,6 +2687,20 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             closeConnection(conn);
         }
+    }
+
+    /**
+     * Process the given job is possible and return the result. If the job is unknown, return null.
+     * @param jobName  the name of the internal job.
+     * @param base     base-limiter.
+     * @param minMtime time-limiter.
+     * @param maxMtime time-limiter.
+     * @param options  custom options.
+     * @return the result of the job or null if the job is unknown.
+     */
+    protected String handleInternalBatchJob(
+            String jobName, String base, long minMtime, long maxMtime, QueryOptions options) {
+        return null;
     }
 
     /**

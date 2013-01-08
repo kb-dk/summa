@@ -38,11 +38,13 @@ import java.util.Set;
 /**
  * Storage implementation on top of the H" database engine.
  */
+@SuppressWarnings("ThrowFromFinallyBlock")
 public class H2Storage extends DatabaseStorage implements Configurable {
-    /**
-     * Private logger.
-     */
     private static Log log = LogFactory.getLog(H2Storage.class);
+
+    public static final String JOB_BACKUP = "backup"; // Back up the full database
+    public static final String JOB_BACKUP_DESTINATION = "destination"; // Required by backup
+
     /**
      * DB file.
      */
@@ -177,6 +179,47 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             throw new IOException(error, e);
         }
         log.info("H2 Storage closed.");
+    }
+
+    @Override
+    protected String handleInternalBatchJob(
+            String jobName, String base, long minMtime, long maxMtime, QueryOptions options) {
+        String sResult = super.handleInternalBatchJob(jobName, base, minMtime, maxMtime, options);
+        if (sResult != null) {
+            return sResult;
+        }
+        if (!JOB_BACKUP.equals(jobName)) {
+            return null;
+        }
+        String destination = options.meta(JOB_BACKUP_DESTINATION);
+        if (destination == null) {
+            throw new IllegalArgumentException(
+                    "The job " + JOB_BACKUP + " requires the parameter " + JOB_BACKUP_DESTINATION);
+        }
+        log.info("Performing backup to destination '" + destination + "'");
+        final String SQL = "BACKUP TO '" + destination + "'";
+        PreparedStatement stmt = null;
+        try{
+            stmt = getManagedStatement(pool.prepareStatement(SQL));
+
+            stmt.execute();
+            String message = "Database backup to '" + destination + "' was a success";
+            log.info(message);
+            return message;
+        } catch (SQLException e){
+            log.error("SQL Exception in databasebackup", e);
+            throw new RuntimeException("SQL exception", e);
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    String message = "SQLException while closing '" + SQL;
+                    log.error(message, e);
+                    throw new RuntimeException(message, e);
+                }
+            }
+        }
     }
 
     @Override
@@ -358,8 +401,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     protected boolean isIntegrityConstraintViolation(SQLException e) {
         // The H2 error codes for integrity constraint violations are
         // numbers between 23000 and 23999
-        return (e instanceof SQLIntegrityConstraintViolationException
-                || (e.getErrorCode() >= 23000 && e.getErrorCode() < 24000));
+        return e instanceof SQLIntegrityConstraintViolationException
+                || e.getErrorCode() >= 23000 && e.getErrorCode() < 24000;
     }
 
     /**
