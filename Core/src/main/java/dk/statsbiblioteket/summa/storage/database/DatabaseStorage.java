@@ -2810,6 +2810,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     while (!cursor.isAfterLast()) {
                         minTimestamp = cursor.getLong(MTIME_COLUMN);
                         Record record = scanRecord(cursor); // advances cursor
+                        //System.out.println("Processing " + record);
                         if (previousRecord != null
                             && applyJobtoRecord(job, previousRecord, previousRecordId, base, options,
                                                 totalCount == 0, false, conn)) {

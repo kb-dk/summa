@@ -25,6 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -170,6 +171,29 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(2, base.getDeletedCount());
         assertEquals(4, base.getTotalCount());
         assertEquals(1, base.getLiveCount());
+    }
+
+    /**
+     * This loops forever (or at least a long time) as setting deleted = true updates modification-time.
+     * @throws IOException if the test failed due to database problems.
+     */
+    public void testBatchJob() throws IOException {
+        final int RECORDS = 1000;
+        final byte[] CONTENT = new byte[5];
+        for (int i = 0 ; i < RECORDS ; i++) {
+            storage.flush(new Record("Record_" + i, "Dummy", CONTENT));
+        }
+
+        String sampleID = "Record_" + RECORDS/2;
+        assertNotNull("There should be a record named " + sampleID, storage.getRecord(sampleID, null));
+        assertFalse("The record " + sampleID + " should not be marked as deleted",
+                   storage.getRecord(sampleID, null).isDeleted());
+
+        storage.batchJob("delete.job.js", null, 0, Long.MAX_VALUE, null);
+        assertNotNull("There should still be a record named " + sampleID, storage.getRecord(sampleID, null));
+        assertTrue("The record " + sampleID + " should be marked as deleted",
+                   storage.getRecord(sampleID, null).isDeleted());
+
     }
 
     /**
