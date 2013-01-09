@@ -80,7 +80,7 @@ public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
         Request request = new Request(
             DidYouMeanKeys.SEARCH_QUERY, "gense"
         );
-        String expected = "<didyoumean score=\"1.0\">egense</didyoumean>";
+        String expected = "<didyoumean score=\"1.0\" hits=\"1\">egense</didyoumean>";
         assertSummaDYM(request, expected);
         //System.out.println(responses.toXML().replace(">", ">\n"));
     }
@@ -91,7 +91,7 @@ public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
         Request request = new Request(
             DidYouMeanKeys.SEARCH_QUERY, "thomas gense"
         );
-        assertSummaDYM(request, "<didyoumean score=\"1.0\">thomas egense</didyoumean>");
+        assertSummaDYM(request, "<didyoumean score=\"1.0\" hits=\"1\">thomas egense</didyoumean>");
     }
 
     public void testExtendedExplicitParam() throws IOException {
@@ -106,7 +106,7 @@ public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
 //            PRE + "spellcheck.maxCollationTries", Integer.toString(5),
 //            PRE + "spellcheck.count", Integer.toString(5)
         );
-        String expected = "<didyoumean score=\"1.0\">thomas egense</didyoumean>";
+        String expected = "<didyoumean score=\"1.0\" hits=\"1\">thomas egense</didyoumean>";
         assertSummaDYM(request, expected);
     }
 
