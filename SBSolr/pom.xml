@@ -25,6 +25,12 @@
             <artifactId>lucene-analyzers-icu</artifactId>
         </dependency>
 
+         <dependency>
+              <groupId>org.apache.lucene</groupId>
+              <artifactId>lucene-analyzers-uima</artifactId>
+         </dependency>
+            
+
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-analysis-extras</artifactId>
