@@ -69,7 +69,7 @@ public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
             PRE + "spellcheck.count", Integer.toString(5)
         );
 
-        String expected = "<didyoumean score=\"1.0\">egense</didyoumean>";
+        String expected = "<didyoumean score=\"1.0\" hits=\"1\">egense</didyoumean>";
         assertSummaDYM(request, expected);
         //System.out.println(responses.toXML().replace(">", ">\n"));
     }
