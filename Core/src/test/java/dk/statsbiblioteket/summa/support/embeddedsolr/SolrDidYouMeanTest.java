@@ -105,15 +105,20 @@ public class SolrDidYouMeanTest {
 				"support/solr_test_documents/didyoumeantest2.xml",    		
 		};
 		
-		solrServer.optimize();// this is testing spellcheck is not called until optimize is called (Except first time for new index)
 
+
+		
 		SolrServerUnitTestUtil.indexFiles(files);
+		solrServer.optimize();// this is testing spellcheck isumma-sbsolr/s not called until optimize is called (Except first time for new index)
+		
 		// detxe -> dette 
 		query = new SolrQuery("detxe");
 		query.setParam("spellcheck","true");
 		query.setParam("spellcheck.dictionary","summa_spell");         
 		query.setParam("spellcheck.count","5");
 
+		
+		//Thread.sleep(100000000000L);
 		response = solrServer.query(query);
 		suggestionMap = response.getSpellCheckResponse().getSuggestionMap();
 		assertTrue(suggestionMap.size() == 1);                
