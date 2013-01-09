@@ -41,7 +41,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class StorageIterator implements Iterator<Record>, Serializable {
     private static final long serialVersionUID = 186584L;
     // TODO: Consider making this adjustable
-    public static int MAX_QUEUE_SIZE = 110;
+    public static final int DEFAULT_MAX_QUEUE_SIZE = 100;
 
     private int maxQueueSize;
     private final ReadableStorage iteratorHolder;
@@ -59,7 +59,7 @@ public class StorageIterator implements Iterator<Record>, Serializable {
      * @param key the iteration key as returned from the {@link ReadableStorage}
      */
     public StorageIterator(ReadableStorage iteratorHolder, long key) {
-        this(iteratorHolder, key, MAX_QUEUE_SIZE);
+        this(iteratorHolder, key, DEFAULT_MAX_QUEUE_SIZE);
     }
 
     /**
