@@ -2662,7 +2662,8 @@ public abstract class DatabaseStorage extends StorageBase {
                     "Starting internal batch job: %s, Base: %s, Min mtime: %s, Max mtime: %s, Query options: %s",
                     jobName, base, minMtime, maxMtime, options));
             String result;
-            if ((result = handleInternalBatchJob(jobName, base, minMtime, maxMtime, options)) == null) {
+            if ((result = handleInternalBatchJob(
+                    jobName, base, minMtime, Math.min(maxMtime, System.currentTimeMillis()), options)) == null) {
                 log.info(String.format("Batch job %s completed in %ds",
                                        jobName, (System.currentTimeMillis() - start) / 1000));
             } else {
@@ -2704,6 +2705,7 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
+     * Performs a scripted batch job on the database.
      * @param conn     The database connection.
      * @param jobName  The name of the job to instantiate.
      *                 The job name must match the regular expression
@@ -2714,9 +2716,12 @@ public abstract class DatabaseStorage extends StorageBase {
      *                 {@code base} is {@code null} the records from all bases will
      *                 be included in the batch job
      * @param minMtime Only records with modification times strictly greater
-     *                 than {@code minMtime} will be included in the batch job
-     * @param maxMtime Only records with modification times strictly less than
-     *                 {@code maxMtime} will be included in the batch job
+     *                 than {@code minMtime} will be included in the batch job.
+     * @param maxMtime Only records with modification times strictly less than {@code maxMtime} will be included in the
+     *                 batch job.
+     *                 Important: In order to guard against re-processing of Records due to changed mtime, the maxTime
+     *                 will be modified to Math.min(maxMTime, now) before execution. Thus it is impossible to perform
+     *                 jobs on Records with MTime in the future.
      * @param options  Restrict to records for which
      *                 {@link QueryOptions#allowsRecord} returns true
      * @return Output from batch job.
@@ -2726,6 +2731,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private String batchJobWithConnection(String jobName, String base, long minMtime, long maxMtime,
                                           QueryOptions options, Connection conn) throws IOException, SQLException {
+        maxMtime = Math.min(maxMtime, System.currentTimeMillis());
         // Make sure options is always != null to ease logic later
         options = options != null ? options : new QueryOptions();
 
