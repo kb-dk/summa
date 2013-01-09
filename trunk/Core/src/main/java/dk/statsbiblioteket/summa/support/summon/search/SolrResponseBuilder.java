@@ -302,7 +302,7 @@ public class SolrResponseBuilder implements Configurable {
         XMLStepper.iterateElements(xml, "lst", "int", new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
-                String term = (XMLStepper.getAttribute(xml, "name", null));
+                String term = XMLStepper.getAttribute(xml, "name", null);
                 if (term == null) {
                     throw new XMLStreamException(
                         "Encountered element 'int' in list 'terms' in 'elookup' without attribute 'name'");
@@ -642,7 +642,7 @@ public class SolrResponseBuilder implements Configurable {
                     fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_ID, id));
                 }
                 // Add base if it does not exist or was collected using another name
-                if ((base == null && recordBase != null) || base != null && !IndexUtils.RECORD_BASE.equals(baseField)) {
+                if (base == null && recordBase != null || base != null && !IndexUtils.RECORD_BASE.equals(baseField)) {
                     fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_BASE, base));
                 }
                 // TODO: Cons
@@ -666,7 +666,7 @@ public class SolrResponseBuilder implements Configurable {
                         field.getKey(), field.getValue(), !nonescapedFields.contains(field.getKey())));
                 }
                 if (log.isTraceEnabled()) {
-                    log.debug("constructed and added " + record);
+                    log.trace("constructed and added " + record);
                 }
                 response.addRecord(record);
             }

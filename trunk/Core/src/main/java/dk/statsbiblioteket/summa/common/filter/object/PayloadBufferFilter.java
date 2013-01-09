@@ -35,6 +35,7 @@ public class PayloadBufferFilter extends ObjectFilterImpl {
     public PayloadBufferFilter(Configuration conf) {
         super(conf);
         payloads = new ArrayList<Payload>();
+        feedback = false;
     }
 
     /**

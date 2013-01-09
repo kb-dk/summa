@@ -22,8 +22,6 @@ import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -32,15 +30,10 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SBSolrDidYouMeanTranslationTest extends SolrSearchTestBase {
-    private static Log log = LogFactory.getLog(SBSolrDidYouMeanTranslationTest.class);
-
     private static final String PRE = SolrSearchNode.CONF_SOLR_PARAM_PREFIX;
 
     public SBSolrDidYouMeanTranslationTest(String name) {

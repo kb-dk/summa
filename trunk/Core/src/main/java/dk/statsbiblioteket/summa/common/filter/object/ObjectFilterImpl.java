@@ -103,7 +103,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             long spendTime = System.nanoTime() - startTime;
             totalTimeNS += spendTime;
             payloadCount++;
-            String ms = Double.toString((spendTime / 1000000.0));
+            String ms = Double.toString(spendTime / 1000000.0);
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
                 log.trace("Processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms using " + this);

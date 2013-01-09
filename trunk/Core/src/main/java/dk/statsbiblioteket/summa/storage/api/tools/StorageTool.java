@@ -287,7 +287,7 @@ public class StorageTool {
         Record holdings = storage.getRecord("__holdings__", opts);
         String xml = holdings.getContentAsUTF8();
         System.out.println(xml);
-        System.err.println(String.format("Retrieved holdings in %sms", (System.currentTimeMillis() - start)));
+        System.err.println(String.format("Retrieved holdings in %sms", System.currentTimeMillis() - start));
         return 0;
     }
 
@@ -308,7 +308,7 @@ public class StorageTool {
         }
 
         String jobName = argv[1];
-        String base = argv.length > 2 ? (argv[2].isEmpty() ? null : argv[2]) : null;
+        String base = argv.length > 2 ? argv[2].isEmpty() ? null : argv[2] : null;
         long minMtime = argv.length > 3 ? Long.parseLong(argv[3]) : 0;
         long maxMtime = argv.length > 4 ? Long.parseLong(argv[4]) : Long.MAX_VALUE;
 
@@ -450,7 +450,7 @@ public class StorageTool {
                 + "\tdump [base]     (dump storage on stdout)\n"
                 + "\tclear base      (clear all records from base)\n" + "\tholdings\n"
                 + "\tbatchjob <jobname> [base] [minMtime] " + "[maxMtime]   (empty base string means all bases)\n"
-                + "\tbackup destination (full copy of the running storage at the point of command execution)\n");
+                + "\tbackup <destination> (full copy of the running storage at the point of command execution)\n");
     }
 
     /**
@@ -523,5 +523,4 @@ public class StorageTool {
         }
         System.exit(exitCode);
     }
-
 }

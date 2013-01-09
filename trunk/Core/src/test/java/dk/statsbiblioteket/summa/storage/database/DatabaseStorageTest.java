@@ -250,16 +250,12 @@ public class DatabaseStorageTest extends StorageTestBase {
         Configuration conf = createConf();
         storage = (DatabaseStorage) StorageFactory.createStorage(conf);
         long start = storage.getModificationTime(testBase1);
-        try {
-            storage.destroyBaseStatistic();
-            storage.close();
-            // Start storage on a old database file
-            storage = (DatabaseStorage) StorageFactory.createStorage(conf);
-            storage.flush(new Record(testId1, testBase1, testContent1));
-            assertTrue(start < storage.getModificationTime(testBase1));
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("This should not happen");
-        }
+        storage.destroyBaseStatistic();
+        storage.close();
+        // Start storage on a old database file
+        storage = (DatabaseStorage) StorageFactory.createStorage(conf);
+        storage.flush(new Record(testId1, testBase1, testContent1));
+        assertTrue(start < storage.getModificationTime(testBase1));
+        storage.close();
     }
 }
