@@ -96,7 +96,7 @@ public class FullDumpFilter extends ObjectFilterImpl {
         } catch (IOException e) {
             throw new ConfigurationException(String.format(
                     "Exception while trying to retrieve last modified timestamp for base '%s' from '%s'",
-                    base, conf.getString(ConnectionConsumer.CONF_RPC_TARGET, "N/A")));
+                    base, conf.getString(ConnectionConsumer.CONF_RPC_TARGET, "N/A")), e);
         }
         writer = new StorageWriterClient(conf);
         feedback = false;
@@ -136,8 +136,8 @@ public class FullDumpFilter extends ObjectFilterImpl {
                 // +1 as batch maxMTime is <, not <=
                 String result = writer.batchJob(script, base, 0, startupTimestamp + 1, null);
                 if (log.isTraceEnabled()) {
-                    log.info(String.format("Script '%s' successfully executed with output '%s'",
-                                           script, result));
+                    log.trace(String.format("Script '%s' successfully executed with output '%s'",
+                                            script, result));
                 } else {
                     log.info(String.format("Script '%s' successfully executed with %d lines in the output",
                                            script, countLines(result)));

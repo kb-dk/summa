@@ -66,11 +66,12 @@ public class AdjustingSearchNode implements SearchNode {
             inner = SearchNodeFactory.createSearchNode(conf.getSubConfiguration(CONF_INNER_SEARCHNODE));
         } catch (RemoteException e) {
             throw new ConfigurationException(
-                "Unable to create inner search node, although a value were present for key " + CONF_INNER_SEARCHNODE);
+                "Unable to create inner search node, although a value were present for key " + CONF_INNER_SEARCHNODE,
+                e);
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException(
                 "A configuration with support for sub configurations must be provided for the adjuster and must "
-                + "contain a sub configuration with key " + CONF_INNER_SEARCHNODE);
+                + "contain a sub configuration with key " + CONF_INNER_SEARCHNODE, e);
         }
         adjuster = new InteractionAdjuster(conf);
         log.debug("Created AdjustingSearchNode with inner SearchNode " + inner);

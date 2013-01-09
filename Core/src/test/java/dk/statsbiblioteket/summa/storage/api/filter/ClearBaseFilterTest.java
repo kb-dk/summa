@@ -106,7 +106,6 @@ public class ClearBaseFilterTest extends TestCase {
         chain = prepareFilterChain(filter, new Record("id", "base", "data".getBytes()));
 
         while (chain.pump()) {
-            ;
         }
 
         assertEquals(1, chain.size());
@@ -123,9 +122,7 @@ public class ClearBaseFilterTest extends TestCase {
         filter = new ClearBaseFilter(storage, Arrays.asList("base"));
         chain = prepareFilterChain(filter, rec);
 
-        while (chain.pump()) {
-            ;
-        }
+        while (chain.pump()) { }
 
         assertEquals(1, chain.size());
 
@@ -145,9 +142,7 @@ public class ClearBaseFilterTest extends TestCase {
         chain = prepareFilterChain(filter, rec1, rec2);
 
         //noinspection StatementWithEmptyBody
-        while (chain.pump()) {
-            ;
-        }
+        while (chain.pump()) { }
 
         assertEquals(2, chain.size());
 
@@ -178,8 +173,10 @@ public class ClearBaseFilterTest extends TestCase {
         assertBaseCount("base", 3);
 
 
-        Configuration conf = Configuration.newMemoryBased(PayloadMatcher.CONF_ID_REGEX, "id2",
-                                                          ClearBaseFilter.CONF_CLEAR_BASES, "base");
+        Configuration conf = Configuration.newMemoryBased(
+                PayloadMatcher.CONF_ID_REGEX, "id2",
+                ClearBaseFilter.CONF_CLEAR_BASES, "base"
+        );
 
         filter = new ClearBaseFilter(storage, conf);
         chain = prepareFilterChain(filter, rec1, rec11, rec2);
