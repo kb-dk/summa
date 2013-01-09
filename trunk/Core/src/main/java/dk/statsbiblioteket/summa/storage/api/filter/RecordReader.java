@@ -246,6 +246,19 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     public static final String CONF_STOP_ON_NEWER = "summa.storage.recordreader.stop.on.newer";
     public static final boolean DEFAULT_STOP_ON_NEWER = false;
 
+    /**
+     * The batch size is the number of Records that are sent for each remote request to the Storage.
+     * Setting this number very low (10-) will probably lead to poor performance. Setting this number very high (10000+)
+     * will probably lead to OOM on either the Storage- or the client-side.
+     * </p><p>
+     * Note: The batch size is a soft request, as the Storage is free to ignore the parameter. However, a Storage should
+     * not send more than the requested number and will normally send exactly the specified number of Records.
+     * </p><p>
+     * Optional. Default is {@link StorageIterator#DEFAULT_MAX_QUEUE_SIZE}, which is 100.
+     */
+    public static final String CONF_BATCH_SIZE = "summa.storage.recordreader.batch.size";
+    public static final int DEFAULT_BATCH_SIZE = StorageIterator.DEFAULT_MAX_QUEUE_SIZE;
+
 
     /**
      * The readable storage.
@@ -269,6 +282,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private int maxExpansionHeight = DEFAULT_EXPANSION_HEIGHT;
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
+    private int batchSize = DEFAULT_BATCH_SIZE;
     private boolean loadData = DEFAULT_LOAD_DATA_COLUMN;
 
     private final boolean stopOnNewer;
@@ -349,6 +363,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         maxExpansionHeight = conf.getInt(CONF_EXPANSION_HEIGHT, maxExpansionHeight);
         maxReadRecords = conf.getInt(CONF_MAX_READ_RECORDS, DEFAULT_MAX_READ_RECORDS);
         maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS, DEFAULT_MAX_READ_SECONDS);
+        batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         loadData = conf.getBoolean(CONF_LOAD_DATA_COLUMN, DEFAULT_LOAD_DATA_COLUMN);
 
 
@@ -429,7 +444,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             long iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, getQueryOptions());
 
             lastIteratorUpdate = System.currentTimeMillis();
-            recordIterator = new StorageIterator(storage, iterKey);
+            recordIterator = new StorageIterator(storage, iterKey, batchSize);
 
             return false;
         } else if (recordIterator.hasNext()) {
@@ -449,7 +464,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
 
         lastIteratorUpdate = System.currentTimeMillis();
-        recordIterator = new StorageIterator(storage, iterKey);
+        recordIterator = new StorageIterator(storage, iterKey, batchSize);
 
         if (!recordIterator.hasNext()) {
             log.debug("Received update notification from StorageWatcher, but no new Records is available from the "
