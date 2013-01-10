@@ -393,7 +393,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         lastRecordTimestamp = getStartTime();
         lastIteratorUpdate = lastRecordTimestamp;
         stopOnNewer = conf.getBoolean(CONF_STOP_ON_NEWER, DEFAULT_STOP_ON_NEWER);
-        log.trace("RecordReader constructed, ready for pumping");
+        log.info(String.format(
+                "RecordReader(startFromScratch=%b, progressFile='%s', maxRecords=%d, maxSeconds=%d, batchSize=%d) "
+                + "started",
+                startFromScratch, progressFile, maxReadRecords, maxReadSeconds, batchSize));
     }
 
     /**
