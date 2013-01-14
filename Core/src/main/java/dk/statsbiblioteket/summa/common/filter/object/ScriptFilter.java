@@ -346,20 +346,20 @@ public class ScriptFilter extends ObjectFilterImpl {
             }
 
             String message = (String) engine.get("feedbackMessage");
-            String mes = (time / oneSecond) + "ms" + (message == null ? "" : " (" + message + ")");
+            String mes = time / oneSecond + "ms" + (message == null ? "" : " (" + message + ")");
             if (result) {
                 String pass = ++passCount + "/" + (passCount + discardCount);
                 Logging.logProcess(getName(), "Processed " + pass + " in " + mes, Logging.LogLevel.DEBUG, payload);
                 log.debug(getName() + " Processed " + payload.getId() + " (" + pass + ") in " + mes);
             } else {
-                String dis = ++discardCount + "/" + (discardCount + discardCount);
+                String dis = ++discardCount + "/" + (passCount + discardCount);
                 Logging.logProcess(getName(), "Discarded " + dis + " in " + mes, Logging.LogLevel.DEBUG, payload);
                 log.debug(getName() + "Discarded " + payload.getId() + " (" + dis + ")in " + mes);
             }
 
             return result;
         } catch (ClassCastException e) {
-            throw new PayloadException("Script did not return a boolean, but a " + engine.get("allowPayload"));
+            throw new PayloadException("Script did not return a boolean, but a " + engine.get("allowPayload"), e);
         }
     }
 }
