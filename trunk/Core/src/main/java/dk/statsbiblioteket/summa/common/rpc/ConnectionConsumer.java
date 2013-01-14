@@ -16,11 +16,10 @@ package dk.statsbiblioteket.summa.common.rpc;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -114,7 +113,7 @@ public class ConnectionConsumer<E> implements Configurable {
     
     private ConnectionManager<E> connMan;
     private ConnectionContext<E> conn;
-    private String connId;
+    protected final String connId;
 
     /**
      * Instantiate a new {@code ConnectionConsumer} based on {@code conf}.

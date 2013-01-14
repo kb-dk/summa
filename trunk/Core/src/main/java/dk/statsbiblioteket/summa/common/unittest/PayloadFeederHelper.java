@@ -64,7 +64,6 @@ public class PayloadFeederHelper implements ObjectFilter {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating feeder from " + inputFiles.length + " input files");
         payloads = new ArrayList<Payload>(inputFiles.length);
-        int counter = 0;
         for (String inputFile: inputFiles) {
             payloads.add(new Payload(Resolver.getURL(inputFile).openStream(), inputFile));
         }
