@@ -48,6 +48,7 @@ public class StorageIterator implements Iterator<Record>, Serializable {
     private final long key;
     private final Queue<Record> records;
     private boolean next;
+    private long totalReceived = 0;
 
     private Log log;
 
@@ -119,8 +120,11 @@ public class StorageIterator implements Iterator<Record>, Serializable {
     private void checkRecords () throws IOException {
         if (records.isEmpty() && next) {
             try {
+                long startTime = System.currentTimeMillis();
                 List<Record> recs = iteratorHolder.next(key, maxQueueSize);
-
+                totalReceived += recs.size();
+                log.debug("Received " + recs.size() + " Records (" + maxQueueSize + " requested, "+ totalReceived
+                          + " received in total) in " + (System.currentTimeMillis()-startTime) + "ms");
                 if (recs.size() < maxQueueSize) {
                     next = false;
                 }

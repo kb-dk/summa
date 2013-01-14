@@ -351,7 +351,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                       + progressFile + "'");
         } else {
             progressFile = new File(progressFileString);
-            log.debug("Progress.file is " + progressFile.getCanonicalFile());
+            //log.debug("Progress.file is " + progressFile.getCanonicalFile());
         }
         progressFile = Resolver.getPersistentFile(progressFile);
 
@@ -366,9 +366,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         loadData = conf.getBoolean(CONF_LOAD_DATA_COLUMN, DEFAULT_LOAD_DATA_COLUMN);
 
-
-        log.debug("CONF_LOAD_DATA_COLUMN:" + loadData);
-
         if (usePersistence) {
             log.debug("Enabling progress tracker");
             progressTracker = new ProgressTracker(
@@ -376,7 +373,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 conf.getLong(CONF_PROGRESS_BATCH_SIZE, DEFAULT_PROGRESS_BATCH_SIZE),
                 conf.getLong(CONF_PROGRESS_GRACETIME, DEFAULT_PROGRESS_GRACETIME));
         } else {
-            log.info("Progress tracking disabled");
             progressTracker = null;
         }
 
@@ -394,9 +390,14 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         lastIteratorUpdate = lastRecordTimestamp;
         stopOnNewer = conf.getBoolean(CONF_STOP_ON_NEWER, DEFAULT_STOP_ON_NEWER);
         log.info(String.format(
-                "RecordReader(startFromScratch=%b, progressFile='%s', maxRecords=%d, maxSeconds=%d, batchSize=%d) "
-                + "started",
-                startFromScratch, progressFile, maxReadRecords, maxReadSeconds, batchSize));
+                "RecordReader(startFromScratch=%b, storage=%s, bases=%s, startMTime=%s, progressFile='%s', "
+                + "progressTrack=%b, maxRecords=%d, maxSeconds=%d, batchSize=%d, loadDate=%b, stayAlive=%b, "
+                + "stopOnNewer=%b) started", startFromScratch, storage, base == null || "".equals(base) ?
+                                                                        "*" :
+                                                                        base, String.format(ProgressTracker.ISO_TIME,
+                                                                                            startTime), progressFile,
+                progressFile != null, maxReadRecords, maxReadSeconds, batchSize, loadData,
+                storageWatcher != null, stopOnNewer));
     }
 
     /**
@@ -407,7 +408,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     private long getStartTime() {
         if (startFromScratch || !usePersistence) {
-            log.info("Starting extraction of base '" + base + "' from time 0");
+//            log.info("Starting extraction of base '" + base + "' from time 0");
             if (progressTracker != null) {
                 progressTracker.updated(0);
             }
@@ -706,5 +707,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         log.trace("Storage was changed for base " + base + " and timestamp " + timeStamp);
         watch.notifyAll();
         // TODO : Update the Semaphore with at most 1   (remember syns)
+    }
+
+    @Override
+    public String toString() {
+        return "RecordReader(storage=" + storage + ")";
     }
 }

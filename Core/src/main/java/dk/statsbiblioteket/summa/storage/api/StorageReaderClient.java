@@ -45,8 +45,7 @@ import java.util.NoSuchElementException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te, mke, hbk")
-public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
-                                 implements Configurable, ReadableStorage {
+public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> implements Configurable, ReadableStorage {
 
     /**
      * Create a new storage reader. If no RPC vendor is defined in the
@@ -114,8 +113,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             return storage.getRecords(ids, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecords(" + Logs.expand(ids, 10) + ", options=" + options + ") failed: "
-                                  + t.getMessage(), t);
+            throw new IOException("getRecords(" + Logs.expand(ids, 10) + ", options=" + options + ") failed", t);
         } finally {
             releaseConnection();
         }
@@ -200,5 +198,10 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         } finally {
             releaseConnection();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "StorageReaderClient(" + connId + ")";
     }
 }
