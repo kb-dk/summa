@@ -28,6 +28,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te")
 public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
 
+    protected boolean logDiscards = true;
+
     @SuppressWarnings({"UnusedDeclaration"})
     public AbstractDiscardFilter(Configuration conf) {
         super(conf);
@@ -44,10 +46,12 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         boolean discard = checkDiscard(payload);
-        if (discard) {
-            Logging.logProcess(getName(), "Discarding", Logging.LogLevel.DEBUG, payload);
-        } else {
-            Logging.logProcess(getName(), "Payload not discarded", Logging.LogLevel.TRACE, payload);
+        if (logDiscards) {
+            if (discard) {
+                Logging.logProcess(getName(), "Discarding", Logging.LogLevel.DEBUG, payload);
+            } else {
+                Logging.logProcess(getName(), "Payload not discarded", Logging.LogLevel.TRACE, payload);
+            }
         }
         return !discard;
     }
