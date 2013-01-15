@@ -48,7 +48,7 @@ public class Environment {
      *         actual values, or {@code null} if the input string is
      *         {@code null}
      */
-    public static String escapeSystemProperties (String s) {
+    public static String escapeSystemProperties(String s) {
         if (s == null) {
             return null;
         }
@@ -61,7 +61,7 @@ public class Environment {
         }
 
         // This is ridiculously inefficient, but it gets the job done...
-        for (Map.Entry entry: System.getProperties().entrySet()){
+        for (Map.Entry entry : System.getProperties().entrySet()) {
             String pattern = "${" + entry.getKey().toString() + "}";
             String newVal = entry.getValue().toString();
 
@@ -80,7 +80,7 @@ public class Environment {
      * @return a copy of {@code a} with system property values expanded, or
      *         {@code null} if the input string is {@code null}
      */
-    public static String[] escapeSystemProperties (String[] a) {
+    public static String[] escapeSystemProperties(String[] a) {
         if (a == null) {
             return null;
         }
@@ -95,7 +95,6 @@ public class Environment {
     }
 
     /**
-     *
      * Iterate through {@code iterable} and write all strings with system
      * property references expanded into a list. The system property expansion
      * occurs as described in {@link #escapeSystemProperties(String)}.
@@ -107,8 +106,8 @@ public class Environment {
      *         with system property values expanded, or
      *         {@code null} if the input string is {@code null}
      */
-    public static List<String> escapeSystemProperties (
-                                                    Iterable<String> iterable) {
+    public static List<String> escapeSystemProperties(
+            Iterable<String> iterable) {
         if (iterable == null) {
             return null;
         }
@@ -131,6 +130,7 @@ public class Environment {
      * </p><p>
      * It is highly recommended to call this method very early, to provide a
      * fail-fast handling of the incompatibility.
+     *
      * @return the version of the curent JVM or null if it could not be
      *         determined.
      * @throws Error if the version is incompatible with Lucene.
@@ -140,11 +140,13 @@ public class Environment {
         Matcher matcher = version == null ? null :
                           VERSION_PATTERN.matcher(version);
         if (version == null || !matcher.matches()) {
-            log.warn("Unable to determine Java runtime version by property "
-                     + "'java.runtime.version'. Please check that the JVM does"
-                     + " not have bug #6707044 (see http://bugs.sun.com/bugdat"
-                     + "abase/view_bug.do?bug_id=6707044) for details");
-            log.debug("Summa version: " + SummaConstants.getVersion());
+            log.warn("Unable to determine Java runtime version by property 'java.runtime.version'. Please check that "
+                     + "the JVM does not have bug #6707044 "
+                     + "(see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044) for details");
+            Runtime rt = Runtime.getRuntime();
+            log.info(String.format(
+                    "Summa version is %s. Xmx=%dMB, processors=%d. All OK",
+                    SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors()));
             return version;
         }
         // version should be like "1.6.0_10-b33"
@@ -156,19 +158,19 @@ public class Environment {
         int build = Integer.parseInt(matcher.group(5));
         if ((update >= 4 && update <= 10) && !(update == 10 && build > 25)) {
             throw new Error(
-                    "Incompatible Java runtime version. Due to the bug http://"
-                    + "bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044, "
-                    + "running with Java runtime versions from 1.6.0_04 to "
-                    + "1.6.0.10-b25 will sometimes result in corrupted Lucene "
-                    + "indexes. The current Java runtime version is "
+                    "Incompatible Java runtime version. Due to the "
+                    + "bug http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044, "
+                    + "running with Java runtime versions from 1.6.0_04 to 1.6.0.10-b25 will sometimes result in "
+                    + "corrupted Lucene indexes. The current Java runtime version is "
                     + version);
         }
-        log.debug(String.format(
-            "Java runtime version is %s, Summa version is %s. All OK",
-            version, SummaConstants.getVersion()));
+        Runtime rt = Runtime.getRuntime();
+        log.info(String.format(
+                "Java runtime version is %s, Summa version is %s. Xmx=%dMB, processors=%d. All OK",
+                version, SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors()));
         return version;
     }
-    private static Pattern VERSION_PATTERN = Pattern.compile(
-            "([0-9]+)\\.([0-9]+)\\.([0-9]+)\\_([0-9]+)\\-b([0-9]+)");
+
+    private static Pattern VERSION_PATTERN = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)\\_([0-9]+)\\-b([0-9]+)");
 }
 
