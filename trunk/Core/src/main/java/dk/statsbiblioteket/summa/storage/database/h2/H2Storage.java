@@ -290,7 +290,11 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             createSchema();
         } else {
             log.info("Checking database table consistency");
+            long startTime = System.currentTimeMillis();
             checkTableConsistency();
+
+            log.info("Finished checking database table consistency in " + (System.currentTimeMillis()-startTime)/1000
+                     + " seconds");
         }
         setMaxMemoryRows();
     }

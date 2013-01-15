@@ -174,7 +174,7 @@ public class TermStatQueryRewriter implements Configurable {
             try {
                 result.put(target.getID(), rewrite(request, target, query, doLowercase));
             } catch (ParseException e) {
-                log.info("ParseException while rewriting query '" + query + "' for target " + target + ": "
+                log.warn("ParseException while rewriting query '" + query + "' for target " + target + ": "
                          + e.getMessage());
                 return null;
             }

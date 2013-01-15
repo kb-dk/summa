@@ -3804,8 +3804,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return a RecordIterator of the result.
      * @throws IOException - also on no getConnection() and SQLExceptions.
      */
-    private ResultSetCursor startIterator(PreparedStatement stmt, String base,
-                                          QueryOptions options) throws IOException {
+    private ResultSetCursor startIterator(
+            PreparedStatement stmt, String base, QueryOptions options) throws IOException {
         ResultSet resultSet;
 
         log.trace("Getting results for '" + stmt + "'");
@@ -3875,7 +3875,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public void close() throws IOException {
         log.info("Closing DatabaseStorage");
         iteratorReaper.stop();
-        log.info("Closed DatabaseStorage");
+        log.info("DatabaseStorage closed");
     }
 
     /**

@@ -190,7 +190,7 @@ public class SummonSearchNode extends SolrSearchNode {
         nonMatchingQuery = new TermQuery(new Term(qt[0], qt[1]));
 //        boolean fixPublication = conf.getBoolean(CONF_FIX_RANGE_PUBLICATION, DEFAULT_FIX_RANGE_PUBLICATION);
         readyWithoutOpen();
-        log.info("Serial Solutions Summon search node ready for host " + host);
+        log.info(String.format("Created Summon wrapper (host=%s, sabotageDismax=%b)", host, sabotageDismax));
     }
 
     @Override

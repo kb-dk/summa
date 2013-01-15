@@ -161,9 +161,8 @@ public class PagingCursor implements Cursor {
             }
             
             if (log.isDebugEnabled()) {
-                log.debug(
-                        "Got new page from base '" + getBase() + " with mtime >= " + lastMtimeTimestamp + " for " + this
-                        + ": " + page);
+                log.debug("Got new page from base '" + getBase() + " with mtime >= " + lastMtimeTimestamp
+                          + " for " + this + ": " + page);
             }
         } catch (IOException e) {
             log.warn("Failed to execute query for next page: " + e.getMessage(), e);

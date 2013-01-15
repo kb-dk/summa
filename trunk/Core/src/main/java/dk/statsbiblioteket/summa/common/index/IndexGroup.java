@@ -44,6 +44,7 @@ public class IndexGroup<F extends IndexField> {
 
     /**
      * Create a new empty group.
+     *
      * @param name the name of the group.
      */
     public IndexGroup(String name) {
@@ -53,12 +54,13 @@ public class IndexGroup<F extends IndexField> {
 
     /**
      * Create a new Field based on the given node.
+     *
      * @param node          the description of the group.
      * @param fieldProvider where to locate the fields specified in node.
      * @throws ParseException if the group could not be created.
      */
     public IndexGroup(Node node, FieldProvider<F> fieldProvider) throws
-                                                                ParseException {
+                                                                 ParseException {
         log.trace("Creating group based on node");
         name = parse(node, fieldProvider);
         log.trace("Created group based on node with name '" + name + "'");
@@ -67,6 +69,7 @@ public class IndexGroup<F extends IndexField> {
     /**
      * True if the given groupName matches the name of the group or
      * any of its aliases.
+     *
      * @param groupName the name to match.
      * @param lang      the language for alias-searching.
      * @return true if the name matches this group.
@@ -75,7 +78,7 @@ public class IndexGroup<F extends IndexField> {
         if (name.equals(groupName)) {
             return true;
         }
-        for (IndexAlias alias: aliases) {
+        for (IndexAlias alias : aliases) {
             if (alias.isMatch(groupName, lang)) {
                 return true;
             }
@@ -88,6 +91,7 @@ public class IndexGroup<F extends IndexField> {
     /**
      * Adds the alias to the list of aliases for this Group. Adding the same
      * alias multiple times results in only one extra stored alias.
+     *
      * @param alias the alias to add.
      */
     public void addAlias(IndexAlias alias) {
@@ -106,15 +110,16 @@ public class IndexGroup<F extends IndexField> {
     /**
      * Searches the group for a Field that matches the given name and lang.
      * The order of priority is direct match first, the alias-match.
-     * @param name      the name to search for.
-     * @param lang      the language to use for alias-match. If lang == null,
-     *                  lang is ignored when matching aliases.
+     *
+     * @param name the name to search for.
+     * @param lang the language to use for alias-match. If lang == null,
+     *             lang is ignored when matching aliases.
      * @return the first match for the given name and lang or null if no match
      *         was found.
      */
     // TODO: Speed-optimize this
     public F getField(String name, String lang) {
-        for (F field: fields) {
+        for (F field : fields) {
             if (field.isMatch(name, lang)) {
                 return field;
             }
@@ -136,11 +141,12 @@ public class IndexGroup<F extends IndexField> {
      * results in only one stored reference.
      * </p><p>
      * Important: Adding a Field to a group implies that the Field-object is
-     *            also available in the fields-list in the Descriptor.
-     *            It is the responsibility of the caller to ensure this
-     *            invariant. It is recommended to use accessor-methods from
-     *            IndexDescriptor instead of calling the addField-method
-     *            on Group directly.
+     * also available in the fields-list in the Descriptor.
+     * It is the responsibility of the caller to ensure this
+     * invariant. It is recommended to use accessor-methods from
+     * IndexDescriptor instead of calling the addField-method
+     * on Group directly.
+     *
      * @param field the field to add to the group.
      */
     public void addField(F field) {
@@ -152,15 +158,16 @@ public class IndexGroup<F extends IndexField> {
     /**
      * Generate an XML fragment suitable for insertion in an IndexDescriptor
      * XML representation. The fragment references fields by name only.
+     *
      * @return an XML fragment representing the group.
      */
     public String toXMLFragment() {
         StringWriter sw = new StringWriter(500);
         sw.append("<group name=\"").append(name).append("\">\n");
-        for (IndexAlias alias: aliases) {
+        for (IndexAlias alias : aliases) {
             sw.append(alias.toXMLFragment());
         }
-        for (F field: fields) {
+        for (F field : fields) {
             sw.append("<field ref=\"").append(field.getName());
             sw.append("\"/>\n");
         }
@@ -172,15 +179,15 @@ public class IndexGroup<F extends IndexField> {
      * Create a group based on the given Document Node. The Node should conform
      * to the output from {@link #toXMLFragment()}.
      * </p><p>
+     *
      * @param node          a representation of a Field.
      * @param fieldProvider if any fields are specified, the fieldProvider is
      *                      queried for the parent.
+     * @return the name of the newly group.
      * @throws ParseException if the node could not be parsed.
      *                        The index of the exception will normally be -1.
-     * @return the name of the newly group.
      */
-    private String parse(Node node, FieldProvider<F> fieldProvider) throws
-                                                                ParseException {
+    private String parse(Node node, FieldProvider<F> fieldProvider) throws ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
         Node groupNameNode = node.getAttributes().getNamedItem("name");
@@ -191,13 +198,12 @@ public class IndexGroup<F extends IndexField> {
         log.trace("parse: Located group name '" + name + "'");
         aliases = IndexAlias.getAliases(node);
 
-        NodeList children =  node.getChildNodes();
-        for (int i = 0 ; i < children.getLength(); i++) {
+        NodeList children = node.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
             log.debug("Found child '" + child.getNodeName() + "', in group");
             //noinspection DuplicateStringLiteralInspection
-            if (child.getNodeName() != null
-                && "field".equals(child.getNodeName())) {
+            if (child.getNodeName() != null && "field".equals(child.getNodeName())) {
                 Node fieldNameNode = child.getAttributes().getNamedItem("ref");
                 if (fieldNameNode == null
                     || "".equals(fieldNameNode.getNodeValue())) {
@@ -219,8 +225,7 @@ public class IndexGroup<F extends IndexField> {
                 addField(field);
             }
         }
-        log.debug("Resolved " + fields.size() + " fields for group " + name
-                  + ": " + Strings.join(fields, ", "));
+        log.debug("Resolved " + fields.size() + " fields for group " + name + ": " + Strings.join(fields, ", "));
         return name;
     }
 
@@ -240,7 +245,7 @@ public class IndexGroup<F extends IndexField> {
         try {
             // How do we check for generic types?
             //noinspection unchecked
-            other = (IndexGroup<F>)o;
+            other = (IndexGroup<F>) o;
         } catch (ClassCastException e) {
             return false;
         }
@@ -260,8 +265,7 @@ public class IndexGroup<F extends IndexField> {
     }
 
     public String toString() {
-        return "Group(name '" + name + "', " + fields.size()
-               + " fields) subgroups)";
+        return "Group(name '" + name + "', " + fields.size() + " fields) subgroups)";
     }
 
 }
