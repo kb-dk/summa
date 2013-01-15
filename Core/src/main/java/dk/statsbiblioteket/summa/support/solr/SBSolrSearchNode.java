@@ -80,7 +80,7 @@ public class SBSolrSearchNode extends SolrSearchNode {
         efacetHandlerID = conf.getString(CONF_EFACET_HANDLER, DEFAULT_EFACET_HANDLER);
         didYouMeanHandlerID = conf.getString(CONF_DIDYOUMEAN_HANDLER, DEFAULT_DIDYOUMEAN_HANDLER);
 
-        log.info("Created SBSolrSearchNode");
+        log.info(String.format("Created SBSolrSearchNode(eFacets=%s)", useEfacet ? efacetHandlerID : "no"));
     }
 
     @Override

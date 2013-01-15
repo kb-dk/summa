@@ -135,10 +135,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         cleanPrevious = conf.getBoolean(CONF_CLEAN_PREVIOUS_STATUS, DEFAULT_CLEAN_PREVIOUS_STATUS);
         discardUnchanged = conf.getBoolean(CONF_DISCARD_UNCHANGED, DEFAULT_DISCARD_UNCHANGED);
         discardDeleted = conf.getBoolean(CONF_DISCARD_DELETED, DEFAULT_DISCARD_DELETED);
-        log.info(String.format(
-                "Constructed filter with REST='%s', haltOnError=%b, cleanPrevious=%b, discardUnchanged=%b, "
-                + "discardDeleted=%b",
-                rest, haltOnError, cleanPrevious, discardUnchanged, discardDeleted));
+        log.info(String.format("Constructed filter with REST='%s', haltOnError=%b, cleanPrevious=%b, "
+                               + "discardUnchanged=%b, discardDeleted=%b",
+                               rest, haltOnError, cleanPrevious, discardUnchanged, discardDeleted));
     }
 
     @SuppressWarnings("SimplifiableIfStatement")

@@ -277,16 +277,15 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         this.indexFolder = indexFolder;
         long startTime = System.currentTimeMillis();
         //noinspection DuplicateStringLiteralInspection
-        log.debug("indexChanged(" + indexFolder + ") called");
+        log.info("indexChanged(" + indexFolder + ") called");
         try {
             searchNode.open(indexFolder == null ? null : indexFolder.getAbsolutePath());
         } catch (RemoteException e) {
             // TODO: Consider making this a fatal
-            log.error("Exception received while opening '" + indexFolder + "'",
-                      e);
+            log.error("Exception received while opening '" + indexFolder + "'", e);
         }
         freeSlots.setOverallPermits(searchNode.getFreeSlots());
-        log.debug("Finished indexChanged(" + indexFolder + ") in " + (System.currentTimeMillis() - startTime) + " ms");
+        log.info("Finished indexChanged(" + indexFolder + ") in " + (System.currentTimeMillis() - startTime) + " ms");
     }
 
     /* MBean implementations */

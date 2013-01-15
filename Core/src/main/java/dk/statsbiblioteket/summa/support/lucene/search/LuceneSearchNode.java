@@ -298,7 +298,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
 
         sortComparator = SortFactory.COMPARATOR.parse(conf.getString(CONF_SORT_COMPARATOR, DEFAULT_SORT_COMPARATOR));
         sortBuffer = conf.getInt(CONF_SORT_BUFFER, DEFAULT_SORT_BUFFER);
-        filterMatchAll = conf.getString(CONF_FILTER_MATCHALL, filterMatchAll);
+        filterMatchAll = conf.getString(CONF_FILTER_MATCHALL, DEFAULT_FILTER_MATCHALL);
 
         // MoreLikeThis
         setupMoreLikeThis(conf);
