@@ -148,6 +148,7 @@ public class DiscardDOMSFilter extends AbstractDiscardFilter {
     }
 
     private boolean checkDate(Payload payload, String content) {
+        long startTime = System.currentTimeMillis();
         Matcher dm = datePattern.matcher(content);
         String last = null;
         int matches = 0;
@@ -160,8 +161,8 @@ public class DiscardDOMSFilter extends AbstractDiscardFilter {
         }
         if (last.compareTo(dateLastValid) > 0) {
             Logging.logProcess("DiscardDOMSFilter",
-                               String.format("Discarding record as date '%s' > '%s'. #dates=%d",
-                                             last, dateLastValid, matches),
+                               String.format("Discarding record as date '%s' > '%s'. Process time was %dms, #dates=%d",
+                                             last, dateLastValid, System.currentTimeMillis()-startTime, matches),
                                Logging.LogLevel.DEBUG, payload);
             return true;
         }
@@ -170,6 +171,7 @@ public class DiscardDOMSFilter extends AbstractDiscardFilter {
 
     // True if pattern matches and gap is exceeded
     private boolean checkGap(Payload payload, String fixType, String content, Pattern gapPattern, int gapMax) {
+        long startTime = System.currentTimeMillis();
         if (gapPattern == null) {
             return false;
         }
@@ -179,7 +181,8 @@ public class DiscardDOMSFilter extends AbstractDiscardFilter {
                 int gap = Integer.valueOf(matcher.group(1));
                 if (gap > gapMax) {
                     Logging.logProcess("DiscardDOMSFilter",
-                                       String.format("Discarding record due to %s gap %d > %d", fixType, gap, gapMax),
+                                       String.format("Discarding record due to %s gap %d > %d. Process time was %dms, ",
+                                                     fixType, gap, gapMax, System.currentTimeMillis()-startTime),
                                        Logging.LogLevel.DEBUG, payload);
                     return true;
                 }
