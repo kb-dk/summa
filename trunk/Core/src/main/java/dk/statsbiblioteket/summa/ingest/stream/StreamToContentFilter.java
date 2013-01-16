@@ -52,6 +52,7 @@ public class StreamToContentFilter extends ObjectFilterImpl {
     public StreamToContentFilter(Configuration conf) {
         super(conf);
         base = conf.getString(CONF_BASE, base);
+        feedback = false;
         log.debug(String.format("Filter created with base='%s'", base));
     }
 
