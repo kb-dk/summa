@@ -1626,8 +1626,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return A list of records.
      * @throws IOException If error occur while fetching records.
      */
-    public List<Record> getRecordsWithConnection(List<String> ids, QueryOptions options,
-                                                 Connection conn) throws IOException {
+    public List<Record> getRecordsWithConnection(
+            List<String> ids, QueryOptions options, Connection conn) throws IOException {
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
 
         for (String id : ids) {
@@ -1665,7 +1665,6 @@ public abstract class DatabaseStorage extends StorageBase {
             String parentId = recordId; // For each parent found, this value will be overwritten
 
             while (mayHaveParent) {
-
                 StatementHandle handle = statementHandler.getParentIds();
                 // TODO: Use handle directly
                 PreparedStatement pstmtParentIdOnly = conn.prepareStatement(handle.getSql());
@@ -1703,9 +1702,8 @@ public abstract class DatabaseStorage extends StorageBase {
                             "Database inconsistency hasRelations for id" + topParentRecord.getId() + " and "
                             + recordId);
                 }
-                log.debug(
-                        "Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
-                        + (System.currentTimeMillis() - startTime) + "ms");
+                log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
+                          + (System.currentTimeMillis() - startTime) + "ms");
 
                 return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests
             }
@@ -1809,7 +1807,6 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public Record getRecord(String id, QueryOptions options) throws IOException {
-
         //Call new optimized DB method to extract complete object tree
         if (options == null) {
             return getRecordWithFullObjectTree(id);
@@ -1843,8 +1840,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
     }
 
-    private Record getRecordWithConnection(String id, QueryOptions options, Connection conn) throws IOException,
-                                                                                                    SQLException {
+    private Record getRecordWithConnection(
+            String id, QueryOptions options, Connection conn) throws IOException, SQLException {
         log.trace("getRecord('" + id + "', " + options + ")");
 
         if (isPrivateId(id)) {
@@ -2165,8 +2162,8 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Flushed " + recs.size() + " in " + (System.nanoTime() - start) / 1000000D + "ms");
         } catch (SQLException e) {
             error = e.getMessage();
-            throw new IOException(String.format("flushAll(%d records): Failed to flush %s: %s", recs.size(),
-                                                lastRecord, e.getMessage()), e);
+            throw new IOException(String.format("flushAll(%d records): Failed to flush %s: %s",
+                                                recs.size(), lastRecord, e.getMessage()), e);
         } finally {
             try {
                 if (error == null) {
@@ -2174,8 +2171,8 @@ public abstract class DatabaseStorage extends StorageBase {
                     log.debug("Commiting transaction of " + recs.size() + " records");
                     start = System.nanoTime();
                     conn.commit();
-                    log.debug("Transaction of " + recs.size() + " records completed in " + (System.nanoTime() - start)
-                                                                                            / 1000000D + "ms");
+                    log.debug("Transaction of " + recs.size() + " records completed in "
+                              + (System.nanoTime() - start) / 1000000D + "ms");
                     if (isDebug) {
                         for (Record r : recs) {
                             // It may seem dull to iterate over all records
@@ -2215,8 +2212,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException  If error occur with connection.
      * @throws SQLException If error occur while executing SQL.
      */
-    protected void flushWithConnection(Record r, QueryOptions options, Connection conn) throws IOException,
-                                                                                               SQLException {
+    protected void flushWithConnection(
+            Record r, QueryOptions options, Connection conn) throws IOException, SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Flushing: " + r.toString(true));
         } else if (log.isDebugEnabled()) {
@@ -2332,8 +2329,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException  If error occur with database connection.
      * @throws SQLException If error occur executing the SQL.
      */
-    protected List<Record> getParents(String id, QueryOptions options, Connection conn) throws IOException,
-                                                                                               SQLException {
+    protected List<Record> getParents(
+            String id, QueryOptions options, Connection conn) throws IOException, SQLException {
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getGetParents(options);
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
@@ -2385,8 +2382,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException If error occur with executing the storage.
      */
     @SuppressWarnings("unused")
-    private List<Record> getChildren(String id, QueryOptions options, Connection conn) throws IOException,
-                                                                                              SQLException {
+    private List<Record> getChildren(
+            String id, QueryOptions options, Connection conn) throws IOException, SQLException {
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getGetChildren(options);
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
@@ -2649,8 +2646,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException
      */
     @Override
-    public synchronized String batchJob(String jobName, String base, long minMtime, long maxMtime,
-                                        QueryOptions options) throws IOException {
+    public synchronized String batchJob(
+            String jobName, String base, long minMtime, long maxMtime, QueryOptions options) throws IOException {
         long start = System.currentTimeMillis();
         if (INTERNAL_BATCH_JOB.equals(jobName)) {
             jobName = options.meta(INTERNAL_JOB_NAME);
@@ -2865,9 +2862,9 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return False if the batch job wasn't runned because the record was
      *         filtered out.
      */
-    private boolean applyJobtoRecord(BatchJob job, Record record, String oldRecordId, String jobBase,
-                                     QueryOptions options, boolean isFirst, boolean isLast,
-                                     Connection conn) throws SQLException, IOException {
+    private boolean applyJobtoRecord(
+            BatchJob job, Record record, String oldRecordId, String jobBase, QueryOptions options, boolean isFirst,
+            boolean isLast, Connection conn) throws SQLException, IOException {
 
         if (!options.allowsRecord(record)) {
             return false;
@@ -3190,8 +3187,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException  If error communicating with storage.
      * @throws SQLException If error executing SQL.
      */
-    private void updateRecordWithConnection(Record record, QueryOptions options, Connection conn) throws IOException,
-                                                                                                         SQLException {
+    private void updateRecordWithConnection(
+            Record record, QueryOptions options, Connection conn) throws IOException, SQLException {
         log.debug("Updating: " + record.getId());
 
         // Respect the TRY_UPDATE meta flag. See docs for {@link QueryOptions}
@@ -3779,8 +3776,7 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * As {@link #scanRecord(ResultSet, ResultSetCursor)} with
-     * {@code resultSet = null}.
+     * As {@link #scanRecord(ResultSet, ResultSetCursor)} with {@code resultSet = null}.
      *
      * @param resultSet a SQL result set. The result set will be stepped to the
      *                  beginning of the following record
@@ -3977,10 +3973,9 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param conn                    The database connection.
      * @return
      */
-    private BaseStats updateBaseStatsTable(String baseName, long lastModified, long generationTime,
-                                           long deletedIndexables, long nonDeletedIndexables,
-                                           long deletedNonIndexables, long nonDeletedNonIndexables,
-                                           Connection conn) throws SQLException {
+    private BaseStats updateBaseStatsTable(
+            String baseName, long lastModified, long generationTime, long deletedIndexables, long nonDeletedIndexables,
+            long deletedNonIndexables, long nonDeletedNonIndexables, Connection conn) throws SQLException {
         // Update base stats table
         log.debug("Updating base statistic for base '" + baseName + ".");
         // TODO: Use handle directly
@@ -4079,9 +4074,9 @@ public abstract class DatabaseStorage extends StorageBase {
                     // Insert / update database and create {@link BaseStats}
                     // object
                     log.debug("Got stats for " + lastBase + " with " + nonDeletedIndexables + " live records");
-                    stats.add(updateBaseStatsTable(lastBase, getModificationTime(lastBase), startTime,
-                                                   deletedIndexables, nonDeletedIndexables, deletedNonIndexables,
-                                                   nonDeletedNonIndexables, conn));
+                    stats.add(updateBaseStatsTable(
+                            lastBase, getModificationTime(lastBase), startTime, deletedIndexables, nonDeletedIndexables,
+                            deletedNonIndexables, nonDeletedNonIndexables, conn));
                 }
             }
         } finally {
