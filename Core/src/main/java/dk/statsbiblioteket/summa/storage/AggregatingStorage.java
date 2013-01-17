@@ -954,6 +954,7 @@ public class AggregatingStorage extends StorageBase {
                 try {
                     result = sub.batchJob(jobName, base, minMtime, maxMtime, options);
                 } catch (Throwable t) {
+                    log.error("batchJob: Exception while running '" + jobName + "'", t);
                     result = String.format("ERROR(%s): %s", sub.getVendorId(), t.getMessage());
                 }
                 results.add(result);

@@ -242,7 +242,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         combineMode = conf.getString(CONF_SOLR_FACETS_COMBINEMODE, DEFAULT_SOLR_FACETS_COMBINEMODE);
         fieldID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         supportsPureNegative = conf.getBoolean(
-            CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
+                CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, DEFAULT_SUPPORTS_PURE_NEGATIVE_FILTERS);
         facetQueryTransformer = createFacetQueryTransformer(conf);
         if (conf.valueExists(DEPRECATED_COMPENSATE_FOR_PARENTHESIS_BUG)) {
             log.warn("The property " + DEPRECATED_COMPENSATE_FOR_PARENTHESIS_BUG
