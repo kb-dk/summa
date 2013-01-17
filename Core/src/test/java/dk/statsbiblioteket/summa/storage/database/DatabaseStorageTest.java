@@ -258,4 +258,5 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertTrue(start < storage.getModificationTime(testBase1));
         storage.close();
     }
+
 }

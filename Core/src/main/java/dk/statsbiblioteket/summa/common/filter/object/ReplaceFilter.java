@@ -178,6 +178,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
      */
     public ReplaceFilter(Configuration conf) {
         super(conf);
+        feedback = false;
         processContent = conf.getBoolean(CONF_PROCESS_CONTENT, processContent);
         processStream = conf.getBoolean(CONF_PROCESS_STREAM, processStream);
         encodingIn = conf.getString(CONF_ENCODING_IN, encodingIn);

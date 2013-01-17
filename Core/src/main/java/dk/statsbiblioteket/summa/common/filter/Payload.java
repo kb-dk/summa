@@ -90,7 +90,7 @@ public class Payload {
     public Payload(InputStream stream) {
         assignIfValid(stream, record);
         Logging.logProcess(this.getClass().getSimpleName(), "Created based on InputStream",
-                           Logging.LogLevel.DEBUG, this);
+                           Logging.LogLevel.TRACE, this);
     }
 
     public Payload(InputStream stream, String source) {
@@ -101,11 +101,15 @@ public class Payload {
 
     public Payload(Record record) {
         assignIfValid(stream, record);
-        Logging.logProcess(this.getClass().getSimpleName(), "Created based on Record", Logging.LogLevel.DEBUG, this);
+        Logging.logProcess(this.getClass().getSimpleName(), "Created based on Record",
+                           Logging.LogLevel.DEBUG, this);
     }
 
     public Payload(InputStream stream, Record record) {
         assignIfValid(stream, record);
+        if (this.getId() == null && record == null) {
+            return; // No need to log as it is not saying anything
+        }
         Logging.logProcess(this.getClass().getSimpleName(), "Created based on Record and InputStream",
                            Logging.LogLevel.DEBUG, this);
     }

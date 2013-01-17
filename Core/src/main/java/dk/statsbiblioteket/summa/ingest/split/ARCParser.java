@@ -377,4 +377,10 @@ public class ARCParser extends ThreadedStreamParser {
             return null;
         }
     }
+
+    @Override
+    public String toString() {
+        return "ARCParser(useFileHack=" + useFileHack + ", removeHTTPHeaders=" + removeHTTPHeaders
+               + ", runCount=" + runCount + ", " + super.toString() + ')';
+    }
 }
