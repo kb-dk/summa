@@ -59,36 +59,29 @@ public class ClearBaseFilter extends ObjectFilterImpl {
     private PayloadMatcher payloadMatcher;
 
     public ClearBaseFilter(WritableStorage storage, List<String> bases) {
-        super(Configuration.newMemoryBased());
-        this.storage = storage;
-        this.bases = bases;
-        payloadMatcher = new PayloadMatcher(Configuration.newMemoryBased());
-        fired = false;
-        feedback = false; // Normally this filter is very fast
-
+        this(storage, new PayloadMatcher(Configuration.newMemoryBased()), Configuration.newMemoryBased(
+                CONF_CLEAR_BASES, new ArrayList<String>(bases)
+        ));
         log.info("Created ClearBaseFilter directly on Storage for bases: " + Strings.join(bases, ", "));
     }
 
     public ClearBaseFilter(WritableStorage storage, Configuration conf) {
-        super(conf);
-        this.storage = storage;
-        bases = conf.getStrings(CONF_CLEAR_BASES, new ArrayList<String>());
-        payloadMatcher = new PayloadMatcher(conf);
-        fired = false;
-
+        this(storage, new PayloadMatcher(conf), conf);
         log.info("Created ClearBaseFilter directly on Storage " + "with configuration");
     }
 
     public ClearBaseFilter(Configuration conf) {
-        super(conf);
-        log.trace("Creating StorageClient");
-        storage = new StorageWriterClient(conf);
-        log.trace("Created StorageClient");
-        bases = conf.getStrings(CONF_CLEAR_BASES, new ArrayList<String>());
-        payloadMatcher = new PayloadMatcher(conf, false);
-        fired = false;
-
+        this(new StorageWriterClient(conf), new PayloadMatcher(conf, false), conf);
         log.info("Created ClearBaseFilter for bases: " + Strings.join(bases, ", "));
+    }
+
+    private ClearBaseFilter(WritableStorage storage, PayloadMatcher matcher, Configuration conf) {
+        super(conf);
+        this.storage = storage;
+        bases = conf.getStrings(CONF_CLEAR_BASES, new ArrayList<String>());
+        payloadMatcher = matcher;
+        fired = false;
+        feedback = false; // Normally this filter is very fast
     }
 
     @Override
