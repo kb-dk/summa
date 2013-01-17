@@ -277,6 +277,24 @@ public class QueryRewriterTest extends TestCase {
         }
     }
 
+    public void testIsEdismaxSafe() {
+        testIsEdismaxSafe("foo bar", true);
+        testIsEdismaxSafe("foo OR bar", false);
+        testIsEdismaxSafe("foo bar zoo:baz", true);
+        testIsEdismaxSafe("foo AND bar zoo:baz", true);
+        testIsEdismaxSafe("foo bar (zoo:baz boo)", true);
+        testIsEdismaxSafe("foo bar (zoo:baz OR boo)", false);
+        testIsEdismaxSafe("foo bar (zoo:baz NOT boo)", false);
+    }
+    private void testIsEdismaxSafe(String query, boolean expectedSafe) {
+        QueryRewriter qr = new QueryRewriter(null, null, null);
+        if (expectedSafe) {
+            assertTrue("The query '" + query + "' should be eDismax-safe", qr.isEdismaxSafe(query));
+        } else {
+            assertFalse("The query '" + query + "' should not be eDismax-safe", qr.isEdismaxSafe(query));
+        }
+    }
+
     public void testEscaping() throws ParseException {
         String[][] TESTS = new String[][]{
                 {"foo", "foo"},

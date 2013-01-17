@@ -262,6 +262,47 @@ public class QueryRewriter {
     }
 
     /**
+     * Parses the Query and returns true if it does not contain BooleanQuerys with Occur different from MUST.
+     * The edismax parser in Solr has a bug where non-MUST Occurs turns on implicit OR in BooleanQueries.
+     * </p><p>
+     * In case of parse errors, false is returned.
+     * @param query a textual query.
+     * @return true if the query is considered safe for edismax use..
+     */
+    public synchronized boolean isEdismaxSafe(String query) {
+        try {
+            return isEdismaxSafe(queryParser.parse(query));
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+    /**
+     * Returns true if the query does not contain BooleanQuerys with Occur different from MUST.
+     * The edismax parser in Solr has a bug where non-MUST Occurs turns on implicit OR in BooleanQueries.
+     * </p><p>
+     * In case of parse errors, false is returned.
+     * @param query a Lucene query.
+     * @return true if the query is considered safe for edismax use..
+     */
+    public synchronized boolean isEdismaxSafe(Query query) {
+        if (query instanceof TermQuery) {
+            return true;
+        }
+        if (!(query instanceof BooleanQuery)) {
+            return true; // We assume that only Occurs in BooleanQuery affects eDismax badly.
+        }
+        BooleanQuery bq = (BooleanQuery)query;
+        for (BooleanClause bc: bq.getClauses()) {
+            if (bc.isProhibited()
+                || bc.getOccur() == BooleanClause.Occur.SHOULD || bc.getOccur() == BooleanClause.Occur.MUST_NOT
+                || !isEdismaxSafe(bc.getQuery())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Rewrites the query from one textual representation to another textual representation. Any difference in the
      * semantics of the given and resulting query is due to the modification of the specific term queries.
      * In other words, if the term queries are not modified, the resulting query String is semantically equivalent to
