@@ -17,7 +17,7 @@
 
     <appender name="PROCESS" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="DEBUG"/>
-        <param name="File" value="log/process.log"/>
+        <param name="File" value="log/process_index.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="5"/>
@@ -28,7 +28,7 @@
 
     <appender name="PROCESS_FAILED" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="WARN"/>
-        <param name="File" value="log/process_failed.log"/>
+        <param name="File" value="log/process_index.failed.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="5"/>
