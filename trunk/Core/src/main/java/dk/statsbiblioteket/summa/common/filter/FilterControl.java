@@ -220,6 +220,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
      *
      * @param args ignored
      */
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public static void main(String[] args) {
         Thread.setDefaultUncaughtExceptionHandler(new LoggingExceptionHandler(log));
 
@@ -250,9 +251,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
             log.info("Filter chain completed");
         } catch (Throwable t) {
             Logging.fatal(log, "FilterControl.main", "Caught top level exception", t);
-            System.err.println(t.getMessage());
-            //noinspection CallToPrintStackTrace
-            t.printStackTrace();
+            t.printStackTrace(System.err);
             System.exit(1);
         }
     }

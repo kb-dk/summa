@@ -74,4 +74,9 @@ public class PullParser extends ThreadedStreamParser {
         }
         log.debug("Finished processing " + source);
     }
+
+    @Override
+    public String toString() {
+        return "PullParser(charset=" + charset + ", " + super.toString() + ")";
+    }
 }

@@ -51,6 +51,7 @@ public class StreamCopyFilter extends ObjectFilterImpl {
     public StreamCopyFilter(Configuration conf) {
         super(conf);
         warnOnNoStream = conf.getBoolean(CONF_WARN_ON_NO_STREAM, warnOnNoStream);
+        feedback = false;
     }
 
     @Override

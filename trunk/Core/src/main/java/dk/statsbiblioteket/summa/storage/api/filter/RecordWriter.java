@@ -211,9 +211,9 @@ public class RecordWriter extends ObjectFilterImpl {
         }
 
         private synchronized void forceCommit() {
-            if (log.isDebugEnabled()) {
+            if (log.isTraceEnabled()) {
                 for (Record r : records) {
-                    log.debug("Committing: " + r.getId());
+                    log.trace("Committing: " + r.getId());
                 }
             }
             if (records.isEmpty()) {

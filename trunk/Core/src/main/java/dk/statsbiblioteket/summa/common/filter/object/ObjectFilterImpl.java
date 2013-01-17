@@ -86,7 +86,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 processedPayload = null;
                 continue;
             } catch (Throwable t) {
-                /* Woops, this means major trouble, we dump everything we have */
+                /* Woops, this means major trouble, we dump everything we have and prepare to die */
                 String msg = "Unexpected error on payload " + processedPayload.toString();
                 String content = "";
                 Record rec = processedPayload.getRecord();
