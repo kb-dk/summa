@@ -42,7 +42,7 @@ public class StorageRunner {
      *
      * @param args ignored
      */
-    @SuppressWarnings({"CallToPrintStackTrace", "UnusedDeclaration"})
+    @SuppressWarnings({"CallToPrintStackTrace", "UnusedDeclaration", "UseOfSystemOutOrSystemErr"})
     public static void main (String[] args) {
         Log log = LogFactory.getLog(StorageRunner.class);
 
@@ -68,8 +68,7 @@ public class StorageRunner {
             }
         } catch (Throwable t) {
             Logging.fatal(log, "StorageRunner-main", "Caught toplevel exception", t);
-            System.err.println(t.getMessage());
-            t.printStackTrace();
+            t.printStackTrace(System.err);
             System.exit(1);
         }
     }
