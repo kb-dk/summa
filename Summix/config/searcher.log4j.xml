@@ -37,12 +37,19 @@
         </layout>
     </appender>
 
+    <appender name="NULL" class="org.apache.log4j.varia.NullAppender"/>
+
     <!-- This logger stores all encountered queries on DEBUG level.
          We would very much like to run this on DEBUG in production
          as it helps tremendously with load measurement. -->
     <logger name="queries">
         <level value="debug" />
         <appender-ref ref="QUERIES" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket">
+        <level value="debug" />
+        <appender-ref ref="FILE" />
     </logger>
 
     <!-- The fatal-logger is special as it is guaranteed from the code that only fatalities are logged here.
@@ -56,7 +63,7 @@
     (will duplicate log entries in the log file) -->
     <root>
         <level value="DEBUG" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="NULL" />
     </root>
 
 </log4j:configuration>
