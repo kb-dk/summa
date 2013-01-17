@@ -49,12 +49,19 @@
         </layout>
     </appender>
 
+    <appender name="NULL" class="org.apache.log4j.varia.NullAppender"/>
+
     <!-- Records dropped from the index workflow go here -->
     <logger name="process">
         <level value="debug" />
         <appender-ref ref="PROCESS" />
         <!-- Records dropped due to errors in the Records (i.e. Records that were expected to pass) go here -->
         <appender-ref ref="PROCESS_FAILED" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket">
+        <level value="debug" />
+        <appender-ref ref="FILE" />
     </logger>
 
     <!-- The fatal-logger is special as it is guaranteed from the code that only fatalities are logged here.
@@ -68,7 +75,7 @@
     (will duplicate log entries in the log file) -->
     <root>
         <level value="DEBUG" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="NULL" />
     </root>
 
 </log4j:configuration>

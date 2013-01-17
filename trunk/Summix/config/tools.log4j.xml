@@ -27,6 +27,13 @@
         </layout>
     </appender>
 
+    <appender name="NULL" class="org.apache.log4j.varia.NullAppender"/>
+
+    <logger name="dk.statsbiblioteket">
+        <level value="debug" />
+        <appender-ref ref="FILE" />
+    </logger>
+
     <!-- The fatal-logger is special as it is guaranteed from the code that only fatalities are logged here.
          However, due to slf4j, the highest level is ERROR and thus we need to set that as our level -->
     <logger name="fatal">
@@ -38,7 +45,6 @@
     (will duplicate log entries in the log file) -->
     <root>
         <level value="DEBUG" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="NULL" />
     </root>
-
 </log4j:configuration>
