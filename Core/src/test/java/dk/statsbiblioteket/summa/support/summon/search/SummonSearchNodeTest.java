@@ -89,7 +89,7 @@ public class SummonSearchNodeTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         try {
             summon.search(new Request(
-                DocumentKeys.SEARCH_QUERY, "book", DocumentKeys.SEARCH_START_INDEX, 10000), responses);
+                    DocumentKeys.SEARCH_QUERY, "book", DocumentKeys.SEARCH_START_INDEX, 10000), responses);
         } catch (RemoteException e) {
             log.debug("Received RemoteException as expected");
         }
@@ -119,8 +119,8 @@ public class SummonSearchNodeTest extends TestCase {
         log.debug("Creating SummonSearchNode");
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
         Request req = new Request(
-            DocumentKeys.SEARCH_QUERY, QUERY,
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         List<String> ids = getAttributes(summon, req, "id", false);
         assertTrue("There should be at least 1 result", ids.size() >= 1);
 
@@ -134,10 +134,10 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testNegativeFacet() throws RemoteException {
         final String JSON =
-            "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
-            + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
-            + "\"search.document.filter\":\" NOT ContentType:\\\"Newspaper Article\\\"\","
-            + "\"search.document.filter.purenegative\":\"true\"}";
+                "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
+                + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
+                + "\"search.document.filter\":\" NOT ContentType:\\\"Newspaper Article\\\"\","
+                + "\"search.document.filter.purenegative\":\"true\"}";
         SearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
@@ -190,9 +190,9 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testRecordBaseFacet() throws RemoteException {
         final String JSON =
-            "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
-            + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
-            + "\"search.document.filter\":\" recordBase:summon\"}";
+                "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
+                + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
+                + "\"search.document.filter\":\" recordBase:summon\"}";
         SearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
@@ -205,9 +205,9 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testRecordBaseFacetWithOR() throws RemoteException {
         final String JSON =
-            "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
-            + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
-            + "\"search.document.filter\":\" recordBase:summon OR recordBase:sb_aleph\"}";
+                "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
+                + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
+                + "\"search.document.filter\":\" recordBase:summon OR recordBase:sb_aleph\"}";
         SearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
@@ -236,24 +236,24 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testMultiID() throws RemoteException {
         List<String> IDs = Arrays.asList(
-            "FETCH-proquest_dll_11531932811",
-            "FETCH-proquest_dll_6357072911",
-            "FETCH-proquest_dll_15622214411"
+                "FETCH-proquest_dll_11531932811",
+                "FETCH-proquest_dll_6357072911",
+                "FETCH-proquest_dll_15622214411"
         );
         SummonSearchNode searcher = SummonTestHelper.createSummonSearchNode(true);
 
         for (String id: IDs) {
             assertEquals("The number of hits for ID '" + id + "' should match", 1, getAttributes(searcher, new Request(
-                DocumentKeys.SEARCH_QUERY, "ID:\"" + id + "\"",
-                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+                    DocumentKeys.SEARCH_QUERY, "ID:\"" + id + "\"",
+                    SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
             ), "id", false).size());
         }
 
         String IDS_QUERY = "(ID:\"" + Strings.join(IDs, "\" OR ID:\"") + "\")";
 
         Request req = new Request(
-            DocumentKeys.SEARCH_QUERY, IDS_QUERY,
-            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+                DocumentKeys.SEARCH_QUERY, IDS_QUERY,
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
         );
         List<String> returnedIDs = getAttributes(searcher, req, "id", false);
         if (IDs.size() != returnedIDs.size()) {
@@ -288,16 +288,42 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testIDSearch() throws IOException, TransformerException {
-        String ID = "summon_FETCH-gale_primary_2105957371";
+        List<String> sampleIDs = getSampleIDs();
+        assertFalse("There should be at least 1 sample ID", sampleIDs.isEmpty());
+        String ID = sampleIDs.get(0);
+//        String ID = "summon_FETCH-gale_primary_2105957371";
+
+        String query = "recordID:\"" + ID + "\"";
+        log.info("Creating SummonSearchNode and performing search for " + query);
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        Request req = new Request(
+                DocumentKeys.SEARCH_QUERY, query,
+                DocumentKeys.SEARCH_MAX_RECORDS, 1,
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        List<String> ids = getAttributes(summon, req, "id", false);
+        assertTrue("There should be at least 1 result", ids.size() >= 1);
+    }
+
+    private List<String> getSampleIDs() throws IOException, TransformerException {
+        String QUERY = "gene and protein evolution";
 
         log.debug("Creating SummonSearchNode");
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
-        Request req = new Request(
-            DocumentKeys.SEARCH_QUERY, "recordID:\"" + ID + "\"",
-            DocumentKeys.SEARCH_MAX_RECORDS, 1,
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
-        List<String> ids = getAttributes(summon, req, "id", false);
-        assertTrue("There should be at least 1 result", ids.size() >= 1);
+        try {
+            Request req = new Request(
+                    DocumentKeys.SEARCH_QUERY, QUERY,
+                    DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+            List<String> ids = getAttributes(summon, req, "id", false);
+            assertTrue("getSampleIDs(): There should be at least 1 result", ids.size() >= 1);
+
+            final Pattern EMBEDDED_ID_PATTERN =
+                    Pattern.compile("<field name=\"recordID\">(.+?)</field>", Pattern.DOTALL);
+            List<String> embeddedIDs = getPattern(summon, req, EMBEDDED_ID_PATTERN, false);
+            ExtraAsserts.assertEquals("getSampleIDs(): The embedded IDs should match the plain IDs", ids, embeddedIDs);
+            return embeddedIDs;
+        } finally {
+            summon.close();
+        }
     }
 
     public void testTruncation() throws IOException, TransformerException {
@@ -351,17 +377,17 @@ public class SummonSearchNodeTest extends TestCase {
 //        System.out.println(res.toXML());
         Document dom = DOM.stringToDOM(res.toXML());
         Node subDom = DOM.selectNode(
-            dom, "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
+                dom, "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
         retXML = DOM.domToString(subDom);
         return retXML;
     }
 
     public void testNonExistingFacet() throws RemoteException {
         final Request request = new Request(
-            "search.document.query", "foo",
-            "search.document.filter", "Language:abcde32542f",
-            "search.document.collectdocids", "true",
-            "solr.filterisfacet", "true"
+                "search.document.query", "foo",
+                "search.document.filter", "Language:abcde32542f",
+                "search.document.collectdocids", "true",
+                "solr.filterisfacet", "true"
         );
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
@@ -406,7 +432,7 @@ public class SummonSearchNodeTest extends TestCase {
     public void testFacetOrder() throws RemoteException {
         Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
         conf.set(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
-            //SummonSearchNode.CONF_SOLR_FACETS, ""
+        //SummonSearchNode.CONF_SOLR_FACETS, ""
 
         log.debug("Creating SummonSearchNode");
         SummonSearchNode summon = new SummonSearchNode(conf);
@@ -483,9 +509,9 @@ public class SummonSearchNodeTest extends TestCase {
         Collections.sort(tagsAlpha);
         if (alpha) {
             ExtraAsserts.assertEquals(
-                "The order should be alphanumeric\nExp: "
-                + Strings.join(tagsAlpha, " ") + "\nAct: " + Strings.join(tags, " "),
-                tagsAlpha, tags);
+                    "The order should be alphanumeric\nExp: "
+                    + Strings.join(tagsAlpha, " ") + "\nAct: " + Strings.join(tags, " "),
+                    tagsAlpha, tags);
         } else {
             boolean misMatch = false;
             for (int i = 0 ; i < tags.size() ; i++) {
@@ -613,7 +639,7 @@ public class SummonSearchNodeTest extends TestCase {
         String lastValue = null;
         for (String sortValue: sortValues) {
             assertTrue("The sort values should be in unicode order but was " + Strings.join(sortValues, ", "),
-                      lastValue == null || lastValue.compareTo(sortValue) <= 0);
+                       lastValue == null || lastValue.compareTo(sortValue) <= 0);
 //            System.out.println(lastValue + " vs " + sortValue + ": " + (lastValue == null ? 0 : lastValue.compareTo(sortValue)));
             lastValue = sortValue;
         }
@@ -638,7 +664,7 @@ public class SummonSearchNodeTest extends TestCase {
         String lastValue = null;
         for (String sortValue: fields) {
             assertTrue("The field values should be in unicode order but was " + Strings.join(fields, ", "),
-                      lastValue == null || lastValue.compareTo(sortValue) <= 0);
+                       lastValue == null || lastValue.compareTo(sortValue) <= 0);
 //            System.out.println(lastValue + " vs " + sortValue + ": " + (lastValue == null ? 0 : lastValue.compareTo(sortValue)));
             lastValue = sortValue;
         }
@@ -647,14 +673,14 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testFacetedSearchNoFaceting() throws Exception {
         assertSomeHits(new Request(
-            DocumentKeys.SEARCH_QUERY, "first"
+                DocumentKeys.SEARCH_QUERY, "first"
         ));
     }
 
     public void testFacetedSearchNoHits() throws Exception {
         Request request = new Request(
-            DocumentKeys.SEARCH_FILTER, "recordBase:nothere",
-            DocumentKeys.SEARCH_QUERY, "first"
+                DocumentKeys.SEARCH_FILTER, "recordBase:nothere",
+                DocumentKeys.SEARCH_QUERY, "first"
         );
         ResponseCollection responses = search(request);
         assertTrue("There should be a response", responses.iterator().hasNext());
@@ -664,8 +690,8 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testFacetedSearchSomeHits() throws Exception {
         assertSomeHits(new Request(
-            DocumentKeys.SEARCH_FILTER, "recordBase:summon",
-            DocumentKeys.SEARCH_QUERY, "first"
+                DocumentKeys.SEARCH_FILTER, "recordBase:summon",
+                DocumentKeys.SEARCH_QUERY, "first"
         ));
     }
 
@@ -710,17 +736,17 @@ public class SummonSearchNodeTest extends TestCase {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
 //        summon.open(""); // Fake open for setting permits
         List<String> ids0 = getAttributes(
-            summon, new Request(
-            DocumentKeys.SEARCH_QUERY, "foo",
-            DocumentKeys.SEARCH_MAX_RECORDS, 20,
-            DocumentKeys.SEARCH_START_INDEX, 0),
-            "id", false);
+                summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, 20,
+                DocumentKeys.SEARCH_START_INDEX, 0),
+                "id", false);
         List<String> ids1 = getAttributes(
-            summon, new Request(
-            DocumentKeys.SEARCH_QUERY, "foo",
-            DocumentKeys.SEARCH_MAX_RECORDS, 20,
-            DocumentKeys.SEARCH_START_INDEX, 20),
-            "id", false);
+                summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, 20,
+                DocumentKeys.SEARCH_START_INDEX, 20),
+                "id", false);
 
         assertNotEquals("The hits should differ from page 0 and 1",
                         Strings.join(ids0, ", "), Strings.join(ids1, ", "));
@@ -732,7 +758,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     private List<String> getAttributes(
-        SearchNode searcher, Request request, String attributeName, boolean explicitMerge) throws RemoteException {
+            SearchNode searcher, Request request, String attributeName, boolean explicitMerge) throws RemoteException {
         final Pattern IDPATTERN = Pattern.compile("<record.*?" + attributeName + "=\"(.+?)\".*?>", Pattern.DOTALL);
         return getPattern(searcher, request, IDPATTERN, explicitMerge);
 /*        ResponseCollection responses = new ResponseCollection();
@@ -751,7 +777,7 @@ public class SummonSearchNodeTest extends TestCase {
 
     private List<String> getField(SearchNode searcher, Request request, String fieldName) throws RemoteException {
         final Pattern IDPATTERN = Pattern.compile(
-            "<field name=\"" + fieldName + "\">(.+?)</field>", Pattern.DOTALL);
+                "<field name=\"" + fieldName + "\">(.+?)</field>", Pattern.DOTALL);
         return getPattern(searcher, request, IDPATTERN, false);
     }
 
@@ -769,7 +795,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     private List<String> getPattern(
-        SearchNode searcher, Request request, Pattern pattern, boolean explicitMerge) throws RemoteException {
+            SearchNode searcher, Request request, Pattern pattern, boolean explicitMerge) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         if (explicitMerge) {
@@ -849,13 +875,13 @@ public class SummonSearchNodeTest extends TestCase {
     public void testFilterVsQuery2() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         long qHitCount = getHits(
-            summon,
-            DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
-            DocumentKeys.SEARCH_FILTER, "old");
+                summon,
+                DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
+                DocumentKeys.SEARCH_FILTER, "old");
         long fHitCount = getHits(
-            summon,
-            DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
-            DocumentKeys.SEARCH_QUERY, "old");
+                summon,
+                DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
+                DocumentKeys.SEARCH_QUERY, "old");
 
         assertTrue("The filter(old) hit count " + fHitCount + " should differ less than 100 from query(old) hit count "
                    + qHitCount + " as summon API 2.0.0 does field expansion on filters",
@@ -873,15 +899,15 @@ public class SummonSearchNodeTest extends TestCase {
         //String QUERY = "Small business and Ontario";
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         List<String> titlesLower = getField(summon, new Request(
-            DocumentKeys.SEARCH_QUERY, QUERY1 + " and " + QUERY2,
-            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
-            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+                DocumentKeys.SEARCH_QUERY, QUERY1 + " and " + QUERY2,
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
+                SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
         ), "Title");
         String lower = Strings.join(titlesLower, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
         List<String> titlesUpper = getField(summon, new Request(
-            DocumentKeys.SEARCH_QUERY, QUERY1 + " AND " + QUERY2,
-            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
-            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+                DocumentKeys.SEARCH_QUERY, QUERY1 + " AND " + QUERY2,
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
+                SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
         ), "Title");
         String upper = Strings.join(titlesUpper, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
 
@@ -890,7 +916,7 @@ public class SummonSearchNodeTest extends TestCase {
             fail("Using 'and' and 'AND' should not yield the same result\n" + lower);
         } else {
             System.out.println("Using 'and' and 'AND' gave different results:\nand: " +
-            lower.replace("\n", ", ") + "\nAND: " + upper.replace("\n", ", "));
+                               lower.replace("\n", ", ") + "\nAND: " + upper.replace("\n", ", "));
         }
     }
 
@@ -899,34 +925,34 @@ public class SummonSearchNodeTest extends TestCase {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
 
         List<String> titlesRaw = getField(summon, new Request(
-            DocumentKeys.SEARCH_QUERY, QUERY,
-            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
-            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true,
+                SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
         ), "Title");
         String raw = Strings.join(titlesRaw, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
         List<String> titlesQuoted = getField(summon, new Request(
-            DocumentKeys.SEARCH_QUERY, QUERY,
-            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, false, // Adds quotes around individual terms
-            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, false, // Adds quotes around individual terms
+                SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
         ), "Title");
         String quoted = Strings.join(titlesQuoted, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
         List<String> titlesNonDismaxed = getField(summon, new Request(
-            DocumentKeys.SEARCH_QUERY, "(" + QUERY + ")",
-            SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, false, // Adds quotes around individual terms
-            SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
+                DocumentKeys.SEARCH_QUERY, "(" + QUERY + ")",
+                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, false, // Adds quotes around individual terms
+                SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false
         ), "Title");
         String nonDismaxed = Strings.join(titlesNonDismaxed, "\n").replace("&lt;h&gt;", "").replace("&lt;/h&gt;", "");
 
         summon.close();
-        
+
         System.out.println("raw " + (raw.equals(quoted) ? "=" : "!") + "= quoted");
         System.out.println("raw " + (raw.equals(nonDismaxed) ? "=" : "!") + "= parenthesized");
         System.out.println("quoted " + (quoted.equals(nonDismaxed) ? "=" : "!") + "= parenthesized");
         System.out.println("raw =           " + raw.replace("\n", ", "));
         System.out.println("quoted =        " + quoted.replace("\n", ", "));
         System.out.println("parenthesized = " + nonDismaxed.replace("\n", ", "));
-        
-        assertEquals("The result from the raw (and thus dismaxed) query should match the result from " 
+
+        assertEquals("The result from the raw (and thus dismaxed) query should match the result from "
                      + "the quoted terms query",
                      raw, quoted);
     }
@@ -934,17 +960,17 @@ public class SummonSearchNodeTest extends TestCase {
     public void testFilterVsQuery3() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         long qCombinedHitCount = getHits(
-            summon,
-            DocumentKeys.SEARCH_QUERY,
-            "PublicationTitle:jama AND Language:English");
+                summon,
+                DocumentKeys.SEARCH_QUERY,
+                "PublicationTitle:jama AND Language:English");
         long qHitCount = getHits(
-            summon,
-            DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
-            DocumentKeys.SEARCH_FILTER, "(Language:English)");
+                summon,
+                DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
+                DocumentKeys.SEARCH_FILTER, "(Language:English)");
         long fHitCount = getHits(
-            summon,
-            DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
-            DocumentKeys.SEARCH_QUERY, "Language:English");
+                summon,
+                DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
+                DocumentKeys.SEARCH_QUERY, "Language:English");
 
         assertTrue("The filter(old) hit count " + fHitCount + " should differ"
                    + " from query(old) hit count " + qHitCount
@@ -989,9 +1015,9 @@ public class SummonSearchNodeTest extends TestCase {
 
         int countSearchTweak = countResults(responsesSearchTweak);
         assertEquals(
-            "Query time specification of 's.ho=false' should give the same "
-            + "result as configuration time specification of the same",
-            countOutside, countSearchTweak);
+                "Query time specification of 's.ho=false' should give the same "
+                + "result as configuration time specification of the same",
+                countOutside, countSearchTweak);
     }
 
     public void testConvertRangeQueries() throws RemoteException {
@@ -1019,8 +1045,8 @@ public class SummonSearchNodeTest extends TestCase {
 
     private Configuration getSummonConfiguration() {
         return Configuration.newMemoryBased(
-            SummonSearchNode.CONF_SUMMON_ACCESSID, "foo",
-            SummonSearchNode.CONF_SUMMON_ACCESSKEY, "bar");
+                SummonSearchNode.CONF_SUMMON_ACCESSID, "foo",
+                SummonSearchNode.CONF_SUMMON_ACCESSKEY, "bar");
     }
 
     public void testFaultyQuoteRemoval() throws RemoteException {
@@ -1035,12 +1061,12 @@ public class SummonSearchNodeTest extends TestCase {
     // we can do about it
     @SuppressWarnings({"UnusedDeclaration"})
     public void disabledtestCounts() throws RemoteException {
-  //      final String QUERY = "reactive arthritis yersinia lassen";
+        //      final String QUERY = "reactive arthritis yersinia lassen";
         final String QUERY = "author:(Helweg Larsen) abuse";
 
         Request request = new Request();
         request.addJSON(
-            "{search.document.query:\"" + QUERY + "\", summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
+                "{search.document.query:\"" + QUERY + "\", summonparam.s.ps:\"15\", summonparam.s.ho:\"false\"}");
 //        String r1 = request.toString(true);
 
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
@@ -1050,8 +1076,8 @@ public class SummonSearchNodeTest extends TestCase {
 
         request.clear();
         request.addJSON(
-            "{search.document.query:\"" + QUERY + "\", summonparam.s.ps:\"30\", summonparam.s.ho:\"false\"}");
-  //      String r2 = request.toString(true);
+                "{search.document.query:\"" + QUERY + "\", summonparam.s.ps:\"30\", summonparam.s.ho:\"false\"}");
+        //      String r2 = request.toString(true);
         responses.clear();
         summon.search(request, responses);
         int count20 = countResults(responses);
@@ -1098,14 +1124,14 @@ public class SummonSearchNodeTest extends TestCase {
             }
         }
         throw new IllegalArgumentException(
-            "No documentResponse in ResponseCollection");
+                "No documentResponse in ResponseCollection");
     }
 
     public void testAdjustingSearcher() throws IOException {
         SimplePair<String, String> credentials = SummonTestHelper.getCredentials();
         Configuration conf = Configuration.newMemoryBased(
-            InteractionAdjuster.CONF_IDENTIFIER, "summon",
-            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
+                InteractionAdjuster.CONF_IDENTIFIER, "summon",
+                InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
         Configuration inner = conf.createSubConfiguration(AdjustingSearchNode.CONF_INNER_SEARCHNODE);
         inner.set(SearchNodeFactory.CONF_NODE_CLASS, SummonSearchNode.class.getCanonicalName());
         inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, credentials.getKey());
@@ -1115,9 +1141,9 @@ public class SummonSearchNodeTest extends TestCase {
         AdjustingSearchNode adjusting = new AdjustingSearchNode(conf);
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request(
-            //request.put(DocumentKeys.SEARCH_QUERY, "foo");
-            DocumentKeys.SEARCH_QUERY, "recursion in string theory",
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+                //request.put(DocumentKeys.SEARCH_QUERY, "foo");
+                DocumentKeys.SEARCH_QUERY, "recursion in string theory",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         log.debug("Searching");
         adjusting.search(request, responses);
         log.debug("Finished searching");
@@ -1133,7 +1159,7 @@ public class SummonSearchNodeTest extends TestCase {
             conf.set(QueryRewriter.CONF_TERSE, false);
             SearchNode summon  = new SummonSearchNode(conf);
             Request request = new Request(
-                DocumentKeys.SEARCH_QUERY, QUERY
+                    DocumentKeys.SEARCH_QUERY, QUERY
             );
             summon.search(request, explicitMustResponses);
             summon.close();
@@ -1145,7 +1171,7 @@ public class SummonSearchNodeTest extends TestCase {
             conf.set(QueryRewriter.CONF_TERSE, true);
             SearchNode summon  = new SummonSearchNode(conf);
             Request request = new Request(
-                DocumentKeys.SEARCH_QUERY, QUERY
+                    DocumentKeys.SEARCH_QUERY, QUERY
             );
             summon.search(request, implicitMustResponses);
             summon.close();
@@ -1179,12 +1205,12 @@ public class SummonSearchNodeTest extends TestCase {
         SearchNode summon  = SummonTestHelper.createSummonSearchNode();
         try {
             List<String> ids1 = getAttributes(summon, new Request(
-                DocumentKeys.SEARCH_QUERY, query1,
-                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+                    DocumentKeys.SEARCH_QUERY, query1,
+                    SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
             ), "id", false);
             List<String> ids2 = getAttributes(summon, new Request(
-                DocumentKeys.SEARCH_QUERY, query2,
-                SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+                    DocumentKeys.SEARCH_QUERY, query2,
+                    SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, true
             ), "id", false);
             ExtraAsserts.assertPermutations("Query '" + query1 + "' and '" + query2 + "'", ids1, ids2);
 /*            assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
@@ -1202,16 +1228,16 @@ public class SummonSearchNodeTest extends TestCase {
         SearchNode summon  = SummonTestHelper.createSummonSearchNode();
         try {
             long plainCount =
-                getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
+                    getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
             long sabotagedCount =
-                getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "true");
+                    getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "true");
             assertEquals("The number of hits for a DisMax-enabled and DisMax-sabotages query should match",
                          plainCount, sabotagedCount);
 
             List<String> plain = getAttributes(summon, new Request(
-                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false), "id", false);
+                    DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, false), "id", false);
             List<String> sabotaged = getAttributes(summon, new Request(
-                DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, true), "id", false);
+                    DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, true), "id", false);
             assertFalse("The ids returned by DisMax-enabled and DisMax-sabotaged query should differ",
                         Strings.join(plain, ", ").equals(Strings.join(sabotaged, ", ")));
         } finally {
@@ -1236,8 +1262,8 @@ public class SummonSearchNodeTest extends TestCase {
 
         ResponseCollection raw = new ResponseCollection();
         summon.search(new Request(
-            DocumentKeys.SEARCH_QUERY, query1,
-            SolrSearchNode.SEARCH_PASSTHROUGH_QUERY, true
+                DocumentKeys.SEARCH_QUERY, query1,
+                SolrSearchNode.SEARCH_PASSTHROUGH_QUERY, true
         ), raw);
 
         ResponseCollection weighted = new ResponseCollection();
@@ -1252,10 +1278,10 @@ public class SummonSearchNodeTest extends TestCase {
                      rawScores.size(), weightedScores.size());
         for (int i = 0 ; i < rawScores.size() ; i++) {
             assertTrue(String.format(
-                "The scores at position %d were %s and %s. Max difference allowed is %s. "
-                + "All scores for '%s' and '%s':\n%s\n%s",
-                i, rawScores.get(i), weightedScores.get(i), maxDifference,
-                query1, query2, Strings.join(rawScores, ", "), Strings.join(weightedScores, ", ")),
+                    "The scores at position %d were %s and %s. Max difference allowed is %s. "
+                    + "All scores for '%s' and '%s':\n%s\n%s",
+                    i, rawScores.get(i), weightedScores.get(i), maxDifference,
+                    query1, query2, Strings.join(rawScores, ", "), Strings.join(weightedScores, ", ")),
                        Math.abs(rawScores.get(i) - weightedScores.get(i)) <= maxDifference);
         }
     }
@@ -1348,24 +1374,24 @@ public class SummonSearchNodeTest extends TestCase {
 
         { // shortformat should match Author
             String expected =
-                "  <shortrecord>\n"
-                + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
-                + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
-                + "      <rdf:Description>\n"
-                + "        <dc:title>Estimates of worldwide burden of cancer in 2008: GLOBOCAN 2008</dc:title>\n"
-                + "        <dc:creator>Ferlay, Jacques</dc:creator>\n"
-                + "        <dc:creator>Shin, Hai-Rim</dc:creator>\n"
-                + "        <dc:creator>Bray, Freddie</dc:creator>\n"
-                + "        <dc:creator>Forman, David</dc:creator>\n"
-                + "        <dc:creator>Mathers, Colin</dc:creator>\n"
-                + "        <dc:creator>Parkin, Donald Maxwell</dc:creator>\n"
-                + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
-                + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
-                + "        <dc:date>2010</dc:date>\n"
-                + "        <dc:format></dc:format>\n"
-                + "      </rdf:Description>\n"
-                + "    </rdf:RDF>\n"
-                + "  </shortrecord>\n";
+                    "  <shortrecord>\n"
+                    + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
+                    + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
+                    + "      <rdf:Description>\n"
+                    + "        <dc:title>Estimates of worldwide burden of cancer in 2008: GLOBOCAN 2008</dc:title>\n"
+                    + "        <dc:creator>Ferlay, Jacques</dc:creator>\n"
+                    + "        <dc:creator>Shin, Hai-Rim</dc:creator>\n"
+                    + "        <dc:creator>Bray, Freddie</dc:creator>\n"
+                    + "        <dc:creator>Forman, David</dc:creator>\n"
+                    + "        <dc:creator>Mathers, Colin</dc:creator>\n"
+                    + "        <dc:creator>Parkin, Donald Maxwell</dc:creator>\n"
+                    + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
+                    + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
+                    + "        <dc:date>2010</dc:date>\n"
+                    + "        <dc:format></dc:format>\n"
+                    + "      </rdf:Description>\n"
+                    + "    </rdf:RDF>\n"
+                    + "  </shortrecord>\n";
             SearchNode summon = SummonTestHelper.createSummonSearchNode();
             assertFieldContent("shortformat", summon, query, "shortformat", expected, false);
             summon.close();
@@ -1384,21 +1410,21 @@ public class SummonSearchNodeTest extends TestCase {
 
         { // shortformat should match Author
             String expected =
-                "  <shortrecord>\n"
-                + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
-                + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
-                + "      <rdf:Description>\n"
-                + "        <dc:title>Substantial under-estimation in cancer incidence estimates for developing "
-                + "countries due to under-ascertainment in elderly cancer cases</dc:title>\n"
-                + "        <dc:creator>Fallah, Mahdi</dc:creator>\n"
-                + "        <dc:creator>Kharazmi, Elham</dc:creator>\n"
-                + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
-                + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
-                + "        <dc:date>2008</dc:date>\n"
-                + "        <dc:format></dc:format>\n"
-                + "      </rdf:Description>\n"
-                + "    </rdf:RDF>\n"
-                + "  </shortrecord>\n";
+                    "  <shortrecord>\n"
+                    + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
+                    + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
+                    + "      <rdf:Description>\n"
+                    + "        <dc:title>Substantial under-estimation in cancer incidence estimates for developing "
+                    + "countries due to under-ascertainment in elderly cancer cases</dc:title>\n"
+                    + "        <dc:creator>Fallah, Mahdi</dc:creator>\n"
+                    + "        <dc:creator>Kharazmi, Elham</dc:creator>\n"
+                    + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
+                    + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
+                    + "        <dc:date>2008</dc:date>\n"
+                    + "        <dc:format></dc:format>\n"
+                    + "      </rdf:Description>\n"
+                    + "    </rdf:RDF>\n"
+                    + "  </shortrecord>\n";
             SearchNode summon = SummonTestHelper.createSummonSearchNode();
             assertFieldContent("shortformat", summon, query, "shortformat", expected, false);
             summon.close();
@@ -1407,16 +1433,16 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testScoreAssignment() throws RemoteException {
         String QUERY =
-            "The effect of multimedia on perceived equivocality and perceived usefulness of information systems";
+                "The effect of multimedia on perceived equivocality and perceived usefulness of information systems";
         String BAD =
-            "<record score=\"0.0\" "
-            + "id=\"summon_FETCH-LOGICAL-j865-7bb06e292771fe19b17b4f676a0939e693be812b38d8502735ffb8ab6e46b4d21\" "
-            + "source=\"Summon\">";
+                "<record score=\"0.0\" "
+                + "id=\"summon_FETCH-LOGICAL-j865-7bb06e292771fe19b17b4f676a0939e693be812b38d8502735ffb8ab6e46b4d21\" "
+                + "source=\"Summon\">";
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
         Request req = new Request(
-            DocumentKeys.SEARCH_QUERY, QUERY,
-            DocumentKeys.SEARCH_MAX_RECORDS, 10,
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                DocumentKeys.SEARCH_MAX_RECORDS, 10,
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
         ResponseCollection responses = new ResponseCollection();
         summon.search(req, responses);
@@ -1457,10 +1483,10 @@ public class SummonSearchNodeTest extends TestCase {
     public void testIDAdjustment() throws IOException {
         SimplePair<String, String> credentials = SummonTestHelper.getCredentials();
         Configuration conf = Configuration.newMemoryBased(
-            InteractionAdjuster.CONF_IDENTIFIER, "summon",
-            InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
+                InteractionAdjuster.CONF_IDENTIFIER, "summon",
+                InteractionAdjuster.CONF_ADJUST_DOCUMENT_FIELDS, "recordID - ID");
         Configuration inner = conf.createSubConfiguration(
-            AdjustingSearchNode.CONF_INNER_SEARCHNODE);
+                AdjustingSearchNode.CONF_INNER_SEARCHNODE);
         inner.set(SearchNodeFactory.CONF_NODE_CLASS, SummonSearchNode.class.getCanonicalName());
         inner.set(SummonSearchNode.CONF_SUMMON_ACCESSID, credentials.getKey());
         inner.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, credentials.getValue());
@@ -1491,14 +1517,14 @@ public class SummonSearchNodeTest extends TestCase {
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
 
         long filterCount = getHits(
-            summon,
-            DocumentKeys.SEARCH_QUERY, "foo",
-            DocumentKeys.SEARCH_FILTER, "ContentType:\"Book / eBook\"",
-            SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+                summon,
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_FILTER, "ContentType:\"Book / eBook\"",
+                SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
         long queryCount = getHits(
-            summon,
-            DocumentKeys.SEARCH_QUERY, "foo",
-            DocumentKeys.SEARCH_FILTER, "ContentType:Book OR ContentType:eBook");
+                summon,
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_FILTER, "ContentType:Book OR ContentType:eBook");
 
         assertTrue("There should be at least 1 hit for either query or filter request",
                    queryCount > 0 || filterCount > 0);
@@ -1510,22 +1536,22 @@ public class SummonSearchNodeTest extends TestCase {
     public void testFacetFieldValidity() throws RemoteException {
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
         String[][] FACET_QUERIES = new String[][]{
-            //{"Ferlay", "Author", "Ferlay\\, Jacques"}, // We need a sample from the Author facet
-            {"foo", "Language", "German"},
-            {"foo", "IsScholarly", "true"},
-            {"foo", "IsFullText", "true"},
-            {"foo", "ContentType", "Book / eBook"},
-            {"foo", "SubjectTerms", "biology"}
+                //{"Ferlay", "Author", "Ferlay\\, Jacques"}, // We need a sample from the Author facet
+                {"foo", "Language", "German"},
+                {"foo", "IsScholarly", "true"},
+                {"foo", "IsFullText", "true"},
+                {"foo", "ContentType", "Book / eBook"},
+                {"foo", "SubjectTerms", "biology"}
         };
         for (String[] facetQuery: FACET_QUERIES) {
             String q = facetQuery[0];
             String ff = facetQuery[1] + ":\"" + facetQuery[2] + "\"";
             log.debug(String.format("Searching for query '%s' with facet filter '%s'", q, ff));
             long queryCount = getHits(
-                summon,
-                DocumentKeys.SEARCH_QUERY, q,
-                DocumentKeys.SEARCH_FILTER, ff,
-                SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+                    summon,
+                    DocumentKeys.SEARCH_QUERY, q,
+                    DocumentKeys.SEARCH_FILTER, ff,
+                    SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
             assertTrue(String.format("There should be at least 1 hit for query '%s' with facet filter '%s'", q, ff),
                        queryCount > 0);
         }
@@ -1536,7 +1562,7 @@ public class SummonSearchNodeTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(arguments), responses);
         if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).
-            matches()) {
+                matches()) {
             return 0;
         }
         String hitsS = responses.toXML().replaceAll(HITS_PATTERN, "$1");
@@ -1544,8 +1570,8 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     protected void assertHits(
-        String message, SearchNode searcher, String... queries)
-                                                        throws RemoteException {
+            String message, SearchNode searcher, String... queries)
+            throws RemoteException {
         long hits = getHits(searcher, queries);
         assertTrue(message + ". Hits == " + hits, hits > 0);
     }
