@@ -51,11 +51,6 @@ public class HPAltoAnalyzer {
         descriptionVDistMax = conf.getInt(CONF_DESCRIPTION_VDIST_MAX, DEFAULT_DESCRIPTION_VDIST_MAX);
     }
 
-    // TODO: Improve these regexps
-    private Pattern programPattern = Pattern.compile("(PROGRAM.+)", Pattern.CASE_INSENSITIVE);
-    private Pattern fromTimePattern = Pattern.compile("([0-9]{1,2}).([0-9]{2})(.*)");
-    private Pattern fullTimePattern = Pattern.compile("([0-9]{1,2}).([0-9]{2})[^0-9]{1,2}([0-9]{1,2}).([0-9]{2})(.*)");
-
     /**
      * The heart of the analyzer tries to extract Segments from the given alto. Special segments are "Program x" that
      * are used to mark subsequent segments with the right program.
@@ -127,7 +122,15 @@ public class HPAltoAnalyzer {
             // TODO: Implement this
             segments.add(segment);
         }
-        return segments;
+        return collapse(segments);
+    }
+
+    /*
+     * Iterate segments and fill missing endTimes by using next startTime
+     * Segments with missing titles are merged with subsequent segment if it does not have time
+     */
+    private List<Segment> collapse(List<Segment> segments) {
+        return null;  // TODO: Implement this
     }
 
     // TODO: Consider weights that prefers closer vDistance over hDistance
@@ -135,6 +138,8 @@ public class HPAltoAnalyzer {
         return Math.sqrt(Math.pow(hPos-candidate.getHpos(), 2) + Math.pow(vPos-candidate.getVpos(), 2));
     }
 
+    // TODO: Improve this regexp
+    private Pattern programPattern = Pattern.compile("(PROGRAM.+)", Pattern.CASE_INSENSITIVE);
     private String getProgram(Alto.TextBlock textBlock) {
         Matcher programMatcher = programPattern.matcher(textBlock.getAllText());
         if (programMatcher.matches()) {
@@ -154,11 +159,37 @@ public class HPAltoAnalyzer {
         segment.program = program;
         segment.hpos = textBlock.getHpos();
         segment.vpos = textBlock.getVpos();
+        segment.width = textBlock.getWidth();
+        segment.height = textBlock.getHeight();
 
-        List<Alto.TextLine> lines = textBlock.getLines();
+        List<Alto.TextLine> lines = new LinkedList<Alto.TextLine>(textBlock.getLines());
 
+        extractTimeAndtitle(segment, lines);
+
+        // Just add the rest of the lines
+        for (Alto.TextLine line: lines) {
+            segment.paragraphs.add(clean(line.getAllText()));
+        }
+        return segment;
+    }
+
+    private Pattern approximateTimePattern =
+            Pattern.compile("(ca[.]|~) *(.*)", Pattern.CASE_INSENSITIVE);
+    // TODO: Improve these regexps
+    private Pattern fromTimePattern =
+            Pattern.compile("([0-9]{1,2}) ?. ?([0-9]{2}).?(.*)");
+    private Pattern fullTimePattern =
+            Pattern.compile("([0-9]{1,2}) ?. ?([0-9]{2})[^0-9]{1,2}([0-9]{1,2}) ?. ?([0-9]{2}).?(.*)");
+    private boolean extractTimeAndtitle(Segment segment, List<Alto.TextLine> lines) {
         boolean gotTime = false;
-        Matcher fullTimeMatcher = fullTimePattern.matcher(lines.get(0).getAllText()); // First line
+        String line = lines.get(0).getAllText();
+        Matcher aMatcher = approximateTimePattern.matcher(line);
+        if (aMatcher.matches()) {
+            segment.timeApproximate = true;
+            line = aMatcher.group(2);
+        }
+
+        Matcher fullTimeMatcher = fullTimePattern.matcher(line);
         if (fullTimeMatcher.matches()) {
             segment.startTime = fullTimeMatcher.group(1) + ":" + fullTimeMatcher.group(2);
             segment.endTime = fullTimeMatcher.group(3) + ":" + fullTimeMatcher.group(4);
@@ -167,7 +198,7 @@ public class HPAltoAnalyzer {
                       + segment.title);
             gotTime = true;
         } else {
-            Matcher fromTimeMatcher = fromTimePattern.matcher(lines.get(0).getAllText()); // First line
+            Matcher fromTimeMatcher = fromTimePattern.matcher(line);
             if (fromTimeMatcher.matches()) {
                 segment.startTime = fromTimeMatcher.group(1) + ":" + fromTimeMatcher.group(2);
                 segment.title = clean(fromTimeMatcher.group(3));
@@ -176,17 +207,16 @@ public class HPAltoAnalyzer {
             }
         }
         if (gotTime) {
-            if (lines.size() > 1) {
-                for (Alto.TextLine line: lines.subList(1, lines.size() - 1)) {
-                    segment.paragraphs.add(clean(line.getAllText()));
-                }
-            }
-        } else {
-            for (Alto.TextLine line: lines) {
-                segment.paragraphs.add(clean(line.getAllText()));
-            }
+            lines.remove(0);
         }
-        return segment;
+
+        // TODO: Match textStyles for headline
+        while ((segment.title == null || segment.title.isEmpty()) && !lines.isEmpty()) { // First real text is the title
+            //String textStyle = lines.get(0).getTextStrings().get(0).getStyleRefs();
+            segment.title = clean(lines.remove(0).getAllText());
+        }
+
+        return gotTime;
     }
 
     // TODO: Improve cleanup by collapsing multiple spaces and removing "unrealistic" chars
@@ -199,47 +229,6 @@ public class HPAltoAnalyzer {
     private String getDateFromFilename(String filename) {
         Matcher matcher = dateFromFile.matcher(filename);
         return matcher.matches() ? matcher.group(1) + matcher.group(2) + matcher.group(3) : null;
-    }
-
-    // Seek from the given coordinates. Returned blocks are never to the left of the given block.
-    // Blocks are scanned from left to right. The block with the lowest hPos that is below the given
-    // coordinates is returned, except when the horizontal distance is greater than the with of the
-    // previous block. In that case, vpos is set to 0 and hpos to previous.hpos + previous.width,
-    // which results in the next column.
-    private Alto.TextBlock getNextTextBlock(Alto.Page page, Alto.TextBlock previous) {
-        int hPos = previous == null ? 0 : previous.getHpos();
-        int vPos = previous == null ? 0 : previous.getVpos();
-        int width = previous == null ? 99999999 : previous.getWidth(); // Not maxvalue as we add hpos later
-        Alto.TextBlock closest = null;
-
-        for (Alto.TextBlock candidate: page.getPrintSpace()) {
-            if (closest == null) {
-                if ((candidate.getHpos() >= hPos && candidate.getVpos() > vPos && candidate.getHpos() < hPos+width)
-                    || candidate.getHpos() > hPos+width) { // Valid
-                    closest = candidate;
-                }
-                continue;
-            }
-            // TODO: Introduce slop
-            if ((candidate.getHpos() >= hPos && candidate.getVpos() > vPos && candidate.getHpos() < hPos+width)
-                || candidate.getHpos() > hPos+width) { // Valid
-                if (candidate.getHpos() < closest.getHpos()) { // Prioritize horizontal
-                    closest = candidate;
-                    continue;
-                }
-                if (candidate.getHpos() == closest.getHpos()) {
-                    if (candidate.getVpos() < closest.getVpos()) {
-                        closest = candidate;
-                    }
-                    continue;
-                }
-/*                if (candidate.getVpos() < closest.getVpos()) { // Vertical is secondary
-                    System.out.println("Replacing " + closest + " with " + candidate);
-                    closest = candidate;
-                }*/
-            }
-        }
-        return closest;
     }
 
     public static class Segment {
@@ -260,9 +249,49 @@ public class HPAltoAnalyzer {
 
         @Override
         public String toString() {
-            return "Segment(time=" + startTime + '-' + endTime + ", title='" + title + "', program='" + program + '\''
-                   + ", timeApproximate=" + timeApproximate + ", #paragraphs=" + paragraphs.size()
+            return "Segment(time=" + (timeApproximate ? "~" : "") + startTime + '-' + endTime
+                   + ", title='" + title + "', program='" + program + '\'' + ", #paragraphs=" + paragraphs.size()
                    + (paragraphs.isEmpty() ? "" : ": " + paragraphs.get(0)) + ')';
+        }
+
+        public String getFilename() {
+            return filename;
+        }
+        public String getDate() {
+            return date;
+        }
+        public String getProgram() {
+            return program;
+        }
+        public String getId() {
+            return id;
+        }
+        public int getHpos() {
+            return hpos;
+        }
+        public int getVpos() {
+            return vpos;
+        }
+        public int getWidth() {
+            return width;
+        }
+        public int getHeight() {
+            return height;
+        }
+        public String getStartTime() {
+            return startTime;
+        }
+        public String getEndTime() {
+            return endTime;
+        }
+        public boolean isTimeApproximate() {
+            return timeApproximate;
+        }
+        public String getTitle() {
+            return title;
+        }
+        public List<String> getParagraphs() {
+            return paragraphs;
         }
     }
 }
