@@ -465,9 +465,10 @@ public class SummonSearchNode extends SolrSearchNode {
     protected Map<String, List<String>> buildSolrQuery(
         Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
         int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
+
         @SuppressWarnings("UnnecessaryLocalVariable")
         int perPage = maxRecords;
-        int startPage = maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords) + 1;
+        int startPage = maxRecords == 0 ? 0 : (startIndex-1) / maxRecords + 1;
         Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
 
         queryMap.put("s.dym", Arrays.asList("true"));

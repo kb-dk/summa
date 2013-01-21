@@ -218,10 +218,9 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
                 responses.getTransient().put(DOCIDS, collector);
                 if (records == 0) {
                     long docTime = System.currentTimeMillis();
-                    DocumentResponse docResponse = new DocumentResponse(filter, query, startIndex, records, sortKey,
-                                                                        reverse, resultFields,
-                                                                        System.currentTimeMillis()
-                                                                        - startTime, collector.getBits().cardinality());
+                    DocumentResponse docResponse = new DocumentResponse(
+                            filter, query, startIndex, records, sortKey, reverse, resultFields,
+                            System.currentTimeMillis() - startTime, collector.getBits().cardinality());
                     docResponse.addTiming("lucene.collectDocIDSearch", System.currentTimeMillis() - docTime);
                     responses.add(docResponse);
                 }
