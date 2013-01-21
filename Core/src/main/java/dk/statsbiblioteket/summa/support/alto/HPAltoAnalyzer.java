@@ -9,6 +9,7 @@
 package dk.statsbiblioteket.summa.support.alto;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -24,31 +25,29 @@ import java.util.regex.Pattern;
 public class HPAltoAnalyzer {
     private static Log log = LogFactory.getLog(HPAltoAnalyzer.class);
 
-    // DESCRIPTION is a text block connected to an entry. The vdist and hdist specifies where it may be placed to
-    // be considered a candidate
+    /**
+     * If true, Segments that has no time are attached to the previous segment, if it has time.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_MERGE_SUBSEQUENT_NOTIME = "hpaltoanalyzer.merge.subsequent";
+    public static final boolean DEFAULT_MERGE_SUBSEQUENT_NOTIME = true;
 
-    public static final String CONF_DESCRIPTION_HDIST_MIN = "hp.description.hdist.min";
-    public static final int DEFAULT_DESCRIPTION_HDIST_MIN = 10;
+    /**
+     * If a Segment has no end time, the start time from the next Segment with a start time is used.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_CONNECT_TIMES = "hpaltoanalyzer.connect.times";
+    public static final boolean DEFAULT_CONNECT_TIMES = true;
 
-    public static final String CONF_DESCRIPTION_HDIST_MAX = "hp.description.hdist.max";
-    public static final int DEFAULT_DESCRIPTION_HDIST_MAX = 50;
 
-    public static final String CONF_DESCRIPTION_VDIST_MIN = "hp.description.vdist.min";
-    public static final int DEFAULT_DESCRIPTION_VDIST_MIN = 1;
-    
-    public static final String CONF_DESCRIPTION_VDIST_MAX = "hp.description.vdist.max";
-    public static final int DEFAULT_DESCRIPTION_VDIST_MAX = 20;
-
-    private final int descriptionHDistMin;
-    private final int descriptionHDistMax;
-    private final int descriptionVDistMin;
-    private final int descriptionVDistMax;
+    private final boolean mergeSubsequent;
+    private final boolean connectTimes;
 
     public HPAltoAnalyzer(Configuration conf) {
-        descriptionHDistMin = conf.getInt(CONF_DESCRIPTION_HDIST_MIN, DEFAULT_DESCRIPTION_HDIST_MIN);
-        descriptionHDistMax = conf.getInt(CONF_DESCRIPTION_HDIST_MAX, DEFAULT_DESCRIPTION_HDIST_MAX);
-        descriptionVDistMin = conf.getInt(CONF_DESCRIPTION_VDIST_MIN, DEFAULT_DESCRIPTION_VDIST_MIN);
-        descriptionVDistMax = conf.getInt(CONF_DESCRIPTION_VDIST_MAX, DEFAULT_DESCRIPTION_VDIST_MAX);
+        mergeSubsequent = conf.getBoolean(CONF_MERGE_SUBSEQUENT_NOTIME, DEFAULT_MERGE_SUBSEQUENT_NOTIME);
+        connectTimes = conf.getBoolean(CONF_CONNECT_TIMES, DEFAULT_CONNECT_TIMES);
     }
 
     /**
@@ -82,7 +81,7 @@ public class HPAltoAnalyzer {
                 log.warn(String.format(
                         "getSegments found %d segments with %d remaining TextBlocks, where there should be 0 remaining",
                         segments.size(), blocks.size()));
-                return segments;
+                return collapse(segments);
             }
 
             // If there are no candidate, adjust search parameters for next column
@@ -130,7 +129,53 @@ public class HPAltoAnalyzer {
      * Segments with missing titles are merged with subsequent segment if it does not have time
      */
     private List<Segment> collapse(List<Segment> segments) {
-        return null;  // TODO: Implement this
+        if (mergeSubsequent) {
+            segments = mergeSubsequent(segments);
+        }
+        if (connectTimes) {
+            segments = connectTimes(segments);
+        }
+        return segments;
+    }
+
+    private List<Segment> mergeSubsequent(List<Segment> segments) {
+        Segment last = null;
+        List<Segment> merged = new LinkedList<Segment>();
+        while (!segments.isEmpty()) {
+            Segment current = segments.remove(0);
+            if (last == null) {
+                if (current.getStartTime() != null || current.getEndTime() != null) {
+                    last = current;
+                }
+                merged.add(current);
+                continue;
+            }
+            // We have a last now
+            if (current.getStartTime() == null && current.getEndTime() == null) { // No time, so we merge
+                last.paragraphs.add(current.title);
+                last.paragraphs.addAll(current.paragraphs);
+                // TODO: Change bounding box dimensions
+            } else {
+                merged.add(current);
+            }
+        }
+        return merged;
+    }
+
+    private List<Segment> connectTimes(List<Segment> segments) {
+        for (int i = 0 ; i < segments.size() ; i++) {
+            Segment current = segments.get(i);
+            if (current.getStartTime() != null && current.getEndTime() == null) {
+                for (int j = i+1 ; j < segments.size() ; j++) {
+                    Segment subsequent = segments.get(j);
+                    if (subsequent.getStartTime() != null) {
+                        current.endTime = subsequent.getStartTime();
+                        break;
+                    }
+                }
+            }
+        }
+        return segments;
     }
 
     // TODO: Consider weights that prefers closer vDistance over hDistance
@@ -168,7 +213,7 @@ public class HPAltoAnalyzer {
 
         // Just add the rest of the lines
         for (Alto.TextLine line: lines) {
-            segment.paragraphs.add(clean(line.getAllText()));
+            segment.paragraphs.add(cleanTitle(line.getAllText()));
         }
         return segment;
     }
@@ -188,12 +233,12 @@ public class HPAltoAnalyzer {
             segment.timeApproximate = true;
             line = aMatcher.group(2);
         }
-
+        // TODO: If no time is extracted, keep adding lines to see if it matches at some point
         Matcher fullTimeMatcher = fullTimePattern.matcher(line);
         if (fullTimeMatcher.matches()) {
             segment.startTime = fullTimeMatcher.group(1) + ":" + fullTimeMatcher.group(2);
             segment.endTime = fullTimeMatcher.group(3) + ":" + fullTimeMatcher.group(4);
-            segment.title = clean(fullTimeMatcher.group(5));
+            segment.title = cleanTitle(fullTimeMatcher.group(5));
             log.trace("Found start time " + segment.startTime + " and end time " + segment.endTime + " with title "
                       + segment.title);
             gotTime = true;
@@ -201,7 +246,7 @@ public class HPAltoAnalyzer {
             Matcher fromTimeMatcher = fromTimePattern.matcher(line);
             if (fromTimeMatcher.matches()) {
                 segment.startTime = fromTimeMatcher.group(1) + ":" + fromTimeMatcher.group(2);
-                segment.title = clean(fromTimeMatcher.group(3));
+                segment.title = cleanTitle(fromTimeMatcher.group(3));
                 log.trace("Found start time " + segment.startTime + " with title " + segment.title);
                 gotTime = true;
             }
@@ -213,15 +258,19 @@ public class HPAltoAnalyzer {
         // TODO: Match textStyles for headline
         while ((segment.title == null || segment.title.isEmpty()) && !lines.isEmpty()) { // First real text is the title
             //String textStyle = lines.get(0).getTextStrings().get(0).getStyleRefs();
-            segment.title = clean(lines.remove(0).getAllText());
+            segment.title = cleanTitle(lines.remove(0).getAllText());
         }
 
         return gotTime;
     }
 
     // TODO: Improve cleanup by collapsing multiple spaces and removing "unrealistic" chars
-    private String clean(String text) {
-        return text.trim();
+    private String cleanTitle(String text) {
+        text = text.trim();
+        if (".".equals(text)) {
+            return "";
+        }
+        return text;
     }
 
     // B-1977-10-02-P-0003.xml -> 19771002
@@ -251,7 +300,7 @@ public class HPAltoAnalyzer {
         public String toString() {
             return "Segment(time=" + (timeApproximate ? "~" : "") + startTime + '-' + endTime
                    + ", title='" + title + "', program='" + program + '\'' + ", #paragraphs=" + paragraphs.size()
-                   + (paragraphs.isEmpty() ? "" : ": " + paragraphs.get(0)) + ')';
+                   + (paragraphs.isEmpty() ? "" : ": " + Strings.join(paragraphs, ", ")) + ')';
         }
 
         public String getFilename() {
@@ -292,6 +341,9 @@ public class HPAltoAnalyzer {
         }
         public List<String> getParagraphs() {
             return paragraphs;
+        }
+        public String getAllText() {
+            return paragraphs.isEmpty() ? title : title + " " + Strings.join(paragraphs, " ");
         }
     }
 }
