@@ -19,8 +19,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -31,7 +29,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class HPAltoAnalyzerTest extends TestCase {
-    private static Log log = LogFactory.getLog(HPAltoAnalyzerTest.class);
+    //private static Log log = LogFactory.getLog(HPAltoAnalyzerTest.class);
 
     // TODO: We do not have license to publish these files. Generate obfuscated test files from them
     public static final String alto1977 = "/home/te/projects/hvideprogrammer/B-1977-10-02-P-0003.xml";
