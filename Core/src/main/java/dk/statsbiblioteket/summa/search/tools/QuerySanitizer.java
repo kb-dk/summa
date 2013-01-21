@@ -17,8 +17,8 @@ package dk.statsbiblioteket.summa.search.tools;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -66,6 +66,8 @@ public class QuerySanitizer implements Configurable {
      */
     public static final String CONF_FIX_EXCLAMATIONS = "sanitizer.trailingexclamationmarks";
     public static final ACTION DEFAULT_FIX_EXCLAMATIONS = ACTION.escape;
+
+    // TODO: Standalone dash (-), ampersand (&) and other special characters
 
     private final ACTION fixQuotes;
     private final ACTION fixParentheses;

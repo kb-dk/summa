@@ -379,6 +379,20 @@ public class QueryRewriter {
             if (tq.getBoost() != 1.0f) {
                 result += "^" + tq.getBoost();
             }
+/*        } else if (query instanceof PhraseQuery) {
+            PhraseQuery phraseQuery = (PhraseQuery)query;
+            String field = null;
+            String text = "";
+            for (Term term: phraseQuery.getTerms()) {
+                if (field == null) {
+                    field = term.field();
+                }
+                if (!text.isEmpty()) {
+                    text += " ";
+                }
+                text += quotedEscaper.transform(term.text());
+            }
+            result += (field == null ? "" : field + ":") + '"' + text + '"';*/
         } else if (query instanceof PrefixQuery) {
             PrefixQuery prefixQuery = (PrefixQuery) query;
             return convertSubqueryToString(prefixQuery.getField(), prefixQuery.getPrefix().text(), false) + "*";
@@ -434,7 +448,7 @@ public class QueryRewriter {
         return true;
     }
 
-    private ReplaceReader escaper;
+    private final ReplaceReader unquotedEscaper;
     {
         //String PROBLEMS = "!*\\'\"";
         //String PROBLEMS = "!*'\":";
@@ -444,14 +458,28 @@ public class QueryRewriter {
             char problem = PROBLEMS.charAt(i);
             rules.put("" + problem, "\\" + problem);
         }
-        escaper = ReplaceFactory.getReplacer(rules);
+        unquotedEscaper = ReplaceFactory.getReplacer(rules);
+    }
+    private final ReplaceReader quotedEscaper;
+    {
+        //String PROBLEMS = "!*\\'\"";
+        //String PROBLEMS = "!*'\":";
+        String PROBLEMS = "\"";
+        Map<String, String> rules = new HashMap<String, String>(PROBLEMS.length());
+        for (int i = 0 ; i < PROBLEMS.length() ; i++) {
+            char problem = PROBLEMS.charAt(i);
+            rules.put("" + problem, "\\" + problem);
+        }
+        quotedEscaper = ReplaceFactory.getReplacer(rules);
     }
     private String convertSubqueryToString(String field, String text, boolean quote) {
-/*        text = escaper.transform(QueryParser.escape(text));
+/*        text = unquotedEscaper.transform(QueryParser.escape(text));
         if (quote) {
             text = "\"" + text + "\"";
         }*/
-        text = quote ? "\"" + text + "\"" : escaper.transform(QueryParser.escape(text));
+        text = quote ?
+               "\"" + quotedEscaper.transform(text) + "\"" :
+               unquotedEscaper.transform(QueryParser.escape(text));
         return field == null || field.isEmpty() ? text : field + ":" + text;
     }
 /*    private String convertSubqueryToString(String field, String text, boolean quote) {
@@ -460,7 +488,7 @@ public class QueryRewriter {
         if (quote) {
             escapedText = "\"" + escapedText + "\"";
         } else {
-            escapedText = escaper.transform(escapedText);
+            escapedText = unquotedEscaper.transform(escapedText);
         }
         return (field == null || field.isEmpty()) ? escapedText : field + ":" + escapedText;
     }*/
