@@ -291,14 +291,30 @@ public class SummonSearchNodeTest extends TestCase {
         List<String> sampleIDs = getSampleIDs();
         assertFalse("There should be at least 1 sample ID", sampleIDs.isEmpty());
         String ID = sampleIDs.get(0);
+//        System.out.println("Got IDs " + Strings.join(sampleIDs, ", "));
 //        String ID = "summon_FETCH-gale_primary_2105957371";
 
+        /*
+        From Summon-provided test site
+        From Summon-provided test site
+        queryString="
+        s.rec.qs.max=
+        &amp;s.mr=
+        &amp;s.ho=t
+        &amp;s.rec.db.max=
+        &amp;s.ps=10
+        &amp;s.q=ID%3A%22FETCH-LOGICAL-a8990-b5a26f60b0093e6474a5a91213bf9fccef1af6e41cbc4c3456d008ae2e43f7e61%22
+        &amp;s.pn=1
+         */
+
         String query = "recordID:\"" + ID + "\"";
+        //String query = "ID:\"" + ID + "\"";
         log.info("Creating SummonSearchNode and performing search for " + query);
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
         Request req = new Request(
                 DocumentKeys.SEARCH_QUERY, query,
-                DocumentKeys.SEARCH_MAX_RECORDS, 1,
+                DocumentKeys.SEARCH_MAX_RECORDS, 10,
+//                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "ps", "10",
                 DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         List<String> ids = getAttributes(summon, req, "id", false);
         assertTrue("There should be at least 1 result", ids.size() >= 1);

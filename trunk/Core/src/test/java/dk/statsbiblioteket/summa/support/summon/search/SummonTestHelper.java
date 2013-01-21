@@ -17,8 +17,8 @@ package dk.statsbiblioteket.summa.support.summon.search;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 
@@ -39,6 +39,7 @@ public class SummonTestHelper {
         try {
             Configuration conf = getDefaultSummonConfiguration();
             conf.set(SummonResponseBuilder.CONF_SHORT_DATE, useShortDate);
+
             summon = new SummonSearchNode(conf);
         } catch (IOException e) {
             throw new RuntimeException("Unable to connect to summon", e);

@@ -427,7 +427,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                       + buildResponseTime + " ms for converting to Summa response)");
         }
         responses.addTiming(getID() + ".search.buildresponses", buildResponseTime);
-        responses.addTiming(getID() + ".search.total", (System.currentTimeMillis() - startTime));
+        responses.addTiming(getID() + ".search.total", System.currentTimeMillis() - startTime);
     }
 
     // Override this to get search backend specific facet request syntax
@@ -646,7 +646,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected Map<String, List<String>> buildSolrQuery(
         Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
         int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
-        int startPage = Math.max(0, maxRecords == 0 ? 0 : ((startIndex-1) / maxRecords));
+        int startPage = Math.max(0, maxRecords == 0 ? 0 : (startIndex-1) / maxRecords);
         Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
 
         if (request.containsKey(DocumentKeys.SEARCH_RESULT_FIELDS)) {
