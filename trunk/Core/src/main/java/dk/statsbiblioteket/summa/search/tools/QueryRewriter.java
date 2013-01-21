@@ -218,10 +218,10 @@ public class QueryRewriter {
     }
 
     public QueryParser createQueryParser() {
-        QueryParser queryParser = new QueryParser(Version.LUCENE_40, "",
-                                                  PARSER_KEYWORD.equals(defaultParser) ?
-                                                  new KeywordAnalyzer() :
-                                                  new WhitespaceAnalyzer(Version.LUCENE_40));
+        QueryParser queryParser = new QueryParser(
+                Version.LUCENE_40, "", PARSER_KEYWORD.equals(defaultParser) ?
+                                       new KeywordAnalyzer() :
+                                       new WhitespaceAnalyzer(Version.LUCENE_40));
 
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
         return queryParser;
@@ -447,11 +447,12 @@ public class QueryRewriter {
         escaper = ReplaceFactory.getReplacer(rules);
     }
     private String convertSubqueryToString(String field, String text, boolean quote) {
-        text = escaper.transform(QueryParser.escape(text));
+/*        text = escaper.transform(QueryParser.escape(text));
         if (quote) {
             text = "\"" + text + "\"";
-        }
-        return (field == null || field.isEmpty()) ? text : field + ":" + text;
+        }*/
+        text = quote ? "\"" + text + "\"" : escaper.transform(QueryParser.escape(text));
+        return field == null || field.isEmpty() ? text : field + ":" + text;
     }
 /*    private String convertSubqueryToString(String field, String text, boolean quote) {
         // Lucene removes back slashes
