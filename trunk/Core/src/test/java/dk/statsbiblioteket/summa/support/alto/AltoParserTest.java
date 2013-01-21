@@ -23,19 +23,15 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLStreamException;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class AltoParserTest extends TestCase {
-    private static Log log = LogFactory.getLog(AltoParserTest.class);
+//    private static Log log = LogFactory.getLog(AltoParserTest.class);
 
     public AltoParserTest(String name) {
         super(name);
