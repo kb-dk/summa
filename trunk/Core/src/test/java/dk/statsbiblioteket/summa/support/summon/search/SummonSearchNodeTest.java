@@ -109,8 +109,8 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("OR with recordBase:summon should leave the rest of the query",
                      "\"foo\"", summon.convertQuery("recordBase:summon OR foo", null));
         assertEquals("recordBase:summon AND recordBase:nonexisting should not match anything",
-                     SummonSearchNode.DEFAULT_NONMATCHING_QUERY.replace(":", ":\"") + "\"",
-                     summon.convertQuery("recordBase:summon AND recordBase:nonexisting", null));
+                     SummonSearchNode.DEFAULT_NONMATCHING_QUERY.replace(":", ":\"")
+                     + "\"", summon.convertQuery("recordBase:summon AND recordBase:nonexisting", null));
     }
 
     public void testIDResponse() throws IOException, TransformerException {
@@ -165,8 +165,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         List<String> tags = StringExtraction.getStrings(responses.toXML(), "<tag.+?>");
         assertEquals("The number of returned tags should be " + tagCount + "+1. The returned Tags were\n"
-                     + Strings.join(tags, "\n"),
-                     tagCount + 1, tags.size());
+                     + Strings.join(tags, "\n"), tagCount + 1, tags.size());
         summon.close();
     }
 
@@ -183,8 +182,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         List<String> tags = StringExtraction.getStrings(responses.toXML(), "<tag.+?>");
         assertEquals("The number of returned tags should be " + tagCount + "+1. The returned Tags were\n"
-                     + Strings.join(tags, "\n"),
-                     tagCount + 1, tags.size());
+                     + Strings.join(tags, "\n"), tagCount + 1, tags.size());
         summon.close();
     }
 
@@ -198,8 +196,8 @@ public class SummonSearchNodeTest extends TestCase {
         Request request = new Request();
         request.addJSON(JSON);
         summon.search(request, responses);
-        assertTrue("The response should contain a summon tag from faceting\n" + responses.toXML(),
-                   responses.toXML().contains("<tag name=\"summon\" addedobjects=\""));
+        assertTrue("The response should contain a summon tag from faceting\n"
+                   + responses.toXML(), responses.toXML().contains("<tag name=\"summon\" addedobjects=\""));
         summon.close();
     }
 
@@ -213,8 +211,8 @@ public class SummonSearchNodeTest extends TestCase {
         Request request = new Request();
         request.addJSON(JSON);
         summon.search(request, responses);
-        assertTrue("The response should contain a summon tag from faceting\n" + responses.toXML(),
-                   responses.toXML().contains("<tag name=\"summon\" addedobjects=\""));
+        assertTrue("The response should contain a summon tag from faceting\n"
+                   + responses.toXML(), responses.toXML().contains("<tag name=\"summon\" addedobjects=\""));
         summon.close();
     }
 
@@ -263,8 +261,8 @@ public class SummonSearchNodeTest extends TestCase {
 //            System.out.println(responses.toXML());
         }
 
-        assertEquals("There should be a result for each id from search '" + IDS_QUERY + "'",
-                     IDs.size(), returnedIDs.size());
+        assertEquals(
+                "There should be a result for each id from search '" + IDS_QUERY + "'", IDs.size(), returnedIDs.size());
     }
 
     public void testShortFormat() throws RemoteException {
@@ -423,11 +421,28 @@ public class SummonSearchNodeTest extends TestCase {
         }
     }
 
+    // TODO: Test search for term with colon, quoted and unquoted
     public void testColonSearch() throws RemoteException {
         final String OK = "FETCH-proquest_dll_14482952011";
         final String PROBLEM = "FETCH-doaj_primary_oai:doaj-articles:932b6445ce452a2b2a544189863c472e1";
         performSearch("ID:\"" + OK + "\"");
         performSearch("ID:\"" + PROBLEM + "\"");
+    }
+
+    public void testColonNameSearch() throws RemoteException {
+        performSearch("Gillis\\ P\\:son\\ Wetter");
+    }
+
+    public void testColonFieldShortNameSearch() throws RemoteException {
+        performSearch("AuthorCombined:(Gillis Wetter)");
+    }
+
+    public void testColonFieldLongNameSearch() throws RemoteException {
+        performSearch("AuthorCombined:(Gillis P\\:son Wetter)");
+    }
+
+    public void testColonPhrasedNameSearch() throws RemoteException {
+        performSearch("AuthorCombined:\"Gillis P:son Wetter\"");
     }
 
     private void performSearch(String query) throws RemoteException {
@@ -614,10 +629,10 @@ public class SummonSearchNodeTest extends TestCase {
         conf.set(SummonSearchNode.CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, true);
         SummonSearchNode summon = new SummonSearchNode(conf);
         assertEquals("There should be zero hits for filter with assumed pure negative faceting support", 0,
-                     getHits(summon,
-                             DocumentKeys.SEARCH_QUERY, QUERY,
-                             DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, "true",
-                             DocumentKeys.SEARCH_FILTER, "NOT " + FACET));
+                     getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE,
+                             "true", DocumentKeys.SEARCH_FILTER,
+                                                                                                                    "NOT "
+                                                                                                                    + FACET));
         summon.close();
     }
 
@@ -625,13 +640,11 @@ public class SummonSearchNodeTest extends TestCase {
         final String QUERY = "foo";
         final String FACET = "SubjectTerms:\"analysis\"";
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        assertHits("There should be at least one hit for positive faceting", summon,
-                   DocumentKeys.SEARCH_QUERY, QUERY,
-                   DocumentKeys.SEARCH_FILTER, FACET);
+        assertHits("There should be at least one hit for positive faceting", summon, DocumentKeys.SEARCH_QUERY,
+                   QUERY, DocumentKeys.SEARCH_FILTER, FACET);
         assertHits("There should be at least one hit for query with negative facet", summon,
-                   DocumentKeys.SEARCH_QUERY, QUERY,
-                   DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, Boolean.TRUE.toString(),
-                   DocumentKeys.SEARCH_FILTER, "NOT " + FACET);
+                   DocumentKeys.SEARCH_QUERY, QUERY, DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, Boolean.TRUE.toString(), DocumentKeys.SEARCH_FILTER,
+                   "NOT " + FACET);
         summon.close();
     }
 
@@ -700,14 +713,29 @@ public class SummonSearchNodeTest extends TestCase {
         );
         ResponseCollection responses = search(request);
         assertTrue("There should be a response", responses.iterator().hasNext());
-        assertEquals("There should be no hits. Response was\n" + responses.toXML(),
-                     0, ((DocumentResponse) responses.iterator().next()).getHitCount());
+        assertEquals("There should be no hits. Response was\n"
+                     + responses.toXML(), 0, ((DocumentResponse) responses.iterator().next()).getHitCount());
     }
 
     public void testFacetedSearchSomeHits() throws Exception {
+        assertSomeHits(new Request(DocumentKeys.SEARCH_FILTER, "recordBase:summon", DocumentKeys.SEARCH_QUERY, "first"));
+    }
+
+    public void testDashSomeHits() throws Exception {
+        assertSomeHits(new Request(DocumentKeys.SEARCH_QUERY, "merrian - webster"));
+    }
+
+    public void testDashWeightSomeHits() throws Exception {
+        assertSomeHits(new Request(DocumentKeys.SEARCH_QUERY, "merrian \\-^12.2 webster"));
+    }
+
+    public void testAmpersandWeightSomeHits() throws Exception {
+        assertSomeHits(new Request(DocumentKeys.SEARCH_QUERY, "merrian &^12.2 webster"));
+    }
+
+    public void testDashWeightQuotedSomeHits() throws Exception {
         assertSomeHits(new Request(
-                DocumentKeys.SEARCH_FILTER, "recordBase:summon",
-                DocumentKeys.SEARCH_QUERY, "first"
+                DocumentKeys.SEARCH_QUERY, "merrian \"-\"^12.2 webster"
         ));
     }
 
@@ -1577,18 +1605,21 @@ public class SummonSearchNodeTest extends TestCase {
         String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(arguments), responses);
-        if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).
-                matches()) {
+        if (!Pattern.compile(HITS_PATTERN).matcher(responses.toXML()).matches()) {
             return 0;
         }
         String hitsS = responses.toXML().replaceAll(HITS_PATTERN, "$1");
         return "".equals(hitsS) ? 0L : Long.parseLong(hitsS);
     }
 
-    protected void assertHits(
-            String message, SearchNode searcher, String... queries)
-            throws RemoteException {
+    protected void assertHits(String message, SearchNode searcher, String... queries) throws RemoteException {
         long hits = getHits(searcher, queries);
         assertTrue(message + ". Hits == " + hits, hits > 0);
+    }
+
+    protected void assertHits(String message, String query, int expectedHits) throws RemoteException {
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        long hits = getHits(summon, DocumentKeys.SEARCH_QUERY, query);
+        assertEquals(message + ". Query='" + query + "'", expectedHits, hits);
     }
 }

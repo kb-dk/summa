@@ -121,9 +121,9 @@ public class QueryRewriterTest extends TestCase {
                 "\"foo\"");
     }
 
-    public void testTerm3() throws ParseException {
+    public void testTermDash() throws ParseException {
         assertIdentity(
-                "\"\\-\"",
+                "\"-\"",
                 "- ");
     }
 
@@ -139,31 +139,31 @@ public class QueryRewriterTest extends TestCase {
                 "\"foo bar\" OR \"zoo AND baz\"");
     }
 
-    public void testRewriteDivider() throws ParseException {
-        assertIdentity("\"foo\" \"\\-\" \"bar\"",  "foo - bar");
+    public void testRewriteDashDivider() throws ParseException {
+        assertIdentity("\"foo\" \"-\" \"bar\"",  "foo - bar");
         assertIdentity("\"foo - bar\"",  "\"foo - bar\"");
-        assertIdentity("\"foo\" \"\\-\" \"bar\"",  "(+foo +- +bar)");
+        assertIdentity("\"foo\" \"-\" \"bar\"",  "(+foo +- +bar)");
     }
 
 
     public void testColon() throws ParseException {
         assertIdentity(
-                "foo:\"bar\\:zoo\"",
+                "foo:\"bar:zoo\"",
                 "foo:\"bar:zoo\"");
         assertIdentity(
-                "foo:\"bar\\:zoo\\:baz\"",
+                "foo:\"bar:zoo:baz\"",
                 "foo:\"bar:zoo:baz\"");
     }
 
     public void testColonWithWeight() throws ParseException {
         assertIdentity(
-                "foo:\"bar\\:zoo\"^2.5",
+                "foo:\"bar:zoo\"^2.5",
                 "foo:\"bar:zoo\"^2.5");
     }
 
     public void testNoAdjustment() throws ParseException {
         assertIdentity("\"foo\"", "foo");
-        assertIdentity("\"foo\" \"\\-\" \"bar\"", "foo - bar");
+        assertIdentity("\"foo\" \"-\" \"bar\"", "foo - bar");
         assertIdentity("\"foo\" \"bar\"", "foo AND bar");
     }
 
@@ -172,7 +172,7 @@ public class QueryRewriterTest extends TestCase {
     }
 
     public void testScoreAdjustmentPlainConcat() throws ParseException {
-        assertIdentity("\"foo\\-bar\"^1.2", "foo-bar^1.2");
+        assertIdentity("\"foo-bar\"^1.2", "foo-bar^1.2");
     }
 
     public void testScoreAssignmentAndAdjustmentPlain() throws ParseException {
@@ -186,7 +186,7 @@ public class QueryRewriterTest extends TestCase {
         String userInput = "foo - bar";
         String rewritten = assignWeight(userInput, 1.2f);
         // So far so good. Now to eat our own dog food
-        assertIdentity("\"foo\"^1.2 \"\\-\"^1.2 \"bar\"^1.2", rewritten);
+        assertIdentity("\"foo\"^1.2 \"-\"^1.2 \"bar\"^1.2", rewritten);
     }
 
     private String assignWeight(String query, final float weight) throws ParseException {
@@ -201,12 +201,12 @@ public class QueryRewriterTest extends TestCase {
     }
 
     public void testScoreAdjustmentDividerQuoted() throws ParseException {
-        assertIdentity("\"foo\" \"\\-\"^1.2 \"bar\"", "foo \"-\"^1.2 bar");
+        assertIdentity("\"foo\" \"-\"^1.2 \"bar\"", "foo \"-\"^1.2 bar");
     }
 
     public void testQuoting() throws ParseException {
         String query = "- ";
-        assertIdentity("\"\\-\"^1.2", assignWeight(query, 1.2f));
+        assertIdentity("\"-\"^1.2", assignWeight(query, 1.2f));
     }
 
     public void testEscapedWhitespace1() throws ParseException {
@@ -238,7 +238,7 @@ public class QueryRewriterTest extends TestCase {
 
     public void testBooleanQueryInBooleanQuery() throws ParseException {
         String query = "foo AND (bar OR - )";
-        assertIdentity("\"foo\" (\"bar\" OR \"\\-\")", query);
+        assertIdentity("\"foo\" (\"bar\" OR \"-\")", query);
     }
 
     public void testProximity() throws ParseException {
@@ -247,9 +247,9 @@ public class QueryRewriterTest extends TestCase {
     }
 
     public void testAmpersand() throws ParseException {
-        assertIdentity("\"foo\" \"\\&\" \"bar\"",
+        assertIdentity("\"foo\" \"&\" \"bar\"",
                        "foo & bar");
-        assertIdentity("\"foo\\&bar\"", // TODO: Consider if this should be tokenized so that weight adjustements works
+        assertIdentity("\"foo&bar\"", // TODO: Consider if this should be tokenized so that weight adjustements works
                        "foo&bar");
     }
 
