@@ -68,8 +68,8 @@ public class QueryRewritingSearchNodeTest extends TestCase {
                 QueryRewritingSearchNode.CONF_PHRASE_QUERIES, false,
                 QueryRewriter.CONF_QUOTE_TERMS, false
         ), new String[][]{
-            {"foo:\"bar:zoo\"", "foo:\"bar:zoo\""},
-            {"foo:\"bar:zoo\"^2.5", "foo:\"bar:zoo\"^2.5"}
+            {"foo:\"bar:zoo\"", "foo:bar\\:zoo"},
+            {"foo:\"bar:zoo\"^2.5", "foo:bar\\:zoo^2.5"}
         });
     }
 

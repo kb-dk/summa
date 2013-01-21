@@ -433,6 +433,10 @@ public class SummonSearchNodeTest extends TestCase {
         performSearch("Gillis\\ P\\:son\\ Wetter");
     }
 
+    public void testColonNameWeightedSearch() throws RemoteException {
+        performSearch("P\\:son^1.2");
+    }
+
     public void testColonFieldShortNameSearch() throws RemoteException {
         performSearch("AuthorCombined:(Gillis Wetter)");
     }
