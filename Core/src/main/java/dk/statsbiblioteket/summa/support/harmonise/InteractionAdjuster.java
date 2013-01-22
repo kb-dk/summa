@@ -158,13 +158,13 @@ public class InteractionAdjuster implements Configurable {
      * Fields that are rewritten to a term that match nothing in the searcher.
      */
     public static final String CONF_ADJUST_UNSUPPORTED_FIELDS = "adjuster.document.unsupported.fields";
-        
+
     /**
      * Query that match nothing in the searcher (ie. year:991234)
      */
     public static final String CONF_ADJUST_UNSUPPORTED_QUERY= "adjuster.document.unsupported.query";
-           
-    
+
+
     /**
      * Maps from field names to field names, one way when rewriting queries,
      * the other way when adjusting the returned result. This involves only
@@ -181,7 +181,7 @@ public class InteractionAdjuster implements Configurable {
     // TODO: Handle many-to-many re-writing
     public static final String CONF_ADJUST_FACET_FIELDS = "adjuster.facet.fields";
     public static final String SEARCH_ADJUST_FACET_FIELDS = CONF_ADJUST_FACET_FIELDS;
-    
+
     /**
      * Maps, extends and contracts tag names for returned facet results.
      * </p><p>
@@ -226,26 +226,26 @@ public class InteractionAdjuster implements Configurable {
         simpleBaseAddition += conf.getDouble(prefix + CONF_SIMPLE_ADJUST_SCORE_ADD, 0.0);
 
         pureNegativeNotSimple = conf.getBoolean(
-            CONF_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE, DEFAULT_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE);
+                CONF_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE, DEFAULT_PURE_NEGATIVE_FILTER_TRIGGERS_NOT_SIMPLE);
 
         adjustResponseFieldsEnabled = conf.getBoolean(
-            CONF_ADJUST_RESPONSE_FIELDS_ENABLED, DEFAULT__ADJUST_RESPONSE_FIELDS_ENABLED);
+                CONF_ADJUST_RESPONSE_FIELDS_ENABLED, DEFAULT__ADJUST_RESPONSE_FIELDS_ENABLED);
         adjustResponseFacetsEnabled = conf.getBoolean(
-            CONF_ADJUST_RESPONSE_FACETS_ENABLED, DEFAULT__ADJUST_RESPONSE_FACETS_ENABLED);
+                CONF_ADJUST_RESPONSE_FACETS_ENABLED, DEFAULT__ADJUST_RESPONSE_FACETS_ENABLED);
         if (conf.valueExists(CONF_ADJUST_DOCUMENT_FIELDS)) {
             defaultDocumentFields = new ManyToManyMapper(conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS));
         }
         if (conf.valueExists(CONF_ADJUST_FACET_FIELDS)) {
             defaultFacetFields = new ManyToManyMapper(conf.getStrings(CONF_ADJUST_FACET_FIELDS));
-        }              
+        }
         if (conf.valueExists(CONF_ADJUST_FACET_TAGS)) {
             List<Configuration> taConfs;
             try {
                 taConfs = conf.getSubConfigurations(CONF_ADJUST_FACET_TAGS);
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException(
-                    "Expected a list of sub configurations for key " + CONF_ADJUST_FACET_TAGS + " but the current "
-                    + "Configuration does not support them", e);
+                        "Expected a list of sub configurations for key " + CONF_ADJUST_FACET_TAGS + " but the current "
+                        + "Configuration does not support them", e);
             }
             tagAdjusters = new ArrayList<TagAdjuster>(taConfs.size());
             for (Configuration tagConf: taConfs) {
@@ -255,24 +255,24 @@ public class InteractionAdjuster implements Configurable {
             }
             log.debug("Created " + tagAdjusters.size() + " tag adjusters");
         }
-        
+
         if (conf.valueExists(CONF_ADJUST_UNSUPPORTED_FIELDS)){
-          unsupportedFields = new HashSet<String>(conf.getStrings(CONF_ADJUST_UNSUPPORTED_FIELDS));
-          String unsupportedQueryString = conf.getString(CONF_ADJUST_UNSUPPORTED_QUERY);
-          
-          String[] split = unsupportedQueryString.split(":");
-          unsupportedQuery = new TermQuery(new Term(split[0],split[1]));
+            unsupportedFields = new HashSet<String>(conf.getStrings(CONF_ADJUST_UNSUPPORTED_FIELDS));
+            String unsupportedQueryString = conf.getString(CONF_ADJUST_UNSUPPORTED_QUERY);
+
+            String[] split = unsupportedQueryString.split(":");
+            unsupportedQuery = new TermQuery(new Term(split[0],split[1]));
         }
-                               
+
         log.debug(String.format(
-            "Constructed search adjuster with id='%s', enabled=%b, baseFactor=%f, baseAddition=%f, "
-            + "adjustingDocumentFields='%s', adjustingFacetFields='%s', tagAdjusters=%d, "
-            + "adjustResponseFieldsEnabled=%b, adjustResponseFacetsEnabled=%b",
-            id, enabled, baseFactor, baseAddition,
-            conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS, new ArrayList<String>(0)),
-            conf.getStrings(CONF_ADJUST_FACET_FIELDS, new ArrayList<String>(0)),
-            tagAdjusters == null ? 0 : tagAdjusters.size(),
-            adjustResponseFieldsEnabled, adjustResponseFacetsEnabled));
+                "Constructed search adjuster with id='%s', enabled=%b, baseFactor=%f, baseAddition=%f, "
+                + "adjustingDocumentFields='%s', adjustingFacetFields='%s', tagAdjusters=%d, "
+                + "adjustResponseFieldsEnabled=%b, adjustResponseFacetsEnabled=%b",
+                id, enabled, baseFactor, baseAddition,
+                conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS, new ArrayList<String>(0)),
+                conf.getStrings(CONF_ADJUST_FACET_FIELDS, new ArrayList<String>(0)),
+                tagAdjusters == null ? 0 : tagAdjusters.size(),
+                adjustResponseFieldsEnabled, adjustResponseFacetsEnabled));
     }
 
     /**
@@ -288,11 +288,11 @@ public class InteractionAdjuster implements Configurable {
     public Request rewrite(Request request) {
         log.trace("rewrite called");
         String incoming=null;
-        
+
         if (log.isDebugEnabled()) {
             incoming=request.toString();
         }
-        
+
         Request adjusted = clone(request);
         if (!adjusted.getBoolean(SEARCH_ADJUST_ENABLED, enabled)) {
             log.trace("The adjuster is disabled. Exiting rewrite");
@@ -304,13 +304,13 @@ public class InteractionAdjuster implements Configurable {
         } catch (ParseException e) {
             log.info("ParseException while rewriting request", e);
         }
-       
+
         if (log.isDebugEnabled()) {
-          log.debug("Query Request:" + incoming + " Query rewritten:"+adjusted);
-          
+            log.debug("Query Request:" + incoming + " Query rewritten:"+adjusted);
+
         }
         return adjusted;
-        
+
     }
 
     /**
@@ -324,9 +324,9 @@ public class InteractionAdjuster implements Configurable {
     private void rewriteQuery(Request request) throws ParseException {
         log.trace("rewriteQuery called");
         final ManyToManyMapper documentFieldMap = resolveMap(
-            request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
+                request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
         final ManyToManyMapper facetFieldMap = resolveMap(
-            request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
+                request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
 
         if (documentFieldMap == null && facetFieldMap == null &&
             tagAdjusters == null) {
@@ -337,11 +337,11 @@ public class InteractionAdjuster implements Configurable {
         log.trace("Rewriting fields and content in document filter, query and sort");
         if (request.containsKey(DocumentKeys.SEARCH_FILTER)) {
             request.put(DocumentKeys.SEARCH_FILTER, rewriteQuery(
-                request.getString(DocumentKeys.SEARCH_FILTER), documentFieldMap, facetFieldMap));
+                    request.getString(DocumentKeys.SEARCH_FILTER), documentFieldMap, facetFieldMap));
         }
         if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
             request.put(DocumentKeys.SEARCH_QUERY, rewriteQuery(
-                request.getString(DocumentKeys.SEARCH_QUERY), documentFieldMap, facetFieldMap));
+                    request.getString(DocumentKeys.SEARCH_QUERY), documentFieldMap, facetFieldMap));
         }
         if (documentFieldMap != null
             && request.containsKey(DocumentKeys.SEARCH_SORTKEY)) {
@@ -361,116 +361,119 @@ public class InteractionAdjuster implements Configurable {
     }
 
     private String rewriteQuery(final String query, final ManyToManyMapper... maps) throws ParseException {
-        return new QueryRewriter(null, null, // TODO: Consider supplying the SummaAnalyzer
-            new QueryRewriter.Event() {
+        return new QueryRewriter(
+                getRewriterConfig(), null, // TODO: Consider supplying the SummaAnalyzer
+                new QueryRewriter.Event() {
 
-                // For phrases we only replace the field (if any)
-                @Override
-                public Query onQuery(PhraseQuery query) {
-                	String baseField = query.getTerms()[0].field();
-                	if (unsupportedFields.contains(baseField)) {
-                		return unsupportedQuery;
-                	}
-                    if ("".equals(baseField)) {
-                        return query;
-                    }
-                    boolean first = true;
-                    String field = "";
-                    StringWriter sw = new StringWriter();
-                    for (Term term: query.getTerms()) {
-                        if (first) {
-                            first = false;
-                            field = term.field();
-                        } else {
-                            sw.append(" ");
+                    // For phrases we only replace the field (if any)
+                    @Override
+                    public Query onQuery(PhraseQuery query) {
+                        String baseField = query.getTerms()[0].field();
+                        if (unsupportedFields.contains(baseField)) {
+                            return unsupportedQuery;
                         }
-                        sw.append(term.text());
+                        // We cannot skip processing as we need the escaping
+//                    if ("".equals(baseField)) {
+//                        return query;
+//                    }
+                        boolean first = true;
+                        String field = "";
+                        StringWriter sw = new StringWriter();
+                        for (Term term : query.getTerms()) {
+                            if (first) {
+                                first = false;
+                                field = term.field();
+                            } else {
+                                sw.append(" ");
+                            }
+                            sw.append(term.text());
+                        }
+                        List<Pair<String, String>> terms = makeTerms(field, sw.toString(), maps);
+                        Query result = makeQuery(terms, query.getBoost(), true);
+                        if (result instanceof PhraseQuery) {
+                            ((PhraseQuery) result).setSlop(query.getSlop());
+                        }
+                        return result;
                     }
-                    List<Pair<String, String>> terms = makeTerms(field, sw.toString(), maps);
-                    Query result = makeQuery(terms, query.getBoost());
-                    if (result instanceof PhraseQuery) {
-                        ((PhraseQuery)result).setSlop(query.getSlop());
-                    }
-                    return result;
-                }
 
-                @Override
-                public Query onQuery(TermQuery query) {
-                    if ("".equals(query.getTerm().field())) {
+                    @Override
+                    public Query onQuery(TermQuery query) {
+//                    if ("".equals(query.getTerm().field())) {
+//                        return query;
+//                    }
+                        String baseField = query.getTerm().field();
+                        if (unsupportedFields.contains(baseField)) {
+                            return unsupportedQuery;
+                        }
+
+                        List<Pair<String, String>> terms = makeTerms(
+                                query.getTerm().field(), query.getTerm().text(), maps);
+                        Query result = makeQuery(terms, query.getBoost(), false);
+                        if (log.isTraceEnabled()) {
+                            log.trace("rewriteQuery(query) changed " + query + " to " + result);
+                        }
+                        return result;
+                    }
+
+                    @Override
+                    public Query onQuery(final TermRangeQuery query) {
+                        String baseField = query.getField();
+                        if (unsupportedFields.contains(baseField)) {
+                            return unsupportedQuery;
+                        }
+
+
+                        return handleFieldExpansionQuery(query, query.getField(), new FieldExpansionCallback() {
+                            @Override
+                            public Query createQuery(String field) {
+                                // TODO: Escape
+                                return new TermRangeQuery(field, query.getLowerTerm(), query.getUpperTerm(), query.includesLower(), query.includesUpper());
+                            }
+                        }, maps);
+                    }
+
+                    @Override
+                    public Query onQuery(final PrefixQuery query) {
+                        String baseField = query.getPrefix().field();
+                        if (unsupportedFields.contains(baseField)) {
+                            return unsupportedQuery;
+                        }
+
+                        return handleFieldExpansionQuery(query, query.getPrefix().field(), new FieldExpansionCallback() {
+                            @Override
+                            public Query createQuery(String field) {
+                                return new PrefixQuery(new Term(field, query.getPrefix().text()));
+                            }
+                        }, maps);
+                    }
+
+                    @Override
+                    public Query onQuery(final FuzzyQuery query) {
+                        String baseField = query.getTerm().field();
+                        if (unsupportedFields.contains(baseField)) {
+                            return unsupportedQuery;
+                        }
+
+                        return handleFieldExpansionQuery(query, query.getTerm().field(), new FieldExpansionCallback() {
+                            @Override
+                            public Query createQuery(String field) {
+                                return new FuzzyQuery(new Term(field, query.getTerm().text()), query.getMaxEdits(), query.getPrefixLength());
+                            }
+                        }, maps);
+                    }
+
+                    @Override
+                    public Query onQuery(Query query) {
+                        log.trace("Ignoring query of type " + query.getClass().getSimpleName());
                         return query;
                     }
-                    String baseField = query.getTerm().field();
-                	if (unsupportedFields.contains(baseField)) {
-                		return unsupportedQuery;
-                	}                    
-                    
-                    List<Pair<String, String>> terms = makeTerms(query.getTerm().field(), query.getTerm().text(), maps);
-                    Query result = makeQuery(terms, query.getBoost());
-                    if (log.isTraceEnabled()) {
-                        log.trace("rewriteQuery(query) changed " + query + " to " + result);
-                    }
-                    return result;
-                }
+                }).rewrite(query);
+    }
 
-                @Override
-                public Query onQuery(final TermRangeQuery query) {
-                	String baseField = query.getField();
-                 	if (unsupportedFields.contains(baseField)) {
-                 		return unsupportedQuery;
-                 	}     
-                	
-                	
-                	return handleFieldExpansionQuery(
-                        query, query.getField(), new FieldExpansionCallback() {
-                            @Override
-                            public Query createQuery(String field) {
-                                return new TermRangeQuery(field, query.getLowerTerm(), query.getUpperTerm(),
-                                                          query.includesLower(), query.includesUpper());
-                            }
-                        }, maps);
-                }
-
-                @Override
-                public Query onQuery(final PrefixQuery query) {
-                	String baseField = query.getPrefix().field();
-                 	if (unsupportedFields.contains(baseField)) {
-                 		return unsupportedQuery;
-                 	}     
-                	
-                	return handleFieldExpansionQuery(
-                        query, query.getPrefix().field(), new FieldExpansionCallback() {
-                            @Override
-                            public Query createQuery(String field) {
-                                return new PrefixQuery(
-                                    new Term(field, query.getPrefix().text()));
-                            }
-                        }, maps);
-                }
-
-                @Override
-                public Query onQuery(final FuzzyQuery query) {
-                	String baseField = query.getTerm().field();
-                 	if (unsupportedFields.contains(baseField)) {
-                 		return unsupportedQuery;
-                 	}     
-
-                	return handleFieldExpansionQuery(
-                        query, query.getTerm().field(), new FieldExpansionCallback() {
-                            @Override
-                            public Query createQuery(String field) {
-                                return new FuzzyQuery(
-                                    new Term(field, query.getTerm().text()),
-                                    query.getMaxEdits(), query.getPrefixLength());
-                            }
-                        }, maps);
-                }
-
-                @Override
-                public Query onQuery(Query query) {
-                    log.trace("Ignoring query of type " + query.getClass().getSimpleName());
-                    return query;
-                }
-            }).rewrite(query);
+    public Configuration getRewriterConfig() {
+        return Configuration.newMemoryBased(
+                QueryRewriter.CONF_QUOTE_TERMS, false
+        );
     }
 
     private interface FieldExpansionCallback {
@@ -480,8 +483,8 @@ public class InteractionAdjuster implements Configurable {
     // or BooleanQuery (is 2+ expansions)
     // Also sets boost
     private Query handleFieldExpansionQuery(
-        final Query originalQuery, final String field,
-        FieldExpansionCallback callback, ManyToManyMapper... maps) {
+            final Query originalQuery, final String field,
+            FieldExpansionCallback callback, ManyToManyMapper... maps) {
         Set<String> newFields = getAlternativeFields(field, maps);
         if (newFields == null) {
             return originalQuery;
@@ -502,7 +505,7 @@ public class InteractionAdjuster implements Configurable {
 
     // Returns null on empty field or no alternatives
     private Set<String> getAlternativeFields(
-        String field, ManyToManyMapper... maps) {
+            String field, ManyToManyMapper... maps) {
         if ("".equals(field)) {
             return null;
         }
@@ -540,9 +543,37 @@ public class InteractionAdjuster implements Configurable {
         return bq;
     }
 
+    private Query makeQuery(List<Pair<String, String>> terms, float boost, boolean phrase) {
+        if (terms.size() == 1) {
+            return makeQuery(terms.get(0).getKey(), terms.get(0).getValue(), boost, phrase);
+        }
+        BooleanQuery bq = new BooleanQuery();
+        for (Pair<String, String> term: terms) {
+            Query q = makeQuery(term.getKey(), term.getValue(), 1.0f, phrase);
+            bq.add(new BooleanClause(q, BooleanClause.Occur.SHOULD));
+        }
+        bq.setBoost(boost); // TODO: Verify this should not be on clause
+        return bq;
+    }
+
+    private Query makeQuery(String field, String text, float boost, boolean phrase) {
+        //final Term t = new Term(field, qrw.escape(text, phrase));
+        final Term t = new Term(field, text); // Escaping is done later
+        Query query;
+        if (phrase) {
+            PhraseQuery phraseQuery = new PhraseQuery();
+            phraseQuery.add(t);
+            query = phraseQuery;
+        } else {
+            query =new TermQuery(t);
+        }
+        query.setBoost(boost);
+        return query;
+    }
+
     private List<Pair<String, String>> makeTerms(
-        final String field, final String text,
-        final ManyToManyMapper... maps) {
+            final String field, final String text,
+            final ManyToManyMapper... maps) {
         Set<String> newFields = null;
         for (ManyToManyMapper map: maps) {
             if (map != null && map.getForward().containsKey(field)) {
@@ -565,12 +596,12 @@ public class InteractionAdjuster implements Configurable {
             }
         }
         if (newTexts == null) {
-             // No transformation
+            // No transformation
             newTexts = new HashSet<String>(Arrays.asList(text));
         }
 
         List<Pair<String, String>> result =
-            new ArrayList<Pair<String, String>>();
+                new ArrayList<Pair<String, String>>();
         for (String newField: newFields) {
             for (String newText: newTexts) {
                 result.add(new Pair<String, String>(newField, newText));
@@ -581,18 +612,15 @@ public class InteractionAdjuster implements Configurable {
     }
 
     private Query createPhraseOrTermQuery(String field, String text) {
-        Query newQuery;
         if (text.contains(" ")) {
             PhraseQuery phraseQuery = new PhraseQuery();
             String[] tokens = text.split(" +");
             for (String term: tokens) {
                 phraseQuery.add(new Term(field, term));
             }
-            newQuery = phraseQuery;
-        } else {
-            newQuery = new TermQuery(new Term(field, text));
+            return phraseQuery;
         }
-        return newQuery;
+        return new TermQuery(new Term(field, text));
     }
 
     private void rewriteFacetFields(Request request) {
@@ -632,8 +660,7 @@ public class InteractionAdjuster implements Configurable {
         }
     }
 
-    private ManyToManyMapper resolveMap(
-        Request request, ManyToManyMapper defaultMap, String key) {
+    private ManyToManyMapper resolveMap(Request request, ManyToManyMapper defaultMap, String key) {
         log.trace("resolveMap called");
         ManyToManyMapper map = defaultMap;
         if (request.containsKey(key)) {
@@ -644,7 +671,7 @@ public class InteractionAdjuster implements Configurable {
         }
         return map;
     }
-    
+
     private Request clone(Request request) {
         Request cloned = new Request();
         for (Map.Entry<String, Serializable> entry: request.entrySet()) {
@@ -677,7 +704,7 @@ public class InteractionAdjuster implements Configurable {
     }
 
     private void adjustDocuments(
-        Request request, ResponseCollection responses) {
+            Request request, ResponseCollection responses) {
         log.trace("adjustDocuments called");
         DocumentResponse documentResponse = null;
         for (Response response: responses) {
@@ -737,18 +764,18 @@ public class InteractionAdjuster implements Configurable {
         }
         // Check and warn for multiple destinations for same source
         for (Map.Entry<String, Set<String>> entry:
-            facetMap.getForward().entrySet()) {
+                facetMap.getForward().entrySet()) {
             if (entry.getValue().size() > 1 && !warnedOnIncompleteFacetMap) {
                 warnedOnIncompleteFacetMap = true;
                 log.warn(String.format(
-                    "Encountered mapping from source '%s' to destinations '%s'. Multiple sources is not yet supported",
-                    entry.getValue(), entry.getKey()));
+                        "Encountered mapping from source '%s' to destinations '%s'. Multiple sources is not yet supported",
+                        entry.getValue(), entry.getKey()));
             }
         }
 
         Map<String, String> reversedSimplified = new HashMap<String, String>(facetMap.getForward().size());
         for (Map.Entry<String, Set<String>> entry:
-            facetMap.getReverse().entrySet()) {
+                facetMap.getReverse().entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 reversedSimplified.put(entry.getKey(), entry.getValue().iterator().next());
             }
@@ -757,7 +784,7 @@ public class InteractionAdjuster implements Configurable {
     }
 
     private void replaceDocumentFields(
-        Request request, DocumentResponse documentResponse) {
+            Request request, DocumentResponse documentResponse) {
         log.trace("replaceDocumentFields called");
         long startTime = System.currentTimeMillis();
         ManyToManyMapper docFieldMap = resolveMap(request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
@@ -779,7 +806,7 @@ public class InteractionAdjuster implements Configurable {
                 if (docFieldMap.getReverse().containsKey(field.getName())) {
                     if (log.isTraceEnabled()) {
                         log.trace("Changing field name '" + field.getName() + "' to '" + Strings.join(
-                            docFieldMap.getReverse().get(field.getName()), ", ") + " for " + record.getId());
+                                docFieldMap.getReverse().get(field.getName()), ", ") + " for " + record.getId());
                     }
                     Set<String> alts = docFieldMap.getReverse().get(field.getName());
                     if (alts.size() == 1) { // 1:1
@@ -811,9 +838,9 @@ public class InteractionAdjuster implements Configurable {
     private void adjustDocumentScores(Request request, DocumentResponse documentResponse) {
         log.trace("adjustDocumentScores called");
         boolean filtersContaminateQuery =
-            request.containsKey(DocumentKeys.SEARCH_FILTER)
-            && !request.getBoolean(SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, false)
-            && (pureNegativeNotSimple && request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE));
+                request.containsKey(DocumentKeys.SEARCH_FILTER)
+                && !request.getBoolean(SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, false)
+                && pureNegativeNotSimple && request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE);
 
         boolean isSimple = (!filtersContaminateQuery
                             && request.containsKey(DocumentKeys.SEARCH_QUERY)
