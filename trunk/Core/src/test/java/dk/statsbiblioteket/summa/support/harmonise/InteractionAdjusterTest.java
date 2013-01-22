@@ -318,14 +318,53 @@ public class InteractionAdjusterTest extends TestCase {
 
     public void testQueryFieldRewrite() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "Language:\"foo\" \"bar\"", "llang:\"foo\" bar");
-        assertAdjustment(adjuster, "FieldB:\"ContentA\" OR FieldA:\"ContentA\"", "fa:ca");
+        assertAdjustment(adjuster, "Language:foo bar", "llang:\"foo\" bar");
+        assertAdjustment(adjuster, "FieldB:ContentA OR FieldA:ContentA", "fa:ca");
     }
 
-    
+    public void testQualifiedEscaping() {
+        assertAdjustment(createAdjuster(), "Language:foo\\ bar", "llang:foo\\ bar");
+    }
+
+    public void testQualifiedPhrases() {
+        assertAdjustment(createAdjuster(), "Language:\"foo bar\"", "llang:\"foo bar\"");
+    }
+
+    public void testUnqualifiedPhrases() {
+        assertAdjustment(createAdjuster(), "\"foo bar\"", "\"foo bar\"");
+    }
+
+    public void testEscapedPhrases() {
+        assertAdjustment(createAdjuster(), "\"foo\\\" bar\"", "\"foo\\\" bar\"");
+    }
+
+    public void testQualifiedEscapedPhrases() {
+        assertAdjustment(createAdjuster(), "Language:\"foo\\\" bar\"", "llang:\"foo\\\" bar\"");
+    }
+
+    public void testNonqualifiedEscaping() {
+        assertAdjustment(createAdjuster(), "foo\\ bar", "foo\\ bar");
+    }
+
+    public void testQualifiedTruncation() {
+        assertAdjustment(createAdjuster(), "Language:bar*", "llang:bar*");
+    }
+
+    public void testNonqualifiedTruncation() {
+        assertAdjustment(createAdjuster(), "bar*", "bar*");
+    }
+
+    public void testQualifiedEscapingAndTruncation() {
+        assertAdjustment(createAdjuster(), "Language:foo\\ bar*", "llang:foo\\ bar*");
+    }
+
+    public void testNonqualifiedEscapingAndTruncation() {
+        assertAdjustment(createAdjuster(), "foo\\ bar*", "foo\\ bar*");
+    }
+
     public void testQueryUnsupportedField() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "\"foo\" year:\"999999\"", "foo ma:bar");
+        assertAdjustment(adjuster, "foo year:999999", "foo ma:bar");
     }
 
     
@@ -333,74 +372,70 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryFieldMultiple() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "ContentType:\"Newspaper Article\" OR "
-                         + "ContentType:\"Magazine Article\" OR "
-                         + "ContentType:\"Newsletter\" OR "
-                         + "ContentType:\"Book Review\" OR "
-                         + "ContentType:\"Trade Publication Article\" OR "
-                         + "ContentType:\"Publication Article\" OR "
-                         + "ContentType:\"Journal Article\" OR "
-                         + "ContentType:\"Book Chapter\" OR "
-                         + "ContentType:\"Article\"",
-                         "lma_long:\"artikel\"");
+                         "ContentType:Newspaper\\ Article OR "
+                         + "ContentType:Magazine\\ Article OR "
+                         + "ContentType:Newsletter OR "
+                         + "ContentType:Book\\ Review OR "
+                         + "ContentType:Trade\\ Publication\\ Article OR "
+                         + "ContentType:Publication\\ Article OR "
+                         + "ContentType:Journal\\ Article OR "
+                         + "ContentType:Book\\ Chapter OR "
+                         + "ContentType:Article",
+                         "lma_long:artikel");
         assertAdjustment(adjuster,
-                         "-ContentType:\"Book Chapter\"",
+                         "-ContentType:Book\\ Chapter",
                          "-lma_long:\"artikelibog\"");
     }
 
 
     public void testQueryTagRewrite_nonAdjusting() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "Language:\"foo\" \"bar\"", "llang:\"foo\" bar");
-        assertAdjustment(adjuster, "\"English\"", "English");
-        assertAdjustment(adjuster, "\"eng\"", "eng");
-        assertAdjustment(adjuster, "year:\"2010\"", "year:2010");
-        assertAdjustment(adjuster, "ContentType:\"eng\"", "lma_long:eng");
-        assertAdjustment(adjuster, "ContentType:\"gryf\"", "lma_long:gryf");
+        assertAdjustment(adjuster, "Language:foo bar", "llang:\"foo\" bar");
+        assertAdjustment(adjuster, "English", "English");
+        assertAdjustment(adjuster, "eng", "eng");
+        assertAdjustment(adjuster, "year:2010", "year:2010");
+        assertAdjustment(adjuster, "ContentType:eng", "lma_long:eng");
+        assertAdjustment(adjuster, "ContentType:gryf", "lma_long:gryf");
         assertAdjustment(adjuster, "Language:\"eng dan\"", "llang:\"eng dan\"");
     }
 
     public void testQueryTagRewrite_nonAdjustingPair() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "year:\"2010\"", "year:2010");
+        assertAdjustment(adjuster, "year:2010", "year:2010");
     }
 
     public void testQueryTagRewrite_1to1() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "Language:\"English\"", "llang:eng");
-        assertAdjustment(adjuster, "Language:\"English\"", "llang:\"eng\"");
-        assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"one\"");
-        assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"two\"");
+        assertAdjustment(adjuster, "Language:English", "llang:eng");
+        assertAdjustment(adjuster, "Language:English", "llang:\"eng\"");
+        assertAdjustment(adjuster, "Language:MyLang", "llang:\"one\"");
+        assertAdjustment(adjuster, "Language:MyLang", "llang:\"two\"");
     }
 
     public void testQueryTagAndFieldRewrite() {
         InteractionAdjuster adjuster = createAdjuster();
         // Tag
-        assertAdjustment(adjuster, "Language:\"English\"", "llang:eng");
+        assertAdjustment(adjuster, "Language:English", "llang:eng");
         // Field
-        assertAdjustment(adjuster, "Language:\"English\"", "lang:English");
+        assertAdjustment(adjuster, "Language:English", "lang:English");
         // Field + Tag
-        assertAdjustment(adjuster, "Language:\"English\"", "lang:eng");
+        assertAdjustment(adjuster, "Language:English", "lang:eng");
     }
 
     public void testQueryTagRewrite_1ton() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"one\"");
-        assertAdjustment(adjuster, "Language:\"MyLang\"", "llang:\"two\"");
-        assertAdjustment(adjuster, "Language:\"Boom\"", "llang:boo");
-        assertAdjustment(adjuster, "Language:\"Boom\"", "llang:hoo");
-        assertAdjustment(adjuster, "Language:\"Space man\"", "llang:always");
+        assertAdjustment(adjuster, "Language:MyLang", "llang:\"one\"");
+        assertAdjustment(adjuster, "Language:MyLang", "llang:\"two\"");
+        assertAdjustment(adjuster, "Language:Boom", "llang:boo");
+        assertAdjustment(adjuster, "Language:Boom", "llang:hoo");
+        assertAdjustment(adjuster, "Language:Space\\ man", "llang:always");
     }
 
     public void testQueryTagRewrite_phrase() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster,
-                         "Language:\"empty space\"", "llang:\"empty space\"");
-        assertAdjustment(adjuster,
-                         "Language:\"Space man\"", "llang:always");
-        assertAdjustment(adjuster,
-                         "Language:\"Source B\" OR Language:\"Source A\"",
-                         "llang:\"Dest A\"");
+        assertAdjustment(adjuster, "Language:\"empty space\"", "llang:\"empty space\"");
+        assertAdjustment(adjuster, "Language:Space\\ man", "llang:always");
+        assertAdjustment(adjuster, "Language:\"Source B\" OR Language:\"Source A\"", "llang:\"Dest A\"");
     }
 
     public void testQueryTagRewrite_range() {
@@ -424,13 +459,13 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryTagRewrite_multiValue() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "Language:\"foo\" OR Language:\"English\"",
+                         "Language:foo OR Language:English",
                          "llang:(foo OR eng)");
     }
 
     public void testQueryDividerRewrite_multiValue() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "\"foo\" \"-\" \"bar\"", "foo - bar");
+        assertAdjustment(adjuster, "foo \\- bar", "foo - bar");
     }
 
     public void testQueryDividerPhraseRewrite_multiValue() {
@@ -441,7 +476,7 @@ public class InteractionAdjusterTest extends TestCase {
     public void testQueryTagRewrite_nto1() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "Language:\"Doo\" OR Language:\"Moo\"",
+                         "Language:Doo OR Language:Moo",
                          "llang:\"single\"");
     }
 
@@ -449,17 +484,17 @@ public class InteractionAdjusterTest extends TestCase {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(
             adjuster,
-            "(Language:\"Doo\" OR Language:\"Moo\") Language:\"Boom\"",
+            "(Language:Doo OR Language:Moo) Language:Boom",
             "llang:\"single\" llang:boo");
     }
 
     public void testQueryTagRewrite_nton() {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(adjuster,
-                         "Language:\"Bim\" OR Language:\"Bam\"",
+                         "Language:Bim OR Language:Bam",
                          "llang:\"bi\"");
         assertAdjustment(adjuster,
-                         "Language:\"Bim\" OR Language:\"Bam\"",
+                         "Language:Bim OR Language:Bam",
                          "llang:\"ba\"");
     }
 

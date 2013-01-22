@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
@@ -73,6 +74,7 @@ public class QueryRewriter {
      */
     public static final String CONF_DEFAULT_PARSER = "queryrewriter.defaultparser";
     public static final String DEFAULT_DEFAULT_PARSER = PARSER_WHITESPACE;
+    //public static final String DEFAULT_DEFAULT_PARSER = PARSER_KEYWORD;
     // TODO: Consider using keyword as new default
     //public static final String DEFAULT_DEFAULT_PARSER = PARSER_KEYWORD;
 
@@ -379,7 +381,7 @@ public class QueryRewriter {
             if (tq.getBoost() != 1.0f) {
                 result += "^" + tq.getBoost();
             }
-/*        } else if (query instanceof PhraseQuery) {
+        } else if (query instanceof PhraseQuery) {
             PhraseQuery phraseQuery = (PhraseQuery)query;
             String field = null;
             String text = "";
@@ -392,7 +394,7 @@ public class QueryRewriter {
                 }
                 text += quotedEscaper.transform(term.text());
             }
-            result += (field == null ? "" : field + ":") + '"' + text + '"';*/
+            result += (field == null || field.isEmpty() ? "" : field + ":") + '"' + text + '"';
         } else if (query instanceof PrefixQuery) {
             PrefixQuery prefixQuery = (PrefixQuery) query;
             return convertSubqueryToString(prefixQuery.getField(), prefixQuery.getPrefix().text(), false) + "*";
@@ -472,14 +474,23 @@ public class QueryRewriter {
         }
         quotedEscaper = ReplaceFactory.getReplacer(rules);
     }
+
+    /**
+     * Escape the given text, making it suitable for construction of a new TermQuery or PhraseQuery.
+     * @param text   the text to escape.
+     * @param phrase if true, only quote (") will be escpaed. If false, all special characters are escaped.
+     * @return properly escaped text.
+     */
+    public String escape(String text, boolean phrase) {
+        return phrase ? quotedEscaper.transform(text) : unquotedEscaper.transform(QueryParser.escape(text));
+    }
+
     private String convertSubqueryToString(String field, String text, boolean quote) {
 /*        text = unquotedEscaper.transform(QueryParser.escape(text));
         if (quote) {
             text = "\"" + text + "\"";
         }*/
-        text = quote ?
-               "\"" + quotedEscaper.transform(text) + "\"" :
-               unquotedEscaper.transform(QueryParser.escape(text));
+        text = quote ? "\"" + escape(text, true) + "\"" : escape(text, false);
         return field == null || field.isEmpty() ? text : field + ":" + text;
     }
 /*    private String convertSubqueryToString(String field, String text, boolean quote) {

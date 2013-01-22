@@ -209,14 +209,30 @@ public class QueryRewriterTest extends TestCase {
         assertIdentity("\"-\"^1.2", assignWeight(query, 1.2f));
     }
 
-    public void testEscapedWhitespace1() throws ParseException {
+    public void testEscapedWhitespaceWithTruncation() throws ParseException {
         String query = "new:umat\\ 11*";
         assertIdentity("new:umat\\ 11*", query);
     }
 
-    public void testEscapedWhitespace2() throws ParseException {
+    public void testEscapedWhitespaceWithTruncation2() throws ParseException {
+        String query = "new:umat\\ humbo\\ *";
+        assertIdentity("new:umat\\ humbo\\ *", query);
+    }
+
+    public void testEscapedWhitespaceWithTruncationNoField() throws ParseException {
+        String query = "umat\\ humbo\\ *";
+        assertIdentity("umat\\ humbo\\ *", query);
+    }
+
+    public void testQualifiedEscapedWhitespace() throws ParseException {
         String query = "new:umat\\ 11";
-        assertIdentity("new:\"umat\" new:\"11\"", query); // We accept this because one would normally use quotes instead of escaping
+        assertIdentity("new:umat\\ 11", query);
+        //assertIdentity("new:\"umat\" new:\"11\"", query); // We accept this because one would normally use quotes instead of escaping
+    }
+
+    public void testUnqualifiedEscapedWhitespace() throws ParseException {
+        String query = "umat\\ 11";
+        assertIdentity("umat\\ 11", query);
     }
 
     public void testKeywordAnalyzer() throws ParseException {
@@ -319,7 +335,7 @@ public class QueryRewriterTest extends TestCase {
         if (explicit.equals(implicit)) {
             fail("The rewritten queries should differ, but were both '" + implicit + "'");
         }
-        System.out.println("explicit: " + explicit + "\nimplicit: " + implicit);
+//        System.out.println("explicit: " + explicit + "\nimplicit: " + implicit);
     }
 
     public void testTerseParentheses() throws ParseException {
@@ -334,7 +350,9 @@ public class QueryRewriterTest extends TestCase {
 
     private void assertIdentity(String expected, String input) throws ParseException {
         assertEquals("Rewrite should be correct",
-                     expected, new QueryRewriter(new QueryRewriter.Event()).rewrite(input));
+                     expected, new QueryRewriter(Configuration.newMemoryBased(
+//                QueryRewriter.CONF_DEFAULT_PARSER, QueryRewriter.PARSER_KEYWORD
+        ), null, new QueryRewriter.Event()).rewrite(input));
     }
     private void assertIdentity(String expected, String input, boolean terse) throws ParseException {
         assertEquals("Rewrite should be correct",

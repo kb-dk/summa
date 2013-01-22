@@ -41,8 +41,7 @@ public class SummaQueryParser {
      * If true, query time boosts on fields are enabled. Field-boosts are
      * given in the query-string as defined by the class {@link LuceneBooster}.
      */
-    public static final String CONF_QUERY_TIME_FIELD_BOOSTS =
-            "summa.common.queryparser.querytimefieldboosts";
+    public static final String CONF_QUERY_TIME_FIELD_BOOSTS = "summa.common.queryparser.querytimefieldboosts";
     public static final boolean DEFAULT_QUERY_TIME_FIELD_BOOSTS = true;
     private boolean supportQueryTimeBoosts = DEFAULT_QUERY_TIME_FIELD_BOOSTS;
 
@@ -67,6 +66,7 @@ public class SummaQueryParser {
         QueryBalancer() {
             balance = new Stack<Integer>();
         }
+
         void addToken(Token t) throws ParseException {
             switch (t.kind) {
                 case QueryParserConstants.LPAREN:       // (
@@ -79,30 +79,20 @@ public class SummaQueryParser {
                     balance.add(t.kind);
                     break;
                 case QueryParserConstants.RANGEIN_END: // ]
-                    if (balance.isEmpty() ||
-                        balance.peek() != QueryParserConstants.RANGEIN_START) {
-                        throw new ParseException(UNBALANCED
-                                                 + t.image + "<" + t
-                                .beginColumn + "," + t.beginLine + ">");
+                    if (balance.isEmpty() || balance.peek() != QueryParserConstants.RANGEIN_START) {
+                        throw new ParseException(UNBALANCED + t.image + "<" + t.beginColumn + "," + t.beginLine + ">");
                     }
                     balance.pop();
                     break;
                 case QueryParserConstants.RANGEEX_END: // }
-                    if (balance.isEmpty() || balance.peek()
-                                             != QueryParserConstants
-                            .RANGEEX_START) {
-                        throw new ParseException(UNBALANCED
-                                                 + t.image + "<" + t
-                                .beginColumn + "," + t.beginLine + ">");
+                    if (balance.isEmpty() || balance.peek() != QueryParserConstants.RANGEEX_START) {
+                        throw new ParseException(UNBALANCED + t.image + "<" + t.beginColumn + "," + t.beginLine + ">");
                     }
                     balance.pop();
                     break;
                 case QueryParserConstants.RPAREN: // )
-                    if (balance.isEmpty()
-                        || balance.peek() != QueryParserConstants.LPAREN) {
-                        throw new ParseException(UNBALANCED
-                                                 + t.image + "<" + t
-                                .beginColumn + "," + t.beginLine + ">");
+                    if (balance.isEmpty() || balance.peek() != QueryParserConstants.LPAREN) {
+                        throw new ParseException(UNBALANCED + t.image + "<" + t.beginColumn + "," + t.beginLine + ">");
                     }
                     balance.pop();
                     break;
@@ -120,8 +110,10 @@ public class SummaQueryParser {
     /**
      * Create a parser based on the given descriptor. It is recommended to use
      * the constructor
-     * {@link #SummaQueryParser(dk.statsbiblioteket.summa.common.configuration.Configuration, dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor)} 
+     * {@link #SummaQueryParser(dk.statsbiblioteket.summa.common.configuration.Configuration,
+     * dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor)}
      * instead as it allows for customization of the parser.
+     *
      * @param descriptor the index descriptor.
      */
     public SummaQueryParser(LuceneIndexDescriptor descriptor) {
@@ -134,14 +126,15 @@ public class SummaQueryParser {
      * construction of an {@link IndexDescriptor}. For performance and
      * stability reasons, it is recommended to share index descriptors, so it
      * is recommended to use the constructor
-     * {@link #SummaQueryParser(dk.statsbiblioteket.summa.common.configuration.Configuration, dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor)}
+     * {@link #SummaQueryParser(dk.statsbiblioteket.summa.common.configuration.Configuration,
+     * dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor)}
      * instead.
+     *
      * @param conf the configuration for the parser and corresponding index
      *             descriptor.
      */
     public SummaQueryParser(Configuration conf) {
-        log.debug("Creating query parser with descriptor specified "
-                  + "in configuration");
+        log.debug("Creating query parser with descriptor specified " + "in configuration");
         init(LuceneIndexUtils.getDescriptor(conf));
         extractSetup(conf);
     }
@@ -150,11 +143,11 @@ public class SummaQueryParser {
      * Create a query parser with the given configuration and descriptor.
      * This is the recommended way of constructing the parser as is allows for
      * reuse and customizability.
+     *
      * @param conf       the configuration for the parser.
      * @param descriptor the index descriptor.
      */
-    public SummaQueryParser(Configuration conf,
-                            LuceneIndexDescriptor descriptor) {
+    public SummaQueryParser(Configuration conf, LuceneIndexDescriptor descriptor) {
         log.debug("Creating query parser with configuration and descriptor");
         init(descriptor);
         log.trace("Determining query time boosts");
@@ -163,11 +156,9 @@ public class SummaQueryParser {
     }
 
     private void extractSetup(Configuration conf) {
-        supportQueryTimeBoosts = conf.getBoolean(CONF_QUERY_TIME_FIELD_BOOSTS,
-                                                 supportQueryTimeBoosts);
+        supportQueryTimeBoosts = conf.getBoolean(CONF_QUERY_TIME_FIELD_BOOSTS, supportQueryTimeBoosts);
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Query time boosts are "
-                  + (supportQueryTimeBoosts ? "enabled" : "disabled"));
+        log.debug("Query time boosts are " + (supportQueryTimeBoosts ? "enabled" : "disabled"));
     }
 
     public void init(LuceneIndexDescriptor descriptor) {
@@ -177,19 +168,20 @@ public class SummaQueryParser {
     }
 
     private final static Query MATCH_ALL = new MatchAllDocsQuery();
+
     /**
      * Parse the given String and return a Lucene Query from it.
      * </p><p>
      * see http://lucene.apache.org/java/docs/queryparsersyntax.html for syntax.
+     *
      * @param queryString a String with Lucene query syntax.
      * @return the expanded query.
      * @throws ParseException if the query could not be parsed.
      */
     public synchronized Query parse(String queryString) throws ParseException {
         if (queryString == null || "".equals(queryString) ||
-            "*".equals(queryString)|| "(*)".equals(queryString)) {
-            log.debug(
-                "Received '" + queryString + "', returning MatchAllQuery");
+            "*".equals(queryString) || "(*)".equals(queryString)) {
+            log.debug("Received '" + queryString + "', returning MatchAllQuery");
             return MATCH_ALL;
         }
 
@@ -211,8 +203,7 @@ public class SummaQueryParser {
 
 
         if (log.isTraceEnabled()) {
-            log.trace("Parsed query (" + query + ") in "
-                      + (System.nanoTime() - startTime) / 1000000D + "ms: "
+            log.trace("Parsed query (" + query + ") in " + (System.nanoTime() - startTime) / 1000000D + "ms: "
                       + query.toString());
         }
 
@@ -226,20 +217,16 @@ public class SummaQueryParser {
                 log.error("Exception applying query-time boost", e);
             }
             if (log.isTraceEnabled()) {
-                log.trace("Applied boost in "
-                          + (System.nanoTime() - boostStartTime)  / 1000000D
-                          + "ms");
+                log.trace("Applied boost in " + (System.nanoTime() - boostStartTime) / 1000000D + "ms");
             }
         }
 
         if (log.isDebugEnabled()) {
             try {
-                log.debug("Fully parsed and boosted query in "
-                          + (System.nanoTime() - startTime) / 1000000D
-                          + "ms: " + LuceneIndexUtils.queryToString(query));
+                log.debug("Fully parsed and boosted query in " + (System.nanoTime() - startTime) / 1000000D + "ms: "
+                          + LuceneIndexUtils.queryToString(query));
             } catch (Exception e) {
-                log.error("Could not dump fully parsed and boosted query to" 
-                          + " String", e);
+                log.error("Could not dump fully parsed and boosted query to" + " String", e);
             }
         }
         return query;
@@ -353,18 +340,19 @@ public class SummaQueryParser {
         return r;
     }
   */
+
     /**
-     * @see LuceneBooster#splitQuery(String)
      * @return true if query-time field-level boosts is supported.
+     * @see LuceneBooster#splitQuery(String)
      */
     public boolean isSupportQueryTimeBoosts() {
         return supportQueryTimeBoosts;
     }
 
     /**
-     * @see LuceneBooster#splitQuery(String)
      * @param supportQueryTimeBoosts set to true if query-time field-level
      *                               boosts should be supported.
+     * @see LuceneBooster#splitQuery(String)
      */
     public void setSupportQueryTimeBoosts(boolean supportQueryTimeBoosts) {
         this.supportQueryTimeBoosts = supportQueryTimeBoosts;
@@ -374,6 +362,7 @@ public class SummaQueryParser {
     /**
      * Parses a Query-tree and returns it as a human-readable String. This
      * dumper writes custom boosts. Not suitable to feed back into a parser!
+     *
      * @param query the query to dump as a String.
      * @return the query as a human-redable String.
      */
@@ -383,7 +372,7 @@ public class SummaQueryParser {
         if (query instanceof BooleanQuery) {
             sw.append("(");
             boolean first = true;
-            for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
+            for (BooleanClause clause : ((BooleanQuery) query).getClauses()) {
                 if (!first) {
                     sw.append(" ");
                 }
@@ -394,7 +383,7 @@ public class SummaQueryParser {
             sw.append(")[");
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof TermQuery) {
-            TermQuery termQuery = (TermQuery)query;
+            TermQuery termQuery = (TermQuery) query;
             sw.append(termQuery.getTerm().field()).append(":");
             sw.append(termQuery.getTerm().text()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
@@ -404,14 +393,14 @@ public class SummaQueryParser {
             sw.append(query.toString()).append("[");
             sw.append(Float.toString(query.getBoost())).append("]");
         } else if (query instanceof DisjunctionMaxQuery) {
-            Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
+            Iterator iterator = ((DisjunctionMaxQuery) query).iterator();
             sw.append("<");
             boolean first = true;
             while (iterator.hasNext()) {
                 if (!first) {
                     sw.append(" ");
                 }
-                sw.append(queryToString((Query)iterator.next()));
+                sw.append(queryToString((Query) iterator.next()));
                 first = false;
             }
             sw.append(">");
@@ -427,6 +416,3 @@ public class SummaQueryParser {
         return descriptor;
     }
 }
-
-
-
