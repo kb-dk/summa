@@ -226,13 +226,25 @@ public class QueryRewriterTest extends TestCase {
 
     public void testQualifiedEscapedWhitespace() throws ParseException {
         String query = "new:umat\\ 11";
-        assertIdentity("new:umat\\ 11", query);
+        assertIdentity("new:\"umat 11\"", query);
         //assertIdentity("new:\"umat\" new:\"11\"", query); // We accept this because one would normally use quotes instead of escaping
     }
 
     public void testUnqualifiedEscapedWhitespace() throws ParseException {
         String query = "umat\\ 11";
-        assertIdentity("umat\\ 11", query);
+        assertIdentity("\"umat 11\"", query);
+    }
+
+    public void testSimpleMulti() throws ParseException {
+        String query = "foo bar zoo";
+        String expected = "\"foo\" \"bar\" \"zoo\"";
+        assertIdentity(expected, query);
+    }
+
+    public void testMultiWithEscape() throws ParseException {
+        String query = "foo\\ bar zoo";
+        String expected = "\"foo bar\" \"zoo\"";
+        assertIdentity(expected, query);
     }
 
     public void testKeywordAnalyzer() throws ParseException {
