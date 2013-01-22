@@ -323,7 +323,7 @@ public class InteractionAdjusterTest extends TestCase {
     }
 
     public void testQualifiedEscaping() {
-        assertAdjustment(createAdjuster(), "Language:foo\\ bar", "llang:foo\\ bar");
+        assertAdjustment(createAdjuster(), "Language:\"foo bar\"", "llang:foo\\ bar");
     }
 
     public void testQualifiedPhrases() {
@@ -343,7 +343,7 @@ public class InteractionAdjusterTest extends TestCase {
     }
 
     public void testNonqualifiedEscaping() {
-        assertAdjustment(createAdjuster(), "foo\\ bar", "foo\\ bar");
+        assertAdjustment(createAdjuster(), "\"foo bar\"", "foo\\ bar");
     }
 
     public void testQualifiedTruncation() {

@@ -224,7 +224,7 @@ public class QueryRewriter {
                 Version.LUCENE_40, "", PARSER_KEYWORD.equals(defaultParser) ?
                                        new KeywordAnalyzer() :
                                        new WhitespaceAnalyzer(Version.LUCENE_40));
-
+        queryParser.setAutoGeneratePhraseQueries(true);
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
         return queryParser;
     }
