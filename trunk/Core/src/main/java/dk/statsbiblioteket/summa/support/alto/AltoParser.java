@@ -13,6 +13,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -37,16 +38,26 @@ public class AltoParser extends ThreadedStreamParser {
     public static final String CONF_OUTPUT = "altoparser.output";
     public static final String DEFAULT_OUTPUT = OUTPUT.summadocument.toString();
 
+    /**
+     * The maximum number of characters to use for dc:description in shortformat.
+     * </p><p>
+     * Optional. Default is 50.
+     */
+    public static final String CONF_SNIPPET_CHARACTERS = "altoparser.snippet.characters";
+    public static final int DEFAULT_SNIPPET_CHARACTERS = 50;
+
     public enum OUTPUT {summadocument}
 
     private static final XMLOutputFactory factory = XMLOutputFactory.newInstance();
     private final HPAltoAnalyzer analyzer;
     private final OUTPUT output;
+    private final int snippetCharacters;
 
     public AltoParser(Configuration conf) {
         super(conf);
         analyzer = new HPAltoAnalyzer(conf);
         output = OUTPUT.valueOf(conf.getString(CONF_OUTPUT, DEFAULT_OUTPUT));
+        snippetCharacters = conf.getInt(CONF_SNIPPET_CHARACTERS, DEFAULT_SNIPPET_CHARACTERS);
         log.info("Created HPAltoAnalyzer");
     }
 
@@ -137,6 +148,13 @@ public class AltoParser extends ThreadedStreamParser {
         xml.writeStartElement("rdf", "Description", RDF);
         xml.writeCharacters("\n");
         writeDC(xml, "title", segment.getTitle());
+        if (!segment.getParagraphs().isEmpty()) {
+            String snippet = Strings.join(segment.getParagraphs(), " ");
+            if (snippet.length() > snippetCharacters) {
+                snippet = snippet.substring(0, snippetCharacters);
+            }
+            writeDC(xml, "description", snippet);
+        }
         writeDC(xml, "date", segment.getDate());
         writeDC(xml, "type", "hvideprogrammer");
         writeDC(xml, "lang", "da");

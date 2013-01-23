@@ -41,13 +41,23 @@ public class HPAltoAnalyzer {
     public static final String CONF_CONNECT_TIMES = "hpaltoanalyzer.connect.times";
     public static final boolean DEFAULT_CONNECT_TIMES = true;
 
+    /**
+     * When calculating the distance between two points, the horizontal distance will be multiplied with this factor.
+     * Stating a value below 1 means that vertical distance is more significant..
+     * </p><p>
+     * Optional. Default is 0.5.
+     */
+    public static final String CONF_HDIST_FACTOR = "hpaltoanalyzer.hdist.factor";
+    public static final double DEFAULT_HDIST_FACTOR = 0.5d;
 
     private final boolean mergeSubsequent;
     private final boolean connectTimes;
+    private final double hdistFactor;
 
     public HPAltoAnalyzer(Configuration conf) {
         mergeSubsequent = conf.getBoolean(CONF_MERGE_SUBSEQUENT_NOTIME, DEFAULT_MERGE_SUBSEQUENT_NOTIME);
         connectTimes = conf.getBoolean(CONF_CONNECT_TIMES, DEFAULT_CONNECT_TIMES);
+        hdistFactor = conf.getDouble(CONF_HDIST_FACTOR, DEFAULT_HDIST_FACTOR);
     }
 
     /**
@@ -79,8 +89,8 @@ public class HPAltoAnalyzer {
             // Endless loop detection
             if (best == null && maxHPos == Integer.MAX_VALUE) {
                 log.warn(String.format(
-                        "getSegments found %d segments with %d remaining TextBlocks, where there should be 0 remaining." +
-                                " The content of the TextBlocks follows:\n%s",
+                        "getSegments found %d segments with %d remaining TextBlocks, where there should be 0 remaining."
+                                + " The content of the TextBlocks follows:\n%s",
                         segments.size(), blocks.size(), dumpFull(blocks)));
                 return collapse(segments);
             }
@@ -192,7 +202,7 @@ public class HPAltoAnalyzer {
 
     // TODO: Consider weights that prefers closer vDistance over hDistance
     private double getDistance(int hPos, int vPos, Alto.TextBlock candidate) {
-        return Math.sqrt(Math.pow(hPos-candidate.getHpos(), 2) + Math.pow(vPos-candidate.getVpos(), 2));
+        return Math.sqrt(Math.pow((hPos-candidate.getHpos())*hdistFactor, 2) + Math.pow(vPos-candidate.getVpos(), 2));
     }
 
     // TODO: Improve this regexp
