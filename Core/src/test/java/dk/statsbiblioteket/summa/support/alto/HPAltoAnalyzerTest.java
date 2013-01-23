@@ -20,9 +20,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -32,9 +30,10 @@ public class HPAltoAnalyzerTest extends TestCase {
     //private static Log log = LogFactory.getLog(HPAltoAnalyzerTest.class);
 
     // TODO: We do not have license to publish these files. Generate obfuscated test files from them
-    public static final String alto1977 = "/home/te/projects/hvideprogrammer/B-1977-10-02-P-0003.xml";
     public static final String alto1934 = "/home/te/projects/hvideprogrammer/A-1934-04-02-P-0005.xml";
     public static final String alto1947 = "/home/te/projects/hvideprogrammer/A-1947-01-01-P-0005.xml";
+    public static final String alto1977 = "/home/te/projects/hvideprogrammer/B-1977-10-02-P-0003.xml";
+    public static final String alto1972 = "/home/te/projects/hvideprogrammer/B-1972-01-09-P-0014.xml";
     public static final String alto1983 = "/home/te/projects/hvideprogrammer/B-1983-10-17-P-0080.xml";
 
     public HPAltoAnalyzerTest(String name) {
@@ -55,25 +54,44 @@ public class HPAltoAnalyzerTest extends TestCase {
         return new TestSuite(HPAltoAnalyzerTest.class);
     }
 
-    public void testBasic1977() throws XMLStreamException, FileNotFoundException {
-        testBasicAnalyze(alto1977);
-    }
-
-    public void testBasic1934() throws XMLStreamException, FileNotFoundException {
+    public void testBasic1934() throws Exception {
         testBasicAnalyze(alto1934);
     }
 
-    public void testBasic1947() throws XMLStreamException, FileNotFoundException {
+    public void testBasic1947() throws Exception {
         testBasicAnalyze(alto1947);
     }
 
-    public void testBasic1983() throws XMLStreamException, FileNotFoundException {
+    public void testBasic1972() throws Exception {
+        testBasicAnalyze(alto1972);
+    }
+
+    public void testCustom1972() throws Exception {
+        testBasicAnalyze(Configuration.newMemoryBased(
+                        HPAltoAnalyzerSetup.CONF_MERGE_SUBSEQUENT_NOTIME, false,
+                        HPAltoAnalyzerSetup.CONF_CONNECT_TIMES, true
+                ), alto1972);
+    }
+
+    public void testBasic1977() throws Exception {
+        testBasicAnalyze(alto1977);
+    }
+
+    public void testBasic1983() throws Exception {
         testBasicAnalyze(alto1983);
     }
 
-    private void testBasicAnalyze(String source) throws XMLStreamException, FileNotFoundException {
+    private void testBasicAnalyze(String source) throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        testBasicAnalyze(conf, source);
+    }
+
+    private void testBasicAnalyze(Configuration conf, String source) throws Exception {
+        Configuration realConf = Configuration.newMemoryBased();
+        List<Configuration> subs = realConf.createSubConfigurations(HPAltoAnalyzer.CONF_SETUPS, 1);
+        subs.get(0).importConfiguration(conf);
         Alto alto = new Alto(new File(source));
-        HPAltoAnalyzer analyzer = new HPAltoAnalyzer(Configuration.newMemoryBased());
+        HPAltoAnalyzer analyzer = new HPAltoAnalyzer(realConf);
         List<HPAltoAnalyzer.Segment> segments = analyzer.getSegments(alto);
         for (HPAltoAnalyzer.Segment segment: segments) {
             System.out.println(segment);
