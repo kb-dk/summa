@@ -147,7 +147,11 @@ public class AltoParser extends ThreadedStreamParser {
         xml.writeCharacters("\n          ");
         xml.writeStartElement("rdf", "Description", RDF);
         xml.writeCharacters("\n");
-        writeDC(xml, "title", segment.getTitle());
+        if (segment.getStartTime() != null) {
+            writeDC(xml, "title", segment.getTitle() + ": " + segment.getReadableTime());
+        } else {
+            writeDC(xml, "title", segment.getTitle());
+        }
         if (!segment.getParagraphs().isEmpty()) {
             String snippet = Strings.join(segment.getParagraphs(), " ");
             if (snippet.length() > snippetCharacters) {
@@ -155,6 +159,7 @@ public class AltoParser extends ThreadedStreamParser {
             }
             writeDC(xml, "description", snippet);
         }
+        // TODO: Add year + airing-iso (for sorting)
         writeDC(xml, "date", segment.getDate());
         writeDC(xml, "type", "hvideprogrammer");
         writeDC(xml, "lang", "da");
