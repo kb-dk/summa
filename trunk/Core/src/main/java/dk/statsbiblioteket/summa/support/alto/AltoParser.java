@@ -101,7 +101,7 @@ public class AltoParser extends ThreadedStreamParser {
         writeField(xml, "starttime", segment.getStartTime());
         writeField(xml, "endtime", segment.getEndTime());
         writeField(xml, "filename", segment.getFilename());
-        writeField(xml, "freetext", segment.getAllText());
+//        writeField(xml, "freetext", segment.getAllText());
         // TODO: Remove copyToFreetext from IndexDesctiptor
         writeField(xml, "date", segment.getDate());
         writeField(xml, "timeapproximate", Boolean.toString(segment.isTimeApproximate()));

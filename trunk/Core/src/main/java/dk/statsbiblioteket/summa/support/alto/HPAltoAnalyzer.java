@@ -79,8 +79,9 @@ public class HPAltoAnalyzer {
             // Endless loop detection
             if (best == null && maxHPos == Integer.MAX_VALUE) {
                 log.warn(String.format(
-                        "getSegments found %d segments with %d remaining TextBlocks, where there should be 0 remaining",
-                        segments.size(), blocks.size()));
+                        "getSegments found %d segments with %d remaining TextBlocks, where there should be 0 remaining." +
+                                " The content of the TextBlocks follows:\n%s",
+                        segments.size(), blocks.size(), dumpFull(blocks)));
                 return collapse(segments);
             }
 
@@ -92,7 +93,7 @@ public class HPAltoAnalyzer {
                 continue;
             }
 
-            // See if there are a better candidate
+            // See if there is a better candidate
             for (Alto.TextBlock candidate: blocks) {
                 if (candidate.getHpos() >= hPos && candidate.getVpos() > vPos && candidate.getHpos() <= maxHPos) {
                     // Valid. Check is the distance is better
@@ -122,6 +123,17 @@ public class HPAltoAnalyzer {
             segments.add(segment);
         }
         return collapse(segments);
+    }
+
+    private String dumpFull(List<Alto.TextBlock> blocks) {
+        String result = "";
+        for (Alto.TextBlock block: blocks) {
+            if (!result.isEmpty()) {
+                result += "\n";
+            }
+            result += block + ":" + block.getAllText();
+        }
+        return result;
     }
 
     /*
