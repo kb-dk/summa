@@ -11,6 +11,7 @@ package dk.statsbiblioteket.summa.support.alto;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.util.Strings;
@@ -53,7 +54,7 @@ public class AltoParser extends ThreadedStreamParser {
     private final OUTPUT output;
     private final int snippetCharacters;
 
-    public AltoParser(Configuration conf) {
+    public AltoParser(Configuration conf) throws SubConfigurationsNotSupportedException {
         super(conf);
         analyzer = new HPAltoAnalyzer(conf);
         output = OUTPUT.valueOf(conf.getString(CONF_OUTPUT, DEFAULT_OUTPUT));

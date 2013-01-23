@@ -9,6 +9,7 @@
 package dk.statsbiblioteket.summa.support.alto;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,38 +27,26 @@ public class HPAltoAnalyzer {
     private static Log log = LogFactory.getLog(HPAltoAnalyzer.class);
 
     /**
-     * If true, Segments that has no time are attached to the previous segment, if it has time.
+     * A list of sub configurations containing setups. When an Alto is precessed, the setup from the first matching
+     * setup in the list is used.
      * </p><p>
-     * Optional. Default is true.
+     * Optional. Default is a list with 1 default {@link HPAltoAnalyzerSetup}.
+     * </p>
      */
-    public static final String CONF_MERGE_SUBSEQUENT_NOTIME = "hpaltoanalyzer.merge.subsequent";
-    public static final boolean DEFAULT_MERGE_SUBSEQUENT_NOTIME = true;
+    public static final String CONF_SETUPS = "hpaltoanalyzer.setups";
 
-    /**
-     * If a Segment has no end time, the start time from the next Segment with a start time is used.
-     * </p><p>
-     * Optional. Default is true.
-     */
-    public static final String CONF_CONNECT_TIMES = "hpaltoanalyzer.connect.times";
-    public static final boolean DEFAULT_CONNECT_TIMES = true;
+    private final List<HPAltoAnalyzerSetup> setups = new ArrayList<HPAltoAnalyzerSetup>();
 
-    /**
-     * When calculating the distance between two points, the horizontal distance will be multiplied with this factor.
-     * Stating a value below 1 means that vertical distance is more significant..
-     * </p><p>
-     * Optional. Default is 0.5.
-     */
-    public static final String CONF_HDIST_FACTOR = "hpaltoanalyzer.hdist.factor";
-    public static final double DEFAULT_HDIST_FACTOR = 0.5d;
-
-    private final boolean mergeSubsequent;
-    private final boolean connectTimes;
-    private final double hdistFactor;
-
-    public HPAltoAnalyzer(Configuration conf) {
-        mergeSubsequent = conf.getBoolean(CONF_MERGE_SUBSEQUENT_NOTIME, DEFAULT_MERGE_SUBSEQUENT_NOTIME);
-        connectTimes = conf.getBoolean(CONF_CONNECT_TIMES, DEFAULT_CONNECT_TIMES);
-        hdistFactor = conf.getDouble(CONF_HDIST_FACTOR, DEFAULT_HDIST_FACTOR);
+    public HPAltoAnalyzer(Configuration conf) throws SubConfigurationsNotSupportedException {
+        if (conf.valueExists(CONF_SETUPS)) {
+            List<Configuration> subs = conf.getSubConfigurations(CONF_SETUPS);
+            for (Configuration sub: subs) {
+                setups.add(new HPAltoAnalyzerSetup(sub));
+            }
+        } else {
+            log.info("No setups defined under key " + CONF_SETUPS + ". Using a single default setup");
+            setups.add(new HPAltoAnalyzerSetup(Configuration.newMemoryBased()));
+        }
     }
 
     /**
@@ -67,6 +56,7 @@ public class HPAltoAnalyzer {
      * @return the Segments for the page in the alto (note: Currently only the first page is processed).
      */
     public List<Segment> getSegments(Alto alto) {
+        HPAltoAnalyzerSetup setup = getSetup(alto);
         // We'll do a lot of random access extraction so linked lists seems the obvious choice (ignoring caching)
         final List<Alto.TextBlock> blocks = new LinkedList<Alto.TextBlock>(alto.getLayout().get(0).getPrintSpace());
         final List<Segment> segments = new ArrayList<Segment>();
@@ -88,11 +78,17 @@ public class HPAltoAnalyzer {
 
             // Endless loop detection
             if (best == null && maxHPos == Integer.MAX_VALUE) {
-                log.warn(String.format(
-                        "getSegments found %d segments with %d remaining TextBlocks, where there should be 0 remaining."
-                                + " The content of the TextBlocks follows:\n%s",
-                        segments.size(), blocks.size(), dumpFull(blocks)));
-                return collapse(segments);
+                if (!setup.doAttachFloaters()) {
+                    log.warn(String.format(
+                            "getSegments found %d segments with %d remaining TextBlocks, where there should be 0 " +
+                            "remaining. The content of the TextBlocks follows:\n%s",
+                            segments.size(), blocks.size(), dumpFull(blocks)));
+                } else {
+                    log.debug(String.format(
+                            "getSegments found %d segments with %d remaining TextBlocks",
+                            segments.size(), blocks.size()));
+                }
+                return collapse(setup, segments, blocks);
             }
 
             // If there are no candidate, adjust search parameters for next column
@@ -107,7 +103,7 @@ public class HPAltoAnalyzer {
             for (Alto.TextBlock candidate: blocks) {
                 if (candidate.getHpos() >= hPos && candidate.getVpos() > vPos && candidate.getHpos() <= maxHPos) {
                     // Valid. Check is the distance is better
-                    if (getDistance(hPos, vPos, candidate) < getDistance(hPos, vPos, best)) {
+                    if (getDistance(setup, hPos, vPos, candidate) < getDistance(setup, hPos, vPos, best)) {
                         best = candidate;
                     }
                 }
@@ -132,7 +128,18 @@ public class HPAltoAnalyzer {
             // TODO: Implement this
             segments.add(segment);
         }
-        return collapse(segments);
+        return collapse(setup, segments, blocks);
+    }
+
+    private HPAltoAnalyzerSetup getSetup(Alto alto) {
+        for (HPAltoAnalyzerSetup setup: setups) {
+            if (setup.fitsDate(alto)) {
+                return setup;
+            }
+        }
+        throw new IllegalStateException(
+                "Unable to find a HTAltoAnalyzerSetup that matches the date " + getDateFromFilename(alto.getFilename())
+                + ". Consider adding a catch-all setup at the end of the setup chain");
     }
 
     private String dumpFull(List<Alto.TextBlock> blocks) {
@@ -150,49 +157,56 @@ public class HPAltoAnalyzer {
      * Iterate segments and fill missing endTimes by using next startTime
      * Segments with missing titles are merged with subsequent segment if it does not have time
      */
-    private List<Segment> collapse(List<Segment> segments) {
-        if (mergeSubsequent) {
+    private List<Segment> collapse(HPAltoAnalyzerSetup setup, List<Segment> segments, List<Alto.TextBlock> blocks) {
+        if (setup.doMergeSubsequent()) {
             segments = mergeSubsequent(segments);
         }
-        if (connectTimes) {
+        if (setup.doConnectTimes()) {
             segments = connectTimes(segments);
+        }
+        if (setup.doAttachFloaters()) {
+            segments = attachFloaters(setup, segments, blocks);
         }
         return segments;
     }
 
+    // TODO: Mark that such merges has been performed
     private List<Segment> mergeSubsequent(List<Segment> segments) {
         Segment last = null;
         List<Segment> merged = new LinkedList<Segment>();
         while (!segments.isEmpty()) {
             Segment current = segments.remove(0);
-            if (last == null) {
-                if (current.getStartTime() != null || current.getEndTime() != null) {
-                    last = current;
-                }
+
+            // Just store the segment if is has start time
+            if (current.getStartTime() != null) {
+                last = current.getEndTime() == null ? null : current;
                 merged.add(current);
                 continue;
             }
-            // We have a last now
-            if (current.getStartTime() == null && current.getEndTime() == null) { // No time, so we merge
-                last.paragraphs.add(current.title);
-                last.paragraphs.addAll(current.paragraphs);
-                // TODO: Change bounding box dimensions
-            } else {
+
+            // No start time, but also no last
+            if (last == null) {
                 merged.add(current);
+                continue;
             }
+
+            // We have a last and no current start time
+            last.paragraphs.add(current.title);
+            last.paragraphs.addAll(current.paragraphs);
+            // TODO: Change bounding box dimensions
         }
         return merged;
     }
 
+    // TODO: Mark that the times are connected by logic rather that TextBlock primary entries
     private List<Segment> connectTimes(List<Segment> segments) {
         for (int i = 0 ; i < segments.size() ; i++) {
             Segment current = segments.get(i);
             if (current.getStartTime() != null && current.getEndTime() == null) {
-                for (int j = i+1 ; j < segments.size() ; j++) {
-                    Segment subsequent = segments.get(j);
+                if (i < segments.size()-1) {
+                    Segment subsequent = segments.get(i+1);
                     if (subsequent.getStartTime() != null) {
                         current.endTime = subsequent.getStartTime();
-                        break;
                     }
                 }
             }
@@ -200,13 +214,50 @@ public class HPAltoAnalyzer {
         return segments;
     }
 
+    private List<Segment> attachFloaters(
+            HPAltoAnalyzerSetup setup, List<Segment> segments, List<Alto.TextBlock> blocks) {
+        if (segments.isEmpty() && !blocks.isEmpty()) {
+            throw new IllegalStateException(
+                    "No defined segments with " + blocks.size() + " defined blocks. This state should be unreachable");
+        }
+        while (!blocks.isEmpty()) {
+            Alto.TextBlock block = blocks.remove(0);
+            Segment best = null;
+            for (Segment candidate: segments) {
+                if (best == null || getFloaterDistance(setup, candidate, block) <
+                                    getFloaterDistance(setup, best, block)) {
+                    best = candidate;
+                }
+            }
+            if (best == null) {
+                throw new IllegalStateException("Internal logic exception. Best should always be defined here");
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("Merging free flowing " + block + " into " + best);
+            }
+            for (Alto.TextLine line: block.getLines()) {
+                best.getParagraphs().add(line.getAllText());
+            }
+        }
+        return segments;
+    }
+
+    // TODO: Prioritize vertical promixity to _both_ top & bottom
+    private double getFloaterDistance(HPAltoAnalyzerSetup setup, Segment segment, Alto.TextBlock block) {
+        return getDistance(setup,
+                segment.getHpos()+segment.getWidth(),
+                segment.getVpos()+segment.getHeight()/2,
+                block);
+    }
+
     // TODO: Consider weights that prefers closer vDistance over hDistance
-    private double getDistance(int hPos, int vPos, Alto.TextBlock candidate) {
-        return Math.sqrt(Math.pow((hPos-candidate.getHpos())*hdistFactor, 2) + Math.pow(vPos-candidate.getVpos(), 2));
+    private double getDistance(HPAltoAnalyzerSetup setup, int hPos, int vPos, Alto.TextBlock candidate) {
+        return Math.sqrt(Math.pow((hPos-candidate.getHpos())*setup.getHdistFactor(), 2)
+                         + Math.pow(vPos-candidate.getVpos(), 2));
     }
 
     // TODO: Improve this regexp
-    private Pattern programPattern = Pattern.compile("(PROGRAM.+)", Pattern.CASE_INSENSITIVE);
+    private Pattern programPattern = Pattern.compile("(program.+)", Pattern.CASE_INSENSITIVE);
     private String getProgram(Alto.TextBlock textBlock) {
         Matcher programMatcher = programPattern.matcher(textBlock.getAllText());
         if (programMatcher.matches()) {
@@ -295,9 +346,9 @@ public class HPAltoAnalyzer {
         return text;
     }
 
-    // B-1977-10-02-P-0003.xml -> 19771002
-    private final Pattern dateFromFile = Pattern.compile("..([0-9]{4})-([0-9]{2})-([0-9]{2}).*");
-    private String getDateFromFilename(String filename) {
+    // B-1977-10-02w-P-0003.xml -> 19771002
+    private static final Pattern dateFromFile = Pattern.compile("..([0-9]{4})-([0-9]{2})-([0-9]{2}).*");
+    public static String getDateFromFilename(String filename) {
         Matcher matcher = dateFromFile.matcher(filename);
         return matcher.matches() ? matcher.group(1) + matcher.group(2) + matcher.group(3) : null;
     }
