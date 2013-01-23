@@ -352,6 +352,16 @@ public class HPAltoAnalyzer {
         public String getStartTime() {
             return startTime;
         }
+        public String getReadableTime() {
+            String time = "";
+            if (startTime == null) {
+                return time;
+            }
+            time += timeApproximate ? "~" : "";
+            time += startTime;
+            time += endTime == null ? "" : "-" + endTime;
+            return time;
+        }
         public String getEndTime() {
             return endTime;
         }
