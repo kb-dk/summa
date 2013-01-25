@@ -152,7 +152,7 @@ public class AltoParser extends ThreadedStreamParser {
         xml.writeStartElement("rdf", "Description", RDF);
         xml.writeCharacters("\n");
         if (segment.getStartTime() != null) {
-            writeDC(xml, "title", segment.getTitle() + ": " + segment.getReadableTime());
+            writeDC(xml, "title", segment.getTitle() + " : " + segment.getReadableTime());
         } else {
             writeDC(xml, "title", segment.getTitle());
         }

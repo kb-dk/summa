@@ -36,7 +36,8 @@ public class HPAltoAnalyzer {
     public static final String CONF_SETUPS = "hpaltoanalyzer.setups";
 
     public static final String CONF_URL_PREFIX = "hpaltoanalyzer.url.prefix";
-    public static final String DEFAULT_URL_PREFIX = "http://bja-linux2.sb/index.php?vScale=0.4&hScale=0.4&image=";
+    public static final String DEFAULT_URL_PREFIX =
+            "http://bja-linux2.sb.statsbiblioteket.dk/index.php?vScale=0.4&hScale=0.4&image=";
 
     private final List<HPAltoAnalyzerSetup> setups = new ArrayList<HPAltoAnalyzerSetup>();
     private final String URLPrefix;
