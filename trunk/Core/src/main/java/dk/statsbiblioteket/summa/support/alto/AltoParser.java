@@ -15,8 +15,8 @@ import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSuppor
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.util.Strings;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -45,7 +45,7 @@ public class AltoParser extends ThreadedStreamParser {
      * Optional. Default is 50.
      */
     public static final String CONF_SNIPPET_CHARACTERS = "altoparser.snippet.characters";
-    public static final int DEFAULT_SNIPPET_CHARACTERS = 50;
+    public static final int DEFAULT_SNIPPET_CHARACTERS = 100;
 
     public enum OUTPUT {summadocument}
 
@@ -65,7 +65,7 @@ public class AltoParser extends ThreadedStreamParser {
     @Override
     protected void protectedRun(Payload source) throws Exception {
         List<HPAltoAnalyzer.Segment> segments = analyzer.getSegments(
-                new Alto(new InputStreamReader(source.getStream(), "utf-8")));
+                new Alto(new InputStreamReader(source.getStream(), "utf-8"), (String)source.getData(Payload.ORIGIN)));
         for (HPAltoAnalyzer.Segment segment: segments) {
             if (segment.getId() == null) {
                 Logging.logProcess("AltoParser", "Received segment without ID: " + segment.toString() + ". Skipping",
@@ -108,14 +108,17 @@ public class AltoParser extends ThreadedStreamParser {
 
         writeField(xml, "title", segment.getTitle());
         writeField(xml, "sort_title", segment.getTitle());
+        writeField(xml, "sort_time",
+                   segment.getDate() + (segment.getStartTime() == null ? "" : "t" + segment.getStartTime()));
         writeField(xml, "lma", "hp");
         writeField(xml, "lma_long", "hvideprogrammer");
         writeField(xml, "starttime", segment.getStartTime());
         writeField(xml, "endtime", segment.getEndTime());
         writeField(xml, "filename", segment.getFilename());
+        writeField(xml, "url", segment.getURL());
 //        writeField(xml, "freetext", segment.getAllText());
-        // TODO: Remove copyToFreetext from IndexDesctiptor
         writeField(xml, "date", segment.getDate());
+        writeField(xml, "year", segment.getYear());
         writeField(xml, "timeapproximate", Boolean.toString(segment.isTimeApproximate()));
         for (String paragraph: segment.getParagraphs()) {
             writeField(xml, "content", paragraph);
@@ -161,7 +164,8 @@ public class AltoParser extends ThreadedStreamParser {
             writeDC(xml, "description", snippet);
         }
         // TODO: Add year + airing-iso (for sorting)
-        writeDC(xml, "date", segment.getDate());
+        writeDC(xml, "date", segment.getYear());
+        writeDC(xml, "identifier", segment.getURL());
         writeDC(xml, "type", "hvideprogrammer");
         writeDC(xml, "lang", "da");
         // http://bja-linux2.sb/index.php?vScale=0.4&hScale=0.4&image=Arkiv_A.6/1929_07-09/PNG/A-1929-07-05-P-0015
@@ -182,6 +186,9 @@ public class AltoParser extends ThreadedStreamParser {
     }
 
     private void writeDC(XMLStreamWriter xml, String tag, String content) throws XMLStreamException {
+        if (content == null|| content.isEmpty()) {
+            return;
+        }
         final String DC = "http://purl.org/dc/elements/1.1/";
         xml.writeCharacters("            ");
         xml.writeStartElement("dc", tag, DC);

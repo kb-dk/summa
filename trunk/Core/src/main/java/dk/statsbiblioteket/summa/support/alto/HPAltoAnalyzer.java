@@ -35,9 +35,14 @@ public class HPAltoAnalyzer {
      */
     public static final String CONF_SETUPS = "hpaltoanalyzer.setups";
 
+    public static final String CONF_URL_PREFIX = "hpaltoanalyzer.url.prefix";
+    public static final String DEFAULT_URL_PREFIX = "http://bja-linux2.sb/index.php?vScale=0.4&hScale=0.4&image=";
+
     private final List<HPAltoAnalyzerSetup> setups = new ArrayList<HPAltoAnalyzerSetup>();
+    private final String URLPrefix;
 
     public HPAltoAnalyzer(Configuration conf) throws SubConfigurationsNotSupportedException {
+        URLPrefix = conf.getString(CONF_URL_PREFIX, DEFAULT_URL_PREFIX);
         if (conf.valueExists(CONF_SETUPS)) {
             List<Configuration> subs = conf.getSubConfigurations(CONF_SETUPS);
             for (Configuration sub: subs) {
@@ -271,6 +276,7 @@ public class HPAltoAnalyzer {
     private int counter = 0;
     private Segment blockToSegment(Alto alto, Alto.TextBlock textBlock, String program) {
         Segment segment = new Segment();
+        segment.origin = alto.getOrigin();
         segment.filename = alto.getFilename();
         segment.date = getDateFromFilename(segment.filename);
         segment.id = "alto_" + segment.date + "_" + counter++;
@@ -353,7 +359,7 @@ public class HPAltoAnalyzer {
         return matcher.matches() ? matcher.group(1) + matcher.group(2) + matcher.group(3) : null;
     }
 
-    public static class Segment {
+    public class Segment {
         private String filename = null;
         private String date = null;
         private String program = null;
@@ -368,6 +374,7 @@ public class HPAltoAnalyzer {
         private boolean timeApproximate = false;
         private String title = null;
         private List<String> paragraphs = new ArrayList<String>();
+        public String origin;
 
         @Override
         public String toString() {
@@ -427,6 +434,34 @@ public class HPAltoAnalyzer {
         }
         public String getAllText() {
             return paragraphs.isEmpty() ? title : title + " " + Strings.join(paragraphs, " ");
+        }
+
+        public String getYear() {
+            return getDate() == null || getDate().length() < 4 ? null : getDate().substring(0, 4);
+        }
+
+        // TODO: This is extremely fragile. We need a more solid URL calculator
+        // /home/te/projects/hvideprogrammer/samples_with_paths/dhp/data/Arkiv_A.1/1933_07-09/ALTO/A-1933-07-02-P-0008.xml
+        // http://bja-linux2.sb/index.php?vScale=0.4&hScale=0.4&image=Arkiv_A.6/1929_07-09/PNG/A-1929-07-05-P-0015
+        public String getURL() {
+            if (origin == null) {
+                return origin;
+            }
+            // Yes, unix path separator. Fragile, remember?
+            String[] elements = origin.split("/");
+            if (elements.length < 4) {
+                log.warn("Expected the origin '" + origin + "' to contain at least 4 path elements, but got only "
+                         + elements.length);
+                return null;
+            }
+            if (!elements[elements.length-1].endsWith(".xml")) {
+                log.warn("Expected the origin '" + origin + "' to end with '.xml'");
+                return null;
+            }
+            return URLPrefix
+                   + elements[elements.length-4] + "/"
+                   + elements[elements.length-3] + "/PNG/"
+                   + elements[elements.length-1].substring(0, elements[elements.length-1].length()-".xml".length());
         }
     }
 }
