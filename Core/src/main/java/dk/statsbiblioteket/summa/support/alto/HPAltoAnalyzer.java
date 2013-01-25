@@ -179,7 +179,7 @@ public class HPAltoAnalyzer {
 
             // Just store the segment if is has start time
             if (current.getStartTime() != null) {
-                last = current.getEndTime() == null ? null : current;
+                last = current.getEndTime() == null ? current : null;
                 merged.add(current);
                 continue;
             }
