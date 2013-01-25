@@ -216,6 +216,7 @@ public class QueryRewriter {
         QueryParser queryParser = new QueryParser(Version.LUCENE_40, "", new WhitespaceAnalyzer(Version.LUCENE_40));
 
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
+        queryParser.setAutoGeneratePhraseQueries(true);
         return queryParser;
     }
 

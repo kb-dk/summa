@@ -3,8 +3,8 @@ package dk.statsbiblioteket.summa.support.summon.search;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.lucene.queryparser.classic.ParseException;
 
 import java.util.Collections;
@@ -72,6 +72,14 @@ public class FacetQueryTransformerTest extends TestCase {
         assertConvert("-foo:bar -zoo:moo", "foo,bar,true zoo,moo,true");
         assertConvert("-foo:bar zoo:moo",  "foo,bar,true zoo,moo,false");
         assertConvert("foo:bar -zoo:moo",  "foo,bar,false zoo,moo,true");
+    }
+
+    public void testQuoting() throws ParseException {
+        assertConvert("foo:\"bar zoo\"", "foo,bar zoo,false");
+    }
+
+    public void testEscaping() throws ParseException {
+        assertConvert("foo:bar\\ zoo", "foo,bar zoo,false");
     }
 
     public void testSubGroup() throws ParseException {
