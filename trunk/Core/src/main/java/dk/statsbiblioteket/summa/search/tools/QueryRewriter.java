@@ -395,6 +395,7 @@ public class QueryRewriter {
                 text += quotedEscaper.transform(term.text());
             }
             result += (field == null || field.isEmpty() ? "" : field + ":") + '"' + text + '"';
+            result += phraseQuery.getSlop() == 0 ? "" : "~" + phraseQuery.getSlop();
         } else if (query instanceof PrefixQuery) {
             PrefixQuery prefixQuery = (PrefixQuery) query;
             return convertSubqueryToString(prefixQuery.getField(), prefixQuery.getPrefix().text(), false) + "*";
