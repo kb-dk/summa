@@ -69,7 +69,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * If no records has been received during {@link #CONF_BATCH_TIMEOUT}
      * milliseconds the currently batched records will be committed.
      * <p/>
-     * The default value for this property is 100.
+     * The default value for this property is 1000.
      * </p><p>
      * @see #CONF_BATCH_MAXMEMORY
      */
@@ -78,7 +78,7 @@ public class RecordWriter extends ObjectFilterImpl {
     /**
      * Default value for the {@link #CONF_BATCH_SIZE} property
      */
-    public static final int DEFAULT_BATCH_SIZE = 100;
+    public static final int DEFAULT_BATCH_SIZE = 1000;
 
     /**
      * The maximum amount of memory in bytes used by grouped Records before they
