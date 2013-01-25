@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                xmlns:dc="http://purl.org/dc/elements/1.1/"
-                xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+        >
     <xsl:output method="html" encoding="UTF-8"/>
 
     <xsl:param name="query"/>
@@ -169,14 +167,15 @@
             <div class="searchResultItemCommon searchResultItemType">
                 <xsl:choose>
                     <xsl:when test="contains($identifier,'http:')">
-                        <a href="{$identifier}">  <xsl:value-of select="$mattype"/>  </a>
+                        <!-- TODO: Use <xsl:value-of select="$mattype"/> if available -->
+                        <a href="{$identifier}">  <xsl:value-of select="$recordBase"/>  </a>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select="$mattype"/>
+                        <!--<xsl:value-of select="$mattype"/>-->
+                        <span class="searchResultItemRecordBase"><xsl:value-of select="$recordBase"/></span>
                     </xsl:otherwise>
                 </xsl:choose>
                 <xsl:text> </xsl:text>
-                <span class="searchResultItemRecordBase"><xsl:value-of select="$recordBase"/></span>
             </div>
 
             <!-- score -->
