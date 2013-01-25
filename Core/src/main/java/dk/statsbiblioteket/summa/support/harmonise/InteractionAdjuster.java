@@ -392,6 +392,12 @@ public class InteractionAdjuster implements Configurable {
                         Query result = makeQuery(terms, query.getBoost(), true);
                         if (result instanceof PhraseQuery) {
                             ((PhraseQuery) result).setSlop(query.getSlop());
+                        } else if (result instanceof BooleanQuery) {
+                            for (BooleanClause clause: ((BooleanQuery)result).clauses()) {
+                                if (clause.getQuery() instanceof PhraseQuery) {
+                                    ((PhraseQuery) clause.getQuery()).setSlop(query.getSlop());
+                                }
+                            }
                         }
                         return result;
                     }
