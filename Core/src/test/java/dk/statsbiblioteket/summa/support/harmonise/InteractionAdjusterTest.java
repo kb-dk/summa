@@ -354,6 +354,14 @@ public class InteractionAdjusterTest extends TestCase {
         assertAdjustment(createAdjuster(), "foo:\"bar\\\" zoo\"", "foo:bar\\\"\\ zoo");
     }
 
+    public void testPhraseSlop() {
+        assertAdjustment(createAdjuster(), "\"bar zoo\"~8", "\"bar zoo\"~8");
+    }
+
+    public void testQualifiedPhraseSlop() {
+        assertAdjustment(createAdjuster(), "baz:\"bar zoo\"~8", "baz:\"bar zoo\"~8");
+    }
+
     public void testQualifiedTruncation() {
         assertAdjustment(createAdjuster(), "Language:bar*", "llang:bar*");
     }

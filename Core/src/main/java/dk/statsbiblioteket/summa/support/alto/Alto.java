@@ -9,8 +9,8 @@
 package dk.statsbiblioteket.summa.support.alto;
 
 import dk.statsbiblioteket.summa.common.xml.XMLStepper;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -19,7 +19,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An object representation of an Alto-file.
@@ -33,19 +36,27 @@ public class Alto {
     }
 
     private String filename = null;
+    private String origin = null;
     private Map<String, TextStyle> styles = new HashMap<String, TextStyle>();
     private List<Page> layout = new ArrayList<Alto.Page>();
 
     public Alto(File xml) throws XMLStreamException, FileNotFoundException {
-        this(new FileReader(xml));
+        this(new FileReader(xml), xml.toString());
     }
     public Alto(Reader xml) throws XMLStreamException {
         this(factory.createXMLStreamReader(xml));
     }
-    // coalescing expected
+    public Alto(Reader xml, String origin) throws XMLStreamException {
+        this(factory.createXMLStreamReader(xml), origin);
+    }
     public Alto(XMLStreamReader xml) throws XMLStreamException {
-        log.trace("Starting alto parsing");
+        this(xml, null);
+    }
+    // coalescing expected
+    public Alto(XMLStreamReader xml, String origin) throws XMLStreamException {
+        log.trace("Starting alto parsing of XML with origin " + origin);
         long startTime = System.currentTimeMillis();
+        this.origin = origin;
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean elementStart(
@@ -93,6 +104,9 @@ public class Alto {
     }
     public List<Page> getLayout() {
         return layout;
+    }
+    public String getOrigin() {
+        return origin;
     }
 
     // <Page ID="P1" PHYSICAL_IMG_NR="0003" HEIGHT="3605" WIDTH="2557">

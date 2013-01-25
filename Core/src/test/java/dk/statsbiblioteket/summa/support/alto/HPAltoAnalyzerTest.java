@@ -35,6 +35,8 @@ public class HPAltoAnalyzerTest extends TestCase {
     public static final String alto1977 = "/home/te/projects/hvideprogrammer/B-1977-10-02-P-0003.xml";
     public static final String alto1972 = "/home/te/projects/hvideprogrammer/B-1972-01-09-P-0014.xml";
     public static final String alto1983 = "/home/te/projects/hvideprogrammer/B-1983-10-17-P-0080.xml";
+    public static final String alto1933_path = "/home/te/projects/hvideprogrammer/samples_with_paths/dhp/data/"
+                                               + "Arkiv_A.1/1933_07-09/ALTO/A-1933-07-02-P-0008.xml";
 
     public HPAltoAnalyzerTest(String name) {
         super(name);
@@ -52,6 +54,10 @@ public class HPAltoAnalyzerTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(HPAltoAnalyzerTest.class);
+    }
+
+    public void testPath1933() throws Exception {
+        testBasicAnalyze(alto1933_path);
     }
 
     public void testBasic1934() throws Exception {

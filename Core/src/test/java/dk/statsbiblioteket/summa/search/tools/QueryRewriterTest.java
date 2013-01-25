@@ -235,6 +235,11 @@ public class QueryRewriterTest extends TestCase {
         assertIdentity("\"umat 11\"", query);
     }
 
+    public void testPhraseSlop() throws ParseException {
+        String query = "\"bar zoo\"~8";
+        assertIdentity("\"bar zoo\"~8", query);
+    }
+
     public void testSimpleMulti() throws ParseException {
         String query = "foo bar zoo";
         String expected = "\"foo\" \"bar\" \"zoo\"";
