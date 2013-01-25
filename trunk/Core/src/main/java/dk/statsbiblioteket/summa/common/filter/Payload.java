@@ -95,6 +95,7 @@ public class Payload {
 
     public Payload(InputStream stream, String source) {
         assignIfValid(stream, record);
+        getData().put(ORIGIN, source);
         Logging.logProcess(this.getClass().getSimpleName(), "Created based on InputStream with specified source",
                            Logging.LogLevel.DEBUG, source);
     }
