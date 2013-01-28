@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,6 +58,20 @@ public abstract class ThreadedStreamParser implements StreamParser {
      */
     public static final String CONF_QUEUE_BYTESIZE = "summa.ingest.stream.threadedstreamparser.queue.bytesize";
     public static final int DEFAULT_QUEUE_BYTESIZE = 5*1000*1000; // 5 MB
+
+    /**
+     * If true, any exception thrown in {@link #protectedRun(dk.statsbiblioteket.summa.common.filter.Payload)} will
+     * result in fatal logging and a forced shutdown of the JVM.
+     * </p><p>
+     * If the workflow is oriented around singular large data dumps, it is recommended to set this to true to get
+     * transactional-like behaviour and to signal that potentially nearly all data is unprocessed.
+     * </p><p>
+     * Optional. Default is false;
+     */
+    public static final String CONF_SHUTDOWN_ON_EXCEPTION =
+            "summa.ingest.stream.threadedstreamparser.shutdown_on_exception";
+    public static final boolean DEFAULT_SHUTDOWN_ON_EXCEPTION = false;
+    private static final int SHUTDOWN_DELAY = 100; // ms
 
     /**
      * The maximum number of milliseconds to wait for data when hasNext(),
@@ -105,13 +120,15 @@ public abstract class ThreadedStreamParser implements StreamParser {
     private Throwable lastError = null;
     private Thread runningThread = null;
     private long queueCount = 0;
+    private final boolean shutdownOnException;
 
     public ThreadedStreamParser(Configuration conf) {
         queue = new PayloadQueue(conf.getInt(CONF_QUEUE_SIZE, DEFAULT_QUEUE_SIZE),
                                  conf.getInt(CONF_QUEUE_BYTESIZE, DEFAULT_QUEUE_BYTESIZE));
         queueTimeout = conf.getInt(CONF_QUEUE_TIMEOUT, queueTimeout);
+        shutdownOnException = conf.getBoolean(CONF_SHUTDOWN_ON_EXCEPTION, DEFAULT_SHUTDOWN_ON_EXCEPTION);
         log.debug("Constructed ThreadedStreamParser with queue-size " + queue.remainingCapacity()
-                  + " and queue timeout " + queueTimeout + " ms");
+                  + " shutdown on exception " + shutdownOnException + " and queue timeout " + queueTimeout + " ms");
     }
 
     @Override
@@ -150,14 +167,25 @@ public abstract class ThreadedStreamParser implements StreamParser {
                         sourcePayload.close();
                     }
                 } catch (Exception e) {
-                    // TODO: Introduce option that fails ingest on this
-                    String message = String.format("Exception caught from protectedRun of %s with origin '%s'",
-                                                   sourcePayload, sourcePayload.getData(Payload.ORIGIN));
-                    log.warn(String.format("%s in '%s'. Stopping processing", message, this), e);
-                    Logging.logProcess("ThreadedStreamParser", message, Logging.LogLevel.WARN, sourcePayload);
-                    // We don't close in a 'finally' clause because we shouldn't
-                    // clean up if the JVM raises an Error type throwable
-                    sourcePayload.close();
+                    setError(e);
+                    if (shutdownOnException) {
+                        String message = String.format(
+                                "Exception in protectedRun of %s with origin '%s'. Shutting down the JVM in %dms",
+                                sourcePayload, sourcePayload.getData(Payload.ORIGIN), SHUTDOWN_DELAY);
+                        Logging.fatal(log, "ThreadedStreamParser", message, e);
+                        Logging.logProcess("ThreadedStreamParser", message, Logging.LogLevel.WARN, sourcePayload, e);
+                        new DeferredSystemExit(1);
+                    } else {
+                        String message = String.format("Exception caught from protectedRun of %s with origin '%s'",
+                                                       sourcePayload, sourcePayload.getData(Payload.ORIGIN));
+                        log.warn(String.format("%s in '%s'. Stopping processing", message, this), e);
+                        Logging.logProcess("ThreadedStreamParser", message, Logging.LogLevel.WARN, sourcePayload, e);
+                        // We don't close in a 'finally' clause because we shouldn't
+                        // clean up if the JVM raises an Error type throwable
+                        sourcePayload.close();
+                    }
+                    running = false;
+                    addToQueue(INTERRUPTOR);
                 } finally {
                     running = false;
                     addToQueue(INTERRUPTOR);
@@ -382,6 +410,6 @@ public abstract class ThreadedStreamParser implements StreamParser {
 
     @Override
     public String toString() {
-        return "ThreadedStreamParser#" + getClass().getSimpleName() + "(" + queue.size() + "payloads queued)";
+        return "ThreadedStreamParser#" + getClass().getSimpleName() + "(" + queue.size() + " payloads queued)";
     }
 }
