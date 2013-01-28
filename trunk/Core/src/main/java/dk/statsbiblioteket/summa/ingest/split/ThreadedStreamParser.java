@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -149,11 +150,11 @@ public abstract class ThreadedStreamParser implements StreamParser {
                         sourcePayload.close();
                     }
                 } catch (Exception e) {
-                    log.warn(String.format(
-                        "Exception caught from protectedRun of %s with origin '%s' in '%s'. Stopping processing",
-                        sourcePayload, sourcePayload.getData(Payload.ORIGIN), this),
-                             e);
-
+                    // TODO: Introduce option that fails ingest on this
+                    String message = String.format("Exception caught from protectedRun of %s with origin '%s'",
+                                                   sourcePayload, sourcePayload.getData(Payload.ORIGIN));
+                    log.warn(String.format("%s in '%s'. Stopping processing", message, this), e);
+                    Logging.logProcess("ThreadedStreamParser", message, Logging.LogLevel.WARN, sourcePayload);
                     // We don't close in a 'finally' clause because we shouldn't
                     // clean up if the JVM raises an Error type throwable
                     sourcePayload.close();
