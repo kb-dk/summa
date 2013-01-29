@@ -47,11 +47,10 @@ import java.util.Map;
  * Trivial implementation of a Lucene IndexDescriptor.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "tke",
+        state = QAInfo.State.QA_NEEDED,
+        author = "te",
         comment = "Needs JavaDoc")
-public class LuceneIndexDescriptor
-        extends IndexDescriptor<LuceneIndexField> {
+public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
     private static Log log = LogFactory.getLog(LuceneIndexDescriptor.class);
 
     private Analyzer indexAnalyzer;
@@ -184,7 +183,7 @@ public class LuceneIndexDescriptor
                              Field.Index.ANALYZED,
                              Field.Store.NO,
                              Field.TermVector.NO,
-                             new SimpleAnalyzer(Version.LUCENE_30));
+                             new SimpleAnalyzer(Version.LUCENE_40));
         }
         if (baseFieldName.equals(NUMBER)) {
             return makeField(baseFieldName,
@@ -298,9 +297,11 @@ public class LuceneIndexDescriptor
     private void createAnalyzers() {
         log.debug("createAnalyzers called");
         Map<String, Analyzer> indexAnalyzers = new HashMap<String, Analyzer>();
+        Map<String, Analyzer> indexprefixAnalyzers = new HashMap<String, Analyzer>();
         Map<String, Analyzer> queryAnalyzers = new HashMap<String, Analyzer>();
-        for (Map.Entry<String, LuceneIndexField> entry:
-                getFields().entrySet()) {
+        Map<String, Analyzer> queryPrefixAnalyzers = new HashMap<String, Analyzer>();
+
+        for (Map.Entry<String, LuceneIndexField> entry: getFields().entrySet()) {
             log.debug("Adding field " + entry.getKey() + " index-analyzer " + entry.getValue().getIndexAnalyzer()
                       + " and query-analyzer " + entry.getValue().getQueryAnalyzer());
             if (entry.getValue().getIndexAnalyzer() != null) {
@@ -310,8 +311,20 @@ public class LuceneIndexDescriptor
                 queryAnalyzers.put(entry.getKey(), entry.getValue().getQueryAnalyzer());
             }
         }
-        indexAnalyzer = new PerFieldAnalyzerWrapper(defaultField.getIndexAnalyzer(), indexAnalyzers);
-        queryAnalyzer = new PerFieldAnalyzerWrapper(defaultField.getQueryAnalyzer(), queryAnalyzers);
+        for (Map.Entry<String, LuceneIndexField> entry: getFields().entrySet()) {
+            log.debug("Adding prefix field " + entry.getKey() + " index-analyzer " + entry.getValue().getIndexAnalyzer()
+                      + " and query-analyzer " + entry.getValue().getQueryAnalyzer());
+            if (entry.getValue().getIndexAnalyzer() != null) {
+                indexprefixAnalyzers.put(entry.getKey(), entry.getValue().getIndexAnalyzer());
+            }
+            if (entry.getValue().getQueryAnalyzer() != null) {
+                queryPrefixAnalyzers.put(entry.getKey(), entry.getValue().getQueryAnalyzer());
+            }
+        }
+        indexAnalyzer = new DynamicPerFieldAnalyzerWrapper(
+                defaultField.getIndexAnalyzer(), indexAnalyzers, indexprefixAnalyzers);
+        queryAnalyzer = new DynamicPerFieldAnalyzerWrapper(
+                defaultField.getQueryAnalyzer(), queryAnalyzers, queryPrefixAnalyzers);
     }
 
     /**

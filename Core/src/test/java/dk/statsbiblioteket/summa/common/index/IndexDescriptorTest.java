@@ -73,6 +73,8 @@ public class IndexDescriptorTest extends TestCase {
             + "        <field name=\"author_inherit\" parent=\"author\"/>\n"
             + "        <field name=\"title\" indexed=\"false\" stored=\"true\"/>\n"
             + "        <field name=\"titel\" indexed=\"false\" stored=\"true\"/>\n"
+            + "        <field name=\"joke\" indexed=\"false\" stored=\"true\"/>\n"
+            + "        <field name=\"joker*\" indexed=\"false\" stored=\"true\"/>\n"
             + "        <field name=\"nostore\" parent=\"text\" indexed=\"true\" stored=\"false\"/>\n"
             + "    </fields>\n"
             + "    <defaultLanguage>no</defaultLanguage>\n"
@@ -161,8 +163,7 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals(intro + "sortLocale", "da", a.getSortLocale());
         assertEquals(intro + "inFreeText", true, a.isInFreetext());
         assertEquals(intro + "required", true, a.isRequired());
-        assertEquals(intro + "alias", "forfatter",
-                     a.getAliases().get(0).getName());
+        assertEquals(intro + "alias", "forfatter", a.getAliases().get(0).getName());
 
         IndexField i = id.getField("author_inv");
         assertNotNull("The field author_inv should have a parent",
@@ -179,8 +180,7 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals(intro + "required", false, i.isRequired());
 
         IndexField inh = id.getField("author_inherit");
-        assertNotNull("The field author_inherit should have a parent",
-                      inh.getParent());
+        assertNotNull("The field author_inherit should have a parent", inh.getParent());
         intro = "The field author_inherit should have the correct ";
         assertEquals(intro + "parent", "author", inh.getParent().getName());
         assertEquals(intro + "indexed", true, inh.isDoIndex());
@@ -190,6 +190,9 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals(intro + "sortLocale", "da", inh.getSortLocale());
         assertEquals(intro + "inFreeText", true, inh.isInFreetext());
         assertEquals(intro + "required", true, inh.isRequired());
+
+        assertEquals("The field 'joke' should resolve 'joke'", "joke", id.getField("joke").getName());
+        assertEquals("The prefix field 'joker' should resolve 'joker123'", "joker", id.getField("joker123").getName());
     }
 
     public void testEmpty() throws Exception {
