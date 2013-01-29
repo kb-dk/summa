@@ -90,8 +90,7 @@ public class PayloadFeederHelper implements ObjectFilter {
      * @param payloads The list of payloads.
      * @param delayBetweenPayloads The delay between each payload.
      */
-    public PayloadFeederHelper(
-            List<Payload> payloads, int delayBetweenPayloads) {
+    public PayloadFeederHelper(List<Payload> payloads, int delayBetweenPayloads) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating feeder with " + payloads.size() + " Payloads");
         this.payloads = new ArrayList<Payload>(payloads.size());

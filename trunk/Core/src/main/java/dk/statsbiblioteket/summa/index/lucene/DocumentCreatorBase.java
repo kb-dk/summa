@@ -63,10 +63,10 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
                     + "default field)",
                     fieldName));
         }
-        if (!fieldName.equals(indexField.getName())) {
-            log.debug("The field name '" + fieldName + "' resolved to index field '" + indexField.getName() + "'");
-        }
         if (log.isTraceEnabled()) {
+            if (!fieldName.equals(indexField.getName())) {
+                log.trace("The field name '" + fieldName + "' resolved to index field '" + indexField.getName() + "'");
+            }
             log.trace("Creating field '" + fieldName + "' with boost " + boost + " and content\n" + content);
         }
         Field field = new Field(fieldName, content, indexField.getStore(), indexField.getIndex(), 

@@ -19,11 +19,11 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.MARCObjectFilter;
-import dk.statsbiblioteket.summa.common.marc.MARC;
 import dk.statsbiblioteket.summa.common.marc.MARCObject;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -31,7 +31,10 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Creates a sub-Record with ID 'marcdump_<counter>' that holds the cleaned MARC record (parsed and serialized).
@@ -115,6 +118,7 @@ public class MARCXMLCopyFilter extends MARCObjectFilter {
 
         xml.writeCharacters("\n");
         xml.writeStartElement("http://statsbiblioteket.dk/summa/2008/Document", "SummaDocument");
+        xml.writeNamespace(null, "http://statsbiblioteket.dk/summa/2008/Document");
         xml.writeAttribute("version", "1.0");
         xml.writeAttribute("id", "invalid");
         xml.writeCharacters("\n");
@@ -144,12 +148,19 @@ public class MARCXMLCopyFilter extends MARCObjectFilter {
         return sw.toString().getBytes("utf-8");
     }
 
+    private static final Pattern VALID_FIELD = Pattern.compile("[-a-zA-Z0-9_.]+");
+    private final Set<String> discarded = new HashSet<String>();
     private void writeField(XMLStreamWriter xml, String field, String content) throws XMLStreamException {
         if (content == null || content.isEmpty()) {
             return;
         }
+        if (!VALID_FIELD.matcher(field).matches()) {
+            discarded.add(field);
+            return;
+        }
         xml.writeCharacters("  ");
-        xml.writeStartElement(field);
+        xml.writeStartElement("field");
+        xml.writeAttribute("name", field);
         xml.writeCharacters(content);
         xml.writeEndElement();
         xml.writeCharacters("\n");
@@ -160,5 +171,16 @@ public class MARCXMLCopyFilter extends MARCObjectFilter {
             factory = XMLOutputFactory.newInstance();
         }
         return factory;
+    }
+
+    @Override
+    public void close(boolean success) {
+        super.close(success);
+        if (discarded.isEmpty()) {
+            log.info("Closing MARCXMLCopyFilter with no invalid field names");
+        } else {
+            log.info("Closing MARCXMLCopyFilter with " + discarded + " unique discarded field names: "
+                     + Strings.join(discarded, ", "));
+        }
     }
 }

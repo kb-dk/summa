@@ -78,7 +78,9 @@ public class MARCObject implements Cloneable {
         xml.writeNamespace("", MARC21_NAMESPACE);
         attribute(xml, MARC.ATTRIBUTE_ID, id);
         attribute(xml, MARC.TAG_RECORD_ATTRIBUTE_TYPE, type);
+        xml.writeCharacters("\n");
         if (leader != null) {
+            xml.writeCharacters("  ");
             leader.toXML(xml);
         }
         for (ControlField controlField: controlFields) {
@@ -219,10 +221,12 @@ public class MARCObject implements Cloneable {
         }
 
         public void toXML(XMLStreamWriter xml) throws XMLStreamException {
+            xml.writeCharacters("  ");
             xml.writeStartElement(MARC.TAG_CONTROLFIELD);
             attribute(xml, MARC.ATTRIBUTE_ID, id);
             attribute(xml, MARC.TAG_CONTROLFIELD_ATTRIBUTE_TAG, tag);
             xml.writeCharacters(content);
+            xml.writeCharacters("  ");
             xml.writeEndElement();
             xml.writeCharacters("\n");
         }
@@ -296,6 +300,7 @@ public class MARCObject implements Cloneable {
         }
 
         public void toXML(XMLStreamWriter xml) throws XMLStreamException {
+            xml.writeCharacters("  ");
             xml.writeStartElement(MARC.TAG_DATAFIELD);
             attribute(xml, MARC.ATTRIBUTE_ID, id);
             attribute(xml, MARC.TAG_DATAFIELD_ATTRIBUTE_TAG, tag);
@@ -305,6 +310,7 @@ public class MARCObject implements Cloneable {
             for (SubField subField: subFields) {
                 subField.toXML(xml);
             }
+            xml.writeCharacters("  ");
             xml.writeEndElement();
             xml.writeCharacters("\n");
         }
@@ -355,6 +361,7 @@ public class MARCObject implements Cloneable {
         }
 
         public void toXML(XMLStreamWriter xml) throws XMLStreamException {
+            xml.writeCharacters("    ");
             xml.writeStartElement(MARC.TAG_SUBFIELD);
             attribute(xml, MARC.TAG_SUBFIELD_ATTRIBUTE_CODE, code);
             xml.writeCharacters(content);
