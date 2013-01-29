@@ -273,9 +273,14 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
                     || reader.getEventType() == XMLStreamReader.COMMENT) {
                     // Ignore text and comments in between fields
                 } else {
-                    log.debug("Expected start-element but got " + XMLUtil.eventID2String(
-                            reader.getEventType()) + " in " + record);
-                }
+                    if (reader.getEventType() == XMLStreamReader.END_ELEMENT) {
+                        log.debug("Expected start-element but got " + XMLUtil.eventID2String(reader.getEventType())
+                                  + " with name '" + reader.getLocalName() + "' in " + record);
+                    } else {
+                        log.debug("Expected start-element but got " + XMLUtil.eventID2String(
+                                reader.getEventType()) + " in " + record);
+                    }
+                    }
                 continue;
             }
             if (!(SUMMA_FIELD.equals(reader.getLocalName()) &&

@@ -25,8 +25,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Handles the logistic of traversing a graph of Records with the input Record
- * as origin. Only Payloads with Records are permitted.
+ * Handles the logistic of traversing a graph of Records with the input Record as origin.
+ * Only Payloads with Records are permitted.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,

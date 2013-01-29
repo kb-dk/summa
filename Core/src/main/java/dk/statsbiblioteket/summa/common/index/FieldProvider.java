@@ -14,10 +14,10 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import java.text.ParseException;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.w3c.dom.Node;
+
+import java.text.ParseException;
 
 /**
  * Provides look-up and creation of IndexFields based on their names.
@@ -32,8 +32,7 @@ public interface FieldProvider<F extends IndexField> {
      * @return the field corresponding to the name.
      * @throws IllegalArgumentException if the field could not be located.
      */
-    F getField(String fieldName) throws
-                                                IllegalArgumentException;
+    F getField(String fieldName) throws IllegalArgumentException;
 
     /**
      * Create an new field with default values.

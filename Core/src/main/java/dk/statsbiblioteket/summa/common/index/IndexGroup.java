@@ -201,7 +201,7 @@ public class IndexGroup<F extends IndexField> {
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
-            log.debug("Found child '" + child.getNodeName() + "', in group");
+            //log.debug("Found child '" + child.getNodeName() + "', in group");
             //noinspection DuplicateStringLiteralInspection
             if (child.getNodeName() != null && "field".equals(child.getNodeName())) {
                 Node fieldNameNode = child.getAttributes().getNamedItem("ref");

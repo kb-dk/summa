@@ -21,7 +21,7 @@ import javax.xml.namespace.NamespaceContext;
 import java.util.*;
 
 /**
- * For reasons beyond the frontiers of human intelligens, the XML api in JAVA only provide
+ * For reasons beyond the frontiers of human intelligence, the XML api in JAVA only provide
  *  an Interface for the {@link javax.xml.namespace.NamespaceContext}.<br>
  *
  * This is the implementation that should have been provided in the API.<br>
