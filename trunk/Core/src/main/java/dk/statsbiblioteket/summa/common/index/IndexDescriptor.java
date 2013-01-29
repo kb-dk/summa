@@ -157,7 +157,13 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
     /**
      * All Fields mapped from field name => Field object.
      */
-    private Map<String, F> allFields = new LinkedHashMap<String, F>(20);
+    private Map<String, F> allFields = new LinkedHashMap<String, F>();
+
+    /**
+     * Fields that performs prefix matching (specified with [@code fieldprefix*} in field name in the index descriptor).
+     * Note that these fields cannot be part of a group.
+     */
+    private List<F> prefixFields = new ArrayList<F>();
 
     /**
      * All Groups mapped from group name => Group object. All the Fields
@@ -393,6 +399,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         return document;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     private Document parseXMLToDocument(String xml) throws ParseException {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -511,8 +518,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
     }
 
     /**
-     * XML-representation usable for persistence. This is the format that
-     * {@link #parse} accepts.
+     * XML-representation usable for persistence. This is the format that {@link #parse} accepts.
      *
      * @return a well-formed XML representation of the descriptor.
      * @see #parse(String)
@@ -532,6 +538,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         for (Map.Entry<String, F> entry : allFields.entrySet()) {
             sw.append(entry.getValue().toXMLFragment());
         }
+        // TODO: Add prefix fields to this
         sw.append("</fields>\n");
 
         sw.append("<defaultLanguage>").append(defaultLanguage);
@@ -580,6 +587,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
     public synchronized boolean addField(F field) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("addField(" + field + ") called");
+        if (field.getName().endsWith("*")) {
+            return addPrefixField(field);
+        }
         if (allFields.get(field.getName()) != null) {
             log.debug("A Field with name '" + field.getName() + "' is already "
                       + "present in allFields. The old field will be replaced");
@@ -591,6 +601,15 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
             log.debug("Assigning new default field");
             defaultField = field;
         }
+        return true;
+    }
+
+    private boolean addPrefixField(F field) {
+        field.setName(field.getName().substring(0, field.getName().length()-1)); // remove *
+        // TODO: Add duplicate detection and warning
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Adding " + field + " to prefixFields");
+        prefixFields.add(field);
         return true;
     }
 
@@ -666,8 +685,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
      * languages match).
      *
      * @param fieldName the name or alias of the wanted field.
-     * @return the field corresponding to the name or alias or null if a field
-     *         could not be found.
+     * @return the field corresponding to the name or alias or null if a field could not be found.
      * @see #allFields
      */
     @Override
@@ -677,14 +695,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
 
     /**
      * Locates and returns a field from the internal list of all fields.
-     * The look-up is performed with alias-expansion. Name-matches takes
-     * precedence over alias-matches.
+     * The look-up is performed with alias-expansion. Name-matches takes precedence over alias-matches.
      *
      * @param fieldName the name or alias of the wanted field.
-     * @param language  the language for alias-lookup. If the language is null,
-     *                  it is ignored.
-     * @return the field corresponding to the name or alias or null if a field
-     *         could not be found.
+     * @param language  the language for alias-lookup. If the language is null, it is ignored.
+     * @return the field corresponding to the name or alias or null if a field could not be found.
      * @see #allFields
      */
     public F getField(String fieldName, String language) {
@@ -693,11 +708,20 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
             return field;
         }
         // TODO: Optimize alias-lookup
+
+        // Alias lookup
         for (Map.Entry<String, F> entry : allFields.entrySet()) {
             if (entry.getValue().isMatch(fieldName, language)) {
                 return entry.getValue();
             }
         }
+        // Prefix lookup
+        for (F prefixField: prefixFields) {
+            if (fieldName.startsWith(prefixField.getName())) {
+                return prefixField;
+            }
+        }
+
         log.debug("getField: No field with name '" + fieldName + "' found. Returning null");
         return null;
     }
@@ -715,6 +739,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         F field = allFields.get(fieldName);
         if (field != null) {
             return field;
+        }
+        // Prefix lookup
+        for (F prefixField: prefixFields) {
+            if (fieldName.startsWith(prefixField.getName())) {
+                return prefixField;
+            }
         }
         log.debug("No field with name '" + fieldName + "' found. Returning default field");
         return defaultField;
@@ -797,6 +827,18 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         return allFields;
     }
 
+    public List<F> getPrefixFields() {
+        return prefixFields;
+    }
+
+    public Map<String, F> getPrefixFieldsAsMap() {
+        Map<String, F> fields = new HashMap<String, F>(prefixFields.size());
+        for (F prefixField: prefixFields) {
+            fields.put(prefixField.getName(), prefixField);
+        }
+        return fields;
+    }
+
     /**
      * If the sub-configuration {@link #CONF_DESCRIPTOR} is present in the
      * given conf, it is copied to all the subConfs. If the CONF_DESCRIPTOR is
@@ -817,9 +859,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         try {
             id = conf.getSubConfiguration(CONF_DESCRIPTOR);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException("Storage doesn't support sub configurations");
+            throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format("Unable to extract %s from configuration", 
+            throw new ConfigurationException(String.format("Unable to extract %s from configuration",
                                                            CONF_DESCRIPTOR), e);
         }
         for (Configuration subConf : subConfs) {
@@ -828,8 +870,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
                 continue;
             }
             try {
-                subConf.createSubConfiguration(CONF_DESCRIPTOR).
-                        importConfiguration(id);
+                subConf.createSubConfiguration(CONF_DESCRIPTOR).importConfiguration(id);
             } catch (IOException e) {
                 throw new ConfigurationException("Unable to insert index description in sub configuration", e);
             }
