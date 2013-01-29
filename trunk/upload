@@ -21,14 +21,16 @@ USER=$1
 cd Summix/target
 echo "MD5Sum: `md5sum summix-*-SNAPSHOT.zip`"
 
-VERSION=`ls *SNAPSHOT.zip | tail -n 1 | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*SNAPSHOT[.]zip/\\1/"`
+#VERSION=`ls *SNAPSHOT.zip | tail -n 1 | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*SNAPSHOT[.]zip/\\1/"`
+VERSION=`ls summix-*.zip | tail -n 1 | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*[.]zip/\\1/"`
 
-FOLDER=$VERSION-trunk-SNAPSHOT
+FOLDER=$VERSION
 if [ ! -d $FOLDER ]
 then
     mkdir $FOLDER
 fi
-cp summix-*-SNAPSHOT.zip $FOLDER
+#cp summix-*-SNAPSHOT.zip $FOLDER
+cp summix-*.zip $FOLDER
 
 echo "Deploying folder $FOLDER with content `ls $FOLDER` for user $USER"
 echo "scp -r $FOLDER  $USER,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/"
