@@ -505,8 +505,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
             } catch (Exception e) {
                 String message = String.format("IOException for manipulator #%d (%s) while indexing",
                                                manipulatorPosition + 1, manipulator);
-                Logging.logProcess(
-                    this.getClass().getSimpleName(), message, Logging.LogLevel.WARN, payload, e);
+                Logging.logProcess(getClass().getSimpleName(), message, Logging.LogLevel.WARN, payload, e);
                 if (manipulatorPosition == 0) {
                     updatesSinceLastCommit--;
                     updatesSinceLastConsolidate--;
@@ -523,7 +522,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         if (newOrderChanged && !oldOrderChanged) {
             orderChangedSinceLastCommit();
         }
-        Logging.logProcess(this.getClass().getSimpleName(),
+        Logging.logProcess(getClass().getSimpleName(),
                            "Indexed update finished with deleted=" + (payload.getRecord() == null ? "N/A" :
                             payload.getRecord().isDeleted()), Logging.LogLevel.DEBUG, payload);
         // TODO: Keep received Payloads and close them on commit?
@@ -725,7 +724,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         int feedbackEvery = 1000;
         if (log.isTraceEnabled() || (log.isDebugEnabled() && (profiler.getBeats()+1) % feedbackEvery == 0)) {
             log.trace("Got payload #" + (profiler.getBeats()+1) + " from source in "
-                      + (System.nanoTime() - start)/1000000f + "ms. UpdatesSinceLastCommit=" + updatesSinceLastCommit
+                      + (System.nanoTime() - start)/1000000.0f + "ms. UpdatesSinceLastCommit=" + updatesSinceLastCommit
                       + ", updatesSinceLastconsolidate=" + updatesSinceLastConsolidate);
         }
 
