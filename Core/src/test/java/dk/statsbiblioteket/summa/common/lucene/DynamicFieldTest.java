@@ -39,7 +39,6 @@ import junit.framework.TestSuite;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.security.PrivateKey;
 
 /**
  * Tests whether indexing and searching on dynamic (prefix-based) fields works.
@@ -49,6 +48,7 @@ public class DynamicFieldTest extends TestCase {
     public static final File INDEX = new File(System.getProperty("java.io.tmpdir"), "dynamictmp");
 
     public static final File DOC_SIMPLE = Resolver.getFile("common/lucene/SimpleDocument.xml");
+    public static final File DOC_JOKER = Resolver.getFile("common/lucene/JokerDocument.xml");
 
     public DynamicFieldTest(String name) {
         super(name);
@@ -87,6 +87,26 @@ public class DynamicFieldTest extends TestCase {
 
         assertEquals("The number of hits should be as expected", 1, getHitCount(new Request(
                 DocumentSearcher.SEARCH_QUERY, "jens"
+        )));
+    }
+
+    public void testJokerFlow() throws IOException {
+        ObjectFilter feeder = new PayloadFeederHelper(0, DOC_JOKER.toString());
+        ObjectFilter indexer = getIndexChain(feeder);
+        assertTrue("There should be a single record", indexer.hasNext());
+        Payload indexed = indexer.next();
+        assertNotNull("The records should pass through the chain", indexed);
+        indexed.close();
+        indexer.close(true);
+
+        assertEquals("The number of hits should be as expected for plain query", 1, getHitCount(new Request(
+                DocumentSearcher.SEARCH_QUERY, "jens"
+        )));
+        assertEquals("The number of hits should be as expected for field based query", 1, getHitCount(new Request(
+                DocumentSearcher.SEARCH_QUERY, "author:jens"
+        )));
+        assertEquals("The number of hits should be as expected for field based joker query", 1, getHitCount(new Request(
+                DocumentSearcher.SEARCH_QUERY, "joker123:harley"
         )));
     }
 
