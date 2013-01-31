@@ -121,7 +121,10 @@ public class DisjunctionQueryParser extends QueryParser {
             // TODO: The field is unknown in the descriptor but might be indexed
             return inner.getFinalQuery(field);
         }
-        return inner.getFinalQuery(resolvedField.getName());
+
+        // Note: This was introduced to support dynamic fields. It _should_ not collide with existing usage
+        return inner.getFinalQuery(field);
+        //return inner.getFinalQuery(resolvedField.getName());
     }
 
     private abstract interface InnerQueryMaker {

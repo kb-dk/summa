@@ -82,13 +82,11 @@ public class IndexTest extends NoExitTestCase {
 
         assertEquals("There should be no existing indexes", 0, countIndexes());
         Configuration indexConf = loadFagrefProperties(
-            STORAGE_ID, "integration/search/IndexTest_IndexConfiguration.xml");
+                STORAGE_ID, "integration/search/IndexTest_IndexConfiguration.xml");
         updateIndex(indexConf);
-        assertEquals("After update one the number of indexes should be correct",
-                     1, countIndexes());
+        assertEquals("After update one the number of indexes should be correct", 1, countIndexes());
         updateIndex(indexConf);
-        assertEquals("After update two the number of indexes should be correct",
-                     2, countIndexes());
+        assertEquals("After update two the number of indexes should be correct", 2, countIndexes());
         storage.close();
     }
 
@@ -99,17 +97,15 @@ public class IndexTest extends NoExitTestCase {
 
         assertEquals("There should be no existing indexes", 0, countIndexes());
         Configuration indexConf = loadFagrefProperties(
-            STORAGE_ID, "integration/search/IndexTest_IndexConfiguration.xml");
+                STORAGE_ID, "integration/search/IndexTest_IndexConfiguration.xml");
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
 //                getSubConfiguration("IndexUpdate").
-                set(IndexControllerImpl.CONF_CREATE_NEW_INDEX, false);
+        set(IndexControllerImpl.CONF_CREATE_NEW_INDEX, false);
         updateIndex(indexConf);
-        assertEquals("After update one the number of indexes should be correct",
-                     1, countIndexes());
+        assertEquals("After update one the number of indexes should be correct", 1, countIndexes());
         updateIndex(indexConf);
-        assertEquals("After update two the number of indexes should be correct",
-                     1, countIndexes());
+        assertEquals("After update two the number of indexes should be correct", 1, countIndexes());
         storage.close();
     }
 
@@ -122,10 +118,11 @@ public class IndexTest extends NoExitTestCase {
 
     // TODO: Implement proper shutdown of single tests
 
-    public static final File INDEX_ROOT = new File(
-            System.getProperty("java.io.tmpdir"), "testindex");
+    public static final File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"), "testindex");
+
     /**
      * Tests the workflow from files on disk to finished index.
+     *
      * @throws Exception if the workflow failed.
      */
     public void testWorkflow() throws Exception {
@@ -133,117 +130,91 @@ public class IndexTest extends NoExitTestCase {
         Storage storage = createSampleStorage(STORAGE_ID);
 
         // Index chain setup
-        URL xsltLocation =
-                Thread.currentThread().getContextClassLoader().getResource(
-                        "integration/fagref/fagref_index.xsl");
-        assertNotNull("The original xslt location should not be null",
-                      xsltLocation);
-        String descriptorLocation =
-                "file://"
-                + Thread.currentThread().getContextClassLoader().getResource(
-                        "integration/fagref/fagref_IndexDescriptor.xml").getFile();
+        URL xsltLocation = Thread.currentThread().getContextClassLoader().getResource
+                ("integration/fagref/fagref_index.xsl");
+        assertNotNull("The original xslt location should not be null", xsltLocation);
+        String descriptorLocation = "file://" + Thread.currentThread().getContextClassLoader().getResource(
+                "integration/fagref/fagref_IndexDescriptor.xml").getFile();
 //        System.out.println(descriptorLocation);
-        Configuration indexConf = loadFagrefProperties(
-            STORAGE_ID, "integration/fagref/fagref_index_setup.xml");
+        Configuration indexConf = loadFagrefProperties(STORAGE_ID, "integration/fagref/fagref_index_setup.xml");
 
-        assertNotNull(
-            "Configuration should contain " + FilterControl.CONF_CHAINS,
-            indexConf.getSubConfigurations(FilterControl.CONF_CHAINS));
+        assertNotNull("Configuration should contain "
+                      + FilterControl.CONF_CHAINS, indexConf.getSubConfigurations(FilterControl.CONF_CHAINS));
 
         FilterService indexService = new FilterService(indexConf);
         indexService.start();
 
         waitForService(indexService);
 
-        List<Filter> filters =
-                indexService.getFilterControl().getPumps().get(0).getFilters();
-        File indexLocation = ((IndexControllerImpl)filters.get(filters.size()-1)).
+        List<Filter> filters = indexService.getFilterControl().getPumps().get(0).getFilters();
+        File indexLocation = ((IndexControllerImpl) filters.get(filters.size() - 1)).
                 getIndexLocation();
 
-        String[] EXPECTED_IDS = new String[] {"fagref:gm@example.com",
-                                              "fagref:hj@example.com",
-                                              "fagref:jh@example.com"};
-        LuceneTestHelper.verifyContent(
-                new File(indexLocation, LuceneIndexUtils.LUCENE_FOLDER),
-                EXPECTED_IDS);
+        String[] EXPECTED_IDS = new String[]{"fagref:gm@example.com", "fagref:hj@example.com", "fagref:jh@example.com"};
+        LuceneTestHelper.verifyContent(new File(indexLocation, LuceneIndexUtils.LUCENE_FOLDER), EXPECTED_IDS);
 
         storage.close();
     }
 
     /**
      * Create a Storage and fill it with test-data, ready for indexing.
+     *
      * @param storageName the RMI-exposed name for the Storage.
      * @return the StorageService containing the filled Storage.
      * @throws Exception if the fill failed.
      */
-    public static Storage createSampleStorage(String storageName)
-        throws Exception {
+    public static Storage createSampleStorage(String storageName) throws Exception {
         Storage storage = ReleaseHelper.startStorage(storageName);
         fillStorage(storageName);
         return storage;
     }
 
     public void testGetResource() {
-        URL dataLocation = Resolver.getURL(
-            "integration/fagref/fagref_testdata.txt");
-        assertNotNull("The test data resource (.txt) should not be null",
-                      dataLocation);
+        URL dataLocation = Resolver.getURL("integration/fagref/fagref_testdata.txt");
+        assertNotNull("The test data resource (.txt) should not be null", dataLocation);
     }
 
 
     // TODO: Use property substitution instead of replace
     public static void fillStorage(String storage) throws Exception {
         // Ingest
-        URL dataLocation = Resolver.getURL(
-            "integration/fagref/fagref_testdata.txt");
+        URL dataLocation = Resolver.getURL("integration/fagref/fagref_testdata.txt");
         assertNotNull("The data location should not be null", dataLocation);
         File ingestRoot = new File(dataLocation.getFile()).getParentFile();
-        System.setProperty("fagref_filter_storage",
-                           ReleaseHelper.STORAGE_RMI_PREFIX + storage);
-        String filterConfString = Streams.getUTF8Resource(
-                    "integration/fagref/fagref_filter_setup.xml");
-        filterConfString = filterConfString.replace(
-                    "/tmp/summatest/data/fagref", ingestRoot.toString());
-        assertFalse("Replace should work",
-                    filterConfString.contains("/tmp/summatest/data/fagref"));
-        File filterConfFile = new File(System.getProperty(
-            "java.io.tmpdir"), "filterConf.xml");
+        System.setProperty("fagref_filter_storage", ReleaseHelper.STORAGE_RMI_PREFIX + storage);
+        String filterConfString = Streams.getUTF8Resource("integration/fagref/fagref_filter_setup.xml");
+        filterConfString = filterConfString.replace("/tmp/summatest/data/fagref", ingestRoot.toString());
+        assertFalse("Replace should work", filterConfString.contains("/tmp/summatest/data/fagref"));
+        File filterConfFile = new File(System.getProperty("java.io.tmpdir"), "filterConf.xml");
         Files.saveString(filterConfString, filterConfFile);
 
         assertTrue("The filter conf. should exist", filterConfFile.exists());
-        Configuration filterConf = loadFagrefProperties(
-            storage, filterConfFile.getPath());
-        assertNotNull(
-            "Configuration should contain " + FilterControl.CONF_CHAINS,
-            filterConf.getSubConfigurations(FilterControl.CONF_CHAINS));
+        Configuration filterConf = loadFagrefProperties(storage, filterConfFile.getPath());
+        assertNotNull("Configuration should contain " + FilterControl.CONF_CHAINS,
+                      filterConf.getSubConfigurations(FilterControl.CONF_CHAINS));
 
         FilterService ingester = new FilterService(filterConf);
         ingester.start();
         waitForService(ingester);
 
         int recordCount = ReleaseHelper.getRecords(storage).size();
-        assertEquals("The number of Records in Storage should be as expected",
-                     NUM_RECORDS, recordCount);
+        assertEquals("The number of Records in Storage should be as expected", NUM_RECORDS, recordCount);
 
         Record gurli = ReleaseHelper.getRecords(storage).get(0);
-        String fileContent =
-                Resolver.getUTF8Content("integration/fagref/gurli.margrethe.xml");
+        String fileContent = Resolver.getUTF8Content("integration/fagref/gurli.margrethe.xml");
         assertEquals("The stored content should match the file-content",
                      fileContent.trim(), gurli.getContentAsUTF8().trim());
     }
 
-    public static void waitForService(FilterService service)
-                                  throws RemoteException, InterruptedException {
+    public static void waitForService(FilterService service) throws RemoteException, InterruptedException {
         int TIMEOUT = 10000;
         waitForService(service, TIMEOUT);
     }
 
-    public static void waitForService(FilterService service, int timeout)
-                                  throws RemoteException, InterruptedException {
+    public static void waitForService(FilterService service, int timeout) throws RemoteException, InterruptedException {
         long endTime = System.currentTimeMillis() + timeout;
         log.debug("Waiting a maximum of " + timeout + " ms for service");
-        while (service.getStatus().getCode() != Status.CODE.stopped &&
-               System.currentTimeMillis() < endTime) {
+        while (service.getStatus().getCode() != Status.CODE.stopped && System.currentTimeMillis() < endTime) {
             log.trace("Sleeping a bit");
             Thread.sleep(100);
         }
@@ -258,16 +229,12 @@ public class IndexTest extends NoExitTestCase {
     }
 
     private static void setFagrefProperties(String storageID) {
-        URL xsltLocation = Resolver.getURL(
-                "integration/search/fagref_xslt/fagref_index.xsl");
-        assertNotNull("The fagref xslt location should not be null",
-                      xsltLocation);
+        URL xsltLocation = Resolver.getURL("integration/search/fagref_xslt/fagref_index.xsl");
+        assertNotNull("The fagref xslt location should not be null", xsltLocation);
         System.setProperty("fagref_xslt", xsltLocation.getFile());
 
-        URL descriptorLocation = Resolver.getURL(
-                "integration/search/SearchTest_IndexDescriptor.xml");
-        assertNotNull("The descriptor location should not be null",
-                      descriptorLocation);
+        URL descriptorLocation = Resolver.getURL("integration/search/SearchTest_IndexDescriptor.xml");
+        assertNotNull("The descriptor location should not be null", descriptorLocation);
         System.setProperty("fagref_descriptor", descriptorLocation.getFile());
 
         // TODO: Consider cleanup of the index folder on tearDown
@@ -306,7 +273,3 @@ public class IndexTest extends NoExitTestCase {
         indexService.stop();
     }
 }
-
-
-
-

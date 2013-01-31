@@ -297,7 +297,7 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
     private void createAnalyzers() {
         log.debug("createAnalyzers called");
         Map<String, Analyzer> indexAnalyzers = new HashMap<String, Analyzer>();
-        Map<String, Analyzer> indexprefixAnalyzers = new HashMap<String, Analyzer>();
+        Map<String, Analyzer> indexPrefixAnalyzers = new HashMap<String, Analyzer>();
         Map<String, Analyzer> queryAnalyzers = new HashMap<String, Analyzer>();
         Map<String, Analyzer> queryPrefixAnalyzers = new HashMap<String, Analyzer>();
 
@@ -311,18 +311,18 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
                 queryAnalyzers.put(entry.getKey(), entry.getValue().getQueryAnalyzer());
             }
         }
-        for (Map.Entry<String, LuceneIndexField> entry: getFields().entrySet()) {
-            log.debug("Adding prefix field " + entry.getKey() + " index-analyzer " + entry.getValue().getIndexAnalyzer()
-                      + " and query-analyzer " + entry.getValue().getQueryAnalyzer());
-            if (entry.getValue().getIndexAnalyzer() != null) {
-                indexprefixAnalyzers.put(entry.getKey(), entry.getValue().getIndexAnalyzer());
+        for (LuceneIndexField field: getPrefixFields()) {
+            log.debug("Adding prefix field " + field.getName() + " index-analyzer " + field.getIndexAnalyzer()
+                      + " and query-analyzer " + field.getQueryAnalyzer());
+            if (field.getIndexAnalyzer() != null) {
+                indexPrefixAnalyzers.put(field.getName(), field.getIndexAnalyzer());
             }
-            if (entry.getValue().getQueryAnalyzer() != null) {
-                queryPrefixAnalyzers.put(entry.getKey(), entry.getValue().getQueryAnalyzer());
+            if (field.getQueryAnalyzer() != null) {
+                queryPrefixAnalyzers.put(field.getName(), field.getQueryAnalyzer());
             }
         }
         indexAnalyzer = new DynamicPerFieldAnalyzerWrapper(
-                defaultField.getIndexAnalyzer(), indexAnalyzers, indexprefixAnalyzers);
+                defaultField.getIndexAnalyzer(), indexAnalyzers, indexPrefixAnalyzers);
         queryAnalyzer = new DynamicPerFieldAnalyzerWrapper(
                 defaultField.getQueryAnalyzer(), queryAnalyzers, queryPrefixAnalyzers);
     }
