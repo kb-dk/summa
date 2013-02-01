@@ -150,10 +150,7 @@ public class ParseUtil {
          * @return the text with &, ", < and > encoded.
          */
         public static String encode(String input) {
-            input = input.replace("&", "&amp;");
-            input = input.replace("\"", "&quot;");
-            input = input.replace("<", "&lt;");
-            return input.replace(">", "&gt;");
+            return input.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;").replace(">", "&gt;");
         }
 
         /**
