@@ -58,8 +58,7 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
 
     private List<String> moreLikethisFields;
 
-    public LuceneIndexDescriptor(Configuration configuration)
-                                                            throws IOException {
+    public LuceneIndexDescriptor(Configuration configuration) throws IOException {
         super(configuration);
     }
 
@@ -223,16 +222,13 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
                 moreLikethisFields.add(ref);
             }
         }
-        log.info("Finished extracting MoreLikeThis fields: "
-                 + Logs.expand(moreLikethisFields, 20));
+        log.info("Finished extracting MoreLikeThis fields: " + Logs.expand(moreLikethisFields, 20));
 
         return document;
     }
 
-    private LuceneIndexField makeField(String name, Field.Index index,
-                                       Field.Store store,
-                                       Field.TermVector termVector,
-                                       Analyzer analyzer) {
+    private LuceneIndexField makeField(
+            String name, Field.Index index, Field.Store store, Field.TermVector termVector, Analyzer analyzer) {
         LuceneIndexField field = new LuceneIndexField(name);
         if (index == Field.Index.NO) {
             field.setDoIndex(false);
