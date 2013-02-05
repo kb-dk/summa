@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -129,9 +130,25 @@ public class StorageIterator implements Iterator<Record>, Serializable {
                     next = false;
                 }
                 records.addAll(recs);
+            } catch (Exception e) { // Often this is a java.rmi.ServerException indirectly wrapping NoSuchElementEx...
+                try {
+                    Throwable sub = e;
+                    while (sub != null) {
+                        if (sub instanceof NoSuchElementException) {
+                            log.info("Got NoSuchElementException, which signals no more Records. "
+                                     + "Received a total of " + totalReceived + " Records");
+                            next = false;
+                            return;
+                        }
+                        sub = sub.getCause();
+                    }
+                    throw new RemoteException("Received Exception that did not have a NoSuchElementException "
+                                              + "in the causes chain", e);
+                } catch (Exception e2) {
+                    throw new RemoteException("Exception triggered while searching for NoSuchElementException "
+                                              + "cause in " + e, e2);
+                }
 
-            } catch (NoSuchElementException e) {
-                next = false;
             }
         }
     }
