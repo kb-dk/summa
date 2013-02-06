@@ -88,12 +88,10 @@ public class TermDocIterator implements Iterator<ExposedTuple> {
                 + order + ", ordinal=" + order.get(position), e);
       }
       position++;
-
       if (!collectDocIDs) {
         pending = true;
         return;
       }
-
       // TODO: Speed up by reusing (this currently breaks TestExposedCache.testIndirectIndex)
       docsEnum = source.getDocsEnum(tuple.ordinal, null);
       if (docsEnum == null) {
