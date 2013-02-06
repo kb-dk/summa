@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.gwsc;
 
-import dk.statsbiblioteket.util.qa.*;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
@@ -222,7 +222,7 @@ public class WebServices {
                                     String outputstr = output.getAttributes().getNamedItem("name").getNodeValue();
                                     NodeList nl2 = DOM.selectNodeList(wsdldoc,"definitions/message[@name='" + inputstr + "']/part");
                                     if (nl2 != null && nl2.getLength() == 1 && nl2.item(0).getAttributes().getNamedItem("name").getNodeValue().equals("parameters")) {
-                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + nl1.item(j).getAttributes().getNamedItem("name").getNodeValue() + "']" + "/complexType/sequence/element");
+                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + nl1.item(j).getAttributes().getNamedItem("name").getNodeValue() + "']/complexType/sequence/element");
                                         for (int k = 0; k < nl3.getLength(); k++) {
                                             service.setParameters(nl3.item(k).getAttributes().getNamedItem("name").getNodeValue(),nl3.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
@@ -233,7 +233,7 @@ public class WebServices {
                                     }
                                     nl2 = DOM.selectNodeList(wsdldoc,"definitions/message[@name='" + outputstr + "']/part");
                                     if (nl2 != null && nl2.getLength() == 1 && nl2.item(0).getAttributes().getNamedItem("name").getNodeValue().equals("parameters")) {
-                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + outputstr + "']" + "/complexType/sequence/element");
+                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + outputstr + "']/complexType/sequence/element");
                                         for (int k = 0; k < nl3.getLength(); k++) {
                                             service.setReturnvalue(nl3.item(k).getAttributes().getNamedItem("name").getNodeValue(),nl3.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }

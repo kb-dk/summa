@@ -90,7 +90,7 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage> impleme
 
     @Override
     public Storage createConnection(String connectionId) {
-        log.trace("Creating connection to '" + connectionId + "' via backend " + "'" + backend.getClass().getName()
+        log.trace("Creating connection to '" + connectionId + "' via backend '" + backend.getClass().getName()
                   + "'");
         Object o = backend.createConnection(connectionId);
         log.trace("Got storage proxy class: " + o);

@@ -238,7 +238,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                     queries.info("Search finished "
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms with "
-                                 + hits + " hits. " + "Request was " + request.toString(true)
+                                 + hits + " hits. Request was " + request.toString(true)
                                  + " with Timing(" + merged.getTiming() + ")");
                 }
             }

@@ -226,7 +226,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
             // TODO: Make this cleaner with no explicit dependency
             if (responses == null) {
                 queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                             + " in " + responseTime / 1000000 + "ms. " + "Request was " + request.toString(true));
+                             + " in " + responseTime / 1000000 + "ms. Request was " + request.toString(true));
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);

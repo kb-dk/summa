@@ -96,7 +96,7 @@ public class StorageTool {
      */
     private static int actionGet(String[] argv, StorageReaderClient storage) throws IOException {
         if (argv.length == 1) {
-            System.err.println("You must specify at least one record id to " + "the 'get' action");
+            System.err.println("You must specify at least one record id to the 'get' action");
             return 1;
         }
 
@@ -134,7 +134,7 @@ public class StorageTool {
     private static int actionTouch(String[] argv, StorageReaderClient reader, StorageWriterClient writer) throws
                                                                                                           IOException {
         if (argv.length == 1) {
-            System.err.println("You must specify at least one record id to" + " the 'touch' action");
+            System.err.println("You must specify at least one record id to the 'touch' action");
             return 1;
         }
 
@@ -374,7 +374,7 @@ public class StorageTool {
     @SuppressWarnings("CallToPrintStackTrace")
     private static int actionXslt(String[] argv, StorageReaderClient storage) throws IOException {
         if (argv.length <= 2) {
-            System.err.println("You must specify a record id and a URL " + "for the XSLT to apply");
+            System.err.println("You must specify a record id and a URL for the XSLT to apply");
             return 1;
         }
 
@@ -433,7 +433,7 @@ public class StorageTool {
                     in.close();
                 }
             } catch (IOException e) {
-                System.err.println("Non-fatal IOException while closing " + "stream for '" + xsltUrl + "'");
+                System.err.println("Non-fatal IOException while closing stream for '" + xsltUrl + "'");
             }
         }
         return transformer;
@@ -443,13 +443,15 @@ public class StorageTool {
      * Print usage to {@link System#err}.
      */
     private static void printUsage() {
-        System.err.println("USAGE:\n\t" + "storage-tool.sh <action> [arg]...");
+        System.err.println("USAGE:\n\tstorage-tool.sh <action> [arg]...");
         System.err.println(
-                "Actions:\n" + "\tget  <record_id>\n" + "\tpeek [base] [max_count=5]\n"
-                + "\ttouch <record_id> [record_id...]\n" + "\txslt <record_id> <xslt_url>\n"
+                "Actions:\n"
+                + "\tget  <record_id>\n"
+                + "\tpeek [base] [max_count=5]\n"
+                + "\ttouch <record_id> [record_id...]\n\txslt <record_id> <xslt_url>\n"
                 + "\tdump [base]     (dump storage on stdout)\n"
-                + "\tclear base      (clear all records from base)\n" + "\tholdings\n"
-                + "\tbatchjob <jobname> [base] [minMtime] " + "[maxMtime]   (empty base string means all bases)\n"
+                + "\tclear base      (clear all records from base)\n\tholdings\n"
+                + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
                 + "\tbackup <destination> (full copy of the running storage at the point of command execution)\n");
     }
 

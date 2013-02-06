@@ -158,7 +158,7 @@ public abstract class ResourceListener implements Runnable {
             log.debug("Already inactive");
             return;
         }
-        if (active && !oldActive) {
+        if (active) { // && !oldActive) {
             log.debug("Starting new listener thread");
             new Thread(this, "ResourceListenerThread").start();
             return;

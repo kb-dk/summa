@@ -2542,8 +2542,8 @@ public abstract class DatabaseStorage extends StorageBase {
         final int _ID = 1;
         final int _MTIME = 2;
         final int _DELETED = 3;
-        String sql = "SELECT id, mtime, deleted " + " FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ?" + " AND "
-                     + MTIME_COLUMN + " > ?" + " AND " + MTIME_COLUMN + " < ?" + " AND " + DELETED_COLUMN + " = 0";
+        String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? AND "
+                     + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
         if (usePagingModel) {
             sql = getPagingStatement(sql);
         }
@@ -3418,7 +3418,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 + MTIME_COLUMN + " BIGINT, " + DELETE_INDEXABLES_COLUMN + " BIGINT, " + NON_DELETED_INDEXABLES_COLUMN
                 + " BIGINT, " + DELETED_NON_INDEXABLES_COLUMN + " BIGINT, " + NON_DELETED_NON_INDEXABLES_COLUMN
                 + " BIGINT, " + VALID_COLUMN + " INTEGER)";
-        log.debug("Creating table " + BASE_STATISTICS + " if not already existing" + " with query '"
+        log.debug("Creating table " + BASE_STATISTICS + " if not already existing with query '"
                   + createBaseStatisticQuery + "'");
         Statement stmt = conn.createStatement();
         stmt.execute(createBaseStatisticQuery);
@@ -4022,7 +4022,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private List<BaseStats> getHeavyStatsWithConnection(Connection conn) throws SQLException, IOException {
         long startTime = System.currentTimeMillis();
         List<BaseStats> stats = new LinkedList<BaseStats>();
-        final String query = "SELECT base, deleted, indexable, count(base) " + "FROM summa_records "
+        final String query = "SELECT base, deleted, indexable, count(base) FROM summa_records "
                              + "GROUP BY base,deleted,indexable";
         final int baseKey = 1;
         final int deletedKey = 2;

@@ -77,7 +77,7 @@ public class XMLSplitterParser extends ThreadedStreamParser implements XMLSplitt
 
             // TODO Handle non-namespaceaware saxparsers better
         } catch (ParserConfigurationException e) {
-            throw new RuntimeException("Could not instantiate SAXParser due to " + "configuration exception", e);
+            throw new RuntimeException("Could not instantiate SAXParser due to configuration exception", e);
         } catch (SAXNotRecognizedException e) {
             throw new IllegalArgumentException(String.format("SAXProperty %s not recognized", LEXICAL_HANDLER), e);
         } catch (SAXNotSupportedException e) {

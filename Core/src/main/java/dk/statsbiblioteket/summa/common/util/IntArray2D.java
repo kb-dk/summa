@@ -211,7 +211,7 @@ public class IntArray2D {
     private void checkPos(final int position) {
         if (position >= size) {
             throw new ArrayIndexOutOfBoundsException(String.format(
-                    "The primary array has size %d, while the requested " + "position was %d", size, position));
+                    "The primary array has size %d, while the requested position was %d", size, position));
         }
     }
 

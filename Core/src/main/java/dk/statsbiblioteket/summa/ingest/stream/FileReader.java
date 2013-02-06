@@ -183,7 +183,7 @@ public class FileReader extends FileSystemReader {
                 }
                 //noinspection DuplicateStringLiteralInspection
                 log.debug(
-                        "Queueing " + files.length + " files or folders from " + "'" + start + "'. Queue size before: "
+                        "Queueing " + files.length + " files or folders from '" + start + "'. Queue size before: "
                         + todo.size());
                 if (log.isTraceEnabled()) {
                     Logs.log(log, Logs.Level.TRACE, "Queueing Files: ", Arrays.toString(files));
@@ -309,7 +309,7 @@ public class FileReader extends FileSystemReader {
                     continue;
                 }
                 if (!(payload.getStream() instanceof RenamingFileStream)) {
-                    log.debug("RenamingFilestream not located when closing " + "payload " + payload.getId() + ". Got: "
+                    log.debug("RenamingFilestream not located when closing payload " + payload.getId() + ". Got: "
                               + payload.getStream().getClass().getName());
                 } else {
                     RenamingFileStream stream = (RenamingFileStream) payload.getStream();

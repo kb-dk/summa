@@ -77,7 +77,7 @@ public class IndexResponse extends ResponseImpl {
             log.trace(String.format("Adding term '%s' to field '%s'", term, request.getField()));
         }
         if (term.getKey() == null) {
-            log.warn("addTerm was called with null as term. Modifying to the " + "String 'null'");
+            log.warn("addTerm was called with null as term. Modifying to the String 'null'");
             term.setKey("null");
         }
         if (term.getValue() == null) {

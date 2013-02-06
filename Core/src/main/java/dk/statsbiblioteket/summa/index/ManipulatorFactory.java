@@ -52,16 +52,14 @@ public class ManipulatorFactory {
                     IndexManipulator.CONF_MANIPULATOR_CLASS, IndexManipulator.class, conf);
         } catch (Exception e) {
             throw new Configurable.ConfigurationException(
-                    "Could not get manipulator class from property " + IndexManipulator.CONF_MANIPULATOR_CLASS
-                    + ": " + e.getMessage(), e);
+                    "Could not get manipulator class from property " + IndexManipulator.CONF_MANIPULATOR_CLASS, e);
         }
 
         log.debug("Instantiating manipulator class " + manipulatorClass);
         try {
             return Configuration.create(manipulatorClass, conf);
         } catch (Exception e) {
-            throw new Configurable.ConfigurationException(
-                    "Failed to instantiate manipulator " + manipulatorClass + ": " + e.getMessage(), e);
+            throw new Configurable.ConfigurationException("Failed to instantiate manipulator " + manipulatorClass, e);
         }
     }
 }

@@ -97,7 +97,7 @@ public class AdjustingSearchClient extends SearchClient {
         } finally {
             if (responses == null) {
                 queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                              + " in " + searchTime / 1000000 + "ms. " + "Request was " + request.toString(true));
+                              + " in " + searchTime / 1000000 + "ms. Request was " + request.toString(true));
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);

@@ -293,7 +293,7 @@ public class BundleStub {
     @Override
     public String toString() {
         return "BundleStub(bundleDir=" + bundleDir + ", mainJar=" + mainJar + ", bundleId='" + bundleId + "'" +
-               ", instanceId='" + instanceId + "'" + ", mainClass='" + mainClass + "'" + ", #libs=" + libs.size() +
+               ", instanceId='" + instanceId + "', mainClass='" + mainClass + "', #libs=" + libs.size() +
                ", #jvmArgs=" + jvmArgs.size() + ")";
     }
 }

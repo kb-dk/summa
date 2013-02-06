@@ -90,9 +90,9 @@ public class QuerySanitizer implements Configurable {
         fixQualifiers =   ACTION.valueOf(conf.getString(CONF_FIX_QUALIFIERS, DEFAULT_FIX_QUALIFIERS.toString()));
         fixExclamations = ACTION.valueOf(conf.getString(CONF_FIX_EXCLAMATIONS, DEFAULT_FIX_EXCLAMATIONS.toString()));
         fixRegexps =      ACTION.valueOf(conf.getString(CONF_FIX_REGEXP, DEFAULT_FIX_REGEXP.toString()));
-        log.debug(String.format("Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s,"
-                                + " regexps:%s",
-                                fixQuotes, fixParentheses, fixQualifiers, fixExclamations, fixRegexps));
+        log.debug(String.format(
+                "Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s, regexps:%s",
+                fixQuotes, fixParentheses, fixQualifiers, fixExclamations, fixRegexps));
     }
 
     /**

@@ -111,7 +111,7 @@ public class StringMap extends HashMap<String, String> {
         try {
             return toFormal().getBytes("utf-8");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Could not convert utf-8 bytes");
+            throw new RuntimeException("Could not convert utf-8 bytes", e);
         }
     }
 
@@ -156,7 +156,7 @@ public class StringMap extends HashMap<String, String> {
         try {
             return formal == null || formal.length == 0 ? null : fromFormal(new String(formal, "utf-8"));
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Could not convert utf-8 bytes");
+            throw new RuntimeException("Could not convert utf-8 bytes", e);
         }
     }
 }

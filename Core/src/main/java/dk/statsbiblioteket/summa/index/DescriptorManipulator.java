@@ -55,11 +55,11 @@ public class DescriptorManipulator implements IndexManipulator {
         try {
             descriptorConf = conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException("Storage doesn't support sub configurations");
+            throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
             throw new ConfigurationException(String.format("Unable to extract sub configuration %s", 
-                                                           IndexDescriptor.CONF_DESCRIPTOR));
+                                                           IndexDescriptor.CONF_DESCRIPTOR), e);
         }
         try {
             descriptor = new StoringIndexDescriptor(descriptorConf);
@@ -71,8 +71,7 @@ public class DescriptorManipulator implements IndexManipulator {
 
     @Override
     public void open(File indexRoot) throws IOException {
-        log.debug(String.format(
-                "open(%s) called. Setting this as destination for the IndexDescriptor", indexRoot));
+        log.debug(String.format("open(%s) called. Setting this as destination for the IndexDescriptor", indexRoot));
         this.indexRoot = indexRoot;
     }
 
@@ -90,8 +89,8 @@ public class DescriptorManipulator implements IndexManipulator {
     @Override
     public void commit() throws IOException {
         if (indexRoot == null) {
-            log.error("No indexRoot specified. This indicates that open(...) "
-                      + "has not been called. Unable to store IndexDescriptor");
+            log.error("No indexRoot specified. This indicates that open(...) has not been called. "
+                      + "Unable to store IndexDescriptor");
             return;
         }
         if (descriptor == null) {
@@ -99,8 +98,7 @@ public class DescriptorManipulator implements IndexManipulator {
             return;
         }
         if (descriptor.getXml() == null) {
-            log.warn(String.format(
-                    "No descriptor XML available. Unable to store IndexDescriptor to '%s'", indexRoot));
+            log.warn(String.format("No descriptor XML available. Unable to store IndexDescriptor to '%s'", indexRoot));
             return;
         }
         File descFile = new File(indexRoot, IndexDescriptor.DESCRIPTOR_FILENAME);
@@ -114,10 +112,11 @@ public class DescriptorManipulator implements IndexManipulator {
         }
         Files.saveString(descriptor.getXml(), descFile);
         if (log.isTraceEnabled()) {
-            log.debug(String.format("Stored IndexDescriptor to '%s':\n%s", descFile, descriptor.getXml()));
-        } else {
-            log.debug(String.format("Stored IndexDescriptor of size %d to '%s'", descriptor.getXml().length(), 
-                                    descFile));
+            log.trace(String.format("Stored IndexDescriptor to '%s':\n%s",
+                                    descFile, descriptor.getXml()));
+        } else if (log.isDebugEnabled()) {
+            log.debug(String.format("Stored IndexDescriptor of size %d to '%s'",
+                                    descriptor.getXml().length(), descFile));
         }
     }
 

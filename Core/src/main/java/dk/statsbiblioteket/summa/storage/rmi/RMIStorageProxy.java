@@ -149,7 +149,7 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
          * infinite recursion by forcing it into a DerbyStorage. */
         if (backendConf.valueExists(CONF_CLASS)) {
             if (this.getClass().getName().equals(backendConf.getString(CONF_CLASS))) {
-                log.warn("Backend set to RMIStorageProxy. Forcing backend " + "class to " + DEFAULT_BACKEND.getName()
+                log.warn("Backend set to RMIStorageProxy. Forcing backend class to " + DEFAULT_BACKEND.getName()
                          + " to avoid infinite recursion");
                 backendConf.set(CONF_CLASS, DEFAULT_BACKEND.getName());
             }

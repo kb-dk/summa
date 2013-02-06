@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.gwsc;
 
-import dk.statsbiblioteket.util.qa.*;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
@@ -45,8 +45,7 @@ import java.util.Hashtable;
 public class WebServices {
     private static String services = "services.xml";
     private static WebServices ourInstance = null;
-    private Hashtable<String, ServiceObj> servicehash =
-                                            new Hashtable<String, ServiceObj>();
+    private Hashtable<String, ServiceObj> servicehash = new Hashtable<String, ServiceObj>();
     private static Logger log = Logger.getLogger(WebServices.class);
 
     public synchronized static WebServices getInstance() {
@@ -77,8 +76,7 @@ public class WebServices {
         if (!servicehash.containsKey(name.toLowerCase())) {
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             URL propurl = loader.getResource(services);
-            DocumentBuilderFactory docBuilderFactory =
-                                           DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder;
             try {
                 docBuilder = docBuilderFactory.newDocumentBuilder();
@@ -87,53 +85,42 @@ public class WebServices {
 
                 Document doc =
                         docBuilder.parse(getResourceInputStream(propurl));
-                Node nn = DOM.selectNode(doc,"properties/service[name=\""
-                                             + name + "\"]");
+                Node nn = DOM.selectNode(doc,"properties/service[name=\"" + name + "\"]");
                 ServiceObj service = null;
                 if (nn != null) {
                     service = getServiceObj(nn);
                 }
                 if (service != null && service.getName() != null
-                    && !service.getName().equals("")
-                    && !servicehash.containsKey(
-                        service.getName().toLowerCase())) {
+                    && !"".equals(service.getName())
+                    && !servicehash.containsKey(service.getName().toLowerCase())) {
                     servicehash.put(service.getName().toLowerCase(),service);
                     success = true;
                 }
             } catch (ParserConfigurationException e) {
-                log.warn("Exception while parsing configuration for service: '"
-                                           + name + "': "  + e.getMessage(), e);
+                log.warn("Exception while parsing configuration for service: '" + name + "'", e);
             } catch (IOException e) {
-                log.warn("IOException while creating service: '" + name + "': "
-                                                           + e.getMessage(), e);
+                log.warn("IOException while creating service: '" + name + "'", e);
             } catch (SAXException e) {
-                log.warn("SAXException while creating services: '" + name
-                                                  + "': "  + e.getMessage(), e);
+                log.warn("SAXException while creating services: '" + name + "'", e);
             } catch (Exception e) {
-                log.warn("Exception while creating service: '" + name + "': "
-                                                           + e.getMessage(), e);
+                log.warn("Exception while creating service: '" + name + "'", e);
             }
         }
         return success;
     }
 
     /**
-     * Workaround for a bug in DocumentBuilder.parse where Files with '#' cannot
-     * be opened.
-     * @param resource the URL to the resource to open,. Must be present at the
-     *                 local file system.
+     * Workaround for a bug in DocumentBuilder.parse where Files with '#' cannot be opened.
+     * @param resource the URL to the resource to open,. Must be present at the local file system.
      * @return an InputStream for the given property.
-     * @throws FileNotFoundException if the property could not be resolved to
-     *         a file.
+     * @throws FileNotFoundException if the property could not be resolved to a file.
      */
-    private InputStream getResourceInputStream(URL resource) throws
-                                                         FileNotFoundException {
+    private InputStream getResourceInputStream(URL resource) throws FileNotFoundException {
         try {
             return new FileInputStream(new File(resource.toURI()));
         } catch (URISyntaxException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException(String.format(
-                    "Unable to convert the URL '%s' to URI", resource), e);
+            throw new RuntimeException(String.format("Unable to convert the URL '%s' to URI", resource), e);
         }
     }
 
@@ -159,9 +146,8 @@ public class WebServices {
             for (int i = 0; i < nl.getLength(); i++) {
                 ServiceObj service = getServiceObj(nl.item(i));
                 if (service != null && service.getName() != null
-                        && !service.getName().equals("")
-                        && !servicehash.containsKey(
-                                             service.getName().toLowerCase())) {
+                        && !"".equals(service.getName())
+                        && !servicehash.containsKey(service.getName().toLowerCase())) {
                     servicehash.put(service.getName().toLowerCase(),service);
                 }            }
         } catch (ParserConfigurationException e) {
@@ -222,7 +208,7 @@ public class WebServices {
                                     String outputstr = output.getAttributes().getNamedItem("name").getNodeValue();
                                     NodeList nl2 = DOM.selectNodeList(wsdldoc,"definitions/message[@name='" + inputstr + "']/part");
                                     if (nl2 != null && nl2.getLength() == 1 && nl2.item(0).getAttributes().getNamedItem("name").getNodeValue().equals("parameters")) {
-                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + nl1.item(j).getAttributes().getNamedItem("name").getNodeValue() + "']" + "/complexType/sequence/element");
+                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + nl1.item(j).getAttributes().getNamedItem("name").getNodeValue() + "']/complexType/sequence/element");
                                         for (int k = 0; k < nl3.getLength(); k++) {
                                             service.setParameters(nl3.item(k).getAttributes().getNamedItem("name").getNodeValue(),nl3.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
@@ -233,7 +219,7 @@ public class WebServices {
                                     }
                                     nl2 = DOM.selectNodeList(wsdldoc,"definitions/message[@name='" + outputstr + "']/part");
                                     if (nl2 != null && nl2.getLength() == 1 && nl2.item(0).getAttributes().getNamedItem("name").getNodeValue().equals("parameters")) {
-                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + outputstr + "']" + "/complexType/sequence/element");
+                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + outputstr + "']/complexType/sequence/element");
                                         for (int k = 0; k < nl3.getLength(); k++) {
                                             service.setReturnvalue(nl3.item(k).getAttributes().getNamedItem("name").getNodeValue(),nl3.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
@@ -256,21 +242,16 @@ public class WebServices {
             } else {
                 log.info("Soap-Service: '" + wsdlurl + "' not available!");
             }
-        } else if (nn.getAttributes().getNamedItem("type").getNodeValue()
-                                                              .equals("rest")) {
+        } else if (nn.getAttributes().getNamedItem("type").getNodeValue().equals("rest")) {
             String url = DOM.selectNode(nn,"url/text()").getNodeValue();
-            service = new ServiceObj(
-                        nn.getAttributes().getNamedItem("type").getNodeValue());
+            service = new ServiceObj(nn.getAttributes().getNamedItem("type").getNodeValue());
             name = nn.getAttributes().getNamedItem("name").getNodeValue();
-            log.info("Node '" + nn + "' has item 'name' with value '"
-                                                                 + name + "'.");
+            log.info("Node '" + nn + "' has item 'name' with value '" + name + "'.");
             service.setName(name);
-            service.createCallObj(DOM.selectNode(nn,"url/text()")
-                                                               .getNodeValue());
+            service.createCallObj(DOM.selectNode(nn,"url/text()").getNodeValue());
             NodeList nl1 = DOM.selectNodeList(nn,"parameters/parameter");
             for (int j=0; j < nl1.getLength(); j++) {
-                service.setParameters(nl1.item(j).getAttributes()
-                                          .getNamedItem("name").getNodeValue());
+                service.setParameters(nl1.item(j).getAttributes().getNamedItem("name").getNodeValue());
             }
             ok = true;
             log.info("Rest-Service: " + url + " started!");
@@ -324,11 +305,7 @@ public class WebServices {
             return this.servicehash.get(name);
         } else {
             this.createService(name);
-            if (this.servicehash.containsKey(name)) {
-                return this.servicehash.get(name);
-            } else {
-               return null;
-            }
+            return this.servicehash.containsKey(name) ? this.servicehash.get(name) : null;
         }
     }
 
@@ -362,11 +339,10 @@ public class WebServices {
             //        HttpURLConnection.setInstanceFollowRedirects(false)
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("HEAD");
-            return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
+            return con.getResponseCode() == HttpURLConnection.HTTP_OK;
         }
         catch (Exception e) {
-            log.warn("HTTP connection failed in some way for URL: '" + url
-                                                                     + "'.", e);
+            log.warn("HTTP connection failed in some way for URL: '" + url + "'.", e);
             return false;
         }
     }
@@ -381,22 +357,19 @@ public class WebServices {
      * @throws Exception if error encountered.
      */
     private String postData(String target, String content) throws Exception {
-        System.setProperty("java.protocol.handler.pkgs",
-                           "com.sun.net.ssl.internal.www.protocol");
+        System.setProperty("java.protocol.handler.pkgs", "com.sun.net.ssl.internal.www.protocol");
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
         String response = "";
         URL url = new URL(target);
         URLConnection conn = url.openConnection();
         conn.setReadTimeout(10000);
         conn.setDoInput (true);
-        if (!content.equals("")) {
+        if (!"".equals(content)) {
             conn.setDoOutput (true);
             conn.setUseCaches (false);
-            conn.setRequestProperty("Content-Type",
-                                    "application/x-www-form-urlencoded");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-            DataOutputStream out =
-                                 new DataOutputStream (conn.getOutputStream ());
+            DataOutputStream out = new DataOutputStream (conn.getOutputStream ());
             out.writeBytes(content);
             out.flush ();
             out.close ();
@@ -404,13 +377,9 @@ public class WebServices {
         String contentType = conn.getHeaderField("Content-Type");
         String[] dummy = contentType.split("charset=");
         BufferedReader in;
-        if (dummy != null && dummy.length == 2) {
-            in = new BufferedReader(
-                        new InputStreamReader(conn.getInputStream (),dummy[1]));
-        } else {
-            in = new BufferedReader(
-                                 new InputStreamReader(conn.getInputStream ()));
-        }
+        in = dummy != null && dummy.length == 2 ?
+             new BufferedReader(new InputStreamReader(conn.getInputStream(), dummy[1])) :
+             new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String temp;
         while ((temp = in.readLine()) != null){
             response += temp + "\n";

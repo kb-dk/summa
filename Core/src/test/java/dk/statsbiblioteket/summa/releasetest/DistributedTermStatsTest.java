@@ -207,7 +207,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
             int searchID = 0;
             for (SummaSearcher searcher : searchers) {
                 log.info(String.format(
-                        "Search with searcher %d for 'bar%d' gave the " + "result:\n%s", searchID++,
+                        "Search with searcher %d for 'bar%d' gave the result:\n%s", searchID++,
                         i + 1, search(searcher, "bar" + (i + 1))));
             }
             log.info(String.format("Aggregated searching for 'bar%d' gave the result:\n%s",
@@ -261,7 +261,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         SummaSearcher aggregator = createAggregator(searchers);
         log.info("Aggregated search for 'bar' resulted in:\n" + search(aggregator, "bar"));
         assertTrue("The result should contain a field with 'bar'",
-                   search(aggregator, "bar").contains("<field " + "name=\"single_token\">bar</field>"));
+                   search(aggregator, "bar").contains("<field name=\"single_token\">bar</field>"));
         close(searchers);
     }
 
