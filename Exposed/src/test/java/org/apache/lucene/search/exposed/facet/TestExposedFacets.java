@@ -29,6 +29,7 @@ import java.util.Locale;
 public class TestExposedFacets extends TestCase {
   private ExposedHelper helper;
   private ExposedCache cache;
+  private IndexWriter w = null;
 
   public TestExposedFacets(String name) {
     super(name);
@@ -45,6 +46,14 @@ public class TestExposedFacets extends TestCase {
 
   public void tearDown() throws Exception {
     super.tearDown();
+    if (w != null) {
+      try {
+        w.close();
+      } catch (Exception e) {
+        System.err.println("Exception auto-closing test IndexWriter");
+        e.printStackTrace();
+      }
+    }
     cache.purgeAllCaches();
     helper.close();
   }
@@ -142,7 +151,9 @@ public class TestExposedFacets extends TestCase {
 
   public static final String DELETE_REQUEST =
       "<?xml version='1.0' encoding='utf-8'?>\n" +
-          "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"20\">\n" +
+          "<facetrequest "
+          +     "xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" "
+          +     "maxtags=\"20\">\n" +
           "  <query>even:true</query>\n" +
           "  <groups>\n" +
           "    <group name=\"facet\" order=\"count\" mincount=\"1\">\n" +
@@ -152,24 +163,25 @@ public class TestExposedFacets extends TestCase {
           "    </group>\n" +
           "  </groups>\n" +
           "</facetrequest>";
-  public void testDelete() throws IOException, XMLStreamException, ParseException {
-    IndexWriter w = ExposedHelper.getWriter();
+  public void testDelete() throws IOException, XMLStreamException,
+                                  ParseException {
+    w = ExposedHelper.getWriter();
     {
       ExposedHelper.addDocument(w,
-          ExposedHelper.ID + ":1",
-          ExposedHelper.ALL + ":" + ExposedHelper.ALL,
-          "facet:tag_1");
+                                ExposedHelper.ID + ":1",
+                                ExposedHelper.ALL + ":" + ExposedHelper.ALL,
+                                "facet:tag_1");
       ExposedHelper.addDocument(w,
-          ExposedHelper.ID + ":2",
-          ExposedHelper.ALL + ":" + ExposedHelper.ALL,
-          "facet:tag_2");
+                                ExposedHelper.ID + ":2",
+                                ExposedHelper.ALL + ":" + ExposedHelper.ALL,
+                                "facet:tag_2");
       w.commit();
       FacetResponse response = getFacetResult(DELETE_REQUEST);
       assertEquals("A search for all should give the right number of hits",
-          2, response.getHits());
+                   2, response.getHits());
       List<String> tags = extractTags(response);
       assertEquals("The tags without deletions should match",
-          Arrays.asList("facet:tag_1(1)", "facet:tag_2(1)"), tags);
+                   Arrays.asList("facet:tag_1(1)", "facet:tag_2(1)"), tags);
     }
 
     {
@@ -177,43 +189,43 @@ public class TestExposedFacets extends TestCase {
       w.commit();
       FacetResponse response = getFacetResult(DELETE_REQUEST);
       assertEquals("A search for all after delete should give the right " +
-          "number of hits",
-          1, response.getHits());
+                   "number of hits",
+                   1, response.getHits());
       List<String> tags = extractTags(response);
       assertEquals("The tags after deletions should match",
-          Arrays.asList("facet:tag_2(1)"), tags);
+                   Arrays.asList("facet:tag_2(1)"), tags);
     }
 
     {
       ExposedHelper.addDocument(w,
-          ExposedHelper.ID + ":1",
-          ExposedHelper.ALL + ":" + ExposedHelper.ALL,
-          "facet:tag_1");
+                                ExposedHelper.ID + ":1",
+                                ExposedHelper.ALL + ":" + ExposedHelper.ALL,
+                                "facet:tag_1");
       w.commit();
       FacetResponse response = getFacetResult(DELETE_REQUEST);
       assertEquals("A search for all after reinsert should give the right " +
-          "number of hits",
-          2, response.getHits());
+                   "number of hits",
+                   2, response.getHits());
       List<String> tags = extractTags(response);
       assertEquals("The tags after reinsert should match",
-          Arrays.asList("facet:tag_1(1)", "facet:tag_2(1)"), tags);
+                   Arrays.asList("facet:tag_1(1)", "facet:tag_2(1)"), tags);
     }
 
     {
       ExposedHelper.addDocument(w,
-          ExposedHelper.ID + ":m",
-          ExposedHelper.ALL + ":" + ExposedHelper.ALL,
-          "facet:maruška šubic kovač");
+                                ExposedHelper.ID + ":m",
+                                ExposedHelper.ALL + ":" + ExposedHelper.ALL,
+                                "facet:maruška šubic kovač");
       w.commit();
       FacetResponse response = getFacetResult(DELETE_REQUEST);
-      assertEquals("A search for all after special tag should give the right " +
-          "number of hits",
-          3, response.getHits());
+      assertEquals("A search for all after special tag should give the right "
+                   + "number of hits",
+                   3, response.getHits());
       List<String> tags = extractTags(response);
       assertEquals("The tags after reinsert should match",
-          Arrays.asList("facet:maruška šubic kovač(1)", "facet:tag_1(1)",
-              "facet:tag_2(1)"),
-          tags);
+                   Arrays.asList("facet:maruška šubic kovač(1)",
+                                 "facet:tag_1(1)", "facet:tag_2(1)"),
+                   tags);
     }
 
     {
@@ -221,17 +233,17 @@ public class TestExposedFacets extends TestCase {
       w.commit();
       FacetResponse response = getFacetResult(DELETE_REQUEST);
       assertEquals("A search for all after delete of special document/tag " +
-          "should give the right number of hits",
-          2, response.getHits());
+                   "should give the right number of hits",
+                   2, response.getHits());
       List<String> tags = extractTags(response);
-      assertEquals("The tags after deletion of document with special tag should" +
-          " match",
-          Arrays.asList("facet:tag_1(1)", "facet:tag_2(1)"), tags);
+      assertEquals("The tags after deletion of document with special tag"
+                   + " should match",
+                   Arrays.asList("facet:tag_1(1)", "facet:tag_2(1)"), tags);
     }
     w.close();
-  }
+}
 
-  public static final String MISCOUNT_REQUEST =
+public static final String MISCOUNT_REQUEST =
       "<?xml version='1.0' encoding='utf-8'?>\n" +
           "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"5\">\n" +
           "  <query>even:true</query>\n" +
@@ -244,7 +256,7 @@ public class TestExposedFacets extends TestCase {
   public void testMiscountEmpty()
                         throws IOException, XMLStreamException, ParseException {
     {
-      IndexWriter w = ExposedHelper.getWriter();
+      w = ExposedHelper.getWriter();
       ExposedHelper.addDocument(w,
           ExposedHelper.ID + ":1",
           ExposedHelper.ALL + ":" + ExposedHelper.ALL,
@@ -314,7 +326,7 @@ public class TestExposedFacets extends TestCase {
           "  </groups>\n" +
           "</facetrequest>";
   public void testMultiGroup() throws IOException, XMLStreamException, ParseException {
-    IndexWriter w = ExposedHelper.getWriter();
+    w = ExposedHelper.getWriter();
     {
       ExposedHelper.addDocument(w,
           ExposedHelper.ID + ":1",
@@ -387,7 +399,7 @@ public class TestExposedFacets extends TestCase {
     FieldTermProvider.maxSortCacheSize = 200;
     FieldTermProvider.iteratorCacheSize = 100;
     FieldTermProvider.iteratorReadAhead = 10;
-    IndexWriter w = ExposedHelper.getWriter();
+    w = ExposedHelper.getWriter();
     { // Plain build
       for (int docID = 0 ; docID < DOCS ; docID++) {
         String even = (docID % 2 == 0 ? "true" : "false");
@@ -994,7 +1006,7 @@ public class TestExposedFacets extends TestCase {
     //new ExposedHelper().close(); // Deletes old index
     final File LOCATION = ExposedHelper.INDEX_LOCATION;
     if (!LOCATION.exists()|| LOCATION.listFiles().length == 0) {
-      final int DOCCOUNT = 10000000;
+      final int DOCCOUNT = 100000;
       final int TERM_LENGTH = 20;
       final int MIN_SEGMENTS = 2;
       final List<String> FIELDS = Arrays.asList("a");
@@ -1020,8 +1032,8 @@ public class TestExposedFacets extends TestCase {
     Query q = qp.parse("true");
 
     StringWriter sw = new StringWriter(10000);
-    sw.append("Index = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc()
-        + " documents)\n");
+    sw.append("\nIndex = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc()
+              + " documents)\n");
 
     searcher.search(q, TopScoreDocCollector.create(10, false));
     sw.append("Used heap after loading index and performing a simple search: "

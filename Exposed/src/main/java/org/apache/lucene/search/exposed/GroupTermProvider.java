@@ -247,8 +247,8 @@ public class GroupTermProvider extends TermProviderImpl {
 
     private PackedInts.Reader sortOrdinals(final OrderedDecorator decorator)
             throws IOException {
-//    System.out.println("FacetGroup sorting ordinals from " + providers.size()
-//        + " providers");
+//    System.out.println("GroupTermProvider: Sorting ordinals from "
+//                       + providers.size() + " providers");
     int maxTermCount = (int)termOrdinalStarts[termOrdinalStarts.length-1];
     long iteratorConstruction = System.currentTimeMillis();
     PackedInts.Mutable collector = ExposedSettings.getMutable(
@@ -262,7 +262,7 @@ public class GroupTermProvider extends TermProviderImpl {
 
     iteratorConstruction = System.currentTimeMillis() - iteratorConstruction;
     if (ExposedSettings.debug) {
-      System.out.println("Group total iterator construction: "
+      System.out.println("GroupTermProvider: Group iterator construction:"
           + ExposedUtil.time("ordinals", maxTermCount, iteratorConstruction));
     }
 

@@ -50,6 +50,12 @@ public class FacetMap {
   private final PackedInts.Mutable doc2ref;
   private final PackedInts.Mutable refs;
 
+  // This is highly inefficient as it performs 3 iterations of terms
+  // 1. Generate sorted and de-duplicated ordinals list
+  // 2. Count references from documents to tags
+  // 3. Update map with references from documents to tags
+  // By using the decorator and an auto-expanding map, this can be done in a
+  // single run.
   public FacetMap(int docCount, List<TermProvider> providers)
       throws IOException {
     this.providers = providers;
@@ -71,14 +77,96 @@ public class FacetMap {
     tagExtractTime += System.currentTimeMillis();
     doc2ref = pair.getKey();
     refs = pair.getValue();
-//    System.out.println("Unique count: " + uniqueTime
-//        + "ms, tag time: " + tagExtractTime + "ms");
+    if (ExposedSettings.debug) {
+      System.out.println(
+              "FacetMap: Unique count (" + providers.size() + " providers): "
+              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
+    }
+  }
+
+  // Experimental
+  public FacetMap(int docCount, List<TermProvider> providers, boolean disable)
+      throws IOException {
+    this.providers = providers;
+    indirectStarts = new int[providers.size() +1];
+    int start = 0;
+    long uniqueTime = -System.currentTimeMillis();
+    final int[] tagCounts = new int[docCount]; // One counter for each doc
+//    System.out.println("******************************");
+    for (int i = 0 ; i < providers.size() ; i++) {
+//      System.out.println("------------------------------");
+      Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
+      long uniqueCount = 0;
+      BytesRef last = null;
+      while (tuples.hasNext()) {
+        ExposedTuple tuple = tuples.next();
+        int docID;
+        while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+          tagCounts[(int) (tuple.docIDBase + docID)]++;
+        }
+        if (last == null || !last.equals(tuple.term)) {
+          uniqueCount++;
+          last = tuple.term;
+//          System.out.println("FaM got: " + last.utf8ToString());
+        }
+      }
+      indirectStarts[i] = start;
+//      System.out.println("..............................");
+      long uc = providers.get(i).getUniqueTermCount();
+      if (uc != uniqueCount) {
+        throw new IllegalStateException(
+            "The expected unique term count should be " + uc + " but was "
+            + uniqueCount);
+      }
+      //start += providers.get(i).getUniqueTermCount();
+      start += uniqueCount;
+    }
+    uniqueTime += System.currentTimeMillis();
+    indirectStarts[indirectStarts.length-1] = start;
+
+    { // Sanity check
+      int[] verifyCount = new int[docCount];
+      countTags(verifyCount);
+      for (int i = 0 ; i < tagCounts.length ; i++) {
+        if (verifyCount[i] != tagCounts[i]) {
+          throw new IllegalStateException(
+              "At index " + i + "/" + tagCounts.length
+              + ", the expected tag count was " + verifyCount[i]
+              + " with actual count " + tagCounts[i]);
+        }
+      }
+    }
+
+    refBase = new int[(docCount >>> BASE_BITS) + 1];
+//    doc2ref = PackedInts.getMutable(docCount+1, PackedInts.bitsRequired(start));
+    long tagExtractTime = - System.currentTimeMillis();
+    Map.Entry<PackedInts.Mutable, PackedInts.Mutable> pair =
+        extractTags(docCount, tagCounts);
+    tagExtractTime += System.currentTimeMillis();
+    doc2ref = pair.getKey();
+    refs = pair.getValue();
+    if (ExposedSettings.debug) {
+      System.out.println(
+              "FacetMap: Unique count (" + docCount + " documents, "
+              + providers.size() + " providers): "
+              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
+    }
   }
 
   public int getTagCount() {
     return indirectStarts[indirectStarts.length-1];
   }
 
+  private Map.Entry<PackedInts.Mutable, PackedInts.Mutable> extractTags(
+      int docCount) throws IOException {
+    // We start by counting the references as this spares us a lot of array
+    // content re-allocation
+    final int[] tagCounts = new int[docCount]; // One counter for each doc
+    // Fill the tagCounts with the number of tags (references really) for each
+    // document.
+    countTags(tagCounts);
+    return extractTags(docCount, tagCounts);
+  }
   /*
   In order to efficiently populate the ref-structure, we perform a three-pass
   run.
@@ -92,20 +180,14 @@ public class FacetMap {
   If the offset was larger than 0, it it decreased.
    */
   private Map.Entry<PackedInts.Mutable, PackedInts.Mutable> extractTags(
-      int docCount) throws IOException {
+      int docCount, final int[] tagCounts) throws IOException {
     if (ExposedSettings.debug) {
       System.out.println("Creating facet map for " + providers.size()
-          + " group" + (providers.size() == 1 ? "" : "s"));
+          + " group" + (providers.size() == 1 ? "" : "s") + " with given "
+          + "tagCounts(" + tagCounts.length + " documents)");
     }
-    // We start by counting the references as this spares us a lot of array
-    // content re-allocation
-    final int[] tagCounts = new int[docCount]; // One counter for each doc
     long maxRefBlockSize = 0; // from refsBase in blocks of EVERY size
     long totalRefs = 0;
-
-    // Fill the tagCounts with the number of tags (references really) for each
-    // document.
-    countTags(tagCounts);
 
     { // Update totalRefs and refBase
       int next = 0;
@@ -326,6 +408,12 @@ public class FacetMap {
     }*/
   }
 
+  /**
+   * Iterates all terms and counts the number of references from each document
+   * to any tag.
+   * @param tagCounts    #tag-references, one entry/document.
+   * @throws IOException if the tags could not be iterated.
+   */
   private void countTags(final int[] tagCounts) throws IOException {
     long tagCountTime = -System.currentTimeMillis();
     long tupleCount = 0;
@@ -361,7 +449,7 @@ public class FacetMap {
     }
     tagCountTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
-      System.out.println("Counted tag references for "
+      System.out.println("FacetMap: Counted tag references for "
           + ExposedUtil.time("documents",  tagCounts.length, tagCountTime)
           + ". Retrieved "
           + ExposedUtil.time("tuples", tupleCount, tupleTime / 1000000));
