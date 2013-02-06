@@ -31,6 +31,12 @@ public class QueryRewriterTest extends TestCase {
         return new TestSuite(QueryRewriterTest.class);
     }
 
+    public void testregexpHandling() throws ParseException {
+        assertIdentity(
+                "\"foo/bar\"",
+                "foo\\/bar");
+    }
+
     public void testParenthesized1() throws ParseException {
         assertIdentity(
                 "\"foo\" OR (\"bar\" \"baz\")",
@@ -331,6 +337,8 @@ public class QueryRewriterTest extends TestCase {
     public void testEscaping() throws ParseException {
         String[][] TESTS = new String[][]{
                 {"foo", "foo"},
+                {"foo\\/bar", "foo\\/bar"},
+                {"\"foo/bar\"", "foo\\/bar"},
                 {"\"foo\\\"\"", "foo\\\""},
                 {"\"foo!\"", "foo\\!"}
         };
