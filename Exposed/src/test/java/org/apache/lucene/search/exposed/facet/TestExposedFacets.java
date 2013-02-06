@@ -55,7 +55,7 @@ public class TestExposedFacets extends TestCase {
       }
     }
     cache.purgeAllCaches();
-    helper.close();
+//    helper.close();
   }
 
 
