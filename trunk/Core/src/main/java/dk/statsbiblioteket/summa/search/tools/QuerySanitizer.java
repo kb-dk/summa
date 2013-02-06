@@ -67,12 +67,21 @@ public class QuerySanitizer implements Configurable {
     public static final String CONF_FIX_EXCLAMATIONS = "sanitizer.trailingexclamationmarks";
     public static final ACTION DEFAULT_FIX_EXCLAMATIONS = ACTION.escape;
 
+    /**
+     * How to handle regexps. Regexps are signalled by the use of '/'.
+     * </p><p>
+     * Optional. Possible actions are ignore, remove (default) and escape.
+     */
+    public static final String CONF_FIX_REGEXP = "sanitizer.regexps";
+    public static final ACTION DEFAULT_FIX_REGEXP = ACTION.escape;
+
     // TODO: Standalone dash (-), ampersand (&) and other special characters
 
     private final ACTION fixQuotes;
     private final ACTION fixParentheses;
     private final ACTION fixQualifiers;
     private final ACTION fixExclamations;
+    private final ACTION fixRegexps;
 
     @SuppressWarnings({"UnusedParameters"})
     public QuerySanitizer(Configuration conf) {
@@ -80,8 +89,10 @@ public class QuerySanitizer implements Configurable {
         fixParentheses =  ACTION.valueOf(conf.getString(CONF_FIX_PARENTHESES, DEFAULT_FIX_PARENTHESES.toString()));
         fixQualifiers =   ACTION.valueOf(conf.getString(CONF_FIX_QUALIFIERS, DEFAULT_FIX_QUALIFIERS.toString()));
         fixExclamations = ACTION.valueOf(conf.getString(CONF_FIX_EXCLAMATIONS, DEFAULT_FIX_EXCLAMATIONS.toString()));
-        log.debug(String.format("Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s",
-                                fixQuotes, fixParentheses, fixQualifiers, fixExclamations));
+        fixRegexps =      ACTION.valueOf(conf.getString(CONF_FIX_REGEXP, DEFAULT_FIX_REGEXP.toString()));
+        log.debug(String.format("Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s,"
+                                + " regexps:%s",
+                                fixQuotes, fixParentheses, fixQualifiers, fixExclamations, fixRegexps));
     }
 
     /**
@@ -173,9 +184,19 @@ public class QuerySanitizer implements Configurable {
             if (fixExclamations != ACTION.ignore) { // TODO: Consider 'foo!!!'
                 fixTrailing(query, "Exclamation mark without expression", '!', fixExclamations);
             }
+            if (fixRegexps!= ACTION.ignore) {
+                fixRegexps(query, fixRegexps);
+            }
             lastChangeCount = query.getChangeCount();
         }
         return query;
+    }
+
+    private void fixRegexps(SanitizedQuery query, ACTION action) {
+        String adjusted = fixChar(query.getLastQuery(), '/', action);
+        if (adjusted != null && !adjusted.equals(query.getLastQuery())) {
+            query.addChange(adjusted, SanitizedQuery.CHANGE.summasyntax, "Regexp signal char '/'");
+        }
     }
 
     private void fixQuotes(SanitizedQuery query) {

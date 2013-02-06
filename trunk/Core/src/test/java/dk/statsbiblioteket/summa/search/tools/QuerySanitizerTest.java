@@ -89,6 +89,11 @@ public class QuerySanitizerTest extends TestCase {
         assertSanitize("Bad colon",                         "foo bar",     "foo bar:", true, SYNTAX);
     }
 
+    public void testRegexpEscape() {
+        assertSanitize("Regexp escaping", "foo\\/bar", "foo/bar", true, SYNTAX);
+        assertSanitize("Regexp escaping in phrases", "\"foo/bar\"", "\"foo/bar\"", true);
+    }
+
     public void testMixedProblems() {
         assertSanitize("Gallimaufry", "foo bar\\!",      "\"foo (bar!",     false, ERROR, ERROR, SYNTAX);
         assertSanitize("Hodgepodge",  "foo \"(\"bar\\!", "foo \"(\"bar!",   false, SYNTAX);
