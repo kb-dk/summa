@@ -85,7 +85,7 @@ public class FacetMap {
   }
 
   // Experimental
-  public FacetMap(int docCount, List<TermProvider> providers, boolean disable)
+  public FacetMap(int docCount, List<TermProvider> providers, boolean disabled)
       throws IOException {
     this.providers = providers;
     indirectStarts = new int[providers.size() +1];
@@ -112,18 +112,18 @@ public class FacetMap {
       }
       indirectStarts[i] = start;
 //      System.out.println("..............................");
-      long uc = providers.get(i).getUniqueTermCount();
+/*      long uc = providers.get(i).getUniqueTermCount();
       if (uc != uniqueCount) {
         throw new IllegalStateException(
             "The expected unique term count should be " + uc + " but was "
             + uniqueCount);
-      }
+      }*/
       //start += providers.get(i).getUniqueTermCount();
       start += uniqueCount;
     }
     uniqueTime += System.currentTimeMillis();
     indirectStarts[indirectStarts.length-1] = start;
-
+         /*
     { // Sanity check
       int[] verifyCount = new int[docCount];
       countTags(verifyCount);
@@ -136,7 +136,7 @@ public class FacetMap {
         }
       }
     }
-
+           */
     refBase = new int[(docCount >>> BASE_BITS) + 1];
 //    doc2ref = PackedInts.getMutable(docCount+1, PackedInts.bitsRequired(start));
     long tagExtractTime = - System.currentTimeMillis();
@@ -147,7 +147,7 @@ public class FacetMap {
     refs = pair.getValue();
     if (ExposedSettings.debug) {
       System.out.println(
-              "FacetMap: Unique count (" + docCount + " documents, "
+              "FacetMap: Unique count, tag counts and tag fill (" + docCount + " documents, "
               + providers.size() + " providers): "
               + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     }
