@@ -88,7 +88,7 @@ public final class StorageFactory {
             storageClass = Configuration.getClass(classProp, Storage.class, DEFAULT_STORAGE, conf);
         } catch (Exception e) {
             throw new Configurable.ConfigurationException(
-                    "Could not get storage" + " class from property " + Storage.CONF_CLASS + ": " + e.getMessage(), e);
+                    "Could not get storage class from property " + Storage.CONF_CLASS + ": " + e.getMessage(), e);
         }
         //noinspection DuplicateStringLiteralInspection
         log.debug("Instantiating storage class " + storageClass);
@@ -98,7 +98,7 @@ public final class StorageFactory {
             return Configuration.create(storageClass, conf);
         } catch (Exception e) {
             throw new IOException(
-                    "Failed to instantiate storage class: " + e.getMessage() + ".\n" + "Remember: The setting '"
+                    "Failed to instantiate storage class: " + e.getMessage() + ".\nRemember: The setting '"
                     + Storage.CONF_CLASS + "' should be well defined.", e);
         }
     }

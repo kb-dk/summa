@@ -86,7 +86,7 @@ public interface Configurable {
                     return getCauseMessage(t.getCause());
                 }
             }
-            return (t.getMessage() == null || "".equals(t.getMessage())) ? "Unknwon cause" : t.getMessage();
+            return t.getMessage() == null || "".equals(t.getMessage()) ? "Unknown cause" : t.getMessage();
         }
     }
 }

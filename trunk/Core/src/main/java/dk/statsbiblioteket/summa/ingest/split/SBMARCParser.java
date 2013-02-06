@@ -69,7 +69,7 @@ import java.util.List;
         state = QAInfo.State.QA_NEEDED,
         author = "te",
         comment = "Stable Summa uses 245*g as fallback for sorting children. "
-                  + "dl stated that this led to more trouble than good things, " + "so it has been deprecated")
+                  + "dl stated that this led to more trouble than good things, so it has been deprecated")
 public class SBMARCParser extends MARCParser {
     private static Log log = LogFactory.getLog(SBMARCParser.class);
 

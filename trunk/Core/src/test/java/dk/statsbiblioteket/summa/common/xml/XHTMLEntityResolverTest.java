@@ -54,7 +54,7 @@ public class XHTMLEntityResolverTest extends TestCase {
         try {
             transformer.transform(new StreamSource(new FileInputStream(Resolver.getFile
                     ("common/XHTMLEntityResolver/webpage_xhtml-1.0-strict.xml"))), result);
-            fail("Transformation of XHTML 1.0 content without DTD-resolving" + " should fail");
+            fail("Transformation of XHTML 1.0 content without DTD-resolving should fail");
         } catch (TransformerException e) {
             // Expected
         }

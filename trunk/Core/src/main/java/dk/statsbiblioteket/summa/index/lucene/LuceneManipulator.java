@@ -292,13 +292,11 @@ public class LuceneManipulator implements IndexManipulator {
             author = "te")
     public synchronized boolean update(Payload payload) throws IOException {
         if (payload.getData(Payload.LUCENE_DOCUMENT) == null) {
-            throw new IllegalArgumentException(
-                    "No Document defined in Payload '" + payload + "'");
+            throw new IllegalArgumentException("No Document defined in Payload '" + payload + "'");
         }
         String id = payload.getId();
         if (id == null) {
-            throw new IllegalArgumentException(String.format(
-                    "Could not extract id from %s", payload));
+            throw new IllegalArgumentException(String.format("Could not extract id from %s", payload));
         }
         IndexUtils.assignBasicProperties(payload);
         if (payload.getRecord() == null) {
@@ -344,7 +342,7 @@ public class LuceneManipulator implements IndexManipulator {
             log.warn(String.format(
                     "Interrupted while waiting for writer job for %s. "
                     + "Signalling that index documents might be out of order",
-                    e), e);
+                    writerFuture), e);
             orderChangedSinceLastCommit();
         } catch (ExecutionException e) {
             Logging.logProcess(
@@ -461,7 +459,7 @@ public class LuceneManipulator implements IndexManipulator {
         writer.commit();
         log.debug(String.format(
                 "Commit finished for '%s' in %s ms with docCount %d and expungeDeleted=%b",
-                indexRoot , (System.currentTimeMillis() - startTime), writer.maxDoc(), expungeDeleted));
+                indexRoot, System.currentTimeMillis() - startTime, writer.maxDoc(), expungeDeleted));
     }
 
     /* Note: Sets executor = null */
@@ -476,8 +474,8 @@ public class LuceneManipulator implements IndexManipulator {
             executor.shutdown();
             executor.awaitTermination(10, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
-            log.warn("flushPending(): Interrupted while waiting for pending "
-                     + "jobs to finish. Some Payloads might not be indexed");
+            log.warn("flushPending(): Interrupted while waiting for pending jobs to finish. "
+                     + "Some Payloads might not be indexed");
         }
         executor = null;
     }
@@ -521,29 +519,25 @@ public class LuceneManipulator implements IndexManipulator {
             return;
         }
         //noinspection DuplicateStringLiteralInspection
-        log.trace("close(" + flush + ") called for '"
-                  + indexDirectory.getDirectory() + "'");
+        log.trace("close(" + flush + ") called for '" + indexDirectory.getDirectory() + "'");
         if (flush) {
             commit();
         } else {
             flushPending();
         }
         if (writer != null) {
-            log.debug("Closing writer for '" + indexDirectory.getDirectory()
-                      + "'");
+            log.debug("Closing writer for '" + indexDirectory.getDirectory() + "'");
             try {
                 closeWriter();
             } finally {
                 try {
                     if (IndexWriter.isLocked(indexDirectory)) {
-                        log.error("Lucene lock at '"
-                                  + indexDirectory.getDirectory()
+                        log.error("Lucene lock at '" + indexDirectory.getDirectory()
                                   + "' after close. Attempting removal");
                         IndexWriter.unlock(indexDirectory);
                     }
                 } catch (IOException e) {
-                    log.error("Could not remove lock at '"
-                              + indexDirectory.getDirectory() + "'");
+                    log.error("Could not remove lock at '" + indexDirectory.getDirectory() + "'");
                 }
             }
             //noinspection AssignmentToNull
@@ -568,18 +562,15 @@ public class LuceneManipulator implements IndexManipulator {
             log.trace("closeWriter: No writer present");
             return;
         }
-        log.debug("closeWriter: Closing '" + indexDirectory.getDirectory()
-                  + "'");
+        log.debug("closeWriter: Closing '" + indexDirectory.getDirectory() + "'");
         try {
             writer.close();
             //noinspection AssignmentToNull
             writer = null;
         } catch (CorruptIndexException e) {
-            throw new IOException("Corrupt index in writer for '"
-                                  + indexDirectory.getDirectory() + "'", e);
+            throw new IOException("Corrupt index in writer for '" + indexDirectory.getDirectory() + "'", e);
         } catch (IOException e) {
-            throw new IOException("Exception closing writer for '"
-                                  + indexDirectory.getDirectory() + "'", e);
+            throw new IOException("Exception closing writer for '" + indexDirectory.getDirectory() + "'", e);
         }
     }
 

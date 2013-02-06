@@ -60,7 +60,7 @@ public class CleanSlateRollingFileAppender extends RollingFileAppender {
     }
 
     /**
-     * This calls {@link #activateOptions()} and den do a
+     * This calls {@link RollingFileAppender#activateOptions()} and den do a
      * {@link #rollOver}.
      */
     @Override

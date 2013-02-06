@@ -160,14 +160,14 @@ public class RelationResolverTest extends TestCase {
             + "                    <docDate>201</docDate>\n"
             + "                </docImprint>\n"
             + "            </titlePage>\n"
-            + "    </front>\n" + "<body>\n"
+            + "    </front>\n<body>\n"
             + "<div>\n"
             + "  <pb n=\"4\"/>\n"
             + "  <p>Lorem Ipsum and all that</p>\n"
             + "</div>\n";
 
-    private static final String TEI13 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "      <publicationStmt>\n"
-                                        + "          <idno type=\"ISBN\">12-3456-789-0-123</idno>\n" + "</div>\n";
+    private static final String TEI13 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n      <publicationStmt>\n"
+                                        + "          <idno type=\"ISBN\">12-3456-789-0-123</idno>\n</div>\n";
 
     @SuppressWarnings({"FieldCanBeLocal"})
     private final String CONTENT10 = "(?s).*<publicationStmt.*?>.+?<idno.+?type=\"ISBN\">[^0-9]*([0-9])[^0-9]*([0-9])"

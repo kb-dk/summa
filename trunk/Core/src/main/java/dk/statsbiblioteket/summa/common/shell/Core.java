@@ -455,14 +455,14 @@ public class Core {
                 } else if (e instanceof SyntaxErrorNotification) {
                     if (scriptIter != null) {
                         getShellContext().error(
-                                "Syntax error when parsing " + "'" + scriptStatement + "': " + e.getMessage());
+                                "Syntax error when parsing '" + scriptStatement + "': " + e.getMessage());
                         returnVal = -3;
                     } else {
                         handleSyntaxErrorNotification((SyntaxErrorNotification) e);
                     }
                 } else {
                     // This is a bug in the shell core
-                    shellCtx.error("Shell Core encountered an unknown " + "notification: " + e.getClass().getName());
+                    shellCtx.error("Shell Core encountered an unknown notification: " + e.getClass().getName());
                 }
             } catch (ParseException e) {
                 returnVal = -4;
@@ -472,7 +472,7 @@ public class Core {
                  * service returns an unknown class */
                 if (e.getCause() instanceof ClassNotFoundException) {
                     shellCtx.error("Caught exception of unknown class type: " + e.getCause().getMessage() + "\n\n"
-                                   + "This usually happens if a remote " + "service throws a custom exception");
+                                   + "This usually happens if a remote service throws a custom exception");
                 } else {
                     shellCtx.error("RMI protocol error:" + e.getMessage());
                 }

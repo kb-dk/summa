@@ -243,7 +243,7 @@ public class MiniConnectionPoolManager {
             return pconn.getConnection();
         } catch (SQLException e) {
             throw new ConnectionException(
-                    "Error extracting physical connection" + " from pooled connection: " + e.getMessage(), e);
+                    "Error extracting physical connection from pooled connection: " + e.getMessage(), e);
         }
     }
 
@@ -261,7 +261,7 @@ public class MiniConnectionPoolManager {
 
         synchronized (this) {
             if (isDisposed) {
-                throw new IllegalStateException("Connection pool" + " has been disposed.");
+                throw new IllegalStateException("Connection pool has been disposed.");
             }
         }
 
@@ -270,7 +270,7 @@ public class MiniConnectionPoolManager {
                 throw new TimeoutException();
             }
         } catch (InterruptedException e) {
-            throw new ConnectionException("Interrupted while waiting for " + "a database connection.", e);
+            throw new ConnectionException("Interrupted while waiting for a database connection.", e);
         }
 
         boolean ok = false;
@@ -299,7 +299,7 @@ public class MiniConnectionPoolManager {
      */
     private synchronized PooledConnection _getPooledConnection() {
         if (isDisposed) {
-            throw new IllegalStateException("Connection pool has " + "been disposed.");   // test again with lock
+            throw new IllegalStateException("Connection pool has been disposed.");   // test again with lock
         }
 
         PooledConnection pconn;
@@ -319,7 +319,7 @@ public class MiniConnectionPoolManager {
                     log.trace("Got new pooled connection " + pconn.hashCode());
                 }
             } catch (Exception e) {
-                throw new ConnectionException("Error creating new pooled " + "connection: " + e.getMessage(), e);
+                throw new ConnectionException("Error creating new pooled connection: " + e.getMessage(), e);
             }
         }
 
@@ -347,7 +347,7 @@ public class MiniConnectionPoolManager {
         assertInnerState();
 
         if (log.isTraceEnabled()) {
-            log.trace("Connection " + pconn.hashCode() + " back in pool" + ", now " + getActiveConnections()
+            log.trace("Connection " + pconn.hashCode() + " back in pool, now " + getActiveConnections()
                       + " active connections");
         }
     }
@@ -379,11 +379,11 @@ public class MiniConnectionPoolManager {
         }
 
         if (activeConnections + recycledConnections.size() > maxConnections) {
-            throw new AssertionError("Number of spawned connections exceeds " + "the connection limit");
+            throw new AssertionError("Number of spawned connections exceeds the connection limit");
         }
 
         if (activeConnections + semaphore.availablePermits() > maxConnections) {
-            throw new AssertionError("Number of permits exceed the " + "connection limit");
+            throw new AssertionError("Number of permits exceed the connection limit");
         }
     }
 

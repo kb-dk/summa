@@ -134,7 +134,7 @@ public class SummaQueryParser {
      *             descriptor.
      */
     public SummaQueryParser(Configuration conf) {
-        log.debug("Creating query parser with descriptor specified " + "in configuration");
+        log.debug("Creating query parser with descriptor specified in configuration");
         init(LuceneIndexUtils.getDescriptor(conf));
         extractSetup(conf);
     }
@@ -226,7 +226,7 @@ public class SummaQueryParser {
                 log.debug("Fully parsed and boosted query in " + (System.nanoTime() - startTime) / 1000000D + "ms: "
                           + LuceneIndexUtils.queryToString(query));
             } catch (Exception e) {
-                log.error("Could not dump fully parsed and boosted query to" + " String", e);
+                log.error("Could not dump fully parsed and boosted query to String", e);
             }
         }
         return query;

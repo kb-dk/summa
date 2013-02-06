@@ -59,7 +59,7 @@ public class CopyingInputStream extends InputStream {
     public int read(byte b[], int off, int len) throws IOException {
         int readLength = in.read(b, off, len);
         if (readLength == -1) {
-            log.debug("EOF reached in read(buffer, offset, length), closing " + "output stream");
+            log.debug("EOF reached in read(buffer, offset, length), closing output stream");
             out.close();
         } else {
             out.write(b, off, readLength);

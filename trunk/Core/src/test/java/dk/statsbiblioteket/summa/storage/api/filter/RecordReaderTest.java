@@ -103,12 +103,14 @@ public class RecordReaderTest extends TestCase {
                                                            formatted));
     }*/
 
-    private static final String expected = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" + "<lastRecordTimestamp>\n"
-                                           + "<epoch>1208461857000</epoch>\n" + "<iso>20080417-215057</iso>\n"
+    private static final String expected = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
+                                           + "<lastRecordTimestamp>\n"
+                                           + "<epoch>1208461857000</epoch>\n"
+                                           + "<iso>20080417-215057</iso>\n"
                                            + "</lastRecordTimestamp>\n";
 
     public void testPatternMatching() throws Exception {
-        Pattern p = Pattern.compile("([0-9]{4})([0-9]{2})([0-9]{2})-" + "([0-9]{2})([0-9]{2})([0-9]{2})");
+        Pattern p = Pattern.compile("([0-9]{4})([0-9]{2})([0-9]{2})-([0-9]{2})([0-9]{2})([0-9]{2})");
         assertTrue("Pattern should match simple case", p.matcher("20080417-215057").matches());
 
         //String TAG = "lastRecordTimestamp";

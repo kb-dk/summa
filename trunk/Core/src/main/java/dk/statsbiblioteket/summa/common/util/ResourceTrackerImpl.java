@@ -75,7 +75,8 @@ public abstract class ResourceTrackerImpl<T> implements ResourceTracker<T> {
 
     @Override
     public boolean hasRoom(T element) {
-        return count < minCountLimit || (count + 1 <= maxCountLimit && calculateBytes(element) + mem < memLimit);
+        return count < minCountLimit ||
+               count + 1 <= maxCountLimit && calculateBytes(element) + mem < memLimit;
     }
 
     @Override

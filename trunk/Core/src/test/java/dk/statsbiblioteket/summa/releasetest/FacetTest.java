@@ -219,7 +219,7 @@ public class FacetTest extends NoExitTestCase {
             updateIndex(STORAGE);
             log.debug("Index updated. Creating searcher");
             SummaSearcherImpl searcher = new SummaSearcherImpl(getSearcherConfiguration());
-            log.debug("Searcher created. Verifying existence of Hans Jensen " + "data");
+            log.debug("Searcher created. Verifying existence of Hans Jensen data");
             SearchTest.verifySearch(searcher, "Hans", 1);
             Request request = new Request();
             request.put(DocumentKeys.SEARCH_QUERY, "hans");
@@ -304,7 +304,7 @@ public class FacetTest extends NoExitTestCase {
             updateIndex(STORAGE);
             log.debug("Index updated. Creating searcher");
             SummaSearcherImpl searcher = new SummaSearcherImpl(getSearcherConfiguration());
-            log.debug("Searcher created. Verifying existence of Hans Jensen " + "data");
+            log.debug("Searcher created. Verifying existence of Hans Jensen data");
             SearchTest.verifySearch(searcher, "Hans", 1);
 
             {
@@ -368,9 +368,9 @@ public class FacetTest extends NoExitTestCase {
             request.put(IndexKeys.SEARCH_INDEX_MINCOUNT, 1);
             ResponseCollection responses = searcher.search(request);
 //            System.out.println(responses.toXML());
-            assertFalse("The index lookup should have no Jens Hansen entry but" + " had\n"
+            assertFalse("The index lookup should have no Jens Hansen entry but had\n"
                         + responses.toXML(), responses.toXML().contains("<term count=\"0\">Jens Hansen</term>"));
-            assertTrue("The index lookup should return 1 for Hans Jensen but " + "got\n"
+            assertTrue("The index lookup should return 1 for Hans Jensen but got\n"
                        + responses.toXML(), responses.toXML().contains("<term count=\"1\">Hans Jensen</term>"));
         }
 
@@ -381,7 +381,7 @@ public class FacetTest extends NoExitTestCase {
             request.put(IndexKeys.SEARCH_INDEX_TERM, "J");
             request.put(IndexKeys.SEARCH_INDEX_MINCOUNT, 0);
             ResponseCollection responses = searcher.search(request);
-            assertTrue("The index lookup should return 0 for Jens Hansen but " + "got\n"
+            assertTrue("The index lookup should return 0 for Jens Hansen but got\n"
                        + responses.toXML(), responses.toXML().contains("<term count=\"0\">Jens Hansen</term>"));
             //          System.out.println(responses.toXML());
         }
@@ -429,9 +429,9 @@ public class FacetTest extends NoExitTestCase {
             */
             ResponseCollection responses = searcher.search(request);
             System.out.println(responses.toXML());
-            assertFalse("The index lookup should have no Jens Hansen entry but" + " had\n"
+            assertFalse("The index lookup should have no Jens Hansen entry but had\n"
                         + responses.toXML(), responses.toXML().contains("<term count=\"0\">Jens Hansen</term>"));
-            assertTrue("The index lookup should return 1 for 'omnilogi' but " + "got\n"
+            assertTrue("The index lookup should return 1 for 'omnilogi' but got\n"
                        + responses.toXML(), responses.toXML().contains("<term count=\"0\">omnilogi</term>"));
         }
         // TODO: IndexDescriptor-load?
@@ -452,7 +452,7 @@ public class FacetTest extends NoExitTestCase {
         }
 
         if ((!shouldExist && contains)) {
-            fail("Search for '" + query + "' did produce facets when it should " + "not. Result was:\n" + res);
+            fail("Search for '" + query + "' did produce facets when it should not. Result was:\n" + res);
         }
     }
 

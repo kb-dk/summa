@@ -55,7 +55,7 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
     /*private final static String FACET_NODE_EXPR =
             "/" + DESCRIPTOR_NAMESPACE_PREFIX + ":IndexDescriptor/"
             + FACET_NAMESPACE_PREFIX + ":facets";*/
-    private final static String FACET_NODE_EXPR = "/" + "IndexDescriptor/" + "facets";
+    private final static String FACET_NODE_EXPR = "/IndexDescriptor/facets";
     //private final static String FACET_EXPR = FACET_NAMESPACE_PREFIX + ":facet";
     private final static String FACET_EXPR = "facet";
 

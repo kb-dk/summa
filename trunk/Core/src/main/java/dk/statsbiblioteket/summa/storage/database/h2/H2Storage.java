@@ -143,7 +143,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
 
         if (location.isFile()) {
-            throw new ConfigurationException("Database path contains a regular" + " file");
+            throw new ConfigurationException("Database path contains a regular file");
         }
 
         // Create new DB?
@@ -236,7 +236,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                 try {
                     Files.delete(location);
                 } catch (IOException e) {
-                    throw new RemoteException("Could not delete old database " + "at '" + location + "'", e);
+                    throw new RemoteException("Could not delete old database at '" + location + "'", e);
                 }
             } else {
                 log.info("Reusing old database at '" + location + "'");
@@ -248,7 +248,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                 log.info("Creating new database at '" + location + "'");
             } else {
                 throw new IOException("No database exists at '" + location + " and createNew is false. The "
-                                      + "metadata storage cannot run " + "without a backend. Exiting");
+                                      + "metadata storage cannot run without a backend. Exiting");
             }
         }
 
@@ -379,7 +379,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             stmt = conn.createStatement();
             stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
         } catch (SQLException e) {
-            log.warn("Failed to set MAX_MEMORY_ROWS this may affect performance" + " on large result sets");
+            log.warn("Failed to set MAX_MEMORY_ROWS this may affect performance on large result sets");
         } finally {
             try {
                 conn.close();

@@ -111,7 +111,7 @@ public class Logging {
     public static void logProcess(String origin, String message, LogLevel level, Payload payload, Throwable cause) {
         String fullMessage;
 //        if ((level == LogLevel.WARN) || isProcessLogLevel(LogLevel.DEBUG) || isProcessLogLevel(LogLevel.TRACE)) {
-        if ((level == LogLevel.WARN) || isProcessLogLevel(LogLevel.TRACE)) {
+        if (level == LogLevel.WARN || isProcessLogLevel(LogLevel.TRACE)) {
             String snippet = getContentSnippet(payload);
             fullMessage = (origin == null ? "" : origin + ": ") + message + ". " + payload + ". Content:"
                           + (snippet.length() <= 10 ? " " : "\n") + snippet;
@@ -372,11 +372,11 @@ public class Logging {
      */
     public static void log(Log logger, LogLevel logLevel, Throwable cause, String message, Object... values) {
         if (logger.isTraceEnabled()
-            || (logger.isDebugEnabled() && logLevel.getLevel() >= LogLevel.DEBUG.getLevel())
-            || (logger.isInfoEnabled() && logLevel.getLevel() >= LogLevel.INFO.getLevel())
-            || (logger.isWarnEnabled() && logLevel.getLevel() >= LogLevel.WARN.getLevel())
-            || (logger.isErrorEnabled() && logLevel.getLevel() >= LogLevel.ERROR.getLevel())
-            || (logger.isFatalEnabled() && logLevel.getLevel() >= LogLevel.FATAL.getLevel())) {
+            || logger.isDebugEnabled() && logLevel.getLevel() >= LogLevel.DEBUG.getLevel()
+            || logger.isInfoEnabled() && logLevel.getLevel() >= LogLevel.INFO.getLevel()
+            || logger.isWarnEnabled() && logLevel.getLevel() >= LogLevel.WARN.getLevel()
+            || logger.isErrorEnabled() && logLevel.getLevel() >= LogLevel.ERROR.getLevel()
+            || logger.isFatalEnabled() && logLevel.getLevel() >= LogLevel.FATAL.getLevel()) {
             String mes;
             try {
                 mes = values == null || values.length == 0 ? message : String.format(message, values);

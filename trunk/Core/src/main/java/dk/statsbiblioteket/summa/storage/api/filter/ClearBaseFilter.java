@@ -67,7 +67,7 @@ public class ClearBaseFilter extends ObjectFilterImpl {
 
     public ClearBaseFilter(WritableStorage storage, Configuration conf) {
         this(storage, new PayloadMatcher(conf), conf);
-        log.info("Created ClearBaseFilter directly on Storage " + "with configuration");
+        log.info("Created ClearBaseFilter directly on Storage with configuration");
     }
 
     public ClearBaseFilter(Configuration conf) {

@@ -111,7 +111,7 @@ public class XStorage implements ConfigurationStorage {
             return;
         }
         if (!configurationFile.exists()) {
-            log.warn("Property file '" + configurationFile + "' does not exist." + " Creating new file");
+            log.warn("Property file '" + configurationFile + "' does not exist. Creating new file");
             syncStorageFile();
         } else {
             xprops.load(configurationFile.getAbsoluteFile().toString(), false, false);
@@ -178,7 +178,7 @@ public class XStorage implements ConfigurationStorage {
     @Override
     public Iterator<Map.Entry<String, Serializable>> iterator() throws IOException {
         // TODO: Fully support iterators
-        log.debug("Iterators are not fully supported by XStorage. " + "This won't work well with nesting");
+        log.debug("Iterators are not fully supported by XStorage. This won't work well with nesting");
         Map<String, Serializable> tempMap = new HashMap<String, Serializable>(size());
         for (Map.Entry<Object, Object> entry : xprops.entrySet()) {
             try {
@@ -308,7 +308,7 @@ public class XStorage implements ConfigurationStorage {
         for (Object o : list) {
             if (!(o instanceof XProperties)) {
                 throw new IOException(String.format(
-                        "A class in the list for '%s' was '%s'. Expected " + "XProperties", key, o.getClass()));
+                        "A class in the list for '%s' was '%s'. Expected XProperties", key, o.getClass()));
             }
             storages.add(new XStorage((XProperties) o));
         }

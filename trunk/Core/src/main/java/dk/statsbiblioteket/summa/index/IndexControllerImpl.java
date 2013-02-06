@@ -624,7 +624,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
             return;
         }
         indexIsOpen = false;
-        if ((consolidateOnClose && updatesSinceLastConsolidate > 0) || forceConsolidateOnClose) {
+        if (consolidateOnClose && updatesSinceLastConsolidate > 0 || forceConsolidateOnClose) {
             log.debug("Calling consolidate because of close. " + updatesSinceLastConsolidate
                       + " updates since last consolidate");
             consolidate();
@@ -722,7 +722,8 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         Payload payload = source.next();
         /* How often to feed back. */
         int feedbackEvery = 1000;
-        if (log.isTraceEnabled() || (log.isDebugEnabled() && (profiler.getBeats()+1) % feedbackEvery == 0)) {
+        if (log.isTraceEnabled()
+            || log.isDebugEnabled() && (profiler.getBeats()+1) % feedbackEvery == 0) {
             log.trace("Got payload #" + (profiler.getBeats()+1) + " from source in "
                       + (System.nanoTime() - start)/1000000.0f + "ms. UpdatesSinceLastCommit=" + updatesSinceLastCommit
                       + ", updatesSinceLastconsolidate=" + updatesSinceLastConsolidate);
