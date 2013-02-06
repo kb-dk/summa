@@ -6,6 +6,7 @@ import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.ExposedUtil;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.DoubleIntArrayList;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
@@ -57,6 +58,7 @@ public class FacetMap {
   // By using the decorator and an auto-expanding map, this can be done in a
   // single run.
   public FacetMap(int docCount, List<TermProvider> providers)
+  //public FacetMap(int docCount, List<TermProvider> providers)
       throws IOException {
     this.providers = providers;
     indirectStarts = new int[providers.size() +1];
@@ -84,7 +86,7 @@ public class FacetMap {
     }
   }
 
-  // Experimental
+  // Experimental 2 pass
   public FacetMap(int docCount, List<TermProvider> providers, boolean disabled)
       throws IOException {
     this.providers = providers;
@@ -139,6 +141,78 @@ public class FacetMap {
            */
     refBase = new int[(docCount >>> BASE_BITS) + 1];
 //    doc2ref = PackedInts.getMutable(docCount+1, PackedInts.bitsRequired(start));
+    long tagExtractTime = - System.currentTimeMillis();
+    Map.Entry<PackedInts.Mutable, PackedInts.Mutable> pair =
+        extractTags(docCount, tagCounts);
+    tagExtractTime += System.currentTimeMillis();
+    doc2ref = pair.getKey();
+    refs = pair.getValue();
+    if (ExposedSettings.debug) {
+      System.out.println(
+              "FacetMap: Unique count, tag counts and tag fill (" + docCount + " documents, "
+              + providers.size() + " providers): "
+              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
+    }
+  }
+
+  // Experimental single pass
+  public FacetMap(int docCount, List<TermProvider> providers, String disabled)
+//  public FacetMap(int docCount, List<TermProvider> providers, String disabled)
+      throws IOException {
+    this.providers = providers;
+    indirectStarts = new int[providers.size() +1];
+    int start = 0;
+    long uniqueTime = -System.currentTimeMillis();
+    DoubleIntArrayList pairs = new DoubleIntArrayList(docCount); // docIDs, indirect
+//    System.out.println("******************************");
+    for (int i = 0 ; i < providers.size() ; i++) {
+//      System.out.println("------------------------------");
+      Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
+      long uniqueCount = 0;
+      BytesRef last = null;
+      while (tuples.hasNext()) {
+        ExposedTuple tuple = tuples.next();
+        int docID;
+        while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+          pairs.add((int) (tuple.docIDBase + docID), (int)tuple.indirect);
+        }
+        if (last == null || !last.equals(tuple.term)) {
+          uniqueCount++;
+          last = tuple.term;
+//          System.out.println("FaM got: " + last.utf8ToString());
+        }
+      }
+      indirectStarts[i] = start;
+//      System.out.println("..............................");
+/*      long uc = providers.get(i).getUniqueTermCount();
+      if (uc != uniqueCount) {
+        throw new IllegalStateException(
+            "The expected unique term count should be " + uc + " but was "
+            + uniqueCount);
+      }*/
+      //start += providers.get(i).getUniqueTermCount();
+      start += uniqueCount;
+    }
+    uniqueTime += System.currentTimeMillis();
+    indirectStarts[indirectStarts.length-1] = start;
+         /*
+    { // Sanity check
+      int[] verifyCount = new int[docCount];
+      countTags(verifyCount);
+      for (int i = 0 ; i < tagCounts.length ; i++) {
+        if (verifyCount[i] != tagCounts[i]) {
+          throw new IllegalStateException(
+              "At index " + i + "/" + tagCounts.length
+              + ", the expected tag count was " + verifyCount[i]
+              + " with actual count " + tagCounts[i]);
+        }
+      }
+    }
+           */
+    refBase = new int[(docCount >>> BASE_BITS) + 1];
+//    doc2ref = PackedInts.getMutable(docCount+1, PackedInts.bitsRequired(start));
+      final int[] tagCounts = new int[docCount]; // One counter for each doc
+      countTags(tagCounts);
     long tagExtractTime = - System.currentTimeMillis();
     Map.Entry<PackedInts.Mutable, PackedInts.Mutable> pair =
         extractTags(docCount, tagCounts);
