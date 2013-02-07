@@ -392,10 +392,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         log.info(String.format(
                 "RecordReader(startFromScratch=%b, storage=%s, bases=%s, startMTime=%s, progressFile='%s', "
                 + "progressTrack=%b, maxRecords=%d, maxSeconds=%d, batchSize=%d, loadDate=%b, stayAlive=%b, "
-                + "stopOnNewer=%b) started", startFromScratch, storage, base == null || "".equals(base) ?
-                                                                        "*" :
-                                                                        base, String.format(ProgressTracker.ISO_TIME,
-                                                                                            startTime), progressFile,
+                + "stopOnNewer=%b) started", startFromScratch, storage,
+                base == null || "".equals(base) ? "*" : base,
+                String.format(ProgressTracker.ISO_TIME, lastRecordTimestamp), progressFile,
                 progressFile != null, maxReadRecords, maxReadSeconds, batchSize, loadData,
                 storageWatcher != null, stopOnNewer));
     }
