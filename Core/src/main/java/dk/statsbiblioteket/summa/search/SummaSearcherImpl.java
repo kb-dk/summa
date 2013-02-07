@@ -160,7 +160,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         if (log.isTraceEnabled()) {
             log.trace("Search called with parameters\n" + request.toString(true));
         }
-        long fullStartTime = System.nanoTime();
+        final long fullStartTime = System.nanoTime();
         if (searchQueue.availablePermits() == 0) {
             throw new RemoteException(
                     "Could not perform search as the queue of requests exceed " + searchQueue.getOverallPermits());
@@ -225,8 +225,10 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
             searchQueue.release();
             // TODO: Make this cleaner with no explicit dependency
             if (responses == null) {
-                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                             + " in " + responseTime / 1000000 + "ms. Request was " + request.toString(true));
+                queries.info("SummaSearcherImpl finished "
+                             + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                             + " in " + (System.nanoTime() - fullStartTime) / 1000000
+                             + "ms. Request was " + request.toString(true));
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
@@ -241,9 +243,10 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                             hits = Long.toString(((DocumentResponse)response).getHitCount());
                         }
                     }
-                    queries.info("Search finished "
+                    queries.info("SummaSearcherImpl finished "
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                                 + " in " + responseTime / 1000000 + "ms with " + hits + " hits. "
+                                 + " in " + (System.nanoTime() - fullStartTime) / 1000000
+                                 + "ms with " + hits + " hits. "
                                  + "Request was " + request.toString(true)
                                  + " with Timing(" + responses.getTiming() + ")");
                 }
