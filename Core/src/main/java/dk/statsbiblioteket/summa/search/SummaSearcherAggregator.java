@@ -88,7 +88,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         try {
             searcherConfs = conf.getSubConfigurations(CONF_SEARCHERS);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException("Storage doesn't support sub configurations");
+            throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             throw new ConfigurationException("Unable to extract sub-configurations for " + CONF_SEARCHERS, e);
         }
@@ -158,6 +158,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             log.trace("Starting search for " + request);
         }
         final long startTime = System.currentTimeMillis();
+        final String originalRequest = request.toString(true);
         preProcess(request);
         ResponseCollection merged = null;
         boolean success = false;
@@ -221,7 +222,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                 queries.info("SummaSearcherAggregator finished "
                              + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                              + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms. "
-                             + "Request was " + request.toString(true));
+                             + "Request was " + originalRequest);
             } else {
                 if (merged.getTransient() != null && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);
@@ -239,7 +240,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                     queries.info("SummaSearcherAggregator finished "
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms with "
-                                 + hits + " hits. Request was " + request.toString(true)
+                                 + hits + " hits. Request was " + originalRequest
                                  + " with Timing(" + merged.getTiming() + ")");
                 }
             }

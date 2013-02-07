@@ -66,6 +66,7 @@ public class AdjustingSearchClient extends SearchClient {
     @Override
     public ResponseCollection search(Request request) throws IOException {
         final long startTime = System.currentTimeMillis();
+        final String originalRequest = request.toString(true);
         ResponseCollection responses = null;
         boolean success = false;
         try {
@@ -98,7 +99,7 @@ public class AdjustingSearchClient extends SearchClient {
                 queries.info("AdjustingSearchClient finished "
                              + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                               + " in " + (System.currentTimeMillis() - startTime)
-                              + "ms. Request was " + request.toString(true));
+                              + "ms. Request was " + originalRequest);
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
@@ -116,7 +117,7 @@ public class AdjustingSearchClient extends SearchClient {
                     queries.info("AdjustingSearchClient finished "
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.currentTimeMillis() - startTime) + "ms with " + hits + " hits. "
-                                 + "Request was " + request.toString(true)
+                                 + "Request was " + originalRequest
                                  + " with Timing(" + responses.getTiming() + ")");
                 }
             }

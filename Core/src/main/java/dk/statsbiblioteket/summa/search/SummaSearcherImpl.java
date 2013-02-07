@@ -161,6 +161,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
             log.trace("Search called with parameters\n" + request.toString(true));
         }
         final long fullStartTime = System.nanoTime();
+        final String originalRequest = request.toString(true);
         if (searchQueue.availablePermits() == 0) {
             throw new RemoteException(
                     "Could not perform search as the queue of requests exceed " + searchQueue.getOverallPermits());
@@ -171,7 +172,6 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         } catch (InterruptedException e) {
             throw new RemoteException("Interrupted while waiting for search queue access", e);
         }
-        long responseTime = -1;
         boolean success = false;
         ResponseCollection responses = new ResponseCollection();
         try {
@@ -204,7 +204,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                 }
                 log.debug("Concurrent searches: " + concurrent);
                 searchNode.search(request, responses);
-                responseTime = System.nanoTime() - fullStartTime;
+                long responseTime = System.nanoTime() - fullStartTime;
                 lastResponseTime = responseTime;
                 //noinspection DuplicateStringLiteralInspection
                 log.trace("Query performed in " + responseTime / 1000000.0 + " milliseconds");
@@ -228,7 +228,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                 queries.info("SummaSearcherImpl finished "
                              + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                              + " in " + (System.nanoTime() - fullStartTime) / 1000000
-                             + "ms. Request was " + request.toString(true));
+                             + "ms. Request was " + originalRequest);
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
@@ -247,7 +247,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.nanoTime() - fullStartTime) / 1000000
                                  + "ms with " + hits + " hits. "
-                                 + "Request was " + request.toString(true)
+                                 + "Request was " + originalRequest
                                  + " with Timing(" + responses.getTiming() + ")");
                 }
             }
