@@ -65,7 +65,7 @@ public class AdjustingSearchClient extends SearchClient {
 
     @Override
     public ResponseCollection search(Request request) throws IOException {
-        long searchTime = -System.currentTimeMillis();
+        final long startTime = System.currentTimeMillis();
         ResponseCollection responses = null;
         boolean success = false;
         try {
@@ -86,18 +86,19 @@ public class AdjustingSearchClient extends SearchClient {
             long adjustTime = -System.currentTimeMillis();
             adjuster.adjust(adjusted, responses);
             adjustTime += System.currentTimeMillis();
-            searchTime += System.currentTimeMillis();
             log.debug("Adjusted search for " + id + " with original query '" + originalQuery + "' and adjusted query '"
-                      + finalQuery + " in " + searchTime + " ms");
+                      + finalQuery + " in " + (System.currentTimeMillis() - startTime) + " ms");
             responses.addTiming("request.rewrite", rewriteTime);
             responses.addTiming("response.adjust", adjustTime);
-            responses.addTiming("total", searchTime);
+            responses.addTiming("total", System.currentTimeMillis() - startTime);
             success = true;
             return responses;
         } finally {
             if (responses == null) {
-                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                              + " in " + searchTime / 1000000 + "ms. Request was " + request.toString(true));
+                queries.info("AdjustingSearchClient finished "
+                             + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                              + " in " + (System.currentTimeMillis() - startTime)
+                              + "ms. Request was " + request.toString(true));
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
@@ -112,9 +113,9 @@ public class AdjustingSearchClient extends SearchClient {
                             hits = Long.toString(((DocumentResponse)response).getHitCount());
                         }
                     }
-                    queries.info("Search finished "
+                    queries.info("AdjustingSearchClient finished "
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                                 + " in " + searchTime / 1000000 + "ms with " + hits + " hits. "
+                                 + " in " + (System.currentTimeMillis() - startTime) + "ms with " + hits + " hits. "
                                  + "Request was " + request.toString(true)
                                  + " with Timing(" + responses.getTiming() + ")");
                 }

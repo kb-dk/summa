@@ -157,7 +157,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         if (log.isTraceEnabled()) {
             log.trace("Starting search for " + request);
         }
-        long startTime = System.currentTimeMillis();
+        final long startTime = System.currentTimeMillis();
         preProcess(request);
         ResponseCollection merged = null;
         boolean success = false;
@@ -218,9 +218,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
             throw new IOException(message, e);
         } finally {
             if (merged == null) {
-                queries.info("Search finished " + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                              + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms. "
-                              + "Request was " + request.toString(true));
+                queries.info("SummaSearcherAggregator finished "
+                             + (success ? "successfully" : "unsuccessfully (see logs for errors)")
+                             + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms. "
+                             + "Request was " + request.toString(true));
             } else {
                 if (merged.getTransient() != null && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);
@@ -235,7 +236,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                             hits = Long.toString(((DocumentResponse)response).getHitCount());
                         }
                     }
-                    queries.info("Search finished "
+                    queries.info("SummaSearcherAggregator finished "
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms with "
                                  + hits + " hits. Request was " + request.toString(true)
