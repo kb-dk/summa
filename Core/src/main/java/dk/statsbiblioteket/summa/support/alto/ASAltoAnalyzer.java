@@ -27,7 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Hvide Programmer (a project at Statsbiblioteket) specific analyzer for Altos.
+ * Avissamling (a project at Statsbiblioteket) specific analyzer for Altos.
  */
 public class ASAltoAnalyzer extends AltoAnalyzerBase {
     private static Log log = LogFactory.getLog(ASAltoAnalyzer.class);
