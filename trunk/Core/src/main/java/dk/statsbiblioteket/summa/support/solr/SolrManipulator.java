@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.solr;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadBatcher;
@@ -41,6 +42,7 @@ import org.apache.http.protocol.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -190,18 +192,62 @@ public class SolrManipulator implements IndexManipulator {
     }
 
     private void send(List<Payload> payloads) {
-        StringWriter command = new StringWriter(payloads.size() * 1000);
-        command.append("<add>");
-        for (Payload payload: payloads) {
-            command.append(removeHeader(payload.getRecord().getContentAsUTF8()));
+        if (payloads.isEmpty()) {
+            log.warn("Potential logic failure: send(...) called with empty list of Payloads");
+            return;
         }
-        command.append("</add>");
+        int add = 0;
+        int del = 0;
+        StringWriter command = new StringWriter(payloads.size() * 1000);
+        // https://wiki.apache.org/solr/UpdateXmlMessages#Add_and_delete_in_a_single_batch
+        command.append("<update>");
+        boolean adding = false;
+        for (Payload payload: payloads) {
+            Record record = payload.getRecord();
+            if (adding) {
+                if (record.isDeleted()) {
+                    command.append("</add>");
+                    adding = false;
+                }
+            } else {
+                if (!record.isDeleted()) {
+                    command.append("<add>");
+                    adding = true;
+                }
+            }
+
+            if (record.isDeleted()) {
+                command.append("<delete><id>").append(XMLUtil.encode(payload.getId())).append("</id></delete>");
+                del++;
+            } else {
+                command.append(removeHeader(payload.getRecord().getContentAsUTF8()));
+                add++;
+            }
+        }
+        deletes += del;
+        deletesSinceLastCommit += del;
+        if (adding) {
+            command.append("</add>");
+        }
+        command.append("</update>");
         try {
             send(payloads.size() + " Payloads", command.toString());
+        } catch (NoRouteToHostException e) {
+            String error = String.format(
+                    "NoRouteToHostException sending %d updates (%d adds, %d deletes) to %s. "
+                    + "This is likely to be caused by depletion of ports in the ephemeral range. "
+                    + "Consider adjusting batch setup from the current %s"
+                    + "Payloads: %s. The JVM will be shut down in 5 seconds. First part of command:\n%s",
+                    payloads.size(), add, del, this, batcher,
+                    Strings.join(payloads, ", "), trim(command.toString(), 1000));
+            Logging.logProcess("SolrManipulator", error, Logging.LogLevel.FATAL, "", e);
+            Logging.fatal(log, "SolrManipulator.send", error, e);
+            new DeferredSystemExit(1, 5000);
         } catch (IOException e) {
-            String error = "IOException sending " + payloads.size() + " additions to " + this
-                           + ". Payloads: " + Strings.join(payloads, ", ") + ". The JVM will be shut down in 5 seconds."
-                           + " First part of command:\n" + trim(command.toString(), 1000);
+            String error = String.format(
+                    "IOException sending %d updates (%d adds, %d deletes) to %s. Payloads: %s. "
+                    + "The JVM will be shut down in 5 seconds. First part of command:\n%s",
+                    payloads.size(), add, del, this, Strings.join(payloads, ", "), trim(command.toString(), 1000));
             Logging.logProcess("SolrManipulator", error, Logging.LogLevel.FATAL, "", e);
             Logging.fatal(log, "SolrManipulator.send", error, e);
             new DeferredSystemExit(1, 5000);
