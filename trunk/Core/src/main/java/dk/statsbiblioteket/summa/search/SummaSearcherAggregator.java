@@ -210,7 +210,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             merged = merge(request, responses);
             postProcessPaging(merged, startIndex, maxRecords);
             log.debug("Finished search in " + (System.currentTimeMillis() - startTime) + " ms");
-            merged.addTiming("aggregator.searchandmergeall", (System.nanoTime() - startTime) / 1000000);
+            merged.addTiming("aggregator.searchandmergeall", System.currentTimeMillis() - startTime);
             success = true;
             return merged;
         } catch (Exception e) {
@@ -221,7 +221,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             if (merged == null) {
                 queries.info("SummaSearcherAggregator finished "
                              + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                             + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms. "
+                             + " in " + (System.currentTimeMillis()-startTime) + "ms. "
                              + "Request was " + originalRequest);
             } else {
                 if (merged.getTransient() != null && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
