@@ -175,17 +175,18 @@ public class SolrManipulator implements IndexManipulator {
         updatesSinceLastCommit++;
         updates++;
         if (payload.getRecord().isDeleted()) {
-            orderChanged = true;
+            deletesSinceLastCommit++;
+            deletes++;
+        }
+/*            orderChanged = true;
             if (flushOnDelete) {
                 batcher.flush();
             }
             String command = "<delete><id>" + XMLUtil.encode(payload.getId()) + "</id></delete>";
             send(command, command);
-            deletesSinceLastCommit++;
-            deletes++;
             log.trace("Removed " + payload.getId() + " from index");
             return false;
-        }
+        } */
         batcher.add(payload);
         log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
         return false;
@@ -224,14 +225,15 @@ public class SolrManipulator implements IndexManipulator {
                 add++;
             }
         }
-        deletes += del;
-        deletesSinceLastCommit += del;
         if (adding) {
             command.append("</add>");
         }
         command.append("</update>");
         try {
             send(payloads.size() + " Payloads", command.toString());
+            if (flushOnDelete) {
+                batcher.flush();
+            }
         } catch (NoRouteToHostException e) {
             String error = String.format(
                     "NoRouteToHostException sending %d updates (%d adds, %d deletes) to %s. "
