@@ -164,11 +164,9 @@ public class DumpFilter extends ObjectFilterImpl {
                                + " was > than max dumps " + maxDumps, Logging.LogLevel.TRACE, payload);
             return true;
         }
-        if (payload.getRecord() == null && dumpNonRecords) {
-            payloadsDumpedSinceReset++;
-            dump(payload);
-        } else if (basePattern.matcher(payload.getRecord().getBase()).matches()
-            && idPattern.matcher(payload.getRecord().getId()).matches()) {
+        if (payload.getRecord() == null && dumpNonRecords
+            || basePattern.matcher(payload.getRecord().getBase()).matches()
+               && idPattern.matcher(payload.getRecord().getId()).matches()) {
             payloadsDumpedSinceReset++;
             dump(payload);
         } else {
