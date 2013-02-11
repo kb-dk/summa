@@ -408,7 +408,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 return;
             }
             if (log.isTraceEnabled()) {
-                log.debug(String.format(
+                log.trace(String.format(
                     "Transformed %s to %s stored in %s for %s",
                     source, newText, destination, payload));
             }
@@ -544,7 +544,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             return null;
         }
         if (log.isTraceEnabled()) {
-            log.debug(String.format("Found new '%s' '%s' for %s", type, newText, payload));
+            log.trace(String.format("Found new '%s' '%s' for %s", type, newText, payload));
         }
         return newText;
     }

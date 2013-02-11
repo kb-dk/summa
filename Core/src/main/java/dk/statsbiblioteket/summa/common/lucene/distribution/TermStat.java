@@ -495,9 +495,9 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     private String termToString(TermEntry value) {
         return value.toPersistent() + "\n";
     }
-    private TermEntry stringToTerm(String content) {
+/*    private TermEntry stringToTerm(String content) {
         return new TermEntry(content, columns);
-    }
+    }*/
 
     /**
      * Close down all connections to persistent files and free memory. Only
@@ -551,11 +551,6 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      */
     @Override
     public boolean contains(Object o) {
-        if (o instanceof TermEntry) {
-            return indexOf(o) >= 0;
-        } else if (o instanceof String) {
-            return indexOf(o) >= 0;
-        }
         return indexOf(o) >= 0;
     }
 

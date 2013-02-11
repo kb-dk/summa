@@ -74,8 +74,10 @@ public class RemoteStorage extends UnicastRemoteObject implements RemoteStorageM
      */
     private static final int DEFAULT_REGISTRY_PORT = 27000;
 
-    private String serviceName, registryHost;
-    private int servicePort, registryPort;
+    private String serviceName;
+    private String registryHost;
+    private int servicePort;
+    private int registryPort;
     private Configuration conf;
     private ConfigurationStorage storage;
 

@@ -40,6 +40,7 @@ import java.util.*;
  * a playground for experiments than a real tester. See the benchmark contrib to
  * Lucene for a Real Solution.
  */
+@SuppressWarnings("UseOfSystemOutOrSystemErr")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -60,8 +61,7 @@ public class IndexSpeed {
 
     private static int feedbackInterval = 10000;
     private static final String[] SEMI_RANDOMS = new String[]{
-            "foo", "bar", "zoo", "kablooie", "Hamster", "Huey", "gooey", "and",
-            "the"};
+            "foo", "bar", "zoo", "kablooie", "Hamster", "Huey", "gooey", "and", "the"};
     private IndexWriter writer;
     SearcherThread searcherThread = new SearcherThread();
 
@@ -70,31 +70,21 @@ public class IndexSpeed {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         if (!(args.length >= 1)) {
-            System.err.println("Usage: IndexSpeed [-m maxdocs] [-r rambuffer]"
-                               + " [-f flushcount] [-d] [-t threads]"
-                               + " [-u termlength] "
-                               + " [-s searcherinterval] [-rs] [-w] [-n]"
-                               + "indexlocation");
-            System.err.println("-m maxdocs\tThe maximum number of documents to "
-                               + "create (default: Integer.MAX_VALUE-1)");
+            System.err.println("Usage: IndexSpeed [-m maxdocs] [-r rambuffer] [-f flushcount] [-d] [-t threads] "
+                               + "[-u termlength] [-s searcherinterval] [-rs] [-w] [-n] indexlocation");
+            System.err.println("-m maxdocs\tThe maximum number of documents to create (default: Integer.MAX_VALUE-1)");
             System.err.println("-r rambuffer\tRAM-buffer size in MB (default: "
                                + ramBuffer + ")");
-            System.err.println("-f flushcount\tFlush writer every flushcount "
-                               + "document (default: 0 (no flushing))");
+            System.err.println("-f flushcount\tFlush writer every flushcount document (default: 0 (no flushing))");
             System.err.println("-d\tDocument re-use");
             System.err.println("-t\tThreads (Default: " + threads + ")");
-            System.err.println("-u termlength\tCreate a unique random term of "
-                               + "size termlength (Default: " + termlength
+            System.err.println("-u termlength\tCreate a unique random term of size termlength (Default: " + termlength
                                + ")");
-            System.err.println("-s searchinterval\tOpen a searcher every"
-                               + " searchinterval millisecond, if possible."
-                               + " An open triggers a flush. (default: -1 ("
-                               + "disabled))");
+            System.err.println("-s searchinterval\tOpen a searcher every searchinterval millisecond, if possible."
+                               + " An open triggers a flush. (default: -1 (disabled))");
             System.err.println("-rs\tUse the re-open method for searcher");
-            System.err.println("-w\tWarm searcher after opening with a "
-                               + "catch-all search");
-            System.err.println("-n\tNo writing of Documents (simulation. "
-                               + "Default: false)");
+            System.err.println("-w\tWarm searcher after opening with a catch-all search");
+            System.err.println("-n\tNo writing of Documents (simulation. Default: false)");
             System.err.println("indexlocation\tA folder for the index");
             System.exit(-1);
         }
@@ -138,8 +128,7 @@ public class IndexSpeed {
         try {
             result = Integer.parseInt(arguments.get(0));
         } catch (NumberFormatException e) {
-            System.err.println("Expected " + expected + " (an integer). Got '"
-                               + arguments.get(0) + "'. Exiting");
+            System.err.println("Expected " + expected + " (an integer). Got '" + arguments.get(0) + "'. Exiting");
             System.exit(-1);
         }
         arguments.remove(0);
@@ -153,12 +142,9 @@ public class IndexSpeed {
     private synchronized int ping() {
         profiler.beat();
         if (counter % feedbackInterval == 0 && counter > 0) {
-            System.out.println(counter + "/" + maxdocs + "("
-                               + counter * 100 / maxdocs + "%) at "
-                               + profiler.getBps(true) + " doc/sec ("
-                               + profiler.getBps(false) + " total). "
-                               + searcherThread.getStats()
-                               + ". ETA: " + profiler.getETAAsString(true));
+            System.out.println(counter + "/" + maxdocs + "(" + counter * 100 / maxdocs + "%) at "
+                               + profiler.getBps(true) + " doc/sec (" + profiler.getBps(false) + " total). "
+                               + searcherThread.getStats() + ". ETA: " + profiler.getETAAsString(true));
         }
         if (counter++ >= maxdocs) {
             return -1;
@@ -166,6 +152,7 @@ public class IndexSpeed {
         return counter;
     }
 
+    @SuppressWarnings({"UseOfSystemOutOrSystemErr", "CallToPrintStackTrace"})
     class SearcherThread extends Thread {
         private IndexSearcher searcher;
         private DirectoryReader reader;
@@ -225,18 +212,15 @@ public class IndexSpeed {
 
         public String getStats() {
             long ms = openingtime / 1000000;
-            return "Searcher opened " + openingCounter + " times in " + ms
-                   + "ms (" + (openingtime > 0 ? ms / openingCounter : "NA")
-                   + " ms/open)";
+            return "Searcher opened " + openingCounter + " times in " + ms + "ms ("
+                   + (openingtime > 0 ? ms / openingCounter : "NA") + " ms/open)";
         }
     }
 
     class SpeedThread extends Thread {
         private Random random = new Random();
-        private final char[] randChars =
-                ("abcdefgh ijklmn opqrstu. vxyz æøå1234 ABCD EFGHIJ "
-                 + "KLMNOP QRSTYV WXYZÆØÅ 123456 7890 !?-,").
-                        toCharArray();
+        private final char[] randChars = ("abcdefgh ijklmn opqrstu. vxyz æøå1234 "
+                                          + "ABCD EFGHIJ KLMNOP QRSTYV WXYZÆØÅ 123456 7890 !?-,").toCharArray();
         private String getRandom() {
             if (termlength == 0) {
                 return "";
