@@ -227,6 +227,11 @@ public class GroupTermProvider extends TermProviderImpl {
     return getOrderedOrdinals(null);
   }
 
+  // TODO: This is an ugly performance hack tied to FacetMap
+  public void setOrderedOrdinals(PackedInts.Reader ordered) {
+    order = ordered;
+  }
+
     @Override
   public synchronized PackedInts.Reader getOrderedOrdinals(
         OrderedDecorator decorator) throws IOException {
@@ -291,7 +296,8 @@ public class GroupTermProvider extends TermProviderImpl {
 
     extractionTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
-      System.out.println("Group ordinal iterator depletion from "
+      System.out.println(
+          "GroupTermProvider: Group ordinal iterator depletion from "
           + providers.size() + " providers: "
           + ExposedUtil.time("ordinals", result.size(), extractionTime)
           + " (Memory optimize time: " + reducetime + " ms)");
@@ -343,4 +349,5 @@ public class GroupTermProvider extends TermProviderImpl {
       provider.transitiveReleaseCaches(level, keepRoot);
     }
   }
+
 }

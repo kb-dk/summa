@@ -984,7 +984,9 @@ public static final String MISCOUNT_REQUEST =
 
   public static final String FACET_SCALE_SIMPLE_REQUEST =
       "<?xml version='1.0' encoding='utf-8'?>\n" +
-          "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"5\">\n" +
+          "<facetrequest " +
+              "xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" " +
+              "maxtags=\"5\">\n" +
           "  <query>even:true</query>\n" +
           "  <groups>\n" +
           "    <group name=\"many\" order=\"count\">\n" +
@@ -996,7 +998,7 @@ public static final String MISCOUNT_REQUEST =
           "</facetrequest>";
   public void testFacetScale()
       throws XMLStreamException, IOException, ParseException {
-
+    FacetMap.defaultImpl = FacetMap.IMPL.stable;
     //CodecProvider.setDefaultCodec("Standard");
 
     long totalTime = -System.currentTimeMillis();

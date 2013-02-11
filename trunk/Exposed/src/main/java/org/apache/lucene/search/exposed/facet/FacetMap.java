@@ -1,10 +1,7 @@
 package org.apache.lucene.search.exposed.facet;
 
 import org.apache.lucene.index.DocsEnum;
-import org.apache.lucene.search.exposed.ExposedSettings;
-import org.apache.lucene.search.exposed.ExposedTuple;
-import org.apache.lucene.search.exposed.ExposedUtil;
-import org.apache.lucene.search.exposed.TermProvider;
+import org.apache.lucene.search.exposed.*;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.DoubleIntArrayList;
 import org.apache.lucene.util.packed.PackedInts;
@@ -40,6 +37,10 @@ import java.util.Map;
  * {@code refBase[docID >>> 8] + doc2ref[docID]}.
  */
 public class FacetMap {
+
+  protected enum IMPL {stable, pass2, pass1}
+  public static IMPL defaultImpl = IMPL.stable;
+
   // TODO: Consider auto-tuning this value
   private static final int BASE_BITS = 8;
   private static final int EVERY = (int)Math.pow(2, BASE_BITS);
@@ -51,6 +52,23 @@ public class FacetMap {
   private final PackedInts.Mutable doc2ref;
   private final PackedInts.Mutable refs;
 
+  public static FacetMap createMap(int docCount, List<TermProvider> providers)
+      throws IOException {
+    return createMap(docCount, providers, defaultImpl);
+  }
+
+  public static FacetMap createMap(
+      int docCount, List<TermProvider> providers, IMPL impl)
+      throws IOException {
+    switch (impl) {
+      case stable: return new FacetMap(docCount, providers);
+      case pass2: return new FacetMap(docCount, providers, true);
+      case pass1: return new FacetMap(docCount, providers, "dummy");
+      default: throw new UnsupportedOperationException(
+          "The implementation '" + impl + "' is unknown");
+    }
+  }
+
   // This is highly inefficient as it performs 3 iterations of terms
   // 1. Generate sorted and de-duplicated ordinals list
   // 2. Count references from documents to tags
@@ -58,9 +76,15 @@ public class FacetMap {
   // By using the decorator and an auto-expanding map, this can be done in a
   // single run.
   public FacetMap(int docCount, List<TermProvider> providers)
-  //public FacetMap(int docCount, List<TermProvider> providers)
       throws IOException {
     this.providers = providers;
+
+    if (ExposedSettings.debug) {
+      System.out.println("FacetMap: Creating map for " + providers.size()
+          + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount
+          + " documents)");
+    }
+
     indirectStarts = new int[providers.size() +1];
     int start = 0;
     long uniqueTime = -System.currentTimeMillis();
@@ -90,6 +114,11 @@ public class FacetMap {
   public FacetMap(int docCount, List<TermProvider> providers, boolean disabled)
       throws IOException {
     this.providers = providers;
+    if (ExposedSettings.debug) {
+      System.out.println("FacetMap: Creating 2 pass map for " + providers.size()
+          + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount
+          + " documents)");
+    }
     indirectStarts = new int[providers.size() +1];
     int start = 0;
     long uniqueTime = -System.currentTimeMillis();
@@ -149,7 +178,8 @@ public class FacetMap {
     refs = pair.getValue();
     if (ExposedSettings.debug) {
       System.out.println(
-              "FacetMap: Unique count, tag counts and tag fill (" + docCount + " documents, "
+              "FacetMap: Unique count, tag counts and tag fill (" + docCount
+              + " documents, "
               + providers.size() + " providers): "
               + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     }
@@ -159,19 +189,35 @@ public class FacetMap {
   public FacetMap(int docCount, List<TermProvider> providers, String disabled)
 //  public FacetMap(int docCount, List<TermProvider> providers, String disabled)
       throws IOException {
+    final long startTime = System.currentTimeMillis();
     this.providers = providers;
+    if (ExposedSettings.debug) {
+      System.out.println(
+          "FacetMap: Creating single pass map for " + providers.size()
+          + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount
+          + " documents)");
+    }
     indirectStarts = new int[providers.size() +1];
     int start = 0;
     long uniqueTime = -System.currentTimeMillis();
+
+    // pairs collects unordered docID -> indirect
     DoubleIntArrayList pairs = new DoubleIntArrayList(docCount); // docIDs, indirect
 //    System.out.println("******************************");
     for (int i = 0 ; i < providers.size() ; i++) {
 //      System.out.println("------------------------------");
       Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
+
+      // indirect->ordinal are collected in order to be assigned to the current
+      // provider, which uses them for later resolving of Tag Strings.
+      // If they are not collected here, the terms will be iterated again upon
+      // first request for a faceting result.
+      DoubleIntArrayList indirectToOrdinal = new DoubleIntArrayList(100);
       long uniqueCount = 0;
       BytesRef last = null;
       while (tuples.hasNext()) {
         ExposedTuple tuple = tuples.next();
+        indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
         int docID;
         while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
           pairs.add((int) (tuple.docIDBase + docID), (int)tuple.indirect);
@@ -183,6 +229,29 @@ public class FacetMap {
         }
       }
       indirectStarts[i] = start;
+      if (providers.get(i) instanceof GroupTermProvider) {
+        // Not at all OO
+        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(
+            indirectToOrdinal.getPacked());
+      }
+/*      PackedInts.Mutable i2o = indirectToOrdinal.getPacked();
+      { // Sanity test
+        PackedInts.Reader authoritative = providers.get(i).getOrderedOrdinals();
+        if (i2o.size() != authoritative.size()) {
+          throw new IllegalStateException(
+              "Expected indirect to ordinal map to have size "
+              + authoritative.size() + " but got " + i2o.size());
+        }
+        for (int j = 0 ; j < i2o.size() ; j++) {
+          if (i2o.get(j) != authoritative.get(j)) {
+            throw new IllegalStateException(
+                "Expected indirect to ordinal map entry " + j
+                + " to have ordinal value " + authoritative.get(j)
+                + " but it had " + i2o.get(j));
+          }
+        }
+      }
+  */
 //      System.out.println("..............................");
 /*      long uc = providers.get(i).getUniqueTermCount();
       if (uc != uniqueCount) {
@@ -195,6 +264,9 @@ public class FacetMap {
     }
     uniqueTime += System.currentTimeMillis();
     indirectStarts[indirectStarts.length-1] = start;
+    pairs.sortByPrimaries();
+    System.out.println("Full index iteration in "
+                       + (System.currentTimeMillis() - startTime) + "ms");
          /*
     { // Sanity check
       int[] verifyCount = new int[docCount];
@@ -215,14 +287,14 @@ public class FacetMap {
       countTags(tagCounts);
     long tagExtractTime = - System.currentTimeMillis();
     Map.Entry<PackedInts.Mutable, PackedInts.Mutable> pair =
-        extractTags(docCount, tagCounts);
+        extractTags(docCount, pairs);
     tagExtractTime += System.currentTimeMillis();
     doc2ref = pair.getKey();
     refs = pair.getValue();
     if (ExposedSettings.debug) {
       System.out.println(
-              "FacetMap: Unique count, tag counts and tag fill (" + docCount + " documents, "
-              + providers.size() + " providers): "
+              "FacetMap: Unique count, tag counts and tag fill (" + docCount
+              + " documents, " + providers.size() + " providers): "
               + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     }
   }
@@ -241,6 +313,13 @@ public class FacetMap {
     countTags(tagCounts);
     return extractTags(docCount, tagCounts);
   }
+
+  private Map.Entry<PackedInts.Mutable, PackedInts.Mutable> extractTags(
+      int docCount, DoubleIntArrayList i2o) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+
   /*
   In order to efficiently populate the ref-structure, we perform a three-pass
   run.
@@ -255,11 +334,6 @@ public class FacetMap {
    */
   private Map.Entry<PackedInts.Mutable, PackedInts.Mutable> extractTags(
       int docCount, final int[] tagCounts) throws IOException {
-    if (ExposedSettings.debug) {
-      System.out.println("Creating facet map for " + providers.size()
-          + " group" + (providers.size() == 1 ? "" : "s") + " with given "
-          + "tagCounts(" + tagCounts.length + " documents)");
-    }
     long maxRefBlockSize = 0; // from refsBase in blocks of EVERY size
     long totalRefs = 0;
 
@@ -452,8 +526,9 @@ public class FacetMap {
     }
     fillTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
-      System.out.println("Filled map with "
-          + ExposedUtil.time("references", totalRefs, fillTime) + " out of which was " +
+      System.out.println("FacetMap: Filled map with "
+          + ExposedUtil.time("references", totalRefs, fillTime)
+          + " out of which was " +
           ExposedUtil.time("nextDocs", nextDocCount, nextDocTime / 1000000));
     }
   }
@@ -471,8 +546,8 @@ public class FacetMap {
 
   //    }
     }
-    doc2ref.set(
-        tagCounts.length, offset - refBase[tagCounts.length >>> BASE_BITS]);
+    doc2ref.set(tagCounts.length,
+                offset - refBase[tagCounts.length >>> BASE_BITS]);
 //      doc2ref.set(doc2ref.size()-1, offset);
     initTime += System.currentTimeMillis();
     // < 100 ms for 10M doc2refs so we do not print performance data
@@ -566,14 +641,13 @@ public class FacetMap {
   public BytesRef getOrderedTerm(final int termIndirect) throws IOException {
     for (int i = 0 ; i < providers.size() ; i++) {
       if (termIndirect < indirectStarts[i+1]) {
-        return providers.get(i).getOrderedTerm(
-            termIndirect- indirectStarts[i]);
+        return providers.get(i).getOrderedTerm(termIndirect- indirectStarts[i]);
       }
     }
     throw new ArrayIndexOutOfBoundsException(
         "The indirect " + termIndirect + " was too high. The maximum indirect "
-            + "supported by the current map is "
-            + indirectStarts[indirectStarts.length-1]);
+        + "supported by the current map is "
+        + indirectStarts[indirectStarts.length-1]);
   }
 
   /**

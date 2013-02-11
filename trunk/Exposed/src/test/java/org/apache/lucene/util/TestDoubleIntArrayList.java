@@ -25,37 +25,43 @@ import java.util.Arrays;
 public class TestDoubleIntArrayList extends TestCase {
 
   public void testGrowth() throws Exception {
-      DoubleIntArrayList list = new DoubleIntArrayList(0);
-      list.add(1, 2);
-      list.add(3, 4);
-      assertEquals(new int[]{1, 3}, list.getPrimaries());
-      assertEquals(new int[]{2, 4}, list.getSecondaries());
+    DoubleIntArrayList list = new DoubleIntArrayList(0);
+    list.add(1, 2);
+    list.add(3, 4);
+    assertEquals(new int[]{1, 3}, list.getPrimaries());
+    assertEquals(new int[]{2, 4}, list.getSecondaries());
+  }
+
+  public void testSet() throws Exception {
+    DoubleIntArrayList list = new DoubleIntArrayList(0);
+    list.add(1, 2);
+    list.set(1000, 3, 4);
   }
 
   public void testSortPrimary() {
-      DoubleIntArrayList list = new DoubleIntArrayList(0);
-      list.add(1, 4);
-      list.add(3, 2);
-      list.add(2, 3);
+    DoubleIntArrayList list = new DoubleIntArrayList(0);
+    list.add(1, 4);
+    list.add(3, 2);
+    list.add(2, 3);
 
-      list.sortByPrimaries();
-      assertEquals(new int[]{1, 2, 3}, list.getPrimaries());
-      assertEquals(new int[]{4, 3, 2}, list.getSecondaries());
+    list.sortByPrimaries();
+    assertEquals(new int[]{1, 2, 3}, list.getPrimaries());
+    assertEquals(new int[]{4, 3, 2}, list.getSecondaries());
 
-      list.sortBySecondaries();
-      assertEquals(new int[]{2, 3, 4}, list.getSecondaries());
-      assertEquals(new int[]{3, 2, 1}, list.getPrimaries());
+    list.sortBySecondaries();
+    assertEquals(new int[]{2, 3, 4}, list.getSecondaries());
+    assertEquals(new int[]{3, 2, 1}, list.getPrimaries());
   }
 
   private void assertEquals(int[] expected, int[] actual) {
-      if (expected.length != actual.length) {
-          fail("Expected array of length " + expected.length + " got one of length " + actual.length);
+    if (expected.length != actual.length) {
+      fail("Expected array of length " + expected.length + " got one of length " + actual.length);
+    }
+    for (int i = 0 ; i < expected.length ; i++) {
+      if (expected[i] != actual[i]) {
+        fail("The element at index " + i + " was expected to be " + expected[i] + " but was " + actual[i]);
       }
-      for (int i = 0 ; i < expected.length ; i++) {
-          if (expected[i] != actual[i]) {
-              fail("The element at index " + i + " was expected to be " + expected[i] + " but was " + actual[i]);
-          }
-      }
+    }
   }
 
 }

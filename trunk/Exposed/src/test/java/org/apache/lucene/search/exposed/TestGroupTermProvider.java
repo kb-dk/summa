@@ -338,7 +338,7 @@ public class TestGroupTermProvider extends TestCase {
         ExposedHelper.INDEX_LOCATION);
 
     List<TermProvider> providers = createGroupProviders(message, fields, reader);
-    FacetMap map = new FacetMap(1, providers);
+    FacetMap map = FacetMap.createMap(1, providers);
     assertEquals(message + ". There should be the correct number of terms for " +
         "the single document in the map",
         termCount, map.getTermsForDocID(0).length);

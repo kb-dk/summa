@@ -111,7 +111,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
     }
 
     if (ExposedSettings.debug) {
-      System.out.println("Creating CollectorPool for " + key);
+      System.out.println("CollectorPoolFactory: Creating pool for " + key);
     }
     List<FacetRequestGroup> groups = request.getGroups();
     List<TermProvider> termProviders =
@@ -127,7 +127,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
     }
 
     long mapTime = -System.currentTimeMillis();
-    FacetMap facetMap = new FacetMap(reader.maxDoc(), termProviders);
+    FacetMap facetMap = FacetMap.createMap(reader.maxDoc(), termProviders);
     mapTime += System.currentTimeMillis();
 //    System.out.println("Map time: " + mapTime + "ms");
     pool = new CollectorPool(key, facetMap, filledCollectors, freshCollectors);
