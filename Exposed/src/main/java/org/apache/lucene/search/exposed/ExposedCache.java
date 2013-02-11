@@ -60,7 +60,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
       }
     }
     if (ExposedSettings.debug) {
-      System.out.println("Creating provider for " + groupName);
+      System.out.println("ExposedCache: Creating provider for " + groupName);
     }
 
      // No cached value. Modify the comparator IDs to LUCENE-order if they were

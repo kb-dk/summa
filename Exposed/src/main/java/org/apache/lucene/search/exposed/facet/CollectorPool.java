@@ -1,5 +1,7 @@
 package org.apache.lucene.search.exposed.facet;
 
+import org.apache.lucene.search.exposed.ExposedSettings;
+
 import java.util.*;
 
 /**
@@ -69,10 +71,10 @@ public class CollectorPool {
     this.map = map;
     this.key = key;
 
-    this.maxFresh = freshCollectors;
+    maxFresh = freshCollectors;
     fresh = new ArrayList<TagCollector>();
 
-    this.maxFilled = filledCollectors;
+    maxFilled = filledCollectors;
     filled = new LinkedHashMap<String, TagCollector>(filledCollectors) {
       @Override
       protected boolean removeEldestEntry(
