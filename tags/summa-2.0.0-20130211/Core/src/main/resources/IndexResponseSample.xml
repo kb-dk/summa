@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<indexresponse xmlns="http://statsbiblioteket.dk/summa/2009/IndexResponse"
+               field="author" term="hugo" caseSensitive="false"
+               delta="-2" length="5" origo="2">
+    <index>
+        <term count="1">birger</term>
+        <term count="56">carsten</term>
+        <term count="1">hugo</term>
+        <term count="5">lars</term>
+        <term count="1000">melanie</term>
+    </index>
+</indexresponse>
+
+

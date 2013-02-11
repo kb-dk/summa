@@ -1,0 +1,7 @@
+<!-- $Id: -->
+<Context>
+    <Environment name="solr/logback" value="${catalina.base}/../../src/test/resources/logback-include.xml"
+                 type="java.lang.String" override="false"/>
+    <Environment name="solr/home" value="${catalina.base}/../test-classes/solr" type="java.lang.String"
+                 override="false"/>
+</Context>

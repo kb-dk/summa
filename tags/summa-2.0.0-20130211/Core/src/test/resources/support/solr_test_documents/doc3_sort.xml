@@ -1,0 +1,10 @@
+<doc>
+    <field name="recordID">doc3_sort</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">Æbler er sunde</field>
+    <field name="sort_title">Æbler er sunde</field>
+    <field name="shortformat">Æbler er sunde</field>
+    <field name="author_main">Thomas Egense</field>
+    <field name="author_normalised">Thomas Egense</field>
+    <field name="year">2011</field>    
+</doc>

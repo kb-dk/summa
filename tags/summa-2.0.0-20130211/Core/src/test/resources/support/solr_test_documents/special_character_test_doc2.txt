@@ -1,0 +1,10 @@
+<doc>
+    <field name="recordID">special_character_test_doc2</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">ABCD</field>
+    <field name="author_main">Thomas Egense</field>
+    <field name="author_normalised">Egense, Thomas</field>
+    <field name="year">2012</field>
+    <field name="location_normalised">Statsbiblioteket</field>
+    <field name="lma_long">03</field>
+</doc>
