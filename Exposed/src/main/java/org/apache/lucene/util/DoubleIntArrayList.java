@@ -1,7 +1,7 @@
 package org.apache.lucene.util;
 
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.util.Arrays;
@@ -42,15 +42,31 @@ public class DoubleIntArrayList {
     if (pairs.length == size) {
       expand();
     }
-    pairs[size++] = ((long)primary) << 32 | (long)secondary;
+    pairs[size++] = (long)primary << 32 | (long)secondary;
   }
 
   public void set(int index, int primary, int secondary) {
     if (pairs.length <= index) {
       expand(index);
     }
-    pairs[index] = ((long)primary) << 32 | (long)secondary;
+    pairs[index] = (long)primary << 32 | (long)secondary;
     size = size < index ? index : size;
+  }
+
+  /**
+   * Wrapper for {@link Arrays#binarySearch(int[], int)}. JavaDoc for return is
+   * taken from Array's JavaDoc.
+   * @param primary the primary key to search.
+   * @return index of the search key, if it is contained in the array within the
+   * specified range; otherwise, <tt>(-(insertion point) - 1)</tt>.
+   * The insertion point is defined as the point at which the key would be
+   * inserted into the array: the index of the first element in the range
+   * greater than the key, or toIndex if all elements in the range are less than
+   * the specified key. Note that this guarantees that the return value will be
+   * <tt>&gt;= 0</tt> if and only if the key is found.
+   */
+  public int searchPrimary(int primary) {
+    return Arrays.binarySearch(pairs, 0, size, (long)primary << 32);
   }
 
   private void expand() {
@@ -194,8 +210,15 @@ public class DoubleIntArrayList {
     return result;
   }
 
-  public int getSize() {
+  public int size() {
     return size;
   }
 
+  /**
+   * Note: Capacity auto-increases.
+   * @return the current capacity.
+   */
+  public int capacity() {
+    return pairs.length;
+  }
 }
