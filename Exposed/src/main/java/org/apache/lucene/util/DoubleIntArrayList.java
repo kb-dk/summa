@@ -4,7 +4,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.util.packed.PackedInts;
 
+import java.lang.management.ManagementFactory;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Specialized high performance expandable list of integer pairs that can be sorted on both primary and secondary key.
@@ -85,11 +87,30 @@ public class DoubleIntArrayList {
     } catch (OutOfMemoryError e) {
       throw new OutOfMemoryError(String.format(
           "OOM (%s) with pairs[%d] (%dMB) while attempting to allocate "
-          + "newPairs[%d] (%dMB)",
+          + "newPairs[%d] (%dMB). %s",
           e.toString(), pairs.length, pairs.length*8/1048576,
-          newCapacity, newCapacity*8/1048576));
+          newCapacity, newCapacity*8/1048576, memStats()));
     }
   }
+
+  private static final Locale locale = new Locale("en");
+  private String memStats() {
+      Runtime r = Runtime.getRuntime();
+      return String.format(
+          locale,
+          "Allocated memory: %s, Allocated unused memory: %s, "
+          + "Heap memory used: %s, Max memory: %s",
+          reduce(r.totalMemory()), reduce(r.freeMemory()),
+          reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().
+              getUsed()),
+          reduce(r.maxMemory())
+      );
+  }
+
+  private static String reduce(long bytes) {
+      return bytes / 1048576 + "MB";
+  }
+
 
   public void sortByPrimaries() {
     Arrays.sort(pairs, 0, size);
