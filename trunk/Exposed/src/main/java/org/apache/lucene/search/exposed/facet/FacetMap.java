@@ -4,6 +4,7 @@ import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.search.exposed.*;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.DoubleIntArrayList;
+import org.apache.lucene.util.packed.MonotonicReaderFactory;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
@@ -39,18 +40,14 @@ import java.util.Map;
 public class FacetMap {
 
   protected enum IMPL {stable, pass2, pass1}
+  // stable is well-tested, pass2 is deprecated and pass1 is experimental
   public static IMPL defaultImpl = IMPL.stable;
-
 
   private final List<TermProvider> providers;
   private final int[] indirectStarts;
 
-  // TODO: Consider auto-tuning this value
-  private static final int BASE_BITS = 8;
-  private static final int EVERY = (int)Math.pow(2, BASE_BITS);
-  private final int[] refBase;
-  private final PackedInts.Mutable doc2ref;
-  private final PackedInts.Mutable refs;
+  private final PackedInts.Reader doc2ref;
+  private final PackedInts.Reader refs;
 
   public static FacetMap createMap(int docCount, List<TermProvider> providers)
       throws IOException {
@@ -95,10 +92,9 @@ public class FacetMap {
     uniqueTime += System.currentTimeMillis();
     indirectStarts[indirectStarts.length-1] = start;
 
-    refBase = new int[(docCount >>> BASE_BITS) + 1];
 //    doc2ref = PackedInts.getMutable(docCount+1, PackedInts.bitsRequired(start));
     long tagExtractTime = - System.currentTimeMillis();
-    Map.Entry<PackedInts.Mutable, PackedInts.Mutable> pair =
+    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
         extractTags(docCount);
     tagExtractTime += System.currentTimeMillis();
     doc2ref = pair.getKey();
@@ -168,10 +164,9 @@ public class FacetMap {
       }
     }
            */
-    refBase = new int[(docCount >>> BASE_BITS) + 1];
 //    doc2ref = PackedInts.getMutable(docCount+1, PackedInts.bitsRequired(start));
     long tagExtractTime = - System.currentTimeMillis();
-    Map.Entry<PackedInts.Mutable, PackedInts.Mutable> pair =
+    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
         extractTags(docCount, tagCounts);
     tagExtractTime += System.currentTimeMillis();
     doc2ref = pair.getKey();
@@ -186,7 +181,7 @@ public class FacetMap {
   }
 
   // Experimental single pass
-  public FacetMap(int docCount, List<TermProvider> providers, String disabled)
+  public FacetMap(int docCount, List<TermProvider> providers, String hack)
 //  public FacetMap(int docCount, List<TermProvider> providers, String disabled)
       throws IOException {
     final long startTime = System.currentTimeMillis();
@@ -205,6 +200,8 @@ public class FacetMap {
     DoubleIntArrayList pairs = new DoubleIntArrayList(docCount); // docIDs, indirect
 //    System.out.println("******************************");
     for (int i = 0 ; i < providers.size() ; i++) {
+      indirectStarts[i] = start;
+      final long termOffset = start;
 //      System.out.println("------------------------------");
       Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
 
@@ -220,7 +217,9 @@ public class FacetMap {
         indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
         int docID;
         while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-          pairs.add((int) (tuple.docIDBase + docID), (int)tuple.indirect);
+//          System.out.println("*** " + tuple + " docID " + docID);
+          pairs.add((int) (tuple.docIDBase + docID),
+                    (int) (tuple.indirect+termOffset));
         }
         if (last == null || !last.equals(tuple.term)) {
           uniqueCount++;
@@ -228,7 +227,8 @@ public class FacetMap {
 //          System.out.println("FaM got: " + last.utf8ToString());
         }
       }
-      indirectStarts[i] = start;
+
+      start += indirectToOrdinal.size();
       if (providers.get(i) instanceof GroupTermProvider) {
         // Not at all OO
         ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(
@@ -261,13 +261,13 @@ public class FacetMap {
             + uniqueCount);
       }*/
       //start += providers.get(i).getUniqueTermCount();
-      start += uniqueCount;
     }
     uniqueTime += System.currentTimeMillis();
     indirectStarts[indirectStarts.length-1] = start;
+    System.out.println("FacetMap: Full index iteration in "
+                       + (System.currentTimeMillis() - startTime) + "ms. "
+                       + "Sorting d2i and extracting structures");
     pairs.sortByPrimaries();
-    System.out.println("Full index iteration in "
-                       + (System.currentTimeMillis() - startTime) + "ms");
          /*
     { // Sanity check
       int[] verifyCount = new int[docCount];
@@ -282,9 +282,8 @@ public class FacetMap {
       }
     }
            */
-    refBase = new int[(docCount >>> BASE_BITS) + 1];
     long tagExtractTime = - System.currentTimeMillis();
-    Map.Entry<PackedInts.Mutable, PackedInts.Mutable> pair =
+    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
         extractTags(docCount, pairs);
     tagExtractTime += System.currentTimeMillis();
     doc2ref = pair.getKey();
@@ -301,7 +300,7 @@ public class FacetMap {
     return indirectStarts[indirectStarts.length-1];
   }
 
-  private Map.Entry<PackedInts.Mutable, PackedInts.Mutable> extractTags(
+  private Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
       int docCount) throws IOException {
     // We start by counting the references as this spares us a lot of array
     // content re-allocation
@@ -318,67 +317,44 @@ public class FacetMap {
    *               Sorted by docID, but may skip docIDs.
    * @return doc2ref and refs.
    */
-  private Map.Entry<PackedInts.Mutable, PackedInts.Mutable> extractTags(
+  private Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
       int docCount, DoubleIntArrayList doc2in) {
 
-    { // Update totalRefs and refBase
-      int maxRefBlockSize = 0;
-      for (int docID = 0 ; docID < docCount ; docID += EVERY) {
-        int index = doc2in.searchPrimary(docID);
-        if (index < 0) {
-          index = -(index+1);
-        }
-        refBase[docID >>> BASE_BITS] = index;
-        if (index > 0) {
-          maxRefBlockSize = Math.max(
-              maxRefBlockSize,
-              refBase[docID >>> BASE_BITS] - refBase[docID - 1 >>> BASE_BITS]);
-        }
+    // refs are indirects
+    // maxRefBlockSize-1 as we count from 0
+    final PackedInts.Mutable doc2ref =
+        ExposedSettings.getMutable(docCount+1, doc2in.size());
+    final PackedInts.Mutable refs = doc2in.getSecondariesPacked();
+
+    // Fill doc2ref and refs from doc2in
+    int doc2inIndex = 0;
+    int refIndex = 0;
+    for (int docID = 0 ; docID < docCount ; docID++) {
+      doc2ref.set(docID, refIndex);
+      if (doc2inIndex == doc2in.size() ||
+          doc2in.getPrimary(doc2inIndex) != docID) { // No entry
+        continue;
       }
-      if (docCount > 2) {
-        maxRefBlockSize = Math.max(
-            maxRefBlockSize,
-            refBase[docCount-1 >>> BASE_BITS]
-            - refBase[docCount-2 >>> BASE_BITS]);
-      }
-
-      // refs are indirects
-      // maxRefBlockSize-1 as we count from 0
-      final PackedInts.Mutable doc2ref =
-          ExposedSettings.getMutable(docCount+1, maxRefBlockSize-1);
-      final PackedInts.Mutable refs = ExposedSettings.getMutable(
-          doc2in.size(), getTagCount());
-
-      // Fill doc2ref and refs from doc2in
-      int doc2inIndex = 0;
-      int refIndex = 0;
-      for (int docID = 0 ; docID < docCount ; docID++) {
-        if (doc2inIndex == doc2in.size()) {
-
-        }
-      }
-      int lastDocID = -1;
-      for (int i = 0 ; i < doc2in.size() ; i++) {
-        int docID = doc2in.getPrimary(i);
-        int indirect = doc2in.getSecondary(i);
-
-      }
-
-      if (ExposedSettings.debug) {
-        System.out.println(String.format(
-            "extractTags: maxRefBlockSize=%d (bits=%d), #doc2in=%d (bpv=%d), "
-            + "doc2in=%dKB, #refBase=%d (%dKB), "
-            + "doc2ref=%dKB (non-optimized: %dKB) refs=%dKB",
-            maxRefBlockSize, PackedInts.bitsRequired(maxRefBlockSize),
-            doc2in.size(), PackedInts.bitsRequired(doc2in.size()),
-            doc2in.capacity()*8/1024, refBase.length, refBase.length*4/1024,
-            doc2ref.ramBytesUsed() / 1024,
-            1L * docCount * PackedInts.bitsRequired(doc2in.size()) / 8 / 1024,
-            refs.ramBytesUsed()/1024));
+      while (doc2inIndex < doc2in.size()
+             && doc2in.getPrimary(doc2inIndex) == docID) {
+        doc2inIndex++;
+        refIndex++;
       }
     }
+    doc2ref.set(docCount, refIndex); // Terminator
 
-    throw new UnsupportedOperationException("Not implemented yet");
+    if (ExposedSettings.debug) {
+      System.out.println(String.format(
+          "extractTags: #doc2in=%d (bpv=%d), doc2in=%dKB, "
+          + "doc2ref=%dKB (non-optimized: %dKB) refs=%dKB",
+          doc2in.size(), PackedInts.bitsRequired(doc2in.size()),
+          doc2in.capacity()*8/1024, doc2ref.ramBytesUsed() / 1024,
+          1L * docCount * PackedInts.bitsRequired(doc2in.size()) / 8 / 1024,
+          refs.ramBytesUsed()/1024));
+    }
+
+    return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(
+        MonotonicReaderFactory.reduce(doc2ref), refs);
   }
 
 
@@ -394,27 +370,14 @@ public class FacetMap {
   refs-array at the position given by doc2ref plus the offset from pass 2.
   If the offset was larger than 0, it it decreased.
    */
-  private Map.Entry<PackedInts.Mutable, PackedInts.Mutable> extractTags(
+  private Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
       int docCount, final int[] tagCounts) throws IOException {
-    long maxRefBlockSize = 0; // from refsBase in blocks of EVERY size
     long totalRefs = 0;
 
-    { // Update totalRefs and refBase
-      int next = 0;
-      for (int i = 0 ; i < tagCounts.length ; i++) {
-        if (i == next) {
-          refBase[i >>> BASE_BITS] = (int)totalRefs;
-          next += EVERY;
-          maxRefBlockSize = Math.max(
-              maxRefBlockSize,
-              totalRefs - (i == 0 ? 0 : refBase[i-1 >>> BASE_BITS]));
-
-        }
-        totalRefs += tagCounts[i];
+    {
+      for (int tagCount : tagCounts) {
+        totalRefs += tagCount;
       }
-      maxRefBlockSize = Math.max(maxRefBlockSize,
-          totalRefs - (tagCounts.length-1 < EVERY ? 0 :
-              refBase[tagCounts.length-2 >>> BASE_BITS]));
       if (totalRefs > Integer.MAX_VALUE) {
         throw new IllegalStateException(
             "The current implementations does not support more that " +
@@ -424,7 +387,7 @@ public class FacetMap {
     }
 
     final PackedInts.Mutable doc2ref =
-        ExposedSettings.getMutable(docCount+1, (int)maxRefBlockSize);
+        ExposedSettings.getMutable(docCount+1, totalRefs);
 
     // With the tag counts and the refBase in place, it is possible to fill the
     // doc2ref with the correct pointers into the (still non-existing) refs.
@@ -486,8 +449,8 @@ public class FacetMap {
           + reduceTime / 1000 + " seconds");
       doc2ref = reduced;
     }*/
-    return new AbstractMap.SimpleEntry<PackedInts.Mutable, PackedInts.Mutable>(
-        doc2ref, refs);
+    return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(
+        MonotonicReaderFactory.reduce(doc2ref), refs);
   }
 
   private void fillRefs(final int[] tagCounts, final long totalRefs,
@@ -600,7 +563,7 @@ public class FacetMap {
     long initTime = -System.currentTimeMillis();
     int offset = 0;
     for (int i = 0 ; i < tagCounts.length ; i++) {
-      doc2ref.set(i, offset - refBase[i >>> BASE_BITS]);
+      doc2ref.set(i, offset);
 //      if (tagCounts[i] != 0) {
 //          refs.set(offset, tagCounts[i]-1);
       final int oldOffset = offset;
@@ -609,8 +572,7 @@ public class FacetMap {
 
   //    }
     }
-    doc2ref.set(tagCounts.length,
-                offset - refBase[tagCounts.length >>> BASE_BITS]);
+    doc2ref.set(tagCounts.length, offset);
 //      doc2ref.set(doc2ref.size()-1, offset);
     initTime += System.currentTimeMillis();
     // < 100 ms for 10M doc2refs so we do not print performance data
@@ -676,10 +638,8 @@ public class FacetMap {
    */
   // TODO: Check if static helps speed in this inner loop method
   public final void updateCounter(final int[] tagCounts, final int docID) {
-    final int start =
-        (int)(refBase[docID >>> BASE_BITS] + doc2ref.get(docID));
-    final int end =
-        (int)(refBase[(docID+1) >>> BASE_BITS] + doc2ref.get(docID+1));
+    final int start = (int)doc2ref.get(docID);
+    final int end = (int)doc2ref.get(docID+1);
     for (int refI = start ; refI < end ; refI++) {
       try {
         tagCounts[(int)refs.get(refI)]++;
@@ -721,10 +681,8 @@ public class FacetMap {
    * @throws java.io.IOException if the terms could not be accessed.
    */
   public BytesRef[] getTermsForDocID(int docID) throws IOException {
-    final int start =
-        (int)(refBase[docID >>> BASE_BITS] + doc2ref.get(docID));
-    final int end =
-        (int)(refBase[(docID+1) >>> BASE_BITS] + doc2ref.get(docID+1));
+    final int start = (int)doc2ref.get(docID);
+    final int end = (int) doc2ref.get(docID+1);
 //    System.out.println("Doc " + docID + ", " + start + " -> " + end);
     BytesRef[] result = new BytesRef[end - start];
     for (int refI = start ; refI < end ; refI++) {
@@ -751,8 +709,7 @@ public class FacetMap {
   }
 
   private String packedSize(PackedInts.Reader packed) {
-    long bytes = (long)packed.size() * packed.getBitsPerValue() / 8
-        + refBase.length * 4;
+    long bytes = packed.ramBytesUsed();
     if (bytes > 1048576) {
       return bytes / 1048576 + " MB";
     }

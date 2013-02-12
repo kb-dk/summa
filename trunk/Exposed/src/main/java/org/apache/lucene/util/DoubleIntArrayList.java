@@ -78,9 +78,17 @@ public class DoubleIntArrayList {
     if (newCapacity == pairs.length) {
       newCapacity += 10;
     }
-    long[] newPairs = new long[newCapacity];
-    System.arraycopy(pairs, 0, newPairs, 0, size);
-    pairs = newPairs;
+    try {
+      long[] newPairs = new long[newCapacity];
+      System.arraycopy(pairs, 0, newPairs, 0, size);
+      pairs = newPairs;
+    } catch (OutOfMemoryError e) {
+      throw new OutOfMemoryError(String.format(
+          "OOM (%s) with pairs[%d] (%dMB) while attempting to allocate "
+          + "newPairs[%d] (%dMB)",
+          e.toString(), pairs.length, pairs.length*8/1048576,
+          newCapacity, newCapacity*8/1048576));
+    }
   }
 
   public void sortByPrimaries() {
@@ -180,6 +188,40 @@ public class DoubleIntArrayList {
         maxPrimary+1, PackedInts.bitsRequired(maxSecondary), 0);
     for (int i = 0 ; i < size ; i++) {
       result.set(getPrimary(i), getSecondary(i));
+    }
+    return result;
+  }
+
+  public PackedInts.Mutable getPrimariesPacked() {
+    if (size == 0) {
+      return PackedInts.getMutable(0, 1, 0);
+    }
+
+    int max = Integer.MIN_VALUE;
+    for (int i = 0 ; i < size ; i++) {
+      max = Math.max(max, getPrimary(i));
+    }
+    PackedInts.Mutable result = PackedInts.getMutable(
+        size(), PackedInts.bitsRequired(max), 0);
+    for (int i = 0 ; i < size ; i++) {
+      result.set(i, getPrimary(i));
+    }
+    return result;
+  }
+
+  public PackedInts.Mutable getSecondariesPacked() {
+    if (size == 0) {
+      return PackedInts.getMutable(0, 1, 0);
+    }
+
+    int max = Integer.MIN_VALUE;
+    for (int i = 0 ; i < size ; i++) {
+      max = Math.max(max, getSecondary(i));
+    }
+    PackedInts.Mutable result = PackedInts.getMutable(
+        size(), PackedInts.bitsRequired(max), 0);
+    for (int i = 0 ; i < size ; i++) {
+      result.set(i, getSecondary(i));
     }
     return result;
   }
