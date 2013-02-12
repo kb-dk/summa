@@ -55,7 +55,7 @@ public class TestExposedFacets extends TestCase {
       }
     }
     cache.purgeAllCaches();
-//    helper.close();
+    helper.close();
   }
 
 
@@ -535,6 +535,34 @@ public static final String MISCOUNT_REQUEST =
         response.toXML().contains(GROUP_ABC_EXPECTED));
   }
 
+  public static final String GROUP_REQUEST_AB =
+      "<?xml version='1.0' encoding='utf-8'?>\n" +
+          "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"20\">\n" +
+          "  <query>even:true</query>\n" +
+          "  <groups>\n" +
+          "    <group name=\"multi\" order=\"count\">\n" +
+          "      <fields>\n" +
+          "        <field name=\"a\" />\n" +
+          "        <field name=\"b\" />\n" +
+          "      </fields>\n" +
+          "    </group>\n" +
+          "  </groups>\n" +
+          "</facetrequest>";
+  public static final String GROUP_AB_EXPECTED = // TODO: Avoid hardcoding
+      "      <tag count=\"2\" term=\"b0\" />\n"
+      + "      <tag count=\"1\" term=\"a0\" />\n"
+      + "      <tag count=\"1\" term=\"a1\" />";
+  public void testMultiFacet2() throws Exception {
+    final int DOCCOUNT = 2;
+    FacetRequest request = FacetRequest.parseXML(GROUP_REQUEST_AB);
+    FacetResponse response = testMultiFacetHelper(request, DOCCOUNT);
+    //System.out.println(response.toXML());
+    assertTrue("The response should contain \n" + GROUP_AB_EXPECTED
+        + ", but was\n" + response.toXML(),
+        response.toXML().contains(GROUP_AB_EXPECTED));
+    System.out.println(response.toXML());
+  }
+
   public static final String MINCOUNT_REQUEST =
       "<?xml version='1.0' encoding='utf-8'?>\n" +
           "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"20\" mincount=\"0\">\n" +
@@ -595,9 +623,8 @@ public static final String MISCOUNT_REQUEST =
 
   private FacetResponse testMultiFacetHelper(
       FacetRequest request, int doccount) throws Exception {
-    final int DOCCOUNT = 6;
     ExposedHelper helper = new ExposedHelper();
-    File location = helper.buildMultiFieldIndex(DOCCOUNT);
+    File location = helper.buildMultiFieldIndex(doccount);
 
     DirectoryReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
@@ -721,10 +748,13 @@ public static final String MISCOUNT_REQUEST =
 
   public static final String LOOKUP_REQUEST =
       "<?xml version='1.0' encoding='utf-8'?>\n" +
-          "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"5\">\n" +
+          "<facetrequest "
+          + "xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" "
+          + "maxtags=\"5\">\n" +
           "  <query>even:true</query>\n" +
           "  <groups>\n" +
-          "    <group name=\"custom\" order=\"index\" locale=\"da\" offset=\"myoffset\" prefix=\"myprefix\">\n" +
+          "    <group name=\"custom\" order=\"index\" locale=\"da\" "
+          + "offset=\"myoffset\" prefix=\"myprefix\">\n" +
           "      <fields>\n" +
           "        <field name=\"a\" />\n" +
           "      </fields>\n" +
@@ -756,7 +786,7 @@ public static final String MISCOUNT_REQUEST =
         DOCCOUNT >= 10);
     final int span = DOCCOUNT / 10;
     long firstTime = -1;
-    long subsequents = 0;
+    long subsequentMin = 0;
     int subCount = 0;
     long poolTime = -1;
     for (char prefix = 'A' ; prefix < 'X' ; prefix++) {
@@ -792,7 +822,7 @@ public static final String MISCOUNT_REQUEST =
           firstTime = totalTime;
         } else {
           subCount++;
-          subsequents += totalTime;
+          subsequentMin = Math.min(subsequentMin, totalTime);
         }
         response.setTotalTime(totalTime);
 /*        System.out.println("Collection for prefix " + prefix + " and offset "
@@ -804,8 +834,8 @@ public static final String MISCOUNT_REQUEST =
     System.out.println("Document count = " + DOCCOUNT);
     System.out.println("Facet structure build time = " + getTime(poolTime));
     System.out.println("First facet call = " + getTime(firstTime));
-    System.out.println("Average of " + subCount + " subsequent calls = "
-        + getTime(subsequents / subCount));
+    System.out.println("Min of " + subCount + " subsequent calls = "
+        + getTime(subsequentMin));
     System.out.println("Mem usage: preFacet=" + preMem
         + " MB, postFacet=" + getMem() + " MB");
     if (response != null) {
@@ -998,7 +1028,7 @@ public static final String MISCOUNT_REQUEST =
           "</facetrequest>";
   public void testFacetScale()
       throws XMLStreamException, IOException, ParseException {
-    FacetMap.defaultImpl = FacetMap.IMPL.stable;
+    FacetMap.defaultImpl = FacetMap.IMPL.pass1;
     //CodecProvider.setDefaultCodec("Standard");
 
     long totalTime = -System.currentTimeMillis();
@@ -1008,7 +1038,7 @@ public static final String MISCOUNT_REQUEST =
     //new ExposedHelper().close(); // Deletes old index
     final File LOCATION = ExposedHelper.INDEX_LOCATION;
     if (!LOCATION.exists()|| LOCATION.listFiles().length == 0) {
-      final int DOCCOUNT = 1000000;
+      final int DOCCOUNT = 100000;
       final int TERM_LENGTH = 20;
       final int MIN_SEGMENTS = 2;
       final List<String> FIELDS = Arrays.asList("a");
