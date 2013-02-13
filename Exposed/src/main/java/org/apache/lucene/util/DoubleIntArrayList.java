@@ -1,12 +1,8 @@
 package org.apache.lucene.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.util.packed.PackedInts;
 
-import java.lang.management.ManagementFactory;
 import java.util.Arrays;
-import java.util.Locale;
 
 /**
  * Specialized high performance expandable list of integer pairs that can be sorted on both primary and secondary key.
@@ -14,48 +10,29 @@ import java.util.Locale;
  * This implementation is not thread safe.
  */
 public class DoubleIntArrayList {
-  private static Log log = LogFactory.getLog(DoubleIntArrayList.class);
 
-  /**
-   * The factor used when expanding the list.
-   */
-  private final double expandFactor;
-
-  // TODO: consider using lists of lists to avoid array copy on expansion.
-  private long[] pairs;
-  private int size;
+  private ChunkedLongArray pairs;
 
   public DoubleIntArrayList(int initialCapacity) {
-    this(initialCapacity, 1.5d);
-  }
-
-  public DoubleIntArrayList(int initialCapacity, double expandFactor) {
-    pairs = new long[initialCapacity];
-    this.expandFactor = expandFactor;
+    // TODO: Make a clever guess of chunkBits to scale down
+    pairs = new ChunkedLongArray();
   }
 
   /**
    * Adds the given pair to the list. When the internal list capacity is exceeded, it is expanded, which involves
    * an array copy.
    * @param primary   primary value.
-   * @param secondary secondary value.
+s   * @param secondary secondary value.
    */
   public void add(int primary, int secondary) {
-    if (pairs.length == size) {
-      expand();
-    }
-    pairs[size++] = (long)primary << 32 | (long)secondary;
+    pairs.add((long)primary << 32 | (long)secondary);
   }
 
   public void set(int index, int primary, int secondary) {
-    if (pairs.length <= index) {
-      expand(index);
-    }
-    pairs[index] = (long)primary << 32 | (long)secondary;
-    size = size < index ? index : size;
+    pairs.set(index, (long)primary << 32 | (long)secondary);
   }
 
-  /**
+  /*
    * Wrapper for {@link Arrays#binarySearch(int[], int)}. JavaDoc for return is
    * taken from Array's JavaDoc.
    * @param primary the primary key to search.
@@ -67,60 +44,19 @@ public class DoubleIntArrayList {
    * the specified key. Note that this guarantees that the return value will be
    * <tt>&gt;= 0</tt> if and only if the key is found.
    */
-  public int searchPrimary(int primary) {
-    return Arrays.binarySearch(pairs, 0, size, (long)primary << 32);
-  }
-
-  private void expand() {
-    expand(pairs.length);
-  }
-
-  private void expand(int minSize) {
-    int newCapacity = (int) (minSize * expandFactor);
-    if (newCapacity == pairs.length) {
-      newCapacity += 10;
-    }
-    try {
-      long[] newPairs = new long[newCapacity];
-      System.arraycopy(pairs, 0, newPairs, 0, size);
-      pairs = newPairs;
-    } catch (OutOfMemoryError e) {
-      throw new OutOfMemoryError(String.format(
-          "OOM (%s) with pairs[%d] (%dMB) while attempting to allocate "
-          + "newPairs[%d] (%dMB). %s",
-          e.toString(), pairs.length, pairs.length*8/1048576,
-          newCapacity, newCapacity*8/1048576, memStats()));
-    }
-  }
-
-  private static final Locale locale = new Locale("en");
-  private String memStats() {
-      Runtime r = Runtime.getRuntime();
-      return String.format(
-          locale,
-          "Allocated memory: %s, Allocated unused memory: %s, "
-          + "Heap memory used: %s, Max memory: %s",
-          reduce(r.totalMemory()), reduce(r.freeMemory()),
-          reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().
-              getUsed()),
-          reduce(r.maxMemory())
-      );
-  }
-
-  private static String reduce(long bytes) {
-      return bytes / 1048576 + "MB";
-  }
-
+/*  public int searchPrimary(int primary) {
+    return pairs.binarySearch(0, pairs.size(), (long)primary << 32);
+  }*/
 
   public void sortByPrimaries() {
-    Arrays.sort(pairs, 0, size);
+    pairs.sort();
   }
 
-  public void sortBySecondaries() {
+/*  public void sortBySecondaries() {
     secondarySort(pairs, 0, size);
-  }
+  }*/
 
-  /**
+  /*
    * Classic merge sort with memory overhead equal to the full input.
    * </p><p>
    * The article http://en.wikipedia.org/wiki/Merge_sort was used as base for
@@ -129,7 +65,7 @@ public class DoubleIntArrayList {
    * @param start      the index of the first reference to sort (inclusive).
    * @param end        the index of the last reference to sort (exclusive).
    */
-  private void secondarySort(long[] references, int start, int end) {
+ /* private void secondarySort(long[] references, int start, int end) {
     if (end - start <= 1) {
       return;
     }
@@ -138,9 +74,9 @@ public class DoubleIntArrayList {
     secondarySort(references, start, middle + 1);
     secondarySort(references, middle + 1, end);
     secondaryMerge(references, start, middle + 1, end);
-  }
+  }*/
 
-  /**
+  /*
    * Expects the references from start (inclusive) to middle (exclusive) to
    * be sorted and the references from middle (inclusive) to end (exclusive)
    * to be sorted and performs a merge, with the result assigned to references
@@ -151,7 +87,7 @@ public class DoubleIntArrayList {
    * @param middle the middle of the pairs to merge.
    * @param end    the end of the pairs to merge.
    */
-  private void secondaryMerge(long[] pairs, int start, int middle, int end) {
+ /* private void secondaryMerge(long[] pairs, int start, int middle, int end) {
     if (middle - start == 0 || end - middle == 0) {
       return;
     }
@@ -171,33 +107,35 @@ public class DoubleIntArrayList {
       result[iResult++] = pairs[iRight++];
     }
     System.arraycopy(result, 0, pairs, start, result.length);
-  }
+  }*/
 
   public int getPrimary(int index) {
-    if (index >= size) {
+    if (index >= pairs.size()) {
       throw new ArrayIndexOutOfBoundsException(
-          "Requested value @ index " + index + " with array length " + size);
+          "Requested value @ index " + index + " with array length "
+          + pairs.size());
     }
-    return (int) (pairs[index] >>> 32);
+    return (int) (pairs.get(index) >>> 32);
   }
 
   public int getSecondary(int index) {
-    if (index >= size) {
+    if (index >= pairs.size()) {
       throw new ArrayIndexOutOfBoundsException(
-          "Requested value @ index " + index + " with array length " + size);
+          "Requested value @ index " + index + " with array length "
+          + pairs.size());
     }
-    return (int) pairs[index]; // Discards the upper 32 bit
+    return (int) pairs.get(index); // Discards the upper 32 bit
   }
 
   public PackedInts.Mutable getPacked() {
-    if (size == 0) {
+    if (pairs.size() == 0) {
       return PackedInts.getMutable(0, 1, 0);
     }
 
     // Find max
     int maxPrimary = Integer.MIN_VALUE;
     int maxSecondary = Integer.MIN_VALUE;
-    for (int i = 0 ; i < size ; i++) {
+    for (int i = 0 ; i < pairs.size() ; i++) {
       final int primary = getPrimary(i);
       final int secondary = getSecondary(i);
       if (maxSecondary < secondary) {
@@ -209,41 +147,41 @@ public class DoubleIntArrayList {
     }
     PackedInts.Mutable result = PackedInts.getMutable(
         maxPrimary+1, PackedInts.bitsRequired(maxSecondary), 0);
-    for (int i = 0 ; i < size ; i++) {
+    for (int i = 0 ; i < pairs.size() ; i++) {
       result.set(getPrimary(i), getSecondary(i));
     }
     return result;
   }
 
   public PackedInts.Mutable getPrimariesPacked() {
-    if (size == 0) {
+    if (pairs.size() == 0) {
       return PackedInts.getMutable(0, 1, 0);
     }
 
     int max = Integer.MIN_VALUE;
-    for (int i = 0 ; i < size ; i++) {
+    for (int i = 0 ; i < pairs.size() ; i++) {
       max = Math.max(max, getPrimary(i));
     }
     PackedInts.Mutable result = PackedInts.getMutable(
-        size(), PackedInts.bitsRequired(max), 0);
-    for (int i = 0 ; i < size ; i++) {
+        pairs.size(), PackedInts.bitsRequired(max), 0);
+    for (int i = 0 ; i < pairs.size() ; i++) {
       result.set(i, getPrimary(i));
     }
     return result;
   }
 
   public PackedInts.Mutable getSecondariesPacked() {
-    if (size == 0) {
+    if (pairs.size() == 0) {
       return PackedInts.getMutable(0, 1, 0);
     }
 
     int max = Integer.MIN_VALUE;
-    for (int i = 0 ; i < size ; i++) {
+    for (int i = 0 ; i < pairs.size() ; i++) {
       max = Math.max(max, getSecondary(i));
     }
     PackedInts.Mutable result = PackedInts.getMutable(
-        size(), PackedInts.bitsRequired(max), 0);
-    for (int i = 0 ; i < size ; i++) {
+        pairs.size(), PackedInts.bitsRequired(max), 0);
+    for (int i = 0 ; i < pairs.size() ; i++) {
       result.set(i, getSecondary(i));
     }
     return result;
@@ -255,9 +193,9 @@ public class DoubleIntArrayList {
    * @return all primary values.
    */
   public int[] getPrimaries() {
-    final int[] result = new int[size];
-    for (int i = 0 ; i < size ; i++) {
-      result[i] = (int) (pairs[i] >>> 32);
+    final int[] result = new int[pairs.size()];
+    for (int i = 0 ; i < pairs.size() ; i++) {
+      result[i] = (int) (pairs.get(i) >>> 32);
     }
     return result;
   }
@@ -268,15 +206,15 @@ public class DoubleIntArrayList {
    * @return all secondary values.
    */
   public int[] getSecondaries() {
-    final int[] result = new int[size];
-    for (int i = 0 ; i < size ; i++) {
-      result[i] = (int) pairs[i]; // Discards the upper 32 bit
+    final int[] result = new int[pairs.size()];
+    for (int i = 0 ; i < pairs.size() ; i++) {
+      result[i] = (int) pairs.get(i); // Discards the upper 32 bit
     }
     return result;
   }
 
   public int size() {
-    return size;
+    return pairs.size();
   }
 
   /**
@@ -284,6 +222,6 @@ public class DoubleIntArrayList {
    * @return the current capacity.
    */
   public int capacity() {
-    return pairs.length;
+    return pairs.capacity();
   }
 }
