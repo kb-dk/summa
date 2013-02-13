@@ -122,11 +122,19 @@ public class FacetMap {
 //    System.out.println("******************************");
     for (int i = 0 ; i < providers.size() ; i++) {
 //      System.out.println("------------------------------");
+
+
+      // indirect->ordinal are collected in order to be assigned to the current
+      // provider, which uses them for later resolving of Tag Strings.
+      // If they are not collected here, the terms will be iterated again upon
+      // first request for a faceting result.
+      DoubleIntArrayList indirectToOrdinal = new DoubleIntArrayList(100);
       Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
       long uniqueCount = 0;
       BytesRef last = null;
       while (tuples.hasNext()) {
         ExposedTuple tuple = tuples.next();
+        indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
         int docID;
         while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
           tagCounts[(int) (tuple.docIDBase + docID)]++;
@@ -137,6 +145,12 @@ public class FacetMap {
 //          System.out.println("FaM got: " + last.utf8ToString());
         }
       }
+      if (providers.get(i) instanceof GroupTermProvider) {
+        // Not at all OO
+        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(
+            indirectToOrdinal.getPacked());
+      }
+
       indirectStarts[i] = start;
 //      System.out.println("..............................");
 /*      long uc = providers.get(i).getUniqueTermCount();
@@ -271,6 +285,7 @@ public class FacetMap {
           + "Sorting d2i and extracting structures. Temporary map: " + pairs);
     }
     long sortTime = -System.currentTimeMillis();
+    // TODO: Sorting takes way too much time. Re-introduce tagCount
     pairs.sortByPrimaries();
     sortTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
