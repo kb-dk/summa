@@ -61,6 +61,7 @@ public class ChunkedLongArray {
   public void set(int index, long value) {
     ensureSpace(index);
     chunks.get(index >>> chunkBits)[index &  offsetMask] = value;
+    size = Math.max(size, index+1);
   }
 
   public long get(int index) {
@@ -82,9 +83,10 @@ public class ChunkedLongArray {
       } catch (OutOfMemoryError e) {
         throw new OutOfMemoryError(String.format(
             "OOM (%s) while allocating long[%d] (%dMB) in addition to " +
-            "the existing %d chunks (%dMB). %s",
-            e.toString(), chunkLength, chunkLength*8/1048576,
-            chunks.size(), chunks.size()*chunkLength*8/1048576, memStats()));
+            "the existing %d chunks (%d entries, %dMB). %s",
+            e.toString(), chunkLength, 1L*chunkLength*8/1048576,
+            chunks.size(), size(),
+            1L*chunks.size()*chunkLength*8/1048576, memStats()));
       }
     }
   }
@@ -102,6 +104,7 @@ public class ChunkedLongArray {
       length -= subLength;
       srcPos += subLength;
       destPos += subLength;
+      size = Math.max(size, destPos+1);
     }
   }
 
