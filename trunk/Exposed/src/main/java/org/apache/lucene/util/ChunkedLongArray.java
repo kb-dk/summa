@@ -91,6 +91,7 @@ public class ChunkedLongArray {
       set(src.chunks.get(srcChunk), srcOffset, destPos, subLength);
       length -= subLength;
       srcPos += subLength;
+      destPos += subLength;
     }
   }
 
@@ -109,6 +110,7 @@ public class ChunkedLongArray {
           src, srcPos, chunks.get(destChunk), destOffset, subLength);
       length -= subLength;
       srcPos += subLength;
+      destPos += subLength;
     }
   }
 

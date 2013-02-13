@@ -97,16 +97,21 @@ public class TestChunkedLongArray extends TestCase {
   }
 
   public void testCopyCrossChunk() {
-    final int CHUNK_BITS = 1;
-    final int CHUNK_SIZE = (int)Math.pow(2, CHUNK_BITS);
+    for (int bits = 1 ; bits < 10 ; bits++) {
+      testCopyCrossChunk(bits);
+    }
+  }
+
+  public void testCopyCrossChunk(int chunkBits) {
+    final int CHUNK_SIZE = (int)Math.pow(2, chunkBits);
     final int ENTRIES = CHUNK_SIZE+2;
 
     final int SRC_POS = CHUNK_SIZE-1;
     final int DEST_POS = 1;
     final int LENGTH = 2;
 
-    ChunkedLongArray chunkedSrc = new ChunkedLongArray(CHUNK_BITS);
-    ChunkedLongArray chunkedDest = new ChunkedLongArray(CHUNK_BITS);
+    ChunkedLongArray chunkedSrc = new ChunkedLongArray(chunkBits);
+    ChunkedLongArray chunkedDest = new ChunkedLongArray(chunkBits);
     long[] expectedSrc = new long[ENTRIES];
     long[] expectedDest = new long[ENTRIES];
 
@@ -118,7 +123,7 @@ public class TestChunkedLongArray extends TestCase {
     }
     chunkedDest.set(chunkedSrc, SRC_POS, DEST_POS, LENGTH);
     System.arraycopy(expectedSrc, SRC_POS, expectedDest, DEST_POS, LENGTH);
-    assertEquals(expectedDest, chunkedDest);
+    assertEquals("chunkBits=" + chunkBits, expectedDest, chunkedDest);
   }
 
   public void testCopyCrossExplicit() {
@@ -141,12 +146,32 @@ public class TestChunkedLongArray extends TestCase {
     assertEquals(new long[]{0, 2, 1, 3}, chunkedDest);
   }
 
+  public void testCopyBorderExplicit() {
+    final int CHUNK_BITS = 1;
+
+    ChunkedLongArray chunkedSrc = new ChunkedLongArray(CHUNK_BITS);
+    ChunkedLongArray chunkedDest = new ChunkedLongArray(CHUNK_BITS);
+
+    chunkedSrc.add(3);
+    chunkedSrc.add(2);
+    chunkedSrc.add(1);
+    chunkedSrc.add(0);
+
+    chunkedDest.add(0);
+    chunkedDest.add(1);
+    chunkedDest.add(2);
+    chunkedDest.add(3);
+
+    chunkedDest.set(chunkedSrc, 2, 1, 2);
+    assertEquals(new long[]{0, 1, 0, 3}, chunkedDest);
+  }
+
   public void testCopyMonkey() {
-    final int CHUNK_BITS = 4;
+    final int CHUNK_BITS = 2;
     final int CHUNK_SIZE = (int) Math.pow(2, CHUNK_BITS);
     final int ENTRIES = CHUNK_SIZE*4+1;
 
-    final int COPIES = 20;
+    final int PASSES = 20;
 
     ChunkedLongArray chunked1 = getChunked(CHUNK_BITS, ENTRIES, new Random(87));
     ChunkedLongArray chunked2 = getChunked(CHUNK_BITS, ENTRIES, new Random(88));
@@ -158,19 +183,16 @@ public class TestChunkedLongArray extends TestCase {
     assertEquals("Sanity check 2", expected2, chunked2);
 
     Random random = new Random(87);
-    for (int i = 0 ; i < COPIES ; i++) {
+    for (int i = 0 ; i < PASSES ; i++) {
       int startPosA = random.nextInt(ENTRIES);
       int startPosB = random.nextInt(ENTRIES);
       int length = random.nextInt(ENTRIES - Math.max(startPosA, startPosB));
-      if (random.nextBoolean()) {
-        chunked1.set(chunked2, startPosA, startPosB, length);
-        System.arraycopy(expected2, startPosA, expected1, startPosB, length);
-      } else {
-        chunked2.set(chunked1, startPosA, startPosB, length);
-        System.arraycopy(expected1, startPosA, expected2, startPosB, length);
-      }
-      assertEquals("Part1 " + (i+1) + "/" + COPIES, expected1, chunked1);
-      assertEquals("Part2 " + (i+1) + "/" + COPIES, expected2, chunked2);
+      chunked1.set(chunked2, startPosA, startPosB, length);
+      System.arraycopy(expected2, startPosA, expected1, startPosB, length);
+      String debug = "pass=" + (i+1) + "/" + PASSES + ", startPosA=" + startPosA
+                     + ", startPosB=" + startPosB + ", length=" + length
+                     + ", chunkSize=" + CHUNK_SIZE;
+      assertEquals(debug, expected1, chunked1);
     }
   }
 
