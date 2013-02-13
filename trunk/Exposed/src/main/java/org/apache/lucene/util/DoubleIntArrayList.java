@@ -175,14 +175,16 @@ public class DoubleIntArrayList {
 
   public int getPrimary(int index) {
     if (index >= size) {
-      throw new ArrayIndexOutOfBoundsException("Requested value @ index " + index + " with array length " + size);
+      throw new ArrayIndexOutOfBoundsException(
+          "Requested value @ index " + index + " with array length " + size);
     }
     return (int) (pairs[index] >>> 32);
   }
 
   public int getSecondary(int index) {
     if (index >= size) {
-      throw new ArrayIndexOutOfBoundsException("Requested value @ index " + index + " with array length " + size);
+      throw new ArrayIndexOutOfBoundsException(
+          "Requested value @ index " + index + " with array length " + size);
     }
     return (int) pairs[index]; // Discards the upper 32 bit
   }
