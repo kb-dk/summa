@@ -229,7 +229,7 @@ public class ChunkedLongArray {
   }
 
   private static final Locale locale = new Locale("en");
-  private String memStats() {
+  public static String memStats() {
       Runtime r = Runtime.getRuntime();
       return String.format(
           locale,
@@ -237,8 +237,7 @@ public class ChunkedLongArray {
           + "Heap memory used: %s, Max memory: %s",
           reduce(r.totalMemory()), reduce(r.freeMemory()),
           reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().
-              getUsed()),
-          reduce(r.maxMemory())
+              getUsed()), reduce(r.maxMemory())
       );
   }
   private static String reduce(long bytes) {
