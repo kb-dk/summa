@@ -109,8 +109,8 @@ public class TestChunkedLongArray extends TestCase {
     long[] expected1 = getLongArray(ENTRIES, new Random(87));
     long[] expected2 = getLongArray(ENTRIES, new Random(88));
     // Sanity check for standard addition
-    assertEquals(expected1, chunked1);
-    assertEquals(expected2, chunked2);
+    assertEquals("Sanity check 1", expected1, chunked1);
+    assertEquals("Sanity check 2", expected2, chunked2);
 
     Random random = new Random(87);
     for (int i = 0 ; i < COPIES ; i++) {
@@ -124,20 +124,27 @@ public class TestChunkedLongArray extends TestCase {
         chunked2.set(chunked1, startPosA, startPosB, length);
         System.arraycopy(expected1, startPosA, expected2, startPosB, length);
       }
+      assertEquals("Part1 " + (i+1) + "/" + COPIES, expected1, chunked1);
+      assertEquals("Part2 " + (i+1) + "/" + COPIES, expected2, chunked2);
     }
-    assertEquals(expected1, chunked1);
-    assertEquals(expected2, chunked2);
   }
 
   private void assertEquals(long[] expected, ChunkedLongArray actual) {
+    assertEquals(null, expected, actual);
+  }
+
+  private void assertEquals(
+      String message, long[] expected, ChunkedLongArray actual) {
     if (expected.length != actual.size()) {
-      fail("Expected array of length " + expected.length
+      fail((message == null ? "" : message + ". ")
+           + "Expected array of length " + expected.length
            + " got one of length " + actual.size());
     }
     for (int i = 0 ; i < expected.length ; i++) {
       if (expected[i] != actual.get(i)) {
-        fail("The element at index " + i + " was expected to be " + expected[i]
-             + " but was " + actual.get(i));
+        fail((message == null ? "" : message + ". ")
+             + "The element at index " + i + " was expected to be "
+             + expected[i] + " but was " + actual.get(i));
       }
     }
   }
