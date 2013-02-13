@@ -355,12 +355,13 @@ public class FacetMap {
 
     if (ExposedSettings.debug) {
       System.out.println(String.format(
-          "extractTags: #doc2in=%d (bpv=%d), doc2in=%dKB, "
-          + "doc2ref=%dKB (non-optimized: %dKB) refs=%dKB",
-          doc2in.size(), PackedInts.bitsRequired(doc2in.size()),
-          doc2in.capacity()*8/1024, doc2ref.ramBytesUsed() / 1024,
-          1L * docCount * PackedInts.bitsRequired(doc2in.size()) / 8 / 1024,
-          refs.ramBytesUsed()/1024));
+          "extractTags: temp doc2in(%d refs, %dKB) -> "
+          + "doc2ref(%d docs, %dKB (non-optimized: %dKB)) "
+          + "+ refs=(%d ins, %dKB)",
+          doc2in.size(), doc2in.capacity()*8/1024,
+          doc2ref.size(), doc2ref.ramBytesUsed() / 1024,
+          1L * docCount * PackedInts.bitsRequired(refs.size()) / 8 / 1024,
+          refs.size(), refs.ramBytesUsed()/1024));
     }
 
     return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(
@@ -601,6 +602,7 @@ public class FacetMap {
   private void countTags(final int[] tagCounts) throws IOException {
     long tagCountTime = -System.currentTimeMillis();
     long tupleCount = 0;
+    long referenceCount = 0;
     long tupleTime = 0;
     for (TermProvider provider: providers) {
       final Iterator<ExposedTuple> tuples = provider.getIterator(true);
@@ -612,10 +614,11 @@ public class FacetMap {
         if (tuple.docIDs == null) {
           continue;
         }
-            int doc;
+        int doc;
           // TODO: Test if bulk reading (which includes freqs) is faster
           while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
             tagCounts[(int)(doc + tuple.docIDBase)]++;
+            referenceCount++;
           }
           /*
         int read;
@@ -631,9 +634,11 @@ public class FacetMap {
         */
       }
     }
+
     tagCountTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
-      System.out.println("FacetMap: Counted tag references for "
+      System.out.println(
+          "FacetMap: Counted " + referenceCount + " tag references for "
           + ExposedUtil.time("documents",  tagCounts.length, tagCountTime)
           + ". Retrieved "
           + ExposedUtil.time("tuples", tupleCount, tupleTime / 1000000));

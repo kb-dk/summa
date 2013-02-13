@@ -185,8 +185,9 @@ s   * @param secondary secondary value.
           pairs.size(), PackedInts.bitsRequired(max), 0);
     } catch (OutOfMemoryError e) {
       throw new OutOfMemoryError(String.format(
-          "OOM (%s) while calling PackedInts.getMutable(%d, %d) with estimated"
-          + " heap requirement %dMB. %s. %s",
+          "OOM (%s) while preparing for indirects extraction by calling " +
+          "PackedInts.getMutable(%d, %d) with estimated"
+          + " heap requirement %dMB based on %s. %s",
           e.toString(), pairs.size(), PackedInts.bitsRequired(max),
           1L*pairs.size()*PackedInts.bitsRequired(max)/8/1048576,
           pairs, ChunkedLongArray.memStats()));
