@@ -8,9 +8,11 @@
   */
 package org.apache.lucene.util;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Large contiguous memory allocations on the heap are not recommended as heap
@@ -75,7 +77,15 @@ public class ChunkedLongArray {
 
   private void ensureSpace(final int index) {
     while (chunks.size() <= (index >>> chunkBits)) {
-      chunks.add(new long[chunkLength]);
+      try {
+        chunks.add(new long[chunkLength]);
+      } catch (OutOfMemoryError e) {
+        throw new OutOfMemoryError(String.format(
+            "OOM (%s) while allocating long[%d] (%dMB) in addition to " +
+            "the existing %d chunks (%dMB). %s",
+            e.toString(), chunkLength, chunkLength*8/1048576,
+            chunks.size(), chunks.size()*chunkLength*8/1048576, memStats()));
+      }
     }
   }
 
@@ -164,6 +174,22 @@ public class ChunkedLongArray {
     src.swap(storeIndex, right);  // Move pivot to its final place
     return storeIndex;
   }
+
+  /*
+   * Wrapper for {@link Arrays#binarySearch(int[], int)}. JavaDoc for return is
+   * taken from Array's JavaDoc.
+   * @param value the value to search for.
+   * @return index of the search key, if it is contained in the array within the
+   * specified range; otherwise, <tt>(-(insertion point) - 1)</tt>.
+   * The insertion point is defined as the point at which the key would be
+   * inserted into the array: the index of the first element in the range
+   * greater than the key, or toIndex if all elements in the range are less than
+   * the specified key. Note that this guarantees that the return value will be
+   * <tt>&gt;= 0</tt> if and only if the key is found.
+   */
+  private int binarySearch(int start, int end, long value) {
+    throw new UnsupportedOperationException("Not implemented yet");
+  }
 /*  private void sortIndividualChunks() {
     for (int i = 0 ; i < chunks.size() ; i++) {
       if ((i+1)*chunkLength < size) {
@@ -192,5 +218,29 @@ public class ChunkedLongArray {
     throw new UnsupportedOperationException("Not implemented yet");
   }  */
 
+  /**
+   * Note: Capacity auto-increases.
+   * @return the current capacity.
+   */
+  public int capacity() {
+    return chunks.size()*chunkLength;
+  }
+
+  private static final Locale locale = new Locale("en");
+  private String memStats() {
+      Runtime r = Runtime.getRuntime();
+      return String.format(
+          locale,
+          "Allocated memory: %s, Allocated unused memory: %s, "
+          + "Heap memory used: %s, Max memory: %s",
+          reduce(r.totalMemory()), reduce(r.freeMemory()),
+          reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().
+              getUsed()),
+          reduce(r.maxMemory())
+      );
+  }
+  private static String reduce(long bytes) {
+      return bytes / 1048576 + "MB";
+  }
 }
 
