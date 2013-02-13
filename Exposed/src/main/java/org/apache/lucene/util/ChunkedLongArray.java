@@ -10,7 +10,6 @@ package org.apache.lucene.util;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,7 +29,7 @@ import java.util.Locale;
  * // TODO: Perform more tests on actual performance
  */
 public class ChunkedLongArray {
-  public static final int DEFAULT_CHUNK_BITS = 20; // 1MB
+  public static final int DEFAULT_CHUNK_BITS = 20; // 1M entries = 8MB
 
   private final int chunkBits;
   private final int offsetMask;
@@ -244,6 +243,12 @@ public class ChunkedLongArray {
   }
   private static String reduce(long bytes) {
       return bytes / 1048576 + "MB";
+  }
+
+  @Override
+  public String toString() {
+    return "ChunkedLongArray(" + size + " entries, " + chunks.size()
+           + " chunks, " + 1L*chunks.size()*chunkLength*8/1047576 + "MB)";
   }
 }
 

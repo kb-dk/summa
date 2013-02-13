@@ -264,10 +264,20 @@ public class FacetMap {
     }
     uniqueTime += System.currentTimeMillis();
     indirectStarts[indirectStarts.length-1] = start;
-    System.out.println("FacetMap: Full index iteration in "
-                       + (System.currentTimeMillis() - startTime) + "ms. "
-                       + "Sorting d2i and extracting structures");
+    if (ExposedSettings.debug) {
+      System.out.println(
+          "FacetMap: Full index iteration in "
+          + (System.currentTimeMillis() - startTime) + "ms. "
+          + "Sorting d2i and extracting structures. Temporary map: " + pairs);
+    }
+    long sortTime = -System.currentTimeMillis();
     pairs.sortByPrimaries();
+    sortTime += System.currentTimeMillis();
+    if (ExposedSettings.debug) {
+      System.out.println(
+          "FacetMap: Sorted d2i (" + pairs.size() + " entries) in "
+          + sortTime/1000 + " seconds");
+    }
          /*
     { // Sanity check
       int[] verifyCount = new int[docCount];

@@ -224,4 +224,9 @@ s   * @param secondary secondary value.
   public int capacity() {
     return pairs.capacity();
   }
+
+  @Override
+  public String toString() {
+    return "DoubleIntArrayList(" + pairs + ")";
+  }
 }
