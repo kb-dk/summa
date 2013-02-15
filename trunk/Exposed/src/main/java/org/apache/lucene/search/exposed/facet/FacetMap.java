@@ -367,6 +367,7 @@ public class FacetMap {
       BytesRef last = null;
       int localUniqueTerms = 0;
       long localTime = -System.currentTimeMillis();
+      int pairsStartSize = pairs.size();
       while (tuples.hasNext()) {
         ExposedTuple tuple = tuples.next();
         indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
@@ -392,9 +393,9 @@ public class FacetMap {
         ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
         if (ExposedSettings.debug) {
           System.out.println(String.format(
-              "FacetMap: Assigning indirects for %d unique terms, extracted in " +
-              "%d ms, to %s: %s",
-              localUniqueTerms, localTime,
+              "FacetMap: Assigning indirects for %d unique terms, " +
+              "%d references, extracted in %d ms, to %s: %s",
+              localUniqueTerms, pairs.size()-pairsStartSize, localTime,
               ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(),
               i2o));
         }
