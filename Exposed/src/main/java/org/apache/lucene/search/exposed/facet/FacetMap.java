@@ -148,8 +148,19 @@ public class FacetMap {
       }
       if (providers.get(i) instanceof GroupTermProvider) {
         // Not at all OO
-        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(
-            indirectToOrdinal.getPacked());
+        PackedInts.Reader i2o = indirectToOrdinal.getPacked();
+        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
+        if (ExposedSettings.debug) {
+          System.out.println(String.format(
+              "FacetMap: Assigning ordered ordinals to %s: %s",
+              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(),
+              i2o));
+        }
+      } else if (ExposedSettings.debug) {
+        System.out.println(String.format(
+            "FacetMap: Hoped for GroupTermProvider, but got %s. " +
+            "Collected ordered ordinals are discarded",
+            providers.get(i).getClass()));
       }
 
       indirectStarts[i] = start;
@@ -341,7 +352,7 @@ public class FacetMap {
     // pairs collects unordered docID -> indirect
     DoubleIntArrayList pairs = new DoubleIntArrayList(docCount); // docIDs, indirect
 //    System.out.println("******************************");
-    long uniqueTerms = 0;
+    long totalUniqueTerms = 0;
     for (int i = 0 ; i < providers.size() ; i++) {
       indirectStarts[i] = start;
       final long termOffset = start;
@@ -354,6 +365,8 @@ public class FacetMap {
       // first request for a faceting result.
       DoubleIntArrayList indirectToOrdinal = new DoubleIntArrayList(100);
       BytesRef last = null;
+      int localUniqueTerms = 0;
+      long localTime = -System.currentTimeMillis();
       while (tuples.hasNext()) {
         ExposedTuple tuple = tuples.next();
         indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
@@ -364,17 +377,32 @@ public class FacetMap {
                     (int) (tuple.indirect+termOffset));
         }
         if (last == null || !last.equals(tuple.term)) {
-          uniqueTerms++;
           last = tuple.term;
+          localUniqueTerms++;
 //          System.out.println("FaM got: " + last.utf8ToString());
         }
       }
+      totalUniqueTerms += localUniqueTerms;
+      localTime += System.currentTimeMillis();
 
       start += indirectToOrdinal.size();
       if (providers.get(i) instanceof GroupTermProvider) {
         // Not at all OO
-        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(
-            indirectToOrdinal.getPacked());
+        PackedInts.Reader i2o = indirectToOrdinal.getPacked();
+        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
+        if (ExposedSettings.debug) {
+          System.out.println(String.format(
+              "FacetMap: Assigning indirects for %d unique terms, extracted in " +
+              "%d ms, to %s: %s",
+              localUniqueTerms, localTime,
+              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(),
+              i2o));
+        }
+      } else if (ExposedSettings.debug) {
+        System.out.println(String.format(
+            "FacetMap: Hoped for GroupTermProvider, but got %s. " +
+            "Collected ordered ordinals are discarded",
+            providers.get(i).getClass()));
       }
   /*
       { // Sanity test
@@ -429,7 +457,7 @@ public class FacetMap {
            */
     long tagExtractTime = - System.currentTimeMillis();
     Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
-        extractTags(pairs, docCount, uniqueTerms);
+        extractTags(pairs, docCount, totalUniqueTerms);
     tagExtractTime += System.currentTimeMillis();
     doc2ref = pair.getKey();
     refs = pair.getValue();
