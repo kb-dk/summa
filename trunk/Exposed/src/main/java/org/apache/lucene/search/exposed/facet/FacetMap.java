@@ -5,6 +5,7 @@ import org.apache.lucene.search.exposed.*;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.DoubleIntArrayList;
 import org.apache.lucene.util.packed.MonotonicReaderFactory;
+import org.apache.lucene.util.packed.PackedIntWrapper;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
@@ -194,8 +195,8 @@ public class FacetMap {
     }
   }
 
-  // Experimental single pass
-  public FacetMap(int docCount, List<TermProvider> providers, String hack)
+  // Working disabled high-mem single pass
+  public FacetMap(int docCount, List<TermProvider> providers, Integer hack)
 //  public FacetMap(int docCount, List<TermProvider> providers, String disabled)
       throws IOException {
     final long startTime = System.currentTimeMillis();
@@ -321,6 +322,187 @@ public class FacetMap {
     }
   }
 
+  // Experimental single pass
+  public FacetMap(int docCount, List<TermProvider> providers, String hack)
+//  public FacetMap(int docCount, List<TermProvider> providers, String disabled)
+      throws IOException {
+    final long startTime = System.currentTimeMillis();
+    this.providers = providers;
+    if (ExposedSettings.debug) {
+      System.out.println(
+          "FacetMap: Creating experimental single pass map for "
+          + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
+          + " with " + docCount + " documents)");
+    }
+    indirectStarts = new int[providers.size() +1];
+    int start = 0;
+    long uniqueTime = -System.currentTimeMillis();
+
+    // pairs collects unordered docID -> indirect
+    DoubleIntArrayList pairs = new DoubleIntArrayList(docCount); // docIDs, indirect
+//    System.out.println("******************************");
+    long uniqueTerms = 0;
+    for (int i = 0 ; i < providers.size() ; i++) {
+      indirectStarts[i] = start;
+      final long termOffset = start;
+//      System.out.println("------------------------------");
+      Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
+
+      // indirect->ordinal are collected in order to be assigned to the current
+      // provider, which uses them for later resolving of Tag Strings.
+      // If they are not collected here, the terms will be iterated again upon
+      // first request for a faceting result.
+      DoubleIntArrayList indirectToOrdinal = new DoubleIntArrayList(100);
+      BytesRef last = null;
+      while (tuples.hasNext()) {
+        ExposedTuple tuple = tuples.next();
+        indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
+        int docID;
+        while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+//          System.out.println("*** " + tuple + " docID " + docID);
+          pairs.add((int) (tuple.docIDBase + docID),
+                    (int) (tuple.indirect+termOffset));
+        }
+        if (last == null || !last.equals(tuple.term)) {
+          uniqueTerms++;
+          last = tuple.term;
+//          System.out.println("FaM got: " + last.utf8ToString());
+        }
+      }
+
+      start += indirectToOrdinal.size();
+      if (providers.get(i) instanceof GroupTermProvider) {
+        // Not at all OO
+        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(
+            indirectToOrdinal.getPacked());
+      }
+  /*
+      { // Sanity test
+        PackedInts.Mutable i2o = indirectToOrdinal.getPacked();
+        PackedInts.Reader authoritative = providers.get(i).getOrderedOrdinals();
+        if (i2o.size() != authoritative.size()) {
+          throw new IllegalStateException(
+              "Expected indirect to ordinal map to have size "
+              + authoritative.size() + " but got " + i2o.size());
+        }
+        for (int j = 0 ; j < i2o.size() ; j++) {
+          if (i2o.get(j) != authoritative.get(j)) {
+            throw new IllegalStateException(
+                "Expected indirect to ordinal map entry " + j
+                + " to have ordinal value " + authoritative.get(j)
+                + " but it had " + i2o.get(j));
+          }
+        }
+      }
+    */
+//      System.out.println("..............................");
+/*      long uc = providers.get(i).getUniqueTermCount();
+      if (uc != uniqueCount) {
+        throw new IllegalStateException(
+            "The expected unique term count should be " + uc + " but was "
+            + uniqueCount);
+      }*/
+      //start += providers.get(i).getUniqueTermCount();
+    }
+    uniqueTime += System.currentTimeMillis();
+    indirectStarts[indirectStarts.length-1] = start;
+    if (ExposedSettings.debug) {
+      System.out.println(
+          "FacetMap: Full index iteration in "
+          + (System.currentTimeMillis() - startTime) + "ms. "
+          + "Commencing extraction of structures. Temporary map: "
+          + pairs);
+    }
+         /*
+    { // Sanity check
+      int[] verifyCount = new int[docCount];
+      countTags(verifyCount);
+      for (int i = 0 ; i < tagCounts.length ; i++) {
+        if (verifyCount[i] != tagCounts[i]) {
+          throw new IllegalStateException(
+              "At index " + i + "/" + tagCounts.length
+              + ", the expected tag count was " + verifyCount[i]
+              + " with actual count " + tagCounts[i]);
+        }
+      }
+    }
+           */
+    long tagExtractTime = - System.currentTimeMillis();
+    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
+        extractTags(pairs, docCount, uniqueTerms);
+    tagExtractTime += System.currentTimeMillis();
+    doc2ref = pair.getKey();
+    refs = pair.getValue();
+    if (ExposedSettings.debug) {
+      System.out.println(
+              "FacetMap: Unique count, tag counts and tag fill (" + docCount
+              + " documents, " + providers.size() + " providers): "
+              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
+    }
+  }
+
+  /**
+   * Sorts the pairs by docID (the primary in pairs). The order of the indirects
+   * (the secondary in pairs) is not guaranteed.
+   * </p><p>
+   * This operation temporarily allocates a {@code int[docCount]} and runs in
+   * <tt>O(n)</tt>, where n is {@code pairs.size()}. In reality, two passes is
+   * done on <tt>pairs</tt> where the first one is sequential and the second one
+   * is
+   * @param pairs    the docID->indirect mao.
+   * @param docCount the number of documents.
+   * @param uniqueTerms the number of unique terms (and thus indirects).
+   */
+  private Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
+      DoubleIntArrayList pairs, int docCount, long uniqueTerms) {
+    long startTime = System.currentTimeMillis();
+
+    // Count tags and convert the tagCounts to starting positions
+    final int[] starts = new int[docCount+1];
+    for (int i = 0 ; i < pairs.size() ; i++) {
+      starts[pairs.getPrimary(i)]++;
+    }
+    int index = 0 ;
+    for (int i = 0 ; i < starts.length ; i++) {
+      final int delta = starts[i];
+      starts[i] = index;
+      index += delta;
+    }
+    starts[starts.length-1] = index;
+
+    // The starting positions are used in the final structure, so we absorb them
+    // right away. Important: We copy the values (by reducing) as they are
+    // changed while constructing the ref-structure.
+    final PackedInts.Reader doc2ref = MonotonicReaderFactory.reduce(
+        new PackedIntWrapper(starts));
+    long countTime = System.currentTimeMillis() - startTime;
+
+    final PackedInts.Mutable refs = PackedInts.getMutable(
+        pairs.size(), PackedInts.bitsRequired(uniqueTerms), 0);
+
+    // Iterate pairs and put the pairs at the proper starting positions
+    for (int pairIndex = 0 ; pairIndex < pairs.size() ; pairIndex++) {
+/*      if ((pairIndex & 0xFFFF) == 0) {
+        System.out.print("|");
+      }*/
+      int docID = pairs.getPrimary(pairIndex);
+      int destination = starts[docID]++;
+      refs.set(destination, pairs.getSecondary(pairIndex));
+    }
+//    System.out.println("\n");
+
+    if (ExposedSettings.debug) {
+      System.out.println(String.format(
+          "FacetMap: Extracted doc2in and refs %s from %d pairs for %d docIDs "
+          + "in %d seconds (%d of these seconds used for counting docID "
+          + "frequencies and creating doc2in structure)",
+          refs, pairs.size(), docCount,
+          (System.currentTimeMillis()-startTime)/1000, countTime/1000));
+    }
+    return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(
+        doc2ref, refs);
+  }
+
   public int getTagCount() {
     return indirectStarts[indirectStarts.length-1];
   }
@@ -355,7 +537,9 @@ public class FacetMap {
     int doc2inIndex = 0;
     int refIndex = 0;
     for (int docID = 0 ; docID < docCount ; docID++) {
+      // We could get this from the bucket sort at the cost of (sigh) more mem
       doc2ref.set(docID, refIndex);
+
       if (doc2inIndex == doc2in.size() ||
           doc2in.getPrimary(doc2inIndex) != docID) { // No entry
         continue;

@@ -55,7 +55,7 @@ public class TestExposedFacets extends TestCase {
       }
     }
     cache.purgeAllCaches();
-    helper.close();
+//    helper.close();
   }
 
 
@@ -1038,7 +1038,7 @@ public static final String MISCOUNT_REQUEST =
     //new ExposedHelper().close(); // Deletes old index
     final File LOCATION = ExposedHelper.INDEX_LOCATION;
     if (!LOCATION.exists()|| LOCATION.listFiles().length == 0) {
-      final int DOCCOUNT = 100000;
+      final int DOCCOUNT = 1000000;
       final int TERM_LENGTH = 20;
       final int MIN_SEGMENTS = 2;
       final List<String> FIELDS = Arrays.asList("a");
