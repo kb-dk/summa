@@ -2,8 +2,6 @@ package org.apache.lucene.util;
 
 import org.apache.lucene.util.packed.PackedInts;
 
-import java.util.Arrays;
-
 /**
  * Specialized high performance expandable list of integer pairs that can be sorted on both primary and secondary key.
  * </p><p>
@@ -33,7 +31,7 @@ s   * @param secondary secondary value.
   }
 
   /*
-   * Wrapper for {@link Arrays#binarySearch(int[], int)}. JavaDoc for return is
+     * Wrapper for {@link Arrays#binarySearch(int[], int)}. JavaDoc for return is
    * taken from Array's JavaDoc.
    * @param primary the primary key to search.
    * @return index of the search key, if it is contained in the array within the
@@ -239,5 +237,11 @@ s   * @param secondary secondary value.
   @Override
   public String toString() {
     return "DoubleIntArrayList(" + pairs + ")";
+  }
+
+  public void swap(int from, int to) {
+    long temp = pairs.get(from);
+    pairs.set(from, pairs.get(to));
+    pairs.set(to, temp);
   }
 }
