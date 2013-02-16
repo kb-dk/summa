@@ -65,7 +65,7 @@ public class TestFieldTermProvider extends TestCase {
     }
     
     assertEquals("There should be the right number of terms",
-        DOCCOUNT, termCount);
+                 DOCCOUNT, termCount);
     reader.close();
   }
 
@@ -163,6 +163,40 @@ public class TestFieldTermProvider extends TestCase {
       }
     }
     Collections.sort(exposed);
+  }
+
+  public void testTermDocIDPairDuplication() throws IOException {
+    ExposedIOFactory.forceFixedCodec = false;
+
+    helper.buildSpecificIndex(new String[][]{
+        {"a:a", "a:b", "a:b"}, // a:b is duplicated
+        {"a:b", "a:e", "a:f"}
+    });
+    AtomicReader segment =
+        ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+    Collator sorter = Collator.getInstance(new Locale("da"));
+
+    ExposedRequest.Field request = new ExposedRequest.Field(
+        "a", new NamedCollatorComparator(sorter));
+    FieldTermProvider segmentProvider =
+        new FieldTermProvider(segment, 0, request, true);
+    Iterator<ExposedTuple> ei = segmentProvider.getIterator(true);
+    Set<String> encountered = new HashSet<String>();
+    while (ei.hasNext()) {
+      final ExposedTuple tuple = ei.next();
+      if (tuple.docIDs != null) {
+        int doc;
+        while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+          String concat =
+              tuple.field + ":" + tuple.term.utf8ToString() + "->" + doc;
+          if (!encountered.add(concat)) {
+            fail("Already received " + concat + "'. Duplicate term->docID " +
+                 "should not happen");
+          }
+//          System.out.println(tuple + " docID=" + doc);
+        }
+      }
+    }
   }
 
   public void testDocIDMapping() throws IOException {
