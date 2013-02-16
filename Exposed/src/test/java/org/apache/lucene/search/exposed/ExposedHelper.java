@@ -1,6 +1,7 @@
 package org.apache.lucene.search.exposed;
 
 import com.ibm.icu.text.Collator;
+import com.sun.org.apache.xerces.internal.impl.dv.xs.AbstractDateTimeDV;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
@@ -8,6 +9,8 @@ import org.apache.lucene.index.IndexWriter;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -209,6 +212,23 @@ public class ExposedHelper {
           "a:a" + docID,
           "b:b" + docID / 2,
           "c:c" + docID % 2);
+    }
+    w.close(true);
+    return INDEX_LOCATION;
+  }
+
+  public File buildSpecificIndex(String[][] documents)
+      throws IOException {
+    IndexWriter w = getWriter();
+    int docID = 0;
+    for (String[] document: documents) {
+      List<String> fields = new ArrayList<String>(document.length+1);
+      fields.add(ID + ":" + docID);
+      fields.add(ALL + ":" + ALL);
+      fields.addAll(Arrays.asList(document));
+      String[] f = new String[fields.size()];
+      fields.toArray(f);
+      addDocument(w, f);
     }
     w.close(true);
     return INDEX_LOCATION;
