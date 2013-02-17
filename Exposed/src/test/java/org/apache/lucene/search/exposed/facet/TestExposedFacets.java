@@ -1028,7 +1028,7 @@ public static final String MISCOUNT_REQUEST =
           "</facetrequest>";
   public void testFacetScale()
       throws XMLStreamException, IOException, ParseException {
-    FacetMap.defaultImpl = FacetMap.IMPL.pass1;
+    FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.stable;
     //CodecProvider.setDefaultCodec("Standard");
 
     long totalTime = -System.currentTimeMillis();
