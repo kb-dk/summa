@@ -7,6 +7,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.FacetMap;
+import org.apache.lucene.search.exposed.facet.FacetMapFactory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IndexUtil;
 
@@ -357,7 +358,7 @@ public class TestFieldTermProvider extends TestCase {
       providers.add(ExposedFactory.createProvider(
           segment, null, Arrays.asList(field), new NamedNaturalComparator()));
     }
-    FacetMap map = FacetMap.createMap(1, providers);
+    FacetMap map = FacetMapFactory.createMap(1, providers);
     assertEquals(message + ". There should be the correct number of terms for " +
         "the single document in the map",
         termCount, map.getTermsForDocID(0).length);
