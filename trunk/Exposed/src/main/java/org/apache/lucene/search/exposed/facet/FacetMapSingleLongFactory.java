@@ -30,7 +30,7 @@ public class FacetMapSingleLongFactory {
     final long startTime = System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMap: Creating experimental single pass map for "
+          "FacetMap: Creating long single pass map for "
           + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
           + " with " + docCount + " documents)");
     }
