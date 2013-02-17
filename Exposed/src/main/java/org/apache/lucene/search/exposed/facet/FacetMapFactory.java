@@ -29,6 +29,8 @@ public class FacetMapFactory {
       case pass2: return FacetMapDualFactory.createMap(docCount, providers);
       case pass1long:
         return FacetMapSingleLongFactory.createMap(docCount, providers);
+      case pass1packed:
+        return FacetMapSinglePackedFactory.createMap(docCount, providers);
       default: throw new UnsupportedOperationException(
           "The implementation '" + impl + "' is unknown");
     }

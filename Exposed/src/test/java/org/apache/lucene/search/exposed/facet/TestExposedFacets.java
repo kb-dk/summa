@@ -40,6 +40,7 @@ public class TestExposedFacets extends TestCase {
     super.setUp();
     cache = ExposedCache.getInstance();
     helper = new ExposedHelper();
+    helper.deleteIndex();
   }
 
   @Override
@@ -1028,7 +1029,7 @@ public static final String MISCOUNT_REQUEST =
           "</facetrequest>";
   public void testFacetScale()
       throws XMLStreamException, IOException, ParseException {
-    FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.stable;
+    FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass1packed;
     //CodecProvider.setDefaultCodec("Standard");
 
     long totalTime = -System.currentTimeMillis();
