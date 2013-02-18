@@ -923,6 +923,10 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
         }
     }
 
+    public boolean containsKey(String key) {
+        return valueExists(key);
+    }
+
     /**
      * Get an {@link Iterator} over all key-value pairs in the
      * {@link ConfigurationStorage} backend of the {@code Configuration}.
