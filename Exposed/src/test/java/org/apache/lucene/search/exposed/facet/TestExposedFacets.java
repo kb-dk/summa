@@ -1049,7 +1049,7 @@ public class TestExposedFacets extends TestCase {
       "</facetrequest>";
   public void testFacetScale()
       throws XMLStreamException, IOException, ParseException {
-    FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass1packed;
+    FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
     //CodecProvider.setDefaultCodec("Standard");
 
     long totalTime = -System.currentTimeMillis();

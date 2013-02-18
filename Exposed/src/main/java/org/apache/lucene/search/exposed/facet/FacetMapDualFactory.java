@@ -40,13 +40,20 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
       // provider, which uses them for later resolving of Tag Strings.
       // If they are not collected here, the terms will be iterated again upon
       // first request for a faceting result.
-      DoubleIntArrayList indirectToOrdinal = new DoubleIntArrayList(100);
+      //DoubleIntArrayList indirectToOrdinal = new DoubleIntArrayList(100);
+
+      // No need to collect both - we just store the ordinal directly at the
+      // indirect position
+      PackedInts.Mutable i2o =  PackedInts.getMutable(
+          (int) providers.get(i).getOrdinalTermCount(),
+          PackedInts.bitsRequired(providers.get(i).getOrdinalTermCount()), 0);
       Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
       long uniqueCount = 0;
       BytesRef last = null;
       while (tuples.hasNext()) {
         ExposedTuple tuple = tuples.next();
-        indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
+        //indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
+        i2o.set((int) tuple.indirect, tuple.ordinal);
         int docID;
         while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
           tagCounts[(int) (tuple.docIDBase + docID)]++;
@@ -59,7 +66,7 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
       }
       if (providers.get(i) instanceof GroupTermProvider) {
         // Not at all OO
-        PackedInts.Reader i2o = indirectToOrdinal.getPacked();
+//        PackedInts.Reader i2o = indirectToOrdinal.getPacked();
         ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
         if (ExposedSettings.debug) {
           System.out.println(String.format(
