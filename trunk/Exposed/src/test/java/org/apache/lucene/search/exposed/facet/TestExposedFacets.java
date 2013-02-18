@@ -40,7 +40,7 @@ public class TestExposedFacets extends TestCase {
     super.setUp();
     cache = ExposedCache.getInstance();
     helper = new ExposedHelper();
-    helper.deleteIndex();
+//    helper.deleteIndex();
   }
 
   @Override

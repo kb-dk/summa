@@ -8,8 +8,8 @@
   */
 package org.apache.lucene.util;
 
+import org.apache.lucene.util.packed.DoublePackedPair;
 import org.apache.lucene.util.packed.PackedInts;
-import org.apache.lucene.util.packed.PackedPair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,8 @@ public class ExpandablePackedPair {
 
   private final int chunkBits;
   private final int chunkLength;
-  private final List<PackedPair> chunks = new ArrayList<PackedPair>();
+  private final List<DoublePackedPair> chunks =
+      new ArrayList<DoublePackedPair>();
   private final int primaryBPV;
   private final int secondaryBPV;
   private final long secondaryOffset;
@@ -45,13 +46,13 @@ public class ExpandablePackedPair {
   }
 
   public void countUniquePrimaries(int[] counters) {
-    for (PackedPair chunk: chunks) {
+    for (DoublePackedPair chunk: chunks) {
       chunk.countUniquePrimaries(counters);
     }
   }
 
   public void assignSecondaries(int[] offsets, PackedInts.Mutable destination) {
-    for (PackedPair chunk: chunks) {
+    for (DoublePackedPair chunk: chunks) {
       chunk.assignSecondaries(offsets, destination);
     }
   }
@@ -62,7 +63,7 @@ public class ExpandablePackedPair {
 
   private void ensureSpace(final int index) {
     while (chunks.size() <= (index >>> chunkBits)) {
-        chunks.add(new PackedPair(
+        chunks.add(new DoublePackedPair(
             chunkLength, primaryBPV, secondaryBPV, secondaryOffset));
         // TODO: Detailed OOM
     }
