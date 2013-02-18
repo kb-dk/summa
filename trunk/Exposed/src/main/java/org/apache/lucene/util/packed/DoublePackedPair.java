@@ -5,7 +5,7 @@ package org.apache.lucene.util.packed;
  */
 public class DoublePackedPair {
   private final PackedInts.Mutable values;
-  private final long secondaryOffset;
+  private long secondaryOffset; // Extraction only
   private final int primaryShift;
   private final int secondaryMask;
   private int size = 0;
@@ -29,6 +29,7 @@ public class DoublePackedPair {
   }
 
   public void assignSecondaries(int[] offsets, PackedInts.Mutable destination) {
+    final long secondaryOffset = this.secondaryOffset; // For speed
     for (int i = 0 ; i < size; i++) {
       final long value = values.get(i);
       destination.set(offsets[(int)(value >>> primaryShift)]++,
@@ -36,4 +37,7 @@ public class DoublePackedPair {
     }
   }
 
+  public void setSecondaryOffset(long secondaryOffset) {
+    this.secondaryOffset = secondaryOffset;
+  }
 }

@@ -23,7 +23,7 @@ public class ExpandablePackedPair {
       new ArrayList<DoublePackedPair>();
   private final int primaryBPV;
   private final int secondaryBPV;
-  private final long secondaryOffset;
+  private long secondaryOffset; // Used for extraction only
   private int size = 0;
 
   public ExpandablePackedPair(
@@ -66,6 +66,13 @@ public class ExpandablePackedPair {
         chunks.add(new DoublePackedPair(
             chunkLength, primaryBPV, secondaryBPV, secondaryOffset));
         // TODO: Detailed OOM
+    }
+  }
+
+  public void setSecondaryOffset(long secondaryOffset) {
+    this.secondaryOffset = secondaryOffset;
+    for (DoublePackedPair chunk: chunks) {
+      chunk.setSecondaryOffset(secondaryOffset);
     }
   }
 

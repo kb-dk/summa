@@ -6,7 +6,6 @@ import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.GroupTermProvider;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.DoubleIntArrayList;
 import org.apache.lucene.util.ExpandablePackedPair;
 import org.apache.lucene.util.packed.MonotonicReaderFactory;
 import org.apache.lucene.util.packed.PackedIntWrapper;
@@ -14,6 +13,7 @@ import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Single pass builder that collects termID-docID pairs in space optimized
@@ -32,118 +32,37 @@ public class FacetMapSinglePackedFactory {
     }
     final int[] indirectStarts = new int[providers.size() +1];
     int start = 0;
-    long uniqueTime = -System.currentTimeMillis();
+    long indexExtractTime = -System.currentTimeMillis();
+    long refCount = 0;
+
+    List<ProviderData> providerDatas = extractProviderDatas(docCount, providers);
+    new ArrayList<ProviderData>(providers.size());
 
     // Collects unordered docID -> indirect
     List<ExpandablePackedPair> providerMaps =
         new ArrayList<ExpandablePackedPair>(providers.size());
-//    System.out.println("******************************");
     long totalUniqueTerms = 0;
-    for (int i = 0 ; i < providers.size() ; i++) {
+    for (int i = 0 ; i < providerDatas.size() ; i++) {
+      ProviderData providerData = providerDatas.get(i);
       indirectStarts[i] = start;
       final long termOffset = start;
-      ExpandablePackedPair providerMap = new ExpandablePackedPair(
-          PackedInts.bitsRequired(docCount),
-          PackedInts.bitsRequired(providers.get(i).getOrdinalTermCount()),
-          termOffset);
-//      System.out.println("------------------------------");
-      Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
-
-      // indirect->ordinal are collected in order to be assigned to the current
-      // provider, which uses them for later resolving of Tag Strings.
-      // If they are not collected here, the terms will be iterated again upon
-      // first request for a faceting result.
-      DoubleIntArrayList indirectToOrdinal = new DoubleIntArrayList(100);
-      BytesRef last = null;
-      int localUniqueTerms = 0;
-      long localTime = -System.currentTimeMillis();
-      while (tuples.hasNext()) {
-        ExposedTuple tuple = tuples.next();
-        indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
-        int docID;
-        while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-//          System.out.println("*** " + tuple + " docID " + docID);
-          providerMap.add((int)(tuple.docIDBase + docID), (int)tuple.indirect);
-        }
-        if (last == null || !last.equals(tuple.term)) {
-          last = tuple.term;
-          localUniqueTerms++;
-//          System.out.println("FaM got: " + last.utf8ToString());
-        }
-      }
+      ExpandablePackedPair providerMap = providerData.providerMap;
+      providerMap.setSecondaryOffset(termOffset);
       providerMaps.add(providerMap);
-      totalUniqueTerms += localUniqueTerms;
-      localTime += System.currentTimeMillis();
-
-      start += indirectToOrdinal.size();
-      if (providers.get(i) instanceof GroupTermProvider) {
-        // Not at all OO
-        PackedInts.Reader i2o = indirectToOrdinal.getPacked();
-        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
-        if (ExposedSettings.debug) {
-          System.out.println(String.format(
-              "FacetMap: Assigning indirects for %d unique terms, " +
-              "%d references, extracted in %d ms, to %s: %s",
-              localUniqueTerms, providerMap.size(), localTime,
-              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(),
-              i2o));
-        }
-      } else if (ExposedSettings.debug) {
-        System.out.println(String.format(
-            "FacetMap: Hoped for GroupTermProvider, but got %s. " +
-            "Collected ordered ordinals are discarded",
-            providers.get(i).getClass()));
-      }
-  /*
-      { // Sanity test
-        PackedInts.Mutable i2o = indirectToOrdinal.getPacked();
-        PackedInts.Reader authoritative = providers.get(i).getOrderedOrdinals();
-        if (i2o.size() != authoritative.size()) {
-          throw new IllegalStateException(
-              "Expected indirect to ordinal map to have size "
-              + authoritative.size() + " but got " + i2o.size());
-        }
-        for (int j = 0 ; j < i2o.size() ; j++) {
-          if (i2o.get(j) != authoritative.get(j)) {
-            throw new IllegalStateException(
-                "Expected indirect to ordinal map entry " + j
-                + " to have ordinal value " + authoritative.get(j)
-                + " but it had " + i2o.get(j));
-          }
-        }
-      }
-    */
-//      System.out.println("..............................");
-/*      long uc = providers.get(i).getUniqueTermCount();
-      if (uc != uniqueCount) {
-        throw new IllegalStateException(
-            "The expected unique term count should be " + uc + " but was "
-            + uniqueCount);
-      }*/
-      //start += providers.get(i).getUniqueTermCount();
+      totalUniqueTerms += providerData.uniqueTerms;
+      refCount += providerMap.size();
+      start += providerData.uniqueTerms;
     }
-    uniqueTime += System.currentTimeMillis();
     indirectStarts[indirectStarts.length-1] = start;
+    indexExtractTime += System.currentTimeMillis();
+
     if (ExposedSettings.debug) {
       System.out.println(
           "FacetMap: Full index iteration in "
           + (System.currentTimeMillis() - startTime) + "ms. "
           + "Commencing extraction of structures");
     }
-         /*
-    { // Sanity check
-      int[] verifyCount = new int[docCount];
-      countTags(verifyCount);
-      for (int i = 0 ; i < tagCounts.length ; i++) {
-        if (verifyCount[i] != tagCounts[i]) {
-          throw new IllegalStateException(
-              "At index " + i + "/" + tagCounts.length
-              + ", the expected tag count was " + verifyCount[i]
-              + " with actual count " + tagCounts[i]);
-        }
-      }
-    }
-           */
+
     long tagExtractTime = - System.currentTimeMillis();
     Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
         extractTags(providerMaps, docCount, totalUniqueTerms);
@@ -151,12 +70,154 @@ public class FacetMapSinglePackedFactory {
     final PackedInts.Reader doc2ref = pair.getKey();
     final PackedInts.Reader refs = pair.getValue();
     if (ExposedSettings.debug) {
-      System.out.println(
-              "FacetMap: Unique count, tag counts and tag fill (" + docCount
-              + " documents, " + providers.size() + " providers): "
-              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
+      System.out.println(String.format(
+          "FacetMap: docs=%s, terms=%s, refs=%d. Term extraction time=%dms,"
+          + " Secondary structure processing time=%dms",
+          docCount, totalUniqueTerms, refCount, indexExtractTime,
+          tagExtractTime));
     }
     return new FacetMap(providers, indirectStarts, doc2ref, refs);
+  }
+
+  private static List<ProviderData> extractProviderDatas(
+      int docCount, List<TermProvider> providers) {
+    List<ProviderData> providerDatas =
+        new ArrayList<ProviderData>(providers.size());
+    if (ExposedSettings.threads == 1 || providers.size() == 1) {
+      if (ExposedSettings.debug) {
+        System.out.println(String.format(
+            "FacetMap: Performing single threaded extraction of term " +
+            "data from %d providers",
+            providers.size()));
+      }
+      for (TermProvider provider: providers) {
+        try {
+          providerDatas.add(extractProviderData(docCount, provider));
+        } catch (IOException e) {
+          throw new RuntimeException(
+              "Unable to extract data for " + provider, e);
+        }
+      }
+      return providerDatas;
+    }
+
+    if (ExposedSettings.debug) {
+      System.out.println(String.format(
+          "FacetMap: Starting a maximum of %d threads for extracting term " +
+          "data from %d providers",
+          ExposedSettings.threads, providers.size()));
+    }
+    long realTime = -System.currentTimeMillis();
+    long summedTime = 0;
+    final ExecutorService executor =
+        Executors.newFixedThreadPool(ExposedSettings.threads);
+    List<Future<ProviderData>> jobs =
+        new ArrayList<Future<ProviderData>>(providers.size());
+    for (TermProvider provider: providers) {
+      jobs.add(executor.submit(new ProviderCallable(docCount, provider)));
+    }
+    for (Future<ProviderData> job: jobs) {
+      try {
+        ProviderData pd = job.get();
+        providerDatas.add(pd);
+        summedTime += pd.processingTime;
+      } catch (InterruptedException e) {
+        throw new RuntimeException(
+            "Interrupted while waiting for data extraction from provider", e);
+      } catch (ExecutionException e) {
+        throw new RuntimeException(
+            "ExecutionException extracting data from provider", e);
+      }
+    }
+    realTime += System.currentTimeMillis();
+    if (ExposedSettings.debug) {
+      System.out.println(String.format(
+          "FacetMap: Finished running max %d threads for %d providers. " +
+          "Real time spend: %dms. Summed thread time: %dms",
+          ExposedSettings.threads, providers.size(), realTime, summedTime));
+    }
+    return providerDatas;
+  }
+
+  private static class ProviderCallable implements Callable<ProviderData> {
+    private final int docCount;
+    private final TermProvider provider;
+
+    private ProviderCallable(int docCount, TermProvider provider) {
+      this.docCount = docCount;
+      this.provider = provider;
+    }
+
+    @Override
+    public ProviderData call() throws Exception {
+      return extractProviderData(docCount, provider);
+    }
+  }
+
+  private static class ProviderData {
+    public final TermProvider provider; // For debug
+    public final ExpandablePackedPair providerMap;
+    public final int uniqueTerms;
+    public final long processingTime;
+
+    public ProviderData(
+        TermProvider provider, ExpandablePackedPair providerMap,
+        int uniqueTerms, long processingTime) {
+      this.provider = provider;
+      this.providerMap = providerMap;
+      this.uniqueTerms = uniqueTerms;
+      this.processingTime = processingTime;
+    }
+  }
+
+  private static ProviderData extractProviderData(
+      int docCount, TermProvider provider) throws IOException {
+    long processingTime = -System.currentTimeMillis();
+    ExpandablePackedPair providerMap = new ExpandablePackedPair(
+        PackedInts.bitsRequired(docCount),
+        PackedInts.bitsRequired(provider.getOrdinalTermCount()),
+        0); // TODO: Add termOffset later
+    Iterator<ExposedTuple> tuples = provider.getIterator(true);
+    PackedInts.Mutable i2o =  PackedInts.getMutable(
+        (int) provider.getOrdinalTermCount(),
+        PackedInts.bitsRequired(provider.getOrdinalTermCount()), 0);
+    BytesRef last = null;
+    int uniqueTerms = 0;
+    while (tuples.hasNext()) {
+      ExposedTuple tuple = tuples.next();
+//        indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
+      i2o.set((int) tuple.indirect, tuple.ordinal);
+      int docID;
+      while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+//          System.out.println("*** " + tuple + " docID " + docID);
+        providerMap.add((int)(tuple.docIDBase + docID), (int)tuple.indirect);
+      }
+      if (last == null || !last.equals(tuple.term)) { // TODO: Remove this check
+        last = tuple.term;
+        uniqueTerms++;
+//          System.out.println("FaM got: " + last.utf8ToString());
+      }
+    }
+
+    processingTime += System.currentTimeMillis();
+    if (provider instanceof GroupTermProvider) {
+      // Not at all OO
+      ((GroupTermProvider)provider).setOrderedOrdinals(i2o);
+      if (ExposedSettings.debug) {
+        System.out.println(String.format(
+            "FacetMap: Assigning indirects for %d unique terms, " +
+            "%d references, extracted in %d ms, to %s: %s",
+            uniqueTerms, providerMap.size(), processingTime,
+            ((GroupTermProvider)provider).getRequest().getFieldNames(),
+            i2o));
+      }
+    } else if (ExposedSettings.debug) {
+      System.out.println(String.format(
+          "FacetMap: Hoped for GroupTermProvider, but got %s. " +
+          "Collected ordered ordinals are discarded",
+          provider.getClass()));
+    }
+    return new ProviderData(provider, providerMap, uniqueTerms, processingTime);
   }
 
   /**
