@@ -6,12 +6,11 @@ import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.GroupTermProvider;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.ExpandablePackedPair;
 import org.apache.lucene.util.DoubleIntArrayList;
+import org.apache.lucene.util.ExpandablePackedPair;
 import org.apache.lucene.util.packed.MonotonicReaderFactory;
 import org.apache.lucene.util.packed.PackedIntWrapper;
 import org.apache.lucene.util.packed.PackedInts;
-import org.apache.lucene.util.packed.PackedPair;
 
 import java.io.IOException;
 import java.util.*;
@@ -27,7 +26,7 @@ public class FacetMapSinglePackedFactory {
     final long startTime = System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMap: Creating packed single pass map for "
+          "FacetMap: Creating dual-packed single pass map for "
           + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
           + " with " + docCount + " documents)");
     }
