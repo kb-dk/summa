@@ -241,7 +241,6 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
      * Optional. Default is {@link FacetMapFactory#defaultImpl}.
      */
     public static final String CONF_EXPOSED_FACET_MAP = "exposed.facetmap";
-    public static final String DEFAULT_EXPOSED_FACET_MAP = FacetMapFactory.defaultImpl.toString();
 
     /**
      * If true, the Exposed faceting module outputs debug information on stdout.
@@ -249,7 +248,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
      * Optional. Default is {@link ExposedSettings#debug}.
      */
     public static final String CONF_EXPOSED_DEBUG = "exposed.debug";
-    public static final boolean DEFAULT_EXPOSED_DEBUG = ExposedSettings.debug;
+
+    /**
+     * This number of threads will be used for Exposed processing.
+     * </p><p>
+     * Optional. Default is {@link ExposedSettings#threads}.
+     */
+    public static final String CONF_EXPOSED_THREADS = "exposed.threads";
 
     /**
      * The FSDirectory-implementation to use. Valid values are 'nio', 'mmap' and 'auto' with nio being the old and safe
@@ -310,12 +315,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                 exposedFeedback += " Exposed FacetMap impl=" + impl;
                 FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.valueOf(impl);
             }
-            if (conf.containsKey(CONF_EXPOSED_DEBUG)) {
-                boolean debug = conf.getBoolean(CONF_EXPOSED_DEBUG);
-                exposedFeedback += " Exposed debug=" + debug;
-                ExposedSettings.debug = debug;
-
-            }
+          if (conf.containsKey(CONF_EXPOSED_DEBUG)) {
+              boolean debug = conf.getBoolean(CONF_EXPOSED_DEBUG);
+              exposedFeedback += " Exposed debug=" + debug;
+              ExposedSettings.debug = debug;
+          }
+          if (conf.containsKey(CONF_EXPOSED_THREADS)) {
+              int threads = conf.getInt(CONF_EXPOSED_THREADS);
+              exposedFeedback += " Exposed threads=" + threads;
+              ExposedSettings.threads = threads;
+          }
         }
         int maxBooleanClauses = conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, DEFAULT_MAX_BOOLEAN_CLAUSES);
         log.trace("Setting max boolean clauses to " + maxBooleanClauses);

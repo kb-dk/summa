@@ -6,7 +6,7 @@ package org.apache.lucene.util.packed;
 public class PackedPair {
   private final PackedInts.Mutable primaries;
   private final PackedInts.Mutable secondaries;
-  private final long secondaryOffset;
+  private long secondaryOffset;
   private int size = 0;
 
   public PackedPair(
@@ -64,5 +64,7 @@ public class PackedPair {
     return secondaries;
   }
 
-
+  public void setSecondaryOffset(long secondaryOffset) {
+    this.secondaryOffset = secondaryOffset;
+  }
 }

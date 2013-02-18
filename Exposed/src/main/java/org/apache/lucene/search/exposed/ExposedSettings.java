@@ -35,6 +35,11 @@ public class ExposedSettings {
   public static boolean debug = false;
 
   /**
+   * Where applicable, this number of threads will be used for speedup
+   */
+  public static int threads = 2;
+
+  /**
    * Construct a PackedInts.Mutable based on the given values and the overall
    * priority between memory usage and speed. If the maxValue is below 2^4 of
    * between 2^32 and 2^40, a standard PackedInts.Mutable is created, else the
