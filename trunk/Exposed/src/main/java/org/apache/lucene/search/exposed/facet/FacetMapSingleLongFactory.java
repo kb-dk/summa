@@ -94,8 +94,7 @@ public class FacetMapSingleLongFactory {
             "Collected ordered ordinals are discarded",
             providers.get(i).getClass()));
       }
-  /*
-      { // Sanity test
+/*      { // Sanity test
         PackedInts.Mutable i2o = indirectToOrdinal.getPacked();
         PackedInts.Reader authoritative = providers.get(i).getOrderedOrdinals();
         if (i2o.size() != authoritative.size()) {
@@ -111,8 +110,7 @@ public class FacetMapSingleLongFactory {
                 + " but it had " + i2o.get(j));
           }
         }
-      }
-    */
+      }*/
 //      System.out.println("..............................");
 /*      long uc = providers.get(i).getUniqueTermCount();
       if (uc != uniqueCount) {
@@ -131,23 +129,9 @@ public class FacetMapSingleLongFactory {
           + "Commencing extraction of structures. Temporary map: "
           + pairs);
     }
-         /*
-    { // Sanity check
-      int[] verifyCount = new int[docCount];
-      countTags(verifyCount);
-      for (int i = 0 ; i < tagCounts.length ; i++) {
-        if (verifyCount[i] != tagCounts[i]) {
-          throw new IllegalStateException(
-              "At index " + i + "/" + tagCounts.length
-              + ", the expected tag count was " + verifyCount[i]
-              + " with actual count " + tagCounts[i]);
-        }
-      }
-    }
-           */
     long tagExtractTime = - System.currentTimeMillis();
     Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
-        extractTags(pairs, docCount, totalUniqueTerms);
+        extractReferences(pairs, docCount, totalUniqueTerms);
     tagExtractTime += System.currentTimeMillis();
     final PackedInts.Reader doc2ref = pair.getKey();
     final PackedInts.Reader refs = pair.getValue();
@@ -161,19 +145,16 @@ public class FacetMapSingleLongFactory {
   }
 
   /**
-   * Sorts the pairs by docID (the primary in pairs). The order of the indirects
-   * (the secondary in pairs) is not guaranteed.
-   * </p><p>
    * This operation temporarily allocates a {@code int[docCount]} and runs in
    * <tt>O(n)</tt>, where n is {@code pairs.size()}. In reality, two passes is
    * done on <tt>pairs</tt> where the first one is sequential and the second one
-   * is
+   * performs scattered writes in the destination structure.
    * @param pairs    the docID->indirect mao.
    * @param docCount the number of documents.
    * @param uniqueTerms the number of unique terms (and thus indirects).
    */
-  private static Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
-      DoubleIntArrayList pairs, int docCount, long uniqueTerms) {
+  private static Map.Entry<PackedInts.Reader, PackedInts.Reader>
+  extractReferences(DoubleIntArrayList pairs, int docCount, long uniqueTerms) {
     long startTime = System.currentTimeMillis();
 
     // Count tags and convert the tagCounts to starting positions
@@ -190,10 +171,16 @@ public class FacetMapSingleLongFactory {
     starts[starts.length-1] = index;
 
     // The starting positions are used in the final structure, so we absorb them
-    // right away. Important: We copy the values (by reducing) as they are
-    // changed while constructing the ref-structure.
-    final PackedInts.Reader doc2ref = MonotonicReaderFactory.reduce(
-        new PackedIntWrapper(starts));
+    // right away. Important: We guarantee value copying (by reducing or
+    // explicit copy) as they are changed while constructing the ref-structure.
+    PackedInts.Reader direct = new PackedIntWrapper(starts);
+    PackedInts.Reader doc2ref = MonotonicReaderFactory.reduce(direct);
+    if (direct == doc2ref) {
+      int[] startsCopy = new int[starts.length];
+      System.arraycopy(starts, 0, startsCopy, 0, starts.length);
+      doc2ref = new PackedIntWrapper(startsCopy);
+    }
+
     long countTime = System.currentTimeMillis() - startTime;
 
     final PackedInts.Mutable refs = PackedInts.getMutable(

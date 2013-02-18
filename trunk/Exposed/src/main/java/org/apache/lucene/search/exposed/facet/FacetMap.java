@@ -1,19 +1,12 @@
 package org.apache.lucene.search.exposed.facet;
 
-import org.apache.lucene.index.DocsEnum;
-import org.apache.lucene.search.exposed.*;
+import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.DoubleIntArrayList;
-import org.apache.lucene.util.packed.MonotonicReaderFactory;
-import org.apache.lucene.util.packed.PackedIntWrapper;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.AbstractMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Provides a map from docID to tagIDs (0 or more / document), where tagID
@@ -74,14 +67,6 @@ public class FacetMap {
     }
   }
 
-  public int[] getIndirectStarts() {
-    return indirectStarts;
-  }
-
-  public List<TermProvider> getProviders() {
-    return providers;
-  }
-
   public BytesRef getOrderedTerm(final int termIndirect) throws IOException {
     for (int i = 0 ; i < providers.size() ; i++) {
       if (termIndirect < indirectStarts[i+1]) {
@@ -138,5 +123,21 @@ public class FacetMap {
       return bytes / 1024 + " KB";
     }
     return bytes + " bytes";
+  }
+
+  public int[] getIndirectStarts() {
+    return indirectStarts;
+  }
+
+  public List<TermProvider> getProviders() {
+    return providers;
+  }
+
+  public PackedInts.Reader getDoc2ref() {
+    return doc2ref;
+  }
+
+  public PackedInts.Reader getRefs() {
+    return refs;
   }
 }

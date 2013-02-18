@@ -6,7 +6,10 @@ import junit.framework.TestSuite;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.*;
-import org.apache.lucene.search.exposed.*;
+import org.apache.lucene.search.exposed.ExposedCache;
+import org.apache.lucene.search.exposed.ExposedHelper;
+import org.apache.lucene.search.exposed.ExposedIOFactory;
+import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.util.IndexUtil;
 import org.apache.lucene.util.packed.PackedInts;
@@ -144,7 +147,7 @@ public class TestHierarchicalTermProvider extends TestCase {
       TermsEnum terms = mTerms.iterator(null);
       while (terms.next() != null) {
         System.out.print(terms.term().utf8ToString() + ":");
-        docsEnum = terms.docs(r.getLiveDocs(), docsEnum);
+        docsEnum = terms.docs(r.getLiveDocs(), docsEnum, 0);
         while (docsEnum.nextDoc() != DocsEnum.NO_MORE_DOCS) {
           System.out.print(" " + docsEnum.docID());
         }

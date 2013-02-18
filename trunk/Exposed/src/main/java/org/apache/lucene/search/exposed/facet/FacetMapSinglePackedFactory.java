@@ -192,8 +192,13 @@ public class FacetMapSinglePackedFactory {
     // The starting positions are used in the final structure, so we absorb them
     // right away. Important: We copy the values (by reducing) as they are
     // changed while constructing the ref-structure.
-    final PackedInts.Reader doc2ref = MonotonicReaderFactory.reduce(
-        new PackedIntWrapper(starts));
+    PackedInts.Reader direct = new PackedIntWrapper(starts);
+    PackedInts.Reader doc2ref = MonotonicReaderFactory.reduce(direct);
+    if (direct == doc2ref) {
+      int[] startsCopy = new int[starts.length];
+      System.arraycopy(starts, 0, startsCopy, 0, starts.length);
+      doc2ref = new PackedIntWrapper(startsCopy);
+    }
     long countTime = System.currentTimeMillis() - startTime;
 
     int fullSize = 0;

@@ -174,7 +174,7 @@ public class FieldTermProvider extends TermProviderImpl {
 
     lastOrdinalRequest = ordinal;
     //
-    return termsEnum.docs(getReader().getLiveDocs(), reuse);
+    return termsEnum.docs(getReader().getLiveDocs(), reuse, 0); // 0 as we do not need frequencies
   }
 
   @Override

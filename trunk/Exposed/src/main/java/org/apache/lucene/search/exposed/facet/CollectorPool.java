@@ -1,7 +1,5 @@
 package org.apache.lucene.search.exposed.facet;
 
-import org.apache.lucene.search.exposed.ExposedSettings;
-
 import java.util.*;
 
 /**
@@ -309,5 +307,9 @@ public class CollectorPool {
   public synchronized void setMaxFilled(int maxFilled) {
     this.maxFilled = maxFilled;
     filled.clear();
+  }
+
+  public FacetMap getMap() {
+    return map;
   }
 }
