@@ -14,7 +14,7 @@ public class FacetMapFactory {
   public enum IMPL {stable, pass2, pass1long, pass1packed}
 
   // stable is well-tested, pass2 is deprecated and pass1long is experimental
-  public static IMPL defaultImpl = IMPL.pass1packed;
+  public static IMPL defaultImpl = IMPL.stable;
 
   public static FacetMap createMap(int docCount, List<TermProvider> providers)
       throws IOException {
