@@ -226,7 +226,7 @@ public class TermStatSource implements Closeable {
                 // Extracting stats
                 long tf = 0;
                 long df = 0;
-                docsEnum = termsEnum.docs(ir.getLiveDocs(), docsEnum);
+                docsEnum = termsEnum.docs(ir.getLiveDocs(), docsEnum, 0); // No need for foc-freq
                 while (docsEnum.nextDoc() != DocsEnum.NO_MORE_DOCS) {
                     tf += docsEnum.freq();
                     df++;
