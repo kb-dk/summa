@@ -48,6 +48,8 @@ import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.ExposedCache;
+import org.apache.lucene.search.exposed.ExposedSettings;
+import org.apache.lucene.search.exposed.facet.FacetMapFactory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.store.NIOFSDirectory;
@@ -228,6 +230,28 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     public static final String DEFAULT_FILTER_MATCHALL = "recordBase:sb*";
 
     /**
+     * FacetMap implementation for Exposed faceting. Valid values are {@link FacetMapFactory.IMPL}:
+     * <ul>
+     *     <li>stable: Well tested triple pass: Low mem, long startup</li>
+     *     <li>pass2: Slightly tweaked dual pass: Same mem, 75% startup time, relative to stable</li>
+     *     <li>pass1long: Probably faulty long[] single pass: Very high mem, 75% startup time, relative to pass2</li>
+     *     <li>pass1packed: Probably faulty packed single pass: Very high mem, ?% startup time, relative to pass2</li>
+     * </ul>
+     * </p><p>
+     * Optional. Default is {@link FacetMapFactory#defaultImpl}.
+     */
+    public static final String CONF_EXPOSED_FACET_MAP = "exposed.facetmap";
+    public static final String DEFAULT_EXPOSED_FACET_MAP = FacetMapFactory.defaultImpl.toString();
+
+    /**
+     * If true, the Exposed faceting module outputs debug information on stdout.
+     * </p><p>
+     * Optional. Default is {@link ExposedSettings#debug}.
+     */
+    public static final String CONF_EXPOSED_DEBUG = "exposed.debug";
+    public static final boolean DEFAULT_EXPOSED_DEBUG = ExposedSettings.debug;
+
+    /**
      * The FSDirectory-implementation to use. Valid values are 'nio', 'mmap' and 'auto' with nio being the old and safe
      * implementation, at the cost of performance. mmap uses memory mapping and performs better. If is not recommended
      * for 32 bit machines. auto uses Lucene's auto-selector.
@@ -279,6 +303,20 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         super(conf);
         log.debug("Constructing LuceneSearchNode");
         this.conf = conf;
+        String exposedFeedback = "";
+        {
+            if (conf.containsKey(CONF_EXPOSED_FACET_MAP)) {
+                String impl = conf.getString(CONF_EXPOSED_FACET_MAP);
+                exposedFeedback += " Exposed FacetMap impl=" + impl;
+                FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.valueOf(impl);
+            }
+            if (conf.containsKey(CONF_EXPOSED_DEBUG)) {
+                boolean debug = conf.getBoolean(CONF_EXPOSED_DEBUG);
+                exposedFeedback += " Exposed debug=" + debug;
+                ExposedSettings.debug = debug;
+
+            }
+        }
         int maxBooleanClauses = conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, DEFAULT_MAX_BOOLEAN_CLAUSES);
         log.trace("Setting max boolean clauses to " + maxBooleanClauses);
         BooleanQuery.setMaxClauseCount(maxBooleanClauses);
@@ -311,8 +349,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             fsDirectoryT = DEFAULT_FSDIRECTORY;
         }
         fsDirectory = fsDirectoryT;
-        log.info(String.format("Constructed LuceneSearchNode(FSDirectory='%s')",
-                               fsDirectory));
+        log.info(String.format("Constructed LuceneSearchNode(FSDirectory='%s')%s",
+                               fsDirectory, exposedFeedback));
     }
 
     private void setupMoreLikeThis(Configuration conf) {
@@ -478,7 +516,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         log.debug("MoreLikeThis created for reader for '" + location + "'");
     }
 
-    @SuppressWarnings("ObjectToString")
+    @SuppressWarnings("Objectstatng")
     @Override
     public void managedClose() {
         log.trace("close called");
