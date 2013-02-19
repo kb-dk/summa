@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
@@ -38,10 +39,7 @@ import org.w3c.dom.NodeList;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Trivial implementation of a Lucene IndexDescriptor.
@@ -191,6 +189,13 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
                              Field.TermVector.NO,
                              new SummaNumberAnalyzer());
         }
+        if (baseFieldName.equals(COLLATED_DA)) { // Hack!
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.NO,
+                             Field.TermVector.NO,
+                             new SummaStandardAnalyzer(Collator.getInstance(new Locale("da"))));
+        }
 
         throw new IllegalArgumentException(String.format(
                 "The base field '%s' is unknown by the LuceneIndexDescriptor",
@@ -235,8 +240,7 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
             field.setAnalyze(false);
         } else if (index == Field.Index.NOT_ANALYZED_NO_NORMS) {
             throw new UnsupportedOperationException(
-                    "Storing with no norms is not supported. Offending field "
-                    + "has name '" + name + "'");
+                    "Storing with no norms is not supported. Offending field has name '" + name + "'");
         } else if (index == Field.Index.ANALYZED) {
             field.setDoIndex(true);
             field.setAnalyze(true);

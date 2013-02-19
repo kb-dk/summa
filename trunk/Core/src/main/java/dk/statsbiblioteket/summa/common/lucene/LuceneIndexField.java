@@ -32,8 +32,7 @@ import java.text.ParseException;
 public class LuceneIndexField extends
                               IndexField<Analyzer, Tokenizer, IndexFilter> {
     /** The field term vector. */
-    private Field.TermVector termVector =
-                                        Field.TermVector.WITH_POSITIONS_OFFSETS;
+    private Field.TermVector termVector = Field.TermVector.WITH_POSITIONS_OFFSETS;
 
     /**
      * Creates an empty Lucene index field.
@@ -51,13 +50,11 @@ public class LuceneIndexField extends
     }
 
     
-    public LuceneIndexField(Node node, FieldProvider indexFieldFieldProvider)
-                                                         throws ParseException {
+    public LuceneIndexField(Node node, FieldProvider indexFieldFieldProvider) throws ParseException {
         super(node, indexFieldFieldProvider);
     }
 
-    public LuceneIndexField(IndexField<Analyzer, Tokenizer, IndexFilter>
-            parent) {
+    public LuceneIndexField(IndexField<Analyzer, Tokenizer, IndexFilter> parent) {
         super(parent);
     }
 

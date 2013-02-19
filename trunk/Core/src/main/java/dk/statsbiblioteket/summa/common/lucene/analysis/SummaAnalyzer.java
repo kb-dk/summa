@@ -14,10 +14,14 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
+import org.apache.lucene.collation.ICUCollationAttributeFactory;
+import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 
 import java.io.Reader;
@@ -25,6 +29,8 @@ import java.io.Reader;
 /**
  * The SummaAnalyzer defines a configurable chain for tokenization.
  *
+ * If a Collator is provided, the analyzer generated collation keys with the original String embedded.
+ * The original String can be extracted by {@link #getOriginalString}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -42,9 +48,17 @@ public class SummaAnalyzer extends Analyzer {
     private ReplaceFactory transliteratorFactory;
     private ReplaceFactory tokenReplacerFactory;
 
+    private Collator collator = null;
+    private ICUCollationAttributeFactory factory = null;
+
     @Override
     protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-        return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_40, reader));
+        //return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_40, reader));
+        if (collator == null) {
+            return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_40, reader));
+        }
+        KeywordTokenizer tokenizer = new KeywordTokenizer(factory, reader, KeywordTokenizer.DEFAULT_BUFFER_SIZE);
+        return new TokenStreamComponents(tokenizer, tokenizer);
     }
 
     @Override
@@ -52,6 +66,10 @@ public class SummaAnalyzer extends Analyzer {
         return wrap(reader);
     }
 
+    public SummaAnalyzer(String transliterationRules, boolean keepDefaultTransliterations, String tokenRules,
+                         boolean keepDefaultTokenRules, boolean ignoreCase){
+        this(transliterationRules, keepDefaultTransliterations, tokenRules, keepDefaultTokenRules, ignoreCase, null);
+    }
     /**
      * Makes a SummaAnalyzer.
      *
@@ -66,13 +84,17 @@ public class SummaAnalyzer extends Analyzer {
      * @param ignoreCase                 if true everything will be converted to lower case
      */
     public SummaAnalyzer(String transliterationRules, boolean keepDefaultTransliterations, String tokenRules,
-                         boolean keepDefaultTokenRules, boolean ignoreCase){
+                         boolean keepDefaultTokenRules, boolean ignoreCase, Collator collator){
         super();
         this.transliterationRules = transliterationRules;
         this.keepDefaultTransliterations = keepDefaultTransliterations;
         this.tokenRules = tokenRules;
         this.keepDefaultTokenRules = keepDefaultTokenRules;
         this.ignoreCase = ignoreCase;
+        this.collator = collator;
+        if (collator != null) {
+            this.factory = new ICUCollationAttributeFactory(collator);
+        }
 
         transliteratorFactory = new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
             transliterationRules, keepDefaultTransliterations, Rules.ALL_TRANSLITERATIONS)));
@@ -89,8 +111,8 @@ public class SummaAnalyzer extends Analyzer {
         return reader;
     }
 
+    // Delegation to {@link SummaICUCollatedTermAttributeImpl#getOriginalString}.
+    public static BytesRef getOriginalString(final BytesRef concat, BytesRef reuse) {
+        return SummaICUCollatedTermAttributeImpl.getOriginalString(concat, reuse);
+    }
 }
-
-
-
-

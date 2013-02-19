@@ -131,6 +131,8 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
     public static final String DATE = "date";
     public static final String NUMBER = "number";
 
+    public static final String COLLATED_DA = "collatedDA"; // Hack
+
     /**
      * The base fields must be defined in all implementations of the
      * IndexDescriptor. This is enforced by the IndexDescriptor calling
@@ -147,7 +149,8 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
             SORTKEY,                  // Index
             STORED,                   // Store
             DATE,                     // Index
-            NUMBER                    // Index, store
+            NUMBER,                   // Index, store
+            COLLATED_DA               // Index
     };
 
     private ResourceListener listener;
@@ -342,7 +345,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         }
         if (baseFieldName.equals(IndexField.FREETEXT) || baseFieldName.equals(KEYWORD) || baseFieldName.equals(VERBATIM)
             || baseFieldName.equals(LOWERCASE) || baseFieldName.equals(TEXT) || baseFieldName.equals(SORTKEY)
-            || baseFieldName.equals(DATE)) {
+            || baseFieldName.equals(DATE) || baseFieldName.equals(COLLATED_DA)) {
             return createNewField(baseFieldName, true, false);
         }
         if (baseFieldName.equals(STORED_KEYWORD) || baseFieldName.equals(STORED_VERBATIM)

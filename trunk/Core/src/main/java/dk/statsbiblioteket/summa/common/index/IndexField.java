@@ -62,7 +62,7 @@ public class IndexField<A, T, F> {
     /**
      * The boost used when no explicit boost is specified.
      */
-    public static Float DEFAULT_BOOST = 1.0F;
+    public final static Float DEFAULT_BOOST = 1.0F;
 
     /**
      * If the field is to be used as a sort field, it can either be lazy or
@@ -70,10 +70,13 @@ public class IndexField<A, T, F> {
      * </p><p>
      * Default is lazy.
      */
-    public enum SORT_CACHE {lazy, active;
+    public enum SORT_CACHE {
+        lazy, active;
+
         public static SORT_CACHE defaultCache() {
             return lazy;
         }
+
         public static SORT_CACHE parse(String cache) {
             if (active.toString().equals(cache)) {
                 return active;
@@ -154,6 +157,7 @@ public class IndexField<A, T, F> {
      * field, queryBoost is not used.
      * </p><p>
      * This is used at query-time.
+     *
      * @see #indexBoost
      */
     private float queryBoost = DEFAULT_BOOST;
@@ -164,6 +168,7 @@ public class IndexField<A, T, F> {
      * field, will be multiplied to this boost.
      * </p><p>
      * This is used at index-time.
+     *
      * @see #queryBoost
      */
     private float indexBoost = DEFAULT_BOOST;
@@ -173,6 +178,7 @@ public class IndexField<A, T, F> {
      * Note that sorting with locale is a lot heavier than sorting without.
      * </p><p>
      * This is used at search-time.
+     *
      * @see <a href="http://www.loc.gov/standards/iso639-2/php/code_list.php">Code List</a>
      */
     private String sortLocale = null;
@@ -262,6 +268,7 @@ public class IndexField<A, T, F> {
 
     /**
      * Create a field with the given name and default attributes.
+     *
      * @param name the name of the field.
      */
     public IndexField(String name) {
@@ -278,20 +285,21 @@ public class IndexField<A, T, F> {
      * will be ignored.
      * If no filters are specified in the node, the filters from the parent
      * will be used.
+     *
      * @param node          a representation of a Field.
      * @param fieldProvider if a parent name is specified, the fieldProvider is
      *                      queried for the parent.
      * @throws ParseException if the node could not be parsed properly.
      */
-    public IndexField(Node node, FieldProvider fieldProvider) throws
-                                                                ParseException {
+    public IndexField(Node node, FieldProvider fieldProvider) throws ParseException {
         log.trace("Creating field based on node " + node);
         parse(node, fieldProvider);
     }
 
     /**
      * Assigns all the values from parent to the newly created field, then
-     * assigns the {@link #parent} attribute to the parent field. 
+     * assigns the {@link #parent} attribute to the parent field.
+     *
      * @param parent the field to use as template for this field.
      */
     public IndexField(IndexField<A, T, F> parent) {
@@ -305,6 +313,7 @@ public class IndexField<A, T, F> {
      * construction and cloning. Assignment will override all values.
      * Lists are shallow copies, to it is safe to modify the lists themselves
      * after assignment.
+     *
      * @param parent the field to get values from.
      */
     protected void assignFrom(IndexField<A, T, F> parent) {
@@ -336,28 +345,28 @@ public class IndexField<A, T, F> {
     /**
      * Construct an XML fragment describing this field, suitable for insertion
      * in IndexDescriptor XML or similar persistent structure.
+     *
      * @return an XML for this field.
      */
     public String toXMLFragment() {
         StringWriter sw = new StringWriter(1000);
         sw.append(String.format(
                 "<field name=\"%s\" parent=\"%s\" indexed=\"%s\" "
-                + "tokenized=\"%s\" stored=\"%s\" compressed=\"%s\" "
-                + "multiValued=\"%s\" queryBoost=\"%s\" indexBoost=\"%s\" "
-                + "sortLocale=\"%s\" sortCache=\"%s\" inFreeText=\"%s\""
-                + " required=\"%s\" tokenized=\"%s\">\n",
+                        + "tokenized=\"%s\" stored=\"%s\" compressed=\"%s\" "
+                        + "multiValued=\"%s\" queryBoost=\"%s\" indexBoost=\"%s\" "
+                        + "sortLocale=\"%s\" sortCache=\"%s\" inFreeText=\"%s\""
+                        + " required=\"%s\" tokenized=\"%s\">\n",
                 name, parent == null ? "" : parent.getName(), doIndex,
                 analyze, doStore, doCompress,
                 multiValued, queryBoost, indexBoost, sortLocale, sortCache,
                 inFreetext, required, analyze));
-        for (IndexAlias alias: aliases) {
+        for (IndexAlias alias : aliases) {
             sw.append(alias.toXMLFragment());
         }
         if (indexAnalyzer != null || !indexFilters.isEmpty()) {
             sw.append("<analyzer type=\"index\"\n>");
-            sw.append(String.format("%s\n",
-                                    analyzerToXMLFragment(indexAnalyzer)));
-            for (F filter: indexFilters) {
+            sw.append(String.format("%s\n", analyzerToXMLFragment(indexAnalyzer)));
+            for (F filter : indexFilters) {
                 sw.append(String.format("%s\n", filterToXMLFragment(filter)));
             }
             sw.append("</analyzer>\n");
@@ -367,6 +376,7 @@ public class IndexField<A, T, F> {
     }
 
     private final XPath xPath = XPathFactory.newInstance().newXPath();
+
     /**
      * Assign attributes of this field from the given Document Node.
      * The Node should conform to the output from {@link #toXMLFragment()}.
@@ -378,6 +388,7 @@ public class IndexField<A, T, F> {
      * will be ignored.
      * If no filters are specified in the node, the filters from the parent
      * will be used.
+     *
      * @param node          a representation of a Field.
      * @param fieldProvider if a parent name is specified, the fieldProvider is
      *                      queried for the parent.
@@ -385,7 +396,7 @@ public class IndexField<A, T, F> {
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection", "unchecked"})
     public void parse(Node node, FieldProvider fieldProvider) throws
-                                                                ParseException {
+            ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
         //String nameVal = ParseUtil.getValue(xPath, node, "@name", (String)null);
@@ -402,8 +413,7 @@ public class IndexField<A, T, F> {
             if (parentName == null) {
                 parentName = SUMMA_DEFAULT;
                 if (fieldProvider.getField(SUMMA_DEFAULT) == null) {
-                    log.warn("Could not locate default field '" + SUMMA_DEFAULT
-                             + "'");
+                    log.warn("Could not locate default field '" + SUMMA_DEFAULT + "'");
                 }
             }
             log.trace("parse: Inheriting from parent '" + parentName + "'");
@@ -411,23 +421,20 @@ public class IndexField<A, T, F> {
             try {
                 // TODO: Generify this
                 //noinspection unchecked
-                parentField =
-                        (IndexField<A, T, F>)fieldProvider.getField(parentName);
+                parentField = (IndexField<A, T, F>) fieldProvider.getField(parentName);
             } catch (ClassCastException e) {
-                throw (ParseException)new ParseException(
-                        "The FieldProvider did not provide the right type",
-                        -1).initCause(e);
+                throw (ParseException) new ParseException(
+                        "The FieldProvider did not provide the right type", -1).initCause(e);
             }
             if (parentField == null) {
-                log.warn("parse: Could not locate parent '" + parentName
-                          + "'");
+                log.warn("parse: Could not locate parent '" + parentName + "'");
             } else {
                 assignFrom(parentField);
                 parent = parentField;
             }
         }
         name = nameVal;
-        aliases =     new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
+        aliases = new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
         //doIndex =     ParseUtil.getValue(xPath, node, "@indexed",
         //                                 doIndex);
         doIndex = DOM.selectBoolean(node, "@indexed", doIndex);
@@ -440,11 +447,11 @@ public class IndexField<A, T, F> {
         //queryBoost =  ParseUtil.getValue(xPath, node, "@queryBoost",
         //                                 queryBoost);
         queryBoost = DOM.selectDouble(node, " @queryBoost",
-                              new Float(queryBoost).doubleValue()).floatValue();
+                new Float(queryBoost).doubleValue()).floatValue();
         //indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost",
         //                                 indexBoost);
         indexBoost = DOM.selectDouble(node, "@indexBoost",
-                              new Float(indexBoost).doubleValue()).floatValue();
+                new Float(indexBoost).doubleValue()).floatValue();
         //analyze =    ParseUtil.getValue(xPath, node, "@analyzed",
         //                                analyze);
         analyze = DOM.selectBoolean(node, "@analyzed", analyze);
@@ -457,7 +464,7 @@ public class IndexField<A, T, F> {
         //sortCache =  SORT_CACHE.parse(ParseUtil.getValue(
         //        xPath, node, "@sortCache", sortCache.toString()));
         sortCache = SORT_CACHE.parse(DOM.selectString(node, "@sortCache",
-                                                         sortCache.toString()));
+                sortCache.toString()));
         //inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
         //                                 inFreetext);
         inFreetext = DOM.selectBoolean(node, "@inFreeText", inFreetext);
@@ -466,10 +473,9 @@ public class IndexField<A, T, F> {
         required = DOM.selectBoolean(node, "@required", required);
 
         NodeList children = node.getChildNodes();
-        for (int i = 0 ; i < children.getLength() ; i++) {
+        for (int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
-            if (child.getNodeName() != null
-                && "analyzer".equals(child.getNodeName())) {
+            if (child.getNodeName() != null && "analyzer".equals(child.getNodeName())) {
                 parseAnalyzer(child);
             }
         }
@@ -495,7 +501,7 @@ public class IndexField<A, T, F> {
             parseQuery = true;
         } else {
             log.warn("Unknown value for attribute type in element analyzer: '"
-                     + typeAttr + "'. Assigning setup to both index and query");
+                    + typeAttr + "'. Assigning setup to both index and query");
             parseIndex = true;
             parseQuery = true;
         }
@@ -505,18 +511,14 @@ public class IndexField<A, T, F> {
         List<F> filters = null;
         try {
             String TOKENIZER = "tokenizer";
-            if ((Boolean)xPath.evaluate(TOKENIZER, node,
-                                        XPathConstants.BOOLEAN)) {
-                tokenizer = createTokenizer((Node)xPath.evaluate(
-                        TOKENIZER, node, XPathConstants.BOOLEAN));
+            if ((Boolean) xPath.evaluate(TOKENIZER, node, XPathConstants.BOOLEAN)) {
+                tokenizer = createTokenizer((Node) xPath.evaluate(TOKENIZER, node, XPathConstants.BOOLEAN));
             }
             String FILTER = "filter";
-            if ((Boolean)xPath.evaluate(
-                    FILTER, node, XPathConstants.BOOLEAN)) {
-                NodeList filterNodes = (NodeList)xPath.evaluate(
-                        FILTER, node, XPathConstants.NODESET);
+            if ((Boolean) xPath.evaluate(FILTER, node, XPathConstants.BOOLEAN)) {
+                NodeList filterNodes = (NodeList) xPath.evaluate(FILTER, node, XPathConstants.NODESET);
                 filters = new ArrayList<F>(filterNodes.getLength());
-                for (int i = 0 ; i < filterNodes.getLength() ; i++) {
+                for (int i = 0; i < filterNodes.getLength(); i++) {
                     F filter = createFilter(filterNodes.item(i));
                     if (filter != null) {
                         filters.add(filter);
@@ -524,7 +526,7 @@ public class IndexField<A, T, F> {
                 }
             }
         } catch (XPathExpressionException e) {
-            throw (ParseException)new ParseException(
+            throw (ParseException) new ParseException(
                     "Error evaluating expression 'tokenizer'", -1).initCause(e);
         }
         if (parseIndex) {
@@ -542,6 +544,7 @@ public class IndexField<A, T, F> {
     /**
      * Checks whether the name of the field or any of its aliases match the
      * given name and language.
+     *
      * @param name the name to match.
      * @param lang the language to match. This can be null.
      * @return true is the field matches the name (and language, if specified).
@@ -550,7 +553,7 @@ public class IndexField<A, T, F> {
         if (this.name.equals(name)) {
             return true;
         }
-        for (IndexAlias alias: aliases) {
+        for (IndexAlias alias : aliases) {
             if (alias.isMatch(name, lang)) {
                 return true;
             }
@@ -566,6 +569,7 @@ public class IndexField<A, T, F> {
      * {@link #createAnalyzer}.
      * </p><p>
      * Sample output: <tokenizer class="summa.SummaStandardAnalyzerFactory"/>.
+     *
      * @param analyzer the analyzer to create an XML fragment for.
      * @return an XML fragment representing the analyzer.
      */
@@ -577,6 +581,7 @@ public class IndexField<A, T, F> {
 
     /**
      * Creates an analyzer based on the given Document Node.
+     *
      * @param node a node representing an analyzer as defined by
      *             {@link #analyzerToXMLFragment(Object)}.
      * @return an analyzer based on the given node.
@@ -593,6 +598,7 @@ public class IndexField<A, T, F> {
      * {@link #createFilter}.
      * </p><p>
      * Sample output: <filter class="summa.StopWordFilter" words="words.txt"/>.
+     *
      * @param filter the filter to create an XML fragment for.
      * @return an XML fragment representing the analyzer.
      */
@@ -604,6 +610,7 @@ public class IndexField<A, T, F> {
 
     /**
      * Creates a filter based on the given Document Node.
+     *
      * @param node a node representing a filter as defined by
      *             {@link #filterToXMLFragment(Object)}.
      * @return a filter based on the given node.
@@ -650,25 +657,27 @@ public class IndexField<A, T, F> {
      * {@link #createTokenizer}.
      * </p><p>
      * Sample output: <tokenizer class="summa.SplitOnHyphenFactory"/>.
+     *
      * @param tokenizer the tokenizer to create an XML fragment for.
      * @return an XML fragment representing the tokenizer.
      */
     protected String tokenizerToXMLFragment(T tokenizer) {
         throw new UnsupportedOperationException(String.format(
                 "XML fragment creation for tokenizer '%s' not supported in "
-                + "'%s'",
+                        + "'%s'",
                 tokenizer, getClass().toString()));
     }
+
     /**
      * Creates a tokenizer based on the given Document Node.
+     *
      * @param node a node representing a filter as defined by
      *             {@link #tokenizerToXMLFragment}.
      * @return a tokenizer based on the given node.
      */
     protected T createTokenizer(Node node) {
         throw new UnsupportedOperationException(String.format(
-                "Creation of tokenizer based on Node '%s' not supported in "
-                + "'%s'",
+                "Creation of tokenizer based on Node '%s' not supported in '%s'",
                 node, getClass().toString()));
     }
 
@@ -688,29 +697,33 @@ public class IndexField<A, T, F> {
         try {
             // How do we check for generic types?
             //noinspection unchecked
-            other = (IndexField<A, T, F>)o;
+            other = (IndexField<A, T, F>) o;
         } catch (ClassCastException e) {
             return false;
         }
         return nullCompare(name, other.getName())
-               && doIndex == other.isDoIndex()
-               && analyze == other.isAnalyze()
-               && doStore == other.doStore
-               && doCompress == other.isDoCompress()
-               && multiValued == other.isMultiValued()
-               && queryBoost == other.getQueryBoost() // Consider window
-               && indexBoost == other.getIndexBoost() // Consider window
-               && nullCompare(sortLocale, other.getSortLocale())
-               && sortCache == other.getSortCache()
-               && inFreetext == other.isInFreetext()
-               && required == other.isRequired()
-               && nullCompare(indexTokenizer, other.getIndexTokenizer())
-               && nullCompare(queryTokenizer, other.getQueryTokenizer())
-               && nullCompare(indexAnalyzer, other.getIndexAnalyzer())
-               && nullCompare(queryAnalyzer, other.getQueryAnalyzer())
-               && listCompare(aliases, other.getAliases())
-               && listCompare(indexFilters, other.getIndexFilters())
-               && listCompare(queryFilters, other.getQueryFilters());
+                && doIndex == other.isDoIndex()
+                && analyze == other.isAnalyze()
+                && doStore == other.doStore
+                && doCompress == other.isDoCompress()
+                && multiValued == other.isMultiValued()
+                && equals(queryBoost, other.getQueryBoost(), 0.001f)
+                && equals(indexBoost, other.getIndexBoost(), 0.001f)
+                && nullCompare(sortLocale, other.getSortLocale())
+                && sortCache == other.getSortCache()
+                && inFreetext == other.isInFreetext()
+                && required == other.isRequired()
+                && nullCompare(indexTokenizer, other.getIndexTokenizer())
+                && nullCompare(queryTokenizer, other.getQueryTokenizer())
+                && nullCompare(indexAnalyzer, other.getIndexAnalyzer())
+                && nullCompare(queryAnalyzer, other.getQueryAnalyzer())
+                && listCompare(aliases, other.getAliases())
+                && listCompare(indexFilters, other.getIndexFilters())
+                && listCompare(queryFilters, other.getQueryFilters());
+    }
+
+    private boolean equals(float f1, float f2, float maxDelta) {
+        return Math.abs(f1-f2) < maxDelta;
     }
 
     @SuppressWarnings({"unchecked"})
