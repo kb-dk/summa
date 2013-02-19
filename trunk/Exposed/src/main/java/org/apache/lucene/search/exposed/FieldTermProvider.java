@@ -166,6 +166,14 @@ public class FieldTermProvider extends TermProviderImpl {
           + " in segment " + getReader()
           + ". Requested ordinal was " + ordinal);
     }
+
+    if (lastOrdinalRequest != -1 && lastOrdinalRequest < ordinal &&
+        ordinal <= lastOrdinalRequest + ITERATE_LIMIT) {
+      while (lastOrdinalRequest != ordinal) {
+        termsEnum.next();
+        lastOrdinalRequest++;
+      }
+    }
     if (ordinal != lastOrdinalRequest) {
       termsEnum.seekExact(ordinal);
        //&& TermsEnum.SeekStatus.FOUND != termsEnum.seek(ordinal)) {

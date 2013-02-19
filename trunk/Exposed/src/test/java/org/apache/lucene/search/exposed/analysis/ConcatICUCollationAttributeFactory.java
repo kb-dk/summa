@@ -12,10 +12,9 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.common.lucene.analysis;
+package org.apache.lucene.search.exposed.analysis;
 
 import com.ibm.icu.text.Collator;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.collation.tokenattributes.ICUCollatedTermAttributeImpl;
 import org.apache.lucene.util.Attribute;
 import org.apache.lucene.util.AttributeImpl;
@@ -25,10 +24,7 @@ import org.apache.lucene.util.AttributeSource;
  * Derivative of {@link org.apache.lucene.collation.ICUCollationAttributeFactory} that adds the original term to the
  * collation key for future extraction.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
-public class SummaICUCollationAttributeFactory extends AttributeSource.AttributeFactory {
+public class ConcatICUCollationAttributeFactory extends AttributeSource.AttributeFactory {
 
     private final Collator collator;
     private final AttributeSource.AttributeFactory delegate;
@@ -39,7 +35,7 @@ public class SummaICUCollationAttributeFactory extends AttributeSource.Attribute
      * factory for all other attributes.
      * @param collator CollationKey generator
      */
-    public SummaICUCollationAttributeFactory(Collator collator) {
+    public ConcatICUCollationAttributeFactory(Collator collator) {
       this(AttributeSource.AttributeFactory.DEFAULT_ATTRIBUTE_FACTORY, collator);
     }
 
@@ -49,7 +45,7 @@ public class SummaICUCollationAttributeFactory extends AttributeSource.Attribute
      * @param delegate Attribute Factory
      * @param collator CollationKey generator
      */
-    public SummaICUCollationAttributeFactory(AttributeSource.AttributeFactory delegate, Collator collator) {
+    public ConcatICUCollationAttributeFactory(AttributeSource.AttributeFactory delegate, Collator collator) {
       this.delegate = delegate;
       this.collator = collator;
     }
@@ -57,7 +53,7 @@ public class SummaICUCollationAttributeFactory extends AttributeSource.Attribute
     @Override
     public AttributeImpl createAttributeInstance(Class<? extends Attribute> attClass) {
       return attClass.isAssignableFrom(ICUCollatedTermAttributeImpl.class)
-        ? new SummaICUCollatedTermAttributeImpl(collator)
+        ? new ConcatICUCollatedTermAttributeImpl(collator)
         : delegate.createAttributeInstance(attClass);
     }
 

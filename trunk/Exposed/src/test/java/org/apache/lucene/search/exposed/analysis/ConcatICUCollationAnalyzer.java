@@ -12,10 +12,9 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.common.lucene.analysis;
+package org.apache.lucene.search.exposed.analysis;
 
 import com.ibm.icu.text.Collator;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.collation.ICUCollationAttributeFactory;
@@ -29,21 +28,18 @@ import java.io.Reader;
  * </p><p>
  * Note: The input is not otherwise processes and will retain casing, diacritics etc,
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
-public class SummaICUCollationAnalyzer extends Analyzer {
+public class ConcatICUCollationAnalyzer extends Analyzer {
     private final Collator collator;
-    private final SummaICUCollationAttributeFactory factory;
+    private final ConcatICUCollationAttributeFactory factory;
 
     /**
      * Create a new ICUCollationKeyAnalyzer, using the specified collator.
      *
      * @param collator CollationKey generator
      */
-    public SummaICUCollationAnalyzer(Collator collator) {
+    public ConcatICUCollationAnalyzer(Collator collator) {
       this.collator = collator;
-      this.factory = new SummaICUCollationAttributeFactory(collator);
+      this.factory = new ConcatICUCollationAttributeFactory(collator);
     }
 
     @Override
@@ -52,9 +48,9 @@ public class SummaICUCollationAnalyzer extends Analyzer {
         return new TokenStreamComponents(tokenizer, tokenizer);
     }
 
-    // Delegation to {@link SummaICUCollatedTermAttributeImpl#getOriginalString}.
+    // Delegation to {@link ConcatICUCollatedTermAttributeImpl#getOriginalString}.
     public static BytesRef getOriginalString(final BytesRef concat, BytesRef reuse) {
-        return SummaICUCollatedTermAttributeImpl.getOriginalString(concat, reuse);
+        return ConcatICUCollatedTermAttributeImpl.getOriginalString(concat, reuse);
     }
 
     public Collator getCollator() {

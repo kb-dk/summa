@@ -26,7 +26,7 @@ public class FacetMapSinglePackedFactory {
     final long startTime = System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMap: Creating dual-packed single pass map for "
+          "FacetMap: Creating packed single pass map for "
           + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
           + " with " + docCount + " documents)");
     }
@@ -192,11 +192,11 @@ public class FacetMapSinglePackedFactory {
 //          System.out.println("*** " + tuple + " docID " + docID);
         providerMap.add((int)(tuple.docIDBase + docID), (int)tuple.indirect);
       }
-      if (last == null || !last.equals(tuple.term)) { // TODO: Remove this check
-        last = tuple.term;
+//      if (last == null || !last.equals(tuple.term)) { // TODO: Remove this check
+  //      last = tuple.term;
         uniqueTerms++;
 //          System.out.println("FaM got: " + last.utf8ToString());
-      }
+    //  }
     }
 
     processingTime += System.currentTimeMillis();
