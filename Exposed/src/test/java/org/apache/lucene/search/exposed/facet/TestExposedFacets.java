@@ -16,6 +16,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.*;
+import org.apache.lucene.search.exposed.analysis.ConcatICUCollationAnalyzer;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.store.Directory;
@@ -157,8 +158,8 @@ public class TestExposedFacets extends TestCase {
   public void testIndexBytes() throws IOException {
     Directory dir = FSDirectory.open(ExposedHelper.INDEX_LOCATION);
     Map<String, Analyzer> map = new HashMap<String, Analyzer>();
-    map.put("foo", new ICUCollationKeyAnalyzer(
-            Version.LUCENE_40, Collator.getInstance(new Locale("da"))));
+    map.put("foo", new ConcatICUCollationAnalyzer(
+            Collator.getInstance(new Locale("da"))));
     map.put("bar", new WhitespaceAnalyzer(Version.LUCENE_40));
     PerFieldAnalyzerWrapper perField = new PerFieldAnalyzerWrapper(
         new WhitespaceAnalyzer(Version.LUCENE_40), map);
@@ -1110,7 +1111,7 @@ public class TestExposedFacets extends TestCase {
     ExposedSettings.debug = true;
     ExposedSettings.priority = ExposedSettings.PRIORITY.memory;
 
-    final File LOCATION = createFacetScaleIndex();
+    final File LOCATION = createFacetScaleIndex(1000000);
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
@@ -1148,7 +1149,7 @@ public class TestExposedFacets extends TestCase {
 
   public void testSimpleFacetImplEquivalence()
       throws XMLStreamException, IOException, ParseException {
-    final File LOCATION = createFacetScaleIndex();
+    final File LOCATION = createFacetScaleIndex(10000);
     testFacetImplEquivalence(LOCATION, FACET_SCALE_SIMPLE_REQUEST);
   }
 
@@ -1207,10 +1208,9 @@ public class TestExposedFacets extends TestCase {
     }
   }
 
-  private File createFacetScaleIndex() throws IOException {
+  private File createFacetScaleIndex(int DOCCOUNT) throws IOException {
     final File LOCATION = ExposedHelper.INDEX_LOCATION;
     if (!LOCATION.exists()|| LOCATION.listFiles().length == 0) {
-      final int DOCCOUNT = 10000;
       final int TERM_LENGTH = 20;
       final int MIN_SEGMENTS = 2;
       final List<String> FIELDS = Arrays.asList("a");
