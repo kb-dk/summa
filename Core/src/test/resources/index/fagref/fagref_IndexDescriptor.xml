@@ -28,6 +28,7 @@
         <field name="ma_long" parent="token" multiValued="true"/>
         <field name="lma_long" parent="keyword"/>
         <field name="sort_title" parent="keyword" sortLocale="da"/>
+        <field name="facet_test" parent="collatedDA"/> <!-- Yes, it is a hack -->
     </fields>
 
     <defaultSearchFields>

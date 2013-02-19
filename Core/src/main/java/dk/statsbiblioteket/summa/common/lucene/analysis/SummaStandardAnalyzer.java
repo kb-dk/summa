@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -30,9 +31,13 @@ public class SummaStandardAnalyzer extends SummaAnalyzer {
     /**
      * @see SummaAnalyzer
      */
-   public SummaStandardAnalyzer() {
-       super(Rules.VOID_TRANSLITERATIONS + Rules.BLANK_TRANSLITERATIONS, false, "", true, true);
-   }
+    public SummaStandardAnalyzer() {
+        super(Rules.VOID_TRANSLITERATIONS + Rules.BLANK_TRANSLITERATIONS, false, "", true, true);
+    }
+
+    public SummaStandardAnalyzer(Collator collator) {
+        super(Rules.VOID_TRANSLITERATIONS + Rules.BLANK_TRANSLITERATIONS, false, "", true, true, collator);
+    }
 
 }
 
