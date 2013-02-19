@@ -1,10 +1,11 @@
 package org.apache.lucene.search.exposed;
 
 import com.ibm.icu.text.Collator;
-import com.sun.org.apache.xerces.internal.impl.dv.xs.AbstractDateTimeDV;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.search.IndexSearcher;
 
 import java.io.File;
 import java.io.IOException;
@@ -102,6 +103,14 @@ public class ExposedHelper {
 
   public static IndexWriter getWriter() throws IOException {
     return ExposedIOFactory.getWriter(INDEX_LOCATION);
+  }
+
+  public static IndexReader getReader() throws IOException {
+    return ExposedIOFactory.getReader(INDEX_LOCATION);
+  }
+
+  public static IndexSearcher getSearcher() throws IOException {
+    return new IndexSearcher(getReader());
   }
 
   public static void addDocument(
