@@ -1,19 +1,25 @@
 package org.apache.lucene.search.exposed.facet;
 
+import com.ibm.icu.text.Collator;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.collation.ICUCollationKeyAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.*;
+import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.util.packed.PackedInts;
@@ -22,10 +28,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class TestExposedFacets extends TestCase {
   private ExposedHelper helper;
@@ -149,6 +152,57 @@ public class TestExposedFacets extends TestCase {
       System.out.println(response.toXML());
     }
     reader.close();
+  }
+
+  public void testIndexBytes() throws IOException {
+    Directory dir = FSDirectory.open(ExposedHelper.INDEX_LOCATION);
+    Map<String, Analyzer> map = new HashMap<String, Analyzer>();
+    map.put("foo", new ICUCollationKeyAnalyzer(
+            Version.LUCENE_40, Collator.getInstance(new Locale("da"))));
+    map.put("bar", new WhitespaceAnalyzer(Version.LUCENE_40));
+    PerFieldAnalyzerWrapper perField = new PerFieldAnalyzerWrapper(
+        new WhitespaceAnalyzer(Version.LUCENE_40), map);
+    IndexWriter w  = new IndexWriter(
+        dir, new IndexWriterConfig(Version.LUCENE_40, perField));
+
+    Document doc = new Document();
+    IndexableField bytes = new TextField("foo", "æblegrød", Field.Store.NO);
+    doc.add(bytes);
+    IndexableField plain = new TextField("bar", "zoo", Field.Store.NO);
+    doc.add(plain);
+    w.addDocument(doc);
+    w.close();
+
+    IndexSearcher searcher = ExposedHelper.getSearcher();
+
+    {
+      Query q = new TermQuery(new Term("bar", "zoo"));
+      TopDocs top = searcher.search(q, 10);
+      assertEquals("A single document should be found for bar:zoo",
+                   1, top.totalHits);
+    }
+
+    {
+      ExposedCache cache = ExposedCache.getInstance();
+      TermProvider provider = cache.getProvider(
+          searcher.getIndexReader(), "Dummy", Arrays.asList("foo"),
+          new NamedNaturalComparator());
+      Iterator<ExposedTuple> tuples = provider.getIterator(true);
+      assertTrue("There should be a binary value", tuples.hasNext());
+      ExposedTuple tuple = tuples.next();
+      assertEquals("The tuple should contain the correct BytesRef",
+                   new BytesRef(Collator.getInstance(
+                       new Locale("da")).getRawCollationKey(
+                       "æblegrød", null).bytes),
+                   tuple.term);
+    }
+/*    {
+      Query q = new TermQuery(new Term(
+          "foo", new BytesRef(new byte[]{0, 1, 2})));
+      TopDocs top = searcher.search(q, 10);
+      assertEquals("A single document should be found for foo",
+                   1, top.totalHits);
+    }*/
   }
 
   public static final String DELETE_REQUEST =
