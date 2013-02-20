@@ -193,6 +193,11 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             throw new RemoteException("Unable to load descriptor from '" + location + "'", e);
         }
         for (Map.Entry<String, LuceneIndexField> entry: descriptor.getFields().entrySet()) {
+            LuceneIndexField field = entry.getValue();
+            if (field.getParent() == null) {
+                log.warn("No parent for field '" + field.getName() + "'");
+                continue;
+            }
             if (LuceneIndexDescriptor.COLLATED_DA.equals(entry.getValue().getParent().getName())) { // Giant hack, sorry
                 String concatField = entry.getValue().getName();
                 log.debug("Assigning " + concatField + " as concat field to ExposedCache");
