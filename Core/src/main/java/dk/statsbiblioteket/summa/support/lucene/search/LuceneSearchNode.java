@@ -458,6 +458,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
 
     // TODO: Optimize with reopen support
     private IndexReader getIndexReader(URL location) throws IOException {
+        // TODO: This should not be needed anymore, but needs heavy testing as the functionality is crucial
         ExposedCache.getInstance().purgeAllCaches();
         File file = new File(Resolver.urlToFile(location).getAbsolutePath());
         if (FS_NIO.equals(fsDirectory)) {

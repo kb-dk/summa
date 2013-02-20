@@ -17,6 +17,8 @@ package dk.statsbiblioteket.summa.facetbrowser;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
@@ -37,6 +39,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.exposed.ExposedCache;
 import org.apache.lucene.search.exposed.ExposedRequest;
 import org.apache.lucene.search.exposed.compare.ComparatorFactory;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
@@ -125,8 +128,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             conf.getInt(CONF_COLLECTOR_FILLED, DEFAULT_COLLECTOR_FILLED),
             conf.getInt(CONF_COLLECTOR_FRESH,  DEFAULT_COLLECTOR_FRESH));
         // TODO: Add override-switch to state where to get the descriptor
-        loadDescriptorFromIndex =
-            !Structure.isSetupDefinedInConfiguration(conf);
+        loadDescriptorFromIndex = !Structure.isSetupDefinedInConfiguration(conf);
         if (loadDescriptorFromIndex) {
             log.debug("The Structure will be derived from IndexDescriptor XML in the index folders upon calls to "
                       + "open(...)");
@@ -180,7 +182,25 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 location, Strings.join(structure.getFacetNames(), ", ")));
         }
         indexLookup.updateDescriptor(location);
+        updateConcats(urlLocation);
     }
+
+    private void updateConcats(URL location) throws RemoteException {
+        LuceneIndexDescriptor descriptor;
+        try {
+            descriptor = new LuceneIndexDescriptor(location);
+        } catch (IOException e) {
+            throw new RemoteException("Unable to load descriptor from '" + location + "'", e);
+        }
+        for (Map.Entry<String, LuceneIndexField> entry: descriptor.getFields().entrySet()) {
+            if (LuceneIndexDescriptor.COLLATED_DA.equals(entry.getValue().getParent().getName())) { // Giant hack, sorry
+                String concatField = entry.getValue().getName();
+                log.debug("Assigning " + concatField + " as concat field to ExposedCache");
+                ExposedCache.getInstance().addConcatField(concatField);
+            }
+        }
+    }
+
 
     private void initStructures(Structure newStructure) throws RemoteException {
         lock.writeLock().lock();
