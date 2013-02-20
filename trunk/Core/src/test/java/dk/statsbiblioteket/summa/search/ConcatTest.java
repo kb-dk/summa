@@ -21,15 +21,18 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
 import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -48,7 +51,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.security.PrivateKey;
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Tests Exposed collator key concatenated fields.
@@ -64,6 +71,7 @@ public class ConcatTest extends TestCase {
 
     public static final String ONE = "search/concat/documents/one_concat.xml";
     public static final String TWO = "search/concat/documents/two_concat.xml";
+    public static final String MANY = "search/concat/documents/many_concat.xml";
 
     public ConcatTest(String name) {
         super(name);
@@ -129,8 +137,7 @@ public class ConcatTest extends TestCase {
         assertEquals("There should be the correct number of terms", 1, count);
     }
 
-    public void testConcatFaceting() throws IOException {
-        // Set breakpoint after tuples.next() in FacetMapTripleFactory.fillRefs to check bytes
+    public void testConcatSingleTagFaceting() throws IOException {
         createIndex(ONE);
         ResponseCollection responses = search(new Request(
                 DocumentKeys.SEARCH_QUERY, "id:one",
@@ -139,6 +146,41 @@ public class ConcatTest extends TestCase {
         ));
         assertTrue("The responses should contain a tag with ål\n" + responses.toXML(),
                 responses.toXML().contains("<tag name=\"concat ål\" addedobjects=\"1\" reliability=\"PRECISE\">"));
+    }
+
+    public void testConcatMultiTagFaceting() throws IOException {
+
+        createIndex(ONE, TWO, MANY);
+        ResponseCollection responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "*:*",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                FacetKeys.SEARCH_FACET_FACETS, "concat"
+        ));
+        assertOrdered(responses, "concat");
+    }
+
+    private void assertOrdered(ResponseCollection responses, String field) {
+        List<String> tags = getTags(responses, field);
+        assertNotNull("There should be tags for facet '" + field + "'", tags);
+
+        List<String> expected = new ArrayList<String>(tags);
+        Collections.sort(expected, Collator.getInstance(new Locale("da")));
+
+        for (int i = 0 ; i < tags.size() ; i++) {
+            assertEquals("The tag at index " + i + " from facet " + field + " should be as expected\nTags: "
+                    + Strings.join(tags, ", "),
+                    expected.get(i), tags.get(i));
+        }
+    }
+
+    private List<String> getTags(ResponseCollection responses, String field) {
+        for (Response response: responses) {
+            if (response instanceof FacetResultExternal) {
+                FacetResultExternal facets = (FacetResultExternal)response;
+                return facets.getTags(field);
+            }
+        }
+        return null;
     }
 
     public void testResultField() throws IOException {

@@ -4,8 +4,8 @@
 <sd:field name="id">two</sd:field>
 <sd:field name="plain">plain æblegrød</sd:field>
 <sd:field name="plain">plain ærter</sd:field>
-<sd:field name="concat">concat æblegrød</sd:field>
 <sd:field name="concat">concat ærter</sd:field>
+<sd:field name="concat">concat æblegrød</sd:field>
 </sd:fields>
 </sd:SummaDocument>
 
