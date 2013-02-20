@@ -37,20 +37,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.*;
-import org.apache.lucene.search.exposed.ExposedSettings;
-import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.BytesRef;
-import org.apache.uima.resource.metadata.impl.ConfigurationGroup_impl;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.rmi.RemoteException;
-import java.security.PrivateKey;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,7 +57,7 @@ import java.util.Locale;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ConcatTest extends TestCase {
-    private static Log log = LogFactory.getLog(ConcatTest.class);
+//    private static Log log = LogFactory.getLog(ConcatTest.class);
 
     public static final File INDEX_DESCRIPTOR = Resolver.getFile("search/concat/concat_IndexDescriptor.xml");
     public static final File INDEX_LOCATION = new File("concat_index_tmp");
@@ -80,7 +73,9 @@ public class ConcatTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        INDEX_LOCATION.mkdirs();
+        if (!INDEX_LOCATION.mkdirs()) {
+            System.out.println("Unable to create folder '" + INDEX_LOCATION.getAbsolutePath() + "'");
+        }
     }
 
     @Override
