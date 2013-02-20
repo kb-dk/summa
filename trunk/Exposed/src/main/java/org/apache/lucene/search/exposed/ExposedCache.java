@@ -152,8 +152,12 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
    * term is delivered for concatenated fields.
    * @param field the concatenated field.
    */
-  public void addConcatField(String field) {
+  public synchronized void addConcatField(String field) {
     concatFields.add(field);
+  }
+
+  public synchronized void clearConcatFields() {
+    concatFields.clear();
   }
 
   public void purgeAllCaches() {
