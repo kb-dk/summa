@@ -2,9 +2,9 @@
 <IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
 
     <fields>
-        <field name="id" parent="storedKeyword"/>
-        <field name="plain" parent="keyword"/>
-        <field name="concat" parent="collatedDA"/>
+        <field name="id" parent="keyword" stored="true"/>
+        <field name="plain" parent="keyword" stored="true"/>
+        <field name="concat" parent="collatedDA" stored="true"/>
     </fields>
 
     <defaultSearchFields>
