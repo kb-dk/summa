@@ -36,6 +36,11 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.*;
+import org.apache.lucene.search.exposed.ExposedSettings;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.MMapDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.apache.uima.resource.metadata.impl.ConfigurationGroup_impl;
 
 import java.io.File;
@@ -93,7 +98,39 @@ public class ConcatTest extends TestCase {
                 responses.toXML().contains("<tag name=\"plain ål\" addedobjects=\"1\" reliability=\"PRECISE\">"));
     }
 
+    @SuppressWarnings("ConstantConditions")
+    public void testIndexedConcat() throws IOException {
+        createIndex(ONE);
+        IndexReader indexReader = DirectoryReader.open(MMapDirectory.open(
+                new File(INDEX_LOCATION.listFiles()[0], "lucene")));
+        int count = 0;
+        for (AtomicReaderContext context: indexReader.leaves()) {
+            AtomicReader reader = context.reader();
+            Terms terms = reader.terms("concat");
+            TermsEnum te = terms.iterator(null);
+            BytesRef term;
+            while ((term = te.next()) != null) {
+                String hexTerm = "";
+                int zeroPos = -1;
+                count++;
+                for (int i = 0 ; i < term.length ; i++) {
+                    byte b = term.bytes[term.offset + i];
+                    hexTerm += Integer.toHexString(b) + " ";
+                    if (b == 0 && zeroPos == -1) {
+                        zeroPos = i;
+                    }
+                }
+                assertFalse("There should be a 0 in the term [" + hexTerm + "]",
+                        zeroPos == -1);
+                assertFalse("The position of the first 0 should not be at the end in the term [" + hexTerm + "]",
+                        term.offset+term.length-1 == zeroPos);
+            }
+        }
+        assertEquals("There should be the correct number of terms", 1, count);
+    }
+
     public void testConcatFaceting() throws IOException {
+        // Set breakpoint after tuples.next() in FacetMapTripleFactory.fillRefs to check bytes
         createIndex(ONE);
         ResponseCollection responses = search(new Request(
                 DocumentKeys.SEARCH_QUERY, "id:one",
@@ -102,6 +139,19 @@ public class ConcatTest extends TestCase {
         ));
         assertTrue("The responses should contain a tag with ål\n" + responses.toXML(),
                 responses.toXML().contains("<tag name=\"concat ål\" addedobjects=\"1\" reliability=\"PRECISE\">"));
+    }
+
+    public void testResultField() throws IOException {
+        createIndex(ONE);
+        String responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "id:one",
+                DocumentKeys.SEARCH_RESULT_FIELDS, "id, concat"
+        )).toXML();
+        assertTrue("The responses should contain a record with the id:one\n" + responses,
+                responses.contains("<field name=\"id\">one</field>"));
+        assertTrue("The responses should contain a record with ål\n" + responses,
+                responses.contains("<field name=\"concat\">concat ål</field>"));
+//        System.out.println(responses);
     }
 
     public void testIndexCreationAndSearch() throws IOException {
