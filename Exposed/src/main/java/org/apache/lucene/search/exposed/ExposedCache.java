@@ -16,6 +16,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
   private final ArrayList<TermProvider> cache = new ArrayList<TermProvider>(5);
   private final List<PurgeCallback> remoteCaches =
       new ArrayList<PurgeCallback>();
+  private final static Set<String> concatFields = new HashSet<String>();
 
   private static final ExposedCache exposedCache;
   static {
@@ -49,8 +50,10 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     if (readers.add(reader)) {
       reader.addReaderClosedListener(this);
     }
+
     ExposedRequest.Group groupRequest = FacetRequestGroup.createGroup(
-        groupName, fieldNames, comparator);
+        groupName, fieldNames, comparator,
+        isConcatGroup(groupName, fieldNames));
 
     for (TermProvider provider: cache) {
       if (provider instanceof GroupTermProvider
@@ -106,6 +109,20 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     return groupProvider;
   }
 
+  private boolean isConcatGroup(String groupName, List<String> fieldNames) {
+    boolean concat = concatFields.contains(fieldNames.get(0));
+    for (String field: fieldNames) {
+      if (concatFields.contains(field) != concat) {
+        throw new IllegalArgumentException(String.format(
+            "The fields for the group %s did not have the same concat flags. "
+            + "First field '%s' had concat=%b, the field '%s' has concat=%b",
+            groupName,
+            fieldNames.get(0), concat, field, concatFields.contains(field)));
+      }
+    }
+    return concat;
+  }
+
   FieldTermProvider getProvider(
       IndexReader segmentReader, int docIDBase, ExposedRequest.Field request,
       boolean cacheTables, boolean cacheProvider) throws IOException {
@@ -126,6 +143,17 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
       cache.add(provider);
     }
     return provider;
+  }
+
+  /**
+   * Terms in concatenated fields starts with the rawCollationKey bytes from a
+   * ICU Collator, followed by an UTF-8 representation of the original term.
+   * When display values are extracted by the Exposed system, only the original
+   * term is delivered for concatenated fields.
+   * @param field the concatenated field.
+   */
+  public void addConcatField(String field) {
+    concatFields.add(field);
   }
 
   public void purgeAllCaches() {

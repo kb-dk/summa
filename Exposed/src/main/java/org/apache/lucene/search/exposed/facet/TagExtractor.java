@@ -141,7 +141,7 @@ public class TagExtractor {
     FacetResponse.Tag[] tags = new FacetResponse.Tag[pq.size()];
     for (int i = pq.size()-1 ; i >= 0 ; i--) {
       HCElement element = pq.pop();
-      String term = provider.getOrderedTerm(element.tagStartPos + delta).
+      String term = provider.getOrderedDisplayTerm(element.tagStartPos + delta).
           utf8ToString();
       FacetResponse.Tag tag = new FacetResponse.Tag(
           getLevelTerm(term, level), element.count, element.totalCount);
@@ -185,8 +185,8 @@ public class TagExtractor {
       totalCount += tagIterator.getTotalCount();
       count += tagIterator.getCount();
       if (validTags < constraints.getMaxTags()) {
-        String term = provider.getOrderedTerm(tagIterator.tagStartPos + delta).
-            utf8ToString();
+        String term = provider.getOrderedDisplayTerm(
+            tagIterator.tagStartPos + delta).utf8ToString();
         FacetResponse.Tag tag =
             new FacetResponse.Tag(getLevelTerm(term, level),
                 tagIterator.getCount(), tagIterator.getTotalCount());
@@ -265,8 +265,8 @@ public class TagExtractor {
          termPos < endTermPos & collectedTags < requestGroup.getMaxTags() ;
          termPos++) {
       if (tagCounts[termPos] >= minCount) {
-        tags.add(new FacetResponse.Tag(
-          map.getOrderedTerm(termPos).utf8ToString(), tagCounts[termPos]));
+        tags.add(new FacetResponse.Tag(map.getOrderedDisplayTerm(
+            termPos).utf8ToString(), tagCounts[termPos]));
         collectedTags++;
       }
     }
@@ -304,8 +304,8 @@ public class TagExtractor {
     int pos = pq.size()-1;
     while (pq.size() > 0) {
       final int termIndex = pq.pop();
-      tags[pos--] =  new FacetResponse.Tag(
-          map.getOrderedTerm(termIndex).utf8ToString(), tagCounts[termIndex]);
+      tags[pos--] =  new FacetResponse.Tag(map.getOrderedDisplayTerm(
+          termIndex).utf8ToString(), tagCounts[termIndex]);
     }
 
     // Create response

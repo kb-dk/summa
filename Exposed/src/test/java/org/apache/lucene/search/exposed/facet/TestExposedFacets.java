@@ -7,7 +7,6 @@ import junit.framework.TestSuite;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-import org.apache.lucene.collation.ICUCollationKeyAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
@@ -61,7 +60,7 @@ public class TestExposedFacets extends TestCase {
       }
     }
     cache.purgeAllCaches();
-//    helper.close();
+    helper.close();
   }
 
 
@@ -156,54 +155,93 @@ public class TestExposedFacets extends TestCase {
   }
 
   public void testIndexBytes() throws IOException {
+    final String SPECIAL = "æblegrød";
+    buildConcatIndex(SPECIAL);
+    IndexSearcher searcher = ExposedHelper.getSearcher();
+
+    {
+      Query q = new TermQuery(new Term(IDFIELD, "doc0"));
+      TopDocs top = searcher.search(q, 10);
+      assertEquals("A single document should be found for " + q,
+                   1, top.totalHits);
+    }
+
+    { // Check concatenated value
+      byte[] raw = Collator.getInstance(new Locale("da")).getRawCollationKey(
+          SPECIAL, null).bytes;
+      byte[] str = SPECIAL.getBytes("utf-8");
+      byte[] concat = new byte[raw.length + str.length];
+      System.arraycopy(raw, 0, concat, 0, raw.length);
+      System.arraycopy(str, 0, concat, raw.length, str.length);
+
+      ExposedCache cache = ExposedCache.getInstance();
+      cache.addConcatField(CONFIELD);
+      TermProvider provider = cache.getProvider(
+          searcher.getIndexReader(), "Dummy", Arrays.asList(CONFIELD),
+          new NamedNaturalComparator());
+      Iterator<ExposedTuple> tuples = provider.getIterator(true);
+      assertTrue("There should be a binary value", tuples.hasNext());
+
+      ExposedTuple tuple = tuples.next();
+      assertEquals("The tuple should contain the concatenated BytesRef",
+                   new BytesRef(concat), tuple.term);
+      assertEquals(
+          "The ordinal display value should be sans collation key",
+          SPECIAL, provider.getDisplayTerm(tuple.ordinal).utf8ToString());
+      assertEquals(
+          "The indirect display value should be sans collation key",
+        SPECIAL, provider.getOrderedDisplayTerm(tuple.indirect).utf8ToString());
+    }
+  }
+
+  public void testConcatOrder() throws IOException {
+    String[] EXPECTED = new String[]{"abe", "bil", "æble", "øre", "ål", "år"};
+    buildConcatIndex("bil", "abe", "æble", "ål", "øre", "år");
+    IndexSearcher searcher = ExposedHelper.getSearcher();
+    ExposedCache cache = ExposedCache.getInstance();
+    cache.addConcatField(CONFIELD);
+    TermProvider provider = cache.getProvider(
+        searcher.getIndexReader(), "DummyGroup", Arrays.asList(CONFIELD),
+        new NamedNaturalComparator());
+    assertEquals("The terms should be collator sorted",
+                 provider, EXPECTED, provider.getIterator(false));
+  }
+
+  private void assertEquals(
+      String message, TermProvider provider, String[] expected,
+      Iterator<ExposedTuple> iterator) throws IOException {
+    int index = 0;
+    while (iterator.hasNext()) {
+      assertEquals(
+          message + ". Terms at index " + index + " should match",
+          expected[index++],
+          provider.getDisplayTerm(iterator.next().ordinal).utf8ToString());
+    }
+  }
+
+  private final static String CONFIELD = "concat";
+  private final static String IDFIELD = "id";
+  private File buildConcatIndex(String... terms) throws IOException {
     Directory dir = FSDirectory.open(ExposedHelper.INDEX_LOCATION);
     Map<String, Analyzer> map = new HashMap<String, Analyzer>();
-    map.put("foo", new ConcatICUCollationAnalyzer(
+    map.put(CONFIELD, new ConcatICUCollationAnalyzer(
             Collator.getInstance(new Locale("da"))));
-    map.put("bar", new WhitespaceAnalyzer(Version.LUCENE_40));
+    map.put(IDFIELD, new WhitespaceAnalyzer(Version.LUCENE_40));
     PerFieldAnalyzerWrapper perField = new PerFieldAnalyzerWrapper(
         new WhitespaceAnalyzer(Version.LUCENE_40), map);
     IndexWriter w  = new IndexWriter(
         dir, new IndexWriterConfig(Version.LUCENE_40, perField));
 
     Document doc = new Document();
-    IndexableField bytes = new TextField("foo", "æblegrød", Field.Store.NO);
-    doc.add(bytes);
-    IndexableField plain = new TextField("bar", "zoo", Field.Store.NO);
+    IndexableField plain = new TextField(IDFIELD, "doc0", Field.Store.NO);
     doc.add(plain);
+    for (String term: terms) {
+      IndexableField bytes = new TextField(CONFIELD, term, Field.Store.NO);
+      doc.add(bytes);
+    }
     w.addDocument(doc);
     w.close();
-
-    IndexSearcher searcher = ExposedHelper.getSearcher();
-
-    {
-      Query q = new TermQuery(new Term("bar", "zoo"));
-      TopDocs top = searcher.search(q, 10);
-      assertEquals("A single document should be found for bar:zoo",
-                   1, top.totalHits);
-    }
-
-    {
-      ExposedCache cache = ExposedCache.getInstance();
-      TermProvider provider = cache.getProvider(
-          searcher.getIndexReader(), "Dummy", Arrays.asList("foo"),
-          new NamedNaturalComparator());
-      Iterator<ExposedTuple> tuples = provider.getIterator(true);
-      assertTrue("There should be a binary value", tuples.hasNext());
-      ExposedTuple tuple = tuples.next();
-      assertEquals("The tuple should contain the correct BytesRef",
-                   new BytesRef(Collator.getInstance(
-                       new Locale("da")).getRawCollationKey(
-                       "æblegrød", null).bytes),
-                   tuple.term);
-    }
-/*    {
-      Query q = new TermQuery(new Term(
-          "foo", new BytesRef(new byte[]{0, 1, 2})));
-      TopDocs top = searcher.search(q, 10);
-      assertEquals("A single document should be found for foo",
-                   1, top.totalHits);
-    }*/
+    return ExposedHelper.INDEX_LOCATION;
   }
 
   public static final String DELETE_REQUEST =
@@ -928,9 +966,9 @@ public class TestExposedFacets extends TestCase {
       final int TERM_LENGTH = 20;
       final int MIN_SEGMENTS = 2;
       final List<String> FIELDS = Arrays.asList("a", "b");
-      System.err.println("No index at " + LOCATION + ". A test index with " +
-                         DOCCOUNT + " documents will be build at "
-                         + ExposedHelper.INDEX_LOCATION );
+      System.err.println(
+          "No index at " + LOCATION + ". A test index with " + DOCCOUNT
+          + " documents will be build at " + ExposedHelper.INDEX_LOCATION );
       helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
       LOCATION = ExposedHelper.INDEX_LOCATION;
     }
@@ -939,8 +977,8 @@ public class TestExposedFacets extends TestCase {
     final String term = "A";
 
     assertTrue("No index at " + LOCATION.getAbsolutePath()
-               + ". Please build a test index (you can use one from on of the other" +
-               " JUnit tests in TestExposedFacets) and correct the path",
+               + ". Please build a test index (you can use one from on of the "
+               + "other JUnit tests in TestExposedFacets) and correct the path",
                LOCATION.exists());
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
@@ -1009,8 +1047,8 @@ public class TestExposedFacets extends TestCase {
       LOCATION = ExposedHelper.INDEX_LOCATION;
     }
     assertTrue("No index at " + LOCATION.getAbsolutePath()
-               + ". Please build a test index (you can use one from on of the other" +
-               " JUnit tests in TestExposedFacets) and correct the path",
+               + ". Please build a test index (you can use one from on of the "
+               + "other JUnit tests in TestExposedFacets) and correct the path",
                LOCATION.exists());
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
@@ -1071,8 +1109,9 @@ public class TestExposedFacets extends TestCase {
     System.out.println(sw.toString());
   }
 
-  private void testScale(CollectorPoolFactory poolFactory,
-                         IndexSearcher searcher, Query query, String sQuery, StringWriter result)
+  private void testScale(
+      CollectorPoolFactory poolFactory, IndexSearcher searcher,
+      Query query, String sQuery, StringWriter result)
       throws IOException, XMLStreamException {
     System.out.println("- Testing sorted search for " + sQuery);
     testSortedSearch(searcher, "b", query, sQuery, null, result);
@@ -1271,9 +1310,9 @@ public class TestExposedFacets extends TestCase {
       CollectorPool collectorPool = poolFactory.acquire(reader, request);
       if (firstTime == -1) {
         poolTime = System.currentTimeMillis() - poolTime;
-        result.append("Facet pool acquisition for " +
-                      "for \"" + sQuery + "\" with structure " + request.getGroupKey()
-                      + ": " + getTime(poolTime) + "\n");
+        result.append(
+            "Facet pool acquisition for \"" + sQuery + "\" with structure "
+            + request.getGroupKey() + ": " + getTime(poolTime) + "\n");
       }
 
       long countStart = System.currentTimeMillis();
@@ -1291,8 +1330,8 @@ public class TestExposedFacets extends TestCase {
       long totalTime = System.currentTimeMillis() - countStart;
       if (firstTime == -1) {
         firstTime = totalTime;
-        result.append("First faceting for " + sQuery + ": "
-                      + getTime(totalTime) + "\n");
+        result.append(
+            "First faceting for " + sQuery + ": " + getTime(totalTime) + "\n");
       } else {
         subCount++;
         subsequents += totalTime;
@@ -1303,8 +1342,9 @@ public class TestExposedFacets extends TestCase {
             + (System.currentTimeMillis()-countStart) + "ms");*/
       collectorPool.release(null, collector); // No caching
     }
-    result.append("Subsequent " + subCount + " faceting calls (count caching " +
-                  "disabled) response times: " + getTime(subsequents / subCount) + "\n");
+    result.append(
+        "Subsequent " + subCount + " faceting calls (count caching " +
+        "disabled) response times: " + getTime(subsequents / subCount) + "\n");
     assertNotNull("There should be a response", response);
     result.append(response.toXML()).append("\n");
   }
@@ -1337,8 +1377,8 @@ public class TestExposedFacets extends TestCase {
         CollectorPool collectorPool = poolFactory.acquire(reader, request);
         if (firstTime == -1) {
           poolTime = System.currentTimeMillis() - poolTime;
-          result.append("Initial lookup pool request (might result in structure" +
-                        " building): " + getTime(poolTime) + "\n");
+          result.append("Initial lookup pool request (might result in structure"
+                        + " building): " + getTime(poolTime) + "\n");
         }
 
         long countStart = System.currentTimeMillis();
@@ -1448,7 +1488,8 @@ public class TestExposedFacets extends TestCase {
 
   private FacetResponse performFaceting(
       CollectorPoolFactory poolFactory, IndexReader reader, String query,
-      String requestXML) throws ParseException, IOException, XMLStreamException {
+      String requestXML)
+      throws ParseException, IOException, XMLStreamException {
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
         Version.LUCENE_40, ExposedHelper.EVEN, getAnalyzer());
@@ -1489,9 +1530,9 @@ public class TestExposedFacets extends TestCase {
     return response;
   }
 
-  private void testSortedSearch(IndexSearcher searcher, String field, Query q,
-                                String sQuery, Locale locale,
-                                StringWriter result) throws IOException {
+  private void testSortedSearch(
+      IndexSearcher searcher, String field, Query q, String sQuery,
+      Locale locale, StringWriter result) throws IOException {
     // Sorted search
     long firstSearch = -System.currentTimeMillis();
     ExposedFieldComparatorSource exposedFCS =
@@ -1514,9 +1555,9 @@ public class TestExposedFacets extends TestCase {
       subSearchMS += System.currentTimeMillis();
     }
 
-    result.append("Subsequent " + RUNS
-                  + " sorted searches average response time: "
-                  + getTime(subSearchMS / RUNS) + "\n");
+    result.append(
+        "Subsequent " + RUNS + " sorted searches average response time: "
+        + getTime(subSearchMS / RUNS) + "\n");
     for (int i = 0 ; i < Math.min(topDocs.totalHits, MAXHITS) ; i++) {
       int docID = topDocs.scoreDocs[i].doc;
       result.append(String.format(
@@ -1533,6 +1574,6 @@ public class TestExposedFacets extends TestCase {
     }
     long seconds = Math.round(ms / 1000.0);
     long minutes = seconds / 60;
-    return String.format("%d:%02d minutes", minutes, seconds - (minutes * 60));
+    return String.format("%d:%02d minutes", minutes, seconds - minutes*60);
   }
 }

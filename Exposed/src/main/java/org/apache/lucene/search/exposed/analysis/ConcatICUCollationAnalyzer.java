@@ -17,7 +17,6 @@ package org.apache.lucene.search.exposed.analysis;
 import com.ibm.icu.text.Collator;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
-import org.apache.lucene.collation.ICUCollationAttributeFactory;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.Reader;

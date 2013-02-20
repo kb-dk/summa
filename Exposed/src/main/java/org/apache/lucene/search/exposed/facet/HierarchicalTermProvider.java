@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 // TODO: Consider optimizing the cases where log2(maxlevel+1) <= 4 and <= 8
 // by backing with byte[] and [short] instead pf PackedInts.
 // TODO: Consider optimizing build with split on byte(s)
+// TODO: Make splitting use the display part of the terms
 public class HierarchicalTermProvider implements TermProvider {
   private final TermProvider source;
   private final PackedInts.Reader levels;
@@ -389,6 +390,16 @@ public class HierarchicalTermProvider implements TermProvider {
   @Override
   public BytesRef getTerm(long ordinal) throws IOException {
     return source.getTerm(ordinal);
+  }
+
+  @Override
+  public BytesRef getDisplayTerm(long ordinal) throws IOException {
+    return source.getDisplayTerm(ordinal);
+  }
+
+  @Override
+  public BytesRef getOrderedDisplayTerm(long indirect) throws IOException {
+    return source.getOrderedDisplayTerm(indirect);
   }
 
   @Override

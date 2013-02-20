@@ -44,11 +44,17 @@ public class ExposedRequest {
     private final String name;
     private final List<Field> fields;
     private final NamedComparator comparator;
+    private final boolean concat;
 
     public Group(String name, List<Field> fields, NamedComparator comparator) {
+      this(name, fields, comparator, false);
+    }
+    public Group(String name, List<Field> fields, NamedComparator comparator,
+                 boolean concat) {
       this.name = name;
       this.fields = fields;
       this.comparator = comparator;
+      this.concat = concat;
     }
 
     /**
@@ -75,7 +81,7 @@ public class ExposedRequest {
         }
         return false;
       }
-      return true;
+      return concat == other.concat;
     }
 
     /**
@@ -102,6 +108,7 @@ public class ExposedRequest {
         }
         return false;
       }
+       // concat inequality is acceptable here as it only affects display
       return true;
     }
 
@@ -113,6 +120,10 @@ public class ExposedRequest {
     }
     public NamedComparator getComparator() {
       return comparator;
+    }
+
+    public boolean isConcat() {
+      return concat;
     }
 
     public List<String> getFieldNames() {
@@ -139,12 +150,17 @@ public class ExposedRequest {
   }
 
   public static class Field {
-    private String field;
-    private NamedComparator comparator;
+    private final String field;
+    private final NamedComparator comparator;
+    private final boolean concat;
 
     public Field(String field, NamedComparator comparator) {
+      this(field, comparator, false);
+    }
+    public Field(String field, NamedComparator comparator, boolean concat) {
       this.field = field;
       this.comparator = comparator;
+      this.concat = concat;
     }
 
     /**
@@ -177,6 +193,11 @@ public class ExposedRequest {
     public String getField() {
       return field;
     }
+
+    public boolean isConcat() {
+      return concat;
+    }
+
     public NamedComparator getComparator() {
       return comparator;
     }
@@ -187,5 +208,4 @@ public class ExposedRequest {
     }
 
   }
-
 }

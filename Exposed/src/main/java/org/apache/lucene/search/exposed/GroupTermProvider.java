@@ -48,10 +48,12 @@ public class GroupTermProvider extends TermProviderImpl {
   // FIXME: this should be relative to segments, not providers.
   //Current implementation is not valid for multiple fields in the same segment
   private final long[] docIDStarts;
+  // TODO: consider if concat should exist at this level
+  private final boolean concat;
 
   public GroupTermProvider(int readerHash,
       List<TermProvider> providers, ExposedRequest.Group request,
-                                        boolean cacheTables) throws IOException {
+      boolean cacheTables) throws IOException {
     super(null, 0, request.getComparator(), "Group " + request.getName(),
           cacheTables);
     this.readerHash = readerHash;
@@ -61,6 +63,7 @@ public class GroupTermProvider extends TermProviderImpl {
     long[][] starts = calculateStarts();
     docIDStarts = starts[0];
     termOrdinalStarts = starts[1];
+    this.concat = request.isConcat();
   }
 
   private List<TermProvider> checkProviders(List<TermProvider> providers) {
@@ -161,6 +164,22 @@ public class GroupTermProvider extends TermProviderImpl {
     int providerIndex = getProviderIndex(ordinal);
     return providers.get(providerIndex).
         getTerm(adjustOrdinal(ordinal, providerIndex));
+  }
+
+  @Override
+  public BytesRef getDisplayTerm(long ordinal) throws IOException {
+    if (concat) {
+      return ExposedUtil.deConcat(getTerm(ordinal), null);
+    }
+    return getTerm(ordinal);
+  }
+
+  @Override
+  public BytesRef getOrderedDisplayTerm(long indirect) throws IOException {
+    if (concat) {
+      return ExposedUtil.deConcat(getOrderedTerm(indirect), null);
+    }
+    return getOrderedTerm(indirect);
   }
 
   @Override
