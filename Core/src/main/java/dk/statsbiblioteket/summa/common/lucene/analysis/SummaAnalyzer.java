@@ -21,6 +21,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.collation.ICUCollationAttributeFactory;
+import org.apache.lucene.search.exposed.analysis.ConcatICUCollationAttributeFactory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 
@@ -49,7 +50,7 @@ public class SummaAnalyzer extends Analyzer {
     private ReplaceFactory tokenReplacerFactory;
 
     private Collator collator = null;
-    private ICUCollationAttributeFactory factory = null;
+    private ConcatICUCollationAttributeFactory factory = null;
 
     @Override
     protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
@@ -93,7 +94,7 @@ public class SummaAnalyzer extends Analyzer {
         this.ignoreCase = ignoreCase;
         this.collator = collator;
         if (collator != null) {
-            this.factory = new ICUCollationAttributeFactory(collator);
+            this.factory = new ConcatICUCollationAttributeFactory(collator);
         }
 
         transliteratorFactory = new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
