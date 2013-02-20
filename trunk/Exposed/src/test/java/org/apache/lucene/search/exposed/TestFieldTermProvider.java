@@ -311,6 +311,26 @@ public class TestFieldTermProvider extends TestCase {
     }
   }
 
+  public void testSimpleGrouping()
+                        throws IOException, XMLStreamException, ParseException {
+    {
+      String[] FIELDS = new String[]{"recordBase", "lsubject"};
+      int TERMS = 3;
+      IndexWriter w = ExposedHelper.getWriter();
+      ExposedHelper.addDocument(w,
+          ExposedHelper.ID + ":1",
+          ExposedHelper.ALL + ":" + ExposedHelper.ALL,
+          "recordBase:foo",
+          "lsubject:bar",
+          "lsubject:zoo"
+      );
+      w.commit();
+      w.close();
+      verifyElements("All terms with content", FIELDS, TERMS);
+      helper.deleteIndex();
+    }
+  }
+
   public void testMiscountEmptyWithMap()
                         throws IOException, XMLStreamException, ParseException {
     {
@@ -348,19 +368,29 @@ public class TestFieldTermProvider extends TestCase {
     }
   }
 
-  private void verifyElements(String message, String[] fields, int termCount)
-                                                            throws IOException {
-    AtomicReader segment =
-        ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+  private void verifyElements(
+      String message, String[] fields, int termCount) throws IOException {
+    AtomicReader segment = ExposedIOFactory.getAtomicReader(
+        ExposedHelper.INDEX_LOCATION);
 
     List<TermProvider> providers = new ArrayList<TermProvider>(fields.length);
     for (String field: fields) {
       providers.add(ExposedFactory.createProvider(
           segment, null, Arrays.asList(field), new NamedNaturalComparator()));
+      if (providers.size() > 1) {
+        assertFalse("There should be no duplicate providers",
+                    providers.get(providers.size()-2) ==
+                    providers.get(providers.size()-1));
+      }
     }
     FacetMap map = FacetMapFactory.createMap(1, providers);
-    assertEquals(message + ". There should be the correct number of terms for " +
-        "the single document in the map",
+    if (termCount != map.getTermsForDocID(0).length) {
+      for (BytesRef term: map.getTermsForDocID(0)) {
+        System.err.println(term.utf8ToString());
+      }
+    }
+    assertEquals(message + ". There should be the correct number of terms for "
+        + "the single document in the map",
         termCount, map.getTermsForDocID(0).length);
     BytesRef last = null;
     for (BytesRef term: map.getTermsForDocID(0)) {

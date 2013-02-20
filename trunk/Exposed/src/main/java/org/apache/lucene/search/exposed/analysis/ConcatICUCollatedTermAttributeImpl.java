@@ -55,7 +55,7 @@ public class ConcatICUCollatedTermAttributeImpl extends CharTermAttributeImpl {
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException("utf-8 must be supported", e);
     }
-    final int bufferSize = strBytes.length +  key.bytes.length;
+    final int bufferSize = strBytes.length +  key.size;
     if (buffer.length < bufferSize) {
       buffer = new byte[bufferSize];
     }

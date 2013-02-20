@@ -71,8 +71,9 @@ public class FieldTermProvider extends TermProviderImpl {
    */
   public static boolean optimizeCollator = true;
 
-  private Terms terms;
-  private TermsEnum termsEnum;
+  private final Terms terms;
+  private final TermsEnum termsEnum;
+  private final boolean concat;
 
   public FieldTermProvider(IndexReader reader, int docIDBase,
                            ExposedRequest.Field request,
@@ -85,6 +86,7 @@ public class FieldTermProvider extends TermProviderImpl {
               + IndexUtil.flatten(reader).size() + " sub readers");
     }
     this.request = request;
+    concat = request.isConcat();
 
     terms = ((AtomicReader)reader).fields().terms(request.getField());
     // TODO: Make an OrdTermsEnum to handle Variable Gap and other non-ord-codec
@@ -156,6 +158,22 @@ public class FieldTermProvider extends TermProviderImpl {
       byte[] bytes = new byte[br.length];
       System.arraycopy(br.bytes, br.offset, bytes, 0, br.length);
       return new BytesRef(bytes, 0, br.length);
+  }
+
+  @Override
+  public BytesRef getDisplayTerm(long ordinal) throws IOException {
+    if (concat) {
+      return ExposedUtil.deConcat(getTerm(ordinal), null);
+    }
+    return getTerm(ordinal);
+  }
+
+  @Override
+  public BytesRef getOrderedDisplayTerm(long indirect) throws IOException {
+    if (concat) {
+      return ExposedUtil.deConcat(getOrderedTerm(indirect), null);
+    }
+    return getOrderedTerm(indirect);
   }
 
   @SuppressWarnings("ObjectToString")

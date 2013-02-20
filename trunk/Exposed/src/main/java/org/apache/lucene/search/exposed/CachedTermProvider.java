@@ -63,6 +63,12 @@ public class CachedTermProvider extends CachedProvider<BytesRef>
     return get(ordinal);
   }
 
+  // TODO: Add display terms to caching system
+  @Override
+  public BytesRef getDisplayTerm(long ordinal) throws IOException {
+    return source.getDisplayTerm(ordinal);
+  }
+
   @Override
   public Iterator<ExposedTuple> getIterator(boolean collectDocIDs)
                                                             throws IOException {
@@ -113,6 +119,11 @@ public class CachedTermProvider extends CachedProvider<BytesRef>
   @Override
   public BytesRef getOrderedTerm(long indirect) throws IOException {
     return source.getOrderedTerm(indirect);
+  }
+
+  @Override
+  public BytesRef getOrderedDisplayTerm(long indirect) throws IOException {
+    return source.getOrderedDisplayTerm(indirect);
   }
 
   @Override

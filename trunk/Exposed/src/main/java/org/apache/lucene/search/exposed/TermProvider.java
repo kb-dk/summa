@@ -100,10 +100,14 @@ public interface TermProvider {
 
   BytesRef getTerm(long ordinal) throws IOException;
 
+  BytesRef getDisplayTerm(long ordinal) throws IOException;
+
   String getOrderedField(long indirect) throws IOException;
 
   // Note: indirect might be -1 which should return null
   BytesRef getOrderedTerm(long indirect) throws IOException;
+
+  BytesRef getOrderedDisplayTerm(long indirect) throws IOException;
 
   long getUniqueTermCount() throws IOException;
 
