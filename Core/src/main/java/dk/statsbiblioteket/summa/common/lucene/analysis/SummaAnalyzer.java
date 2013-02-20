@@ -20,7 +20,6 @@ import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.collation.ICUCollationAttributeFactory;
 import org.apache.lucene.search.exposed.analysis.ConcatICUCollationAttributeFactory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
@@ -94,7 +93,7 @@ public class SummaAnalyzer extends Analyzer {
         this.ignoreCase = ignoreCase;
         this.collator = collator;
         if (collator != null) {
-            this.factory = new ConcatICUCollationAttributeFactory(collator);
+            factory = new ConcatICUCollationAttributeFactory(collator);
         }
 
         transliteratorFactory = new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(

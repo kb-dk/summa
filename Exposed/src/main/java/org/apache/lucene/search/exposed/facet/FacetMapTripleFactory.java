@@ -72,8 +72,8 @@ public class FacetMapTripleFactory {
    * Iterates all terms and counts the number of references from each document
    * to any tag.
    *
-   * @param providers
-   * @param tagCounts    #tag-references, one entry/document.
+   * @param providers the sources for terms for tags.
+   * @param tagCounts #tag-references, one entry/document.
    * @throws IOException if the tags could not be iterated.
    */
   private static void countTags(List<TermProvider> providers,
@@ -220,7 +220,7 @@ public class FacetMapTripleFactory {
   }
 
   private static void initDoc2ref(int[] tagCounts, PackedInts.Mutable doc2ref) {
-    long initTime = -System.currentTimeMillis();
+//    long initTime = -System.currentTimeMillis();
     int offset = 0;
     for (int i = 0 ; i < tagCounts.length ; i++) {
       doc2ref.set(i, offset);
@@ -234,7 +234,7 @@ public class FacetMapTripleFactory {
     }
     doc2ref.set(tagCounts.length, offset);
 //      doc2ref.set(doc2ref.size()-1, offset);
-    initTime += System.currentTimeMillis();
+//    initTime += System.currentTimeMillis();
     // < 100 ms for 10M doc2refs so we do not print performance data
 /*    if (ExposedSettings.debug) {
       System.out.println("initDoc2Ref with " + doc2ref.size() + " doc2refs "
