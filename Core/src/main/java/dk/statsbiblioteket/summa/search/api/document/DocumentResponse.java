@@ -486,4 +486,9 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     public long getHitCount() {
         return hitCount;
     }
+
+    @Override
+    public String toString() {
+        return "DocumentResponse(hitCount=" + hitCount + ", #records=" + records.size() + ")";
+    }
 }
