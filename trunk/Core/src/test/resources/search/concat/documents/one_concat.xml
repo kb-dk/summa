@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sd:SummaDocument xmlns:sd="http://statsbiblioteket.dk/summa/2008/Document" version="1.0" id="jh@example.com" boost="1">
+<sd:fields>
+<sd:field name="id">one</sd:field>
+<sd:field name="plain">plain ål</sd:field>
+<sd:field name="concat">concat ål</sd:field>
+</sd:fields>
+</sd:SummaDocument>
+
+

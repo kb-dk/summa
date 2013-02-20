@@ -172,7 +172,9 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
 
         for (int i = 0; i < args.length; i = i + 2) {
             if (!(args[i] instanceof String)) {
-                throw new IllegalArgumentException("Every even number arg must be a String");
+                throw new IllegalArgumentException(
+                        "Every even number arg must be a String. Argument was a " + args[i].getClass()
+                                + " with toString=" + args[i]);
             }
             if (args[i + 1] instanceof List) {
                 conf.setStrings(args[i].toString(), (List<String>) args[i + 1]);
