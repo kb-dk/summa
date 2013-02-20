@@ -35,10 +35,16 @@ public class ExposedUtil {
                              reuse.bytes, 0, concat.length-i-1);
             reuse.offset = 0;
             reuse.length = concat.length-i-1;
+
+  //          for (int j = 0 ; j < concat.length ; j++) {
+    //            System.out.print((concat.bytes[concat.offset+j]  & 0xFF) + " ");
+      //      }
+//            System.out.println("(" + reuse.utf8ToString() + ")");
+
             return reuse;
         }
     }
+//    System.out.println("No 0 in " + concat.utf8ToString());
     return concat; // Input did not contain a 0
-
   }
 }
