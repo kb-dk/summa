@@ -147,6 +147,12 @@ public class FacetResponse {
       out.writeCharacters("\n");
     }
 
+    @Override
+    public String toString() {
+      return "Group(name=" + request.getGroup().getName() + ", fields="
+             + getFieldsStr() + ", #tags=" + tags.getTags().size() + ")";
+    }
+
     private StringBuffer sb = new StringBuffer();
     public synchronized String getFieldsStr() {
       sb.setLength(0);
@@ -342,4 +348,15 @@ public class FacetResponse {
     this.countCached = wasCached;
   }
 
+  @Override
+  public String toString() {
+    String g = "";
+    for (Group group: groups) {
+      if (!"".equals(g)) {
+        g += ", ";
+      }
+      g += group.toString();
+    }
+    return "FacetResponse(hits=" + hits + ", [" + g + "])";
+  }
 }
