@@ -39,7 +39,7 @@ public class ExposedHelper {
   public void close() {
     deleteIndex();
   }
-  public void deleteIndex() {
+  public static void deleteIndex() {
     if (INDEX_LOCATION.exists()) {
       for (File file: INDEX_LOCATION.listFiles()) {
         file.delete();

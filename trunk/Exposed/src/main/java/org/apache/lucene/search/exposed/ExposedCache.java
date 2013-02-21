@@ -16,7 +16,9 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
   private final ArrayList<TermProvider> cache = new ArrayList<TermProvider>(5);
   private final List<PurgeCallback> remoteCaches =
       new ArrayList<PurgeCallback>();
-  private final static Set<String> concatFields = new HashSet<String>();
+  // field, collatorID. collatorID is used by ExposedUtil
+  private final static Map<String, String> concatFields =
+      new HashMap<String, String>();
 
   private static final ExposedCache exposedCache;
   static {
@@ -53,7 +55,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
 
     ExposedRequest.Group groupRequest = FacetRequestGroup.createGroup(
         groupName, fieldNames, comparator,
-        isConcatGroup(groupName, fieldNames));
+        getConcatCollatorID(groupName, fieldNames));
 
     for (TermProvider provider: cache) {
       if (provider instanceof GroupTermProvider
@@ -109,15 +111,19 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     return groupProvider;
   }
 
-  private boolean isConcatGroup(String groupName, List<String> fieldNames) {
-    boolean concat = concatFields.contains(fieldNames.get(0));
+  private String getConcatCollatorID(
+      String groupName, List<String> fieldNames) {
+    String concat = concatFields.get(fieldNames.get(0));
     for (String field: fieldNames) {
-      if (concatFields.contains(field) != concat) {
+      String currentConcat = concatFields.get(field);
+      if (concat != null && currentConcat == null
+          || concat == null && currentConcat != null
+        || concat != null && !concat.equals(currentConcat)) {
         throw new IllegalArgumentException(String.format(
             "The fields for the group %s did not have the same concat flags. "
-            + "First field '%s' had concat=%b, the field '%s' has concat=%b",
+            + "First field '%s' had concat=%s, the field '%s' has concat=%s",
             groupName,
-            fieldNames.get(0), concat, field, concatFields.contains(field)));
+            fieldNames.get(0), concat, field, concatFields.get(field)));
       }
     }
     return concat;
@@ -150,10 +156,12 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
    * ICU Collator, followed by an UTF-8 representation of the original term.
    * When display values are extracted by the Exposed system, only the original
    * term is delivered for concatenated fields.
-   * @param field the concatenated field.
+   * @param field      the concatenated field.
+   * @param collatorID the ID used to resolve the collator in
+   *                   {@link ExposedUtil#concat}.
    */
-  public synchronized void addConcatField(String field) {
-    concatFields.add(field);
+  public synchronized void addConcatField(String field, String collatorID) {
+    concatFields.put(field, collatorID);
   }
 
   public synchronized void clearConcatFields() {

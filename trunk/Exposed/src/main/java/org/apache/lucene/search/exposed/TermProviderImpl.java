@@ -22,6 +22,8 @@ public abstract class TermProviderImpl implements TermProvider {
   private int docIDBase; // Changed on reopen
   private final NamedComparator comparator;
   private final String designation;
+  private final boolean concat;
+  private final String collatorID;
 
   /**
    * @param reader the underlying reader for this provider.
@@ -34,12 +36,14 @@ public abstract class TermProviderImpl implements TermProvider {
    */
   protected TermProviderImpl(
       IndexReader reader, int docIDBase, NamedComparator comparator,
-      String designation, boolean cacheTables) {
+      String designation, boolean cacheTables, String concatCollatorID) {
     this.reader = reader;
     this.docIDBase = docIDBase;
     this.comparator = comparator;
     this.cacheTables = cacheTables;
     this.designation = designation;
+    concat = concatCollatorID != null;
+    this.collatorID = concatCollatorID;
   }
 
   @Override
@@ -132,7 +136,8 @@ public abstract class TermProviderImpl implements TermProvider {
   }
   @Override
   public int getNearestTermIndirect(
-      final BytesRef key, int startTermPos, int endTermPos) throws IOException {
+      BytesRef key, int startTermPos, int endTermPos) throws IOException {
+    key = concat ? ExposedUtil.concat(collatorID, key, null) : key;
     if (getComparator() != null) {
       return getNearestWithComparator(key, startTermPos, endTermPos);
     }
@@ -201,4 +206,25 @@ public abstract class TermProviderImpl implements TermProvider {
     }
     docToSingle = null;
   }
+
+  public boolean isConcat() {
+    return concat;
+  }
+
+  @Override
+  public BytesRef getDisplayTerm(long ordinal) throws IOException {
+    if (concat) {
+      return ExposedUtil.deConcat(getTerm(ordinal), null);
+    }
+    return getTerm(ordinal);
+  }
+
+  @Override
+  public BytesRef getOrderedDisplayTerm(long indirect) throws IOException {
+    if (concat) {
+      return ExposedUtil.deConcat(getOrderedTerm(indirect), null);
+    }
+    return getOrderedTerm(indirect);
+  }
+
 }

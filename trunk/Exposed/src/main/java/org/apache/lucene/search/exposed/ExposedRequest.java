@@ -45,16 +45,18 @@ public class ExposedRequest {
     private final List<Field> fields;
     private final NamedComparator comparator;
     private final boolean concat;
+    private final String collatorID;
 
     public Group(String name, List<Field> fields, NamedComparator comparator) {
-      this(name, fields, comparator, false);
+      this(name, fields, comparator, null);
     }
     public Group(String name, List<Field> fields, NamedComparator comparator,
-                 boolean concat) {
+                 String concatCollatorID) {
       this.name = name;
       this.fields = fields;
       this.comparator = comparator;
-      this.concat = concat;
+      concat = concatCollatorID != null;
+      collatorID = concatCollatorID;
     }
 
     /**
@@ -134,6 +136,10 @@ public class ExposedRequest {
       return fieldNames;
     }
 
+    public String getConcatCollatorID() {
+      return collatorID;
+    }
+
     /**
      * If the comparatorID is {@link #FREE_ORDER} we set it to
      * {@link #LUCENE_ORDER};
@@ -153,14 +159,17 @@ public class ExposedRequest {
     private final String field;
     private final NamedComparator comparator;
     private final boolean concat;
+    private final String collatorID;
 
     public Field(String field, NamedComparator comparator) {
-      this(field, comparator, false);
+      this(field, comparator, null);
     }
-    public Field(String field, NamedComparator comparator, boolean concat) {
+    public Field(String field, NamedComparator comparator,
+                 String concatCollatorID) {
       this.field = field;
       this.comparator = comparator;
-      this.concat = concat;
+      concat = concatCollatorID != null;
+      collatorID = concatCollatorID;
     }
 
     /**
@@ -205,6 +214,10 @@ public class ExposedRequest {
     public boolean equals(Field otherField) {
       return getField().equals(otherField.getField()) &&
           getComparator().getID().equals(otherField.getComparator().getID());
+    }
+
+    public String getConcatCollatorID() {
+      return collatorID;
     }
 
   }
