@@ -164,6 +164,10 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     concatFields.put(field, collatorID);
   }
 
+  public boolean isConcatField(String field) {
+    return concatFields.containsKey(field);
+  }
+
   public synchronized void clearConcatFields() {
     concatFields.clear();
   }

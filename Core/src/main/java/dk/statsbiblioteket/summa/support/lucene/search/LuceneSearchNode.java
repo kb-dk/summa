@@ -49,6 +49,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.ExposedCache;
 import org.apache.lucene.search.exposed.ExposedSettings;
+import org.apache.lucene.search.exposed.ExposedUtil;
 import org.apache.lucene.search.exposed.facet.FacetMapFactory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.MMapDirectory;
@@ -882,7 +883,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         if (fieldDoc.fields[0] == null) {
             return sortWarned;
         } else if (fieldDoc.fields[0] instanceof BytesRef) {
-                record.setSortValue(((BytesRef)fieldDoc.fields[0]).utf8ToString());
+            String strValue = ExposedCache.getInstance().isConcatField(topDocs.fields[0].getField()) ?
+                    ExposedUtil.deConcat((BytesRef)fieldDoc.fields[0], null).utf8ToString() :
+                    ((BytesRef)fieldDoc.fields[0]).utf8ToString();
+                record.setSortValue(strValue);
         } else if (fieldDoc.fields[0] instanceof String) {
             record.setSortValue((String)fieldDoc.fields[0]);
         } else {

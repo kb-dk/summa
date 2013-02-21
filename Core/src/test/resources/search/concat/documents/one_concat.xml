@@ -3,6 +3,7 @@
 <sd:fields>
 <sd:field name="id">one</sd:field>
 <sd:field name="plain">plain ål</sd:field>
+<sd:field name="sort">øl one</sd:field>
 <sd:field name="concat">concat ål</sd:field>
 </sd:fields>
 </sd:SummaDocument>

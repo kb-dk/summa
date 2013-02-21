@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.exposed.ExposedCache;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -74,9 +75,15 @@ public class SortPool {
         }
         */
         if (!sortFactories.containsKey(field.getName())) {
+            String sortLocale = field.getSortLocale();
+            if (ExposedCache.getInstance().isConcatField(field.getName())) {
+                log.info("Field '" + field.getName() + "' is marked as a concat field. Search-time locale sorting is "
+                        + "disabled in favor of direct collator key sorting");
+                sortLocale = null;
+            }
             log.debug("Adding sort locale '" + field.getSortLocale() + "' to Field '" + field.getName() + "'");
             sortFactories.put(field.getName(), new SortFactory(
-                    comparatorImplementation, bufferSize, field.getName(), field.getSortLocale(), comparators));
+                    comparatorImplementation, bufferSize, field.getName(), sortLocale, comparators));
         } else {
             SortFactory oldFactory = sortFactories.get(field.getName());
             if (!oldFactory.getSortLanguage().equals(field.getSortLocale())) {
