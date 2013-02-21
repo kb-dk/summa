@@ -2,6 +2,7 @@
 <sd:SummaDocument xmlns:sd="http://statsbiblioteket.dk/summa/2008/Document" version="1.0" id="jh@example.com" boost="1">
 <sd:fields>
 <sd:field name="id">many</sd:field>
+<sd:field name="sort">årle many</sd:field>
 <sd:field name="concat">concat b</sd:field>
 <sd:field name="concat">concat a</sd:field>
 <sd:field name="concat">concat z</sd:field>

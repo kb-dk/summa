@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Strings;
@@ -88,6 +89,59 @@ public class ConcatTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(ConcatTest.class);
+    }
+
+    public void testTruncation() throws IOException {
+        createIndex(ONE, TWO, MANY);
+        ResponseCollection responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "concat:concat\\ ze*",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                FacetKeys.SEARCH_FACET_FACETS, "concat"
+        ));
+        assertEquals("The number of hits should be correct",
+                1, getHitcount(responses));
+        assertTrue("The result should contain document many",
+                responses.toXML().contains("<field name=\"id\">many</field>"));
+    }
+
+    private long getHitcount(ResponseCollection responses) {
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)response;
+                return docs.getHitCount();
+            }
+        }
+        return -1;
+    }
+
+    // TODO: Develop test that fails when terms are double collator sorted to verify single sorting
+    public void testSorting() throws IOException {
+        createIndex(ONE, TWO, MANY);
+        ResponseCollection responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "*:*",
+                DocumentKeys.SEARCH_SORTKEY, "sort",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                FacetKeys.SEARCH_FACET_FACETS, "concat"
+        ));
+        List<String> ids = getIDs(responses);
+        assertEquals("The order of the ids should be as expected", "two, one, many", Strings.join(ids, ", "));
+    }
+
+    private List<String> getIDs(ResponseCollection responses) {
+        List<String> ids = new ArrayList<String>();
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)response;
+                for (DocumentResponse.Record record: docs.getRecords()) {
+                    for (DocumentResponse.Field field: record.getFields()) {
+                        if ("id".equals(field.getName())) {
+                            ids.add(field.getContent());
+                        }
+                    }
+                }
+            }
+        }
+        return ids;
     }
 
     public void testPlainFaceting() throws IOException {

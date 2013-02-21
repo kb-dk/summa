@@ -2,6 +2,7 @@
 <sd:SummaDocument xmlns:sd="http://statsbiblioteket.dk/summa/2008/Document" version="1.0" id="jh@example.com" boost="1">
 <sd:fields>
 <sd:field name="id">two</sd:field>
+<sd:field name="sort">æble two</sd:field>
 <sd:field name="plain">plain æblegrød</sd:field>
 <sd:field name="plain">plain ærter</sd:field>
 <sd:field name="concat">concat ærter</sd:field>
