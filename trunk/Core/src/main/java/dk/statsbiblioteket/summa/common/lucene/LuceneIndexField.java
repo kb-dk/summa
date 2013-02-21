@@ -29,8 +29,7 @@ import java.text.ParseException;
  * Extension of IndexField to support Lucene-specific behaviour.
  * TODO: Migrate the building of Analyzer from IndexServiceImpl.
  */
-public class LuceneIndexField extends
-                              IndexField<Analyzer, Tokenizer, IndexFilter> {
+public class LuceneIndexField extends IndexField<Analyzer, Tokenizer, IndexFilter> {
     /** The field term vector. */
     private Field.TermVector termVector = Field.TermVector.WITH_POSITIONS_OFFSETS;
 

@@ -35,6 +35,17 @@ public interface FieldProvider<F extends IndexField> {
     F getField(String fieldName) throws IllegalArgumentException;
 
     /**
+     * Locate and return an already existing field.
+     *
+     * @param instanceName
+     * @param fieldName the name of the wanted field.
+     * @param locale the locale for the field if needed else null.
+     * @return the field corresponding to the name.
+     * @throws IllegalArgumentException if the field could not be located.
+     */
+    F getFieldWithLocale(String instanceName, String fieldName, String locale) throws IllegalArgumentException;
+
+    /**
      * Create an new field with default values.
      * @return a new field.
      */

@@ -49,6 +49,12 @@ public class StoringIndexDescriptor extends IndexDescriptor<IndexField> {
     }
 
     @Override
+    public IndexField getFieldWithLocale(
+            String instanceName, String fieldName, String locale) throws IllegalArgumentException {
+        return getField(fieldName);
+    }
+
+    @Override
     public IndexField createNewField(Node node) throws ParseException {
         return new StoringField(node, this);
     }
