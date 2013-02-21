@@ -1,25 +1,19 @@
 package org.apache.lucene.search.exposed.facet;
 
-import com.ibm.icu.text.Collator;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
-import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.exposed.*;
-import org.apache.lucene.search.exposed.analysis.ConcatICUCollationAnalyzer;
-import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.util.packed.PackedInts;
@@ -28,7 +22,10 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 public class TestExposedFacets extends TestCase {
   private ExposedHelper helper;
@@ -152,96 +149,6 @@ public class TestExposedFacets extends TestCase {
       System.out.println(response.toXML());
     }
     reader.close();
-  }
-
-  public void testIndexBytes() throws IOException {
-    final String SPECIAL = "æblegrød";
-    buildConcatIndex(SPECIAL);
-    IndexSearcher searcher = ExposedHelper.getSearcher();
-
-    {
-      Query q = new TermQuery(new Term(IDFIELD, "doc0"));
-      TopDocs top = searcher.search(q, 10);
-      assertEquals("A single document should be found for " + q,
-                   1, top.totalHits);
-    }
-
-    { // Check concatenated value
-      byte[] raw = Collator.getInstance(new Locale("da")).getRawCollationKey(
-          SPECIAL, null).bytes;
-      byte[] str = SPECIAL.getBytes("utf-8");
-      byte[] concat = new byte[raw.length + str.length];
-      System.arraycopy(raw, 0, concat, 0, raw.length);
-      System.arraycopy(str, 0, concat, raw.length, str.length);
-
-      ExposedCache cache = ExposedCache.getInstance();
-      cache.addConcatField(CONFIELD);
-      TermProvider provider = cache.getProvider(
-          searcher.getIndexReader(), "Dummy", Arrays.asList(CONFIELD),
-          new NamedNaturalComparator());
-      Iterator<ExposedTuple> tuples = provider.getIterator(true);
-      assertTrue("There should be a binary value", tuples.hasNext());
-
-      ExposedTuple tuple = tuples.next();
-      assertEquals("The tuple should contain the concatenated BytesRef",
-                   new BytesRef(concat), tuple.term);
-      assertEquals(
-          "The ordinal display value should be sans collation key",
-          SPECIAL, provider.getDisplayTerm(tuple.ordinal).utf8ToString());
-      assertEquals(
-          "The indirect display value should be sans collation key",
-        SPECIAL, provider.getOrderedDisplayTerm(tuple.indirect).utf8ToString());
-    }
-  }
-
-  public void testConcatOrder() throws IOException {
-    String[] EXPECTED = new String[]{"abe", "bil", "æble", "øre", "ål", "år"};
-    buildConcatIndex("bil", "abe", "æble", "ål", "øre", "år");
-    IndexSearcher searcher = ExposedHelper.getSearcher();
-    ExposedCache cache = ExposedCache.getInstance();
-    cache.addConcatField(CONFIELD);
-    TermProvider provider = cache.getProvider(
-        searcher.getIndexReader(), "DummyGroup", Arrays.asList(CONFIELD),
-        new NamedNaturalComparator());
-    assertEquals("The terms should be collator sorted",
-                 provider, EXPECTED, provider.getIterator(false));
-  }
-
-  private void assertEquals(
-      String message, TermProvider provider, String[] expected,
-      Iterator<ExposedTuple> iterator) throws IOException {
-    int index = 0;
-    while (iterator.hasNext()) {
-      assertEquals(
-          message + ". Terms at index " + index + " should match",
-          expected[index++],
-          provider.getDisplayTerm(iterator.next().ordinal).utf8ToString());
-    }
-  }
-
-  private final static String CONFIELD = "concat";
-  private final static String IDFIELD = "id";
-  private File buildConcatIndex(String... terms) throws IOException {
-    Directory dir = FSDirectory.open(ExposedHelper.INDEX_LOCATION);
-    Map<String, Analyzer> map = new HashMap<String, Analyzer>();
-    map.put(CONFIELD, new ConcatICUCollationAnalyzer(
-            Collator.getInstance(new Locale("da"))));
-    map.put(IDFIELD, new WhitespaceAnalyzer(Version.LUCENE_40));
-    PerFieldAnalyzerWrapper perField = new PerFieldAnalyzerWrapper(
-        new WhitespaceAnalyzer(Version.LUCENE_40), map);
-    IndexWriter w  = new IndexWriter(
-        dir, new IndexWriterConfig(Version.LUCENE_40, perField));
-
-    Document doc = new Document();
-    IndexableField plain = new TextField(IDFIELD, "doc0", Field.Store.NO);
-    doc.add(plain);
-    for (String term: terms) {
-      IndexableField bytes = new TextField(CONFIELD, term, Field.Store.NO);
-      doc.add(bytes);
-    }
-    w.addDocument(doc);
-    w.close();
-    return ExposedHelper.INDEX_LOCATION;
   }
 
   public static final String DELETE_REQUEST =

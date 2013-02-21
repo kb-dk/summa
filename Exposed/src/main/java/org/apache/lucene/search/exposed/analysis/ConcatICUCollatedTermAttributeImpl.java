@@ -47,6 +47,7 @@ public class ConcatICUCollatedTermAttributeImpl extends CharTermAttributeImpl {
 
   @Override
   public int fillBytesRef() {
+    // TODO: Use ExposedUtil instead
     final String str = toString();
     collator.getRawCollationKey(str, key);
     byte[] strBytes;

@@ -315,11 +315,11 @@ public final class FacetRequestGroup implements SubtagsConstraints {
 
   public static ExposedRequest.Group createGroup(
       String name, List<String> fieldNames, NamedComparator comparator) {
-    return createGroup(name, fieldNames, comparator, false);
+    return createGroup(name, fieldNames, comparator, null);
   }
     public static ExposedRequest.Group createGroup(
         String name, List<String> fieldNames, NamedComparator comparator,
-        boolean concat) {
+        String concatCollatorID) {
     if (fieldNames.isEmpty()) {
       throw new IllegalArgumentException("There must be at least 1 field name");
     }
@@ -327,8 +327,9 @@ public final class FacetRequestGroup implements SubtagsConstraints {
         new ArrayList<ExposedRequest.Field>(fieldNames.size());
     for (String fieldName: fieldNames) {
       fieldRequests.add(new ExposedRequest.Field(
-          fieldName, comparator, concat));
+          fieldName, comparator, concatCollatorID));
     }
-    return new ExposedRequest.Group(name, fieldRequests, comparator, concat);
+    return new ExposedRequest.Group(
+        name, fieldRequests, comparator, concatCollatorID);
   }
 }

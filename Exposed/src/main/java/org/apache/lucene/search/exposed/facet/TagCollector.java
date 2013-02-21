@@ -250,8 +250,8 @@ public class TagCollector extends Collector {
 //      System.out.println("Extracting for " + requestGroup.getGroup().getName() + ": " + startTermPos + " -> " + endTermPos);
       responseGroups.add(extractResult(requestGroup, i));
     }
-    FacetResponse response =
-        new FacetResponse(request, responseGroups, hitCount);
+    FacetResponse response = new FacetResponse(
+        request, responseGroups, hitCount);
     response.setCountingTime(getCountTime());
     return response;
   }
