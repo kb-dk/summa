@@ -31,6 +31,7 @@ import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.search.exposed.ExposedUtil;
 import org.apache.lucene.util.Version;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -50,6 +51,10 @@ import java.util.*;
         comment = "Needs JavaDoc")
 public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
     private static Log log = LogFactory.getLog(LuceneIndexDescriptor.class);
+
+
+    public static final String COLLATED_STANDARD = "collatedSummaStandard";
+    public static final String COLLATED_KEYWORD = "collatedKeyword";
 
     private Analyzer indexAnalyzer;
     private Analyzer queryAnalyzer;
@@ -189,13 +194,6 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
                              Field.TermVector.NO,
                              new SummaNumberAnalyzer());
         }
-        if (baseFieldName.equals(COLLATED_DA)) { // Hack!
-            return makeField(baseFieldName,
-                             Field.Index.ANALYZED,
-                             Field.Store.NO,
-                             Field.TermVector.NO,
-                             new SummaStandardAnalyzer(Collator.getInstance(new Locale("da"))));
-        }
 
         throw new IllegalArgumentException(String.format(
                 "The base field '%s' is unknown by the LuceneIndexDescriptor",
@@ -230,6 +228,43 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
         log.info("Finished extracting MoreLikeThis fields: " + Logs.expand(moreLikethisFields, 20));
 
         return document;
+    }
+
+    @Override
+    public LuceneIndexField getFieldWithLocale(String instanceName, String fieldName, String locale)
+            throws IllegalArgumentException {
+        if (!COLLATED_STANDARD.equals(fieldName) && !COLLATED_KEYWORD.equals(fieldName)) {
+            return getField(fieldName);
+        }
+        if (COLLATED_STANDARD.equals(fieldName)) {
+            if (locale == null) {
+                log.warn("getFieldWithLocale: " + fieldName + " specified, but no locale. Returning summa_default");
+                return getField(IndexField.SUMMA_DEFAULT);
+            }
+            Collator collator = Collator.getInstance(new Locale(locale));
+            ExposedUtil.addCollator(locale, collator, instanceName);
+            log.info("Creating new concat SummaStandardAnalyzer(" + locale + ") for field '" + instanceName + "'");
+            return makeField(fieldName + "_" + locale,
+                    Field.Index.ANALYZED,
+                    Field.Store.NO,
+                    Field.TermVector.NO,
+                    new SummaStandardAnalyzer(collator));
+        }
+        if (COLLATED_KEYWORD.equals(fieldName)) {
+            if (locale == null) {
+                log.warn("getFieldWithLocale: " + fieldName + " specified, but no locale. Returning keyword");
+                return getField(KEYWORD);
+            }
+            Collator collator = Collator.getInstance(new Locale(locale));
+            ExposedUtil.addCollator(locale, collator, instanceName);
+            log.info("Creating new concat SummaKeywordAnalyzer(" + locale + ") for field '" + instanceName + "'");
+            return makeField(fieldName + "_" + locale,
+                    Field.Index.ANALYZED,
+                    Field.Store.NO,
+                    Field.TermVector.NO,
+                    new SummaKeywordAnalyzer(collator));
+        }
+        throw new IllegalStateException("Logic flow error: fieldName '" + fieldName + "' should have been handled");
     }
 
     private LuceneIndexField makeField(

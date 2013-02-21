@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.reader.ReplaceFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
+import org.apache.lucene.search.exposed.analysis.ConcatICUCollatedTermAttributeImpl;
 import org.apache.lucene.search.exposed.analysis.ConcatICUCollationAttributeFactory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
@@ -113,6 +114,6 @@ public class SummaAnalyzer extends Analyzer {
 
     // Delegation to {@link SummaICUCollatedTermAttributeImpl#getOriginalString}.
     public static BytesRef getOriginalString(final BytesRef concat, BytesRef reuse) {
-        return SummaICUCollatedTermAttributeImpl.getOriginalString(concat, reuse);
+        return ConcatICUCollatedTermAttributeImpl.getOriginalString(concat, reuse);
     }
 }

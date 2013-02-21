@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
@@ -21,6 +22,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.KeywordTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.search.exposed.analysis.ConcatICUCollationAttributeFactory;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -34,16 +36,34 @@ import java.util.Map;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal")
+        author = "te, hal",
+        comment = "This is a hellish hack that should be re-written from scratch (te)")
 public class SummaKeywordAnalyzer extends Analyzer {
     public static final Map<String, String> RULES = RuleParser.parse("'_' > ' ';");
 
     private SummaStandardAnalyzer standard = new SummaStandardAnalyzer();
     private ReplaceFactory replaceFactory = new ReplaceFactory(RULES);
 
+    private Collator collator = null;
+    private ConcatICUCollationAttributeFactory factory = null;
+
+    public SummaKeywordAnalyzer() {
+        this(null);
+    }
+
+    public SummaKeywordAnalyzer(Collator collator) {
+        if (collator != null) {
+            factory = new ConcatICUCollationAttributeFactory(collator);
+        }
+    }
+
     @Override
     protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-        return new TokenStreamComponents(new KeywordTokenizer(reader));
+        if (collator == null) {
+            return new TokenStreamComponents(new KeywordTokenizer(reader));
+        }
+        KeywordTokenizer tokenizer = new KeywordTokenizer(factory, reader, KeywordTokenizer.DEFAULT_BUFFER_SIZE);
+        return new TokenStreamComponents(tokenizer, tokenizer);
     }
 
     @Override

@@ -96,17 +96,23 @@ public class IndexDescriptorTest extends TestCase {
                 new IndexDescriptor<IndexField<Object, Object, Object>>(
                         SIMPLE_DESCRIPTOR) {
 
-            @Override
-            public IndexField<Object, Object, Object> createNewField() {
-                return new IndexField<Object, Object, Object>();
-            }
+                    @Override
+                    public IndexField<Object, Object, Object> createNewField() {
+                        return new IndexField<Object, Object, Object>();
+                    }
 
-            @Override
-            public IndexField<Object, Object, Object> createNewField(Node node)
-                    throws ParseException {
-                return new IndexField<Object, Object, Object>(node, this);
-            }
-        };
+                    @Override
+                    public IndexField<Object, Object, Object> getFieldWithLocale(
+                            String instanceName, String fieldName, String locale) throws IllegalArgumentException {
+                        return getField(fieldName);
+                    }
+
+                    @Override
+                    public IndexField<Object, Object, Object> createNewField(Node node)
+                            throws ParseException {
+                        return new IndexField<Object, Object, Object>(node, this);
+                    }
+                };
         assertEquals("The default language should be as specified",
                      "no", id.getDefaultLanguage());
         assertEquals("The default fields should be as specified",
@@ -196,15 +202,22 @@ public class IndexDescriptorTest extends TestCase {
     }
 
     public void testEmpty() throws Exception {
-        IndexDescriptor id = new IndexDescriptor(SIMPLE_DESCRIPTOR_EMPTY) {
+        IndexDescriptor<IndexField<Object, Object, Object>> id =
+                new IndexDescriptor<IndexField<Object, Object, Object>>(SIMPLE_DESCRIPTOR_EMPTY) {
 
             @Override
-            public IndexField createNewField() {
+            public IndexField<Object, Object, Object> createNewField() {
                 return new IndexField<Object, Object, Object>();
             }
 
             @Override
-            public IndexField createNewField(Node node) throws ParseException {
+            public IndexField<Object, Object, Object> getFieldWithLocale(
+                    String instanceName, String fieldName, String locale) throws IllegalArgumentException {
+                return getField(fieldName);
+            }
+
+            @Override
+            public IndexField<Object, Object, Object> createNewField(Node node) throws ParseException {
                 return new IndexField<Object, Object, Object>(node, this);
             }
         };

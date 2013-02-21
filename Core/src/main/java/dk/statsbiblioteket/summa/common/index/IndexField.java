@@ -395,8 +395,7 @@ public class IndexField<A, T, F> {
      * @throws ParseException if there was an error parsing.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection", "unchecked"})
-    public void parse(Node node, FieldProvider fieldProvider) throws
-            ParseException {
+    public void parse(Node node, FieldProvider fieldProvider) throws ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
         //String nameVal = ParseUtil.getValue(xPath, node, "@name", (String)null);
@@ -421,7 +420,8 @@ public class IndexField<A, T, F> {
             try {
                 // TODO: Generify this
                 //noinspection unchecked
-                parentField = (IndexField<A, T, F>) fieldProvider.getField(parentName);
+                parentField = (IndexField<A, T, F>) fieldProvider.getFieldWithLocale( // concat needs locale
+                        nameVal, parentName, DOM.selectString(node, "@sortLocale", null));
             } catch (ClassCastException e) {
                 throw (ParseException) new ParseException(
                         "The FieldProvider did not provide the right type", -1).initCause(e);

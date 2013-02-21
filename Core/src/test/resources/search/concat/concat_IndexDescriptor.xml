@@ -4,7 +4,7 @@
     <fields>
         <field name="id" parent="keyword" stored="true"/>
         <field name="plain" parent="keyword" stored="true"/>
-        <field name="concat" parent="collatedDA" stored="true"/>
+        <field name="concat" parent="collatedKeyword" sortLocale="da" stored="true"/>
     </fields>
 
     <defaultSearchFields>
