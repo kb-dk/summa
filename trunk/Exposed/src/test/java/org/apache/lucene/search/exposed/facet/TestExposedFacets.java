@@ -42,10 +42,11 @@ public class TestExposedFacets extends TestCase {
     cache = ExposedCache.getInstance();
     helper = new ExposedHelper();
     helper.deleteIndex();
+    // TODO: Make proper cycling (preferably not randomize, thanks)
+//    FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
   }
 
   @Override
-
   public void tearDown() throws Exception {
     super.tearDown();
     if (w != null) {

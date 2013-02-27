@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.search;
 
+import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
@@ -39,13 +40,13 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.lucene.index.*;
+import org.apache.lucene.search.exposed.ExposedUtil;
 import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -89,6 +90,15 @@ public class ConcatTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(ConcatTest.class);
+    }
+
+    public void testKeyGeneration() {
+        Collator collator = Collator.getInstance(new Locale("da"));
+        ExposedUtil.addCollator("da", collator);
+        for (String term: new String[]{"crab", "crème", "crow"}) {
+            BytesRef concat = ExposedUtil.concat("da", new BytesRef(term), null);
+            System.out.println(term + ": " + ExposedUtil.getConcatHex(concat));
+        }
     }
 
     public void testTruncation() throws IOException {

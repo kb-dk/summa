@@ -102,4 +102,16 @@ public class ExposedUtil {
     reuse.length = length;
     return reuse;
   }
+
+  public static String getConcatHex(BytesRef concat) {
+      String result = "";
+      for (int i = 0 ; i < concat.length ; i++) {
+          if (!"".equals(result)) {
+              result += " ";
+          }
+          String addition = Integer.toHexString(concat.bytes[concat.offset+i] & 0xFF);
+          result += (addition.length() == 1 ? "0" : "") + addition;
+      }
+      return result;
+  }
 }

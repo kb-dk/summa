@@ -445,7 +445,6 @@ public class SummonSearchNode extends SolrSearchNode {
         long prefixIDs = -System.currentTimeMillis();
         String retval = prefixIDs(result, idPrefix);
         prefixIDs += System.currentTimeMillis();
-        log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
         return new Pair<String, String>(retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
     }
 

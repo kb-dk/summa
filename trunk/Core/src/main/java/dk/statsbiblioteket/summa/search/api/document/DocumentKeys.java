@@ -37,6 +37,14 @@ public interface DocumentKeys {
     public static final String SEARCH_QUERY = "search.document.query";
 
     /**
+     * Strings ("sb_aleph:1234", "summon:egsklj2"...). Optional.
+     * </p><p>
+     * Explicit ID-query which allows the backend to optimize lookup.
+     * Using this disables {@link #SEARCH_QUERY} and {@link #SEARCH_FILTER}.
+     */
+    public static final String SEARCH_IDS = "search.document.ids";
+
+    /**
      * String ("foo"). Optional.
      * </p><p>
      * The filter limits the amount of possible documents from a search.
@@ -161,5 +169,5 @@ public interface DocumentKeys {
      * {@link dk.statsbiblioteket.summa.common.Record#getBase()}}.
      */
     public static final String RECORD_BASE = "recordBase";
-}
 
+}
