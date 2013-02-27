@@ -324,6 +324,11 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             return;
         }
 
+        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            throw new UnsupportedOperationException(
+                    "The ID-search API at summon only goes live 2013-03-07 and needs to be tested before this " +
+                            "functionality is made available i Summa");
+        }
         String rawQuery = getEmptyIsNull(request, DocumentKeys.SEARCH_QUERY);
         String filter =  getEmptyIsNull(request, DocumentKeys.SEARCH_FILTER);
         String sortKey = getEmptyIsNull(request, DocumentKeys.SEARCH_SORTKEY);

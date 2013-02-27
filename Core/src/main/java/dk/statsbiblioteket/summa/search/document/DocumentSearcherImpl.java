@@ -150,8 +150,8 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
      * for {@link #fullSearch}. The result from FullSearch is added to
      * responses.
      * </p><p>
-     * If no {@link #SEARCH_QUERY} of {@link #SEARCH_FILTER} is defined, a
-     * warning is logged and no search is performed.
+     * If no {@link #SEARCH_QUERY}, {@link #SEARCH_IDS} or {@link #SEARCH_FILTER} is defined,
+     * a warning is logged and no search is performed.
      *
      * @param request   the search request.
      * @param responses the responses from searches.
@@ -164,8 +164,14 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
         }
         long startTime = System.currentTimeMillis();
 
-        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
-        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
+        String query;
+        String filter = null;
+        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            query = makeIDQuery(request.getStrings(DocumentKeys.SEARCH_IDS));
+        } else {
+            query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+            filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
+        }
         //noinspection OverlyBroadCatchBlock
         long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX, this.startIndex);
         long records = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, this.records);
@@ -233,6 +239,13 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
     }
 
     /**
+     * Create a query that matches any of the given IDs, e.g. "recordID:\"id1\" OR recordID:\"id2\"".
+     * @param ids the document IDs to search for.
+     * @return a quiry that matches any of the provided IDs.
+     */
+    protected abstract String makeIDQuery(List<String> ids);
+
+    /**
      * Calculate the total number of hits for the given query and filter.
      *
      * @param request the original request.
@@ -253,9 +266,10 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
      */
     protected boolean isRequestUsable(Request request) {
         String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        List<String> ids = request.getStrings(DocumentKeys.SEARCH_IDS, (List<String>)null);
         String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
-        if ((query == null || "".equals(query)) && (filter == null || "".equals(filter))) {
-            log.trace("No query, no filter, returning false");
+        if ((query == null || "".equals(query)) && (filter == null || "".equals(filter)) && ids == null) {
+            log.trace("No query, no filter, no IDs, returning false");
             return false;
         }
         return true;

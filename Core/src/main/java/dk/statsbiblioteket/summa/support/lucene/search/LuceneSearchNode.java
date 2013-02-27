@@ -405,6 +405,18 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                     mlt_stopWords == null ? "[None]" : mlt_stopWords.size());
     }
 
+    @Override
+    protected String makeIDQuery(List<String> ids) {
+        String query = "";
+        for (String id: ids) {
+            if (!"".equals(query)) {
+                query += " OR ";
+            }
+            query += IndexUtils.RECORD_FIELD + ":\"" + id.replace("\"", "\\\"") + "\"";
+        }
+        return query;
+    }
+
     private Integer getIntOrNull(Configuration conf, String key) {
         return conf.valueExists(key) ? conf.getInt(key) : null;
     }
@@ -558,6 +570,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
      * @param query either a direct Lucene query or a list of key-value search
      *              parameters.
      */
+    // TODO: Change this to a proper JSON-based warmer in SummaSearcher
     @Override
     public void managedWarmup(String query) {
         //noinspection OverlyBroadCatchBlock

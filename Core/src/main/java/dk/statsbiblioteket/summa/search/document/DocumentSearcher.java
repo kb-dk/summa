@@ -27,7 +27,7 @@ import java.rmi.RemoteException;
  * from a corpus of documents. The base example is a Lucene searcher.
  * </p><p>
  * All constants prefixed with SEARCH maps directly to from {@link Request} to
- * {@link #fullSearch}. The only mandatory value is {@link #SEARCH_QUERY}.
+ * {@link #fullSearch}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
