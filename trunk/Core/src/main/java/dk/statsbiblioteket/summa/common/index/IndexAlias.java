@@ -73,9 +73,7 @@ public final class IndexAlias implements Comparable {
                 }
                 String name = nameNode.getNodeValue();
                 Node langNode = child.getAttributes().getNamedItem("lang");
-                String lang = langNode == null
-                              || "".equals(langNode.getNodeValue())
-                              ? null : langNode.getNodeValue();
+                String lang = langNode == null || "".equals(langNode.getNodeValue()) ? null : langNode.getNodeValue();
                 log.trace("Found alias(" + name + ", " + lang + ")");
                 aliases.add(new IndexAlias(name, lang));
             }
@@ -195,15 +193,11 @@ public final class IndexAlias implements Comparable {
     }
 
     public boolean isMatch(String name, String lang) {
-        return this.name.equals(name)
-               && (this.lang == null || lang == null
-                   || this.lang.equals(lang));
+        return this.name.equals(name) && (this.lang == null || lang == null || this.lang.equals(lang));
     }
 
     public String toXMLFragment() {
-        return "<alias name=\"" + name + "\""
-               + (lang == null ? "" : " lang=\"" + lang + "\"")
-               + "/>\n";
+        return "<alias name=\"" + name + "\"" + (lang == null ? "" : " lang=\"" + lang + "\"") + "/>\n";
     }
 
     @Override
