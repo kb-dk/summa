@@ -11,8 +11,8 @@
 <sd:field name="lsu_oai">urukaisk</sd:field>
 <sd:field name="lsu_oai">Kaslafniansk myrtologi</sd:field>
 <sd:field name="lsu_oai">palæontofantisme</sd:field>
-    <sd:field name="lsu_oai">humus</sd:field>
-    <sd:field name="facet_test">æblegrød</sd:field>
+<sd:field name="lsu_oai">humus</sd:field>
+<sd:field name="facet_test">æblegrød</sd:field>
 </sd:fields>
 </sd:SummaDocument>
 

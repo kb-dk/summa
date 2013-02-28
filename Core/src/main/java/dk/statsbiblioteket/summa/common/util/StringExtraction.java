@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Helper utils from extracting sub strings from strings.
+ * Helper utils for extracting sub strings from strings.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -40,13 +40,7 @@ public class StringExtraction {
      * @return all sub Strings that matches the given regexp. No matches means empty list.
      */
     public static List<String> getStrings(CharSequence input, String regexp) {
-        Pattern pattern = Pattern.compile(regexp, Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(input);
-        List<String> matches = new ArrayList<String>();
-        while (matcher.find()) {
-            matches.add(matcher.group());
-        }
-        return matches;
+        return getStrings(input, Pattern.compile(regexp, Pattern.DOTALL));
     }
 
     /**
@@ -73,11 +67,22 @@ public class StringExtraction {
      * @return all sub Strings that matches the given regexp. No matches means empty list.
      */
     public static List<String> getStrings(CharSequence input, String outerRegexp, String innerRegexp) {
+        return getStrings(input,
+                Pattern.compile(outerRegexp, Pattern.DOTALL), Pattern.compile(innerRegexp, Pattern.DOTALL));
+    }
+    /**
+
+     * Extract matches for outerRegexp, then perform matching of innerRegexp on all outer matches.
+     * @param input  the String to extract sub Strings from.
+     * @param outerPattern used to locale outer text blocks.
+     * @param innerPattern used to locate inner text snippets.
+     * @return all sub Strings that matches the given regexp. No matches means empty list.
+     */
+    public static List<String> getStrings(CharSequence input, Pattern outerPattern, Pattern innerPattern) {
         List<String> merged = new ArrayList<String>();
-        List<String> outer = getStrings(input, outerRegexp);
-        Pattern innerPattern = Pattern.compile(innerRegexp, Pattern.DOTALL);
-        for (String out: outer) {
-            merged.addAll(getStrings(out, innerPattern));
+        final Matcher outer = outerPattern.matcher(input);
+        while(outer.find()) {
+            merged.addAll(getStrings(outer.group(), innerPattern));
         }
         return merged;
     }

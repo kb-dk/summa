@@ -57,8 +57,7 @@ public class FreeTextAnalyzerTest extends AnalyzerTestCase {
         }
     }
 
-    public void testFreetext(String input, List<String> expected)
-                                                            throws IOException {
+    public void testFreetext(String input, List<String> expected) throws IOException {
         FreeTextAnalyzer fa = new FreeTextAnalyzer();
         TokenStream stream = fa.tokenStream("dummy", new StringReader(input));
         assertTerms(expected, stream);
