@@ -22,13 +22,12 @@ import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxyTest;
 import dk.statsbiblioteket.util.Files;
-
-import java.io.File;
-import java.io.IOException;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * StorageWriterClient Tester.
@@ -86,7 +85,8 @@ public class StorageWriterClientTest extends TestCase {
         final int LIMIT = 1000;
         Configuration conf = Configuration.newMemoryBased(
                 ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28087/nonexisting",
-                ConnectionConsumer.CONF_INITIAL_GRACE_TIME, "0"
+                ConnectionConsumer.CONF_INITIAL_GRACE_TIME, "10",
+                ConnectionConsumer.CONF_SUBSEQUENT_GRACE_TIME, "10"
         );
         StorageWriterClient remoteStorage = new StorageWriterClient(conf);
         long clearTime = -System.currentTimeMillis();

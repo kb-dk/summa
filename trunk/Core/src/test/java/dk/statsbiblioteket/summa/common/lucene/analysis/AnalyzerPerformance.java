@@ -71,7 +71,7 @@ public class AnalyzerPerformance extends TestCase {
 
     public static void dumpTokens(TokenStream t, Appendable out) throws Exception {
         //Token tok = new Token();
-
+        t.reset();
         CharTermAttribute term = t.getAttribute(CharTermAttribute.class);
         while (t.incrementToken()) {
             out.append(term.toString());

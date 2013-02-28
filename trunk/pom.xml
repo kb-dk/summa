@@ -179,7 +179,7 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil</artifactId>
-                <version>0.5.9-SNAPSHOT</version>
+                <version>0.5.10-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>fastutil</groupId>

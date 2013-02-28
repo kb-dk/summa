@@ -108,7 +108,7 @@ public class RecordUtilTest extends TestCase {
         log.debug("Got content for " + record + ":\n" + xml);
 
         String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                          + "<foo><bar></bar></foo>";
+                          + "<foo><bar /></foo>";
         assertEquals("fromXML(toXML()) non-escaped content should work",
                      expected,
                      RecordUtil.fromXML(xml).getContentAsUTF8());
@@ -121,7 +121,7 @@ public class RecordUtilTest extends TestCase {
         log.debug("Got content for " + record + ":\n" + xml);
 
         String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                          + "<foo><bar/></foo>";
+                          + "<foo><bar /></foo>";
         assertEquals("fromXML(toXML()) non-escaped content should work",
                      expected,
                      RecordUtil.fromXML(xml).getContentAsUTF8());
@@ -134,7 +134,7 @@ public class RecordUtilTest extends TestCase {
         log.debug("Got content for " + record + ":\n" + xml);
 
         String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                          + "<foo><bar></bar></foo>";
+                          + "<foo><bar/></foo>";
         assertEquals("fromXML(toXML()) non-escaped content should work",
                      expected,
                      RecordUtil.fromXML(xml).getContentAsUTF8());

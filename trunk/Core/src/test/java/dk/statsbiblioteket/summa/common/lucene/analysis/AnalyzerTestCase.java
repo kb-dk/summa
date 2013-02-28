@@ -29,9 +29,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -63,14 +60,15 @@ public class AnalyzerTestCase extends TestCase {
         assertTokens(null, tokenizer, tokens);
     }
     protected void assertTokens(String message, TokenStream tokenizer, String... tokens) throws Exception {
+        tokenizer.reset();
         CharTermAttribute term = tokenizer.getAttribute(CharTermAttribute.class);
         int count = 0;
-        String prefix = message == null ? "" : (message + ". ");
+        String prefix = message == null ? "" : message + ". ";
 
         while (tokenizer.incrementToken()) {
             if (count >= tokens.length) {
                 fail(prefix + "Too many tokens from tokenizer, found " + (count + 1)
-                     + ". Expected " + tokens.length + ".");
+                        + ". Expected " + tokens.length + ".");
             }
 
             assertEquals(prefix + "Mismatch in token number " + (count + 1),
@@ -83,6 +81,7 @@ public class AnalyzerTestCase extends TestCase {
     }
 
     protected void assertTerms(List<String> expected, TokenStream actual) throws IOException {
+        actual.reset();
         List<String> terms = getTerms(actual);
         String es = Strings.join(expected, "', '");
         String as = Strings.join(terms, "', '");
@@ -128,5 +127,4 @@ public class AnalyzerTestCase extends TestCase {
             assertTokens("run 2", analyzer, input, expected);
         }
     }
-
 }
