@@ -710,11 +710,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         // TODO: Optimize alias-lookup
 
         // Alias lookup
-        if (language != null) {
-            for (Map.Entry<String, F> entry : allFields.entrySet()) {
-                if (entry.getValue().isMatch(fieldName, language)) {
-                    return entry.getValue();
-                }
+        for (Map.Entry<String, F> entry : allFields.entrySet()) {
+            if (entry.getValue().isMatch(fieldName, language)) {
+                return entry.getValue();
             }
         }
         // Prefix lookup

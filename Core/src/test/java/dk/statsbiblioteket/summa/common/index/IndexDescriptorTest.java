@@ -63,6 +63,7 @@ public class IndexDescriptorTest extends TestCase {
             + "        </group>\n"
             + "    </groups>\n"
             + "    <fields>\n"
+            + "        <field name=\"superid\" parent=\"verbatim\" stored=\"true\"/>\n"
             + "        <field name=\"text\" indexed=\"true\" stored=\"true\"/>\n"
             + "        <field name=\"author\" parent=\"text\" indexed=\"true\" stored=\"true\" multiValued=\"true\" indexBoost=\"2.0\" "
             + "               queryBoost=\"1.5\" sortLocale=\"da\" required=\"true\" inFreeText=\"true\" >\n"
