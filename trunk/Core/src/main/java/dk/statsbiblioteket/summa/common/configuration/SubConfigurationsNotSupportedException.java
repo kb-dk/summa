@@ -24,8 +24,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hbk")
-public class SubConfigurationsNotSupportedException extends Exception {
-    public static final long serialVersionUID = 68748318356L;
+public class SubConfigurationsNotSupportedException extends RuntimeException {
+    public static final long serialVersionUID = 68748318357L;
     private String msg;
     private Throwable e;
 
