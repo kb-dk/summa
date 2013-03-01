@@ -12,18 +12,30 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.support.alto;
+package dk.statsbiblioteket.summa.support.alto.as;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.support.alto.AltoAnalyzerBase;
+import dk.statsbiblioteket.summa.support.alto.AltoParser;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-public class ASAltoAnalyzerSetup extends AltoAnalyzerSetup {
+/**
+ *
+ */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
+public class ASAltoParser extends AltoParser {
+    private static Log log = LogFactory.getLog(ASAltoParser.class);
 
-    public ASAltoAnalyzerSetup(Configuration conf) {
+    public ASAltoParser(Configuration conf) {
         super(conf);
     }
 
     @Override
-    public String toString() {
-        return "ASAltoAnalyzerSetup(" + super.toString() + ")";
+    protected AltoAnalyzerBase createAnalyzer(Configuration conf) {
+        return new ASAltoAnalyzer(conf);
     }
 }

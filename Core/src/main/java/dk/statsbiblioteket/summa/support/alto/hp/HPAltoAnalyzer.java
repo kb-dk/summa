@@ -12,10 +12,11 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.support.alto;
+package dk.statsbiblioteket.summa.support.alto.hp;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.support.alto.Alto;
+import dk.statsbiblioteket.summa.support.alto.AltoAnalyzerBase;
 import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,7 +30,7 @@ import java.util.regex.Pattern;
 /**
  * Hvide Programmer (a project at Statsbiblioteket) specific analyzer for Altos.
  */
-public class HPAltoAnalyzer extends AltoAnalyzerBase {
+public class HPAltoAnalyzer extends AltoAnalyzerBase<HPAltoAnalyzer.HPSegment> {
     private static Log log = LogFactory.getLog(HPAltoAnalyzer.class);
 
     /**
@@ -48,11 +49,12 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
     private final List<HPAltoAnalyzerSetup> setups = new ArrayList<HPAltoAnalyzerSetup>();
     private final String URLPrefix;
 
-    public HPAltoAnalyzer(Configuration conf) throws SubConfigurationsNotSupportedException {
+    public HPAltoAnalyzer(Configuration conf) {
         super(conf);
         URLPrefix = conf.getString(CONF_URL_PREFIX, DEFAULT_URL_PREFIX);
         if (conf.valueExists(CONF_SETUPS)) {
-            List<Configuration> subs = conf.getSubConfigurations(CONF_SETUPS);
+            List<Configuration> subs = null;
+            subs = conf.getSubConfigurations(CONF_SETUPS);
             for (Configuration sub: subs) {
                 setups.add(new HPAltoAnalyzerSetup(sub));
             }
@@ -68,11 +70,12 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
      * @param alto an object representation of alto XML.
      * @return the Segments for the page in the alto (note: Currently only the first page is processed).
      */
-    public List<Segment> getSegments(Alto alto) {
+    @Override
+    public List<HPSegment> getSegments(Alto alto) {
         HPAltoAnalyzerSetup setup = getSetup(alto);
         // We'll do a lot of random access extraction so linked lists seems the obvious choice (ignoring caching)
         final List<Alto.TextBlock> blocks = new LinkedList<Alto.TextBlock>(alto.getLayout().get(0).getPrintSpace());
-        final List<Segment> segments = new ArrayList<Segment>();
+        final List<HPSegment> segments = new ArrayList<HPSegment>();
         String lastProgram = null; // Last encountered program
         int hPos = 0;
         int vPos = -1;
@@ -135,7 +138,7 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
             }
 
             // Create the segment
-            Segment segment = blockToSegment(alto, best, lastProgram);
+            HPSegment segment = blockToSegment(alto, best, lastProgram);
 
             // See if there are blocks below that belongs to the current segment
             // TODO: Implement this
@@ -145,32 +148,22 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
     }
 
     private HPAltoAnalyzerSetup getSetup(Alto alto) {
+        String date = getDateFromFilename(alto.getFilename());
         for (HPAltoAnalyzerSetup setup: setups) {
-            if (setup.fitsDate(alto)) {
+            if (setup.fitsDate(date)) {
                 return setup;
             }
         }
         throw new IllegalStateException(
-                "Unable to find a HTAltoAnalyzerSetup that matches the date " + getDateFromFilename(alto.getFilename())
+                "Unable to find a HTAltoAnalyzerSetup that matches the date " + date
                 + ". Consider adding a catch-all setup at the end of the setup chain");
-    }
-
-    private String dumpFull(List<Alto.TextBlock> blocks) {
-        String result = "";
-        for (Alto.TextBlock block: blocks) {
-            if (!result.isEmpty()) {
-                result += "\n";
-            }
-            result += block + ":" + block.getAllText();
-        }
-        return result;
     }
 
     /*
      * Iterate segments and fill missing endTimes by using next startTime
      * Segments with missing titles are merged with subsequent segment if it does not have time
      */
-    private List<Segment> collapse(HPAltoAnalyzerSetup setup, List<Segment> segments, List<Alto.TextBlock> blocks) {
+    private List<HPSegment> collapse(HPAltoAnalyzerSetup setup, List<HPSegment> segments, List<Alto.TextBlock> blocks) {
         if (setup.doMergeSubsequent()) {
             segments = mergeSubsequent(segments);
         }
@@ -184,11 +177,11 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
     }
 
     // TODO: Mark that such merges has been performed
-    private List<Segment> mergeSubsequent(List<Segment> segments) {
-        Segment last = null;
-        List<Segment> merged = new LinkedList<Segment>();
+    private List<HPSegment> mergeSubsequent(List<HPSegment> segments) {
+        HPSegment last = null;
+        List<HPSegment> merged = new LinkedList<HPSegment>();
         while (!segments.isEmpty()) {
-            Segment current = segments.remove(0);
+            HPSegment current = segments.remove(0);
 
             // Just store the segment if is has start time
             if (current.getStartTime() != null) {
@@ -204,20 +197,20 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
             }
 
             // We have a last and no current start time
-            last.paragraphs.add(current.title);
-            last.paragraphs.addAll(current.paragraphs);
+            last.addParagraph(current.getTitle());
+            last.getParagraphs().addAll(current.getParagraphs());
             // TODO: Change bounding box dimensions
         }
         return merged;
     }
 
     // TODO: Mark that the times are connected by logic rather that TextBlock primary entries
-    private List<Segment> connectTimes(List<Segment> segments) {
+    private List<HPSegment> connectTimes(List<HPSegment> segments) {
         for (int i = 0 ; i < segments.size() ; i++) {
-            Segment current = segments.get(i);
+            HPSegment current = segments.get(i);
             if (current.getStartTime() != null && current.getEndTime() == null) {
                 if (i < segments.size()-1) {
-                    Segment subsequent = segments.get(i+1);
+                    HPSegment subsequent = segments.get(i+1);
                     if (subsequent.getStartTime() != null) {
                         current.endTime = subsequent.getStartTime();
                     }
@@ -227,16 +220,16 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
         return segments;
     }
 
-    private List<Segment> attachFloaters(
-            HPAltoAnalyzerSetup setup, List<Segment> segments, List<Alto.TextBlock> blocks) {
+    private List<HPSegment> attachFloaters(
+            HPAltoAnalyzerSetup setup, List<HPSegment> segments, List<Alto.TextBlock> blocks) {
         if (segments.isEmpty() && !blocks.isEmpty()) {
             throw new IllegalStateException(
                     "No defined segments with " + blocks.size() + " defined blocks. This state should be unreachable");
         }
         while (!blocks.isEmpty()) {
             Alto.TextBlock block = blocks.remove(0);
-            Segment best = null;
-            for (Segment candidate: segments) {
+            HPSegment best = null;
+            for (HPSegment candidate: segments) {
                 if (best == null || getFloaterDistance(setup, candidate, block) <
                                     getFloaterDistance(setup, best, block)) {
                     best = candidate;
@@ -256,7 +249,7 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
     }
 
     // TODO: Prioritize vertical promixity to _both_ top & bottom
-    private double getFloaterDistance(HPAltoAnalyzerSetup setup, Segment segment, Alto.TextBlock block) {
+    private double getFloaterDistance(HPAltoAnalyzerSetup setup, HPSegment segment, Alto.TextBlock block) {
         return getDistance(setup,
                 segment.getHpos()+segment.getWidth(),
                 segment.getVpos()+segment.getHeight()/2,
@@ -281,26 +274,16 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
         return null;
     }
 
-    private int counter = 0;
-    private Segment blockToSegment(Alto alto, Alto.TextBlock textBlock, String program) {
-        Segment segment = new Segment();
-        segment.origin = alto.getOrigin();
-        segment.filename = alto.getFilename();
-        segment.date = getDateFromFilename(segment.filename);
-        segment.id = "alto_" + segment.date + "_" + counter++;
+    protected HPSegment blockToSegment(Alto alto, Alto.TextBlock textBlock, String program) {
+        HPSegment segment = super.blockToSegment(alto, textBlock);
         segment.program = program;
-        segment.hpos = textBlock.getHpos();
-        segment.vpos = textBlock.getVpos();
-        segment.width = textBlock.getWidth();
-        segment.height = textBlock.getHeight();
-
         List<Alto.TextLine> lines = new LinkedList<Alto.TextLine>(textBlock.getLines());
 
         extractTimeAndtitle(segment, lines);
 
         // Just add the rest of the lines
         for (Alto.TextLine line: lines) {
-            segment.paragraphs.add(cleanTitle(line.getAllText()));
+            segment.addParagraph(cleanTitle(line.getAllText()));
         }
         return segment;
     }
@@ -312,7 +295,7 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
             Pattern.compile("([0-9]{1,2}) ?. ?([0-9]{2}).?(.*)");
     private Pattern fullTimePattern =
             Pattern.compile("([0-9]{1,2}) ?. ?([0-9]{2})[^0-9]{1,2}([0-9]{1,2}) ?. ?([0-9]{2}).?(.*)");
-    private boolean extractTimeAndtitle(Segment segment, List<Alto.TextLine> lines) {
+    private boolean extractTimeAndtitle(HPSegment segment, List<Alto.TextLine> lines) {
         boolean gotTime = false;
         String line = lines.get(0).getAllText();
         Matcher aMatcher = approximateTimePattern.matcher(line);
@@ -325,16 +308,16 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
         if (fullTimeMatcher.matches()) {
             segment.startTime = fullTimeMatcher.group(1) + ":" + fullTimeMatcher.group(2);
             segment.endTime = fullTimeMatcher.group(3) + ":" + fullTimeMatcher.group(4);
-            segment.title = cleanTitle(fullTimeMatcher.group(5));
+            segment.setTitle(cleanTitle(fullTimeMatcher.group(5)));
             log.trace("Found start time " + segment.startTime + " and end time " + segment.endTime + " with title "
-                      + segment.title);
+                      + segment.getTitle());
             gotTime = true;
         } else {
             Matcher fromTimeMatcher = fromTimePattern.matcher(line);
             if (fromTimeMatcher.matches()) {
                 segment.startTime = fromTimeMatcher.group(1) + ":" + fromTimeMatcher.group(2);
-                segment.title = cleanTitle(fromTimeMatcher.group(3));
-                log.trace("Found start time " + segment.startTime + " with title " + segment.title);
+                segment.setTitle(cleanTitle(fromTimeMatcher.group(3)));
+                log.trace("Found start time " + segment.startTime + " with title " + segment.getTitle());
                 gotTime = true;
             }
         }
@@ -343,9 +326,9 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
         }
 
         // TODO: Match textStyles for headline
-        while ((segment.title == null || segment.title.isEmpty()) && !lines.isEmpty()) { // First real text is the title
+        while ((segment.getTitle() == null || segment.getTitle().isEmpty()) && !lines.isEmpty()) { // First real text is the title
             //String textStyle = lines.get(0).getTextStrings().get(0).getStyleRefs();
-            segment.title = cleanTitle(lines.remove(0).getAllText());
+            segment.setTitle(cleanTitle(lines.remove(0).getAllText()));
         }
 
         return gotTime;
@@ -360,61 +343,49 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
         return text;
     }
 
-    // B-1977-10-02w-P-0003.xml -> 19771002
-    private static final Pattern dateFromFile = Pattern.compile("..([0-9]{4})-([0-9]{2})-([0-9]{2}).*");
-    public static String getDateFromFilename(String filename) {
-        Matcher matcher = dateFromFile.matcher(filename);
-        return matcher.matches() ? matcher.group(1) + matcher.group(2) + matcher.group(3) : null;
+    @Override
+    public HPSegment createSegment() {
+        return new HPSegment();
     }
 
-    public class Segment {
-        private String filename = null;
-        private String date = null;
+    public class HPSegment extends AltoAnalyzerBase.Segment  {
         private String program = null;
-        private String id = null;
-        private int hpos = -1;
-        private int vpos = -1;
-        private int width = -1;
-        private int height = -1;
 
         private String startTime = null; // HH:MM
         private String endTime = null;
         private boolean timeApproximate = false;
-        private String title = null;
-        private List<String> paragraphs = new ArrayList<String>();
-        public String origin;
+
+        @Override
+        public void addIndexTerms(List<Term> terms) {
+            terms.add(new Term("lma", "hp"));
+            terms.add(new Term("lma_long", "hvideprogrammer"));
+
+            terms.add(new Term("sort_time", getDate() + (getStartTime() == null ? "" : "t" + getStartTime())));
+            terms.add(new Term("starttime", getStartTime()));
+            terms.add(new Term("endtime", getEndTime()));
+            terms.add(new Term("timeapproximate", Boolean.toString(isTimeApproximate())));
+    //        writeField(xml, "freetext", segment.getAllText());
+        }
+
+        @Override
+        public String getType() {
+            return "hvideprogrammer";
+        }
+
+        @Override
+        public String getShortFormatTitle() {
+            return getStartTime() == null ?
+                    getTitle() :
+                    getTitle() + " : " + getReadableTime();
+        }
 
         @Override
         public String toString() {
-            return "Segment(time=" + (timeApproximate ? "~" : "") + startTime + '-' + endTime
+            return "HPSegment(time=" + (timeApproximate ? "~" : "") + startTime + '-' + endTime
                    + ", title='" + title + "', program='" + program + '\'' + ", #paragraphs=" + paragraphs.size()
                    + (paragraphs.isEmpty() ? "" : ": " + Strings.join(paragraphs, ", ")) + ')';
         }
 
-        public String getFilename() {
-            return filename;
-        }
-        public String getDate() {
-            return date;
-        }
-        public String getProgram() {
-            return program;
-        }
-        public String getId() {
-            return id;
-        }
-        public int getHpos() {
-            return hpos;
-        }
-        public int getVpos() {
-            return vpos;
-        }
-        public int getWidth() {
-            return width;
-        }
-        public int getHeight() {
-            return height;
-        }
         public String getStartTime() {
             return startTime;
         }
@@ -434,23 +405,11 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase {
         public boolean isTimeApproximate() {
             return timeApproximate;
         }
-        public String getTitle() {
-            return title;
-        }
-        public List<String> getParagraphs() {
-            return paragraphs;
-        }
-        public String getAllText() {
-            return paragraphs.isEmpty() ? title : title + " " + Strings.join(paragraphs, " ");
-        }
-
-        public String getYear() {
-            return getDate() == null || getDate().length() < 4 ? null : getDate().substring(0, 4);
-        }
 
         // TODO: This is extremely fragile. We need a more solid URL calculator
         // /home/te/projects/hvideprogrammer/samples_with_paths/dhp/data/Arkiv_A.1/1933_07-09/ALTO/A-1933-07-02-P-0008.xml
         // http://bja-linux2.sb/index.php?vScale=0.4&hScale=0.4&image=Arkiv_A.6/1929_07-09/PNG/A-1929-07-05-P-0015
+        @Override
         public String getURL() {
             if (origin == null) {
                 return origin;

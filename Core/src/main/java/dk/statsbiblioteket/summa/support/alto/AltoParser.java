@@ -11,7 +11,6 @@ package dk.statsbiblioteket.summa.support.alto;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.util.Strings;
@@ -23,12 +22,13 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  */
-public class AltoParser extends ThreadedStreamParser {
+public abstract class AltoParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(AltoParser.class);
 
     /**
@@ -50,23 +50,25 @@ public class AltoParser extends ThreadedStreamParser {
     public enum OUTPUT {summadocument}
 
     private static final XMLOutputFactory factory = XMLOutputFactory.newInstance();
-    private final HPAltoAnalyzer analyzer;
+    private final AltoAnalyzerBase analyzer;
     private final OUTPUT output;
     private final int snippetCharacters;
 
-    public AltoParser(Configuration conf) throws SubConfigurationsNotSupportedException {
+    public AltoParser(Configuration conf) {
         super(conf);
-        analyzer = new HPAltoAnalyzer(conf);
+        analyzer = createAnalyzer(conf);
         output = OUTPUT.valueOf(conf.getString(CONF_OUTPUT, DEFAULT_OUTPUT));
         snippetCharacters = conf.getInt(CONF_SNIPPET_CHARACTERS, DEFAULT_SNIPPET_CHARACTERS);
         log.info("Created HPAltoAnalyzer");
     }
 
+    protected abstract AltoAnalyzerBase createAnalyzer(Configuration conf);
+
     @Override
     protected void protectedRun(Payload source) throws Exception {
-        List<HPAltoAnalyzer.Segment> segments = analyzer.getSegments(
+        List<? extends AltoAnalyzerBase.Segment> segments = analyzer.getSegments(
                 new Alto(new InputStreamReader(source.getStream(), "utf-8"), (String)source.getData(Payload.ORIGIN)));
-        for (HPAltoAnalyzer.Segment segment: segments) {
+        for (AltoAnalyzerBase.Segment segment: segments) {
             if (segment.getId() == null) {
                 Logging.logProcess("AltoParser", "Received segment without ID: " + segment.toString() + ". Skipping",
                                    Logging.LogLevel.WARN, source);
@@ -77,7 +79,7 @@ public class AltoParser extends ThreadedStreamParser {
     }
 
     // TODO: Make proper Dublin Core output for later XSLT-processing.
-    private void pushSegment(HPAltoAnalyzer.Segment segment) throws XMLStreamException {
+    private void pushSegment(AltoAnalyzerBase.Segment segment) throws XMLStreamException {
         switch (output) {
             case summadocument: {
                 pushSegmentAsSummaDocument(segment);
@@ -87,13 +89,13 @@ public class AltoParser extends ThreadedStreamParser {
         }
     }
 
-    private void pushSegmentAsSummaDocument(HPAltoAnalyzer.Segment segment) throws XMLStreamException {
+    private void pushSegmentAsSummaDocument(AltoAnalyzerBase.Segment segment) throws XMLStreamException {
         byte[] content = getDirectXML(segment);
         Record record = new Record("sb_hp_" + segment.getId(), "sb_hp", content);
         addToQueue(record);
     }
 
-    private byte[] getDirectXML(HPAltoAnalyzer.Segment segment) throws XMLStreamException {
+    private byte[] getDirectXML(AltoAnalyzerBase.Segment segment) throws XMLStreamException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         XMLStreamWriter xml = factory.createXMLStreamWriter(out);
         xml.writeStartDocument();
@@ -106,23 +108,25 @@ public class AltoParser extends ThreadedStreamParser {
         xml.writeStartElement("fields");
         xml.writeCharacters("\n");
 
-        writeField(xml, "title", segment.getTitle());
-        writeField(xml, "sort_title", segment.getTitle());
-        writeField(xml, "sort_time",
-                   segment.getDate() + (segment.getStartTime() == null ? "" : "t" + segment.getStartTime()));
-        writeField(xml, "lma", "hp");
-        writeField(xml, "lma_long", "hvideprogrammer");
-        writeField(xml, "starttime", segment.getStartTime());
-        writeField(xml, "endtime", segment.getEndTime());
-        writeField(xml, "filename", segment.getFilename());
-        writeField(xml, "url", segment.getURL());
-//        writeField(xml, "freetext", segment.getAllText());
-        writeField(xml, "date", segment.getDate());
-        writeField(xml, "year", segment.getYear());
-        writeField(xml, "timeapproximate", Boolean.toString(segment.isTimeApproximate()));
+
+        List<AltoAnalyzerBase.Segment.Term> terms = new ArrayList<AltoAnalyzerBase.Segment.Term>();
+
+        terms.add(new AltoAnalyzerBase.Segment.Term("title", segment.getTitle()));
+        terms.add(new AltoAnalyzerBase.Segment.Term("date", segment.getDate()));
+        terms.add(new AltoAnalyzerBase.Segment.Term("year", segment.getYear()));
+        terms.add(new AltoAnalyzerBase.Segment.Term("sort_title", segment.getTitle()));
+        terms.add(new AltoAnalyzerBase.Segment.Term("url", segment.getURL()));
+        terms.add(new AltoAnalyzerBase.Segment.Term("filename", segment.getFilename()));
         for (String paragraph: segment.getParagraphs()) {
-            writeField(xml, "content", paragraph);
+            terms.add(new AltoAnalyzerBase.Segment.Term("content", paragraph));
         }
+
+        segment.addIndexTerms(terms);
+        log.debug("getDirectXML: Writing " + terms + " field:text pairs");
+        for (AltoAnalyzerBase.Segment.Term term: terms) {
+            writeField(xml, term.field, term.text);
+        }
+
         xml.writeCharacters("    ");
         xml.writeStartElement("field");
         xml.writeAttribute("name", "shortformat");
@@ -139,7 +143,7 @@ public class AltoParser extends ThreadedStreamParser {
         return out.toByteArray();
     }
 
-    private String getShortFormat(HPAltoAnalyzer.Segment segment) throws XMLStreamException {
+    private String getShortFormat(AltoAnalyzerBase.Segment segment) throws XMLStreamException {
         final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         XMLStreamWriter xml = factory.createXMLStreamWriter(out);
@@ -151,11 +155,7 @@ public class AltoParser extends ThreadedStreamParser {
         xml.writeCharacters("\n          ");
         xml.writeStartElement("rdf", "Description", RDF);
         xml.writeCharacters("\n");
-        if (segment.getStartTime() != null) {
-            writeDC(xml, "title", segment.getTitle() + " : " + segment.getReadableTime());
-        } else {
-            writeDC(xml, "title", segment.getTitle());
-        }
+        writeDC(xml, "title", segment.getShortFormatTitle());
         if (!segment.getParagraphs().isEmpty()) {
             String snippet = Strings.join(segment.getParagraphs(), " ");
             if (snippet.length() > snippetCharacters) {
@@ -166,7 +166,7 @@ public class AltoParser extends ThreadedStreamParser {
         // TODO: Add year + airing-iso (for sorting)
         writeDC(xml, "date", segment.getYear());
         writeDC(xml, "identifier", segment.getURL());
-        writeDC(xml, "type", "hvideprogrammer");
+        writeDC(xml, "type", segment.getType());
         writeDC(xml, "lang", "da");
         // http://bja-linux2.sb/index.php?vScale=0.4&hScale=0.4&image=Arkiv_A.6/1929_07-09/PNG/A-1929-07-05-P-0015
         // writeDC(xml, "identifier", "");

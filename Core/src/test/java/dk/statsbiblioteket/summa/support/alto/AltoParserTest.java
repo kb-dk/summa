@@ -19,6 +19,8 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
+import dk.statsbiblioteket.summa.support.alto.hp.HPAltoAnalyzerTest;
+import dk.statsbiblioteket.summa.support.alto.hp.HPAltoParser;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -54,7 +56,7 @@ public class AltoParserTest extends TestCase {
     public void testBasicParse() throws XMLStreamException, IOException {
         ObjectFilter feeder = new PayloadFeederHelper(HPAltoAnalyzerTest.alto1934, HPAltoAnalyzerTest.alto1947);
         ObjectFilter altoFilter = new StreamController(Configuration.newMemoryBased(
-                StreamController.CONF_PARSER, AltoParser.class
+                StreamController.CONF_PARSER, HPAltoParser.class
         ));
         altoFilter.setSource(feeder);
         while (altoFilter.hasNext()) {

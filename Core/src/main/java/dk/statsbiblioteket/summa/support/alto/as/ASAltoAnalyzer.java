@@ -12,10 +12,13 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.support.alto;
+package dk.statsbiblioteket.summa.support.alto.as;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.support.alto.Alto;
+import dk.statsbiblioteket.summa.support.alto.AltoAnalyzerBase;
+import dk.statsbiblioteket.summa.support.alto.AltoAnalyzerSetup;
 import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,20 +26,18 @@ import org.apache.commons.logging.LogFactory;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Avissamling (a project at Statsbiblioteket) specific analyzer for Altos.
  */
-public class ASAltoAnalyzer extends AltoAnalyzerBase {
+public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
     private static Log log = LogFactory.getLog(ASAltoAnalyzer.class);
 
     /**
      * A list of sub configurations containing setups. When an Alto is precessed, the setup from the first matching
      * setup in the list is used.
      * </p><p>
-     * Optional. Default is a list with 1 default {@link dk.statsbiblioteket.summa.support.alto.ASAltoAnalyzerSetup}.
+     * Optional. Default is a list with 1 default {@link ASAltoAnalyzerSetup}.
      * </p>
      */
     public static final String CONF_SETUPS = "asaltoanalyzer.setups";
@@ -45,17 +46,13 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase {
     public static final String DEFAULT_URL_PREFIX =
             "http://bja-linux2.sb.statsbiblioteket.dk/index.php?vScale=0.4&hScale=0.4&image=";
 
-    public static final String CONF_DATE_PATTERN = "asaltoanalyzer.filedate.pattern";
-    public static final String DEFAULT_DATE_PATTERN = "\"..([0-9]{4})-([0-9]{2})-([0-9]{2}).*\"";
 
     private final List<ASAltoAnalyzerSetup> setups = new ArrayList<ASAltoAnalyzerSetup>();
     private final String URLPrefix;
-    private final String filedatePattern;
 
     public ASAltoAnalyzer(Configuration conf) throws SubConfigurationsNotSupportedException {
         super(conf);
         URLPrefix = conf.getString(CONF_URL_PREFIX, DEFAULT_URL_PREFIX);
-        filedatePattern = conf.getString(CONF_DATE_PATTERN, DEFAULT_DATE_PATTERN);
         if (conf.valueExists(CONF_SETUPS)) {
             List<Configuration> subs = conf.getSubConfigurations(CONF_SETUPS);
             for (Configuration sub: subs) {
@@ -73,12 +70,12 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase {
      * @param alto an object representation of alto XML.
      * @return the Segments for the page in the alto (note: Currently only the first page is processed).
      */
-    public List<Segment> getSegments(Alto alto) {
+    @Override
+    public List<ASSegment> getSegments(Alto alto) {
         ASAltoAnalyzerSetup setup = getSetup(alto);
         // We'll do a lot of random access extraction so linked lists seems the obvious choice (ignoring caching)
         final List<Alto.TextBlock> blocks = new LinkedList<Alto.TextBlock>(alto.getLayout().get(0).getPrintSpace());
-        final List<Segment> segments = new ArrayList<Segment>();
-        String lastProgram = null; // Last encountered program
+        final List<ASSegment> segments = new ArrayList<ASSegment>();
         int hPos = 0;
         int vPos = -1;
         int maxHPos = Integer.MAX_VALUE;
@@ -126,7 +123,7 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase {
             vPos = best.getVpos();
 
             // Create the segment
-            Segment segment = blockToSegment(alto, best, lastProgram);
+            ASSegment segment = blockToSegment(alto, best);
 
             // See if there are blocks below that belongs to the current segment
             // TODO: Implement this
@@ -146,51 +143,31 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase {
                 + ". Consider adding a catch-all setup at the end of the setup chain");
     }
 
-    private String dumpFull(List<Alto.TextBlock> blocks) {
-        String result = "";
-        for (Alto.TextBlock block: blocks) {
-            if (!result.isEmpty()) {
-                result += "\n";
-            }
-            result += block + ":" + block.getAllText();
-        }
-        return result;
-    }
-
     private double getDistance(AltoAnalyzerSetup setup, int hPos, int vPos, Alto.TextBlock candidate) {
         return Math.sqrt(Math.pow((hPos-candidate.getHpos())*setup.getHdistFactor(), 2)
                          + Math.pow(vPos-candidate.getVpos(), 2));
     }
 
-    private int counter = 0;
-    private Segment blockToSegment(Alto alto, Alto.TextBlock textBlock, String program) {
-        Segment segment = new Segment();
-        segment.origin = alto.getOrigin();
-        segment.filename = alto.getFilename();
-        segment.date = getDateFromFilename(segment.filename);
-        segment.id = "alto_" + segment.date + "_" + counter++;
-        segment.hpos = textBlock.getHpos();
-        segment.vpos = textBlock.getVpos();
-        segment.width = textBlock.getWidth();
-        segment.height = textBlock.getHeight();
+    @Override
+    protected ASSegment blockToSegment(Alto alto, Alto.TextBlock textBlock) {
+        ASSegment segment = super.blockToSegment(alto, textBlock);
 
         List<Alto.TextLine> lines = new LinkedList<Alto.TextLine>(textBlock.getLines());
-
         extractTitle(segment, lines);
 
         // Just add the rest of the lines
         for (Alto.TextLine line: lines) {
-            segment.paragraphs.add(cleanTitle(line.getAllText()));
+            segment.addParagraph(cleanTitle(line.getAllText()));
         }
         return segment;
     }
 
-    private void extractTitle(Segment segment, List<Alto.TextLine> lines) {
+    private void extractTitle(ASSegment segment, List<Alto.TextLine> lines) {
 
         // TODO: Match textStyles for headline
-        while ((segment.title == null || segment.title.isEmpty()) && !lines.isEmpty()) { // First real text is the title
+        while ((segment.getTitle() == null || segment.getTitle().isEmpty()) && !lines.isEmpty()) { // First real text is the title
             //String textStyle = lines.get(0).getTextStrings().get(0).getStyleRefs();
-            segment.title = cleanTitle(lines.remove(0).getAllText());
+            segment.setTitle(cleanTitle(lines.remove(0).getAllText()));
         }
     }
 
@@ -203,93 +180,46 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase {
         return text;
     }
 
-    //
-    private Pattern dateFromFile;
-    protected String getDateFromFilename(String filename) {
-        if (filename == null) {
-            throw new NullPointerException("No filename defined");
-        }
-        if (dateFromFile == null) {
-            dateFromFile = Pattern.compile(filedatePattern);
-        }
-        Matcher matcher = dateFromFile.matcher(filename);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException(
-                    "The filename '" + filename + "' could not be resolved to a date with pattern " + filedatePattern);
-        }
-        return matcher.group(1) + matcher.group(2) + matcher.group(3);
+    @Override
+    public ASSegment createSegment() {
+        return new ASSegment();
     }
 
-    public class Segment {
-        private String filename = null;
-        private String date = null;
-        private String id = null;
-        private int hpos = -1;
-        private int vpos = -1;
-        private int width = -1;
-        private int height = -1;
-
-        private String title = null;
-        private List<String> paragraphs = new ArrayList<String>();
-        public String origin;
-
+    public class ASSegment extends AltoAnalyzerBase.Segment  {
         @Override
         public String toString() {
-            return "Segment(title='" + title + "', #paragraphs=" + paragraphs.size()
-                   + (paragraphs.isEmpty() ? "" : ": " + Strings.join(paragraphs, ", ")) + ')';
+            return "ASSegment(title='" + getTitle() + "', #paragraphs=" + getParagraphs().size()
+                   + (getParagraphs().isEmpty() ? "" : ": " + Strings.join(getParagraphs(), 10)) + ')';
         }
 
-        public String getFilename() {
-            return filename;
-        }
-        public String getDate() {
-            return date;
-        }
-        public String getId() {
-            return id;
-        }
-        public int getHpos() {
-            return hpos;
-        }
-        public int getVpos() {
-            return vpos;
-        }
-        public int getWidth() {
-            return width;
-        }
-        public int getHeight() {
-            return height;
-        }
-        public String getTitle() {
-            return title;
-        }
-        public List<String> getParagraphs() {
-            return paragraphs;
-        }
-        public String getAllText() {
-            return paragraphs.isEmpty() ? title : title + " " + Strings.join(paragraphs, " ");
+        @Override
+        public String getType() {
+            return "avisscanning";
         }
 
-        public String getYear() {
-            return getDate() == null || getDate().length() < 4 ? null : getDate().substring(0, 4);
+        @Override
+        public void addIndexTerms(List<Term> terms) {
+            terms.add(new Term("lma", "as"));
+            terms.add(new Term("lma_long", "avisscanning"));
         }
 
         // TODO: This is extremely fragile. We need a more solid URL calculator
         // /home/te/projects/hvideprogrammer/samples_with_paths/dhp/data/Arkiv_A.1/1933_07-09/ALTO/A-1933-07-02-P-0008.xml
         // http://bja-linux2.sb/index.php?vScale=0.4&hScale=0.4&image=Arkiv_A.6/1929_07-09/PNG/A-1929-07-05-P-0015
+        @Override
         public String getURL() {
-            if (origin == null) {
-                return origin;
+            if (getOrigin() == null) {
+                return null;
             }
             // Yes, unix path separator. Fragile, remember?
-            String[] elements = origin.split("/");
+            String[] elements = getOrigin().split("/");
             if (elements.length < 4) {
-                log.warn("Expected the origin '" + origin + "' to contain at least 4 path elements, but got only "
+                log.warn("Expected the origin '" + getOrigin() + "' to contain at least 4 path elements, but got only "
                          + elements.length);
                 return null;
             }
             if (!elements[elements.length-1].endsWith(".xml")) {
-                log.warn("Expected the origin '" + origin + "' to end with '.xml'");
+                log.warn("Expected the origin '" + getOrigin() + "' to end with '.xml'");
                 return null;
             }
             return URLPrefix
