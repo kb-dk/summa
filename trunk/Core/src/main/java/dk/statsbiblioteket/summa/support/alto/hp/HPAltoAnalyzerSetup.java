@@ -6,9 +6,10 @@
  * This is confidential source code. Unless an explicit written permit has been obtained,
  * distribution, compiling and all other use of this code is prohibited.    
   */
-package dk.statsbiblioteket.summa.support.alto;
+package dk.statsbiblioteket.summa.support.alto.hp;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.support.alto.AltoAnalyzerSetup;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -66,13 +67,9 @@ public class HPAltoAnalyzerSetup extends AltoAnalyzerSetup {
         return attachFloaters;
     }
 
-    public boolean fitsDate(Alto alto) {
-        String altoDate = HPAltoAnalyzer.getDateFromFilename(alto.getFilename());
-        if (altoDate == null) {
-            log.warn("Unable to extract date from " + alto + ". Alto is qualified as not fitting date");
-            return false;
-        }
-        return super.fitsDate(altoDate);
+    public boolean fitsDate(String date) {
+        return (getFromDate() == null || getFromDate().compareTo(date) <= 0)
+                && (getToDate() == null || getToDate().compareTo(date) > 0);
     }
 
     @Override

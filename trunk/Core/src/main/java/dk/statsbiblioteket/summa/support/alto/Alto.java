@@ -48,7 +48,7 @@ public class Alto {
         this(new StringReader(xml), origin);
     }
     public Alto(File xml) throws XMLStreamException, FileNotFoundException {
-        this(new FileReader(xml), xml.toString());
+        this(new FileReader(xml), xml.getAbsolutePath());
     }
     public Alto(Reader xml) throws XMLStreamException {
         this(factory.createXMLStreamReader(xml));
@@ -64,6 +64,7 @@ public class Alto {
         log.trace("Starting alto parsing of XML with origin " + origin);
         long startTime = System.currentTimeMillis();
         this.origin = origin;
+        this.filename = origin;
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean elementStart(

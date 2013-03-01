@@ -43,7 +43,7 @@ public abstract class AltoAnalyzerSetup implements Configurable {
      * </p><p>
      * Optional. Default is 0.5.
      */
-    public static final String CONF_HDIST_FACTOR = "hpaltoanalyzer.hdist.factor";
+    public static final String CONF_HDIST_FACTOR = "altoanalyzer.hdist.factor";
     public static final double DEFAULT_HDIST_FACTOR = 0.5d;
 
     private final String fromDate;
@@ -56,16 +56,23 @@ public abstract class AltoAnalyzerSetup implements Configurable {
         toDate = conf.getString(CONF_TO_DATE, DEFAULT_TO_DATE);
     }
 
-    public double getHdistFactor() {
-        return hdistFactor;
-    }
-
-    public boolean fitsDate(String date) {
-        return (fromDate == null || fromDate.compareTo(date) <= 0) && (toDate == null || toDate.compareTo(date) > 0);
-    }
 
     @Override
     public String toString() {
         return "AltoAnalyzerSetup(fromDate=" + fromDate + ", toDate=" + toDate + ", hdistFactor=" + hdistFactor + ')';
+    }
+
+    /* Getters */
+
+    public String getFromDate() {
+        return fromDate;
+    }
+
+    public String getToDate() {
+        return toDate;
+    }
+
+    public double getHdistFactor() {
+        return hdistFactor;
     }
 }

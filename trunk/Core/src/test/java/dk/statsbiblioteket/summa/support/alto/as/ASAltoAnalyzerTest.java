@@ -12,9 +12,10 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.support.alto;
+package dk.statsbiblioteket.summa.support.alto.as;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.support.alto.Alto;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -76,8 +77,8 @@ public class ASAltoAnalyzerTest extends TestCase {
     private void testBasicAnalyze(Configuration conf, String source) throws Exception {
         Alto alto = new Alto(new File(source));
         ASAltoAnalyzer analyzer = new ASAltoAnalyzer(conf);
-        List<ASAltoAnalyzer.Segment> segments = analyzer.getSegments(alto);
-        for (ASAltoAnalyzer.Segment segment: segments) {
+        List<ASAltoAnalyzer.ASSegment> segments = analyzer.getSegments(alto);
+        for (ASAltoAnalyzer.ASSegment segment: segments) {
             System.out.println(segment);
         }
     }
