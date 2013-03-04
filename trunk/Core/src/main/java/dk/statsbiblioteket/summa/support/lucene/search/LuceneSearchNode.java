@@ -830,15 +830,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                         }
                         continue;
                     }
-                    IndexableField iField = doc.getField(field);
-                    if (iField == null || iField.stringValue() == null || "".equals(iField.stringValue())) {
-                        if (fallbacks != null && fallbacks.length != 0) {
+                    for (IndexableField iField: doc.getFields(field)) {
+                        if (iField == null || iField.stringValue() == null || "".equals(iField.stringValue())) {
+                            if (fallbacks != null && fallbacks.length != 0) {
+                                record.addField(new DocumentResponse.Field(
+                                        field, fallbacks[fieldIndex], !nonescapedFields.contains(field)));
+                            }
+                        } else {
                             record.addField(new DocumentResponse.Field(
-                                field, fallbacks[fieldIndex], !nonescapedFields.contains(field)));
+                                    field, iField.stringValue(), !nonescapedFields.contains(field)));
                         }
-                    } else {
-                        record.addField(new DocumentResponse.Field(
-                            field, iField.stringValue(), !nonescapedFields.contains(field)));
                     }
                 }
                 result.addRecord(record);
