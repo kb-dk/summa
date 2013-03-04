@@ -208,7 +208,6 @@ public class ConcatTest extends TestCase {
     }
 
     public void testConcatMultiTagFaceting() throws IOException {
-
         createIndex(ONE, TWO, MANY);
         ResponseCollection responses = search(new Request(
                 DocumentKeys.SEARCH_QUERY, "*:*",
@@ -216,6 +215,19 @@ public class ConcatTest extends TestCase {
                 FacetKeys.SEARCH_FACET_FACETS, "concat"
         ));
         assertOrdered(responses, "concat");
+    }
+
+    // This does not really belong here
+    public void testResponseFields() throws IOException {
+        createIndex(TWO);
+        ResponseCollection responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "*:*",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, false,
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, plain"
+        ));
+        assertEquals("The number of terms for field 'plain' should be as expected",
+                2, getTerms(responses, "plain").size());
+        System.out.println(responses.toXML());
     }
 
     private void assertOrdered(ResponseCollection responses, String field) {
@@ -240,6 +252,23 @@ public class ConcatTest extends TestCase {
             }
         }
         return null;
+    }
+
+    private List<String> getTerms(ResponseCollection responses, String field) {
+        List<String> terms = new ArrayList<String>();
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)response;
+                for (DocumentResponse.Record record: docs.getRecords()) {
+                    for (DocumentResponse.Field f: record.getFields()) {
+                        if (field.equals(f.getName())) {
+                            terms.add(f.getContent());
+                        }
+                    }
+                }
+            }
+        }
+        return terms;
     }
 
     public void testResultField() throws IOException {
