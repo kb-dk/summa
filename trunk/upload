@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+mvn clean
 mvn deploy -DskipTests
 
 
