@@ -126,7 +126,9 @@ public class MARCXMLCopyFilter extends MARCObjectFilter {
         xml.writeStartElement("fields");
         xml.writeCharacters("\n");
 
-        writeField(xml, "marc_leader", marcObject.getLeader().getContent());
+        if (marcObject.getLeader() != null) {
+            writeField(xml, "marc_leader", marcObject.getLeader().getContent());
+        }
         for (MARCObject.ControlField controlField: marcObject.getControlFields()) {
             writeField(xml, "marc_control_" + controlField.getTag(), controlField.getContent());
             writeField(xml, "marc_controls", controlField.getTag());
