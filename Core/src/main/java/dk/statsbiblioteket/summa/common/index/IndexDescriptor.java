@@ -605,6 +605,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
     }
 
     private boolean addPrefixField(F field) {
+    // TODO: We should throw a parse error is someone attempts to alias a dynamic field
         field.setName(field.getName().substring(0, field.getName().length()-1)); // remove *
         // TODO: Add duplicate detection and warning
         //noinspection DuplicateStringLiteralInspection

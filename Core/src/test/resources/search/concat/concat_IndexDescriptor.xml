@@ -3,7 +3,9 @@
 
     <fields>
         <field name="id" parent="keyword" stored="true"/>
-        <field name="plain" parent="keyword" stored="true"/>
+        <field name="plain" parent="keyword" stored="true">
+            <alias name="almindelig"/>
+        </field>
         <field name="sort" parent="collatedSummaStandard" sortLocale="da"/>
         <field name="concat" parent="collatedSummaStandard" sortLocale="da" stored="true"/>
     </fields>
