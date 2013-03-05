@@ -103,15 +103,17 @@ public class ConcatTest extends TestCase {
 
     public void testTruncation() throws IOException {
         createIndex(ONE, TWO, MANY);
-        ResponseCollection responses = search(new Request(
-                DocumentKeys.SEARCH_QUERY, "concat:concat\\ ze*",
-                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
-                FacetKeys.SEARCH_FACET_FACETS, "concat"
-        ));
-        assertEquals("The number of hits should be correct",
-                1, getHitcount(responses));
-        assertTrue("The result should contain document many",
-                responses.toXML().contains("<field name=\"id\">many</field>"));
+        {
+            ResponseCollection responses = search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "concat:concat\\ ze*",
+                    DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                    FacetKeys.SEARCH_FACET_FACETS, "concat"
+            ));
+            assertEquals("The number of hits should be correct",
+                    1, getHitcount(responses));
+            assertTrue("The result should contain document many",
+                    responses.toXML().contains("<field name=\"id\">many</field>"));
+        }
     }
 
     private long getHitcount(ResponseCollection responses) {
@@ -225,9 +227,22 @@ public class ConcatTest extends TestCase {
                 DocumentKeys.SEARCH_COLLECT_DOCIDS, false,
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, plain"
         ));
-        assertEquals("The number of terms for field 'plain' should be as expected",
+        assertEquals("The number of terms for field 'plain' should be as expected in\n" + responses.toXML(),
                 2, getTerms(responses, "plain").size());
-        System.out.println(responses.toXML());
+//        System.out.println(responses.toXML());
+    }
+
+    // This does not really belong here
+    public void testAlias() throws IOException {
+        createIndex(TWO);
+        ResponseCollection responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "almindelig:p*",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, false,
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, plain"
+        ));
+        assertEquals("The number of terms for field 'plain' should be as expected in\n" + responses.toXML(),
+                2, getTerms(responses, "plain").size());
+//        System.out.println(responses.toXML());
     }
 
     private void assertOrdered(ResponseCollection responses, String field) {

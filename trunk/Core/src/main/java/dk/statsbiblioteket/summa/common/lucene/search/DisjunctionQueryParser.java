@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
+import dk.statsbiblioteket.summa.common.index.IndexAlias;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
@@ -123,6 +124,12 @@ public class DisjunctionQueryParser extends QueryParser {
         }
 
         // Note: This was introduced to support dynamic fields. It _should_ not collide with existing usage
+        for (IndexAlias alias: resolvedField.getAliases()) {
+            if (alias.getName().equals(field)) {
+                // It's an alias so we return the real name
+                return inner.getFinalQuery(resolvedField.getName());
+            }
+        }
         return inner.getFinalQuery(field);
         //return inner.getFinalQuery(resolvedField.getName());
     }
