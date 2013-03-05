@@ -113,6 +113,37 @@ public class SummonSearchNodeTest extends TestCase {
                      + "\"", summon.convertQuery("recordBase:summon AND recordBase:nonexisting", null));
     }
 
+    /*
+    Trying to discover why some phrase searches return more results than non-phrase searches for summon.
+    No luck so fas as it seems that neither the ?-wildcard, nor escaping of space works.
+     */
+/*    public void testQuoting() throws IOException, TransformerException {
+        String[] TESTS = new String[] {
+                "dogs myasthenia gravis",
+                "dogs myasthenia\\ gravis*",
+                "dogs myasthenia*gravis",
+                "dogs myasthenia?gravis",
+                "dogs \"myasthenia gravis\"",
+                "dogs myasthenia\\ gravis"
+        };
+
+        log.debug("Creating SummonSearchNode");
+        String s = "";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        for (String query: TESTS) {
+            long hits = getHits(summon,
+                    DocumentKeys.SEARCH_QUERY, query,
+                    SolrSearchNode.SEARCH_PASSTHROUGH_QUERY, "true",
+                    DocumentKeys.SEARCH_COLLECT_DOCIDS, "false");
+            s += "'" + query + "' gave " + hits + " hits\n";
+        }
+        summon.close();
+
+        System.out.print(s);
+    }
+  */
+
+
     public void testIDResponse() throws IOException, TransformerException {
         String QUERY = "gene and protein evolution";
 
