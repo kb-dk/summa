@@ -19,7 +19,7 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.solr.client.solrj.SolrResponse;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public abstract class HubLeafImpl extends  HubComponentImpl {
     }
 
     @Override
-    public SolrResponse search(Limit limit, SolrParams params) throws Exception {
+    public QueryResponse search(Limit limit, SolrParams params) throws Exception {
         return limitOK(limit) ? search(params) : null;
     }
 
@@ -68,7 +68,7 @@ public abstract class HubLeafImpl extends  HubComponentImpl {
      * @return the result from a search.
      * @throws Exception if an error occurred.
      */
-    public abstract SolrResponse search(SolrParams params) throws Exception;
+    public abstract QueryResponse search(SolrParams params) throws Exception;
 
     @Override
     public boolean limitOK(Limit limit) {

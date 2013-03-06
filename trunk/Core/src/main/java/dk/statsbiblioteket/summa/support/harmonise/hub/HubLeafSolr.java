@@ -19,10 +19,10 @@ import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubLeafImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
 
 /**
@@ -55,7 +55,7 @@ public class HubLeafSolr extends HubLeafImpl {
     }
 
     @Override
-    public SolrResponse search(SolrParams params) throws SolrServerException {
+    public QueryResponse search(SolrParams params) throws SolrServerException {
         return solrServer.query(params);
     }
 
