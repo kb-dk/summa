@@ -21,14 +21,15 @@ import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubCompositeImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.solr.client.solrj.SolrResponse;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Aggregation of multiple HubComponents.
+ * Base for aggregation of multiple HubComponents. Note that this aggregator will fail if there is more than 1
+ * response. It is highly recommended to override {@link #merge}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -42,21 +43,42 @@ public class HubAggregator extends HubCompositeImpl {
     }
 
     @Override
-    public SolrResponse search(Limit limit, SolrParams params) throws Exception {
+    public QueryResponse search(Limit limit, SolrParams params) throws Exception {
         List<HubComponent> subs = getComponents(limit);
-        List<SolrResponse> responses = new ArrayList<SolrResponse>(subs.size());
+        List<NamedResponse> responses = new ArrayList<NamedResponse>(subs.size());
         for (HubComponent node: subs) {
-            responses.add(node.search(limit, params));
+            responses.add(new NamedResponse(node.getID(), node.search(limit, params)));
         }
         if (responses.isEmpty()) {
             return null;
         }
         if (responses.size() == 1) {
-            return responses.get(0);
+            return responses.get(0).getResponse();
         }
+        return merge(responses);
+    }
+
+    public QueryResponse merge(List<NamedResponse> responses) {
         throw new UnsupportedOperationException("Merging not implemented yet");
     }
 
+    public static class NamedResponse {
+        private final String id;
+        private final QueryResponse response;
+
+        public NamedResponse(String id, QueryResponse response) {
+            this.id = id;
+            this.response = response;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public QueryResponse getResponse() {
+            return response;
+        }
+    }
 
     @Override
     protected int maxComponents() {

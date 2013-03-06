@@ -15,7 +15,7 @@
 package dk.statsbiblioteket.summa.support.harmonise.hub.core;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.solr.client.solrj.SolrResponse;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.List;
@@ -23,8 +23,8 @@ import java.util.List;
 /**
  * A HubCompoennt represents one or more searchers that communicate both requests and responses using Solr's NamedList.
  * </p><p>
- * Core concepts for a SearchNode are id, which represent the specific node and bases, which represents groupings of
- * material that the SearchNode supports.
+ * Core concepts for a HubComponent are id, which represent the specific node and bases, which represents groupings of
+ * material that the HubComponent supports.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -38,28 +38,28 @@ public interface HubComponent {
 
 
     /**
-     * The mode determines whether the SearchNode should be used for a request to a given base.<br/>
-     * always:    Use the SearchNode no matter what the base is.<br/>
-     * onlyMatch: Use the SearchNode only if it {@link #getBases} contains the base that is wanted.<br/>
-     * fallback:  Use the SearchNode if no other SearchNodes matches the request.
+     * The mode determines whether the HubComponent should be used for a request to a given base.<br/>
+     * always:    Use the HubComponent no matter what the base is.<br/>
+     * onlyMatch: Use the HubComponent only if it {@link #getBases} contains the base that is wanted.<br/>
+     * fallback:  Use the HubComponent if no other HubComponents matches the request.
      */
     public enum MODE {always, onlyMatch, fallback}
 
     /**
-     * IDs need not be unique, but if an ID is shared between SearchNodes, it is assumed that they have the same role
+     * IDs need not be unique, but if an ID is shared between HubComponents, it is assumed that they have the same role
      * and are functionally duplicates of each other.
-     * @return the machine-usable id for this specific SearchNode.
+     * @return the machine-usable id for this specific HubComponent.
      */
     String getID();
 
     /**
-     * @return a list of all the bases that the SearchNode supports or the empty list if no such list can be made.
+     * @return a list of all the bases that the HubComponent supports or the empty list if no such list can be made.
      * @see
      */
     List<String> getBases();
 
     /**
-     * @return the mode the the specific SearchNode.
+     * @return the mode the the specific HubComponent.
      */
     MODE getMode();
 
@@ -75,7 +75,7 @@ public interface HubComponent {
      * @return the result from a search or null if the request is not applicable.
      * @throws Exception if an error occurred.
      */
-    SolrResponse search(Limit limit, SolrParams params) throws Exception;
+    QueryResponse search(Limit limit, SolrParams params) throws Exception;
 
     public static class Limit {
         private final List<String> ids;
@@ -98,5 +98,4 @@ public interface HubComponent {
             return bases;
         }
     }
-
 }

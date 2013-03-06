@@ -17,32 +17,44 @@ package dk.statsbiblioteket.summa.support.harmonise.hub;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
+import dk.statsbiblioteket.summa.support.solr.SolrSearchTestBase;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
+
+import java.util.Arrays;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class HubLeafSolrTest extends TestCase {
+public class HubLeafSolrTest extends SolrSearchTestBase {
     private static Log log = LogFactory.getLog(HubLeafSolrTest.class);
 
     private HubComponent solr;
+
+    public HubLeafSolrTest(String name) {
+        super(name);
+    }
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         solr = new HubLeafSolr(Configuration.newMemoryBased(
                 HubComponentImpl.CONF_ID, "solr",
-                HubLeafSolr.CONF_URL, "http://mars:57008/sb/sbsolr/"
+                HubLeafSolr.CONF_URL, server.getServerUrl()
         ));
     }
 
     public void testSearch() throws Exception {
-        SolrParams query = new SolrQuery("foo");
-        System.out.println(solr.search(null, query));
+        ingest("lti", Arrays.asList("foo", "fii"));
+        SolrParams query = new SolrQuery("lti:f*");
+        QueryResponse response = solr.search(null, query);
+        assertEquals("The number of hit should be correct in\n" + response,
+                     2, response.getResults().getNumFound());
     }
+
+
 }
