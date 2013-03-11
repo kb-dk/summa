@@ -12,23 +12,28 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.support.alto;
+package dk.statsbiblioteket.summa.support.alto.hp;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.lucene.queryparser.classic.ParseException;
+
+import javax.xml.stream.XMLStreamException;
+import java.io.IOException;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class AltoHighlighterTest extends TestCase {
+public class HPAltoParserTest extends TestCase {
 //    private static Log log = LogFactory.getLog(HPAltoParserTest.class);
 
-    public AltoHighlighterTest(String name) {
+    public HPAltoParserTest(String name) {
         super(name);
     }
 
@@ -43,26 +48,19 @@ public class AltoHighlighterTest extends TestCase {
     }
 
     public static Test suite() {
-        return new TestSuite(AltoHighlighterTest.class);
+        return new TestSuite(HPAltoParserTest.class);
     }
 
-    public void testSimple() throws ParseException {
-        AltoHighlighter hi = new AltoHighlighter(Configuration.newMemoryBased());
-        assertEquals("foo, bar, zoo", Strings.join(hi.getTokens("foo (bar zoo)"), ", "));
-    }
-
-    public void testPhrase() throws ParseException {
-        AltoHighlighter hi = new AltoHighlighter(Configuration.newMemoryBased());
-        assertEquals("foo, bar, zoo", Strings.join(hi.getTokens("foo \"bar zoo\""), ", "));
-    }
-
-    public void testPrefix() throws ParseException {
-        AltoHighlighter hi = new AltoHighlighter(Configuration.newMemoryBased());
-        assertEquals("foo, bar*, zoo", Strings.join(hi.getTokens("foo bar* zoo"), ", "));
-    }
-
-    public void testNot() throws ParseException {
-        AltoHighlighter hi = new AltoHighlighter(Configuration.newMemoryBased());
-        assertEquals("foo", Strings.join(hi.getTokens("foo -bar -zoo"), ", "));
+    public void testBasicParse() throws XMLStreamException, IOException {
+        ObjectFilter feeder = new PayloadFeederHelper(HPAltoAnalyzerTest.alto1934, HPAltoAnalyzerTest.alto1947);
+        ObjectFilter altoFilter = new StreamController(Configuration.newMemoryBased(
+                StreamController.CONF_PARSER, HPAltoParser.class
+        ));
+        altoFilter.setSource(feeder);
+        while (altoFilter.hasNext()) {
+            Payload altoPayload = altoFilter.next();
+            System.out.println(altoPayload.getRecord().getContentAsUTF8());
+        }
+        altoFilter.close(true);
     }
 }
