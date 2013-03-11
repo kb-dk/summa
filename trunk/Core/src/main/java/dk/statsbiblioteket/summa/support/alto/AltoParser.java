@@ -47,18 +47,23 @@ public abstract class AltoParser extends ThreadedStreamParser {
     public static final String CONF_SNIPPET_CHARACTERS = "altoparser.snippet.characters";
     public static final int DEFAULT_SNIPPET_CHARACTERS = 100;
 
+    public static final String CONF_BASE = "altoparser.base";
+    public static final String DEFAULT_BASE = "alto";
+
     public enum OUTPUT {summadocument}
 
     private static final XMLOutputFactory factory = XMLOutputFactory.newInstance();
     private final AltoAnalyzerBase analyzer;
     private final OUTPUT output;
     private final int snippetCharacters;
+    private final String base;
 
     public AltoParser(Configuration conf) {
         super(conf);
         analyzer = createAnalyzer(conf);
         output = OUTPUT.valueOf(conf.getString(CONF_OUTPUT, DEFAULT_OUTPUT));
         snippetCharacters = conf.getInt(CONF_SNIPPET_CHARACTERS, DEFAULT_SNIPPET_CHARACTERS);
+        base = conf.getString(CONF_BASE, DEFAULT_BASE);
         log.info("Created HPAltoAnalyzer");
     }
 
@@ -91,7 +96,7 @@ public abstract class AltoParser extends ThreadedStreamParser {
 
     private void pushSegmentAsSummaDocument(AltoAnalyzerBase.Segment segment) throws XMLStreamException {
         byte[] content = getDirectXML(segment);
-        Record record = new Record("sb_hp_" + segment.getId(), "sb_hp", content);
+        Record record = new Record(base + "_" + segment.getId(), base, content);
         addToQueue(record);
     }
 
@@ -118,7 +123,8 @@ public abstract class AltoParser extends ThreadedStreamParser {
         terms.add(new AltoAnalyzerBase.Segment.Term("url", segment.getURL()));
         terms.add(new AltoAnalyzerBase.Segment.Term("filename", segment.getFilename()));
         terms.add(new AltoAnalyzerBase.Segment.Term("boundingbox", String.format(
-                "%d,%d %dx%d", segment.getHpos(), segment.getVpos(), segment.getWidth(), segment.getHeight())));
+                "%d,%d %dx%d %s",
+                segment.getHpos(), segment.getVpos(), segment.getWidth(), segment.getHeight(), segment.getTitle())));
         for (String paragraph: segment.getParagraphs()) {
             terms.add(new AltoAnalyzerBase.Segment.Term("content", paragraph));
         }

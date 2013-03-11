@@ -12,15 +12,13 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.support.alto;
+package dk.statsbiblioteket.summa.support.alto.as;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
-import dk.statsbiblioteket.summa.support.alto.hp.HPAltoAnalyzerTest;
-import dk.statsbiblioteket.summa.support.alto.hp.HPAltoParser;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -32,10 +30,10 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class AltoParserTest extends TestCase {
-//    private static Log log = LogFactory.getLog(AltoParserTest.class);
+public class ASAltoParserTest extends TestCase {
+//    private static Log log = LogFactory.getLog(HPAltoParserTest.class);
 
-    public AltoParserTest(String name) {
+    public ASAltoParserTest(String name) {
         super(name);
     }
 
@@ -50,13 +48,13 @@ public class AltoParserTest extends TestCase {
     }
 
     public static Test suite() {
-        return new TestSuite(AltoParserTest.class);
+        return new TestSuite(ASAltoParserTest.class);
     }
 
     public void testBasicParse() throws XMLStreamException, IOException {
-        ObjectFilter feeder = new PayloadFeederHelper(HPAltoAnalyzerTest.alto1934, HPAltoAnalyzerTest.alto1947);
+        ObjectFilter feeder = new PayloadFeederHelper(ASAltoAnalyzerTest.p1_2012, ASAltoAnalyzerTest.p5_2012);
         ObjectFilter altoFilter = new StreamController(Configuration.newMemoryBased(
-                StreamController.CONF_PARSER, HPAltoParser.class
+                StreamController.CONF_PARSER, ASAltoParser.class
         ));
         altoFilter.setSource(feeder);
         while (altoFilter.hasNext()) {

@@ -26,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Avissamling (a project at Statsbiblioteket) specific analyzer for Altos.
@@ -42,17 +44,23 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
      */
     public static final String CONF_SETUPS = "asaltoanalyzer.setups";
 
-    public static final String CONF_URL_PREFIX = "asaltoanalyzer.url.prefix";
-    public static final String DEFAULT_URL_PREFIX =
-            "http://bja-linux2.sb.statsbiblioteket.dk/index.php?vScale=0.4&hScale=0.4&image=";
-
+    /**
+     *
+     */
+    public static final String CONF_ORIGIN2URL_REGEXP = "asaltoanalyzer.origin2url";
+    // 1/Berlingske-2012-01-02-01-0002.alto
+    public static final String DEFAULT_ORIGIN2URL_REGEXP = ".*/(\\d+/[^/]+).alto.xml";
+    public static final String CONF_ORIGIN2URL_REPLACEMENT = "asaltoanalyzer.origin2url";
+    public static final String DEFAULT_ORIGIN2URL_REPLACEMENT = "http://pc254.sb.statsbiblioteket.dk/alto/$1_files/";
 
     private final List<ASAltoAnalyzerSetup> setups = new ArrayList<ASAltoAnalyzerSetup>();
-    private final String URLPrefix;
+    private final Pattern origin2url;
+    private final String origin2urlReplacement;
 
     public ASAltoAnalyzer(Configuration conf) throws SubConfigurationsNotSupportedException {
         super(conf);
-        URLPrefix = conf.getString(CONF_URL_PREFIX, DEFAULT_URL_PREFIX);
+        origin2url = Pattern.compile(conf.getString(CONF_ORIGIN2URL_REGEXP, DEFAULT_ORIGIN2URL_REGEXP));
+        origin2urlReplacement = conf.getString(CONF_ORIGIN2URL_REPLACEMENT, DEFAULT_ORIGIN2URL_REPLACEMENT);
         if (conf.valueExists(CONF_SETUPS)) {
             List<Configuration> subs = conf.getSubConfigurations(CONF_SETUPS);
             for (Configuration sub: subs) {
@@ -203,29 +211,18 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
             terms.add(new Term("lma_long", "avisscanning"));
         }
 
-        // TODO: This is extremely fragile. We need a more solid URL calculator
-        // /home/te/projects/hvideprogrammer/samples_with_paths/dhp/data/Arkiv_A.1/1933_07-09/ALTO/A-1933-07-02-P-0008.xml
-        // http://bja-linux2.sb/index.php?vScale=0.4&hScale=0.4&image=Arkiv_A.6/1929_07-09/PNG/A-1929-07-05-P-0015
         @Override
         public String getURL() {
             if (getOrigin() == null) {
                 return null;
             }
-            // Yes, unix path separator. Fragile, remember?
-            String[] elements = getOrigin().split("/");
-            if (elements.length < 4) {
-                log.warn("Expected the origin '" + getOrigin() + "' to contain at least 4 path elements, but got only "
-                         + elements.length);
+
+            Matcher o2u = origin2url.matcher(getOrigin());
+            if (!o2u.matches()) {
+                log.warn("Unable to match origin2url pattern '" + origin2url.pattern() + "' to '" + getOrigin() + "'");
                 return null;
             }
-            if (!elements[elements.length-1].endsWith(".xml")) {
-                log.warn("Expected the origin '" + getOrigin() + "' to end with '.xml'");
-                return null;
-            }
-            return URLPrefix
-                   + elements[elements.length-4] + "/"
-                   + elements[elements.length-3] + "/PNG/"
-                   + elements[elements.length-1].substring(0, elements[elements.length-1].length()-".xml".length());
+            return o2u.replaceAll(origin2urlReplacement);
         }
     }
 }

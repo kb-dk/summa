@@ -34,7 +34,7 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
 
     public static final String CONF_DATE_PATTERN = "altoanalyzer.filedate.pattern";
     // B-1977-10-02w-P-0003.xml -> 19771002
-    public static final String DEFAULT_DATE_PATTERN = "..([0-9]{4})-([0-9]{2})-([0-9]{2}).*";
+    public static final String DEFAULT_DATE_PATTERN = ".{2,}(\\d{4})-(\\d{2})-(\\d{2}).*";
 
     private final String filedatePattern;
 
