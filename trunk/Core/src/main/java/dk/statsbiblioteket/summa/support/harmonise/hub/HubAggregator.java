@@ -37,14 +37,38 @@ import java.util.List;
 public class HubAggregator extends HubCompositeImpl {
     private static Log log = LogFactory.getLog(HubAggregator.class);
 
+    /**
+     * A list of IDs for the components to used when performing a search. If the list is empty, all components are
+     * used. If the list contains one or more IDs, only components with an ID that is in the list are considered as
+     * valid candidates for an aggregated search.
+     */
+    public static final String PARAM_ENABLED_COMPONENTS = "active_components";
+
     public HubAggregator(Configuration conf) {
         super(conf);
         log.info("Created " + toString());
     }
 
     @Override
-    public QueryResponse search(Limit limit, SolrParams params) throws Exception {
+    public QueryResponse barrierSearch(Limit limit, SolrParams params) throws Exception {
         List<HubComponent> subs = getComponents(limit);
+        String [] acceptableIDs = params.getParams(PARAM_ENABLED_COMPONENTS);
+        if (acceptableIDs != null) {
+            List<HubComponent> pruned = new ArrayList<HubComponent>(subs.size());
+            for (int i = subs.size()-1 ; i >= 0 ; i++) {
+                String currentID = subs.get(i).getID();
+                for (String acceptable: acceptableIDs) {
+                    if (currentID.equals(acceptable)) {
+                        pruned.add(subs.get(i));
+                    }
+                }
+            }
+            subs = pruned;
+        }
+        if (subs.isEmpty()) {
+            log.debug(getID() + ": No fitting sub components, returning null");
+            return null;
+        }
         List<NamedResponse> responses = new ArrayList<NamedResponse>(subs.size());
         for (HubComponent node: subs) {
             responses.add(new NamedResponse(node.getID(), node.search(limit, params)));
