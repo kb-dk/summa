@@ -59,7 +59,7 @@ public abstract class HubLeafImpl extends  HubComponentImpl {
     }
 
     @Override
-    public QueryResponse search(Limit limit, SolrParams params) throws Exception {
+    public QueryResponse barrierSearch(Limit limit, SolrParams params) throws Exception {
         return limitOK(limit) ? search(params) : null;
     }
 
