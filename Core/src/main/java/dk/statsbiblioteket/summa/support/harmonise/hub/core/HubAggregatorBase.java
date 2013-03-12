@@ -92,7 +92,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
             log.debug(getID() + ": No fitting sub components, returning null");
             return null;
         }
-        pruned = adjustRequests(pruned);
+        pruned = adjustRequests(params, pruned);
         List<NamedResponse> responses = search(pruned);
         if (responses.isEmpty()) {
             return null;
@@ -143,11 +143,13 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
     /**
      * Optional adjustment of params and limits before calling sub component.
      * </p><p>
-     * Important: If any Limits or SolrParams are changes, they must be deep-copies first as they are shared between
+     * Important: If any Limits or SolrParams are changed, they must be deep-copies first as they are shared between
      * the components.
+     * @param params the originating request.
+     * @param components the components that will be searched.
      * @return the components to search, optionally with adjusted Limits and SolrParams.
      */
-    public List<ComponentCallable> adjustRequests(List<ComponentCallable> components) {
+    public List<ComponentCallable> adjustRequests(SolrParams params, List<ComponentCallable> components) {
         return components;
     }
 
