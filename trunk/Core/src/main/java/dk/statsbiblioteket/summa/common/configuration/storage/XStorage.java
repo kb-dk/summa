@@ -35,7 +35,7 @@ public class XStorage implements ConfigurationStorage {
     /**
      * Serial version UID.
      */
-    public static final long serialVersionUID = 81293421421L;
+    public static final long serialVersionUID = 81293421422L;
     /**
      * Default xconfiguration resource.
      */
@@ -300,6 +300,11 @@ public class XStorage implements ConfigurationStorage {
     public List<ConfigurationStorage> getSubStorages(String key) throws IOException {
         Object sub = get(key);
         if (!(sub instanceof List)) {
+            if (sub instanceof XProperties) { // Not wrapped as list
+                List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(1);
+                storages.add(new XStorage((XProperties)sub));
+                return storages;
+            }
             throw new IOException(String.format("The value for '%s' was of class '%s'. Expected List",
                                                 key, sub.getClass()));
         }
