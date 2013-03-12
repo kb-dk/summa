@@ -32,7 +32,7 @@ import java.util.*;
         state = QAInfo.State.QA_NEEDED,
         author = "mke")
 public class MemoryStorage implements ConfigurationStorage {
-    public static final long serialVersionUID = 342390483L;
+    public static final long serialVersionUID = 342390484L;
     private Map<String, Serializable> map;
 
     /**
@@ -231,6 +231,11 @@ public class MemoryStorage implements ConfigurationStorage {
     public List<ConfigurationStorage> getSubStorages(String key) throws IOException {
         Object sub = get(key);
         if (!(sub instanceof List)) {
+            if (sub instanceof MemoryStorage) { // Not wrapped as list
+                List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(1);
+                storages.add((MemoryStorage)sub);
+                return storages;
+            }
             //noinspection DuplicateStringLiteralInspection
             throw new IOException(String.format("The value for '%s' was of class '%s'. Expected List",
                                                 key, sub.getClass()));

@@ -1456,9 +1456,7 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
      * @param key The key for the list of sub storage.
      * @return A list of sub storage wrapped as Configurations.
      * @throws NullPointerException if the sub storage could not be retrieved.
-     * @throws SubConfigurationsNotSupportedException
-     *                              if one of the storage
-     *                              doesn't support sub configurations.
+     * @throws SubConfigurationsNotSupportedException if one of the storage doesn't support sub configurations.
      */
     public List<Configuration> getSubConfigurations(String key) throws NullPointerException, 
                                                                        SubConfigurationsNotSupportedException {
@@ -1474,7 +1472,8 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
             }
             return Collections.unmodifiableList(configurations);
         } catch (IOException e) {
-            throw new NullPointerException(String.format("Unable to extract sub-configurations for key '%s'", key));
+            throw (NullPointerException)new NullPointerException(
+                    String.format("Unable to extract sub-configurations for key '%s'", key)).initCause(e);
         }
     }
 
