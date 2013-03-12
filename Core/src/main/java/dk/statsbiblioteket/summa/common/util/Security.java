@@ -36,7 +36,7 @@ public class Security {
     @SuppressWarnings("ObjectToString")
     public static void checkSecurityManager() {
         if (System.getSecurityManager() == null) {
-            log.warn("No security manager found. Setting allow-all security manager");
+            log.info("No security manager found. Setting allow-all security manager");
             System.setSecurityManager(new RMISecurityManager() {
                 @Override
                 public void checkPermission(Permission perm) {
