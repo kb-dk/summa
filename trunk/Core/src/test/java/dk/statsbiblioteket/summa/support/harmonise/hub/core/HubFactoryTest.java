@@ -19,19 +19,12 @@ import dk.statsbiblioteket.summa.support.harmonise.hub.DummyLeaf;
 import dk.statsbiblioteket.summa.support.harmonise.hub.TermStatAggregator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class HubFactoryTest extends TestCase {
-    private static Log log = LogFactory.getLog(HubFactoryTest.class);
-
     public void testCreateDirectComponent() throws Exception {
         HubComponent dummy = HubFactory.createComponent(Configuration.newMemoryBased(
                 HubFactory.CONF_COMPONENT, DummyLeaf.class,
@@ -43,7 +36,7 @@ public class HubFactoryTest extends TestCase {
                      2, DummyLeaf.getReceivedParams().get("myDummy").size());
     }
 
-    public void testCreateComponentUnderHub() throws Exception {
+    public void testCreateComponentUnderHubList() throws Exception {
         Configuration hubConf = Configuration.newMemoryBased(
                 HubFactory.CONF_COMPONENT, TermStatAggregator.class
         );
@@ -58,5 +51,22 @@ public class HubFactoryTest extends TestCase {
         dummy.search(null, new SolrQuery("bar"));
         assertEquals("The second search on the direct dummy should pass",
                      2, DummyLeaf.getReceivedParams().get("dummyUnder").size());
+    }
+
+    public void testCreateComponentUnderHubNoList() throws Exception {
+        Configuration hubConf = Configuration.newMemoryBased(
+                HubFactory.CONF_COMPONENT, TermStatAggregator.class
+        );
+        Configuration dummyConf = hubConf.createSubConfiguration(HubFactory.CONF_SUB);
+        dummyConf.set(HubFactory.CONF_COMPONENT, DummyLeaf.class);
+        dummyConf.set(HubComponentImpl.CONF_ID, "dummyUnderSingle");
+        HubComponent dummy = HubFactory.createComponent(hubConf);
+
+        dummy.search(null, new SolrQuery("foo"));
+        assertEquals("The first search on the direct dummy should pass",
+                     1, DummyLeaf.getReceivedParams().get("dummyUnderSingle").size());
+        dummy.search(null, new SolrQuery("bar"));
+        assertEquals("The second search on the direct dummy should pass",
+                     2, DummyLeaf.getReceivedParams().get("dummyUnderSingle").size());
     }
 }

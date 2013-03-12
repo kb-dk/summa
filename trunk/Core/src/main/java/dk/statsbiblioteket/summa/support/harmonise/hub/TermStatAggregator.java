@@ -50,8 +50,8 @@ public class TermStatAggregator extends HubAggregatorBase {
     }
 
     @Override
-    public List<ComponentCallable> adjustRequests(List<ComponentCallable> components) {
-        return rewriter.adjustRequests(components);
+    public List<ComponentCallable> adjustRequests(SolrParams params, List<ComponentCallable> components) {
+        return rewriter.adjustRequests(params, components);
     }
 
     @Override
