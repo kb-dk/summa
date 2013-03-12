@@ -30,21 +30,21 @@ import java.util.Arrays;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class HubLeafSolrTest extends SolrSearchTestBase {
-    private static Log log = LogFactory.getLog(HubLeafSolrTest.class);
+public class SolrLeafTest extends SolrSearchTestBase {
+    private static Log log = LogFactory.getLog(SolrLeafTest.class);
 
     private HubComponent solr;
 
-    public HubLeafSolrTest(String name) {
+    public SolrLeafTest(String name) {
         super(name);
     }
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        solr = new HubLeafSolr(Configuration.newMemoryBased(
+        solr = new SolrLeaf(Configuration.newMemoryBased(
                 HubComponentImpl.CONF_ID, "solr",
-                HubLeafSolr.CONF_URL, server.getServerUrl()
+                SolrLeaf.CONF_URL, server.getServerUrl()
         ));
     }
 

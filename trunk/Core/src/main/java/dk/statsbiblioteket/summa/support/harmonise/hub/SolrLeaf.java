@@ -31,8 +31,8 @@ import org.apache.solr.common.params.SolrParams;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class HubLeafSolr extends HubLeafImpl {
-    private static Log log = LogFactory.getLog(HubLeafSolr.class);
+public class SolrLeaf extends HubLeafImpl {
+    private static Log log = LogFactory.getLog(SolrLeaf.class);
 
     /**
      * The entry point for calls to Solr.
@@ -47,7 +47,7 @@ public class HubLeafSolr extends HubLeafImpl {
     private final String url;
     private final SolrServer solrServer;
 
-    public HubLeafSolr(Configuration conf) {
+    public SolrLeaf(Configuration conf) {
         super(conf);
         url = conf.getString(CONF_URL, DEFAULT_URL);
         solrServer = new HttpSolrServer(url);
@@ -60,6 +60,6 @@ public class HubLeafSolr extends HubLeafImpl {
     }
 
     public String toString() {
-        return "HubLeafSolr(" + super.toString() + ", url='" + url + "')";
+        return "SolrLeaf(" + super.toString() + ", url='" + url + "')";
     }
 }

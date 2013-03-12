@@ -27,10 +27,10 @@ import java.util.Set;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class HubCompositeImpl extends  HubComponentImpl {
+public abstract class HubCompositeImpl extends  HubComponentImpl implements HubComposite {
     private static Log log = LogFactory.getLog(HubCompositeImpl.class);
 
-    private List<HubComponent> nodes = new ArrayList<HubComponent>();
+    private List<HubComponent> components = new ArrayList<HubComponent>();
 
     public HubCompositeImpl(Configuration conf) {
         super(conf);
@@ -39,7 +39,7 @@ public abstract class HubCompositeImpl extends  HubComponentImpl {
 
     @Override
     public boolean limitOK(Limit limit) {
-        for (HubComponent node: nodes) {
+        for (HubComponent node: components) {
             if (node.limitOK(limit)) {
                 return true;
             }
@@ -51,7 +51,7 @@ public abstract class HubCompositeImpl extends  HubComponentImpl {
     public MODE getMode() {
         MODE mode = null;
         outer:
-        for (HubComponent node: nodes) {
+        for (HubComponent node: components) {
             switch (node.getMode()) {
                 case always: {
                     mode = MODE.always;
@@ -82,7 +82,7 @@ public abstract class HubCompositeImpl extends  HubComponentImpl {
     @Override
     public List<String> getBases() {
         Set<String> bases = new HashSet<String>();
-        for (HubComponent node: nodes) {
+        for (HubComponent node: components) {
             bases.addAll(node.getBases());
         }
         return new ArrayList<String>(bases);
@@ -93,17 +93,19 @@ public abstract class HubCompositeImpl extends  HubComponentImpl {
      */
     protected abstract int maxComponents();
 
+    @Override
     public void addComponent(HubComponent node) {
-        if (nodes.size() == maxComponents()) {
+        if (components.size() == maxComponents()) {
             throw new IllegalStateException(
                     "Adding another node would exceed the maximum number of components (" + maxComponents()
                             + ") for this composite");
         }
-        nodes.add(node);
+        components.add(node);
     }
 
+    @Override
     public List<HubComponent> getComponents() {
-        return nodes;
+        return components;
     }
 
     /**
@@ -111,16 +113,16 @@ public abstract class HubCompositeImpl extends  HubComponentImpl {
      * @return all sub components that satisfies limit, with respect to the mode for the components.
      */
     public List<HubComponent> getComponents(Limit limit) {
-        List<HubComponent> ns = new ArrayList<HubComponent>(nodes.size());
+        List<HubComponent> ns = new ArrayList<HubComponent>(components.size());
         // First pass is without fallbacks
-        for (HubComponent node: nodes) {
+        for (HubComponent node: components) {
             if (node.getMode() != MODE.fallback && node.limitOK(limit)) {
                 ns.add(node);
             }
         }
         // Second pass is fallback only
         if (ns.isEmpty()) {
-            for (HubComponent node: nodes) {
+            for (HubComponent node: components) {
                 if (node.getMode() == MODE.fallback && node.limitOK(limit)) {
                     ns.add(node);
                 }
@@ -131,7 +133,7 @@ public abstract class HubCompositeImpl extends  HubComponentImpl {
     @Override
     public String toString() {
         String ids = "";
-        for (HubComponent node: nodes) {
+        for (HubComponent node: components) {
             ids += (ids.isEmpty() ? "" : ", ") + node.getID();
         }
         return "HubCompositeImpl(" + super.toString() + ", sub-IDs=[" + ids + "])";
