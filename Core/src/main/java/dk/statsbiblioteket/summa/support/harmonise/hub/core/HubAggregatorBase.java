@@ -28,7 +28,7 @@ import java.util.concurrent.*;
 
 /**
  * Base for aggregation of multiple HubComponents. Note that this aggregator will fail if there is more than 1
- * response. It is highly recommended to override {@link #merge}.
+ * response. Relevant methods to implement and/or overwrite are {@link #merge} and {@link #adjustRequests}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -73,76 +73,96 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
     @Override
     public QueryResponse barrierSearch(Limit limit, SolrParams params) throws Exception {
         List<HubComponent> subs = getComponents(limit);
+
         String [] acceptableIDs = params.getParams(PARAM_ENABLED_COMPONENTS);
-        if (acceptableIDs != null) {
-            List<HubComponent> pruned = new ArrayList<HubComponent>(subs.size());
-            for (int i = subs.size()-1 ; i >= 0 ; i++) {
-                String currentID = subs.get(i).getID();
+        List<ComponentCallable> pruned = new ArrayList<ComponentCallable>(subs.size());
+        for (int i = subs.size()-1 ; i >= 0 ; i--) {
+            String currentID = subs.get(i).getID();
+            if (acceptableIDs != null) {
                 for (String acceptable: acceptableIDs) {
                     if (currentID.equals(acceptable)) {
-                        pruned.add(subs.get(i));
+                        pruned.add(new ComponentCallable(subs.get(i), limit, params));
                     }
                 }
+            } else {
+                pruned.add(new ComponentCallable(subs.get(i), limit, params));
             }
-            subs = pruned;
         }
-        if (subs.isEmpty()) {
+        if (pruned.isEmpty()) {
             log.debug(getID() + ": No fitting sub components, returning null");
             return null;
         }
-        List<NamedResponse> responses = search(subs, limit, params);
+        pruned = adjustRequests(pruned);
+        List<NamedResponse> responses = search(pruned);
         if (responses.isEmpty()) {
             return null;
         }
         if (responses.size() == 1) {
             return responses.get(0).getResponse();
         }
-        return merge(responses);
+        return merge(params, responses);
     }
 
-    private List<NamedResponse> search(
-            List<HubComponent> subs, final Limit limit, final SolrParams params) throws Exception {
+    private List<NamedResponse> search(List<ComponentCallable> subs) throws Exception {
         if (executor == null) {
             executor = Executors.newFixedThreadPool(getComponents().size());
         }
         List<FutureTask<NamedResponse>> futures = new ArrayList<FutureTask<NamedResponse>>(subs.size());
-        for (HubComponent sub : subs) {
-            FutureTask<NamedResponse> future = new FutureTask<NamedResponse>(
-                    new ComponentCallable(sub, limit, params));
+        for (ComponentCallable sub: subs) {
+            FutureTask<NamedResponse> future = new FutureTask<NamedResponse>(sub);
             futures.add(future);
             executor.submit(future);
             if (!threaded) {
                 try {
-                    if (!executor.awaitTermination(timeout, TimeUnit.MILLISECONDS)) {
-                        throw new Exception(getID() + ": Exceeded timeout " + timeout + "ms while waiting for " + sub);
-                    }
+                    future.get(timeout, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     throw new InterruptedException(getID() + ": Interrupted while performing search on " + sub);
+                } catch (ExecutionException e) {
+                    throw new ExecutionException(getID() + ": exception while performing search on " + sub, e);
+                } catch (TimeoutException e) {
+                    throw new Exception(getID() + ": Exceeded timeout " + timeout + "ms while waiting for " + sub, e);
                 }
             }
         }
-        if (threaded) {
-            try {
-                if (!executor.awaitTermination(timeout, TimeUnit.MILLISECONDS)) {
-                    throw new Exception(getID() + ": Exceeded timeout " + timeout + "ms while waiting for "
-                                        + futures.size() + " sub-searchers");
-                }
-            } catch (InterruptedException e) {
-                throw new InterruptedException(getID() + ": Interrupted while performing search on " + futures.size()
-                                               + " sub-searchers");
-            }
-        }
+
         List<NamedResponse> responses = new ArrayList<NamedResponse>(futures.size());
-        for (FutureTask<NamedResponse> future : futures) {
-            responses.add(future.get());
+        for (FutureTask<NamedResponse> future: futures) {
+            try {
+                responses.add(future.get(timeout, TimeUnit.MILLISECONDS));
+            } catch (InterruptedException e) {
+                throw new InterruptedException(getID() + ": Interrupted while waiting for answer from " + future);
+            } catch (ExecutionException e) {
+                throw new ExecutionException(getID() + ": exception while waiting for answer from " + future, e);
+            } catch (TimeoutException e) {
+                throw new Exception(getID() + ": Exceeded timeout " + timeout + "ms while waiting for " + future, e);
+            }
         }
         return responses;
     }
 
+    /**
+     * Optional adjustment of params and limits before calling sub component.
+     * </p><p>
+     * Important: If any Limits or SolrParams are changes, they must be deep-copies first as they are shared between
+     * the components.
+     * @return the components to search, optionally with adjusted Limits and SolrParams.
+     */
+    public List<ComponentCallable> adjustRequests(List<ComponentCallable> components) {
+        return components;
+    }
+
+    /**
+     * Merges the given responses before they are returned after a search.
+     * @param params the original parameters given to {@link #search(Limit, SolrParams)}.
+     * @param responses the raw responses from the searches.
+     * @return a single response merged from the full set of responses.
+     */
+    public abstract QueryResponse merge(SolrParams params, List<NamedResponse> responses);
+
     public class ComponentCallable implements Callable<NamedResponse> {
         private final HubComponent component;
-        private final Limit limit;
-        private final SolrParams params;
+        private Limit limit;
+        private SolrParams params;
 
         public ComponentCallable(HubComponent component, Limit limit, SolrParams params) {
             this.component = component;
@@ -158,14 +178,28 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
         public HubComponent getComponent() {
             return component;
         }
-    }
 
-    /**
-     * Merges the given responses before they are returned after a search.
-     * @param responses the raw responses from the searches.
-     * @return a single response merged from the full set of responses.
-     */
-    public abstract QueryResponse merge(List<NamedResponse> responses);
+        public Limit getLimit() {
+            return limit;
+        }
+
+        public SolrParams getParams() {
+            return params;
+        }
+
+        public void setParams(SolrParams params) {
+            this.params = params;
+        }
+
+        public void setLimit(Limit limit) {
+            this.limit = limit;
+        }
+
+        @Override
+        public String toString() {
+            return "ComponentCallable(component=" + component + ')';
+        }
+    }
 
     public static class NamedResponse {
         private final String id;

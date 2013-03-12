@@ -28,12 +28,12 @@ public interface HubComposite extends HubComponent {
 
     /**
      * Add the provided node to the composite as a child node.
-     * @param node the node to add.
+     * @param component the sub component to add.
      */
-    public void addNode(HubComponent node);
+    public void addComponent(HubComponent component);
 
     /**
      * @return the child nodes for the composite.
      */
-    public List<HubComponent> getNodes();
+    public List<HubComponent> getComponents();
 }

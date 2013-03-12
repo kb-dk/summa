@@ -64,7 +64,7 @@ public class HubFactory implements Configurable {
             // TODO: Can we trick this so it accepts both a list and a direct sub configuration?
             List<Configuration> subs = conf.getSubConfigurations(CONF_SUB);
             for (Configuration sub: subs) {
-                 composite.addNode(createComponent(sub));
+                 composite.addComponent(createComponent(sub));
             }
         }
         return component;
