@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.common.index;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
@@ -399,7 +398,8 @@ public class IndexField<A, T, F> {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
         //String nameVal = ParseUtil.getValue(xPath, node, "@name", (String)null);
-        String nameVal = DOM.selectString(node, "@name", null);
+        //String nameVal = DOM.selectString(node, "@name", null);
+        String nameVal = getString(node, "name", null);
 
         if (nameVal == null) {
             throw new ParseException("No name defined for field", -1);
@@ -408,7 +408,8 @@ public class IndexField<A, T, F> {
         if (!nameVal.equals(SUMMA_DEFAULT)) {
             //String parentName = ParseUtil.getValue(xPath, node, "@parent",
             //                                       (String)null);
-            String parentName = DOM.selectString(node, "@parent", null);
+            //String parentName = DOM.selectString(node, "@parent", null);
+            String parentName = getString(node, "parent", null);
             if (parentName == null) {
                 parentName = SUMMA_DEFAULT;
                 if (fieldProvider.getField(SUMMA_DEFAULT) == null) {
@@ -420,8 +421,10 @@ public class IndexField<A, T, F> {
             try {
                 // TODO: Generify this
                 //noinspection unchecked
+//                parentField = (IndexField<A, T, F>) fieldProvider.getFieldWithLocale( // concat needs locale
+//                        nameVal, parentName, DOM.selectString(node, "@sortLocale", null));
                 parentField = (IndexField<A, T, F>) fieldProvider.getFieldWithLocale( // concat needs locale
-                        nameVal, parentName, DOM.selectString(node, "@sortLocale", null));
+                        nameVal, parentName, getString(node, "sortLocale", null));
             } catch (ClassCastException e) {
                 throw (ParseException) new ParseException(
                         "The FieldProvider did not provide the right type", -1).initCause(e);
@@ -437,40 +440,48 @@ public class IndexField<A, T, F> {
         aliases = new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
         //doIndex =     ParseUtil.getValue(xPath, node, "@indexed",
         //                                 doIndex);
-        doIndex = DOM.selectBoolean(node, "@indexed", doIndex);
+//        doIndex = DOM.selectBoolean(node, "@indexed", doIndex);
+        doIndex = getBoolean(node, "indexed", doIndex);
         //doStore =     ParseUtil.getValue(xPath, node, "@stored",
         //                                 doStore);
-        doStore = DOM.selectBoolean(node, "@stored", doStore);
+//        doStore = DOM.selectBoolean(node, "@stored", doStore);
+        doStore = getBoolean(node, "stored", doStore);
         //multiValued = ParseUtil.getValue(xPath, node, "@multiValued",
         //                                 multiValued);
-        multiValued = DOM.selectBoolean(node, "@multiValued", multiValued);
+//        multiValued = DOM.selectBoolean(node, "@multiValued", multiValued);
+        multiValued = getBoolean(node, "multiValued", multiValued);
         //queryBoost =  ParseUtil.getValue(xPath, node, "@queryBoost",
         //                                 queryBoost);
-        queryBoost = DOM.selectDouble(node, " @queryBoost",
-                new Float(queryBoost).doubleValue()).floatValue();
+//        queryBoost = DOM.selectDouble(node, " @queryBoost", new Float(queryBoost).doubleValue()).floatValue();
+        queryBoost = Double.valueOf(getDouble(node, "queryBoost", new Float(queryBoost).doubleValue())).floatValue();
         //indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost",
         //                                 indexBoost);
-        indexBoost = DOM.selectDouble(node, "@indexBoost",
-                new Float(indexBoost).doubleValue()).floatValue();
+        //indexBoost = DOM.selectDouble(node, "@indexBoost", new Float(indexBoost).doubleValue()).floatValue();
+        indexBoost = Double.valueOf(getDouble(node, "indexBoost", new Float(indexBoost).doubleValue())).floatValue();
         //analyze =    ParseUtil.getValue(xPath, node, "@analyzed",
         //                                analyze);
-        analyze = DOM.selectBoolean(node, "@analyzed", analyze);
+//        analyze = DOM.selectBoolean(node, "@analyzed", analyze);
+        analyze = getBoolean(node, "analyzed", analyze);
         //doCompress =  ParseUtil.getValue(xPath, node, "@compressed",
         //                                 doCompress);
-        doCompress = DOM.selectBoolean(node, "@compressed", doCompress);
+        //doCompress = DOM.selectBoolean(node, "@compressed", doCompress);
+        doCompress = getBoolean(node, "compressed", doCompress);
         //sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
         //                                 sortLocale);
-        sortLocale = DOM.selectString(node, "@sortLocale", sortLocale);
+        //sortLocale = DOM.selectString(node, "@sortLocale", sortLocale);
+        sortLocale = getString(node, "sortLocale", sortLocale);
         //sortCache =  SORT_CACHE.parse(ParseUtil.getValue(
         //        xPath, node, "@sortCache", sortCache.toString()));
-        sortCache = SORT_CACHE.parse(DOM.selectString(node, "@sortCache",
-                sortCache.toString()));
+//        sortCache = SORT_CACHE.parse(DOM.selectString(node, "@sortCache", sortCache.toString()));
+        sortCache = SORT_CACHE.parse(getString(node, "sortCache", sortCache.toString()));
         //inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
         //                                 inFreetext);
-        inFreetext = DOM.selectBoolean(node, "@inFreeText", inFreetext);
+//        inFreetext = DOM.selectBoolean(node, "@inFreeText", inFreetext);
+        inFreetext = getBoolean(node, "inFreeText", inFreetext);
         //required =    ParseUtil.getValue(xPath, node, "@required",
         //                                 required);
-        required = DOM.selectBoolean(node, "@required", required);
+        //required = DOM.selectBoolean(node, "@required", required);
+        required = getBoolean(node, "required", required);
 
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -482,10 +493,26 @@ public class IndexField<A, T, F> {
         log.debug("Finished parsing node to construct field " + this);
     }
 
+    private boolean getBoolean(Node node, String attribute, boolean defaultValue) {
+        Node value = node.getAttributes().getNamedItem(attribute);
+        return value == null ? defaultValue : Boolean.parseBoolean(value.getNodeValue());
+    }
+
+    private double getDouble(Node node, String attribute, double defaultValue) {
+        Node value = node.getAttributes().getNamedItem(attribute);
+        return value == null ? defaultValue : Double.parseDouble(value.getNodeValue());
+    }
+
+    private String getString(Node node, String attribute, String defaultValue) {
+        Node value = node.getAttributes().getNamedItem(attribute);
+        return value == null ? defaultValue : value.getNodeValue();
+    }
+
     private void parseAnalyzer(Node node) throws ParseException {
         //String typeAttr = ParseUtil.getValue(xPath, node, "@type",
         //                                     (String)null);
-        String typeAttr = DOM.selectString(node, "@type", null);
+        //String typeAttr = DOM.selectString(node, "@type", null);
+        String typeAttr = getString(node, "type", null);
         boolean parseIndex = false;
         boolean parseQuery = false;
         //noinspection DuplicateStringLiteralInspection
