@@ -37,7 +37,7 @@ public interface FieldProvider<F extends IndexField> {
     /**
      * Locate and return an already existing field.
      *
-     * @param instanceName
+     * @param instanceName the name of the field instance, used for prefix fields.
      * @param fieldName the name of the wanted field.
      * @param locale the locale for the field if needed else null.
      * @return the field corresponding to the name.

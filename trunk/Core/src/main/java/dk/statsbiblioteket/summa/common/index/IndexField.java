@@ -350,15 +350,11 @@ public class IndexField<A, T, F> {
     public String toXMLFragment() {
         StringWriter sw = new StringWriter(1000);
         sw.append(String.format(
-                "<field name=\"%s\" parent=\"%s\" indexed=\"%s\" "
-                        + "tokenized=\"%s\" stored=\"%s\" compressed=\"%s\" "
-                        + "multiValued=\"%s\" queryBoost=\"%s\" indexBoost=\"%s\" "
-                        + "sortLocale=\"%s\" sortCache=\"%s\" inFreeText=\"%s\""
-                        + " required=\"%s\" tokenized=\"%s\">\n",
-                name, parent == null ? "" : parent.getName(), doIndex,
-                analyze, doStore, doCompress,
-                multiValued, queryBoost, indexBoost, sortLocale, sortCache,
-                inFreetext, required, analyze));
+                "<field name=\"%s\" parent=\"%s\" indexed=\"%s\" tokenized=\"%s\" stored=\"%s\" compressed=\"%s\" "
+                        + "multiValued=\"%s\" queryBoost=\"%s\" indexBoost=\"%s\" sortLocale=\"%s\" sortCache=\"%s\" " +
+                        "inFreeText=\"%s\" required=\"%s\" tokenized=\"%s\">\n",
+                name, parent == null ? "" : parent.getName(), doIndex, analyze, doStore, doCompress,
+                multiValued, queryBoost, indexBoost, sortLocale, sortCache, inFreetext, required, analyze));
         for (IndexAlias alias : aliases) {
             sw.append(alias.toXMLFragment());
         }
@@ -397,6 +393,7 @@ public class IndexField<A, T, F> {
     public void parse(Node node, FieldProvider fieldProvider) throws ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
+        long startTime = System.nanoTime();
         //String nameVal = ParseUtil.getValue(xPath, node, "@name", (String)null);
         //String nameVal = DOM.selectString(node, "@name", null);
         String nameVal = getString(node, "name", null);
@@ -490,7 +487,7 @@ public class IndexField<A, T, F> {
                 parseAnalyzer(child);
             }
         }
-        log.debug("Finished parsing node to construct field " + this);
+        log.debug("Finished parsing node to construct field " + this + " in " + (System.nanoTime()-startTime) + "ns");
     }
 
     private boolean getBoolean(Node node, String attribute, boolean defaultValue) {
@@ -690,8 +687,7 @@ public class IndexField<A, T, F> {
      */
     protected String tokenizerToXMLFragment(T tokenizer) {
         throw new UnsupportedOperationException(String.format(
-                "XML fragment creation for tokenizer '%s' not supported in "
-                        + "'%s'",
+                "XML fragment creation for tokenizer '%s' not supported in '%s'",
                 tokenizer, getClass().toString()));
     }
 
@@ -910,4 +906,3 @@ public class IndexField<A, T, F> {
         queryAnalyzer = analyzer;
     }
 }
-

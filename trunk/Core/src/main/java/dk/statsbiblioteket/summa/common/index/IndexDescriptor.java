@@ -475,6 +475,36 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         fieldNodes = DOM.selectNodeList(document, FIELD_EXPR);
         //noinspection DuplicateStringLiteralInspection
         log.trace("Located " + fieldNodes.getLength() + " field nodes");
+
+//        long startTime = System.currentTimeMillis();
+  /*      Does not work
+        Node node = fieldNodes.getLength() == 0 ? null : fieldNodes.item(0);
+        while (node != null) {
+            node = node.getNextSibling();
+            if (node.hasAttributes()) {
+                System.out.println("No attributes");
+            }
+        }
+*/
+        /* ~20ms on i7
+        for (int i = 0; i < fieldNodes.getLength(); i++) {
+            Node node = fieldNodes.item(i);
+            node.getParentNode().removeChild(node);
+            if (!node.hasAttributes()) {
+                System.out.println("No attributes");
+            }
+        }
+
+        System.out.println("Clean run: " + (System.currentTimeMillis()-startTime) + "ms");
+*/
+        /* No speed difference
+            for (int i = 0; i < fieldNodes.getLength(); i++) {
+            Node node = fieldNodes.item(i);
+            node.getParentNode().removeChild(node);
+            addField(createNewField(node));
+        }*/
+
+
         for (int i = 0; i < fieldNodes.getLength(); i++) {
             addField(createNewField(fieldNodes.item(i)));
         }
