@@ -46,5 +46,14 @@ public class LuceneIndexDescriptorTest extends TestCase {
         assertEquals("There should be the right number of MoreLikeThis fields",
                    2, descriptor.getMoreLikethisFields().size());
     }
+
+    public void testParseSpeed() throws IOException {
+  //      long startTime = System.currentTimeMillis();
+        LuceneIndexDescriptor descriptor = new LuceneIndexDescriptor(
+                Resolver.getURL("common/LucenIndexDescriptor/ManyFieldsDescriptor.xml"));
+//        System.out.println("Spend " + (System.currentTimeMillis()-startTime) + "ms loading descriptor");
+        assertEquals("There should be the right number of fields",
+                   7621, descriptor.getFields().size());
+    }
 }
 
