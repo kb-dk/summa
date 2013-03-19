@@ -320,10 +320,10 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         if (log.isDebugEnabled()) {
             if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
                 log.debug("Finished facet call for query '" + request.get(DocumentKeys.SEARCH_QUERY) + "' in "
-                          + (System.currentTimeMillis() - startTime));
+                          + (System.currentTimeMillis() - startTime) + "ms");
             } else {
                 log.debug("Finished facet call for unknown query with " + collectedIDs.getDocCount() + " hits in "
-                          + (System.currentTimeMillis() - startTime));
+                          + (System.currentTimeMillis() - startTime) + "ms");
             }
         }
 
