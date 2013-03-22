@@ -125,6 +125,10 @@ public abstract class AltoParser extends ThreadedStreamParser {
         terms.add(new AltoAnalyzerBase.Segment.Term("boundingbox", String.format(
                 "%d,%d %dx%d %s",
                 segment.getHpos(), segment.getVpos(), segment.getWidth(), segment.getHeight(), segment.getTitle())));
+        terms.add(new AltoAnalyzerBase.Segment.Term("boundingboxfraction", String.format(
+                "%f,%f %fx%f %s",
+                segment.getHpos(true), segment.getVpos(true), segment.getWidth(true), segment.getHeight(true),
+                segment.getTitle())));
         for (String paragraph: segment.getParagraphs()) {
             terms.add(new AltoAnalyzerBase.Segment.Term("content", paragraph));
         }

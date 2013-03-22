@@ -75,6 +75,8 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
         segment.vpos = textBlock.getVpos();
         segment.width = textBlock.getWidth();
         segment.height = textBlock.getHeight();
+        segment.pageWidth = alto.getLayout().get(0).getWidth(); // TODO: Remove reliance on page 0
+        segment.pageHeight = alto.getLayout().get(0).getHeight(); // TODO: Remove reliance on page 0
         return segment;
     }
 
@@ -105,6 +107,8 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
         protected int vpos = -1;
         protected int width = -1;
         protected int height = -1;
+        protected int pageWidth = -1;
+        protected int pageHeight = -1;
 
         protected String title = null;
         protected String origin = null;
@@ -178,6 +182,9 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
         public int getHpos() {
             return hpos;
         }
+        public double getHpos(boolean fraction) {
+            return fraction ? hpos * 1.0 / pageWidth : hpos;
+        }
 
         public void setHpos(int hpos) {
             this.hpos = hpos;
@@ -185,6 +192,9 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
 
         public int getVpos() {
             return vpos;
+        }
+        public double getVpos(boolean fraction) {
+            return fraction ? vpos * 1.0 / pageHeight : vpos;
         }
 
         public void setVpos(int vpos) {
@@ -194,6 +204,9 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
         public int getWidth() {
             return width;
         }
+        public double getWidth(boolean fraction) {
+            return fraction ? width * 1.0 / pageWidth : width;
+        }
 
         public void setWidth(int width) {
             this.width = width;
@@ -201,6 +214,9 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
 
         public int getHeight() {
             return height;
+        }
+        public double getHeight(boolean fraction) {
+            return fraction ? height * 1.0 / pageHeight : height;
         }
 
         public void setHeight(int height) {
