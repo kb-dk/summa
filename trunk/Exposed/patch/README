@@ -12,6 +12,9 @@ Usage:
 ./patch_build.sh
   Builds the Lucene & Solr Exposed contribs.
 
+./patch_create.sh
+  Creates a patch-file meant for JIRA SOLR-2412
+
 ./patch_poc.sh
   Lucene Proof Of Concept interactive sort test for Exposed.
   Not terribly interesting as the ICU CollationKey-approach favored by Lucene 4 
