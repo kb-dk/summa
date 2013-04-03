@@ -14,6 +14,10 @@
  */
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,6 +28,7 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -59,4 +64,33 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         }
     }
 
+    public void testDocumentMerge() throws Exception {
+        log.info("testDocumentMerge()");
+        ingest(0, "fulltext", Arrays.asList("bar", "moo"));
+        ingest(1, "fulltext", Arrays.asList("zoo", "bam"));
+
+        HubComponent hub = getHub();
+        QueryResponse response = hub.search(null, new SolrQuery("*:*"));
+        assertEquals("The number of merged hits should match", 2, response.getResults().getNumFound());
+        for (int i = 0 ; i < 2 ; i++) {
+            assertNotNull("There should be a document for hit " + i, response.getResults().get(i));
+        }
+    }
+    
+    private HubComponent getHub() throws IOException {
+        Configuration hubConf = Configuration.newMemoryBased(
+                HubFactory.CONF_COMPONENT, TermStatAggregator.class
+        );
+        List<Configuration> subs =  hubConf.createSubConfigurations(HubFactory.CONF_SUB, 2);
+
+        subs.get(0).set(HubFactory.CONF_COMPONENT, SolrLeaf.class);
+        subs.get(0).set(HubComponentImpl.CONF_ID, "solr0");
+        subs.get(0).set(SolrLeaf.CONF_URL, server0.getServerUrl());
+
+        subs.get(1).set(HubFactory.CONF_COMPONENT, SolrLeaf.class);
+        subs.get(1).set(HubComponentImpl.CONF_ID, "solr1");
+        subs.get(1).set(SolrLeaf.CONF_URL, server1.getServerUrl());
+
+        return HubFactory.createComponent(hubConf);
+    }
 }
