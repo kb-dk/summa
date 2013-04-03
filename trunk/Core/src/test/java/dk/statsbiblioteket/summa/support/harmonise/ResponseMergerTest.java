@@ -295,9 +295,9 @@ public class ResponseMergerTest extends TestCase {
 
     /**
      * Generate a fake response meant for further processing by the
-     * ResponseMerger.
+     * HubResponseMerger.
      * @param searcherID the ID for the searcher. This should correspond to the
-     *        setup for the ResponseMerger.
+     *        setup for the HubResponseMerger.
      * @param request the simulated request producing the records.
      * @param hitCount the simulated total number of hits. This is equal to or
      *        more than the number of records.

@@ -71,15 +71,16 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
 
         HubComponent hub = getHub();
         QueryResponse response = hub.search(null, new SolrQuery("*:*"));
-        assertEquals("The number of merged hits should match", 2, response.getResults().getNumFound());
-        for (int i = 0 ; i < 2 ; i++) {
+        assertEquals("The number of merged hits should match", 4, response.getResults().getNumFound());
+        for (int i = 0 ; i < 4 ; i++) {
             assertNotNull("There should be a document for hit " + i, response.getResults().get(i));
         }
     }
     
     private HubComponent getHub() throws IOException {
         Configuration hubConf = Configuration.newMemoryBased(
-                HubFactory.CONF_COMPONENT, TermStatAggregator.class
+                HubFactory.CONF_COMPONENT, TermStatAggregator.class,
+                HubResponseMerger.CONF_MODE, HubResponseMerger.MODE.score
         );
         List<Configuration> subs =  hubConf.createSubConfigurations(HubFactory.CONF_SUB, 2);
 
