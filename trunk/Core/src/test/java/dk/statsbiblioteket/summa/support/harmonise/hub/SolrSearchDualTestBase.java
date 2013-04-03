@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.summa.support.solr;
+package dk.statsbiblioteket.summa.support.harmonise.hub;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -23,8 +23,11 @@ import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
+import dk.statsbiblioteket.summa.support.solr.SolrManipulator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 
@@ -34,43 +37,51 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Super class for unit testing of Solr search. Handles setup logic and sample data indexing.
+ *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SolrSearchTestBase extends TestCase {
-    public static final String SOLR_HOME = "support/solr_home1"; //data-dir (index) will be created here.
+public class SolrSearchDualTestBase extends TestCase {
+    private static Log log = LogFactory.getLog(SolrSearchDualTestBase.class);
 
-    protected EmbeddedJettyWithSolrServer server = null;
-    protected SolrServer solrServer;
+    public static final String SOLR_HOME0 = "harmonise/hub/solr_home_hub_0";
+    public static final String SOLR_HOME1 = "harmonise/hub/solr_home_hub_1";
 
-    public SolrSearchTestBase(String name) {
-        super(name);
-    }
-
+    protected EmbeddedJettyWithSolrServer server0;
+    protected EmbeddedJettyWithSolrServer server1;
+    protected SolrServer solrServer0;
+    protected SolrServer solrServer1;
+    
     @Override
     public void setUp() throws Exception {
-        super.setUp();
         System.setProperty("basedir", ".");
-        server = new EmbeddedJettyWithSolrServer(SOLR_HOME);
-        server.run();
-        solrServer = new HttpSolrServer(server.getServerUrl());
-        solrServer.deleteByQuery("*:*");
+        server0 = new EmbeddedJettyWithSolrServer(
+                SOLR_HOME0, EmbeddedJettyWithSolrServer.DEFAULT_CONTEXT, EmbeddedJettyWithSolrServer.DEFAULT_PORT);
+        server0.run();
+        solrServer0 = new HttpSolrServer(server0.getServerUrl());
+        solrServer0.deleteByQuery("*:*");
+        server1 = new EmbeddedJettyWithSolrServer(
+                SOLR_HOME1, EmbeddedJettyWithSolrServer.DEFAULT_CONTEXT, EmbeddedJettyWithSolrServer.DEFAULT_PORT+1);
+        server1.run();
+        solrServer1 = new HttpSolrServer(server1.getServerUrl());
+        solrServer1.deleteByQuery("*:*");
+        log.debug("Dual Solr backends ready at '" + server0.getServerUrl() + "' and '" + server1.getServerUrl() + "'");
     }
 
     @Override
     public void tearDown() throws Exception {
-        super.tearDown();
-        server.stopSolr();
+        server0.stopSolr();
+        server1.stopSolr();
+        log.info("Stopped dual Solr backends");
     }
 
-    protected void ingest(List<String> terms) throws IOException {
-        ingest("lti", terms);
-    }
-    protected void ingest(String field, List<String> terms) throws IOException {
+    protected void ingest(int backend, String field, List<String> terms) throws IOException {
+        if (backend != 0 && backend != 1) {
+            throw new IllegalArgumentException("The only valid backends are 0 and 1");
+        }
         ObjectFilter data = getDataProvider(field, terms);
-        ObjectFilter indexer = getIndexer();
+        ObjectFilter indexer = getIndexer(EmbeddedJettyWithSolrServer.DEFAULT_PORT + backend);
         indexer.setSource(data);
         //noinspection StatementWithEmptyBody
         while (indexer.pump());
@@ -89,14 +100,14 @@ public class SolrSearchTestBase extends TestCase {
         return new PayloadFeederHelper(samples);
     }
 
-    protected IndexController getIndexer() throws IOException {
+    protected IndexController getIndexer(int port) throws IOException {
         Configuration controllerConf = Configuration.newMemoryBased(
             IndexController.CONF_FILTER_NAME, "testcontroller");
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
             IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
-        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, IndexUtils.RECORD_FIELD); // 'id' is the default ID field for Solr
+        manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, IndexUtils.RECORD_FIELD);
+        manipulatorConf.set(SolrManipulator.CONF_SOLR_HOST, "localhost:" + port);
         return new IndexControllerImpl(controllerConf);
     }
-
 }
