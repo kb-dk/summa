@@ -534,8 +534,9 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         triggerCheck();
         if (log.isDebugEnabled() || profiler.getBeats() % 100000 == 0) {
             //noinspection DuplicateStringLiteralInspection
+            double bps = profiler.getBps(true);
             String message = "update(" + payload + ") finished - update count for the current location is "
-                      + profiler.getBeats() + " at current rate " + profiler.getBps(true)
+                      + profiler.getBeats() + " at current rate " + (bps > 100 ? (int)bps : bps)
                       + " records/sec. updatesSinceLastCommit = " + updatesSinceLastCommit
                       + ", updatesSinceLastConsolidate = " + updatesSinceLastConsolidate;
             if (profiler.getBeats() % 1000000 == 0) {
