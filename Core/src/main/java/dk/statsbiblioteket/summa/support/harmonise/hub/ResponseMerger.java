@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.common.util.NamedList;
 
 import java.util.List;
 
@@ -40,7 +41,15 @@ public class ResponseMerger implements Configurable {
 
     public QueryResponse merge(SolrParams params, List<HubAggregatorBase.NamedResponse> responses) {
         if (responses.size() == 1) {
+            log.debug("Only a single response received (" + responses.get(0).getId() + "). No merging performed");
             return responses.get(0).getResponse();
+        }
+        NamedList<Object> merged = new NamedList<Object>();
+        for (HubAggregatorBase.NamedResponse responsePair: responses) {
+            String id = responsePair.getId();
+            QueryResponse response = responsePair.getResponse();
+            NamedList raw = response.getResponse();
+
         }
         throw new UnsupportedOperationException("Merging of more than 1 response is not implemented yet");
     }

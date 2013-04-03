@@ -27,9 +27,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.SolrParams;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Rewrites queries according to term statistics.
@@ -110,6 +108,13 @@ public class TermStatRewriter implements Configurable {
             log.debug("Adjusting query '" + query + "' for " + components.size() + " components and " + targets.size()
                       + " resolved targets");
         }
+
+        // Extract query time weights for the targets
+        Map<String, Double> weights = new HashMap<String, Double>(components.size());
+        for (HubAggregatorBase.ComponentCallable comp: components) {
+
+        }
+
         comp:
         for (HubAggregatorBase.ComponentCallable component: components) {
             for (TermStatTarget target: targets) {
@@ -139,7 +144,7 @@ public class TermStatRewriter implements Configurable {
 
                 String term = query.getTerm().text();
                 if (doLowercase) {
-                    term = term.toLowerCase();
+                    term = term.toLowerCase(locale);
                 }
 
                 for (TermStatTarget t : pruned) {

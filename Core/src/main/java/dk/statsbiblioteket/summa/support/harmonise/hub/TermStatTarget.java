@@ -121,6 +121,16 @@ public class TermStatTarget implements Configurable {
     }
 
     /**
+     * Return the document frequency for the given term or {@link #fallbackDF} if the term is not present.
+     * @param term the term to resolve.
+     * @return a document frequency for the given term.
+     */
+    @SuppressWarnings("UnnecessaryParentheses")
+    public long getDF(final String term) {
+        return getDF(term, (int)fallbackDF);
+    }
+
+    /**
      * Return the document frequency for the given term.
      * @param term the term to resolve.
      * @param defaultDF if the term is not in the termstats file, the defaultDF is returned unless defaultDF == -1,
@@ -167,4 +177,9 @@ public class TermStatTarget implements Configurable {
         // TODO: Hates this, but the SolrParams does not support longs. Make a long-getter for SolrParams (and upstream)
         return (int) fallbackDF;
     }
+
+    public void setFallbackDF(long fallbackDF) {
+        this.fallbackDF = fallbackDF;
+    }
+
 }
