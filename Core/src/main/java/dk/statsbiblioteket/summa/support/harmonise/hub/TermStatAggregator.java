@@ -25,7 +25,7 @@ import org.apache.solr.common.params.SolrParams;
 import java.util.List;
 
 /**
- * Delegator for {@link TermStatRewriter} and {@link ResponseMerger}.
+ * Delegator for {@link TermStatRewriter} and {@link HubResponseMerger}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -33,12 +33,12 @@ import java.util.List;
 public class TermStatAggregator extends HubAggregatorBase {
     private static Log log = LogFactory.getLog(TermStatAggregator.class);
 
-    private final ResponseMerger merger;
+    private final HubResponseMerger merger;
     private final TermStatRewriter rewriter;
 
     public TermStatAggregator(Configuration conf) {
         super(conf);
-        merger = new ResponseMerger(conf);
+        merger = new HubResponseMerger(conf);
         rewriter = new TermStatRewriter(conf);
         log.info("Created " + this);
     }

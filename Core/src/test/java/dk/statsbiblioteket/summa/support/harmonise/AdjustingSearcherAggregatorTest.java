@@ -177,7 +177,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
             ResponseMerger.CONF_ORDER, "summon, sb",
             ResponseMerger.CONF_MODE,
             ResponseMerger.MODE.interleave.toString());
-//            ResponseMerger.CONF_MODE, "score");
+//            HubResponseMerger.CONF_MODE, "score");
         List<Configuration> searcherConfs = conf.createSubConfigurations(
             SummaSearcherAggregator.CONF_SEARCHERS, 2);
         // SB
@@ -212,7 +212,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
             ResponseMerger.CONF_ORDER, "sb",
             ResponseMerger.CONF_MODE,
             ResponseMerger.MODE.interleave.toString());
-//            ResponseMerger.CONF_MODE, "score");
+//            HubResponseMerger.CONF_MODE, "score");
         List<Configuration> searcherConfs = conf.createSubConfigurations(
             SummaSearcherAggregator.CONF_SEARCHERS, 1);
         // SB
