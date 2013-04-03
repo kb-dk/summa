@@ -43,6 +43,7 @@ public class TermStatAggregator extends HubAggregatorBase {
         log.info("Created " + this);
     }
 
+    // TODO: Handle paging
 
     @Override
     public QueryResponse merge(SolrParams params, List<NamedResponse> responses) {
