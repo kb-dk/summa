@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
@@ -381,7 +382,7 @@ public class HubResponseMerger implements Configurable {
         log.debug("Merging DocumentResponses with mode " + mode);
         switch (mode) {
             case standard: {
-                sortByStandard(aw);
+                sortByStandard(request, aw);
                 break;
             }
             case score: {
@@ -401,9 +402,48 @@ public class HubResponseMerger implements Configurable {
 //        aw.getMerged().addTiming("responsemerger.merge", System.currentTimeMillis() - startTime);
     }
 
-    private void sortByStandard(AdjustWrapper aw) {
-        // TODO: Implement this
-        throw new UnsupportedOperationException("Not implemented yet");
+    private void sortByStandard(SolrParams request, AdjustWrapper aw) {
+        final String sort = request.get(CommonParams.SORT, null);
+        if (sort == null) {
+            sortByScore(aw);
+            return;
+        }
+        log.trace("sortByStandard: Order='" + sort + "'");
+        // TODO: Examine how collator based sorting should be handled
+        // title asc|desc
+        String[] tokens = sort.split(" ");
+
+        final String sortField = tokens[0];
+        final boolean asc = tokens.length == 1 || "asc".equals(tokens[1]);
+
+        // TODO: Make sortMissingFirst customizable
+        FieldComparator comparator = new FieldComparator(sortField, asc, true);
+        Collections.sort(aw.getDocs(), comparator);
+    }
+
+    private static class FieldComparator implements Comparator<AdjustWrapper.NamedDocument> {
+        private final String field;
+        private final boolean ascending;
+        private final boolean missingFirst;
+
+        public FieldComparator(String field, boolean ascending, boolean missingFirst) {
+            this.field = field;
+            this.ascending = ascending;
+            this.missingFirst = missingFirst;
+        }
+
+        @Override
+        public int compare(AdjustWrapper.NamedDocument o1, AdjustWrapper.NamedDocument o2) {
+            String s1 = (String) o1.getDoc().getFieldValue(field);
+            String s2 = (String) o2.getDoc().getFieldValue(field);
+            int direction = ascending ? 1 : -1;
+            if (s1 == null) {
+                return direction * (missingFirst ? -1 : 1);
+            } else if (s2 == null) {
+                return direction * (missingFirst ? 1 : -1);
+            }
+            return direction * s1.compareTo(s2);
+        }
     }
 
     private void interleave(AdjustWrapper aw, List<String> order) {

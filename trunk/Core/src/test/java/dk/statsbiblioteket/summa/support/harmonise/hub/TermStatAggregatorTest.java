@@ -18,12 +18,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubFactory;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,12 +66,12 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         }
     }
 
-    public void testDocumentMerge() throws Exception {
-        log.info("testDocumentMerge()");
+    public void testDocumentMergeScoreIgnoreOrder() throws Exception {
+        log.info("testDocumentMergeScoreIgnoreOrder()");
         ingest(0, "fulltext", Arrays.asList("bar", "moo"));
         ingest(1, "fulltext", Arrays.asList("zoo", "bam"));
 
-        HubComponent hub = getHub();
+        HubComponent hub = getHub(HubResponseMerger.SEARCH_MODE, HubResponseMerger.MODE.score.toString());
         QueryResponse response = hub.search(null, new SolrQuery("*:*"));
         assertEquals("The number of merged hits should match", 4, response.getResults().getNumFound());
         for (int i = 0 ; i < 4 ; i++) {
@@ -77,11 +79,73 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         }
     }
     
-    private HubComponent getHub() throws IOException {
-        Configuration hubConf = Configuration.newMemoryBased(
-                HubFactory.CONF_COMPONENT, TermStatAggregator.class,
-                HubResponseMerger.CONF_MODE, HubResponseMerger.MODE.score
-        );
+    public void testDocumentMergeScore() throws Exception {
+        log.info("testDocumentMergeScoreIgnoreOrder()");
+        ingest(0,
+               Arrays.asList("fulltext:bar bar zoo", "mykey:bar bar zoo"),
+               Arrays.asList("fulltext:bar bar", "mykey:bar bar"));
+        ingest(1,
+               Arrays.asList("fulltext:bam", "mykey:bam"),
+               Arrays.asList("fulltext:bar bam", "mykey:bar bam moo"));
+
+        HubComponent hub = getHub(HubResponseMerger.SEARCH_MODE, HubResponseMerger.MODE.score.toString());
+        SolrQuery request = new SolrQuery("fulltext:bar");
+        QueryResponse response = hub.search(null, request);
+        //dumpDocuments(response);
+        // "bar bam moo" comes first as that Solr instance only has a single 'bar'-term in the whole index
+        assertDocFieldOrder("Sorting by score should work", response, "mykey", "bar bam moo", "bar bar", "bar bar zoo");
+    }
+
+    public void testDocumentMergeDefaultIgnoreOrder() throws Exception {
+        log.info("testDocumentMergeDefaultIgnoreOrder()");
+        ingest(0, "mykey", Arrays.asList("bar", "moo"));
+        ingest(1, "mykey", Arrays.asList("zoo", "bam"));
+
+        HubComponent hub = getHub(HubResponseMerger.SEARCH_MODE, HubResponseMerger.MODE.standard.toString());
+        SolrQuery request = new SolrQuery("*:*");
+        {
+            request.setSortField("mykey", SolrQuery.ORDER.asc);
+            QueryResponse response = hub.search(null, request);
+            assertDocFieldOrder("Sorting by 'mykey asc' should work", response, "mykey", "bam", "bar", "moo", "zoo");
+        }
+        {
+            request.setSortField("mykey", SolrQuery.ORDER.desc);
+            QueryResponse response = hub.search(null, request);
+            assertDocFieldOrder("Sorting by 'mykey desc' should work", response, "mykey", "zoo", "moo", "bar", "bam");
+        }
+    }
+
+    private void assertDocFieldOrder(String message, QueryResponse response, String field, String... expected) {
+        List<String> extracted = new ArrayList<String>(response.getResults().size());
+        for (SolrDocument doc: response.getResults()) {
+            String value = (String) doc.getFieldValue(field);
+            if (value != null) {
+                extracted.add(value);
+            }
+        }
+        assertEquals(message, Strings.join(expected), Strings.join(extracted));
+    }
+
+    private void dumpDocuments(QueryResponse response) {
+        int docCount = 0;
+        for (SolrDocument doc: response.getResults()) {
+            System.out.println("Document " + docCount++);
+            for (String field: doc.getFieldNames()) {
+                for (Object value: doc.getFieldValues(field)) {
+                    System.out.println("  " + field + ":" + value);
+                }
+            }
+        }
+    }
+
+    private HubComponent getHub(String... hubParams) throws IOException {
+        List<String> hp = new ArrayList<String>(Arrays.asList(hubParams));
+        hp.add(HubFactory.CONF_COMPONENT);
+        hp.add(TermStatAggregator.class.getCanonicalName());
+        String[] hpa = new String[hp.size()];
+        hp.toArray(hpa);
+
+        Configuration hubConf = Configuration.newMemoryBased(hpa);
         List<Configuration> subs =  hubConf.createSubConfigurations(HubFactory.CONF_SUB, 2);
 
         subs.get(0).set(HubFactory.CONF_COMPONENT, SolrLeaf.class);

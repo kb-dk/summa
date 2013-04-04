@@ -312,6 +312,9 @@
         <!-- TODO: This field was introduced by cms but not defined -->
         <field name="ht" type="text"  multiValued="true"/>
 
+        <!-- Test-speficic fields -->
+        <field name="mykey" type="key"/>
+
         <!-- TODO: This alias for lma_short is used by cms.
    Remove it when the XSLT's has been corrected
    to use the real field -->
