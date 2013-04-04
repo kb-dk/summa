@@ -198,7 +198,7 @@ public class HubResponseMerger implements Configurable {
         }
         Set<String> keys = new HashSet<String>();
         for (HubAggregatorBase.NamedResponse responsePair: responses) {
-            String id = responsePair.getId();
+            //String id = responsePair.getId();
             QueryResponse response = responsePair.getResponse();
             NamedList raw = response.getResponse();
             for (int i = 0 ; i < raw.size() ; i++) {
