@@ -89,11 +89,11 @@ public class SolrSearchDualTestBase extends TestCase {
     }
 
     // content: "myfield1:term", "myfield2:some other terms"...
-    protected void ingest(int backend, List<String>... content) throws IOException {
+    protected void ingestMulti(int backend, List<String>... content) throws IOException {
         if (backend != 0 && backend != 1) {
             throw new IllegalArgumentException("The only valid backends are 0 and 1");
         }
-        ObjectFilter data = getDataProvider(content);
+        ObjectFilter data = getDataProviderMulti(content);
         ObjectFilter indexer = getIndexer(EmbeddedJettyWithSolrServer.DEFAULT_PORT + backend);
         indexer.setSource(data);
         //noinspection StatementWithEmptyBody
@@ -102,7 +102,7 @@ public class SolrSearchDualTestBase extends TestCase {
     }
 
     // content: "myfield1:term", "myfield2:some other terms"...
-    private ObjectFilter getDataProvider(List<String>[] content) throws UnsupportedEncodingException {
+    private ObjectFilter getDataProviderMulti(List<String>[] content) throws UnsupportedEncodingException {
         List<Payload> samples = new ArrayList<Payload>(content.length);
         for (int i = 0 ; i < content.length ; i++) {
             String c =

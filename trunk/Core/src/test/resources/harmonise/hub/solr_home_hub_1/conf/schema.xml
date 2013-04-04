@@ -20,6 +20,8 @@
         <!-- Used by recordID and recordBase -->
         <fieldType name="key" class="solr.StrField" indexed="true" stored="true" multiValued="false" required="true" termVectors="false"/>
 
+        <!-- For testing purposes only -->
+        <fieldType name="testkey" class="solr.StrField" indexed="true" stored="true" multiValued="false" termVectors="false"/>
 
         <!-- Summa field: KeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
         <fieldType name="verbatim" class="solr.StrField" indexed="true" stored="false" multiValued="true" termVectors="false"/>
@@ -313,7 +315,7 @@
         <field name="ht" type="text"  multiValued="true"/>
 
         <!-- Test-speficic fields -->
-        <field name="mykey" type="key"/>
+        <field name="mykey" type="testkey"/>
 
         <!-- TODO: This alias for lma_short is used by cms.
    Remove it when the XSLT's has been corrected
