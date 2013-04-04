@@ -318,6 +318,9 @@
         <field name="lma" type="keyword"  multiValued="true"/>
         <field name="ma_short" type="text"  multiValued="true"/>
 
+        <!-- Test-speficic fields -->
+        <field name="mykey" type="key"/>
+
         <!-- TODO: This alias for ma_short is used by cms.
    Remove it when the XSLT's has been corrected
    to use the real field -->

@@ -88,6 +88,40 @@ public class SolrSearchDualTestBase extends TestCase {
         indexer.close(true);
     }
 
+    // content: "myfield1:term", "myfield2:some other terms"...
+    protected void ingest(int backend, List<String>... content) throws IOException {
+        if (backend != 0 && backend != 1) {
+            throw new IllegalArgumentException("The only valid backends are 0 and 1");
+        }
+        ObjectFilter data = getDataProvider(content);
+        ObjectFilter indexer = getIndexer(EmbeddedJettyWithSolrServer.DEFAULT_PORT + backend);
+        indexer.setSource(data);
+        //noinspection StatementWithEmptyBody
+        while (indexer.pump());
+        indexer.close(true);
+    }
+
+    // content: "myfield1:term", "myfield2:some other terms"...
+    private ObjectFilter getDataProvider(List<String>[] content) throws UnsupportedEncodingException {
+        List<Payload> samples = new ArrayList<Payload>(content.length);
+        for (int i = 0 ; i < content.length ; i++) {
+            String c =
+                    "<doc><field name=\"recordID\">doc" + i + "</field>\n"
+                    + "   <field name=\"recordBase\">myBase</field>\n";
+            for (String pair: content[i]) {
+                String[] pairT = pair.split(":",2);
+                if (pairT.length != 2) {
+                    throw new IllegalArgumentException(
+                            "The pair '" + pair + "' did not match the pattern 'field:terms'");
+                }
+                c += "    <field name=\"" + pairT[0] + "\">" + pairT[1] + "</field>\n";
+            }
+            c += "</doc>\n";
+            samples.add(new Payload(new Record("doc" + i, "dummy", c.getBytes("utf-8"))));
+        }
+        return new PayloadFeederHelper(samples);
+    }
+
     protected ObjectFilter getDataProvider(String field, List<String> terms) throws UnsupportedEncodingException {
         List<Payload> samples = new ArrayList<Payload>(terms.size());
         for (int i = 0 ; i < terms.size() ; i++) {
