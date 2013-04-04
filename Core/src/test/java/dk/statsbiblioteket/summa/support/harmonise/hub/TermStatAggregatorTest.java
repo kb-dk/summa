@@ -39,6 +39,8 @@ import java.util.List;
 public class TermStatAggregatorTest extends SolrSearchDualTestBase {
     private static Log log = LogFactory.getLog(TermStatAggregatorTest.class);
 
+    // TODO: Test force top X
+
     public void testBasicIngest() throws IOException, SolrServerException {
         log.info("testBasicIngest()");
         ingest(0, "fulltext", Arrays.asList("bar"));
@@ -108,6 +110,57 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         //dumpDocuments(response);
         // "bar bam moo" comes first as that Solr instance only has a single 'bar'-term in the whole index
         assertDocFieldOrder("Sorting by score should work", response, "mykey", "bar bam moo", "bar bar", "bar bar zoo");
+    }
+
+    public void testDocumentMergeInterleave() throws Exception {
+        log.info("testDocumentMergeScoreIgnoreOrder()");
+        ingestMulti(0,
+               Arrays.asList("fulltext:bar bar zoo", "mykey:a0"),
+               Arrays.asList("fulltext:bar bar", "mykey:a1"));
+        ingestMulti(1,
+               Arrays.asList("fulltext:bam", "mykey:b0"),
+               Arrays.asList("fulltext:bar bam", "mykey:b1"));
+
+        {
+            HubComponent hub = getHub(
+                    HubResponseMerger.CONF_MODE, HubResponseMerger.MODE.interleave.toString(),
+                    HubResponseMerger.CONF_ORDER, "solr0, solr1");
+            SolrQuery request = new SolrQuery("*:*");
+            QueryResponse response = hub.search(null, request);
+            assertDocFieldOrder("Sorting by interleaving should work", response, "mykey",
+                                "a0", "b0", "a1", "b1");
+        }
+    }
+
+    public void testDocumentMergeConcatenate() throws Exception {
+        log.info("testDocumentMergeScoreIgnoreOrder()");
+        ingestMulti(0,
+               Arrays.asList("fulltext:bar bar zoo", "mykey:a0"),
+               Arrays.asList("fulltext:bar bar", "mykey:a1"));
+        ingestMulti(1,
+               Arrays.asList("fulltext:bam", "mykey:b0"),
+               Arrays.asList("fulltext:bar bam", "mykey:b1"));
+
+        {
+            HubComponent hub = getHub(
+                    HubResponseMerger.CONF_MODE, HubResponseMerger.MODE.concatenate.toString(),
+                    HubResponseMerger.SEARCH_ORDER, "solr0, solr1");
+            SolrQuery request = new SolrQuery("*:*");
+            QueryResponse response = hub.search(null, request);
+            assertDocFieldOrder("Sorting by concatenating should work", response, "mykey",
+                                "a0", "a1", "b0", "b1");
+        }
+
+        {
+            HubComponent hub = getHub(
+                    HubResponseMerger.CONF_MODE, HubResponseMerger.MODE.concatenate.toString(),
+                    HubResponseMerger.CONF_ORDER, "solr0, solr1");
+            SolrQuery request = new SolrQuery("*:*");
+            request.set(HubResponseMerger.SEARCH_ORDER, "solr1, solr0");
+            QueryResponse response = hub.search(null, request);
+            assertDocFieldOrder("Sorting by concatenating with search time order should work", response, "mykey",
+                                "b0", "b1", "a0", "a1");
+        }
     }
 
     public void testDocumentMergeDefaultIgnoreOrder() throws Exception {
