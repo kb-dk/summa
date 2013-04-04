@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.params.CommonParams;
@@ -98,11 +99,11 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
     public void testDocumentMergeScore() throws Exception {
         log.info("testDocumentMergeScoreIgnoreOrder()");
         ingestMulti(0,
-               Arrays.asList("fulltext:bar bar zoo", "mykey:bar bar zoo"),
-               Arrays.asList("fulltext:bar bar", "mykey:bar bar"));
+                    Arrays.asList("fulltext:bar bar zoo", "mykey:bar bar zoo"),
+                    Arrays.asList("fulltext:bar bar", "mykey:bar bar"));
         ingestMulti(1,
-               Arrays.asList("fulltext:bam", "mykey:bam"),
-               Arrays.asList("fulltext:bar bam", "mykey:bar bam moo"));
+                    Arrays.asList("fulltext:bam", "mykey:bam"),
+                    Arrays.asList("fulltext:bar bam", "mykey:bar bam moo"));
 
         HubComponent hub = getHub(HubResponseMerger.SEARCH_MODE, HubResponseMerger.MODE.score.toString());
         SolrQuery request = new SolrQuery("fulltext:bar");
@@ -115,11 +116,11 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
     public void testDocumentMergeInterleave() throws Exception {
         log.info("testDocumentMergeScoreIgnoreOrder()");
         ingestMulti(0,
-               Arrays.asList("fulltext:bar bar zoo", "mykey:a0"),
-               Arrays.asList("fulltext:bar bar", "mykey:a1"));
+                    Arrays.asList("fulltext:bar bar zoo", "mykey:a0"),
+                    Arrays.asList("fulltext:bar bar", "mykey:a1"));
         ingestMulti(1,
-               Arrays.asList("fulltext:bam", "mykey:b0"),
-               Arrays.asList("fulltext:bar bam", "mykey:b1"));
+                    Arrays.asList("fulltext:bam", "mykey:b0"),
+                    Arrays.asList("fulltext:bar bam", "mykey:b1"));
 
         {
             HubComponent hub = getHub(
@@ -135,11 +136,11 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
     public void testDocumentMergeConcatenate() throws Exception {
         log.info("testDocumentMergeScoreIgnoreOrder()");
         ingestMulti(0,
-               Arrays.asList("fulltext:bar bar zoo", "mykey:a0"),
-               Arrays.asList("fulltext:bar bar", "mykey:a1"));
+                    Arrays.asList("fulltext:bar bar zoo", "mykey:a0"),
+                    Arrays.asList("fulltext:bar bar", "mykey:a1"));
         ingestMulti(1,
-               Arrays.asList("fulltext:bam", "mykey:b0"),
-               Arrays.asList("fulltext:bar bam", "mykey:b1"));
+                    Arrays.asList("fulltext:bam", "mykey:b0"),
+                    Arrays.asList("fulltext:bar bam", "mykey:b1"));
 
         {
             HubComponent hub = getHub(
@@ -181,6 +182,43 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
             assertDocFieldOrder("Sorting by 'mykey desc' should work", response, "mykey", "zoo", "moo", "bar", "bam");
         }
     }
+
+    public void testFacetMergePopularity() throws Exception {
+        log.info("testFacetMergePopularity()");
+        ingestMulti(0,
+               Arrays.asList("fulltext:bar", "fulltext:baz"),
+               Arrays.asList("fulltext:zoo")
+        );
+        ingestMulti(1,
+               Arrays.asList("fulltext:bar"),
+               Arrays.asList("fulltext:bar", "fulltext:zoo")
+        );
+
+        HubComponent hub = getHub();
+        SolrQuery request = new SolrQuery("*:*");
+        request.setFacet(true);
+        request.setFields("fulltext");
+        QueryResponse response = hub.search(null, request);
+        //dumpDocuments(response);
+        // "bar bam moo" comes first as that Solr instance only has a single 'bar'-term in the whole index
+        assertFacetTermOrder("Default (popularity) faceting", response, "fulltext",
+                             "bar 3", "zoo 2", "baz 1");
+    }
+
+    private void assertFacetTermOrder(String message, QueryResponse response, String field, String... expected) {
+        FacetField ff = response.getFacetField(field);
+        if (ff == null) {
+            fail(message + ". No facet field '" + field + "' in response");
+        }
+        assertEquals(message + ". The number of terms in the facet '" + field + "' should be correct",
+                     expected.length, ff.getValues().size());
+        for (int i = 0 ; i < expected.length ; i++) {
+            String actual = ff.getValues().get(i).getName() + " " + ff.getValues().get(i).getCount();
+            assertEquals(message + ". Facet term #" + i + " for field '" + field + "' should be correct",
+                         expected[i], actual);
+        }
+    }
+
 
     private void assertDocFieldOrder(String message, QueryResponse response, String field, String... expected) {
         List<String> extracted = new ArrayList<String>(response.getResults().size());
