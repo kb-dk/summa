@@ -26,6 +26,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.params.CommonParams;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -79,12 +80,25 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         }
     }
     
+    public void testDocumentTrim() throws Exception {
+        log.info("testDocumentTrim()");
+        ingest(0, "fulltext", Arrays.asList("bar", "moo"));
+        ingest(1, "fulltext", Arrays.asList("zoo", "bam"));
+
+        HubComponent hub = getHub(HubResponseMerger.SEARCH_MODE, HubResponseMerger.MODE.score.toString());
+        SolrQuery request = new SolrQuery("*:*");
+        request.set(CommonParams.ROWS, 3);
+        QueryResponse response = hub.search(null, request);
+        assertEquals("The number of hits should be unchanged", 4, response.getResults().getNumFound());
+        assertEquals("The number of returned documents should be trimmed", 3, response.getResults().size());
+    }
+
     public void testDocumentMergeScore() throws Exception {
         log.info("testDocumentMergeScoreIgnoreOrder()");
-        ingest(0,
+        ingestMulti(0,
                Arrays.asList("fulltext:bar bar zoo", "mykey:bar bar zoo"),
                Arrays.asList("fulltext:bar bar", "mykey:bar bar"));
-        ingest(1,
+        ingestMulti(1,
                Arrays.asList("fulltext:bam", "mykey:bam"),
                Arrays.asList("fulltext:bar bam", "mykey:bar bam moo"));
 

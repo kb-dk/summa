@@ -256,8 +256,10 @@ public class HubResponseMerger implements Configurable {
     }
 
     private void trim(SolrParams request, AdjustWrapper aw) {
-        // TODO: Implement this
-        log.warn("trim not implemented yet");
+        Integer rows = request.getInt(CommonParams.ROWS);
+        if (rows != null && aw.getDocs().size() > rows) {
+            aw.setDocs(aw.getDocs().subList(0, rows));
+        }
     }
 
     private void postProcess(SolrParams request, AdjustWrapper aw) {
@@ -511,7 +513,7 @@ public class HubResponseMerger implements Configurable {
         if (base == null) {
             return defaults;
         }
-        return Arrays.asList(base.split((" *, *")));
+        return Arrays.asList(base.split(" *, *"));
     }
 
     private AdjustWrapper deconstruct(List<HubAggregatorBase.NamedResponse> responses) {
