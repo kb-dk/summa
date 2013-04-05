@@ -19,13 +19,28 @@ import dk.statsbiblioteket.summa.support.alto.AltoAnalyzerSetup;
 
 public class ASAltoAnalyzerSetup extends AltoAnalyzerSetup {
 
+    /**
+     * The maximum distance in percent of block width from the center of the block to the center of nearby TextLines in
+     * order for the lines to be considered near. Assuming a circular block, setting this to < 0.5 would give 0 nearby
+     * TextLines.
+     */
+    public static final String CONF_NEARBY_DISTANCE = "altoanalyzersetup.nearby";
+    public static final double DEFAULT_NEARBY_DISTANCE = 1.0;
+
+    private double nearbyFactor;
+
     public ASAltoAnalyzerSetup(Configuration conf) {
         super(conf);
+        nearbyFactor = conf.getDouble(CONF_NEARBY_DISTANCE, DEFAULT_NEARBY_DISTANCE);
     }
 
     public boolean fitsDate(String date) {
         return (getFromDate() == null || getFromDate().compareTo(date) <= 0)
                 && (getToDate() == null || getToDate().compareTo(date) > 0);
+    }
+
+    public double getNearbyFactor() {
+        return nearbyFactor;
     }
 
     @Override

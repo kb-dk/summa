@@ -50,7 +50,7 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
     public static final String CONF_ORIGIN2URL_REGEXP = "asaltoanalyzer.origin2url";
     // 1/Berlingske-2012-01-02-01-0002.alto
     public static final String DEFAULT_ORIGIN2URL_REGEXP = ".*/(\\d+/[^/]+).alto.xml";
-    public static final String CONF_ORIGIN2URL_REPLACEMENT = "asaltoanalyzer.origin2url";
+    public static final String CONF_ORIGIN2URL_REPLACEMENT = "asaltoanalyzer.origin2url.replacement";
     public static final String DEFAULT_ORIGIN2URL_REPLACEMENT = "http://pc254.sb.statsbiblioteket.dk/alto/$1_files/";
 
     private final List<ASAltoAnalyzerSetup> setups = new ArrayList<ASAltoAnalyzerSetup>();
@@ -137,7 +137,48 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
             // TODO: Implement this
             segments.add(segment);
         }
+        enrichWithNearBlocks(setup, segments, new LinkedList<Alto.TextBlock>(alto.getLayout().get(0).getPrintSpace()));
         return segments;
+    }
+
+    /**
+     * Adds the text content from TextLines spatially near to the segments and lower priority search text.
+     * This introduces false positives for searching, but should be ranked lower than the correct results.
+     * @param setup the setup for the given segments.
+     * @param segments extracted segments.
+     * @param blocks all blocks.
+     */
+    private void enrichWithNearBlocks(
+            ASAltoAnalyzerSetup setup, List<ASSegment> segments, LinkedList<Alto.TextBlock> blocks) {
+        for (ASSegment segment: segments) {
+            for (Alto.PositionedElement element: getNearbyTexts(setup, segment, blocks)) {
+                segment.addNearText(Strings.join(element.getAllTexts(), " "));
+            }
+        }
+    }
+
+    private List<Alto.PositionedElement> getNearbyTexts(
+            ASAltoAnalyzerSetup setup, ASSegment segment, LinkedList<Alto.TextBlock> blocks) {
+        int origoX = segment.getHpos() + segment.getWidth()/2;
+        int origoY = segment.getVpos() + segment.getHeight()/2;
+        double maxDist = segment.getWidth() * setup.getNearbyFactor();
+        List<Alto.PositionedElement> lines = new ArrayList<Alto.PositionedElement>();
+        for (Alto.TextBlock block: blocks) {
+            for (Alto.TextLine line: block.getLines()) {
+                for (Alto.TextString ts: line.getTextStrings()) {
+                    if (isNear(origoX, origoY, maxDist, ts)) {
+                        lines.add(line);
+                    }
+                }
+            }
+        }
+        return lines;
+    }
+
+    private boolean isNear(int origoX, int origoY, double maxDist, Alto.PositionedElement element) {
+        int lineX = element.getHpos() + element.getWidth()/2;
+        int lineY = element.getVpos() + element.getHeight()/2;
+        return Math.sqrt(Math.pow(origoX-lineX, 2) + Math.pow(origoY-lineY, 2)) < maxDist;
     }
 
     private ASAltoAnalyzerSetup getSetup(Alto alto) {
@@ -194,6 +235,16 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
     }
 
     public class ASSegment extends AltoAnalyzerBase.Segment  {
+        private String nearText = null;
+
+        public void addNearText(String nearText) {
+            if (this.nearText == null) {
+                this.nearText = nearText;
+            } else {
+                this.nearText += " " + nearText;
+            }
+        }
+
         @Override
         public String toString() {
             return "ASSegment(title='" + getTitle() + "', #paragraphs=" + getParagraphs().size()
@@ -209,6 +260,10 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
         public void addIndexTerms(List<Term> terms) {
             terms.add(new Term("lma", "as"));
             terms.add(new Term("lma_long", "avisscanning"));
+            if (nearText != null) {
+                // TODO: Consider special field
+                terms.add(new Term("freetext", nearText));
+            }
         }
 
         @Override
