@@ -157,13 +157,15 @@ public abstract class AltoParser extends ThreadedStreamParser {
 
     private String getShortFormat(AltoAnalyzerBase.Segment segment) throws XMLStreamException {
         final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+        final String DC = "http://purl.org/dc/elements/1.1/";
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         XMLStreamWriter xml = factory.createXMLStreamWriter(out);
         xml.writeCharacters("      ");
         xml.writeStartElement("shortrecord");
         xml.writeCharacters("\n        ");
         xml.writeStartElement("rdf", "RDF", RDF);
-        xml.writeNamespace("RDF", RDF);
+        xml.writeNamespace("rdf", RDF);
+        xml.writeNamespace("dc", DC);
         xml.writeCharacters("\n          ");
         xml.writeStartElement("rdf", "Description", RDF);
         xml.writeCharacters("\n");
