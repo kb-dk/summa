@@ -54,7 +54,8 @@ public class ASAltoParserTest extends TestCase {
     public void testBasicParse() throws XMLStreamException, IOException {
         ObjectFilter feeder = new PayloadFeederHelper(ASAltoAnalyzerTest.p1_2012, ASAltoAnalyzerTest.p5_2012);
         ObjectFilter altoFilter = new StreamController(Configuration.newMemoryBased(
-                StreamController.CONF_PARSER, ASAltoParser.class
+                StreamController.CONF_PARSER, ASAltoParser.class,
+                ASAltoAnalyzer.CONF_ORIGIN2URL_REPLACEMENT, "http://mars:57908/images/2012/$1_files/"
         ));
         altoFilter.setSource(feeder);
         while (altoFilter.hasNext()) {
