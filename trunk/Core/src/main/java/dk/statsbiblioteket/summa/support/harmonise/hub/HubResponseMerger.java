@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAggregatorBase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -168,12 +169,22 @@ public class HubResponseMerger implements Configurable {
     public static final String CONF_SEQUENTIAL = "responsemerger.sequential";
     public static final boolean DEFAULT_SEQUENTIAL = false;
 
+    /**
+     * If no explicit facet limit is gived, this value is used.
+     * </p><p>
+     * Optional. Default is 100, which is the same as the Solr default
+     */
+    public static final String CONF_DEFAULT_FACET_LIMIT = "responcemerger.facet.limit";
+    public static final int DEFAULT_DEFAULT_FACET_LIMIT = 100; // Solr default
+
     private final MODE defaultMode;
     private final POST defaultPost;
     private final List<String> defaultOrder;
     private final int defaultForceTopX;
     private List<Pair<String, Integer>> defaultForceRules = null;
     private final boolean sequential;
+
+    private final int defaultFacetLimit;
 
     // responseHeaders
     public static final String STATUS = "status";
@@ -188,6 +199,7 @@ public class HubResponseMerger implements Configurable {
             defaultForceRules = parseForceRules(conf.getString(CONF_FORCE_RULES));
         }
         sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
+        defaultFacetLimit = conf.getInt(CONF_DEFAULT_FACET_LIMIT, DEFAULT_DEFAULT_FACET_LIMIT);
         log.info("Created " + this);
     }
 
@@ -242,6 +254,10 @@ public class HubResponseMerger implements Configurable {
         }
         if ("response".equals(key)) { // Documents
             return mergeResponses(params, responses);
+        }
+        // TODO: Facet request
+        if ("facet_counts".equals(key)) {
+            return mergeFacets(params, responses);
         }
         log.warn("No merger for key '" + key + "'. Values discarded for " + responses.size() + " responses");
         return null;
@@ -705,6 +721,84 @@ public class HubResponseMerger implements Configurable {
             }
             public SolrDocument getDoc() {
                 return doc;
+            }
+        }
+    }
+
+    private Object mergeFacets(SolrParams params, List<HubAggregatorBase.NamedResponse> responses) {
+        SimpleOrderedMap<NamedList<Integer>> facetsFields = new SimpleOrderedMap<NamedList<Integer>>();
+        for (HubAggregatorBase.NamedResponse response: responses) {
+            List<FacetField> ffs = response.getResponse().getFacetFields();
+            if (ffs == null) {
+                continue;
+            }
+            for (FacetField ff: ffs) {
+                NamedList<Integer> mergedTags = facetsFields.get(ff.getName());
+                if (mergedTags == null) {
+                    mergedTags = new NamedList<Integer>();
+                    facetsFields.add(ff.getName(), mergedTags);
+                }
+                mergeFacets(mergedTags, ff);
+            }
+        }
+        sortFacets(params, facetsFields);
+        trimFacets(params, facetsFields);
+
+        SimpleOrderedMap<Object> merged = new SimpleOrderedMap<Object>();
+        merged.add("facet_fields", facetsFields);
+        return merged;
+    }
+
+    // TODO: Examine the discrepancy between Integer and Long for counts
+    private void mergeFacets(NamedList<Integer> mergedTags, FacetField facetField) {
+        for (FacetField.Count count: facetField.getValues()) {
+            Integer c = mergedTags.get(count.getName()); // Really a long but the NamedList uses int
+            if (c == null) {
+                mergedTags.add(count.getName(), (int)count.getCount());
+            } else {
+                mergedTags.setVal(mergedTags.indexOf(count.getName(), 0), (int)(c + count.getCount()));
+            }
+        }
+    }
+
+    private void sortFacets(SolrParams params, SimpleOrderedMap<NamedList<Integer>> facetsFields) {
+        for (Map.Entry<String, NamedList<Integer>> facetField: facetsFields) {
+            final boolean isCount = "count".equals(
+                    params.get("f." + facetField.getKey() + ".sort", params.get("facet.sort", "count")));
+            sort(facetField.getValue(), new Comparator<Map.Entry<String, Integer>>() {
+                @Override
+                public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+                    return isCount ?
+                            o1.getValue().compareTo(o2.getValue())*-1 : // Descending on popularity
+                            o1.getKey().compareTo(o2.getKey());         // Ascending on Unicode
+                }
+            });
+        }
+    }
+
+    // Due to the "interesting" heap-saving implementation of NamedList, we need to sort externally
+    private <T> void sort(NamedList<T> list, Comparator<Map.Entry<String, T>> comparator) {
+        List<Map.Entry<String, T>> nwPairs = new ArrayList<Map.Entry<String, T>>(list.size());
+        for (Map.Entry<String, T> entry: list) {
+            nwPairs.add(new AbstractMap.SimpleEntry<String, T>(entry.getKey(), entry.getValue()));
+        }
+        Collections.sort(nwPairs, comparator);
+        list.clear();
+        for (Map.Entry<String, T> entry: nwPairs) {
+            list.add(entry.getKey(), entry.getValue());
+        }
+    }
+
+    private void trimFacets(SolrParams params, SimpleOrderedMap<NamedList<Integer>> facetsFields) {
+        for (Map.Entry<String, NamedList<Integer>> facetField: facetsFields) {
+            int limit = params.getInt(
+                    "f." + facetField.getKey() + ".limit", params.getInt("facet.limit", defaultFacetLimit));
+            if (limit == -1) {
+                continue;
+            }
+            NamedList tags = facetField.getValue();
+            while (tags.size() > limit) {
+                tags.remove(tags.size()-1);
             }
         }
     }
