@@ -197,7 +197,8 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         HubComponent hub = getHub();
         SolrQuery request = new SolrQuery("*:*");
         request.setFacet(true);
-        request.setFields("fulltext");
+        request.setFacetSort("count");
+        request.set("facet.field", "fulltext");
         QueryResponse response = hub.search(null, request);
         //dumpDocuments(response);
         // "bar bam moo" comes first as that Solr instance only has a single 'bar'-term in the whole index
@@ -208,7 +209,7 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
     private void assertFacetTermOrder(String message, QueryResponse response, String field, String... expected) {
         FacetField ff = response.getFacetField(field);
         if (ff == null) {
-            fail(message + ". No facet field '" + field + "' in response");
+            fail(message + ". No facet field '" + field + "' in response\n" + response);
         }
         assertEquals(message + ". The number of terms in the facet '" + field + "' should be correct",
                      expected.length, ff.getValues().size());
