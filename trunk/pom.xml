@@ -457,6 +457,32 @@
                 <artifactId>marc4j</artifactId>
                 <version>2.4</version>
             </dependency>
+
+
+            <!-- jersey used by Web/Hub -->
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-client</artifactId>
+                <version>1.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+                <version>1.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+                <version>1.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-servlet</artifactId>
+                <version>1.17.1</version>
+            </dependency>
+            <!-- End jersey -->
+
+
         </dependencies>
     </dependencyManagement>
 

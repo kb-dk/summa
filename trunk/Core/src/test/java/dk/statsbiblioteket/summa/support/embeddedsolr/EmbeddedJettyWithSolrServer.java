@@ -1,11 +1,11 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import java.io.File;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.webapp.WebAppContext;
+
+import java.io.File;
 
 
 
@@ -101,9 +101,9 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 		try{
 			server.start();
 		} catch(Exception e){
-			System.err.println("Exception running Solr server:");
+//			System.err.println("Exception running Solr server:");
 			e.printStackTrace();
-			throw new RuntimeException("Exception running Solr server", e);
+			throw new RuntimeException("Exception running Solr server with address " + serverUrl, e);
 		}
 	}
 
