@@ -16,13 +16,19 @@ package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
+import org.apache.solr.request.LocalSolrQueryRequest;
+import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.response.XMLResponseWriter;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -33,6 +39,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +50,8 @@ import java.util.Map;
  * SolrParams object and returning
  *
  */
-@Path("/hub")
+// TODO: Figure out how to set the path in SolrQuery to avoid having the /select suffix
+@Path("/hub/select")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -98,14 +108,20 @@ public class HubWS {
             throw new WebApplicationException(e, response);
         }
         // TODO: Produce XML instead of JSON
-        return qResponse.toString();
+
+        return toResultFormat(solrParams, qResponse);
+    }
+
+    private String toResultFormat(SolrParams request, QueryResponse response) {
+        return HubComponentImpl.toXML(request, response);
     }
 
     private synchronized HubComponent getHub() {
         if (hub == null) {
             try {
                 log.info("Creating HubComponent based on provided configuration...");
-                hub = HubFactory.createComponent(getConfiguration().getSubConfiguration("summa.web.hub"));
+                //hub = HubFactory.createComponent(getConfiguration().getSubConfiguration("summa.web.hub"));
+                hub = HubFactory.createComponent(getConfiguration());
                 log.info("HubComponent successfully created: " + hub);
             } catch (Exception e) {
                 log.error("Failed to create HubComponent", e);

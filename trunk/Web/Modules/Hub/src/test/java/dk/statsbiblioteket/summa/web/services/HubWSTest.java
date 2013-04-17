@@ -17,13 +17,18 @@ package dk.statsbiblioteket.summa.web.services;
 import com.sun.jersey.api.container.httpserver.HttpServerFactory;
 import com.sun.net.httpserver.HttpServer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.support.harmonise.hub.SolrLeaf;
 import dk.statsbiblioteket.summa.support.harmonise.hub.SolrSearchDualTestBase;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.XMLResponseParser;
+import org.apache.solr.client.solrj.response.QueryResponse;
 
 import javax.naming.InitialContext;
 import java.io.IOException;
@@ -43,14 +48,17 @@ public class HubWSTest extends SolrSearchDualTestBase {
 
     @Override
     public void setUp() throws Exception {
+        super.setUp();
         ingestSimpleCorpus();
     }
 
+    // Verifies that the Hub can be created successfully from the configuration
     public void testHub() throws Exception {
         HubComponent hub = HubFactory.createComponent(Configuration.load("hub_configuration.xml"));
         System.out.println("Search for '*:*': " + hub.search(null, new SolrQuery("*:*")));
     }
 
+    // Creates the same hub as testHub, but exposed as a web service
     public void testWebSearch() throws Exception {
         InitialContext context = new InitialContext();
         //context.bind("java:comp/env/confLocation", "goat");
@@ -61,7 +69,21 @@ public class HubWSTest extends SolrSearchDualTestBase {
             throw (BindException)new BindException("Unable to bind to '" + ADDRESS + "'").initCause(e);
         }
         server.start();
+        log.info("Server running at " + ADDRESS + "hub. Performing test search");
+        try {
+            SolrQuery query = new SolrQuery("*:*");
+            query.set("qt", ""); // Just plain /hub
+            query.set("wt", "xml"); // Our hub does not currently return binary format
 
+            System.out.println("Search for '*:*': " + HubComponentImpl.toXML(query, restSearch(query)));
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Hit return to stop...");
+            System.in.read();
+        } finally {
+            server.stop(0);
+        }
+        /*
         System.out.println("Server running");
         System.out.println("Visit: " + ADDRESS);
         System.out.println("Hit return to stop...");
@@ -69,7 +91,16 @@ public class HubWSTest extends SolrSearchDualTestBase {
         System.out.println("Stopping server");
         server.stop(0);
         System.out.println("Server stopped");
+          */
+    }
 
+    private QueryResponse restSearch(SolrQuery query) throws SolrServerException {
+        SolrLeaf solr = new SolrLeaf(Configuration.newMemoryBased(
+                SolrLeaf.CONF_ID, "tmp",
+                SolrLeaf.CONF_URL, ADDRESS + "hub"
+        ));
+        solr.getSolrServer().setParser(new XMLResponseParser());
+        return solr.search(query);
     }
 
     private void ingestSimpleCorpus() throws IOException {

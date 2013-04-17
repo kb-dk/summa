@@ -22,7 +22,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.request.LocalSolrQueryRequest;
+import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.response.XMLResponseWriter;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.Iterator;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -116,6 +122,25 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
      * @throws Exception if an error occurred.
      */
     public abstract QueryResponse barrierSearch(Limit limit, SolrParams params) throws Exception;
+
+    /**
+     * Converts the given request/response pair into Solr-compliant XML.
+     * @param request  a Solr request.
+     * @param response a Solr response.
+     * @return Solr-compliant XML.
+     */
+    public static String toXML(SolrParams request, QueryResponse response) {
+        XMLResponseWriter xmlWriter = new XMLResponseWriter();
+        Writer w = new StringWriter();
+        SolrQueryResponse sResponse = new SolrQueryResponse();
+        sResponse.setAllValues(response.getResponse());
+        try {
+            xmlWriter.write(w, new LocalSolrQueryRequest(null, request), sResponse);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to convert Solr response into XML", e);
+        }
+        return w.toString();
+    }
 
     @Override
     public String getID() {
