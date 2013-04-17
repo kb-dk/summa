@@ -42,10 +42,14 @@ public class SolrLeaf extends HubLeafImpl {
     public static final String CONF_URL = "solr.url";
     public static final String DEFAULT_URL = "http://localhost:8983";
 
+    // TODO: Implement default qt
+    // http://wiki.apache.org/solr/SolrRequestHandler#Handler_Resolution
+    // public static final String CONF_QT = "solr.qt"
+
     // TODO: Timeouts
 
     private final String url;
-    private final SolrServer solrServer;
+    private final HttpSolrServer solrServer;
 
     public SolrLeaf(Configuration conf) {
         super(conf);
@@ -57,6 +61,10 @@ public class SolrLeaf extends HubLeafImpl {
     @Override
     public QueryResponse search(SolrParams params) throws SolrServerException {
         return solrServer.query(params);
+    }
+
+    public HttpSolrServer getSolrServer() {
+        return solrServer;
     }
 
     public String toString() {

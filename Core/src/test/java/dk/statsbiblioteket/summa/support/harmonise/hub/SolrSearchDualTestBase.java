@@ -55,6 +55,7 @@ public class SolrSearchDualTestBase extends TestCase {
     
     @Override
     public void setUp() throws Exception {
+        log.info("Starting and clearing Solr test servers");
         System.setProperty("basedir", ".");
         server0 = new EmbeddedJettyWithSolrServer(
                 SOLR_HOME0, EmbeddedJettyWithSolrServer.DEFAULT_CONTEXT, EmbeddedJettyWithSolrServer.DEFAULT_PORT);
