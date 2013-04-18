@@ -68,6 +68,14 @@
             </includes>
         </fileSet>
         <fileSet>
+            <directory>${basedir}/../Web/Modules/Hub/target/</directory>
+            <directoryMode>0755</directoryMode>
+            <outputDirectory>${project.build.finalName}/web/</outputDirectory>
+            <includes>
+                <include>summa-web-hub.war</include>
+            </includes>
+        </fileSet>
+        <fileSet>
             <directory>${basedir}/../Web/Modules/Status/target/</directory>
             <directoryMode>0755</directoryMode>
             <outputDirectory>${project.build.finalName}/web/</outputDirectory>

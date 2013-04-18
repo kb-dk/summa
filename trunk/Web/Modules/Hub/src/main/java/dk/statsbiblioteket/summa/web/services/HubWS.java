@@ -19,16 +19,11 @@ import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
-import org.apache.solr.request.LocalSolrQueryRequest;
-import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.response.SolrQueryResponse;
-import org.apache.solr.response.XMLResponseWriter;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -39,9 +34,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +53,7 @@ public class HubWS {
     /**
      * The name of the configuration for the hub. This can be overwritten with JNDI "java:comp/env/confLocation".
      */
-    public static final String DEFAULT_CONFIGURATION = "hub_configuration.xml";
+    public static final String DEFAULT_CONFIGURATION = "hub_consfiguration.xml";
 
     private Configuration conf;
     private HubComponent hub = null;
