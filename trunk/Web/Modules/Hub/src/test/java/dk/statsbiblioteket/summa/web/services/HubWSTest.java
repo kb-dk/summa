@@ -20,7 +20,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.harmonise.hub.SolrLeaf;
 import dk.statsbiblioteket.summa.support.harmonise.hub.SolrSearchDualTestBase;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
-import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -55,7 +54,10 @@ public class HubWSTest extends SolrSearchDualTestBase {
     // Verifies that the Hub can be created successfully from the configuration
     public void testHub() throws Exception {
         HubComponent hub = HubFactory.createComponent(Configuration.load("hub_configuration.xml"));
-        System.out.println("Search for '*:*': " + hub.search(null, new SolrQuery("*:*")));
+//        System.out.println("Search for '*:*': " + hub.search(null, new SolrQuery("*:*")));
+        QueryResponse response = hub.search(null, new SolrQuery("*:*"));
+        assertEquals("The hub response should contain the correct number of documents",
+                     4, response.getResults().size());
     }
 
     // Creates the same hub as testHub, but exposed as a web service
@@ -75,11 +77,10 @@ public class HubWSTest extends SolrSearchDualTestBase {
             query.set("qt", ""); // Just plain /hub
             query.set("wt", "xml"); // Our hub does not currently return binary format
 
-            System.out.println("Search for '*:*': " + HubComponentImpl.toXML(query, restSearch(query)));
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Hit return to stop...");
-            System.in.read();
+            QueryResponse response = restSearch(query);
+            assertEquals("The web service response should contain the correct number of documents",
+                         4, response.getResults().size());
+            //System.out.println("Search for '*:*': " + HubComponentImpl.toXML(query, restSearch(query)));
         } finally {
             server.stop(0);
         }

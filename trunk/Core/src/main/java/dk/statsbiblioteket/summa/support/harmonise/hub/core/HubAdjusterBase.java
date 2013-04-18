@@ -19,6 +19,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -50,7 +51,7 @@ public abstract class HubAdjusterBase extends  HubCompositeImpl {
             }
             return null;
         }
-        SolrParams request = adjustPrefixedParams(params);
+        ModifiableSolrParams request = adjustPrefixedParams(params);
         if (!params.getBool(PARAM_ENABLED, true)) {
             return null;
         }
