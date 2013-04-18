@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.ArrayList;
@@ -71,7 +72,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
     }
 
     @Override
-    public QueryResponse barrierSearch(Limit limit, SolrParams params) throws Exception {
+    public QueryResponse barrierSearch(Limit limit, ModifiableSolrParams params) throws Exception {
         List<HubComponent> subs = getComponents(limit);
 
         String [] acceptableIDs = params.getParams(PARAM_ENABLED_COMPONENTS);

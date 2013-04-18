@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.*;
@@ -42,7 +43,7 @@ public class DummyLeaf extends HubComponentImpl {
 
     @SuppressWarnings("ObjectToString")
     @Override
-    public QueryResponse barrierSearch(Limit limit, SolrParams params) throws Exception {
+    public QueryResponse barrierSearch(Limit limit, ModifiableSolrParams params) throws Exception {
         Collection<SolrParams> existing = receivedParams.get(getID());
         if (existing == null) {
             existing = new ArrayList<SolrParams>();

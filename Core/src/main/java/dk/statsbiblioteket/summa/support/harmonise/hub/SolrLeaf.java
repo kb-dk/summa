@@ -19,11 +19,10 @@ import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubLeafImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.common.params.ModifiableSolrParams;
 
 /**
  * Connects to a remote Solr installation using the REST API.
@@ -42,24 +41,58 @@ public class SolrLeaf extends HubLeafImpl {
     public static final String CONF_URL = "solr.url";
     public static final String DEFAULT_URL = "http://localhost:8983";
 
-    // TODO: Implement default qt
+    /**
+     * The protocol used to communicate with the Solr instance. The binary protocol is the fastest and recommended
+     * if supported by the Solr instance.
+     * </p><p>
+     * Optional. Valid values are 'xml' and 'javabin'. Default is 'javabin'.
+     */
+    public static final String CONF_PROTOCOL = "solr.protocol";
+    public static final String DEFAULT_PROTOCOL = PROTOCOL.xml.toString();
+    public enum PROTOCOL {xml, javabin}
+
+    /**
+     * Connection timeout for communication with the remote Solr server.
+     * </p><p>
+     * Optional. Default is 500 milliseconds.
+     */
+    public static final String CONF_CONNECTION_TIMEOUT = "solr.connectiontimeout";
+    public static final int DEFAULT_CONNECTION_TIMEOUT = 500;
+
+    /**
+     * Read timeout for communication with the remote Solr server.
+     * </p><p>
+     * Optional. Default is 10000 milliseconds (10 seconds).
+     */
+    public static final String CONF_READ_TIMEOUT = "solr.readtimeout";
+    public static final int DEFAULT_READ_TIMEOUT = 10*1000;
+
+    // TODO: Consider how to handle qt
     // http://wiki.apache.org/solr/SolrRequestHandler#Handler_Resolution
     // public static final String CONF_QT = "solr.qt"
 
-    // TODO: Timeouts
-
     private final String url;
     private final HttpSolrServer solrServer;
+    private final PROTOCOL protocol;
+    private int connectionTimeout;
+    private int readTimeout;
 
     public SolrLeaf(Configuration conf) {
         super(conf);
         url = conf.getString(CONF_URL, DEFAULT_URL);
+        protocol = PROTOCOL.valueOf(conf.getString(CONF_PROTOCOL, DEFAULT_PROTOCOL));
+        connectionTimeout = conf.getInt(CONF_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+        readTimeout = conf.getInt(CONF_READ_TIMEOUT, DEFAULT_READ_TIMEOUT);
         solrServer = new HttpSolrServer(url);
+        solrServer.setConnectionTimeout(connectionTimeout);
+        solrServer.setSoTimeout(readTimeout);
         log.info("Created " + this);
     }
 
     @Override
-    public QueryResponse search(SolrParams params) throws SolrServerException {
+    public QueryResponse search(ModifiableSolrParams params) throws SolrServerException {
+        params.remove("wt");
+        params.add("wt", protocol.toString());
         return solrServer.query(params);
     }
 
@@ -68,6 +101,7 @@ public class SolrLeaf extends HubLeafImpl {
     }
 
     public String toString() {
-        return "SolrLeaf(" + super.toString() + ", url='" + url + "')";
+        return "SolrLeaf(" + super.toString() + ", url='" + url + "', protocol=" + protocol
+               + ", connectionTimeout=" + connectionTimeout + ", readTimeout=" + readTimeout + ")";
     }
 }

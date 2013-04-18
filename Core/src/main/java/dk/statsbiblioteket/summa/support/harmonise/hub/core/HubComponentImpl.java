@@ -28,7 +28,6 @@ import org.apache.solr.response.XMLResponseWriter;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Iterator;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -69,7 +68,7 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
 
     @Override
     public QueryResponse search(Limit limit, SolrParams params) throws Exception {
-        SolrParams request = adjustPrefixedParams(params);
+        ModifiableSolrParams request = adjustPrefixedParams(params);
         if (!params.getBool(PARAM_ENABLED, true)) {
             return null;
         }
@@ -81,7 +80,7 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
      * @param params the input parameters.
      * @return parameters for search, potentially adjusted.
      */
-    protected SolrParams adjustPrefixedParams(SolrParams params) {
+    protected ModifiableSolrParams adjustPrefixedParams(SolrParams params) {
         // Locate all properly prefixed, remove prefix, clear all existing values for the keys, all new key-value pairs
         Iterator<String> pNames = params.getParameterNamesIterator();
         while (pNames.hasNext()) {
@@ -109,7 +108,7 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
                 return adjusted;
             }
         }
-        return params;
+        return new ModifiableSolrParams(params);
     }
 
     /**
@@ -121,7 +120,7 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
      * @return the result from a search or null if the request is not applicable.
      * @throws Exception if an error occurred.
      */
-    public abstract QueryResponse barrierSearch(Limit limit, SolrParams params) throws Exception;
+    public abstract QueryResponse barrierSearch(Limit limit, ModifiableSolrParams params) throws Exception;
 
     /**
      * Converts the given request/response pair into Solr-compliant XML.
@@ -131,7 +130,7 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
      */
     public static String toXML(SolrParams request, QueryResponse response) {
         XMLResponseWriter xmlWriter = new XMLResponseWriter();
-        Writer w = new StringWriter();
+        StringWriter w = new StringWriter();
         SolrQueryResponse sResponse = new SolrQueryResponse();
         sResponse.setAllValues(response.getResponse());
         try {
