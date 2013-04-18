@@ -29,7 +29,6 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.XMLResponseParser;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
-import javax.naming.InitialContext;
 import java.io.IOException;
 import java.net.BindException;
 import java.util.Arrays;
@@ -62,7 +61,7 @@ public class HubWSTest extends SolrSearchDualTestBase {
 
     // Creates the same hub as testHub, but exposed as a web service
     public void testWebSearch() throws Exception {
-        InitialContext context = new InitialContext();
+ //       InitialContext context = new InitialContext();
         //context.bind("java:comp/env/confLocation", "goat");
         HttpServer server;
         try {
@@ -75,7 +74,6 @@ public class HubWSTest extends SolrSearchDualTestBase {
         try {
             SolrQuery query = new SolrQuery("*:*");
             query.set("qt", ""); // Just plain /hub
-            query.set("wt", "xml"); // Our hub does not currently return binary format
 
             QueryResponse response = restSearch(query);
             assertEquals("The web service response should contain the correct number of documents",
@@ -95,10 +93,24 @@ public class HubWSTest extends SolrSearchDualTestBase {
           */
     }
 
+    public void testWebSearchKeepRunning() throws Exception {
+        HttpServer server;
+        try {
+            server = HttpServerFactory.create(ADDRESS);
+        } catch (BindException e) {
+            throw (BindException)new BindException("Unable to bind to '" + ADDRESS + "'").initCause(e);
+        }
+        server.start();
+        System.out.println("Hit return to stop server at " + ADDRESS);
+        System.in.read();
+        server.stop(0);
+    }
+
     private QueryResponse restSearch(SolrQuery query) throws SolrServerException {
         SolrLeaf solr = new SolrLeaf(Configuration.newMemoryBased(
                 SolrLeaf.CONF_ID, "tmp",
-                SolrLeaf.CONF_URL, ADDRESS + "hub"
+                SolrLeaf.CONF_URL, ADDRESS + "hub",
+                SolrLeaf.CONF_PROTOCOL, SolrLeaf.PROTOCOL.xml.toString()
         ));
         solr.getSolrServer().setParser(new XMLResponseParser());
         return solr.search(query);
