@@ -53,7 +53,7 @@ public class HubWS {
     /**
      * The name of the configuration for the hub. This can be overwritten with JNDI "java:comp/env/confLocation".
      */
-    public static final String DEFAULT_CONFIGURATION = "hub_consfiguration.xml";
+    public static final String DEFAULT_CONFIGURATION = "hub_configuration.xml";
 
     private Configuration conf;
     private HubComponent hub = null;
@@ -116,7 +116,7 @@ public class HubWS {
                 hub = HubFactory.createComponent(getConfiguration());
                 log.info("HubComponent successfully created: " + hub);
             } catch (Exception e) {
-                log.error("Failed to create HubComponent", e);
+                throw new RuntimeException("Unable to create hub component", e);
             }
         }
         return hub;

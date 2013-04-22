@@ -23,6 +23,9 @@ import java.util.Random;
 /**
  * Allocates RAM and fills it with garbage until an OutOfMemoryError occurs.
  * Normally used as a stand-alone program for clearing the disc-cache.
+ *
+ * This is a last resort program. It is highly preferable to clear the disk
+ * cache by
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -30,7 +33,7 @@ import java.util.Random;
 public class RAMEater {
 
     /**
-     * Allocated memory in chunks of 1 MB and fills it with garbage. This goes
+     * Allocates memory in chunks of 1 MB and fills it with garbage. This goes
      * on until an OutOfMemoryError is thrown, at which point a clean exit is
      * performed.
      * @param args all arguments are ignored.
