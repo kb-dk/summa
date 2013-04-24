@@ -27,7 +27,7 @@ import java.util.Set;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class HubCompositeImpl extends  HubComponentImpl implements HubComposite {
+public abstract class HubCompositeImpl extends HubComponentImpl implements HubComposite {
     private static Log log = LogFactory.getLog(HubCompositeImpl.class);
 
     private List<HubComponent> components = new ArrayList<HubComponent>();
