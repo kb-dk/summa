@@ -61,7 +61,7 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
     private final String prefix;
 
     public HubComponentImpl(Configuration conf) {
-        this.id = conf.getString(CONF_ID, getClass().getSimpleName());
+        id = conf.getString(CONF_ID, getClass().getSimpleName());
         prefix = SPECIFIC_PARAM_PREFIX + id + ".";
         log.info("Created " + toString());
     }
@@ -82,6 +82,16 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
      */
     protected ModifiableSolrParams adjustPrefixedParams(SolrParams params) {
         // Locate all properly prefixed, remove prefix, clear all existing values for the keys, all new key-value pairs
+        return getModifiableSolrParams(params, prefix);
+    }
+
+    /**
+     * Rewrites all parameters prefixed as described in {@link #SPECIFIC_PARAM_PREFIX}, but using the provided prefix.
+     * @param params the input parameters.
+     * @param prefix the prefix to adjust to.
+     * @return parameters for search, potentially adjusted.
+     */
+    public static ModifiableSolrParams getModifiableSolrParams(SolrParams params, String prefix) {
         Iterator<String> pNames = params.getParameterNamesIterator();
         while (pNames.hasNext()) {
             if (pNames.next().startsWith(prefix)) {

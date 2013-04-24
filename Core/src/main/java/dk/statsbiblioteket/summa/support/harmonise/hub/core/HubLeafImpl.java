@@ -64,7 +64,8 @@ public abstract class HubLeafImpl extends  HubComponentImpl {
     }
 
     /**
-     * @param params HubComponent-specific parameters.
+     * @param params HubComponent-specific parameters. As the parameters are copied before this method is called,
+     *               adjusting them will have no adverse effect og nodes and leafs higher in the tree.
      * @return the result from a search.
      * @throws Exception if an error occurred.
      */

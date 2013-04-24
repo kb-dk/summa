@@ -19,12 +19,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAggregatorBase;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.*;
@@ -56,11 +58,10 @@ public class TermStatRewriter implements Configurable {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String PARAM_ADJUSTMENT_ENABLED = "adjustment.enabled";
+    public static final String SEARCH_ADJUSTMENT_ENABLED = "termstatadjustment.enabled";
 
     /**
-     * If true, all terms that are to be adjusted are lower cased before they
-     * are looked up in the term stats.
+     * If true, all terms that are to be adjusted are lower cased before they are looked up in the term stats.
      * </p><p>
      * Optional. Default is true.
      */
@@ -97,29 +98,53 @@ public class TermStatRewriter implements Configurable {
         log.info("Created " + this);
     }
 
+    /**
+     * Adjusts the search queries for each component where term stats has been specified during setup, based on term
+     * occurrence statistics and weight modifiers (pre-configured as well as runtime-specified).
+     * @param params     incoming search parameters.
+     * @param components the child-searchers for the aggregator.
+     * @return the child-searchers with adjusted queries.
+     */
     public List<HubAggregatorBase.ComponentCallable> adjustRequests(
             SolrParams params, List<HubAggregatorBase.ComponentCallable> components) {
-        String query = params.get(CommonParams.Q, null);
-        if (query == null) {
+        if (!params.getBool(SEARCH_ADJUSTMENT_ENABLED, true)) {
+            log.debug("TermStat adjustment skipped as " + SEARCH_ADJUSTMENT_ENABLED + "=false");
             return components;
         }
-        List<TermStatTarget> pruned = getTargets(components);
+        String query = params.get(CommonParams.Q, null);
+
+        // Reduce the number of targets to those corresponding to the components in the search
+        // This ensures that the virtual corpus used for query term weight adjustment will be equal to the real corpus
+        // that the distributes search will use.
+        List<TermStatTarget> pruned = getTargets(components, query);
+        if (pruned.isEmpty()) {
+            log.debug("No general or specific queries for any sub component. Returning unchanged");
+            return components;
+        }
         if (log.isDebugEnabled()) {
-            log.debug("Adjusting query '" + query + "' for " + components.size() + " components and " + targets.size()
-                      + " resolved targets");
+            log.debug("Adjusting query '" + query + "' for " + components.size() + " components" + " with " + pruned
+                    + " term stat collections"
+                    + (components.size() == pruned.size() ? "" : ". This is a non-optimal adjustments as there should"
+                    + " be a term stat collection for each component"));
         }
 
-        // Extract query time weights for the targets
+        // Cache query time weights for the components
         Map<String, Double> weights = new HashMap<String, Double>(components.size());
+        double defaultWeight = params.getDouble(TermStatTarget.SEARCH_WEIGHT, -1.0);
         for (HubAggregatorBase.ComponentCallable comp: components) {
-
+            double weight = comp.getParams().getDouble(HubComponentImpl.SPECIFIC_PARAM_PREFIX
+                    + comp.getComponent().getID() + "." + TermStatTarget.SEARCH_WEIGHT, defaultWeight);
+            if (weight >= 0) {
+                weights.put(comp.getComponent().getID(), weight);
+            }
         }
 
+        // Iterate all components with targets and adjust their queries
         comp:
         for (HubAggregatorBase.ComponentCallable component: components) {
             for (TermStatTarget target: targets) {
                 if (component.getComponent().getID().equals(target.getComponentID())) {
-                    adjustRequests(query, component, target, pruned, lowercase);
+                    adjustRequests(query, component, target, pruned, weights);
                     continue comp;
                 }
                 log.debug("Unable to adjust term stats for " + component.getComponent().getID()
@@ -129,11 +154,13 @@ public class TermStatRewriter implements Configurable {
         return components;
     }
 
-    private void adjustRequests(String query, HubAggregatorBase.ComponentCallable component,
+    private void adjustRequests(String mainQuery, HubAggregatorBase.ComponentCallable component,
                                 final TermStatTarget target, final List<TermStatTarget> pruned,
-                                final boolean doLowercase) {
-        final int fallbackDF = component.getParams().getInt(TermStatTarget.SEARCH_FALLBACK_DF, target.getFallbackDF());
-        final double weight = component.getParams().getDouble(TermStatTarget.SEARCH_WEIGHT, target.getWeight());
+                                final Map<String, Double> weights) {
+        ModifiableSolrParams params = HubComponentImpl.getModifiableSolrParams(
+                component.getParams(), component.getComponent().getID());
+        final int fallbackDF = params.getInt(TermStatTarget.SEARCH_FALLBACK_DF, target.getFallbackDF());
+        final boolean toLower = params.getBool(SEARCH_LOWERCASE_QUERY, lowercase);
 
         QueryRewriter queryRewriter = new QueryRewriter(null, null, new QueryRewriter.Event() {
 
@@ -143,13 +170,15 @@ public class TermStatRewriter implements Configurable {
                 double numDocs = 0;
 
                 String term = query.getTerm().text();
-                if (doLowercase) {
+                if (toLower) {
                     term = term.toLowerCase(locale);
                 }
 
                 for (TermStatTarget t : pruned) {
-                    // TODO: We need to resolve the weights properly
-                    //docFreq += t.getDF(term, fallbackDF) * t.getWeight(request);
+                    Double weight = weights.get(t.getID());
+                    if (weight == null) {
+                        weight = t.getWeight();
+                    }
                     docFreq += t.getDF(term, fallbackDF) * weight;
                     numDocs += t.getDocCount();
                 }
@@ -174,13 +203,20 @@ public class TermStatRewriter implements Configurable {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    private List<TermStatTarget> getTargets(List<HubAggregatorBase.ComponentCallable> components) {
+    /*
+     * Extract all the components that has term stats and a component specific query.
+     * If a general query is issued, the component specific query need no be present.
+     */
+    private List<TermStatTarget> getTargets(
+            List<HubAggregatorBase.ComponentCallable> components, String query) {
         List<TermStatTarget> pruned = new ArrayList<TermStatTarget>(targets.size());
         for (HubAggregatorBase.ComponentCallable component: components) {
             for (TermStatTarget target: targets) {
                 if (component.getComponent().getID().equals(target.getComponentID())) {
-                    pruned.add(target);
-                    break;
+                    if (query != null || component.getParams().get(target.getComponentID() + ".q") != null) {
+                        pruned.add(target);
+                        break;
+                    }
                 }
             }
         }
