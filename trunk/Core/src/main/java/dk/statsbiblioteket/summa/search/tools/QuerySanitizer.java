@@ -166,6 +166,9 @@ public class QuerySanitizer implements Configurable {
      * @return the sanitized query + .
      */
     public SanitizedQuery sanitize(String query) {
+        if ("".equals(query)) {
+            return new SanitizedQuery(query);
+        }
         return sanitize(new SanitizedQuery(query));
     }
 

@@ -65,6 +65,59 @@ public class InteractionAdjusterTest extends TestCase {
                      Strings.join(rewritten.getStrings(FacetKeys.SEARCH_FACET_FACETS), ", "));
     }
 
+    public void testUnsupportedFields() {
+        Configuration conf = createAdjusterConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_QUERY, "un:supported");
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_FIELDS, "availability");
+        InteractionAdjuster adjuster = new InteractionAdjuster(conf);
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "availability:none"
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals("The rewritten simple query should be as expected",
+                         "un:supported",
+                         rewritten.getString(DocumentKeys.SEARCH_QUERY));
+        }
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "venner NOT availability:none"
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals("The rewritten NOT query should be as expected",
+                         "+venner -un:supported",
+                         rewritten.getString(DocumentKeys.SEARCH_QUERY));
+        }
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "\"venner\" availability:\"none\"^1.0039482"
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals("The rewritten quoted and weighted query should be as expected",
+                         "venner un:supported",
+                         rewritten.getString(DocumentKeys.SEARCH_QUERY));
+        }
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "\"venner\" availability:\"none\""
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals("The rewritten quoted query should be as expected",
+                         "venner un:supported",
+                         rewritten.getString(DocumentKeys.SEARCH_QUERY));
+        }
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "\"venner\" availability:\"none\"",
+                    DocumentKeys.SEARCH_FILTER, ""
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals("The rewritten quoted query with empty filter should be as expected",
+                         "venner un:supported",
+                         rewritten.getString(DocumentKeys.SEARCH_QUERY));
+        }
+    }
+
     public void testFacetFieldSizeAndOrder() {
         InteractionAdjuster adjuster = createAdjuster();
         Request request = new Request(
