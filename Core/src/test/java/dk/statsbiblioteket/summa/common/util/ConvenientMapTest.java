@@ -49,6 +49,12 @@ public class ConvenientMapTest extends TestCase {
         assertEquals(Integer.valueOf(87), map.getInt("noo"));
     }
 
+    public void testJSONEscape() throws Exception {
+        ConvenientMap map = new ConvenientMap();
+        map.addJSON("{ foo:\"bar\\\\ zoo\" }");
+        assertEquals("bar\\ zoo", map.getString("foo"));
+    }
+
     public void testClear () throws Exception {
         map.put ("foo", "bar");
         assertEquals(map.size(), 1);

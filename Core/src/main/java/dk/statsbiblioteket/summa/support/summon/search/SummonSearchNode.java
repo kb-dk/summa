@@ -489,7 +489,7 @@ public class SummonSearchNode extends SolrSearchNode {
                 if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
                     String reducedFilter = convertQuery(filter, null);
                     if (reducedFilter != null) {
-                        queryMap.put("s.fq", Arrays.asList(filter)); // FilterQuery
+                        queryMap.put("s.fq", Arrays.asList(reducedFilter)); // FilterQuery
                     }
                 } else {
                     if (query == null) {

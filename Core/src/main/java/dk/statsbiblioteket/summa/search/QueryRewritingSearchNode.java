@@ -145,7 +145,7 @@ public class QueryRewritingSearchNode implements SearchNode {
     }
 
     private Request process(Request request) throws ParseException {
-        String oldQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        final String oldQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
         if (oldQuery != null // TODO: Feedback should bubble to front end
             && request.getBoolean(prefix + SEARCH_SANITIZE_QUERIES,
                                   request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries))) {
@@ -161,7 +161,7 @@ public class QueryRewritingSearchNode implements SearchNode {
                 log.debug("Sanitized query '" + oldQuery + "' to '" + newQuery + "'");
             }
         }
-        String oldFilter = request.getString(DocumentKeys.SEARCH_FILTER, null);
+        final String oldFilter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         if (oldFilter != null // TODO: Feedback should bubble to front end
             && request.getBoolean(prefix + SEARCH_SANITIZE_FILTERS,
                                   request.getBoolean(SEARCH_SANITIZE_FILTERS, sanitizeFilters))) {
@@ -177,7 +177,7 @@ public class QueryRewritingSearchNode implements SearchNode {
                 log.debug("Sanitized filter '" + oldFilter + "' to '" + newFilter + "'");
             }
         }
-        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        final String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
         if (query != null && request.getBoolean(prefix + SEARCH_PHRASE_QUERIES,
                                                 request.getBoolean(SEARCH_PHRASE_QUERIES, phrasequeries))) {
             try {

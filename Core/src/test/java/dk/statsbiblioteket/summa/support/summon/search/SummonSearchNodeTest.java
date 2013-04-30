@@ -179,6 +179,58 @@ public class SummonSearchNodeTest extends TestCase {
         summon.close();
     }
 
+    public void testSpacedEscapedFacetFilter() throws RemoteException {
+        final String JSON =
+                "{\"search.document.query\":\"nature\", " +
+                "\"search.document.filter\":" +
+                "\"ContentType:Magazine\\\\ Article OR ContentType:Journal\\\\ Article\", "  +
+                "\"solr.filterisfacet\":\"true\"}";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        log.info("Searching with query='" + request.getString(DocumentKeys.SEARCH_QUERY)
+                 + "', filter='" + request.getString(DocumentKeys.SEARCH_FILTER) + "'");
+        summon.search(request, responses);
+        final long numHits = ((DocumentResponse)responses.iterator().next()).getHitCount();
+        assertTrue("The number of hits should exceed 1 but was " + numHits, numHits > 1);
+        summon.close();
+    }
+
+    public void testSpacedEscapedFacetQuery() throws RemoteException {
+        final String JSON =
+                "{\"search.document.query\":" +
+                "\"nature AND (ContentType:Magazine\\\\ Article OR ContentType:Journal\\\\ Article)\", " +
+                "\"solr.filterisfacet\":\"true\"}";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        log.info("Searching with query='" + request.getString(DocumentKeys.SEARCH_QUERY) + "'");
+        summon.search(request, responses);
+        final long numHits = ((DocumentResponse)responses.iterator().next()).getHitCount();
+        assertTrue("The number of hits should exceed 1 but was " + numHits, numHits > 1);
+        summon.close();
+    }
+
+    public void testSpacedQuotedFacetFilter() throws RemoteException {
+        final String JSON =
+                "{\"search.document.query\":\"nature\", " +
+                "\"search.document.filter\":" +
+                "\"ContentType:\\\"Magazine Article\\\" OR ContentType:\\\"Journal Article\\\"\", " +
+                "\"solr.filterisfacet\":\"true\"}";
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        log.info("Searching with query='" + request.getString(DocumentKeys.SEARCH_QUERY)
+                 + "', filter='" + request.getString(DocumentKeys.SEARCH_FILTER) + "'");
+        summon.search(request, responses);
+        final long numHits = ((DocumentResponse)responses.iterator().next()).getHitCount();
+        assertTrue("The number of hits should exceed 1 but was " + numHits, numHits > 1);
+        summon.close();
+    }
+
     public void testFacetSizeSmall() throws RemoteException {
         assertFacetSize(3);
         assertFacetSize(25);

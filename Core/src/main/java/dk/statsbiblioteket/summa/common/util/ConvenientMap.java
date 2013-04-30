@@ -392,7 +392,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
             }
             String key = entry.getKey();
             Serializable value = entry.getValue();
-            sb.append(key).append("=\"");
+            sb.append(key).append(":\"");
             // See https://www.ietf.org/rfc/rfc4627.txt about escaping
             sb.append(value.toString().replace("\\", "\\\\").replace("\"", "\\\""));
             sb.append("\"");
