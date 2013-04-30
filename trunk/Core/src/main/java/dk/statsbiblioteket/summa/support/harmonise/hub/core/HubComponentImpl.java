@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -78,12 +79,31 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
         log.info("Created " + toString());
     }
 
+    /**
+     * Converts all entries from the given configuration to SolrParam-representation.
+     * @param conf default values for this or another component.
+     * @return static SolrParams with the defaults.
+     */
     protected static SolrParams parseDefaults(Configuration conf) {
         ModifiableSolrParams params = new ModifiableSolrParams();
         for (Map.Entry<String, Serializable> entry: conf) {
-
+            String key = entry.getKey();
+            Serializable value = entry.getValue();
+            put(key, value, params);
         }
         return params;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void put(String key, Serializable value, ModifiableSolrParams params) {
+        if (value instanceof List) {
+            List<Serializable> list = (List<Serializable>) value;
+            for (Serializable v: list) {
+                put(key, v, params);
+            }
+            return;
+        }
+        params.add(key, value.toString());
     }
 
     @Override
