@@ -53,6 +53,15 @@ public class QueryRewritingSearchNodeTest extends TestCase {
     }
 
     public void testIdentity() throws RemoteException {
+        assertTransformations(Configuration.newMemoryBased(
+                QueryRewritingSearchNode.CONF_PHRASE_QUERIES, false,
+                QueryRewritingSearchNode.CONF_SANITIZE_QUERIES, false
+        ), new String[][]{
+            {"foo:\"bar zoo\"", "foo:bar\\ zoo"}
+        });
+    }
+
+    public void testSpace() throws RemoteException {
         assertTransformations(Configuration.newMemoryBased(), new String[][]{
             {"foo", "\"foo\""},
             {"foo bar", "\"foo\" \"bar\""},

@@ -118,6 +118,22 @@ public class InteractionAdjusterTest extends TestCase {
         }
     }
 
+    public void testSpaceEscape() {
+        Configuration conf = createAdjusterConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_QUERY, "un:supported");
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_FIELDS, "availability");
+        InteractionAdjuster adjuster = new InteractionAdjuster(conf);
+        Request request = new Request(
+                DocumentKeys.SEARCH_QUERY, "foo:bar\\ zoo",
+                DocumentKeys.SEARCH_FILTER, "baz:bam\\ bom"
+        );
+        Request rewritten = adjuster.rewrite(request);
+        assertEquals("The rewritten space escaped query should be as expected",
+                     "foo:\"bar zoo\"", rewritten.getString(DocumentKeys.SEARCH_QUERY));
+        assertEquals("The rewritten space escaped filter should be as expected",
+                     "baz:\"bam bom\"", rewritten.getString(DocumentKeys.SEARCH_FILTER));
+    }
+
     public void testFacetFieldSizeAndOrder() {
         InteractionAdjuster adjuster = createAdjuster();
         Request request = new Request(

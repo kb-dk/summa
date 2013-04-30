@@ -306,7 +306,7 @@ public class InteractionAdjuster implements Configurable {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Query Request:" + incoming + " Query rewritten:"+adjusted);
+            log.debug("Query Request:" + incoming + " Query rewritten:" + adjusted);
 
         }
         return adjusted;
