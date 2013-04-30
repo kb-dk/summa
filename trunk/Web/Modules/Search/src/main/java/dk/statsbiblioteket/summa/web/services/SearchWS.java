@@ -14,13 +14,15 @@
  */
 package dk.statsbiblioteket.summa.web.services;
 
-import dk.statsbiblioteket.summa.common.configuration.*;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
 import dk.statsbiblioteket.summa.search.api.*;
-import dk.statsbiblioteket.summa.search.api.document.*;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.api.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -65,12 +67,10 @@ public class SearchWS {
     /**
      * Local XML output factory.
      */
-    private static XMLOutputFactory xmlOutputFactory =
-                                                 XMLOutputFactory.newInstance();
+    private static XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
 
     /** Did-You-Mean XML namespace. */
-    public static final String NAMESPACE =
-                            "http://statsbiblioteket.dk/summa/2009/SearchError";
+    public static final String NAMESPACE = "http://statsbiblioteket.dk/summa/2009/SearchError";
     /** XML tag for search error response. */
     public static final String SEARCH_ERROR_RESPONSE = "searcherror";
     /** XML name tag. */
@@ -99,8 +99,7 @@ public class SearchWS {
     private synchronized SearchClient getSearchClient() {
         if (searcher == null) {
             try {
-                searcher = new SearchClient(getConfiguration()
-                                      .getSubConfiguration("summa.web.search"));
+                searcher = new SearchClient(getConfiguration().getSubConfiguration("summa.web.search"));
             } catch (SubConfigurationsNotSupportedException e) {
                 log.error("Storage doesn't support sub configurations");
             } catch (NullPointerException e) {
@@ -118,8 +117,7 @@ public class SearchWS {
     private synchronized SearchClient getSuggestClient() {
         if (suggester == null) {
             try {
-                suggester = new SearchClient(getConfiguration()
-                                     .getSubConfiguration("summa.web.suggest"));
+                suggester = new SearchClient(getConfiguration().getSubConfiguration("summa.web.suggest"));
             } catch (SubConfigurationsNotSupportedException e) {
                 log.error("Storage doesn't support sub configurations");
             } catch (NullPointerException e) {
@@ -138,8 +136,7 @@ public class SearchWS {
     private synchronized SearchClient getDidYouMeanClient() {
         if (didyoumean == null) {
             try {
-                didyoumean = new SearchClient(getConfiguration()
-                                  .getSubConfiguration("summa.web.didyoumean"));
+                didyoumean = new SearchClient(getConfiguration().getSubConfiguration("summa.web.didyoumean"));
             } catch (SubConfigurationsNotSupportedException e) {
                 log.error("Storage doesn't support sub configurations");
             } catch (NullPointerException e) {
@@ -162,13 +159,11 @@ public class SearchWS {
             InitialContext context;
             try {
                 context = new InitialContext();
-                String paramValue = (String)
-                                   context.lookup("java:comp/env/confLocation");
+                String paramValue = (String)context.lookup("java:comp/env/confLocation");
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
             } catch (NamingException e) {
-                log.warn("Failed to lookup env-entry. Trying to load system " 
-                         + "configuration.", e);
+                log.warn("Failed to lookup env-entry. Trying to load system configuration.", e);
                 conf = Configuration.getSystemConfiguration(true);
             }
         }
@@ -200,28 +195,21 @@ public class SearchWS {
             res = getDidYouMeanClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response[@name='DidYouMeanResponse']/"
-                    + "DidYouMeanResponse");
+                                         "/responsecollection/response[@name='DidYouMeanResponse']/DidYouMeanResponse");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
-            log.warn("Error executing didYouMean: '" + query + "', " +
-                    maxSuggestions +
-                    ". Error was: ", e);
+            log.warn("Error executing didYouMean: '" + query + "', " + maxSuggestions + ". Error was: ", e);
             String mes = "Error performing didYouMean query";
             retXML = getErrorXML(DidYouMeanResponse.DIDYOUMEANRESPONSE, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error executing didYouMean: '" + query + "', " +
-                    maxSuggestions +
-                    ". Error was: ", e);
+            log.warn("Error executing didYouMean: '" + query + "', " + maxSuggestions + ". Error was: ", e);
             String mes = "Error performing didYouMean query";
             retXML = getErrorXML(DidYouMeanResponse.DIDYOUMEANRESPONSE, mes, e);
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("didYouMean('" + query + "', " + maxSuggestions
-                      + ") finished in "
-                      + (System.currentTimeMillis() - startTime)
-                      + "ms" + getTiming(res));
+            log.debug("didYouMean('" + query + "', " + maxSuggestions + ") finished in "
+                      + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
         return retXML;
     }
@@ -250,28 +238,21 @@ public class SearchWS {
             res = getSuggestClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response[@name='SuggestResponse']/"
-                    + "QueryResponse/suggestions");
+                    "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
-            log.warn("Error executing getSuggestions: '" + prefix + "', " +
-                    maxSuggestions +
-                    ". Error was: ", e);
+            log.warn("Error executing getSuggestions: '" + prefix + "', " + maxSuggestions + ". Error was: ", e);
             String mes = "Error performing getSuggestions";
             retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error executing getSuggestions: '" + prefix + "', " +
-                    maxSuggestions +
-                    ". Error was: ", e);
+            log.warn("Error executing getSuggestions: '" + prefix + "', " + maxSuggestions + ". Error was: ", e);
             String mes = "Error performing getSuggestions";
             retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("getSuggestion('" + prefix + "', " + maxSuggestions
-                      + ") finished in "
-                      + (System.currentTimeMillis() - startTime)
-                      + "ms" + getTiming(res));
+            log.debug("getSuggestion('" + prefix + "', " + maxSuggestions + ") finished in "
+                      + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
         return retXML;
     }
@@ -304,8 +285,7 @@ public class SearchWS {
      */
     @WebMethod
     public String getRecentSuggestions(int ageSeconds, int maxSuggestions) {
-        log.trace("getRecentSuggestions(" + ageSeconds + "s, "
-                  + maxSuggestions + ")");
+        log.trace("getRecentSuggestions(" + ageSeconds + "s, " + maxSuggestions + ")");
         long startTime = System.currentTimeMillis();
         String retXML;
         ResponseCollection res;
@@ -318,25 +298,22 @@ public class SearchWS {
             res = getSuggestClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response[@name='SuggestResponse']/"
-                    + "QueryResponse/suggestions");
+                    "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
-            log.warn("Error executing getRecentSuggestions: " + ageSeconds
-                     + "s, " + maxSuggestions + ". Error was: ", e);
+            log.warn("Error executing getRecentSuggestions: " + ageSeconds + "s, " + maxSuggestions + ". Error was: ",
+                     e);
             String mes = "Error performing getRecentSuggestions";
             retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error executing getRecentSuggestions: "
-                     + ageSeconds + "s, " + maxSuggestions
-                     + ". Error was: ", e);
+            log.warn("Error executing getRecentSuggestions: " + ageSeconds + "s, " + maxSuggestions + ". Error was: ",
+                     e);
             String mes = "Error performing getRecentSuggestions";
             retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         }
 
         log.debug("getRecentSuggestions(" + ageSeconds + "s, " + maxSuggestions
-                  + ") finished in " + (System.currentTimeMillis() - startTime)
-                  + "ms");
+                  + ") finished in " + (System.currentTimeMillis() - startTime) + "ms");
         return retXML;
     }
 
@@ -362,8 +339,7 @@ public class SearchWS {
         try {
             getSuggestClient().search(req);
         } catch (IOException e) {
-            log.warn("Error committing query '" + cleanQuery(query)
-                     + "' with hitCount '" + hitCount + "'");
+            log.warn("Error committing query '" + cleanQuery(query) + "' with hitCount '" + hitCount + "'");
         }
     }
 
@@ -406,28 +382,23 @@ public class SearchWS {
             res = getSearchClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response/documentresult/record/"
-                    + "field[@name='" + fieldName + "']");
+                    "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
             retXML = DOM.domToString(subDom);
             if (retXML == null || "".equals(retXML) && log.isDebugEnabled()) {
-                log.debug("getField(" + id + ", " + fieldName + ") did not give"
-                          + " any return-XML. The reply from the core search "
-                          + "was\n" + res.toXML());
+                log.debug("getField(" + id + ", " + fieldName + ") did not give any return-XML. " +
+                          "The reply from the core search was\n" + res.toXML());
             }
         } catch (IOException e) {
-            log.warn("Error querying for id: '" + id + "'." +
-                    "Error was: ", e);
+            log.warn("Error querying for id: '" + id + "'." + "Error was: ", e);
             String mes = "Error performing query";
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error querying for id: '" + id + "'." +
-                    "Error was: ", e);
+            log.warn("Error querying for id: '" + id + "'." + "Error was: ", e);
             String mes = "Error performing query";
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
 
-        log.trace("getField('" + id + "', '" + fieldName
-                  + "') finished in " + (System.currentTimeMillis() - startTime)
+        log.trace("getField('" + id + "', '" + fieldName + "') finished in " + (System.currentTimeMillis() - startTime)
                   + "ms" + getTiming(res));
         return retXML;
     }
@@ -452,11 +423,9 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     @WebMethod
-    public String indexLookup(String field, String term,
-                              int delta, int length) {
+    public String indexLookup(String field, String term, int delta, int length) {
         //noinspection DuplicateStringLiteralInspection
-        String call = "indexLookup(" + field + ":" + term + ", " + delta + ", "
-                      + length + ")";
+        String call = "indexLookup(" + field + ":" + term + ", " + delta + ", " + length + ")";
         log.trace(call);
         long startTime = System.currentTimeMillis();
         String retXML;
@@ -479,9 +448,7 @@ public class SearchWS {
         }
         //noinspection DuplicateStringLiteralInspection
         if (log.isTraceEnabled()) {
-            log.trace(call + " finished in "
-                      + (System.currentTimeMillis() - startTime)
-                         + "ms" + getTiming(res));
+            log.trace(call + " finished in " + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
         return retXML;
     }
@@ -506,11 +473,9 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     @WebMethod
-    public String extendedIndexLookup(String query, String field, String term,
-                                      int delta, int length, int minCount) {
+    public String extendedIndexLookup(String query, String field, String term, int delta, int length, int minCount) {
         //noinspection DuplicateStringLiteralInspection
-        String call = "indexLookup(" + field + ":" + term + ", " + delta + ", "
-                      + length + ")";
+        String call = "indexLookup(" + field + ":" + term + ", " + delta + ", " + length + ")";
         log.trace(call);
         long startTime = System.currentTimeMillis();
         String retXML;
@@ -537,9 +502,7 @@ public class SearchWS {
         }
         //noinspection DuplicateStringLiteralInspection
         if (log.isTraceEnabled()) {
-            log.trace(call + " finished in "
-                      + (System.currentTimeMillis() - startTime)
-                      + "ms" + getTiming(res));
+            log.trace(call + " finished in " + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
         return retXML;
     }
@@ -570,17 +533,13 @@ public class SearchWS {
             res = getSearchClient().search(req);
             retXML = res.toXML();
         } catch (IOException e) {
-            log.warn("Error executing morelikethis: '" + id + "', " +
-                    numberOfRecords +
-                    ". Error was: ", e);
+            log.warn("Error executing morelikethis: '" + id + "', " + numberOfRecords + ". Error was: ", e);
             String mes = "Error performing morelikethis";
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
         if (log.isDebugEnabled()) {
-            log.debug("getMoreLikeThis('" + id + "', " + numberOfRecords
-                      + ") finished in "
-                      + (System.currentTimeMillis() - startTime)
-                      + "ms" + getTiming(res));
+            log.debug("getMoreLikeThis('" + id + "', " + numberOfRecords + ") finished in "
+                      + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
         return retXML;
     }
@@ -597,10 +556,8 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     @WebMethod
-    public String simpleSearch(String query, int numberOfRecords,
-                               int startIndex) {
-        return simpleSearchSorted(query, numberOfRecords, startIndex,
-                                             DocumentKeys.SORT_ON_SCORE, false);
+    public String simpleSearch(String query, int numberOfRecords, int startIndex) {
+        return simpleSearchSorted(query, numberOfRecords, startIndex, DocumentKeys.SORT_ON_SCORE, false);
     }
 
     /**
@@ -634,22 +591,18 @@ public class SearchWS {
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
-            String mes = String.format(
-                "Error performing JSON query '%s': %s", json, e.getMessage());
+            String mes = String.format("Error performing JSON query '%s': %s", json, e.getMessage());
             log.warn(mes, e);
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
         if (log.isDebugEnabled()) {
-            log.debug(String.format(
-                "directJSON(%s) finished in %s ms%s",
-                json, System.currentTimeMillis() - startTime,
-                 getTiming(res)));
+            log.debug(String.format("directJSON(%s) finished in %s ms%s",
+                json, System.currentTimeMillis() - startTime, getTiming(res)));
         }
         return retXML;
     }
 
-    public static final Pattern PROCESSING_OPTIONS =
-            Pattern.compile("\\<\\:(.*)\\:\\>(.*)");
+    public static final Pattern PROCESSING_OPTIONS = Pattern.compile("\\<\\:(.*)\\:\\>(.*)");
     /**
      * A simple way to query the index wile being able to specify which field to
      * sort by and whether the sorting should be reversed.
@@ -670,17 +623,15 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     @WebMethod
-    public String simpleSearchSorted(String query, int numberOfRecords,
-                                     int startIndex, String sortKey,
-                                     boolean reverse) {
+    public String simpleSearchSorted(
+            String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
         if (log.isTraceEnabled()) {
             log.debug(String.format(
-                    "simpleSearchSorted(query='%s', numberOfRecords=%d, "
-                    + "startIndex=%d, sortKey='%s', reverse=%b) entered",
+                    "simpleSearchSorted(query='%s', numberOfRecords=%d, " +
+                    "startIndex=%d, sortKey='%s', reverse=%b) entered",
                     query, numberOfRecords, startIndex, sortKey, reverse));
         }
-        return filterSearchSorted(null, query, numberOfRecords, startIndex,
-                                                              sortKey, reverse);
+        return filterSearchSorted(null, query, numberOfRecords, startIndex, sortKey, reverse);
     }
 
     /**
@@ -705,15 +656,12 @@ public class SearchWS {
      */
     @WebMethod
     public String filterSearchSorted(
-            String filter, String query, int numberOfRecords, int startIndex,
-            String sortKey, boolean reverse) {
-        final String PARAMS = "filter='%s', query='%s', numberOfRecords=%d, "
-                              + "startIndex=%d, sortKey='%s', reverse=%b";
+            String filter, String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
+        final String PARAMS = "filter='%s', query='%s', numberOfRecords=%d, startIndex=%d, sortKey='%s', reverse=%b";
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.debug(String.format("filterSearchSorted(" + PARAMS + ") called",
-                                    filter, query, numberOfRecords, startIndex,
-                                    sortKey, reverse));
+                                    filter, query, numberOfRecords, startIndex, sortKey, reverse));
         }
         long startTime = System.currentTimeMillis();
 
@@ -725,12 +673,10 @@ public class SearchWS {
         try {
             String[] options = extractOptions(query);
             if (options != null) {
-                log.debug("simpleSearchSorted received "
-                          + options.length + " options");
+                log.debug("simpleSearchSorted received " + options.length + " options");
                 for (String option: options) {
                     if ("explain".equals(option)) {
-                        log.debug("Turning on explain for query '"
-                                  + query + "'");
+                        log.debug("Turning on explain for query '" + query + "'");
                         req.put(DocumentKeys.SEARCH_EXPLAIN, true);
                         continue;
                     }
@@ -771,14 +717,13 @@ public class SearchWS {
             long callStart = System.currentTimeMillis();
             res = getSearchClient().search(req);
             res.addTiming("searchws.outercall",
-                          (System.currentTimeMillis() - callStart));
+                          System.currentTimeMillis() - callStart);
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
             log.warn(String.format(
                     "Error executing query '" + PARAMS + "'. Error was: %s",
-                    filter, query, numberOfRecords, startIndex,
-                    sortKey, reverse, e.getMessage()), e);
+                    filter, query, numberOfRecords, startIndex, sortKey, reverse, e.getMessage()), e);
             String mes = String.format("Error performing query: %s", 
                                                                 e.getMessage());
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
