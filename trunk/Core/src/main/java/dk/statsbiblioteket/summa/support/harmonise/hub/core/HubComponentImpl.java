@@ -27,8 +27,10 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.response.XMLResponseWriter;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Iterator;
+import java.util.Map;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -48,7 +50,15 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String PARAM_ENABLED = "enabled";
+    public static final String CONF_ENABLED = "enabled";
+
+    /**
+     * Sub-storage with key-value pairs of atomics, Strings and list of atomics or Strings. When a search is performed,
+     * these pairs will be used as base and overwritten by the query params where the keys matches.
+     * </p><p>
+     * Optional.
+     */
+    public static final String CONF_DEFAULTS = "defaults";
 
     /**
      * The ID for this node.
@@ -59,17 +69,27 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
 
     private final String id;
     private final String prefix;
+    private final SolrParams defaultParams;
 
     public HubComponentImpl(Configuration conf) {
         id = conf.getString(CONF_ID, getClass().getSimpleName());
         prefix = SPECIFIC_PARAM_PREFIX + id + ".";
+        defaultParams = conf.containsKey(CONF_DEFAULTS) ? parseDefaults(conf.getSubConfiguration(CONF_DEFAULTS)) : null;
         log.info("Created " + toString());
+    }
+
+    protected static SolrParams parseDefaults(Configuration conf) {
+        ModifiableSolrParams params = new ModifiableSolrParams();
+        for (Map.Entry<String, Serializable> entry: conf) {
+
+        }
+        return params;
     }
 
     @Override
     public QueryResponse search(Limit limit, SolrParams params) throws Exception {
         ModifiableSolrParams request = adjustPrefixedParams(params);
-        if (!params.getBool(PARAM_ENABLED, true)) {
+        if (!params.getBool(CONF_ENABLED, true)) {
             return null;
         }
         return barrierSearch(limit, request);

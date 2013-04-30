@@ -370,7 +370,6 @@ public class QueryRewriter {
     }
     private String convertQueryToString(Query query, boolean top) {
         String result = "";
-
         if (query instanceof TermQuery) {
             TermQuery tq = (TermQuery) query;
             // We need to quote a term query because even though certain reserved characters get parsed correctly,
