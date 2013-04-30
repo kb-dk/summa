@@ -381,4 +381,23 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         sw.append(")");
         return sw.toString();
     }
+
+    // JSON-compliant
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append('{');
+        for (Map.Entry<String, Serializable> entry: entrySet()) {
+            if (sb.length() != 1) {
+                sb.append(", ");
+            }
+            String key = entry.getKey();
+            Serializable value = entry.getValue();
+            sb.append(key).append("=\"");
+            // See https://www.ietf.org/rfc/rfc4627.txt about escaping
+            sb.append(value.toString().replace("\\", "\\\\").replace("\"", "\\\""));
+            sb.append("\"");
+        }
+
+        return sb.append('}').toString();
+    }
 }
