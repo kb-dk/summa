@@ -158,7 +158,7 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
      * @return the result from a search or null if the request is not applicable.
      * @throws Exception if an error occurred.
      */
-    public abstract QueryResponse barrierSearch(Limit limit, ModifiableSolrParams params) throws Exception;
+    protected abstract QueryResponse barrierSearch(Limit limit, ModifiableSolrParams params) throws Exception;
 
     /**
      * Converts the given request/response pair into Solr-compliant XML.
