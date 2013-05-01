@@ -21,6 +21,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,21 +42,31 @@ public class ProgressTracker {
     private static final String TAG = "lastRecordTimestamp";
     public static final Pattern TIMESTAMP_PATTERN =
             Pattern.compile(".*<" + TAG + ">.*"
+                            + "<iso>([-.0-9]+)</iso>.*"
+                            + "</" + TAG + ">.*", Pattern.DOTALL);
+    public static final Pattern EPOCH_TIMESTAMP_PATTERN =
+            Pattern.compile(".*<" + TAG + ">.*"
                             + "<epoch>([0-9]+)</epoch>.*"
                             + "</" + TAG + ">.*", Pattern.DOTALL);
+
     /*    public static final Pattern TIMESTAMP_PATTERN =
             Pattern.compile(".*<" + TAG + ">.*"
                             + "<epoch>"
                             + "([0-9]{4})([0-9]{2})([0-9]{2})-"
                             + "([0-9]{2})([0-9]{2})([0-9]{2})"
                             + "</" + TAG + ">.*", Pattern.DOTALL);*/
-    public static final String ISO_TIME = "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS";
+//    public static final String ISO_TIME = "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS";
+    public static final String ISO_TIME = "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS.%1$tL";
     public static final String TIMESTAMP_FORMAT =
             "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
             +"<" + TAG + ">\n"
             + "<epoch>%1$tQ</epoch>\n"
+            + "<!-- As of 2013-05-01, iso is the authoritative timestamp and epoch is deprecated -->\n"
             + "<iso>" + ISO_TIME + "</iso>\n"
             + "</" + TAG + ">\n";
+    // <iso>20120718-103035</iso> or <iso>20120718-103035.123</iso>
+    private static final SimpleDateFormat timeParser = new java.text.SimpleDateFormat("yyyyMMdd-HHmmss");
+    private static final SimpleDateFormat timeParserMS = new java.text.SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
 
     private long lastExternalUpdate;
     private long lastInternalUpdate;
@@ -172,15 +184,40 @@ public class ProgressTracker {
         }
     }
 
-    static long getTimestamp(File progressFile, String xml) {
+    static synchronized long getTimestamp(File progressFile, String xml) {
         Matcher matcher = TIMESTAMP_PATTERN.matcher(xml);
         if (!matcher.matches() || matcher.groupCount() != 1) {
             //noinspection DuplicateStringLiteralInspection
-            log.error("getTimestamp: Could not locate timestamp in file '" + progressFile + "' containing '" + xml
+            log.error("getTimestamp: Could not locate iso timestamp in file '" + progressFile + "' containing '" + xml
                       + "'. Returning 0");
             return 0;
         }
-        return Long.parseLong(matcher.group(1));
+        final String iso = matcher.group(1);
+        if (iso.length() == 15) { // Old second-granularity timestamp, so use epoch if available
+            log.debug("Old iso-time '" + iso + "' detected in progress-file. Attempting epoch parsing");
+            Matcher epochMatcher = EPOCH_TIMESTAMP_PATTERN.matcher(xml);
+            if (!epochMatcher.matches() || epochMatcher.groupCount() != 1) {
+                log.warn("Old iso-time '" + iso + "' but no epoch. Using second-granularity iso time");
+                try {
+                    return timeParser.parse(iso).getTime();
+                } catch (ParseException e) {
+                    log.error("Unable to parse iso datetime '" + iso + "'. Returning epoch 0 (1970-01-01)");
+                    return 0;
+                }
+            }
+            return Long.parseLong(epochMatcher.group(1));
+        }
+        if (iso.length() != 19) {
+            log.warn("Unsupported iso-time character count of " + iso.length() + " (expected 19). " +
+                     "Attempting parsing anyway");
+        }
+        try {
+            return timeParserMS.parse(iso).getTime();
+        } catch (ParseException e) {
+            log.error("Unable to parse iso datetime '" + iso + "'. Returning epoch 0 (1970-01-01)");
+        }
+
+        return 0;
 /*        return new GregorianCalendar(Integer.parseInt(matcher.group(1)),
                                      // Months in Calendar starts at 0
                                      Integer.parseInt(matcher.group(2))-1,
