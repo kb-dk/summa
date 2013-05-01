@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.List;
@@ -51,7 +52,7 @@ public class TermStatAggregator extends HubAggregatorBase {
     }
 
     @Override
-    public List<ComponentCallable> adjustRequests(SolrParams params, List<ComponentCallable> components) {
+    public List<ComponentCallable> adjustRequests(ModifiableSolrParams params, List<ComponentCallable> components) {
         return rewriter.adjustRequests(params, components);
     }
 

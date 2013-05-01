@@ -37,11 +37,6 @@ import java.util.*;
  * </p><p>
  * The term stats are calculated only on the basis of active components, with the possibility of search-time adjustment
  * of the weights that each target has with respect to influencing the cumulative stats.
- * </p><p>
- *
- * </p>
- *
- *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
