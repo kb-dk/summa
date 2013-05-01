@@ -34,8 +34,8 @@ import java.util.*;
 public class DummyLeaf extends HubComponentImpl {
     private static Log log = LogFactory.getLog(DummyLeaf.class);
 
-    private static final Map<String, Collection<SolrParams>> receivedParams =
-            Collections.synchronizedMap(new HashMap<String, Collection<SolrParams>>());
+    private static final Map<String, List<SolrParams>> receivedParams =
+            Collections.synchronizedMap(new HashMap<String, List<SolrParams>>());
 
     public DummyLeaf(Configuration conf) {
         super(conf);
@@ -44,7 +44,7 @@ public class DummyLeaf extends HubComponentImpl {
     @SuppressWarnings("ObjectToString")
     @Override
     public QueryResponse barrierSearch(Limit limit, ModifiableSolrParams params) throws Exception {
-        Collection<SolrParams> existing = receivedParams.get(getID());
+        List<SolrParams> existing = receivedParams.get(getID());
         if (existing == null) {
             existing = new ArrayList<SolrParams>();
             receivedParams.put(getID(), existing);
@@ -69,7 +69,8 @@ public class DummyLeaf extends HubComponentImpl {
         return true;
     }
 
-    public static Map<String, Collection<SolrParams>> getReceivedParams() {
+    // We make this static as we do not always have the instantiation available
+    public static Map<String, List<SolrParams>> getReceivedParams() {
         return receivedParams;
     }
 }

@@ -57,6 +57,9 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
      * Sub-storage with key-value pairs of atomics, Strings and list of atomics or Strings. When a search is performed,
      * these pairs will be used as base and overwritten by the query params where the keys matches.
      * </p><p>
+     * Note: Defaults and explicit params are not additive. If an explicit param is provided, it will clear all
+     * instances of default values for the given key before it is added.
+     * </p><p>
      * Optional.
      */
     public static final String CONF_DEFAULTS = "defaults";
@@ -108,7 +111,7 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
 
     @Override
     public QueryResponse search(Limit limit, SolrParams params) throws Exception {
-        ModifiableSolrParams request = adjustPrefixedParams(params);
+        ModifiableSolrParams request = getComponentParams(params);
         if (!params.getBool(CONF_ENABLED, true)) {
             return null;
         }
@@ -116,55 +119,40 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
     }
 
     /**
-     * Rewrites all parameters prefixed as described in {@link #SPECIFIC_PARAM_PREFIX}.
+     * Rewrites all parameters prefixed as described in {@link #SPECIFIC_PARAM_PREFIX},adds them to the
+     * default parameters and returns the merged parameters.
      * @param params the input parameters.
      * @return parameters for search, potentially adjusted.
      */
-    protected ModifiableSolrParams adjustPrefixedParams(SolrParams params) {
+    protected ModifiableSolrParams getComponentParams(SolrParams params) {
         // Locate all properly prefixed, remove prefix, clear all existing values for the keys, all new key-value pairs
-        return getModifiableSolrParams(params, prefix);
+        return getComponentParams(params, defaultParams, prefix);
     }
 
     /**
      * Rewrites all parameters prefixed as described in {@link #SPECIFIC_PARAM_PREFIX}, but using the provided prefix.
      * @param params the input parameters.
-     * @param prefix the prefix to adjust to.
+     * @param defaults the base parameters, which will not be prefix-adjusted. Adjusted params are added to these and
+     *                 the result returned. If null, only params is used for the result.
+     * @param prefix the prefix to adjust to. This should normally be of the form {@code id_foo.}
      * @return parameters for search, potentially adjusted.
      */
-    public static ModifiableSolrParams getModifiableSolrParams(SolrParams params, String prefix) {
+    public static ModifiableSolrParams getComponentParams(SolrParams params, SolrParams defaults, String prefix) {
+        ModifiableSolrParams adjusted = new ModifiableSolrParams(defaults);
         Iterator<String> pNames = params.getParameterNamesIterator();
         while (pNames.hasNext()) {
-            if (pNames.next().startsWith(prefix)) {
-                // Found a param with prefix. This means we must process all params to construct new params
-                ModifiableSolrParams adjusted = new ModifiableSolrParams();
-                { // Extract all non-prefixed
-                    Iterator<String> ipNames = params.getParameterNamesIterator();
-                    while (ipNames.hasNext()) {
-                        String pName = ipNames.next();
-                        if (!pName.startsWith(prefix)) {
-                            adjusted.set(pName, params.getParams(pName));
-                        }
-                    }
-                }
-                { // Extract all prefixed, convert them and overwrite
-                    Iterator<String> ipNames = params.getParameterNamesIterator();
-                    while (ipNames.hasNext()) {
-                        String pName = ipNames.next();
-                        if (pName.startsWith(prefix)) {
-                            adjusted.set(pName.substring(prefix.length()), params.getParams(pName));
-                        }
-                    }
-                }
-                return adjusted;
-            }
+            String pName = pNames.next();
+                adjusted.set(pName.startsWith(prefix) ? pName.substring(prefix.length()) : pName,
+                             params.getParams(pName));
         }
-        return new ModifiableSolrParams(params);
+        return adjusted;
     }
 
     /**
      * The barrierSearch works like {@link #search} with the difference that arguments prefixed with
-     * {@link #SPECIFIC_PARAM_PREFIX} + id + "." will have said prefix removed. Previously prefixed params will
-     * override existing params by clearing all instances of those before being added to params.
+     * {@link #SPECIFIC_PARAM_PREFIX} + id + "." will have said prefix removed and default values will have been added.
+     * Previously prefixed params will override existing params by clearing all instances of those before being added to
+     * params.
      * @param limit optional limitation on the HubComponents and bases that are to be searched.
      * @param params HubComponent-specific parameters.
      * @return the result from a search or null if the request is not applicable.

@@ -157,8 +157,8 @@ public class TermStatRewriter implements Configurable {
     private void adjustRequests(String mainQuery, HubAggregatorBase.ComponentCallable component,
                                 final TermStatTarget target, final List<TermStatTarget> pruned,
                                 final Map<String, Double> weights) {
-        ModifiableSolrParams params = HubComponentImpl.getModifiableSolrParams(
-                component.getParams(), component.getComponent().getID());
+        ModifiableSolrParams params = HubComponentImpl.getComponentParams(
+                component.getParams(), null, component.getComponent().getID());
         final int fallbackDF = params.getInt(TermStatTarget.SEARCH_FALLBACK_DF, target.getFallbackDF());
         final boolean toLower = params.getBool(SEARCH_LOWERCASE_QUERY, lowercase);
 
