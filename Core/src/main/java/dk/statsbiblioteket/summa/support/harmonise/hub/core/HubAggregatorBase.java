@@ -150,7 +150,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
      * @param components the components that will be searched.
      * @return the components to search, optionally with adjusted Limits and SolrParams.
      */
-    public List<ComponentCallable> adjustRequests(SolrParams params, List<ComponentCallable> components) {
+    public List<ComponentCallable> adjustRequests(ModifiableSolrParams params, List<ComponentCallable> components) {
         return components;
     }
 
@@ -165,9 +165,9 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
     public class ComponentCallable implements Callable<NamedResponse> {
         private final HubComponent component;
         private Limit limit;
-        private SolrParams params;
+        private ModifiableSolrParams params;
 
-        public ComponentCallable(HubComponent component, Limit limit, SolrParams params) {
+        public ComponentCallable(HubComponent component, Limit limit, ModifiableSolrParams params) {
             this.component = component;
             this.limit = limit;
             this.params = params;
@@ -186,11 +186,11 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
             return limit;
         }
 
-        public SolrParams getParams() {
+        public ModifiableSolrParams getParams() {
             return params;
         }
 
-        public void setParams(SolrParams params) {
+        public void setParams(ModifiableSolrParams params) {
             this.params = params;
         }
 
