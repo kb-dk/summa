@@ -81,8 +81,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      * </p><p>
      * Optional. Default is 10000.
      */
-    public static final String CONF_CACHE_SIZE =
-        "common.distribution.termstat.cachesize";
+    public static final String CONF_CACHE_SIZE = "common.distribution.termstat.cachesize";
     public static final int DEFAULT_CACHE_SIZE = 10000;
 
     /**
@@ -95,8 +94,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      * </p><p>
      * Optional. Default is 400.
      */
-    public static final String CONF_READER_BUFFER =
-        "common.distribution.reader.buffer";
+    public static final String CONF_READER_BUFFER = "common.distribution.reader.buffer";
     public static final int DEFAULT_READER_BUFFER = 400;
 
     /**
@@ -105,8 +103,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      * </p><p>
      * Optional. Default is "#".
      */
-    public static final String CONF_COMMENT_PREFIX =
-        "common.distribution.comment.prefix";
+    public static final String CONF_COMMENT_PREFIX = "common.distribution.comment.prefix";
     public static final String DEFAULT_COMMENT_PREFIX = "#";
 
     /**
@@ -115,8 +112,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_SKIP_COLUMNNAMES_ON_OPEN =
-        "common.distribution.skipcolumnnamesonopen";
+    public static final String CONF_SKIP_COLUMNNAMES_ON_OPEN = "common.distribution.skipcolumnnamesonopen";
     public static final boolean DEFAULT_SKIP_COLUMNNAMES_ON_OPEN = false;
 
     private LineReader persistent;
@@ -149,8 +145,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         cacheSize = conf.getInt(CONF_CACHE_SIZE, cacheSize);
         bufferSize = conf.getInt(CONF_READER_BUFFER, bufferSize);
         commentPrefix = conf.getString(CONF_COMMENT_PREFIX, commentPrefix);
-        skipColumnNames = conf.getBoolean(
-            CONF_SKIP_COLUMNNAMES_ON_OPEN, skipColumnNames);
+        skipColumnNames = conf.getBoolean(CONF_SKIP_COLUMNNAMES_ON_OPEN, skipColumnNames);
     }
 
     /**
@@ -207,25 +202,19 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
                 log.trace("Got meta data:\n" + meta);
             }
             Document dom = DOM.stringToDOM(meta, false);
-            docCount = Long.parseLong(DOM.selectString(
-                dom,"termstatmeta/doccount"));
-            termCount = Integer.parseInt(DOM.selectString(
-                dom,"termstatmeta/termcount"));
-            minDocumentFrequency = Long.parseLong(DOM.selectString(
-                dom,"termstatmeta/mindocumentfrequency", "0"));
-            columns = DOM.selectString(dom,"termstatmeta/columns").
-                split(" *, *");
+            docCount = Long.parseLong(DOM.selectString(dom,"termstatmeta/doccount"));
+            termCount = Integer.parseInt(DOM.selectString(dom,"termstatmeta/termcount"));
+            minDocumentFrequency = Long.parseLong(DOM.selectString(dom,"termstatmeta/mindocumentfrequency", "0"));
+            columns = DOM.selectString(dom,"termstatmeta/columns").split(" *, *");
             source = DOM.selectString(dom, "termstatmeta/source");
             log.debug(String.format(
-                "Extracted docCount %d, termCount %d, mdf %d, columns '%s' "
-                + "and source '%s'  from '%s'",
+                "Extracted docCount %d, termCount %d, mdf %d, columns '%s' and source '%s'  from '%s'",
                 docCount, termCount, minDocumentFrequency,
                 Strings.join(columns, ", "), source, metaFile));
             return true;
         } catch (Exception e) {
             log.error(String.format(
-                "Unable to open '%s' which holds the docCount. Count will "
-                + "be set to 0, which will lead to wonky ranking",
+                "Unable to open '%s' which holds the docCount. Count will be 0, which will lead to wonky ranking",
                 metaFile), e);
             return false;
         }
@@ -256,11 +245,11 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
      *                Use {@link #getIndex(String)} to resolve the indexes.
      * @return the sum of the stats for the given indexes.
      */
-    public long getSum(String term, int[] indexes) {
+/*    public long getSum(String term, int[] indexes) {
         TermEntry entry = getEntry(term);
         return entry == null ? 0 : entry.getSum(indexes);
     }
-
+  */
     /**
      * @param column the wanted column. If this matches the column for the
      *                term, -1 is returned.
@@ -275,8 +264,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             }
         }
         throw new ArrayIndexOutOfBoundsException(
-            "Unable to locate '" + column + " in "
-            + Strings.join(columns, ", "));
+            "Unable to locate '" + column + " in " + Strings.join(columns, ", "));
     }
 
 
@@ -300,30 +288,24 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             closeExisting();
             if (columns.length <= 1) {
                 throw new IllegalArgumentException(
-                    "There must be at least 2 column names, got "
-                    + Strings.join(columns, ", "));
+                    "There must be at least 2 column names, got " + Strings.join(columns, ", "));
             }
             if (columns[0].startsWith("#")) {
                 throw new IllegalArgumentException(
-                    "The first column name must not start with '#', got "
-                    + Strings.join(columns, ", "));
+                    "The first column name must not start with '#', got " + Strings.join(columns, ", "));
             }
             this.columns = columns;
             if (!location.exists()) {
                 if (!location.mkdirs()) {
-                    throw new IOException(String.format(
-                        "Unable to create the folder '%s'", location));
+                    throw new IOException(String.format("Unable to create the folder '%s'", location));
                 }
             }
 
             File per = getFile(location, ".dat");
             if (per.exists()) {
-                log.debug("The data file " + per + " already exists. "
-                          + "Deleting old file");
+                log.debug("The data file " + per + " already exists. Deleting old file");
                 if (!per.delete()) {
-                    throw new IOException(
-                        "Unable to delete old data file "
-                        + per.getAbsolutePath());
+                    throw new IOException("Unable to delete old data file " + per.getAbsolutePath());
                 }
             }
             persistent = new LineReader(per, "rw");
@@ -360,9 +342,8 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     private void storeMeta() throws IOException {
         File metaFile = getFile(persistent.getFile().getParentFile(), ".meta");
         log.debug(String.format(
-            "StoreMeta called, storing in '%s' with docCount=%d, termCount=%d, "
-            + "mdf=%d, columns=%s", metaFile, docCount, termCount,
-            minDocumentFrequency, Strings.join(columns, ", ")));
+            "StoreMeta called, storing in '%s' with docCount=%d, termCount=%d, mdf=%d, columns=%s",
+            metaFile, docCount, termCount, minDocumentFrequency, Strings.join(columns, ", ")));
         XMLOutputFactory xmlFactory = XMLOutputFactory.newInstance();
         FileOutputStream fileOut = new FileOutputStream(metaFile);
         XMLStreamWriter xmlOut;
@@ -374,16 +355,15 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             xmlOut.writeCharacters(Long.toString(getDocCount()));
             if (getDocCount() == 0) {
                 log.warn(String.format(
-                    "docCount for source '%s' was 0. Unless the index has "
-                    + "no terms, this is normally an error", getSource()));
+                    "docCount for source '%s' was 0. Unless the index has no terms, this is normally an error",
+                    getSource()));
             }
             xmlOut.writeEndElement();
             xmlOut.writeStartElement("termcount");
             xmlOut.writeCharacters(Long.toString(getTermCount()));
             if (getDocCount() == 0) {
                 log.warn(String.format(
-                    "termCount for source '%s' was 0. Unless the index is "
-                    + "empty, this is normally an error", getSource()));
+                    "termCount for source '%s' was 0. Unless the index is empty, this is normally an error", getSource()));
             }
             xmlOut.writeEndElement();
 
@@ -404,14 +384,12 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             fileOut.close();
             log.debug("StoreMeta completed for '" + metaFile + "'");
         } catch (Exception e) {
-            throw new IOException(
-                "Unable to write meta to '" + metaFile + "'", e);
+            throw new IOException("Unable to write meta to '" + metaFile + "'", e);
         }
     }
 
     private void storeLookup() throws IOException {
-        log.debug("Storing offsets for " + termCount + " terms from lookup "
-                  + "table at " + getLookupFile());
+        log.debug("Storing offsets for " + termCount + " terms from lookup table at " + getLookupFile());
         FileOutputStream fileOut = new FileOutputStream(getLookupFile());
         ObjectOutputStream out = new ObjectOutputStream(fileOut);
         for (int i = 0 ; i <= termCount ; i++) {
@@ -428,8 +406,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             createLookup();
             return;
         }
-        log.debug("Opening existing lookup file with offsets for " + termCount
-                  + " terms from " + getLookupFile());
+        log.debug("Opening existing lookup file with offsets for " + termCount + " terms from " + getLookupFile());
         FileInputStream fileIn = new FileInputStream(getLookupFile());
         ObjectInputStream in = new ObjectInputStream(fileIn);
         lookupTable = new long[termCount+1];
@@ -474,14 +451,12 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
                 persistent.readLine();
             } catch (IOException e) {
                 throw new IOException(
-                    "IOException while reading row #" + i
-                    +" (starting from 0) from " + getLookupFile(), e);
+                    "IOException while reading row #" + i + " (starting from 0) from " + getLookupFile(), e);
             }
         }
         storeLookup();
         creationTime += System.currentTimeMillis();
-        log.info("Created lookup file " + getLookupFile() + " for "
-                 + getDataFile() + " in " + creationTime + " ms");
+        log.info("Created lookup file " + getLookupFile() + " for " + getDataFile() + " in " + creationTime + " ms");
     }
 
     private File getLookupFile() {
@@ -526,8 +501,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
                     persistent.seek(lookupTable[termCount]);
                 }
                 if (log.isTraceEnabled()) {
-                    log.trace("Writing " + value + " at offset "
-                              + persistent.getPosition());
+                    log.trace("Writing " + value + " at offset " + persistent.getPosition());
                 }
 //            log.debug(value);
                 persistent.write(termToString(value));
@@ -617,34 +591,30 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
     protected String getLine(int index) {
         if (index >= termCount) {
             throw new ArrayIndexOutOfBoundsException(
-                "There is " + termCount + " terms in the collection, the term "
-                + "at position " + index + " were requested");
+                "There is " + termCount + " terms in the collection, the term at pos " + index + " were requested");
         }
         synchronized (this) {
             try {
                 persistent.seek(lookupTable[index]);
             } catch (IOException e) {
                 throw new RuntimeException(
-                    "IOException seeking to file offset " + lookupTable[index]
-                    + " for index " + index + " in " + getLookupFile(), e);
+                    "IOException seeking to file offset " + lookupTable[index] + " for index " + index + " in "
+                    + getLookupFile(), e);
             }
             try {
                 return persistent.readLine();
             } catch (IllegalArgumentException e) {
                 throw new RuntimeException(String.format(
-                    "Illegal argument after seeking to position %d and reading "
-                    + "line for index %d in '%s'",
+                    "Illegal argument after seeking to position %d and reading line for index %d in '%s'",
                     lookupTable[index], index, getDataFile()), e);
             } catch (BufferOverflowException e) {
                 throw new RuntimeException(String.format(
-                    "Buffer overflow after seeking to position %d and reading "
-                    + "line for index %d in '%s'",
+                    "Buffer overflow after seeking to position %d and reading line for index %d in '%s'",
                     lookupTable[index], index, getDataFile()), e);
             } catch (IOException e) {
                 throw new RuntimeException(
-                    "IOException getting data for line at file offset "
-                    + lookupTable[index] + " for index " + index + " in "
-                    + getLookupFile(), e);
+                    "IOException getting data for line at file offset " + lookupTable[index] + " for index " + index
+                    + " in " + getLookupFile(), e);
             }
         }
     }
@@ -693,8 +663,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
 
     @Override
     public String toString() {
-        return "TermStat(docs " + getDocCount()
-               + ", source '" + getSource() + "')";
+        return "TermStat(docs " + getDocCount() + ", source '" + getSource() + "')";
     }
 
     /**
@@ -714,4 +683,3 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         };
     }
 }
-
