@@ -34,7 +34,7 @@ public class TermStatAggregator extends HubAggregatorBase {
     private static Log log = LogFactory.getLog(TermStatAggregator.class);
 
     private final HubResponseMerger merger;
-    private final TermStatRewriter rewriter;
+    private final RequestAdjuster rewriter;
 
     public TermStatAggregator(Configuration conf) {
         super(conf);

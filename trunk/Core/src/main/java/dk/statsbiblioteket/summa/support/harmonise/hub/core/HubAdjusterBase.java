@@ -25,7 +25,7 @@ import org.apache.solr.common.params.SolrParams;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class HubAdjusterBase extends  HubCompositeImpl {
+public abstract class HubAdjusterBase extends HubCompositeImpl {
     private static Log log = LogFactory.getLog(HubAdjusterBase.class);
 
     /**
@@ -55,7 +55,7 @@ public abstract class HubAdjusterBase extends  HubCompositeImpl {
         if (!params.getBool(CONF_ENABLED, true)) {
             return null;
         }
-        boolean rewrite = params.getBool(PARAM_ADJUSTMENT_ENABLED, true);
+        boolean rewrite = !adjustmentDisablingPossible() || params.getBool(PARAM_ADJUSTMENT_ENABLED, true);
         if (!rewrite) {
             return barrierSearch(limit, request);
         }
@@ -65,7 +65,14 @@ public abstract class HubAdjusterBase extends  HubCompositeImpl {
     }
 
     /**
-     * Reqrite of the request. Note that prefixed parameters has already been handled at this point.
+     * @return true if it should be possible to disable adjustment of parameters at search time.
+     */
+    protected boolean adjustmentDisablingPossible() {
+        return true;
+    }
+
+    /**
+     * Rewrite of the request. Note that prefixed parameters has already been handled at this point.
      * @param request the request for a search.
      * @return the request, potentially modified.
      */

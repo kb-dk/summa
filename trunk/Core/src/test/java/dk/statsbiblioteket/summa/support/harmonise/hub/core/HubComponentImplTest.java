@@ -16,21 +16,17 @@ package dk.statsbiblioteket.summa.support.harmonise.hub.core;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.harmonise.hub.DummyLeaf;
-import dk.statsbiblioteket.summa.support.harmonise.hub.TermStatAggregator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
-
-import java.util.Iterator;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class HubComponentImplTest extends TestCase {
 
-    public void testDefaultValues() throws Exception {
+    public void testDefaultStringValues() throws Exception {
         Configuration conf = Configuration.newMemoryBased(HubComponentImpl.CONF_ID, "dummy");
         Configuration defaults = conf.createSubConfiguration(HubComponentImpl.CONF_DEFAULTS);
         defaults.set("foo", "bar");
@@ -62,6 +58,31 @@ public class HubComponentImplTest extends TestCase {
             assertEquals("Old default 'foo' should be correct", "bar", processed.get("foo"));
             DummyLeaf.getReceivedParams().clear();
         }
+    }
 
+    public void testDefaultIntValues() throws Exception {
+        Configuration conf = Configuration.newMemoryBased(HubComponentImpl.CONF_ID, "dummy");
+        Configuration defaults = conf.createSubConfiguration(HubComponentImpl.CONF_DEFAULTS);
+        defaults.set("foo", 87);
+        DummyLeaf dummy = new DummyLeaf(conf);
+
+        {
+            ModifiableSolrParams params = new ModifiableSolrParams();
+            params.set("zoo", 88);
+            dummy.search(null, params);
+            SolrParams processed = DummyLeaf.getReceivedParams().get("dummy").get(0);
+            assertEquals("Default 'foo' should be correct", Integer.valueOf(87), processed.getInt("foo"));
+            assertEquals("Provided 'zoo' should be correct", Integer.valueOf(88), processed.getInt("zoo"));
+            DummyLeaf.getReceivedParams().clear();
+        }
+
+        {
+            ModifiableSolrParams params = new ModifiableSolrParams();
+            params.set("foo", 90);
+            dummy.search(null, params);
+            SolrParams processed = DummyLeaf.getReceivedParams().get("dummy").get(0);
+            assertEquals("Overwritten 'foo' should be correct", Integer.valueOf(90), processed.getInt("foo"));
+            DummyLeaf.getReceivedParams().clear();
+        }
     }
 }

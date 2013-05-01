@@ -45,7 +45,7 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class TermStatRewriter implements Configurable {
+public class TermStatRewriter implements Configurable, RequestAdjuster {
     private static Log log = LogFactory.getLog(TermStatRewriter.class);
 
     /**
@@ -105,6 +105,7 @@ public class TermStatRewriter implements Configurable {
      * @param components the child-searchers for the aggregator.
      * @return the child-searchers with adjusted queries.
      */
+    @Override
     public List<HubAggregatorBase.ComponentCallable> adjustRequests(
             SolrParams params, List<HubAggregatorBase.ComponentCallable> components) {
         if (!params.getBool(SEARCH_ADJUSTMENT_ENABLED, true)) {
