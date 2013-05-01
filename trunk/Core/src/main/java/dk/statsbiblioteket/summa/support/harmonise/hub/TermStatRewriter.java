@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.params.CommonParams;
@@ -112,7 +113,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
             log.debug("TermStat adjustment skipped as " + SEARCH_ADJUSTMENT_ENABLED + "=false");
             return components;
         }
-        String query = params.get(CommonParams.Q, null);
+        final String query = params.get(CommonParams.Q, null);
 
         // Reduce the number of targets to those corresponding to the components in the search
         // This ensures that the virtual corpus used for query term weight adjustment will be equal to the real corpus
@@ -145,7 +146,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
         for (HubAggregatorBase.ComponentCallable component: components) {
             for (TermStatTarget target: targets) {
                 if (component.getComponent().getID().equals(target.getComponentID())) {
-                    adjustRequests(query, component, target, pruned, weights);
+                    adjustRequests(component, target, pruned, weights);
                     continue comp;
                 }
                 log.debug("Unable to adjust term stats for " + component.getComponent().getID()
@@ -155,9 +156,15 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
         return components;
     }
 
-    private void adjustRequests(String mainQuery, HubAggregatorBase.ComponentCallable component,
+    // At this point, only components with term stats are left
+    private void adjustRequests(HubAggregatorBase.ComponentCallable component,
                                 final TermStatTarget target, final List<TermStatTarget> pruned,
                                 final Map<String, Double> weights) {
+        final String query = component.getParams().get(CommonParams.Q, null);
+        if (query == null) {
+            log.debug("No query in params " + component.getParams() + " for component " + component.getComponent());
+            return;
+        }
         ModifiableSolrParams params = HubComponentImpl.getComponentParams(
                 component.getParams(), null, component.getComponent().getID());
         final int fallbackDF = params.getInt(TermStatTarget.SEARCH_FALLBACK_DF, target.getFallbackDF());
@@ -200,8 +207,17 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
                 return query;
             }
         });
-        // TODO: Set the new query by copying params
-        throw new UnsupportedOperationException("Not implemented yet");
+        String adjusted = query;
+        try {
+            adjusted = queryRewriter.rewrite(query);
+        } catch (ParseException e) {
+            log.warn("Unable to parse query '" + query + "'. Returning query unmodified");
+        } catch (Exception e) {
+            log.warn("Unknown exception rewriting query '" + query + "'. Returning query unmodified");
+        }
+        log.debug("Adjusted query for component " + component.getComponent().getID() + " from '" + query + "' to '"
+                  + adjusted + "'");
+        component.getParams().set(CommonParams.Q, adjusted);
     }
 
     /*
