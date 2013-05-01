@@ -37,6 +37,11 @@ public class ProgressTrackerTest extends TestCase {
         testDir.mkdirs();
     }
 
+    @Override
+    protected void tearDown() throws Exception {
+        Files.delete(testDir);
+    }
+
     public void testStart() throws Exception {
         p = new ProgressTracker(progressFile, 1, 10);
 
@@ -54,6 +59,22 @@ public class ProgressTrackerTest extends TestCase {
         // This works because the batch size is exactly 1
         p.updated(System.currentTimeMillis());
         assertTrue(p.getLastUpdate() > 0);
+    }
+
+    public void testPersistence() throws Exception {
+        final long uTime = System.currentTimeMillis();
+        {
+            p = new ProgressTracker(progressFile, 1, 10000);
+            assertEquals(0, p.getLastUpdate());
+            p.updated(uTime);
+            assertEquals("The updated timestamp should match", uTime, p.getLastUpdate());
+            p.updateProgressFile();
+        }
+        {
+            p = new ProgressTracker(progressFile, 1, 10000);
+            p.loadProgress();
+            assertEquals("After loading, the timestamp should be correct", uTime, p.getLastUpdate());
+        }
     }
 
     public void testUpdateBatch2() throws Exception {
