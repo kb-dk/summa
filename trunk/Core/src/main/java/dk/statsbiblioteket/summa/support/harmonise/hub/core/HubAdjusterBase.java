@@ -51,7 +51,7 @@ public abstract class HubAdjusterBase extends  HubCompositeImpl {
             }
             return null;
         }
-        ModifiableSolrParams request = adjustPrefixedParams(params);
+        ModifiableSolrParams request = getComponentParams(params);
         if (!params.getBool(CONF_ENABLED, true)) {
             return null;
         }
