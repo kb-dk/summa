@@ -32,8 +32,9 @@
     <!-- A time/date based rolling appender -->
 
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
-        <param name="Threshold" value="INFO"/><!-- or DEBUG or INFO -->
-        <param name="File" value="${catalina.home}/logs/searchWS.log"/>
+        <!-- TODO: Change this to INFO when the hub goes into production -->
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="${catalina.home}/logs/hubWS.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="5"/>
@@ -46,7 +47,7 @@
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
     <appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="FATAL"/>
-        <param name="File" value="${catalina.home}/logs/fatal.log"/>
+        <param name="File" value="${catalina.home}/logs/hubWS.fatal.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="1MB"/>
         <param name="MaxBackupIndex" value="5"/>
