@@ -1,4 +1,5 @@
 <%@ page import="dk.statsbiblioteket.gwsc.WebServices" %>
+<%@ page import="dk.statsbiblioteket.summa.common.SummaConstants" %>
 <%@ page import="dk.statsbiblioteket.util.xml.DOM" %>
 <%@ page import="dk.statsbiblioteket.util.xml.XSLT" %>
 <%@ page import="org.w3c.dom.Document" %>
@@ -6,7 +7,6 @@
 <%@ page import="java.io.File" %>
 <%@ page import="java.net.URL" %>
 <%@ page import="java.util.Properties" %>
-<%@ page import="dk.statsbiblioteket.summa.common.*" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
     response.setContentType("text/html; charset=UTF-8");
@@ -180,7 +180,7 @@
         if (filter != null) {
             merged += "(" + filter + ")";
         }
-        if (query != null && !"*".equals(query) ) {
+        if (query != null && !"*".equals(query) && !"*:*".equals(query) ) {
             if (!"".equals(merged)) {
                 merged += " AND ";
             }
