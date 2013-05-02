@@ -225,4 +225,10 @@ public class QueryRewritingSearchNode implements SearchNode {
     public int getFreeSlots() {
         return inner.getFreeSlots();
     }
+
+    @Override
+    public String toString() {
+        return "QueryRewritingSearchNode(sanitizeQueries=" + sanitizeQueries + ", sanitizeFilters=" + sanitizeFilters +
+               ", phrasequeries=" + phrasequeries + ", normalize=" + normalize + ", prefix='" + prefix + "'";
+    }
 }

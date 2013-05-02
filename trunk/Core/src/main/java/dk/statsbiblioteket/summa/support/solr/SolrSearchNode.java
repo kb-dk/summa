@@ -653,7 +653,6 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
         int startPage = Math.max(0, maxRecords == 0 ? 0 : (startIndex-1) / maxRecords);
         Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
-
         if (request.containsKey(DocumentKeys.SEARCH_RESULT_FIELDS)) {
             queryMap.put("fl", Arrays.asList(Strings.join(request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS), ",")));
         }

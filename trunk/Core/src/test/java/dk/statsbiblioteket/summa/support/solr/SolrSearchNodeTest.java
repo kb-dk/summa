@@ -358,6 +358,27 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
+    public void testFacetedSearchMatchAll() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+
+        ));
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(
+            DocumentKeys.SEARCH_QUERY, "*:*",
+            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+            FacetKeys.SEARCH_FACET_FACETS, "fulltext"
+        ), responses);
+
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     2, ((DocumentResponse) responses.iterator().next()).getHitCount());
+        assertTrue("The result should contain tag 'solr' with count 2\n" + responses.toXML(),
+                   responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
+//        System.out.println(responses.toXML());
+    }
+
     private void testFacetedSearch(SearchNode searcher) throws Exception {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
