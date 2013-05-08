@@ -43,13 +43,22 @@ import java.io.IOException;
 public class SearchClient extends ConnectionConsumer<SummaSearcher> implements Configurable, SummaSearcher {
     private static Log log = LogFactory.getLog(SearchClient.class);
 
+    /**
+     * Whether or not this client is enabled. If not enabled, an empty ResponseCollection will be returned when
+     * {@link #search(Request)} is called.
+     */
+    public static final String CONF_ENABLED = "client.enabled";
+    public static final boolean DEFAULT_ENABLED = true;
+
     private String target;
+    private final boolean enabled;
 
     public SearchClient(Configuration conf) {
         super(conf);
         target = conf.getString(ConnectionConsumer.CONF_RPC_TARGET);
-        log.debug(String.format(
-                "Created SearchClient with %s=%s", ConnectionConsumer.CONF_RPC_TARGET, target));
+        enabled = conf.getBoolean(CONF_ENABLED, DEFAULT_ENABLED);
+        log.debug(String.format("Created %s SearchClient with %s=%s",
+                                enabled ? "active" : "inactive", ConnectionConsumer.CONF_RPC_TARGET, target));
     }
 
     /**
@@ -62,6 +71,10 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher> implements C
      */
     @Override
     public ResponseCollection search(Request request) throws IOException {
+        if (!enabled) {
+            log.debug("Skipping search to " + target + " as the SearchClient is disabled");
+            return new ResponseCollection();
+        }
         long connectTime = -System.currentTimeMillis();
         SummaSearcher searcher = getConnection();
         connectTime += System.currentTimeMillis();
