@@ -155,16 +155,22 @@ public class SearchWS {
      * @return The Configuration object.
      */
     private Configuration getConfiguration() {
+        final String LOCATION = "java:comp/env/confLocation";
         if (conf == null) {
             InitialContext context;
             try {
                 context = new InitialContext();
-                String paramValue = (String)context.lookup("java:comp/env/confLocation");
+                String paramValue = (String)context.lookup(LOCATION);
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
             } catch (NamingException e) {
-                log.warn("Failed to lookup env-entry. Trying to load system configuration.", e);
+                if (log.isDebugEnabled()) {
+                    log.debug("Failed to lookup env-entry " + LOCATION + ". Trying to load system configuration", e);
+                } else {
+                    log.info("Failed to lookup env-entry " + LOCATION + ". Trying to load system configuration");
+                }
                 conf = Configuration.getSystemConfiguration(true);
+                log.info("Successfully called Configuration.getSystemConfiguration(true)");
             }
         }
         return conf;
@@ -193,6 +199,10 @@ public class SearchWS {
 
         try {
             res = getDidYouMeanClient().search(req);
+            if (res.isEmpty()) {
+                log.debug("No response from DidYouMeanClient. It might be disabled");
+                return getErrorXML(DidYouMeanResponse.DIDYOUMEAN_RESPONSE, "No response from DidYouMean Client", null);
+            }
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
                                          "/responsecollection/response[@name='DidYouMeanResponse']/DidYouMeanResponse");
@@ -1003,8 +1013,7 @@ public class SearchWS {
      * @return An XML string which can be returned from the server in case of
      * errors.
      */
-    private String getErrorXML(String responseName, String message,
-                                                          Exception exception) {
+    private String getErrorXML(String responseName, String message, Exception exception) {
         StringWriter sw = new StringWriter(2000);
         XMLStreamWriter writer;
         try {
@@ -1027,7 +1036,7 @@ public class SearchWS {
             writer.writeCharacters("\n");
             // stack trace
             writer.writeStartElement(ERROR_TAG);
-            writer.writeCharacters(exception.toString());
+            writer.writeCharacters(exception == null ? "N/A" : exception.toString());
             writer.writeEndElement();
             writer.writeCharacters("\n");
 
