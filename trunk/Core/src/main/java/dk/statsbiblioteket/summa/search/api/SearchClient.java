@@ -49,8 +49,7 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher> implements C
         super(conf);
         target = conf.getString(ConnectionConsumer.CONF_RPC_TARGET);
         log.debug(String.format(
-                "Created SearchClient with %s=%s",
-                ConnectionConsumer.CONF_RPC_TARGET, target));
+                "Created SearchClient with %s=%s", ConnectionConsumer.CONF_RPC_TARGET, target));
     }
 
     /**
@@ -63,12 +62,14 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher> implements C
      */
     @Override
     public ResponseCollection search(Request request) throws IOException {
+        long connectTime = -System.currentTimeMillis();
         SummaSearcher searcher = getConnection();
+        connectTime += System.currentTimeMillis();
 
         if (searcher == null) {
-            final String msg = "The searcher retrieved from getConnection was null";
+            final String msg = "The searcher retrieved from getConnection was null after " + connectTime + "ms";
             log.warn(msg);
-            throw new IOException("Unable to connect to '" + target + "'");
+            throw new IOException("Unable to connect to '" + target + "' in " + connectTime + "ms");
         }
         try {
             return searcher.search(request);
