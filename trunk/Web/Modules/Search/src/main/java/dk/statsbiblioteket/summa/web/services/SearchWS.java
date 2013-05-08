@@ -154,7 +154,7 @@ public class SearchWS {
      *
      * @return The Configuration object.
      */
-    private Configuration getConfiguration() {
+    private synchronized Configuration getConfiguration() {
         final String LOCATION = "java:comp/env/confLocation";
         if (conf == null) {
             InitialContext context;
