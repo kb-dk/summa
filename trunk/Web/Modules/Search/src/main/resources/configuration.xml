@@ -25,6 +25,10 @@
             <key>summa.web.didyoumean</key>
             <value class="xproperties">
                 <entry>
+                    <key>client.enabled</key>
+                    <value class="string">true</value>
+                </entry>
+                <entry>
                     <key>summa.rpc.gracetime</key>
                     <value class="int">0</value> <!-- We want DidYouMean to timeout immediately on errors -->
                 </entry>
