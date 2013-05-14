@@ -419,7 +419,10 @@ public class SummonSearchNode extends SolrSearchNode {
         int startIndex, int maxRecords, String sortKey, boolean reverseSort, ResponseCollection responses)
                                                                                                 throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
-        startIndex++; // summon counts from 1
+
+        // Summon treats startIndex as pages and counts from 1
+        startIndex = startIndex / maxRecords + 1;
+
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", " + startIndex + ", " + maxRecords + ")");
         Map<String, List<String>> queryMap;
         try {
