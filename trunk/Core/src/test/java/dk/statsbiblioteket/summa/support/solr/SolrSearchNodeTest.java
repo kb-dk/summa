@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -99,6 +100,70 @@ public class SolrSearchNodeTest extends TestCase {
         } finally {
             searcher.close();
         }
+    }
+
+    public void testPaging() throws Exception {
+        final int RECORDS = 100;
+        final int PAGE_SIZE = 20;
+
+        ingestFacets(RECORDS);
+        SearchNode searcher = getSearcher();
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy",
+                    DocumentKeys.SEARCH_SORTKEY, "recordID",
+                    DocumentKeys.SEARCH_MAX_RECORDS, 20,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, "recordID"
+            ), responses);
+            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            assertPaging("Result for no start index value", docs, 0, PAGE_SIZE);
+        }
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy",
+                    DocumentKeys.SEARCH_SORTKEY, "recordID",
+                    DocumentKeys.SEARCH_START_INDEX, 0,
+                    DocumentKeys.SEARCH_MAX_RECORDS, 20,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, "recordID"
+            ), responses);
+            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            assertPaging("Result for start index 0", docs, 0, PAGE_SIZE);
+        }
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy",
+                    DocumentKeys.SEARCH_SORTKEY, "recordID",
+                    DocumentKeys.SEARCH_START_INDEX, PAGE_SIZE,
+                    DocumentKeys.SEARCH_MAX_RECORDS, PAGE_SIZE,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, "recordID"
+            ), responses);
+            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            assertPaging("Result for start index 20", docs, PAGE_SIZE, PAGE_SIZE);
+        }
+        searcher.close();
+    }
+
+    private void assertPaging(String message, DocumentResponse docs, int start, int pageSize) {
+        List<String> expected = new ArrayList<String>(pageSize);
+        for (int page = start ; page < start + pageSize ; page++) {
+            expected.add("doc" + String.format("%07d", page));
+        }
+        assertEquals(message, Strings.join(expected), Strings.join(getContent(docs, "recordID")));
+    }
+
+    private List<String> getContent(DocumentResponse docs, String fieldName) {
+        List<String> terms = new ArrayList<String>();
+        for (DocumentResponse.Record records: docs.getRecords()) {
+            for (DocumentResponse.Field field: records.getFields()) {
+                if (fieldName.equals(field.getName())) {
+                    terms.add(field.getContent());
+                }
+            }
+        }
+        return terms;
     }
 
     public void testFilterFacets() throws Exception {
@@ -640,7 +705,7 @@ public class SolrSearchNodeTest extends TestCase {
         ObjectFilter indexer = getIndexer();
         indexer.setSource(data);
         for (int i = 0 ; i < docCount ; i++) {
-            assertTrue("Check " + (i) + "/" + docCount + ". There should be a next for the indexer",
+            assertTrue("Check " + i + "/" + docCount + ". There should be a next for the indexer",
                        indexer.hasNext());
             indexer.next();
         }
@@ -649,7 +714,7 @@ public class SolrSearchNodeTest extends TestCase {
         log.debug("Finished basic ingest");
     }
 
-    final int SAMPLES = 2;
+    final static int SAMPLES = 2;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
         List<Payload> samples = new ArrayList<Payload>(SAMPLES);
         for (int i = 1 ; i <= SAMPLES ; i++) {
@@ -668,9 +733,10 @@ public class SolrSearchNodeTest extends TestCase {
         for (int i = 0 ; i < docCount ; i++) {
             sb.setLength(0);
             sb.append("<doc>\n");
-            sb.append("<field name=\"recordID\">doc").append(i).append("</field>\n");
+            sb.append("<field name=\"recordID\">doc").append(String.format("%07d", i)).append("</field>\n");
             sb.append("<field name=\"recordBase\">dummy</field>\n");
             sb.append("<field name=\"title\">Document_").append(String.format("%07d", i)).append("</field>\n");
+//            sb.append("<field name=\"lma\">sort_").append(String.format("%07d", i)).append("</field>\n");
             sb.append("<field name=\"fulltext\">Some very simple Solr sample document.</field>\n");
             sb.append("<field name=\"lma_long\">03_all</field>\n");
             if ((i & 0x01) == 0) {
