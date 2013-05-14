@@ -567,9 +567,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         try {
             result = getData(restCall + "?" + queryString, responses);
         } catch (Exception e) {
-            throw new RemoteException(
-                "Unable to perform remote call to "  + host + restCall + " with argument '" + queryString
-                + " and message " + e.getMessage());
+            throw new RemoteException("SolrSearchNode: Unable to perform remote call to "  + host + restCall
+                                      + " with argument '" + queryString + " and message " + e.getMessage());
         }
         log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
         return new Pair<String, String>(result, "solr.buildquery:" + buildQuery);
@@ -586,7 +585,14 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         }
 
         URL url = new URL("http://" + host + command);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        HttpURLConnection conn;
+        try {
+            conn = (HttpURLConnection) url.openConnection();
+        } catch (Exception e) {
+            String message = "Exception while calling HttpURLConnection(" + url.toExternalForm() + ").openConnection()";
+            log.error(message, e);
+            throw (ConnectException)new ConnectException(message).initCause(e);
+        }
         conn.setRequestProperty("Host", host);
         conn.setRequestProperty("Accept", "application/xml");
         conn.setRequestProperty("Accept-Charset", "utf-8");
@@ -596,7 +602,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     	long summonConnect = -System.currentTimeMillis();
         try {
             conn.connect();
-        } catch (ConnectException e) {
+        } catch (Exception e) {
             String message = "Unable to connect to remote Solr with URL '" + url.toExternalForm()
                              + "' and connection timeout " + connectionTimeout;
             log.error(message, e);
@@ -619,7 +625,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             responses.addTiming(getID() + ".connect", summonConnect);
             responses.addTiming(getID() + ".rawcall", rawCall);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             String error = String.format(
                 "getData(host='%s', command='%s') for %s failed with error stream\n%s",
                 "http://" + host, command, getID(),
