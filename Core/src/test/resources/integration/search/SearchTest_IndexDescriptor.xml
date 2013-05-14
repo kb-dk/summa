@@ -29,6 +29,7 @@
         <field name="no" parent="token" queryBoost="7"/>
         <field name="ma_long" parent="text" multiValued="true"/>
         <field name="lma_long" parent="keyword"/>
+        <field name="sort_verify" parent="keyword" stored="true" /> <!-- Used by page test in SearchTest -->
         <field name="sort_title" parent="keyword" sortLocale="da"/>
     </fields>
 

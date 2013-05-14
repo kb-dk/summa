@@ -98,7 +98,7 @@ public interface DocumentKeys {
     public static final String SEARCH_SORTKEY = "search.document.sortkey";
 
     /**
-     * Boolean ("true" or "false"). Olptional.
+     * Boolean ("true" or "false"). Optional.
      * </p><p>
      * If true, sorting is performed in reverse.
      */

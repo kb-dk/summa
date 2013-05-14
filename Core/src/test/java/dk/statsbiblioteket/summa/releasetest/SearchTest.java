@@ -208,6 +208,79 @@ public class SearchTest extends NoExitTestCase {
                    luceneFiles.length > 20);
     }
 
+    public void testPaging() throws Exception {
+        final int AMOUNT = 100;
+        final int PAGE_SIZE = 20;
+        final String SORT_FIELD = "sort_verify";
+        final String SORT_VERIFY = "sort_verify";
+        final String INDEX = INDEX_ROOT.toString();
+
+        createFagrefIndex(INDEX, AMOUNT);
+        SummaSearcher searcher = new SummaSearcherImpl(getSearcherConfiguration());
+        verifySearch(searcher, "*:*", AMOUNT);
+
+        {
+            DocumentResponse docs = getRecords(searcher, new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*",
+                    DocumentKeys.SEARCH_SORTKEY, SORT_FIELD,
+                    DocumentKeys.SEARCH_MAX_RECORDS, PAGE_SIZE,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, SORT_VERIFY
+            ));
+            assertPaging("Result for no start index value", docs, 0, PAGE_SIZE);
+        }
+        {
+            DocumentResponse docs = getRecords(searcher, new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*",
+                    DocumentKeys.SEARCH_SORTKEY, SORT_FIELD,
+                    DocumentKeys.SEARCH_START_INDEX, 0,
+                    DocumentKeys.SEARCH_MAX_RECORDS, PAGE_SIZE,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, SORT_VERIFY
+            ));
+            assertPaging("Result for start index 0", docs, 0, PAGE_SIZE);
+        }
+        {
+            DocumentResponse docs = getRecords(searcher, new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*",
+                    DocumentKeys.SEARCH_SORTKEY, SORT_FIELD,
+                    DocumentKeys.SEARCH_START_INDEX, PAGE_SIZE,
+                    DocumentKeys.SEARCH_MAX_RECORDS, PAGE_SIZE,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, SORT_VERIFY
+            ));
+            assertPaging("Result for start index " + PAGE_SIZE, docs, PAGE_SIZE, PAGE_SIZE);
+        }
+        {
+            DocumentResponse docs = getRecords(searcher, new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*",
+                    DocumentKeys.SEARCH_SORTKEY, SORT_FIELD,
+                    DocumentKeys.SEARCH_START_INDEX, PAGE_SIZE*2,
+                    DocumentKeys.SEARCH_MAX_RECORDS, PAGE_SIZE,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, SORT_VERIFY
+            ));
+            assertPaging("Result for start index " + PAGE_SIZE, docs, PAGE_SIZE*2, PAGE_SIZE);
+        }
+        searcher.close();
+    }
+
+    private static void assertPaging(String message, DocumentResponse docs, int start, int pageSize) {
+        List<String> expected = new ArrayList<String>(pageSize);
+        for (int page = start ; page < start + pageSize ; page++) {
+            expected.add("Jensen Hans " + String.format("%07d", page));
+        }
+        assertEquals(message, Strings.join(expected), Strings.join(getContent(docs, "sort_verify")));
+    }
+
+    private static List<String> getContent(DocumentResponse docs, String fieldName) {
+        List<String> terms = new ArrayList<String>();
+        for (DocumentResponse.Record records: docs.getRecords()) {
+            for (DocumentResponse.Field field: records.getFields()) {
+                if (fieldName.equals(field.getName())) {
+                    terms.add(field.getContent());
+                }
+            }
+        }
+        return terms;
+    }
+
     public void testConcurrent() throws Exception {
         final int AMOUNT = 1000;
         final int MAX_CONCURRENT = 10;
@@ -347,7 +420,7 @@ public class SearchTest extends NoExitTestCase {
         createFagrefIndex(indexLocation, amount, "integration/search/fagref_xslt/fagref_index.xsl");
     }
     private void createFagrefIndex(String indexLocation, int amount, String xslt) throws IOException {
-        ObjectFilter producer = getSortdocuments(amount);
+        ObjectFilter producer = getSortDocuments(amount);
 
         ObjectFilter manipulator = createIndexChain(producer, indexLocation, xslt, amount, true);
 
@@ -399,7 +472,7 @@ public class SearchTest extends NoExitTestCase {
         return manipulator;
     }
 
-    private ObjectFilter getSortdocuments(final int amount) throws UnsupportedEncodingException {
+    private ObjectFilter getSortDocuments(final int amount) throws UnsupportedEncodingException {
         final Random random = new Random();
 
         return new ObjectFilter() {
@@ -427,12 +500,13 @@ public class SearchTest extends NoExitTestCase {
             @Override
             public Payload next() {
                 String id = "fagref:hj@example.com" + delivered;
-                String sortValue = "Jensen Hans " + delivered;
+                String sortValue = String.format("Jensen Hans %07d", delivered);
                 sb.setLength(0);
 
                 sb.append("<fagref>\n");
                 sb.append("    <navn>Hans Jensen</navn>\n");
                 sb.append("    <navn_sort>").append(sortValue).append("</navn_sort>\n");
+                sb.append("    <sort_verify>").append(sortValue).append("</sort_verify>\n");
                 sb.append("    <stilling>Fagekspert i Datalogi</stilling>\n");
                 sb.append("    <titel>IT-").append(getRandomWord(random)).append("</titel>\n");
                 sb.append("    <email>hj@example.com").append(id).append("</email>\n");
