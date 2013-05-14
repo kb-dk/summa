@@ -108,6 +108,9 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
         if (executor == null) {
             executor = Executors.newFixedThreadPool(getComponents().size());
         }
+        long startTime = System.currentTimeMillis();
+        log.debug("search: Issuing " + (threaded ? "parallel" : "sequential")
+                  + " search to " + subs.size() + " searchers");
         List<FutureTask<NamedResponse>> futures = new ArrayList<FutureTask<NamedResponse>>(subs.size());
         for (ComponentCallable sub: subs) {
             FutureTask<NamedResponse> future = new FutureTask<NamedResponse>(sub);
@@ -138,6 +141,8 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
                 throw new Exception(getID() + ": Exceeded timeout " + timeout + "ms while waiting for " + future, e);
             }
         }
+        log.debug("search: Finished " + (threaded ? "parallel" : "sequential")
+                  + " search to " + subs.size() + " searchers in " + (System.currentTimeMillis()-startTime) + "ms");
         return responses;
     }
 

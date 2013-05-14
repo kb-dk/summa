@@ -115,14 +115,14 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
         // that the distributes search will use.
         List<TermStatTarget> pruned = getTargets(components, query);
         if (pruned.isEmpty()) {
-            log.debug("No general or specific queries for any sub component. Returning unchanged");
+            log.debug("adjustRequests: No general or specific queries for any sub component. Returning unchanged");
             return components;
         }
         if (log.isDebugEnabled()) {
-            log.debug("Adjusting query '" + query + "' for " + components.size() + " components" + " with " + pruned
-                    + " term stat collections"
-                    + (components.size() == pruned.size() ? "" : ". This is a non-optimal adjustments as there should"
-                    + " be a term stat collection for each component"));
+            log.debug("adjustRequests: Adjusting query '" + query + "' for " + components.size() + " components with "
+                      + pruned + " term stat collections" + (components.size() == pruned.size() ?
+                    "" : ". This is a non-optimal adjustments as there should be a term stat collection for each " +
+                         "component"));
         }
 
         // Cache query time weights for the components
@@ -144,7 +144,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
                     adjustRequests(component, target, pruned, weights);
                     continue comp;
                 }
-                log.debug("Unable to adjust term stats for " + component.getComponent().getID()
+                log.debug("adjustRequests: Unable to adjust term stats for " + component.getComponent().getID()
                           + " as no target could be located");
             }
         }

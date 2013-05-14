@@ -439,8 +439,8 @@ public class SummonSearchNode extends SolrSearchNode {
         try {
             result = getData("http://" + host, restCall + "?" + queryString, date, idstring, null,responses);
         } catch (Exception e) {
-            throw new RemoteException(
-                "Unable to perform remote call to "  + host + restCall + " with argument '" + queryString, e);
+            throw new RemoteException("SummonSearchNode: Unable to perform remote call to "  + host + restCall
+                                      + " with argument '" + queryString, e);
         }
         long prefixIDs = -System.currentTimeMillis();
         String retval = prefixIDs(result, idPrefix);
@@ -646,7 +646,7 @@ public class SummonSearchNode extends SolrSearchNode {
                 target, content, date, idstring, sessionId);
             log.warn(error, e);
             throw new IOException(error, e);
-        } catch (IOException e) {
+        } catch (Exception e) {
             String error = String.format(
                 "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s) failed with error stream\n%s",
                 target, content, date, idstring, sessionId,
