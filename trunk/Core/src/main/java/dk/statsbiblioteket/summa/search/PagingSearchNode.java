@@ -71,7 +71,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
      * </p><p>
      * Optional. If not specified, this will be {@link #CONF_MAXPAGESIZE}.
      */
-    public static final String CONF_GUIPAGESIZE = "paper.guipagesize";
+    public static final String CONF_GUIPAGESIZE = "pager.guipagesize";
 
     /**
      * The timeout for searches in the sub SearchNode.
@@ -79,7 +79,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
      * Milliseconds, optional. Default is 3600000 (1 hour)
      * </p>
      */
-    public static final String CONF_TIMEOUT = "paper.timeoutms";
+    public static final String CONF_TIMEOUT = "pager.timeoutms";
     public static final int DEFAULT_TIMEOUT = 60*60*1000; // 1 hour
 
 
