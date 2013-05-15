@@ -33,8 +33,8 @@ import java.util.concurrent.*;
  * Wrapper that transforms requests with large {@link DocumentKeys#SEARCH_MAX_RECORDS} into multiple paged requests.
  * </p></p>
  * The underlying Search node is specified by the property
- * {@link dk.statsbiblioteket.summa.search.SearchNodeFactory#CONF_NODE} and are constructed using
- * {@link dk.statsbiblioteket.summa.search.SearchNodeFactory}.
+ * {@link dk.statsbiblioteket.summa.search.SearchNodeFactory#CONF_NODE} in a sub property {@link #CONF_SUBCONF} and
+ * is constructed using {@link dk.statsbiblioteket.summa.search.SearchNodeFactory}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -42,6 +42,13 @@ import java.util.concurrent.*;
 public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNode {
     private static final long serialVersionUID = 8974568541L;
     private static Log log = LogFactory.getLog(PagingSearchNode.class);
+
+    /**
+     * The the property that holds the configuration for the sub searcher.
+     * </p><p>
+     * Mandatory.
+     */
+    public static final String CONF_SUBCONF = "pager.subsearcher";
 
     /**
      * If true, all requests are performed in sequence for the underlying
@@ -95,7 +102,12 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
 
     public PagingSearchNode(Configuration conf) throws RemoteException {
         sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
-        subNode = SearchNodeFactory.createSearchNode(conf);
+        if (!conf.containsKey(CONF_SUBCONF)) {
+            log.warn("It is highly recommended to store the setup for the sub searcher under " + CONF_SUBCONF);
+            subNode = SearchNodeFactory.createSearchNode(conf);
+        } else {
+            subNode = SearchNodeFactory.createSearchNode(conf, CONF_SUBCONF);
+        }
         if (!conf.containsKey(CONF_MAXPAGESIZE)) {
             throw new ConfigurationException("The property " + CONF_MAXPAGESIZE + " is mandatory");
         }
