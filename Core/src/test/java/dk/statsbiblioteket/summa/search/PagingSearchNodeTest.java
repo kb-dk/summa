@@ -54,6 +54,24 @@ public class PagingSearchNodeTest extends TestCase {
         assertResponse("Base search", responses, 0, 60, 60, 60);
     }
 
+    public void testStartPagePlain() throws Exception {
+        ResponseCollection responses = search(true, 50, 20, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_START_INDEX, 20,
+                DocumentKeys.SEARCH_MAX_RECORDS, 20
+        ));
+        assertResponse("Base search", responses, 20, 20, 20, 20);
+    }
+
+    public void testStartPageExceeding() throws Exception {
+        ResponseCollection responses = search(true, 50, 20, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_START_INDEX, 20,
+                DocumentKeys.SEARCH_MAX_RECORDS, 60
+        ));
+        assertResponse("Base search", responses, 20, 60, 60, 60);
+    }
+
     public void testDummyNode() {
         new DummyNode(Configuration.newMemoryBased());
     }
