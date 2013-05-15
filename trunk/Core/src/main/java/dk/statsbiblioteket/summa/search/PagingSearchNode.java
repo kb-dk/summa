@@ -38,8 +38,7 @@ import java.util.concurrent.*;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "te",
-        comment = "JavaDoc needed.")
+        author = "te")
 public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNode {
     private static final long serialVersionUID = 8974568541L;
     private static Log log = LogFactory.getLog(PagingSearchNode.class);

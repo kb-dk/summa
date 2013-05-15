@@ -72,6 +72,15 @@ public class PagingSearchNodeTest extends TestCase {
         assertResponse("Base search", responses, 20, 60, 123, 80); // 80 == 2*40
     }
 
+    public void testStartPageExceedingThreaded() throws Exception {
+        ResponseCollection responses = search(false, 50, 20, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_START_INDEX, 20,
+                DocumentKeys.SEARCH_MAX_RECORDS, 60
+        ));
+        assertResponse("Base search", responses, 20, 60, 123, 80); // 80 == 2*40
+    }
+
     public void testDummyNode() {
         new DummyNode(Configuration.newMemoryBased());
     }
