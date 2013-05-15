@@ -14,10 +14,11 @@
  */
 package dk.statsbiblioteket.summa.search.api;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * A request to a SummaSearcher contains arguments to every SearchNode under the Searcher.
@@ -34,10 +35,24 @@ import java.io.Serializable;
         state = QAInfo.State.QA_OK,
         author = "te")
 public class Request extends ConvenientMap {
-    private static final long serialVersionUID = 12L;
+    private static final long serialVersionUID = 12387324823L;
 
     public Request(Serializable... args) {
         super(args);
+    }
+
+    /**
+     * @return a copy of the request, where changes will not be reflected back into the original.
+     */
+    public Request getCopy() {
+        Request copy = new Request();
+        for (Map.Entry<String, Serializable> entry: entrySet()) {
+            put(entry.getKey(),
+                entry.getValue() instanceof ConvenientMap ?
+                        new ConvenientMap((ConvenientMap)entry.getValue()) :
+                        entry.getValue());
+        }
+        return copy;
     }
 }
 

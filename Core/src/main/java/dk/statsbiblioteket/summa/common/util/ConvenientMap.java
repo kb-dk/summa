@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
         author = "te",
         comment = "Some methods needs JavaDoc")
 public class ConvenientMap extends HashMap<String, Serializable> {
-    public static final long serialVersionUID = 384681318L;
+    public static final long serialVersionUID = 384681319L;
     private static Log log = LogFactory.getLog(ConvenientMap.class);
 
     public ConvenientMap(Serializable... args) {
@@ -56,6 +56,20 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         }
         for (int i = 0 ; i < args.length ; i += 2) {
             put((String)args[i], args[i+1]);
+        }
+    }
+
+    /**
+     * Performs a shallow copy of the values from the given map with the addition that nested ConvenientMaps are
+     * recursively copied.
+     * @param map will be copied recursively.
+     */
+    public ConvenientMap(ConvenientMap map) {
+        for (Map.Entry<String, Serializable> entry: map.entrySet()) {
+            put(entry.getKey(),
+                entry.getValue() instanceof ConvenientMap ?
+                        new ConvenientMap((ConvenientMap)entry.getValue()) :
+                        entry.getValue());
         }
     }
 
