@@ -121,7 +121,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
             }
         }
 
-        final int requestCount = requestedRecords / requestPagesize;
+        final int requestCount = (int) Math.ceil(1.0 * requestedRecords / requestPagesize);
         final int origiStart = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
         List<Request> requests = new ArrayList<Request>(requestCount);
 
@@ -132,7 +132,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
             if (r > 0) {
                 optimizeSubsequent(subRequest);
             }
-            requests.add(request);
+            requests.add(subRequest);
         }
 
         log.debug("Requested records " + requestedRecords + " > max page size " + maxPagesize

@@ -35,7 +35,7 @@ public class PagingSearchNodeTest extends TestCase {
         ResponseCollection responses = search(true, 50, 20, new Request(
                 DocumentKeys.SEARCH_QUERY, "foo"
         ));
-        assertResponse("Base search", responses, 0, 20, 20, 20);
+        assertResponse("Base search", responses, 0, 20,123, 20);
     }
 
     public void testLargeSearch() throws Exception {
@@ -43,7 +43,7 @@ public class PagingSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_QUERY, "foo",
                 DocumentKeys.SEARCH_MAX_RECORDS, 40
         ));
-        assertResponse("Base search", responses, 0, 40, 40, 40);
+        assertResponse("Base search", responses, 0, 40, 123, 40);
     }
 
     public void testExceedingMaxPage() throws Exception {
@@ -51,7 +51,7 @@ public class PagingSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_QUERY, "foo",
                 DocumentKeys.SEARCH_MAX_RECORDS, 60
         ));
-        assertResponse("Base search", responses, 0, 60, 60, 60);
+        assertResponse("Base search", responses, 0, 60, 123, 80); // 80 == 2*40
     }
 
     public void testStartPagePlain() throws Exception {
@@ -60,7 +60,7 @@ public class PagingSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_START_INDEX, 20,
                 DocumentKeys.SEARCH_MAX_RECORDS, 20
         ));
-        assertResponse("Base search", responses, 20, 20, 20, 20);
+        assertResponse("Base search", responses, 20, 20, 123, 20);
     }
 
     public void testStartPageExceeding() throws Exception {
@@ -69,7 +69,7 @@ public class PagingSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_START_INDEX, 20,
                 DocumentKeys.SEARCH_MAX_RECORDS, 60
         ));
-        assertResponse("Base search", responses, 20, 60, 60, 60);
+        assertResponse("Base search", responses, 20, 60, 123, 80); // 80 == 2*40
     }
 
     public void testDummyNode() {
@@ -115,6 +115,8 @@ public class PagingSearchNodeTest extends TestCase {
     }
 
     public static class DummyNode implements SearchNode {
+        private int hitCount = 123;
+
         public DummyNode(Configuration conf) {
 
         }
@@ -132,7 +134,7 @@ public class PagingSearchNodeTest extends TestCase {
                     request.getBoolean(DocumentKeys.SEARCH_REVERSE, false),
                     request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS, new String[0]),
                     0L, // searchTime
-                    maxRecords);
+                    hitCount);
             for (int i = start ; i < start + maxRecords ; i++) {
                 DocumentResponse.Record record = new DocumentResponse.Record(
                         "index_" + i, "dummy", 0.001f + i, Integer.toString(i));
