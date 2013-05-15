@@ -112,7 +112,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
         log.trace("Starting search");
         long processingTime = -System.currentTimeMillis();
         int requestedRecords;
-        if ((requestedRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, -1)) > maxPagesize) {
+        if ((requestedRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, -1)) <= maxPagesize) {
             if (log.isDebugEnabled()) {
                 log.debug("Passing request directly: Requested records " + requestedRecords
                           + " <= max page size " + maxPagesize);
@@ -148,6 +148,14 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
     private void mergeResponses(Request request, ResponseCollection merged, List<ResponseCollection> responses,
                                 long processingTime) {
         log.trace("Merging " + responses.size() + " responses");
+        if (responses.size() == 1) {
+            log.debug("mergeResponses: Only 1 response. Skipping merging");
+            return;
+        }
+        if (responses.isEmpty()) {
+            log.debug("mergeResponses: Zero responses. Skipping merging");
+            return;
+        }
         ResponseCollection response = responses.get(0);
         DocumentResponse mergedDocs = null;
         for (Response r: response) {

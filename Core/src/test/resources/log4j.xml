@@ -31,7 +31,7 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.common.index.IndexFieldg">
+    <logger name="dk.statsbiblioteket.summa.search.PagingSearchNode">
         <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </logger>
