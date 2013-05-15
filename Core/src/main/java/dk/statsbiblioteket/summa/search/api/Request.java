@@ -47,7 +47,7 @@ public class Request extends ConvenientMap {
     public Request getCopy() {
         Request copy = new Request();
         for (Map.Entry<String, Serializable> entry: entrySet()) {
-            put(entry.getKey(),
+            copy.put(entry.getKey(),
                 entry.getValue() instanceof ConvenientMap ?
                         new ConvenientMap((ConvenientMap)entry.getValue()) :
                         entry.getValue());
