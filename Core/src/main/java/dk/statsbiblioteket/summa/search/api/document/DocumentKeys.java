@@ -87,6 +87,7 @@ public interface DocumentKeys {
      * Used to limit the amount of hits that is returned for a given search.
      */
     public static final String SEARCH_MAX_RECORDS = "search.document.maxrecords";
+    public static final int DEFAULT_MAX_RECORDS = 20;
 
     /**
      * String ("myfield" or "summa-score"). Optional.

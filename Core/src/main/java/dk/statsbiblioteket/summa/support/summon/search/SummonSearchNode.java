@@ -201,7 +201,7 @@ public class SummonSearchNode extends SolrSearchNode {
     @Override
     protected FacetQueryTransformer createFacetQueryTransformer(final Configuration conf) {
         return new FacetQueryTransformer(conf) {
-            String NONMATCHING;
+            String NONMATCHING = null;
             @Override
             protected void addFacetQuery(
                 Map<String, List<String>> queryMap, String field, String value, boolean negated) {
@@ -421,7 +421,8 @@ public class SummonSearchNode extends SolrSearchNode {
         long buildQuery = -System.currentTimeMillis();
 
         // Summon treats startIndex as pages and counts from 1
-        startIndex = startIndex / maxRecords + 1;
+        // This is handled in buildSolrQuery now
+//        startIndex = startIndex == 0 ? 1 : maxRecords / startIndex + 1;
 
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", " + startIndex + ", " + maxRecords + ")");
         Map<String, List<String>> queryMap;
@@ -468,9 +469,14 @@ public class SummonSearchNode extends SolrSearchNode {
         Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
         int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
 
+        if (maxRecords <= 0) {
+            maxRecords = DocumentKeys.DEFAULT_MAX_RECORDS;
+        }
         @SuppressWarnings("UnnecessaryLocalVariable")
         int perPage = maxRecords;
-        int startPage = maxRecords == 0 ? 0 : (startIndex-1) / maxRecords + 1;
+
+        // Solr starts at page 1
+        int startPage = startIndex == 0 ? 1 : startIndex / perPage + 1;
         Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
 
         queryMap.put("s.dym", Arrays.asList("true"));
