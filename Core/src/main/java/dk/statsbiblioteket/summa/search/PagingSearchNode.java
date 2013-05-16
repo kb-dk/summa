@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -24,9 +25,11 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -138,7 +141,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
         List<Request> requests = new ArrayList<Request>(requestCount);
 
         for (int r = 0 ; r < requestCount ; r++) {
-            Request subRequest = request.getCopy();
+            Request subRequest = copy(request);
             subRequest.put(DocumentKeys.SEARCH_MAX_RECORDS, requestPagesize);
             subRequest.put(DocumentKeys.SEARCH_START_INDEX, origiStart + r * requestPagesize);
             if (r > 0) {
@@ -155,6 +158,21 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
         log.debug("Performed " + requestCount + " " + (sequential ? "sequential" : "parallel") + " paged searches in "
                   + processingTime + "ms");
     }
+
+    /**
+     * @return a copy of the request, where changes will not be reflected back into the original.
+     */
+    public Request copy(Request request) {
+        Request copy = new Request();
+        for (Map.Entry<String, Serializable> entry: request.entrySet()) {
+            copy.put(entry.getKey(),
+                entry.getValue() instanceof ConvenientMap ?
+                        new ConvenientMap((ConvenientMap)entry.getValue()) :
+                        entry.getValue());
+        }
+        return copy;
+    }
+
 
     // Merge is a bit special as only the documents are added and nothing else changed
     private void mergeResponses(Request request, ResponseCollection merged, List<ResponseCollection> responses,
