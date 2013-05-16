@@ -878,9 +878,17 @@ public class SummonSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_MAX_RECORDS, 20,
                 DocumentKeys.SEARCH_START_INDEX, 20),
                 "id", false);
+        List<String> ids2 = getAttributes(
+                summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, 20,
+                DocumentKeys.SEARCH_START_INDEX, 40),
+                "id", false);
 
         assertNotEquals("The hits should differ from page 0 and 1",
                         Strings.join(ids0, ", "), Strings.join(ids1, ", "));
+        assertNotEquals("The hits should differ from page 1 and 2",
+                        Strings.join(ids1, ", "), Strings.join(ids2, ", "));
     }
 
     private void assertNotEquals(String message, String expected, String actual) {

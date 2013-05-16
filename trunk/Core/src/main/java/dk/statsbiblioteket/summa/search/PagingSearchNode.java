@@ -122,18 +122,19 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
     public void search(final Request request, final ResponseCollection responses) throws RemoteException {
         log.trace("Starting search");
         long processingTime = -System.currentTimeMillis();
+        final int origiStart = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
         int requestedRecords;
-        if ((requestedRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, -1)) <= maxPagesize) {
+        if ((requestedRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, DocumentKeys.DEFAULT_MAX_RECORDS))
+            <= maxPagesize) {
             if (log.isDebugEnabled()) {
-                log.debug("Passing request directly: Requested records " + requestedRecords
-                          + " <= max page size " + maxPagesize);
+                log.debug("Passing request directly: Start index " + origiStart
+                          + ", requested records " + requestedRecords + " <= max page size " + maxPagesize);
                 subNode.search(request, responses);
                 return;
             }
         }
 
         final int requestCount = (int) Math.ceil(1.0 * requestedRecords / requestPagesize);
-        final int origiStart = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
         List<Request> requests = new ArrayList<Request>(requestCount);
 
         for (int r = 0 ; r < requestCount ; r++) {
@@ -199,7 +200,6 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
         }
         // TODO: Fix timing info
         merged.add(mergedDocs);
-        log.debug("Merged " + responses.size() + " responses");
     }
 
     private void optimizeSubsequent(Request request) {
@@ -226,6 +226,9 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
             count++;
             ResponseCollection response = new ResponseCollection();
             try {
+                if (log.isDebugEnabled()) {
+                    log.debug("searchSequential: Issuing search for " + request);
+                }
                 subNode.search(request, response);
             } catch (RemoteException e) {
                 throw new RemoteException("Unable to process request #" + count + "/" + requests.size()
@@ -245,6 +248,9 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
                     new Callable<ResponseCollection>() {
                         @Override
                         public ResponseCollection call() throws Exception {
+                            if (log.isDebugEnabled()) {
+                                log.debug("searchParallel: Issuing search for " + request);
+                            }
                             ResponseCollection response = new ResponseCollection();
                             subNode.search(request, response);
                             return response;
