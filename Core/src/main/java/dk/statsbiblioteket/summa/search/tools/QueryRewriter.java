@@ -347,6 +347,8 @@ public class QueryRewriter {
                 }
             }
             return foundSome ? result : null;
+        } else if (query instanceof FuzzyQuery) {
+            return event.onQuery((FuzzyQuery) query);
         } else if (query instanceof TermQuery) {
             return event.onQuery((TermQuery) query);
         } else if (query instanceof PhraseQuery) {
@@ -355,8 +357,6 @@ public class QueryRewriter {
             return event.onQuery((TermRangeQuery) query);
         } else if (query instanceof PrefixQuery) {
             return event.onQuery((PrefixQuery) query);
-        } else if (query instanceof FuzzyQuery) {
-            return event.onQuery((FuzzyQuery) query);
         }
         return event.onQuery(query);
     }
