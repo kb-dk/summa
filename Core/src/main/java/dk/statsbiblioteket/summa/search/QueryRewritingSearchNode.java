@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.search.api.QueryException;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.tools.QueryFuzzinator;
 import dk.statsbiblioteket.summa.search.tools.QueryPhraser;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.search.tools.QuerySanitizer;
@@ -81,6 +82,14 @@ public class QueryRewritingSearchNode implements SearchNode {
     public static final boolean DEFAULT_SANITIZE_NORMALIZE = true;
 
     /**
+     * If true, queries are routed through {@link dk.statsbiblioteket.summa.search.tools.QueryFuzzinator}.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_FUZZY_QUERIES = "rewriter.fuzzyqueries";
+    public static final boolean DEFAULT_FUZZY_QUERIES = false;
+
+    /**
      * If specified, the designation can be used as a prefix for the search parameters to ensure that only the
      * specific QueryRewritingSearchNode receives the parameters.
      */
@@ -104,6 +113,7 @@ public class QueryRewritingSearchNode implements SearchNode {
     private final QuerySanitizer sanitizer;
     private final QueryRewriter normalizer;
     private final QueryPhraser queryPhraser;
+    private final QueryFuzzinator fuzzinator;
     private final String prefix;
 
     public QueryRewritingSearchNode(Configuration conf) {
@@ -134,6 +144,7 @@ public class QueryRewritingSearchNode implements SearchNode {
         sanitizeFilters = conf.getBoolean(CONF_SANITIZE_FILTERS, DEFAULT_SANITIZE_FILTERS);
         normalize = conf.getBoolean(CONF_SANITIZE_NORMALIZE, DEFAULT_SANITIZE_NORMALIZE);
         queryPhraser = new QueryPhraser(conf);
+        fuzzinator = conf.getBoolean(CONF_FUZZY_QUERIES, DEFAULT_FUZZY_QUERIES) ? new QueryFuzzinator(conf) : null;
         normalizer = new QueryRewriter(conf, QueryRewriter.createDefaultQueryParser(), new QueryRewriter.Event());
         phrasequeries = conf.getBoolean(CONF_PHRASE_QUERIES, DEFAULT_PHRASE_QUERIES);
         prefix = conf.valueExists(CONF_DESIGNATION) && !"".equals(conf.getString(CONF_DESIGNATION)) ?
@@ -150,6 +161,9 @@ public class QueryRewritingSearchNode implements SearchNode {
             && request.getBoolean(prefix + SEARCH_SANITIZE_QUERIES,
                                   request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries))) {
             String newQuery = sanitizer.sanitize(oldQuery).getLastQuery();
+            if (fuzzinator != null) {
+                newQuery = fuzzinator.rewrite(request, newQuery);
+            }
             if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
                                    request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
                 newQuery = normalizer.rewrite(newQuery);
