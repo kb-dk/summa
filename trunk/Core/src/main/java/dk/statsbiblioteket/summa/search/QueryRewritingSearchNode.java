@@ -149,10 +149,7 @@ public class QueryRewritingSearchNode implements SearchNode {
         phrasequeries = conf.getBoolean(CONF_PHRASE_QUERIES, DEFAULT_PHRASE_QUERIES);
         prefix = conf.valueExists(CONF_DESIGNATION) && !"".equals(conf.getString(CONF_DESIGNATION)) ?
                  conf.getString(CONF_DESIGNATION) + "." : "";
-        log.debug(String.format(
-            "Created QueryRewritingSearchNode with inner SearchNode %s, default sanitizeFilters=%b, sanitizeQueries=%b,"
-            + " phraseQueries=%b, prefix='%s, normalize=%b'",
-            inner, sanitizeFilters, sanitizeQueries, phrasequeries, prefix, normalize));
+        log.debug("Created " + this);
     }
 
     private Request process(Request request) throws ParseException {
@@ -244,6 +241,6 @@ public class QueryRewritingSearchNode implements SearchNode {
     public String toString() {
         return "QueryRewritingSearchNode(sanitizeQueries=" + sanitizeQueries + ", sanitizeFilters=" + sanitizeFilters +
                ", phrasequeries=" + phrasequeries + ", normalize=" + normalize + ", prefix='" + prefix
-               + "', fuzzyQueries=" + fuzzinator;
+               + "', fuzzyQueries=" + fuzzinator + ", inner=" + inner;
     }
 }
