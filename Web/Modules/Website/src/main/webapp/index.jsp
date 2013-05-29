@@ -95,8 +95,7 @@
         String xml_didyoumean_result = null;
         if(doDidYouMean) {
             dymCall = -System.currentTimeMillis();
-            xml_didyoumean_result = (String)services.execute(
-                    "summadidyoumean", query, 10);
+            xml_didyoumean_result = (String)services.execute("summadidyoumean", query, 10);
             dymCall += System.currentTimeMillis();
         }
         dymXSLT = -System.currentTimeMillis();
@@ -127,8 +126,7 @@
         } else {
             String usersearch = request.getParameter("usersearch");
             Document search_dom = DOM.stringToDOM(xml_search_result);
-            searchTiming = DOM.selectString(search_dom,
-                        "/responsecollection/@timing", "N/A");
+            searchTiming = DOM.selectString(search_dom, "/responsecollection/@timing", "N/A");
             if (usersearch != null && "true".equals(usersearch)) {
                 // this search comes from the form, ie. it is submitted by a user
                 // so we extract the hitCount and submit it to the Suggestions index
@@ -145,8 +143,7 @@
 
 
             searchXSLT = -System.currentTimeMillis();
-            URL search_xslt = new File(
-                    basepath + "xslt/short_records.xsl").toURI().toURL();
+            URL search_xslt = new File(basepath + "xslt/short_records.xsl").toURI().toURL();
 
             Properties search_prop = new Properties();
             if (query != null) {
@@ -167,8 +164,7 @@
             search_prop.put("current_page", current_page);
 
             try {
-                search_html = XSLT.transform(
-                        search_xslt, xml_search_result, search_prop, true);
+                search_html = XSLT.transform(search_xslt, xml_search_result, search_prop, true);
             } catch (TransformerException e) {
                 search_html = "Transformer exception: " + e.getMessage();
             }
@@ -187,16 +183,16 @@
             merged += "(" + query + ")";
         }
         if ("".equals(merged)) {
-            merged = "*";
+            merged = "*:*";
         }
+
         facetCall = -System.currentTimeMillis();
 
         String xml_facet_result;
         if (json != null) {
             xml_facet_result = (String)services.execute("directjson", json);
         } else {
-            xml_facet_result = (String)services.execute(
-                "summasimplefacet", merged);
+            xml_facet_result = (String)services.execute("summasimplefacet", merged);
         }
 
 
@@ -206,11 +202,9 @@
             facet_html = "Error faceting query";
         } else {
             Document facet_dom = DOM.stringToDOM(xml_facet_result);
-            facetTiming = DOM.selectString(facet_dom,
-                        "/responsecollection/@timing", "N/A");
+            facetTiming = DOM.selectString(facet_dom, "/responsecollection/@timing", "N/A");
             facetXSLT = -System.currentTimeMillis();
-            URL facet_xslt = new File(
-                    basepath + "xslt/facet_overview.xsl").toURI().toURL();
+            URL facet_xslt = new File(basepath + "xslt/facet_overview.xsl").toURI().toURL();
 
             Properties facet_prop = new Properties();
             facet_prop.put("filter", filter == null ? "" : "(" + filter + ") ");
