@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.web.services;
 
+import com.google.common.io.LimitInputStream;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
@@ -29,11 +30,9 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import java.util.List;
 import java.util.Map;
 
@@ -62,7 +61,7 @@ public class HubWS {
     @GET
     // TODO: Can we dynamically adjust this to return JSON if wanted?
     //@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-//    @Produces(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_XML)
     // Taken from http://stackoverflow.com/questions/7406921/get-all-html-form-param-name-value-using-jersey
 //    @Consumes("application/x-www-form-urlencoded")
 //    @Consumes("text/plain")
@@ -77,9 +76,10 @@ public class HubWS {
             }
         }
         SolrParams solrParams = SolrParams.toSolrParams(namedPairs);
+        HubComponent.Limit limit = HubComponent.Limit.createLimit(namedPairs);
         QueryResponse qResponse;
         try {
-            qResponse = getHub().search(null, solrParams);
+            qResponse = getHub().search(limit, solrParams);
         } catch (final Exception e) {
             Response response = new Response() {
                 @Override
