@@ -111,6 +111,8 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         //dumpDocuments(response);
         // "bar bam moo" comes first as that Solr instance only has a single 'bar'-term in the whole index
         assertDocFieldOrder("Sorting by score should work", response, "mykey", "bar bam moo", "bar bar", "bar bar zoo");
+        assertFalse("The maxScore should be different from 1.0",
+                    Math.abs(response.getResults().getMaxScore() - 1.0) < 0.001);
     }
 
     public void testDocumentMergeInterleave() throws Exception {

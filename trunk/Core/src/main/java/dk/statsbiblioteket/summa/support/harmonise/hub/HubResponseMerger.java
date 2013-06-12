@@ -203,6 +203,12 @@ public class HubResponseMerger implements Configurable {
         log.info("Created " + this);
     }
 
+    /**
+     * Merges the given responses into a single response.
+     * @param params the originating search parameters, not tailored to any sub searcher.
+     * @param responses the responses from the different sub searchers, including modified parameters.
+     * @return an aggregated response.
+     */
     public QueryResponse merge(SolrParams params, List<HubAggregatorBase.NamedResponse> responses) {
         if (responses.size() == 1) {
             log.debug("Only a single response received (" + responses.get(0).getId() + "). No merging performed");
@@ -716,7 +722,7 @@ public class HubResponseMerger implements Configurable {
                 return searcherID;
             }
             public float getScore() {
-                Float score = (Float) doc.get("_score");
+                Float score = (Float) doc.get("score");
                 return score == null ? 1.0f : score;
             }
             public SolrDocument getDoc() {
