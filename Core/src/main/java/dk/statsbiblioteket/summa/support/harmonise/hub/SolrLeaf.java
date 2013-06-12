@@ -22,6 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrException;
 import org.apache.solr.common.params.ModifiableSolrParams;
 
 /**
@@ -93,7 +94,12 @@ public class SolrLeaf extends HubLeafImpl {
     public QueryResponse search(ModifiableSolrParams params) throws SolrServerException {
         params.remove("wt");
         params.add("wt", protocol.toString());
-        return solrServer.query(params);
+        try {
+            return solrServer.query(params);
+        } catch (SolrException e) {
+            throw new SolrException(SolrException.ErrorCode.getErrorCode(e.code()),
+                                    "SolrException while querying '" + solrServer.getBaseURL() + "' with " + params, e);
+        }
     }
 
     public HttpSolrServer getSolrServer() {
