@@ -98,7 +98,8 @@ public class SolrLeaf extends HubLeafImpl {
             return solrServer.query(params);
         } catch (SolrException e) {
             throw new SolrException(SolrException.ErrorCode.getErrorCode(e.code()),
-                                    "SolrException while querying '" + solrServer.getBaseURL() + "' with " + params, e);
+                                    "SolrException in searcher '" + getID() + "' while querying '"
+                                    + solrServer.getBaseURL() + "' with " + params, e);
         }
     }
 

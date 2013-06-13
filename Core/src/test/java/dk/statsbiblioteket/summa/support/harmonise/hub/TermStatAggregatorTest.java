@@ -82,7 +82,15 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
             assertNotNull("There should be a document for hit " + i, response.getResults().get(i));
         }
     }
-    
+
+    public void testMissingSearcher() throws Exception {
+        log.info("testMissingSearcher()");
+        ingest(0, "fulltext", Arrays.asList("bar", "moo"));
+        HubComponent hub = getHubMissing(HubResponseMerger.SEARCH_MODE, HubResponseMerger.MODE.score.toString());
+        QueryResponse response = hub.search(null, new SolrQuery("*:*"));
+        System.out.println("Got response " + response);
+    }
+
     public void testDocumentTrim() throws Exception {
         log.info("testDocumentTrim()");
         ingest(0, "fulltext", Arrays.asList("bar", "moo"));
@@ -263,6 +271,27 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         subs.get(1).set(HubFactory.CONF_COMPONENT, SolrLeaf.class);
         subs.get(1).set(HubComponentImpl.CONF_ID, "solr1");
         subs.get(1).set(SolrLeaf.CONF_URL, server1.getServerUrl());
+
+        return HubFactory.createComponent(hubConf);
+    }
+
+    private HubComponent getHubMissing(String... hubParams) throws IOException {
+        List<String> hp = new ArrayList<String>(Arrays.asList(hubParams));
+        hp.add(HubFactory.CONF_COMPONENT);
+        hp.add(TermStatAggregator.class.getCanonicalName());
+        String[] hpa = new String[hp.size()];
+        hp.toArray(hpa);
+
+        Configuration hubConf = Configuration.newMemoryBased(hpa);
+        List<Configuration> subs =  hubConf.createSubConfigurations(HubFactory.CONF_SUB, 2);
+
+        subs.get(0).set(HubFactory.CONF_COMPONENT, SolrLeaf.class);
+        subs.get(0).set(HubComponentImpl.CONF_ID, "solr0");
+        subs.get(0).set(SolrLeaf.CONF_URL, server0.getServerUrl());
+
+        subs.get(1).set(HubFactory.CONF_COMPONENT, SolrLeaf.class);
+        subs.get(1).set(HubComponentImpl.CONF_ID, "solr1");
+        subs.get(1).set(SolrLeaf.CONF_URL, server1.getServerUrl() + "missing");
 
         return HubFactory.createComponent(hubConf);
     }

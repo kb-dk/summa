@@ -173,7 +173,15 @@ public abstract class HubComponentImpl implements HubComponent, Configurable {
         XMLResponseWriter xmlWriter = new XMLResponseWriter();
         StringWriter w = new StringWriter();
         SolrQueryResponse sResponse = new SolrQueryResponse();
-        sResponse.setAllValues(response.getResponse());
+        if (response == null || response.getResponse() == null) {
+            String message = (response == null ? "response" : "response.getResponse()")
+                             + " == null for " + request.toNamedList();
+            log.warn(message);
+            sResponse.setException(new NullPointerException(message));
+        } else {
+            sResponse.setAllValues(response.getResponse());
+        }
+
         try {
             xmlWriter.write(w, new LocalSolrQueryRequest(null, request), sResponse);
         } catch (IOException e) {

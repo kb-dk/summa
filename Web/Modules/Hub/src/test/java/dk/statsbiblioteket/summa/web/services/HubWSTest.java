@@ -59,6 +59,14 @@ public class HubWSTest extends SolrSearchDualTestBase {
                      4, response.getResults().size());
     }
 
+    public void testHubMissingSearcher() throws Exception {
+        HubComponent hub = HubFactory.createComponent(Configuration.load("hub_configuration_faulty.xml"));
+//        System.out.println("Search for '*:*': " + hub.search(null, new SolrQuery("*:*")));
+        QueryResponse response = hub.search(null, new SolrQuery("*:*"));
+        assertEquals("The hub response should contain the correct number of documents",
+                     4, response.getResults().size());
+    }
+
     // Creates the same hub as testHub, but exposed as a web service
     public void testWebSearch() throws Exception {
  //       InitialContext context = new InitialContext();
