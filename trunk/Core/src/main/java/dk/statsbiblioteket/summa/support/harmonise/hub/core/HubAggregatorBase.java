@@ -111,9 +111,9 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
         long startTime = System.currentTimeMillis();
         log.debug("search: Issuing " + (threaded ? "parallel" : "sequential")
                   + " search to " + subs.size() + " searchers");
-        List<FutureTask<NamedResponse>> futures = new ArrayList<FutureTask<NamedResponse>>(subs.size());
+        List<NamedFuture> futures = new ArrayList<NamedFuture>(subs.size());
         for (ComponentCallable sub: subs) {
-            FutureTask<NamedResponse> future = new FutureTask<NamedResponse>(sub);
+            NamedFuture future = new NamedFuture(sub);
             futures.add(future);
             executor.submit(future);
             if (!threaded) {
@@ -130,20 +130,39 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
         }
 
         List<NamedResponse> responses = new ArrayList<NamedResponse>(futures.size());
-        for (FutureTask<NamedResponse> future: futures) {
+        for (NamedFuture future: futures) {
             try {
                 responses.add(future.get(timeout, TimeUnit.MILLISECONDS));
             } catch (InterruptedException e) {
-                throw new InterruptedException(getID() + ": Interrupted while waiting for answer from " + future);
+                throw new InterruptedException(
+                        getID() + ": Interrupted while waiting for answer for " + future.getComponent().getParams()
+                        + " from " + future.getComponent().toString());
             } catch (ExecutionException e) {
-                throw new ExecutionException(getID() + ": exception while waiting for answer from " + future, e);
+                throw new ExecutionException(
+                        getID() + ": Exception while waiting for answer for " + future.getComponent().getParams()
+                        + " from " + future.getComponent().toString(), e);
             } catch (TimeoutException e) {
-                throw new Exception(getID() + ": Exceeded timeout " + timeout + "ms while waiting for " + future, e);
+                throw new Exception(getID() + ": Exceeded timeout " + timeout + "ms while waiting for answer for "
+                                    + future.getComponent().getParams() + " from "
+                                    + future.getComponent().toString(), e);
             }
         }
         log.debug("search: Finished " + (threaded ? "parallel" : "sequential")
                   + " search to " + subs.size() + " searchers in " + (System.currentTimeMillis()-startTime) + "ms");
         return responses;
+    }
+
+    private static class NamedFuture extends FutureTask<NamedResponse> {
+        private final ComponentCallable component;
+
+        private NamedFuture(ComponentCallable component) {
+            super(component);
+            this.component = component;
+        }
+
+        public ComponentCallable getComponent() {
+            return component;
+        }
     }
 
     /**
