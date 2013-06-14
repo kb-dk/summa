@@ -93,7 +93,26 @@ public abstract class AltoStepper {
 
     
     public Alto.TextLine step(Alto.TextLine line) {
-        return process(line);
+        Alto.TextLine processedLine = process(line);
+        if (processedLine == null) {
+            return null;
+        }
+
+        List<Alto.TextString> newStrings = new ArrayList<Alto.TextString>(processedLine.getTextStrings().size());
+        for (Alto.TextString textString: processedLine.getTextStrings()) {
+            Alto.TextString processedString = step(textString);
+            if (processedString == null) {
+                continue;
+            }
+            newStrings.add(processedString);
+        }
+        processedLine.getTextStrings().clear();
+        processedLine.getTextStrings().addAll(newStrings);
+        return processedLine;
+    }
+
+    private Alto.TextString step(Alto.TextString textString) {
+        return process(textString);
     }
 
     /* Override the relevant process-methods */
