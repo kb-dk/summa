@@ -50,7 +50,7 @@ public class ChunkedLongArray {
   public ChunkedLongArray(int chunkBits) {
     this.chunkBits = chunkBits;
     chunkLength = (int) Math.pow(2, chunkBits);
-    offsetMask = ~((~0) << chunkBits);
+    offsetMask = ~(~0 << chunkBits);
   }
 
   private ChunkedLongArray(List<long[]> chunks, int size, int chunkBits) {
@@ -71,8 +71,7 @@ public class ChunkedLongArray {
 
   public long get(int index) {
     if (index >= size) {
-      throw new ArrayIndexOutOfBoundsException(
-          "Index " + index + " requested with array length " + size);
+      throw new ArrayIndexOutOfBoundsException("Index " + index + " requested with array length " + size);
     }
     return chunks.get(index >>> chunkBits)[index &  offsetMask];
   }
@@ -87,10 +86,8 @@ public class ChunkedLongArray {
         chunks.add(new long[chunkLength]);
       } catch (OutOfMemoryError e) {
         throw new OutOfMemoryError(String.format(
-            "OOM (%s) while allocating long[%d] (%dMB) in addition to " +
-            "the existing %d chunks (%d entries, %dMB). %s",
-            e.toString(), chunkLength, 1L*chunkLength*8/1048576,
-            chunks.size(), size(),
+            "OOM (%s) while allocating long[%d] (%dMB) in addition to the existing %d chunks (%d entries, %dMB). %s",
+            e.toString(), chunkLength, 1L*chunkLength*8/1048576, chunks.size(), size(),
             1L*chunks.size()*chunkLength*8/1048576, memStats()));
       }
     }
@@ -124,8 +121,7 @@ public class ChunkedLongArray {
         return;
       }
       int subLength = chunkLength - destOffset;
-      System.arraycopy(
-          src, srcPos, chunks.get(destChunk), destOffset, subLength);
+      System.arraycopy(src, srcPos, chunks.get(destChunk), destOffset, subLength);
       length -= subLength;
       srcPos += subLength;
       destPos += subLength;
@@ -239,11 +235,9 @@ public class ChunkedLongArray {
       Runtime r = Runtime.getRuntime();
       return String.format(
           locale,
-          "Allocated memory: %s, Allocated unused memory: %s, "
-          + "Heap memory used: %s, Max memory: %s",
+          "Allocated memory: %s, Allocated unused memory: %s, Heap memory used: %s, Max memory: %s",
           reduce(r.totalMemory()), reduce(r.freeMemory()),
-          reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().
-              getUsed()), reduce(r.maxMemory())
+          reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed()), reduce(r.maxMemory())
       );
   }
   private static String reduce(long bytes) {
