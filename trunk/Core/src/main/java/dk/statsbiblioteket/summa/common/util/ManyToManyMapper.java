@@ -54,7 +54,7 @@ public class ManyToManyMapper {
 
     private void addRules(List<String> rules) {
         for (String rule: rules) {
-            String[] parts = rule.split(" * -  *"); // We demand spaces
+            String[] parts = rule.split(" * -  *"); // We demand at least 1 space to allow for '-' in the names
             if (parts.length != 2) {
                 throw new Configurable.ConfigurationException(
                     "Expected two parts by splitting '" + rule + "' with delimiter '-' but got " + parts.length);
