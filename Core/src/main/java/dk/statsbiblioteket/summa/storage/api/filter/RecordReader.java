@@ -369,9 +369,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         if (usePersistence) {
             log.debug("Enabling progress tracker");
             progressTracker = new ProgressTracker(
-                progressFile,
-                conf.getLong(CONF_PROGRESS_BATCH_SIZE, DEFAULT_PROGRESS_BATCH_SIZE),
-                conf.getLong(CONF_PROGRESS_GRACETIME, DEFAULT_PROGRESS_GRACETIME));
+                    progressFile,
+                    conf.getLong(CONF_PROGRESS_BATCH_SIZE, DEFAULT_PROGRESS_BATCH_SIZE),
+                    conf.getLong(CONF_PROGRESS_GRACETIME, DEFAULT_PROGRESS_GRACETIME));
         } else {
             progressTracker = null;
         }
@@ -439,8 +439,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
         if (recordIterator == null) {
             log.debug(String.format(
-                "Creating initial record iterator for Records modified after " + ProgressTracker.ISO_TIME,
-                lastRecordTimestamp));
+                    "Creating initial record iterator for Records modified after " + ProgressTracker.ISO_TIME,
+                    lastRecordTimestamp));
 
             // Detect if we need special query options and perform the query as
             // we are configured
@@ -460,8 +460,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
         // We have an iterator but it is empty
         log.debug(String.format(
-            "Updating record iterator for Records modified after " + ProgressTracker.ISO_TIME,
-            lastRecordTimestamp));
+                "Updating record iterator for Records modified after " + ProgressTracker.ISO_TIME,
+                lastRecordTimestamp));
 
         long iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, getQueryOptions());
 
@@ -680,9 +680,21 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") entered");
         markEof();
-        if (success && progressTracker != null) {
-            progressTracker.updated(lastRecordTimestamp);
-            progressTracker.updateProgressFile(); // Force a flush of the progress
+        if (success) {
+            if (progressTracker != null) {
+                progressTracker.updated(lastRecordTimestamp);
+                progressTracker.updateProgressFile(); // Force a flush of the progress
+                log.info("Closed with success=true and persistent timestamp " + progressTracker.getLastUpdateStr());
+            } else {
+                log.info("Closed with success=true and no progress tracker");
+            }
+        } else {
+            if (progressTracker != null) {
+                log.info("Closed with success=false. Timestamp not explicitly updated. Last persistent timestamp was "
+                         + progressTracker.getLastUpdateStr());
+            } else {
+                log.info("Closed with success=false and no progress tracker");
+            }
         }
 
         if (storageWatcher != null) {
@@ -710,6 +722,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
     @Override
     public String toString() {
-        return "RecordReader(storage=" + storage + ")";
+        return "RecordReader(storage=" + storage + ", persistent progress="
+               + (progressTracker == null ? "N/A" : progressTracker.getLastUpdateStr()) + " )";
     }
 }
