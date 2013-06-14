@@ -25,20 +25,17 @@ public class ExpandablePackedPair {
 
   private final int chunkBits;
   private final int chunkLength;
-  private final List<DoublePackedPair> chunks =
-      new ArrayList<DoublePackedPair>();
+  private final List<DoublePackedPair> chunks = new ArrayList<DoublePackedPair>();
   private final int primaryBPV;
   private final int secondaryBPV;
   private long secondaryOffset; // Used for extraction only
   private int size = 0;
 
-  public ExpandablePackedPair(
-      int primaryBPV, int secondaryBPV, long secondaryOffset) {
+  public ExpandablePackedPair(int primaryBPV, int secondaryBPV, long secondaryOffset) {
     this(primaryBPV, secondaryBPV, secondaryOffset, DEFAULT_CHUNK_BITS);
   }
 
-  public ExpandablePackedPair(int primaryBPV, int secondaryBPV,
-                              long secondaryOffset, int chunkBits) {
+  public ExpandablePackedPair(int primaryBPV, int secondaryBPV, long secondaryOffset, int chunkBits) {
     this.chunkBits = chunkBits;
     chunkLength = (int) Math.pow(2, chunkBits);
     this.primaryBPV = primaryBPV;
@@ -69,8 +66,7 @@ public class ExpandablePackedPair {
 
   private void ensureSpace(final int index) {
     while (chunks.size() <= (index >>> chunkBits)) {
-        chunks.add(new DoublePackedPair(
-            chunkLength, primaryBPV, secondaryBPV, secondaryOffset));
+        chunks.add(new DoublePackedPair(chunkLength, primaryBPV, secondaryBPV, secondaryOffset));
         // TODO: Detailed OOM
     }
   }
@@ -92,8 +88,7 @@ public class ExpandablePackedPair {
 
   @Override
   public String toString() {
-    return "ChunkedPackedArray(" + size + " entries, " + chunks.size()
-           + " chunks)";
+    return "ChunkedPackedArray(" + size + " entries, " + chunks.size() + " chunks)";
   }
 }
 
