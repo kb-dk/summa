@@ -40,7 +40,21 @@ import java.util.regex.PatternSyntaxException;
 public class FieldAndTermAdjuster extends HubAdjusterBase {
     private static Log log = LogFactory.getLog(FieldAndTermAdjuster.class);
 
-    // TODO: Add option for returning a list of disabled options
+    /**
+     * Maps from field names to field names, one way when rewriting queries,
+     * the other way when adjusting the returned result.
+     * </p><p>
+     * This isa comma-separated list of rewrite-rules. The format of a single rule is
+     * {@code outer_name - inner_fieldname}.
+     * Example: {@code author - AuthorField, title - main_title}.
+     * </p><p>
+     * This option is not cumulative. Search-time overrides base configuration.
+     * </p><p>
+     * Optional. Default is no rewriting.
+     */
+    // TODO: Handle many-to-many re-writing
+    public static final String CONF_ADJUST_DOCUMENT_FIELDS = "adjuster.document.fields";
+    public static final String SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
 
     public FieldAndTermAdjuster(Configuration conf) {
         super(conf);
