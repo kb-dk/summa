@@ -600,47 +600,54 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
 
-        if (!hasNext()) {
-            throw new NoSuchElementException("No more Records available");
-        }
+        try {
 
-        Payload payload = new Payload(recordIterator.next());
-        if (firstRecordReceivedTime == -1) {
-            firstRecordReceivedTime = System.currentTimeMillis();
-        }
-        lastRecordTimestamp = payload.getRecord().getLastModified();
-        if (stopOnNewer && lastRecordTimestamp < firstRecordReceivedTime) {
-            // TODO: Avoid sending the duplicate record
-            log.info("Stopping further Record requests as the Record " + payload.getId() + " has a timestamp newer"
-                     + " than the start time for the RecordReader. The current Record will be the last");
-            markEof();
-        }
-        recordCounter++;
+            if (!hasNext()) {
+                throw new NoSuchElementException("No more Records available");
+            }
 
-        log.debug("Emitting " + payload);
+            Payload payload = new Payload(recordIterator.next());
+            if (firstRecordReceivedTime == -1) {
+                firstRecordReceivedTime = System.currentTimeMillis();
+            }
+            lastRecordTimestamp = payload.getRecord().getLastModified();
+            if (stopOnNewer && lastRecordTimestamp < firstRecordReceivedTime) {
+                // TODO: Avoid sending the duplicate record
+                log.info("Stopping further Record requests as the Record " + payload.getId() + " has a timestamp newer"
+                         + " than the start time for the RecordReader. The current Record will be the last");
+                markEof();
+            }
+            recordCounter++;
 
-        if (log.isTraceEnabled()) {
-            log.trace("next(): Got lastModified timestamp " +
-                      String.format(ProgressTracker.ISO_TIME, payload.getRecord().getLastModified())
-                      + " for " + payload);
+            log.debug("Emitting " + payload);
+
+            if (log.isTraceEnabled()) {
+                log.trace("next(): Got lastModified timestamp " +
+                          String.format(ProgressTracker.ISO_TIME, payload.getRecord().getLastModified())
+                          + " for " + payload);
+            }
+
+            if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
+                log.debug("Reached maximum number of Records to read (" + maxReadRecords + ")");
+                markEof();
+            }
+
+            if (maxReadSeconds != -1 &&
+                maxReadSeconds * 1000 <= System.currentTimeMillis() - startTime) {
+                log.debug("Reached maximum allow time usage (" + maxReadSeconds + ") seconds");
+                markEof();
+            }
+
+            if (progressTracker != null) {
+                progressTracker.updated(lastRecordTimestamp);
+            }
+            return payload;
+        } catch (RuntimeException e) {
+            if (!(e instanceof NoSuchElementException)) {
+                log.warn("Unexpected exception in next()", e);
+            }
+            throw e;
         }
-
-        if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
-            log.debug("Reached maximum number of Records to read (" + maxReadRecords + ")");
-            markEof();
-        }
-
-        if (maxReadSeconds != -1 &&
-            maxReadSeconds * 1000 <= System.currentTimeMillis() - startTime) {
-            log.debug("Reached maximum allow time usage (" + maxReadSeconds + ") seconds");
-            markEof();
-        }
-
-        if (progressTracker != null) {
-            progressTracker.updated(lastRecordTimestamp);
-        }
-
-        return payload;
     }
 
     @Override
