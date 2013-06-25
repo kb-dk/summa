@@ -101,12 +101,9 @@ public class TestExposedFacets extends TestCase {
     final List<String> FIELDS = Arrays.asList("a", "b");
 
     helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN,
-        getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
 //        new MockAnalyzer(new Random()new Random()));
     Query q = qp.parse("true");
     searcher.search(q, TopScoreDocCollector.create(10, false));
@@ -144,8 +141,7 @@ public class TestExposedFacets extends TestCase {
     }
     System.out.println("Document count = " + DOCCOUNT);
     System.out.println("Facet startup time = " + getTime(facetStructureTime));
-    System.out.println("Mem usage: preFacet=" + preMem
-                       + " MB, postFacet=" + getMem() + " MB");
+    System.out.println("Mem usage: preFacet=" + preMem + " MB, postFacet=" + getMem() + " MB");
     if (response != null) {
       System.out.println(response.toXML());
     }
@@ -374,8 +370,7 @@ public class TestExposedFacets extends TestCase {
       w.deleteDocuments(new Term(ExposedHelper.ID, "1"));
       w.commit();
       FacetResponse response = getFacetResult(MULTI_REQUEST);
-      assertEquals("A search for all after delete should give the right " +
-                   "number of hits",
+      assertEquals("A search for all after delete should give the right number of hits",
                    1, response.getHits());
       List<String> tags = extractTags(response);
       assertEquals("The tags after deletions should match",
@@ -434,8 +429,7 @@ public class TestExposedFacets extends TestCase {
       }
       w.commit();
       FacetResponse response = getFacetResult(MULTI_SCALE_REQUEST);
-      assertEquals("A search for all should give the right " +
-                   "number of hits with docs " + DOCS,
+      assertEquals("A search for all should give the right " + "number of hits with docs " + DOCS,
                    DOCS, response.getHits());
       List<String> tags = extractTags(response);
       assertEquals("The tags after initial build should match with docs "
@@ -444,16 +438,14 @@ public class TestExposedFacets extends TestCase {
                        //"facet1:tag_1.0(1)", "facet1:tag_1.1(1)", "facet1:tag_1.10(1)",
                        "facetEven:false(" + HALF + ")", "facetEven:true(" + HALF + ")"),
                    tags.subList(tags.size()-2, tags.size()));
-      System.out.println("Docs " + DOCS + " before delete: " + response.getHits()
-                         + " with tags " + tags);
+      System.out.println("Docs " + DOCS + " before delete: " + response.getHits() + " with tags " + tags);
     }
 
     { // Delete
       w.deleteDocuments(new Term(ExposedHelper.EVEN, "true"));
       w.commit();
       FacetResponse response = getFacetResult(MULTI_SCALE_REQUEST);
-      assertEquals("A search for all after delete should give the right " +
-                   "number of hits",
+      assertEquals("A search for all after delete should give the right number of hits",
                    DOCS / 2, response.getHits());
       List<String> tags = extractTags(response);
       assertEquals("The tags after deletions should match with docs " + DOCS,
@@ -461,8 +453,7 @@ public class TestExposedFacets extends TestCase {
                        //    "facet1:tag_1.1(1)", "facet1:tag_1.101(1)", "facet1:tag_1.103(1)",
                        "facetEven:false(" + HALF + ")"),
                    tags.subList(tags.size()-1, tags.size()));
-      System.out.println("Docs " + DOCS + "  after delete: " + response.getHits()
-                         + " with tags " + tags);
+      System.out.println("Docs " + DOCS + "  after delete: " + response.getHits() + " with tags " + tags);
     }
     w.close();
   }
@@ -480,17 +471,15 @@ public class TestExposedFacets extends TestCase {
 
   private FacetResponse getFacetResult(String facetRequest)
       throws IOException, ParseException, XMLStreamException {
-    return getFacetResult(facetRequest, ExposedHelper.INDEX_LOCATION,
-                          ExposedHelper.ALL, ExposedHelper.ALL);
+    return getFacetResult(facetRequest, ExposedHelper.INDEX_LOCATION, ExposedHelper.ALL, ExposedHelper.ALL);
   }
 
-  private FacetResponse getFacetResult(
-      String facetRequest, File index, String defaultField, String query)
-      throws IOException, ParseException, XMLStreamException {
+  private FacetResponse getFacetResult(String facetRequest, File index, String defaultField, String query)
+          throws IOException, ParseException, XMLStreamException {
     IndexReader reader = ExposedIOFactory.getReader(index);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_40, defaultField, getAnalyzer());
+        Version.LUCENE_43, defaultField, getAnalyzer());
     Query q = qp.parse(query);
     searcher.search(q, TopScoreDocCollector.create(10, false));
 
@@ -517,7 +506,7 @@ public class TestExposedFacets extends TestCase {
   }
 
   private Analyzer getAnalyzer() {
-    return new WhitespaceAnalyzer(Version.LUCENE_40);
+    return new WhitespaceAnalyzer(Version.LUCENE_43);
 //    return new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false);
   }
 
@@ -552,8 +541,7 @@ public class TestExposedFacets extends TestCase {
     FacetRequest request = FacetRequest.parseXML(GROUP_REQUEST_ABC);
     FacetResponse response = testMultiFacetHelper(request, DOCCOUNT);
     //System.out.println(response.toXML());
-    assertTrue("The response should contain \n" + GROUP_ABC_EXPECTED
-               + ", but was\n" + response.toXML(),
+    assertTrue("The response should contain \n" + GROUP_ABC_EXPECTED + ", but was\n" + response.toXML(),
                response.toXML().contains(GROUP_ABC_EXPECTED));
   }
 
@@ -643,17 +631,13 @@ public class TestExposedFacets extends TestCase {
 
   }
 
-  private FacetResponse testMultiFacetHelper(
-      FacetRequest request, int doccount) throws Exception {
+  private FacetResponse testMultiFacetHelper(FacetRequest request, int doccount) throws Exception {
     ExposedHelper helper = new ExposedHelper();
     File location = helper.buildMultiFieldIndex(doccount);
 
-    DirectoryReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    DirectoryReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.ALL,
-        getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.ALL, getAnalyzer());
     Query q = qp.parse(ExposedHelper.ALL);
 
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
@@ -693,25 +677,20 @@ public class TestExposedFacets extends TestCase {
 
     File LOCATION = new File("/home/te/projects/index50M");
     if (!LOCATION.exists()) {
-      System.err.println("No index at " + LOCATION + ". A test index with " +
-                         DOCCOUNT + " documents will be build");
+      System.err.println("No index at " + LOCATION + ". A test index with " + DOCCOUNT + " documents will be build");
       helper.createFacetIndex(DOCCOUNT);
       LOCATION = ExposedHelper.INDEX_LOCATION;
     }
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    System.out.println("Index = " + LOCATION.getAbsolutePath()
-                       + " (" + reader.maxDoc() + " documents)\n");
+    System.out.println("Index = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc() + " documents)\n");
 
     String FIELD = "hits10000";
 
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, FIELD,
-        getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, FIELD, getAnalyzer());
     Query q = qp.parse("true");
     searcher.search(q, TopScoreDocCollector.create(10, false));
-    System.out.println("Used heap after loading index and performing a " +
-                       "simple search: " + getMem() + " MB\n");
+    System.out.println("Used heap after loading index and performing a simple search: " + getMem() + " MB\n");
     long preMem = getMem();
     long facetStructureTime = System.currentTimeMillis();
 
@@ -746,16 +725,14 @@ public class TestExposedFacets extends TestCase {
       long totalTime = System.currentTimeMillis() - countStart;
       collectorPool.release(sQuery, collector);
       response.setTotalTime(totalTime);
-      System.out.println("Facet collection #" + i + " for " + DOCCOUNT
-                         + " documents in "
+      System.out.println("Facet collection #" + i + " for " + DOCCOUNT + " documents in "
                          + getTime(System.currentTimeMillis()-countStart));
       Thread.sleep(50); // Real world simulation or cheating?
     }
     System.out.println("Document count = " + DOCCOUNT);
     System.out.println("Facet startup time = " + getTime(facetStructureTime));
     long fMem = getMem();
-    System.out.println("Mem usage: preFacet = " + preMem
-                       + " MB, postFacet = " + fMem + " MB. "
+    System.out.println("Mem usage: preFacet = " + preMem + " MB, postFacet = " + fMem + " MB. "
                        + "Facet overhead (approximate) = " + (fMem - preMem) + " MB.");
     System.out.println(CollectorPoolFactory.getLastFactory());
     if (response != null) {
@@ -789,23 +766,18 @@ public class TestExposedFacets extends TestCase {
     final int MIN_SEGMENTS = 2;
     final List<String> FIELDS = Arrays.asList("a", "b");
     helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN,
-        getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
     searcher.search(q, TopScoreDocCollector.create(10, false));
-    System.out.println(
-        "Index opened and test-sort performed, commencing faceting...");
+    System.out.println("Index opened and test-sort performed, commencing faceting...");
     long preMem = getMem();
 
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
 
     FacetResponse response = null;
-    assertTrue("There must be at least 10 documents in the index",
-               DOCCOUNT >= 10);
+    assertTrue("There must be at least 10 documents in the index", DOCCOUNT >= 10);
     final int span = DOCCOUNT / 10;
     long firstTime = -1;
     long subsequentMin = 0;
@@ -822,8 +794,7 @@ public class TestExposedFacets extends TestCase {
         CollectorPool collectorPool = poolFactory.acquire(reader, request);
         if (firstTime == -1) {
           poolTime = System.currentTimeMillis() - poolTime;
-          System.out.println("Facet structure build finished in "
-                             + getTime(poolTime) + ". Running requests...\n");
+          System.out.println("Facet structure build finished in " + getTime(poolTime) + ". Running requests...\n");
         }
 
         long countStart = System.currentTimeMillis();
@@ -856,10 +827,8 @@ public class TestExposedFacets extends TestCase {
     System.out.println("Document count = " + DOCCOUNT);
     System.out.println("Facet structure build time = " + getTime(poolTime));
     System.out.println("First facet call = " + getTime(firstTime));
-    System.out.println("Min of " + subCount + " subsequent calls = "
-                       + getTime(subsequentMin));
-    System.out.println("Mem usage: preFacet=" + preMem
-                       + " MB, postFacet=" + getMem() + " MB");
+    System.out.println("Min of " + subCount + " subsequent calls = " + getTime(subsequentMin));
+    System.out.println("Mem usage: preFacet=" + preMem + " MB, postFacet=" + getMem() + " MB");
     if (response != null) {
       System.out.println(response.toXML());
     }
@@ -867,7 +836,6 @@ public class TestExposedFacets extends TestCase {
   }
 
   public void testBasicSearch() throws IOException, ParseException {
-
     File LOCATION = new File("/home/te/projects/index1M");
     if (!LOCATION.exists()) {
       final int DOCCOUNT = 20000;
@@ -891,25 +859,21 @@ public class TestExposedFacets extends TestCase {
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, field,
-        getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, field, getAnalyzer());
     Query q = qp.parse(term);
     System.out.println(q.toString());
     String sQuery = field + ":" + term;
 
     TopDocsCollector collector = TopScoreDocCollector.create(10, false);
     searcher.search(q, collector);
-    assertTrue("There should be some hits for '" + sQuery + "'",
-               collector.getTotalHits() >0);
+    assertTrue("There should be some hits for '" + sQuery + "'", collector.getTotalHits() >0);
 
   }
 
   // MB
   private long getMem() {
     System.gc();
-    return (Runtime.getRuntime().totalMemory()
-            - Runtime.getRuntime().freeMemory()) / 1048576;
+    return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576;
   }
 
   public static final String SCALE_REQUEST =
@@ -961,23 +925,18 @@ public class TestExposedFacets extends TestCase {
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN,
-        getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
     String sQuery = "even:true";
 
     StringWriter sw = new StringWriter(10000);
-    sw.append("Index = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc()
-              + " documents)\n");
+    sw.append("Index = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc() + " documents)\n");
 
     searcher.search(q, TopScoreDocCollector.create(10, false));
-    sw.append("Used heap after loading index and performing a simple search: "
-              + getMem() + " MB\n");
+    sw.append("Used heap after loading index and performing a simple search: " + getMem() + " MB\n");
     sw.append("Maximum possible memory (Runtime.getRuntime().maxMemory()): "
               + Runtime.getRuntime().maxMemory() / 1048576 + " MB\n");
-    System.out.println("Index " + LOCATION
-                       + " opened and test search performed successfully");
+    System.out.println("Index " + LOCATION + " opened and test search performed successfully");
 
     sw.append("\n");
 
@@ -985,7 +944,7 @@ public class TestExposedFacets extends TestCase {
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 4, 2);
 
     qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN,
+        Version.LUCENE_43, ExposedHelper.EVEN,
         getAnalyzer());
     q = qp.parse("true");
     sQuery = "even:true";
@@ -999,7 +958,7 @@ public class TestExposedFacets extends TestCase {
   */
 
     qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.MULTI,
+        Version.LUCENE_43, ExposedHelper.MULTI,
         getAnalyzer());
     q = qp.parse("A");
     sQuery = "multi:A"; // Strictly it's "facet:A", but that is too confusing
@@ -1008,8 +967,7 @@ public class TestExposedFacets extends TestCase {
 
     System.out.println("**************************\n");
 
-    sw.append("\nUsed memory with sort, facet and index lookup structures " +
-              "intact: " + getMem() + " MB\n");
+    sw.append("\nUsed memory with sort, facet and index lookup structures intact: " + getMem() + " MB\n");
     totalTime += System.currentTimeMillis();
     sw.append("Total test time: " + getTime(totalTime));
 
@@ -1017,10 +975,8 @@ public class TestExposedFacets extends TestCase {
     System.out.println(sw.toString());
   }
 
-  private void testScale(
-      CollectorPoolFactory poolFactory, IndexSearcher searcher,
-      Query query, String sQuery, StringWriter result)
-      throws IOException, XMLStreamException {
+  private void testScale(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query query, String sQuery,
+                         StringWriter result) throws IOException, XMLStreamException {
     System.out.println("- Testing sorted search for " + sQuery);
     testSortedSearch(searcher, "b", query, sQuery, null, result);
     result.append("\n");
@@ -1049,8 +1005,7 @@ public class TestExposedFacets extends TestCase {
       "    </group>\n" +
       "  </groups>\n" +
       "</facetrequest>";
-  public void testFacetScale()
-      throws XMLStreamException, IOException, ParseException {
+  public void testFacetScale() throws XMLStreamException, IOException, ParseException {
     FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass1packed;
     //CodecProvider.setDefaultCodec("Standard");
 
@@ -1061,33 +1016,26 @@ public class TestExposedFacets extends TestCase {
     final File LOCATION = createFacetScaleIndex(1000000);
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN,
-        getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
 
     StringWriter sw = new StringWriter(10000);
-    sw.append("\nIndex = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc()
-              + " documents)\n");
+    sw.append("\nIndex = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc() + " documents)\n");
 
     searcher.search(q, TopScoreDocCollector.create(10, false));
-    sw.append("Used heap after loading index and performing a simple search: "
-              + getMem() + " MB\n");
+    sw.append("Used heap after loading index and performing a simple search: " + getMem() + " MB\n");
 
     sw.append("\n");
 
     // Tests
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 4, 2);
 
-    qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN,
-        getAnalyzer());
+    qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
     q = qp.parse("true");
     String sQuery = "even:true";
 
     System.out.println("- Testing faceting for " + sQuery);
-    testFaceting(
-        poolFactory, searcher, q, sQuery, sw, FACET_SCALE_SIMPLE_REQUEST);
+    testFaceting(poolFactory, searcher, q, sQuery, sw, FACET_SCALE_SIMPLE_REQUEST);
     System.out.println(sw.toString());
     System.out.println("Instances: " + ExposedTuple.instances);
     totalTime += System.currentTimeMillis();
@@ -1127,9 +1075,7 @@ public class TestExposedFacets extends TestCase {
     searcher.getIndexReader().close();
   }
 
-  private void assertEquals(
-      FacetMap expected, FacetMapFactory.IMPL impl, FacetMap actual) {
-
+  private void assertEquals(FacetMap expected, FacetMapFactory.IMPL impl, FacetMap actual) {
     int[] eStable = expected.getIndirectStarts();
     int[] aStable = actual.getIndirectStarts();
     assertEquals(impl + ": The indirects.length should match",
@@ -1145,8 +1091,7 @@ public class TestExposedFacets extends TestCase {
                  expected.getDoc2ref(), actual.getDoc2ref());
   }
 
-  private void assertEquals(String message, PackedInts.Reader expected,
-                            PackedInts.Reader actual) {
+  private void assertEquals(String message, PackedInts.Reader expected, PackedInts.Reader actual) {
     assertEquals(message + " should have matching sizes",
                  expected.size(), actual.size());
     for (int i = 0 ; i < expected.size() ; i++) {
@@ -1161,8 +1106,7 @@ public class TestExposedFacets extends TestCase {
       final int TERM_LENGTH = 20;
       final int MIN_SEGMENTS = 2;
       final List<String> FIELDS = Arrays.asList("a");
-      System.err.println("No index at " + LOCATION + ". A test index with " +
-                         DOCCOUNT + " documents will be build at "
+      System.err.println("No index at " + LOCATION + ". A test index with " + DOCCOUNT + " documents will be build at "
                          + ExposedHelper.INDEX_LOCATION );
       helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
     }
@@ -1187,16 +1131,12 @@ public class TestExposedFacets extends TestCase {
       tuples.clear();
     }
     */
-  private void testFaceting(
-      CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q,
-      String sQuery, StringWriter result)
-      throws XMLStreamException, IOException {
+  private void testFaceting(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q,
+                            String sQuery, StringWriter result) throws XMLStreamException, IOException {
     testFaceting(poolFactory, searcher, q, sQuery, result, SCALE_REQUEST);
   }
-  private void testFaceting(
-      CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q,
-      String sQuery, StringWriter result, String requestString)
-      throws XMLStreamException, IOException {
+  private void testFaceting(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q, String sQuery,
+                            StringWriter result, String requestString) throws XMLStreamException, IOException {
     IndexReader reader = searcher.getIndexReader();
     long facetStructureTime = -System.currentTimeMillis();
 
@@ -1218,9 +1158,8 @@ public class TestExposedFacets extends TestCase {
       CollectorPool collectorPool = poolFactory.acquire(reader, request);
       if (firstTime == -1) {
         poolTime = System.currentTimeMillis() - poolTime;
-        result.append(
-            "Facet pool acquisition for \"" + sQuery + "\" with structure "
-            + request.getGroupKey() + ": " + getTime(poolTime) + "\n");
+          result.append("Facet pool acquisition for \"" + sQuery + "\" with structure "
+                        + request.getGroupKey() + ": " + getTime(poolTime) + "\n");
       }
 
       long countStart = System.currentTimeMillis();
@@ -1257,10 +1196,8 @@ public class TestExposedFacets extends TestCase {
     result.append(response.toXML()).append("\n");
   }
 
-  private void TestIndexLookup(
-      CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q,
-      String sQuery, StringWriter result)
-      throws XMLStreamException, IOException {
+  private void TestIndexLookup(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q,
+                               String sQuery, StringWriter result) throws XMLStreamException, IOException {
     IndexReader reader = searcher.getIndexReader();
     long facetStructureTime = -System.currentTimeMillis();
 
@@ -1330,8 +1267,7 @@ public class TestExposedFacets extends TestCase {
       final int TERM_LENGTH = 20;
       final int MIN_SEGMENTS = 2;
       final List<String> FIELDS = Arrays.asList("a", "b");
-      System.err.println("No index at " + LOCATION + ". A test index with " +
-                         DOCCOUNT + " documents will be build at "
+      System.err.println("No index at " + LOCATION + ". A test index with " + DOCCOUNT + " documents will be build at "
                          + ExposedHelper.INDEX_LOCATION );
       helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
       LOCATION = ExposedHelper.INDEX_LOCATION;
@@ -1339,9 +1275,7 @@ public class TestExposedFacets extends TestCase {
     StringWriter sw = new StringWriter();
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN,
-        getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
     String sQuery = "even:true";
     testSortedSearch(searcher, "a", q, sQuery, null, sw);
@@ -1367,11 +1301,10 @@ public class TestExposedFacets extends TestCase {
     final String ID4 = "00000004";
 
     helper.createIndex(3, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
-    DirectoryReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
-    CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
-    {
-      FacetResponse response = performFaceting(
+    DirectoryReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+      CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
+      {
+          FacetResponse response = performFaceting(
           poolFactory, reader, "true", UPDATE_REQUEST);
       assertFalse("The initial response should not contain the id " + ID4,
                   response.toXML().contains(
@@ -1394,13 +1327,10 @@ public class TestExposedFacets extends TestCase {
     reader.close();
   }
 
-  private FacetResponse performFaceting(
-      CollectorPoolFactory poolFactory, IndexReader reader, String query,
-      String requestXML)
-      throws ParseException, IOException, XMLStreamException {
+  private FacetResponse performFaceting(CollectorPoolFactory poolFactory, IndexReader reader, String query,
+                                        String requestXML) throws ParseException, IOException, XMLStreamException {
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse(query);
     searcher.search(q, TopScoreDocCollector.create(10, false));
     long preMem = getMem();
@@ -1433,24 +1363,20 @@ public class TestExposedFacets extends TestCase {
     collectorPool.release(sQuery, collector);
     System.out.println("Facet startup time = " + getTime(facetStructureTime));
     System.out.println("Facet count time = "+ getTime(response.getTotalTime()));
-    System.out.println("Mem usage: preFacet=" + preMem
-                       + " MB, postFacet=" + getMem() + " MB");
+    System.out.println("Mem usage: preFacet=" + preMem + " MB, postFacet=" + getMem() + " MB");
     return response;
   }
 
-  private void testSortedSearch(
-      IndexSearcher searcher, String field, Query q, String sQuery,
-      Locale locale, StringWriter result) throws IOException {
+  private void testSortedSearch(IndexSearcher searcher, String field, Query q, String sQuery,
+                                Locale locale, StringWriter result) throws IOException {
     // Sorted search
     long firstSearch = -System.currentTimeMillis();
-    ExposedFieldComparatorSource exposedFCS =
-        new ExposedFieldComparatorSource(searcher.getIndexReader(), locale);
+    ExposedFieldComparatorSource exposedFCS = new ExposedFieldComparatorSource(searcher.getIndexReader(), locale);
     Sort sort = new Sort(new SortField(field, exposedFCS));
     TopFieldDocs docs = searcher.search(q, null, 5, sort);
     firstSearch += System.currentTimeMillis();
 
-    result.append("First natural order sorted search for \""+ sQuery
-                  + "\" with " + docs.totalHits + " hits: "
+    result.append("First natural order sorted search for \""+ sQuery + "\" with " + docs.totalHits + " hits: "
                   + getTime(firstSearch) + "\n");
 
     long subSearchMS = 0;
@@ -1463,16 +1389,13 @@ public class TestExposedFacets extends TestCase {
       subSearchMS += System.currentTimeMillis();
     }
 
-    result.append(
-        "Subsequent " + RUNS + " sorted searches average response time: "
-        + getTime(subSearchMS / RUNS) + "\n");
+    result.append("Subsequent " + RUNS + " sorted searches average response time: "
+                  + getTime(subSearchMS / RUNS) + "\n");
     for (int i = 0 ; i < Math.min(topDocs.totalHits, MAXHITS) ; i++) {
       int docID = topDocs.scoreDocs[i].doc;
       result.append(String.format(
           "Hit #%d was doc #%d with field " + field + " %s\n",
-          i, docID,
-          ((BytesRef)((FieldDoc)topDocs.scoreDocs[i]).fields[0]).
-              utf8ToString()));
+          i, docID, ((BytesRef)((FieldDoc)topDocs.scoreDocs[i]).fields[0]).utf8ToString()));
     }
   }
 

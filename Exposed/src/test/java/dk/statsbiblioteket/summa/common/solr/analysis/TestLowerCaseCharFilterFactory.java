@@ -21,6 +21,7 @@ import junit.framework.TestSuite;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collections;
 
 public class TestLowerCaseCharFilterFactory extends TestCase {
     public TestLowerCaseCharFilterFactory(String name) {
@@ -31,7 +32,7 @@ public class TestLowerCaseCharFilterFactory extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        factory = new LowerCaseCharFilterFactory();
+        factory = new LowerCaseCharFilterFactory(Collections.<String, String>emptyMap());
     }
 
     @Override

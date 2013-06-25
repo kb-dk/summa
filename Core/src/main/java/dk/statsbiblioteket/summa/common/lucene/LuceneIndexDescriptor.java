@@ -185,7 +185,7 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
                              Field.Index.ANALYZED,
                              Field.Store.NO,
                              Field.TermVector.NO,
-                             new SimpleAnalyzer(Version.LUCENE_40));
+                             new SimpleAnalyzer(Version.LUCENE_43));
         }
         if (baseFieldName.equals(NUMBER)) {
             return makeField(baseFieldName,

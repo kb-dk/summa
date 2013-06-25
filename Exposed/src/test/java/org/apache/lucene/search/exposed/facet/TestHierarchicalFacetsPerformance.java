@@ -161,7 +161,7 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     testRequest(HIERARCHICAL_REQUEST, 5);
   }
 
-  public void testOrderedDeep() throws Exception {
+  public void performanceDisabledtestOrderedDeep() throws Exception {
     TestHierarchicalTermProvider.createIndex(10000, 4, 15);
     ExposedSettings.debug = true;
     testRequest(HIERARCHICAL_REQUEST, 5);
@@ -211,7 +211,7 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     testRequest(COMPARE_3079, 5);
   }
 
-  public void testCompare_3079_big() throws Exception {
+  public void performanceDisabledtestCompare_3079_big() throws Exception {
     TestHierarchicalTermProvider.createIndex(5000000, 3, 6);
     ExposedSettings.debug = true;
     testRequest(COMPARE_3079, 5);
@@ -224,7 +224,7 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     testRequest(COMPARE_3079, 5);
   }
 
-  public void testCompare_3079_wide_deep() throws Exception {
+  public void performanceDisabledtestCompare_3079_wide_deep() throws Exception {
     TestHierarchicalTermProvider.createIndex(1000, 7, 10);
     ExposedSettings.debug = true;
     testRequest(COMPARE_3079, 5);
@@ -250,8 +250,8 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     IndexReader reader = ExposedIOFactory.getReader(location);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.ALL,
-        new WhitespaceAnalyzer(Version.LUCENE_40));
+        Version.LUCENE_43, ExposedHelper.ALL,
+        new WhitespaceAnalyzer(Version.LUCENE_43));
       //MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse(ExposedHelper.ALL);
     TopScoreDocCollector sanityCollector =

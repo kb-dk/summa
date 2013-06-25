@@ -213,7 +213,7 @@ public class QueryRewriter {
     }
 
     public static QueryParser createDefaultQueryParser() {
-        QueryParser queryParser = new QueryParser(Version.LUCENE_40, "", new WhitespaceAnalyzer(Version.LUCENE_40));
+        QueryParser queryParser = new QueryParser(Version.LUCENE_43, "", new WhitespaceAnalyzer(Version.LUCENE_43));
 
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
         queryParser.setAutoGeneratePhraseQueries(true);
@@ -222,9 +222,9 @@ public class QueryRewriter {
 
     public QueryParser createQueryParser() {
         QueryParser queryParser = new QueryParser(
-                Version.LUCENE_40, "", PARSER_KEYWORD.equals(defaultParser) ?
+                Version.LUCENE_43, "", PARSER_KEYWORD.equals(defaultParser) ?
                                        new KeywordAnalyzer() :
-                                       new WhitespaceAnalyzer(Version.LUCENE_40));
+                                       new WhitespaceAnalyzer(Version.LUCENE_43));
         queryParser.setAutoGeneratePhraseQueries(true);
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
         return queryParser;

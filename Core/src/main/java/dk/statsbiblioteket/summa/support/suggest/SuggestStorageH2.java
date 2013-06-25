@@ -160,7 +160,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         analyzerClass = Configuration.getClass(CONF_SANITIZER, Analyzer.class, DEFAULT_SANITIZER, conf);
         try {
             // All analyzers now takes version
-            sanitizer = analyzerClass.getConstructor(Version.class).newInstance(Version.LUCENE_40);
+            sanitizer = analyzerClass.getConstructor(Version.class).newInstance(Version.LUCENE_43);
         } catch (Exception e) {
             throw new ConfigurationException("Unable to instantiate query sanitizer", e);
         }

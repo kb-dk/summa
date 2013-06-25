@@ -105,7 +105,7 @@ public class Inspect {
         }                              */
     }
 
-    private void cache(String field) throws IOException {
+/*    private void cache(String field) throws IOException {
         System.out.println("Populating cache for field '" + field + "'");
         Profiler profiler = new Profiler();
         List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
@@ -130,7 +130,7 @@ public class Inspect {
         String time = profiler.getSpendTime();
         System.out.println("Cached " + defined + " terms for field '" + field + "' of average size "
                            + size * 1.0 / defined + "bytes (" + nulls + " nulls) in " + time);
-    }
+    }*/
 /*
     private void stats(String[] strings) throws IOException {
         int feedback = Math.max(1, ir.maxDoc() / 50);

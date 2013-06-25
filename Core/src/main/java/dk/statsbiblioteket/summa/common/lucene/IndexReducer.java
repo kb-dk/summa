@@ -90,7 +90,7 @@ public class IndexReducer {
 
         System.out.println("Opening index writer...");
         IndexWriterConfig writerConfig = new IndexWriterConfig(
-            Version.LUCENE_40, new SimpleAnalyzer(Version.LUCENE_40));
+            Version.LUCENE_43, new SimpleAnalyzer(Version.LUCENE_43));
         // FIXME: Set max field length to unlimited
 //        writerConfig.setMaxFieldLength(
 //                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
@@ -111,7 +111,7 @@ public class IndexReducer {
         final DirectoryReader ir = DirectoryReader.open(new NIOFSDirectory(location));
         IndexWriter writer = new IndexWriter(
             new NIOFSDirectory(location),
-            new IndexWriterConfig(Version.LUCENE_40, new WhitespaceAnalyzer(Version.LUCENE_40)));
+            new IndexWriterConfig(Version.LUCENE_43, new WhitespaceAnalyzer(Version.LUCENE_43)));
         final int docCount = ir.maxDoc();
         System.out.println("Reducing '" + location + "' to " + fraction + " size (" + ir.maxDoc() + " => "
                            + (int)(ir.maxDoc() * fraction) + " documents...)");
@@ -146,6 +146,11 @@ public class IndexReducer {
                             @Override
                             public int advance(int target) throws IOException {
                                 throw new UnsupportedOperationException("Makes no sense for reduction");
+                            }
+
+                            @Override
+                            public long cost() {
+                                return 87; // TODO: Find out what this means (JavaDoc for 4.3.1 is no help)
                             }
                         };
                     }

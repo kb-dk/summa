@@ -238,8 +238,9 @@
         <!-- Fix of SOLR3422 -->
         <field name="_version_" type="long" indexed="true" stored="true"/>
 
-        <field name="recordID" type="key" unique="true"/>
-        <field name="recordBase" type="key" unique="true"/>
+        <!-- Both recordID and recordBase are supposed to be unique in the index, but this is not enforced by Solr -->
+        <field name="recordID" type="key"/>
+        <field name="recordBase" type="key"/>
 
         <!-- Gruppe enrich -->
         <field name="enrich_editor" type="text"  multiValued="true"/>

@@ -51,8 +51,8 @@ public class TestExposedCache  extends TestCase {
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.EVEN,
-        new WhitespaceAnalyzer(Version.LUCENE_40));
+        Version.LUCENE_43, ExposedHelper.EVEN,
+        new WhitespaceAnalyzer(Version.LUCENE_43));
         //new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse("true");
     Sort aSort = new Sort(new SortField("a", SortField.Type.STRING));
@@ -139,7 +139,7 @@ public class TestExposedCache  extends TestCase {
     DirectoryReader reader =
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.ALL, new MockAnalyzer(
+        Version.LUCENE_43, ExposedHelper.ALL, new MockAnalyzer(
         new Random(), MockTokenizer.WHITESPACE, false));
     Query query = qp.parse(ExposedHelper.ALL);
 //    Sort plainSort = new Sort(new SortField("a", new Locale("da")));
@@ -264,8 +264,8 @@ public class TestExposedCache  extends TestCase {
     IndexReader reader = ExposedIOFactory.getReader(index);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_40, ExposedHelper.ALL,
-        new WhitespaceAnalyzer(Version.LUCENE_40));
+        Version.LUCENE_43, ExposedHelper.ALL,
+        new WhitespaceAnalyzer(Version.LUCENE_43));
         //new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse(ExposedHelper.ALL);
     Sort aPlainSort = new Sort(
