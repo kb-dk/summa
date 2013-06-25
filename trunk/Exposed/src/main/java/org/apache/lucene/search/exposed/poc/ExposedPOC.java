@@ -123,7 +123,7 @@ public class ExposedPOC {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     org.apache.lucene.queryparser.classic.QueryParser qp =
         new org.apache.lucene.queryparser.classic.QueryParser(
-            Version.LUCENE_40, defaultField, new WhitespaceAnalyzer(Version.LUCENE_40));
+            Version.LUCENE_43, defaultField, new WhitespaceAnalyzer(Version.LUCENE_43));
 
     boolean first = true;
     while (true) {

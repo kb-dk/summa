@@ -18,14 +18,19 @@ import org.apache.lucene.analysis.util.CharFilterFactory;
 import org.apache.lucene.util.Version;
 
 import java.io.Reader;
+import java.util.Map;
 
 /**
  * Trivial factory for {@link LowerCaseCharFilter}.
  */
 public class LowerCaseCharFilterFactory extends CharFilterFactory {
 
+    public LowerCaseCharFilterFactory(Map<String, String> args) {
+        super(args);
+    }
+
     @Override
     public Reader create(Reader input) {
-        return new LowerCaseCharFilter(Version.LUCENE_40, input);
+        return new LowerCaseCharFilter(Version.LUCENE_43, input);
     }
 }

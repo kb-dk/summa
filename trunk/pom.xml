@@ -9,7 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>2.0.0-20130618</version>
+    <version>2.0.0-20130625</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -190,7 +190,7 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-core</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 
 <!--            <dependency>
@@ -202,7 +202,7 @@
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
                 <classifier>pom</classifier>
                 <exclusions>
                     <exclusion>
@@ -251,7 +251,7 @@
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
                 <classifier>sources</classifier>
                 <exclusions>
                     <exclusion>
@@ -265,13 +265,13 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-common</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-icu</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
        <!--
             <dependency>
@@ -309,25 +309,25 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-uima</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 
            <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-analysis-extras</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queryparser</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queries</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 <!--
             <dependency>
@@ -345,32 +345,32 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-test-framework</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
                 <type>war</type>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-test-framework</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-solrj</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
             </dependency>                    
             
             <!-- commons-httpclient is deprecated, but needed for heritrix in core -->

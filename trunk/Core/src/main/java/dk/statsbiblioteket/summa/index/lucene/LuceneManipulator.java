@@ -206,7 +206,7 @@ public class LuceneManipulator implements IndexManipulator {
         }
         try {
             IndexWriterConfig writerConfig = new IndexWriterConfig(
-                Version.LUCENE_40, new StandardAnalyzer(Version.LUCENE_40));
+                Version.LUCENE_43, new StandardAnalyzer(Version.LUCENE_43));
             // FIXME: Add max field length
 //            writerConfig.setMaxFieldLength(
 //                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);

@@ -38,7 +38,7 @@ public class LowerCaseCharFilterTest extends TestCase {
     }
 
     private String process(String input) throws IOException {
-        LowerCaseCharFilter filter = new LowerCaseCharFilter(Version.LUCENE_40, new StringReader(input));
+        LowerCaseCharFilter filter = new LowerCaseCharFilter(Version.LUCENE_43, new StringReader(input));
         return Strings.flush(filter);
     }
 }
