@@ -130,6 +130,9 @@ public class StorageIterator implements Iterator<Record>, Serializable {
                     next = false;
                 }
                 records.addAll(recs);
+                if (records.isEmpty()) {
+                    log.info("Received 0 records from iteratorHolder, but no NoSuchElementException");
+                }
             } catch (Exception e) { // Often this is a java.rmi.ServerException indirectly wrapping NoSuchElementEx...
                 try {
                     Throwable sub = e;
