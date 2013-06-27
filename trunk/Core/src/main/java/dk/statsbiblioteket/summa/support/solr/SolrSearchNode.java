@@ -718,4 +718,14 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         return queryMap;
     }
 
+    /**
+     * Clear all content in the index.
+     */
+    public void clear() throws IOException {
+        log.info("Clearing all data in the Solr index");
+        long startTime = System.currentTimeMillis();
+        ResponseCollection responses = new ResponseCollection();
+        getData(restCall + "?<delete><query>*:*</query></delete>?commit=true", responses);
+        log.info("Cleared all data in the Solr index in " + (System.currentTimeMillis() - startTime) + "ms");
+    }
 }
