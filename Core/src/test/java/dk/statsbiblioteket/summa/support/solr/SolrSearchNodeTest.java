@@ -67,9 +67,13 @@ public class SolrSearchNodeTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         System.setProperty("basedir", ".");
-        // TODO: Clear existing data
         server = new EmbeddedJettyWithSolrServer(SOLR_HOME);
         server.run();
+
+        // Clear existing
+        SolrSearchNode searcher = getSearcher();
+        searcher.clear();
+        searcher.close();
     }
 
     @Override
@@ -378,10 +382,13 @@ public class SolrSearchNodeTest extends TestCase {
             EXPECTED_ALPHA[i][0] = "document" + String.format("%07d", i);
             EXPECTED_ALPHA[i][1] = "1";
         }
+        // 200 is the hard limit and we ask for 201, so the solr-part is for the next facet in the result
         EXPECTED_ALPHA[docCount][0] = "solr";
         EXPECTED_ALPHA[docCount][1] = Integer.toString(docCount);
 
+        log.info("Ingesting " + docCount + " documents");
         ingestFacets(docCount);
+        log.info("Finished ingesting " + docCount + " documents");
         {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
                 SolrSearchNode.CONF_SOLR_FACETS, "title(" + docCount + " ALPHA)",
@@ -762,7 +769,7 @@ public class SolrSearchNodeTest extends TestCase {
         return new IndexControllerImpl(controllerConf);
     }
 
-    private SearchNode getSearcher() throws RemoteException {
+    private SolrSearchNode getSearcher() throws RemoteException {
         return new SolrSearchNode(Configuration.newMemoryBased());
     }
 
