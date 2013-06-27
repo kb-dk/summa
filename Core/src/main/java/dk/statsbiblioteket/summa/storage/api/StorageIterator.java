@@ -37,12 +37,13 @@ import java.util.concurrent.LinkedBlockingQueue;
  * fetching them one by one.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
-       author = "mke")
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "mke")
 public class StorageIterator implements Iterator<Record>, Serializable {
     private static final long serialVersionUID = 186584L;
     // TODO: Consider making this adjustable
     public static final int DEFAULT_MAX_QUEUE_SIZE = 100;
+    public static final boolean DEFAULT_ALLOW_PARTIAL_DELIVERIES = false;
 
     private int maxQueueSize;
     private final ReadableStorage iteratorHolder;
@@ -50,6 +51,7 @@ public class StorageIterator implements Iterator<Record>, Serializable {
     private final Queue<Record> records;
     private boolean next;
     private long totalReceived = 0;
+    private boolean allowPartialDeliveries;
 
     private Log log;
 
@@ -73,12 +75,30 @@ public class StorageIterator implements Iterator<Record>, Serializable {
      * @param maxBufferSize maximum number of records to prefetch
      */
     public StorageIterator(ReadableStorage iteratorHolder, long key, int maxBufferSize) {
+        this(iteratorHolder, key, maxBufferSize, DEFAULT_ALLOW_PARTIAL_DELIVERIES);
+    }
+
+    /**
+     * Create an iterator on a given storage and iteration key (as returned
+     * by one of the getters on the {@link ReadableStorage} interface)
+     *
+     * @param iteratorHolder the storage holding the iterator key {@code key}
+     * @param key the iteration key as returned from the {@link ReadableStorage}
+     * @param maxBufferSize maximum number of records to prefetch
+     * @param allowPartialDeliveries if true, delivery of less than maxBufferSize does not terminate the iterator.
+     *                               Note: At least 1 record needs to be delivered for the iteration to continue.
+     *                               Setting this to true might result in never ending iteration if the source produces
+     *                               records continuously.
+     */
+    public StorageIterator(ReadableStorage iteratorHolder, long key, int maxBufferSize,
+                           boolean allowPartialDeliveries) {
         log = LogFactory.getLog (this.getClass().getName());
         this.iteratorHolder = iteratorHolder;
         this.key = key;
         this.next = true;
         records = new LinkedBlockingQueue<Record>(maxBufferSize);
         maxQueueSize = maxBufferSize;
+        this.allowPartialDeliveries = allowPartialDeliveries;
         if(log.isTraceEnabled()) {
             log.trace("Created StorageIterator(" + iteratorHolder + ", " + key + ", " + maxBufferSize + ")");
         }
@@ -99,7 +119,8 @@ public class StorageIterator implements Iterator<Record>, Serializable {
     @Override
     public Record next() {
         if (!hasNext()) {
-            throw new NoSuchElementException ("Depleted");
+            log.warn("next() called with hasNext == false");
+            throw new NoSuchElementException("Depleted");
         }
         return records.poll();
     }
@@ -126,12 +147,20 @@ public class StorageIterator implements Iterator<Record>, Serializable {
                 totalReceived += recs.size();
                 log.debug("Received " + recs.size() + " Records (" + maxQueueSize + " requested, "+ totalReceived
                           + " received in total) in " + (System.currentTimeMillis()-startTime) + "ms");
-                if (recs.size() < maxQueueSize) {
-                    next = false;
+                if (!recs.isEmpty() && recs.size() < maxQueueSize) {
+                    if (allowPartialDeliveries) {
+                        log.debug("checkRecords: Received only " + recs.size() + "/" + maxQueueSize + " records. " +
+                                  "Continuing as allowPartialUpdates is true" );
+                    } else {
+                        log.debug("checkRecords: Received only " + recs.size() + "/" + maxQueueSize + " records. " +
+                                  "Iteration will be terminated" );
+                    }
+                    next = allowPartialDeliveries;
                 }
                 records.addAll(recs);
                 if (records.isEmpty()) {
                     log.info("Received 0 records from iteratorHolder, but no NoSuchElementException");
+                    next = false;
                 }
             } catch (Exception e) { // Often this is a java.rmi.ServerException indirectly wrapping NoSuchElementEx...
                 try {

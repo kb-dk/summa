@@ -259,6 +259,13 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     public static final String CONF_BATCH_SIZE = "summa.storage.recordreader.batch.size";
     public static final int DEFAULT_BATCH_SIZE = StorageIterator.DEFAULT_MAX_QUEUE_SIZE;
 
+    /**
+     * If true, the iteration of the stream of Records from the source will continue even if less that the requested
+     * number of records is received. {@see StorageIterator}.
+     * </p><p>
+     * Optional. Default is {@link StorageIterator#DEFAULT_ALLOW_PARTIAL_DELIVERIES}, which is false.
+     */
+    public static final String CONF_ALLOW_PARTIAL_DELIVERIES = "summa.storage.recordreader.allow.partial.deliveries";
 
     /**
      * The readable storage.
@@ -286,6 +293,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private boolean loadData = DEFAULT_LOAD_DATA_COLUMN;
 
     private final boolean stopOnNewer;
+    private final boolean allowPartialDeliveries;
     private long firstRecordReceivedTime = -1; // -1 means no records received
 
     /**
@@ -365,7 +373,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS, DEFAULT_MAX_READ_SECONDS);
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         loadData = conf.getBoolean(CONF_LOAD_DATA_COLUMN, DEFAULT_LOAD_DATA_COLUMN);
-
+        allowPartialDeliveries = conf.getBoolean(
+                CONF_ALLOW_PARTIAL_DELIVERIES, StorageIterator.DEFAULT_ALLOW_PARTIAL_DELIVERIES);
         if (usePersistence) {
             log.debug("Enabling progress tracker");
             progressTracker = new ProgressTracker(
@@ -389,14 +398,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         lastRecordTimestamp = getStartTime();
         lastIteratorUpdate = lastRecordTimestamp;
         stopOnNewer = conf.getBoolean(CONF_STOP_ON_NEWER, DEFAULT_STOP_ON_NEWER);
-        log.info(String.format(
-                "RecordReader(startFromScratch=%b, storage=%s, bases=%s, startMTime=%s, progressFile='%s', "
-                + "progressTrack=%b, maxRecords=%d, maxSeconds=%d, batchSize=%d, loadDate=%b, stayAlive=%b, "
-                + "stopOnNewer=%b) started", startFromScratch, storage,
-                base == null || "".equals(base) ? "*" : base,
-                String.format(ProgressTracker.ISO_TIME, lastRecordTimestamp), progressFile,
-                progressFile != null, maxReadRecords, maxReadSeconds, batchSize, loadData,
-                storageWatcher != null, stopOnNewer));
+        log.info("Created " + this);
     }
 
     /**
@@ -447,7 +449,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             long iterKey = storage.getRecordsModifiedAfter(lastRecordTimestamp, base, getQueryOptions());
 
             lastIteratorUpdate = System.currentTimeMillis();
-            recordIterator = new StorageIterator(storage, iterKey, batchSize);
+            recordIterator = new StorageIterator(storage, iterKey, batchSize, allowPartialDeliveries);
 
             return false;
         } else if (recordIterator.hasNext()) {
@@ -467,7 +469,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
 
         lastIteratorUpdate = System.currentTimeMillis();
-        recordIterator = new StorageIterator(storage, iterKey, batchSize);
+        recordIterator = new StorageIterator(storage, iterKey, batchSize, allowPartialDeliveries);
 
         if (!recordIterator.hasNext()) {
             log.debug("Received update notification from StorageWatcher, but no new Records is available from the "
@@ -561,7 +563,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 return;
             }
         } catch (IOException e) {
-            log.error("IOException prepraring iterator for wait-phase", e);
+            log.error("IOException preparing iterator for wait-phase", e);
             markEof();
         }
 
@@ -729,7 +731,13 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
     @Override
     public String toString() {
-        return "RecordReader(storage=" + storage + ", persistent progress="
-               + (progressTracker == null ? "N/A" : progressTracker.getLastUpdateStr()) + " )";
+        return String.format(
+                "RecordReader(startFromScratch=%b, storage=%s, bases=%s, startMTime=%s, progress=%s, "
+                + "maxRecords=%d, maxSeconds=%d, batchSize=%d, loadDate=%b, stayAlive=%b, "
+                + "stopOnNewer=%b, allowPartialDeliveries=%b) started",
+                startFromScratch, storage, base == null || "".equals(base) ? "*" : base,
+                String.format(ProgressTracker.ISO_TIME, lastRecordTimestamp), progressTracker,
+                maxReadRecords, maxReadSeconds, batchSize, loadData, storageWatcher != null,
+                stopOnNewer, allowPartialDeliveries);
     }
 }
