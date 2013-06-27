@@ -76,7 +76,8 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
             return storage.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecordsModifiedAfter(" + time + ", " + base + ") failed: " + t.getMessage(), t);
+            throw new IOException("getRecordsModifiedAfter(" + time + ", " + base + ") failed for " + this + ": "
+                                  + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
@@ -96,7 +97,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
             return storage.getModificationTime(base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getModificationTime(" + base + ") failed: " + t.getMessage(), t);
+            throw new IOException("getModificationTime(" + base + ") failed for " + this + ": " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
@@ -113,7 +114,8 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
             return storage.getRecords(ids, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecords(" + Logs.expand(ids, 10) + ", options=" + options + ") failed", t);
+            throw new IOException(
+                    "getRecords(" + Logs.expand(ids, 10) + ", options=" + options + ") failed for " + this, t);
         } finally {
             releaseConnection();
         }
@@ -154,7 +156,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
             // other site?
             connectionError(t);
             checkForNoSuchElementException(t);
-            throw new IOException("next(" + iteratorKey + ") failed: " + t.getMessage(), t);
+            throw new IOException("next(" + iteratorKey + ") failed for " + this + ": " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
@@ -194,7 +196,8 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
             throw new NoSuchElementException();
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("next(" + iteratorKey + ", " + maxRecords + ") failed: " + t.getMessage(), t);
+            throw new IOException(
+                    "next(" + iteratorKey + ", " + maxRecords + ") failed for " + this + ": " + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
