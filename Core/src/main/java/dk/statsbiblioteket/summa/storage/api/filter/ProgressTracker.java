@@ -76,15 +76,12 @@ public class ProgressTracker {
     private long numUpdatesLastFlush;
     private File progressFile;
 
-
     public ProgressTracker (File progressFile, long batchSize, long graceTime) {
         this.batchSize = batchSize;
         this.graceTime = graceTime;
         this.progressFile = progressFile;
 
-        log.debug(String.format(
-                "Created ProgressTracker with batchSize(%d), graceTime(%d), and progressFile(%s)",
-                batchSize, graceTime, progressFile));
+        log.debug("Created " + this);
     }
 
     /**
@@ -228,4 +225,14 @@ public class ProgressTracker {
                 getTimeInMillis();*/
     }
 
+    public File getProgressFile() {
+        return progressFile;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "ProgressTracker(batchSize=%d, graceTime=%d, progressFile='%s', updates=%d, lastExternalUpdate=%s)",
+                batchSize, graceTime, progressFile, numUpdates, getLastUpdateStr());
+    }
 }
