@@ -17,9 +17,13 @@ package dk.statsbiblioteket.summa.storage.api.filter;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.storage.FakeStorage;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Assert;
@@ -68,6 +72,42 @@ public class RecordReaderTest extends TestCase {
     public static Test suite() {
         return new TestSuite(RecordReaderTest.class);
     }
+
+    public void testIterator() throws IOException {
+        int RECORDS = 10;
+        int BATCH = 4;
+
+        List<Record> records = new ArrayList<Record>(RECORDS);
+        for (int i = 0 ; i < RECORDS ; i++) {
+            records.add(new Record("record_" + i, "dummy", new byte[0]));
+        }
+        Storage storage = new FakeStorage(records, BATCH);
+
+        RMIStorageProxy rmiStorage = new RMIStorageProxy(Configuration.newMemoryBased(
+                RMIStorageProxy.CONF_SERVICE_NAME, "Faker",
+                RMIStorageProxy.CONF_SERVICE_PORT, 28000
+        ), storage);
+
+        assertEquals("Without partial deliveries, only a subset should be returned", BATCH, countRecords(false));
+        assertEquals("With partial deliveries, all Records should be returned", RECORDS, countRecords(true));
+
+        rmiStorage.close();
+    }
+
+    private int countRecords(boolean allowPartialDeliveries) throws IOException {
+        RecordReader reader = new RecordReader(Configuration.newMemoryBased(
+                RecordReader.CONF_ALLOW_PARTIAL_DELIVERIES, allowPartialDeliveries,
+                RecordReader.CONF_START_FROM_SCRATCH, true,
+                ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/Faker"
+        ));
+
+        int count = 0;
+        while (reader.pump()) {
+            count++;
+        }
+        return count;
+    }
+
 
     public static Storage createStorage() throws Exception {
         Configuration conf = Configuration.newMemoryBased(DatabaseStorage.CONF_LOCATION, db.getAbsolutePath());
