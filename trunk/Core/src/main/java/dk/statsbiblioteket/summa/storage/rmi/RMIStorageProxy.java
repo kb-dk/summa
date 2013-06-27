@@ -181,6 +181,36 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
     }
 
     /**
+     * Constructs a RMI Storage proxy with a given configuration, backed by the given Storage.
+     * Note: This will ignore the {@link #CONF_BACKEND} parameter.
+     * @param conf The configuration.
+     * @param backend the backing Storage to expose over RMI.
+     * @throws IOException if the wrapping failed.
+     */
+    public RMIStorageProxy(Configuration conf, Storage backend) throws IOException {
+        super(getServicePort(conf));
+        this.backend = backend;
+        flattenExceptions = conf.getBoolean(CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
+
+        serviceName = conf.getString(CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
+        registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
+
+        RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
+
+        try {
+            RemoteHelper.exportMBean(this);
+        } catch (Exception e) {
+            String msg = "Error exporting MBean of '" + this + "'. Going on without it: " + e.getMessage();
+            if (log.isTraceEnabled()) {
+                log.warn(msg, e);
+            } else {
+                log.warn(msg);
+            }
+        }
+
+    }
+
+    /**
      * Return this proxy's service port.
      *
      * @param configuration The configuration.
@@ -208,7 +238,7 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
      */
     @Override
     public long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws RemoteException {
-        log.debug("getRecordsModifiedAfter(" + time + ", '" + base + "', " + options + ").");
+        log.debug("getRecordsModifiedAfter(" + time + ", '" + base + "', " + options + ")");
 
         if (log.isTraceEnabled()) {
             log.trace("getRecordsModifiedAfter(" + time + ", '" + base + "', " + options + ").");
