@@ -221,6 +221,10 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final String fieldID;
     protected final boolean explicitFacetFilter;
 
+    // Debug & feedback
+    private long lastConnectTime = -1;
+    private long lastDataTime = -1;
+
     public SolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
         setID(conf.getString(CONF_ID, "solr"));
@@ -606,13 +610,16 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             String message = "Unable to connect to remote Solr with URL '" + url.toExternalForm()
                              + "' and connection timeout " + connectionTimeout;
             log.error(message, e);
+            summonConnect += System.currentTimeMillis();
+            lastConnectTime = summonConnect;
             throw (ConnectException)new ConnectException(message).initCause(e);
         }
         summonConnect += System.currentTimeMillis();
+        lastConnectTime = summonConnect;
 
         BufferedReader in;
+        long rawCall = -System.currentTimeMillis();
         try {
-        	long rawCall = -System.currentTimeMillis();
         	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
             String str;
 
@@ -622,10 +629,13 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             log.trace("Reading from Solr done in " + (System.currentTimeMillis() - readStart) + "ms");
             in.close();
             rawCall += System.currentTimeMillis();
+            lastDataTime = rawCall;
             responses.addTiming(getID() + ".connect", summonConnect);
             responses.addTiming(getID() + ".rawcall", rawCall);
 
         } catch (Exception e) {
+            rawCall += System.currentTimeMillis();
+            lastDataTime = rawCall;
             String error = String.format(
                 "getData(host='%s', command='%s') for %s failed with error stream\n%s",
                 "http://" + host, command, getID(),
@@ -727,5 +737,19 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         ResponseCollection responses = new ResponseCollection();
         getData(restCall + "?<delete><query>*:*</query></delete>?commit=true", responses);
         log.info("Cleared all data in the Solr index in " + (System.currentTimeMillis() - startTime) + "ms");
+    }
+
+    /**
+     * @return the number of milliseconds used for establishing the last connection.
+     */
+    public long getLastConnectTime() {
+        return lastConnectTime;
+    }
+
+    /**
+     * @return the number of milliseconds used for receiving data for the last request.
+     */
+    public long getLastDataTime() {
+        return lastDataTime;
     }
 }
