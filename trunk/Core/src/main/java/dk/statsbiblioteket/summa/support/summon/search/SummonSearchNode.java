@@ -39,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -631,12 +632,22 @@ public class SummonSearchNode extends SolrSearchNode {
         conn.setReadTimeout(readTimeout);
         Long readStart = System.currentTimeMillis();
     	long summonConnect = -System.currentTimeMillis();
-        conn.connect();
+        try {
+            conn.connect();
+        } catch (Exception e) {
+            String message = "Unable to connect to remote Solr with URL '" + url.toExternalForm()
+                             + "' and connection timeout " + connectionTimeout;
+            log.error(message, e);
+            summonConnect += System.currentTimeMillis();
+            lastConnectTime = summonConnect;
+            throw (ConnectException)new ConnectException(message).initCause(e);
+        }
         summonConnect += System.currentTimeMillis();
-        
+        lastConnectTime = summonConnect;
+
+        long rawCall = -System.currentTimeMillis();
         BufferedReader in;
         try {
-        	long rawCall = -System.currentTimeMillis();             
         	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
             String str;
         
@@ -646,16 +657,21 @@ public class SummonSearchNode extends SolrSearchNode {
             log.trace("Reading from Summon done in " + (System.currentTimeMillis() - readStart) + "ms");
             in.close();
             rawCall += System.currentTimeMillis();
+            lastDataTime = rawCall;
             responses.addTiming(getID() + ".connect", summonConnect);
             responses.addTiming(getID() + ".rawcall", rawCall);
             
         } catch (SocketTimeoutException e) {
+            rawCall += System.currentTimeMillis();
+            lastDataTime = rawCall;
             String error = String.format(
                 "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s) timed out",
                 target, content, date, idstring, sessionId);
             log.warn(error, e);
             throw new IOException(error, e);
         } catch (Exception e) {
+            rawCall += System.currentTimeMillis();
+            lastDataTime = rawCall;
             String error = String.format(
                 "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s) failed with error stream\n%s",
                 target, content, date, idstring, sessionId,

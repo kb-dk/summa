@@ -222,8 +222,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final boolean explicitFacetFilter;
 
     // Debug & feedback
-    private long lastConnectTime = -1;
-    private long lastDataTime = -1;
+    protected long lastConnectTime = -1;
+    protected long lastDataTime = -1;
 
     public SolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
