@@ -45,7 +45,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import javax.xml.transform.TransformerException;
-import java.io.IOException;
+import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -446,6 +446,83 @@ public class SummonSearchNodeTest extends TestCase {
             assertFalse("There should be at least 1 result for " + query, ids.isEmpty());
             log.info("Got " + ids.size() + " from query '" + query + "' in " + searchTime + " ms");
         }
+    }
+
+    /*
+      * At the end of june and the start of july 2013, 5-15% of the summon-requests in production exceeded the
+      * connection timeout of 2000 ms. This unit test was made to verify this and is left (although disabled)
+      * if the problem should arise again.
+     */
+    public void disabledtestTimeout() throws Exception {
+        final int CONNECT_TIMEOUT = 20000;
+        final int READ_TIMEOUT = 20000;
+        final int RUNS = 20;
+        final int DELAY_MS = 5000;
+        final int VARIANCE_MS = 2234;
+
+/*        List<String> QUERIES = new ArrayList<String>();
+        BufferedReader in = new BufferedReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(
+                "/home/te/tmp/sumfresh/common/performancetest/testQueries.txt")), "utf-8"));
+        String line;
+        while ((line = in.readLine()) != null) {
+            if (!line.isEmpty()) {
+                QUERIES.add(line);
+            }
+        }
+        log.info("Loaded " + QUERIES.size() + " queries");
+  */
+        List<String> QUERIES = Arrays.asList("foo", "heat", "heat beads", "heat pans", "dolphin calls",
+                                             "fresh water supply", "fresh water", "fresh water irrigation");
+
+        log.debug("Creating SummonSearchNode");
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(SolrSearchNode.CONF_SOLR_CONNECTION_TIMEOUT, CONNECT_TIMEOUT);
+        conf.set(SolrSearchNode.CONF_SOLR_READ_TIMEOUT, READ_TIMEOUT);
+        SummonSearchNode summon = new SummonSearchNode(conf);
+
+        long maxConnectTime = -1;
+        int success = 0;
+        Random random = new Random();
+        for (int run = 0 ; run < RUNS ; run++) {
+            String query = QUERIES.get(random.nextInt(QUERIES.size()));
+            Request req = new Request(
+                    DocumentKeys.SEARCH_QUERY, query,
+                    DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+            long searchTime = -System.currentTimeMillis();
+            try {
+                List<String> ids = getAttributes(summon, req, "id", false);
+                searchTime += System.currentTimeMillis();
+                log.info(String.format("Test %d/%d. Got %d hits with connect time %dms for '%s' in %dms",
+                                       run+1, RUNS, ids.size(), summon.getLastConnectTime(), query, searchTime));
+                success++;
+            } catch (Exception e) {
+                searchTime += System.currentTimeMillis();
+                if (e instanceof IllegalArgumentException) {
+                    log.warn(String.format("Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
+                                           "time %d due to illegal argument (probably a faulty query)",
+                                           run+1, RUNS, query, searchTime, summon.getLastConnectTime()));
+                } else if (e.getMessage().contains("java.net.SocketTimeoutException: connect timed out")) {
+                    log.warn(String.format("Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
+                                           "time %d due to connect timeout",
+                                           run+1, RUNS, query, searchTime, summon.getLastConnectTime()));
+                } else {
+                    log.error(String.format("Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
+                                           "time %d due to unexpected exception",
+                                           run+1, RUNS, query, searchTime, summon.getLastConnectTime()), e);
+                }
+            }
+
+            maxConnectTime = Math.max(maxConnectTime, summon.getLastConnectTime());
+            if (run != RUNS-1) {
+                int delay = DELAY_MS - VARIANCE_MS/2 + random.nextInt(VARIANCE_MS);
+                synchronized (this) {
+                    this.wait(delay);
+                }
+            }
+        }
+        log.info(String.format("Successfully performed %d/%d queries with max connect time %dms",
+                               success, RUNS, maxConnectTime));
+        summon.close();
     }
 
     public void testGetField() throws IOException, TransformerException {
