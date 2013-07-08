@@ -18,7 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
-import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAggregatorBase;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.ComponentCallable;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -102,8 +102,8 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
      * @return the child-searchers with adjusted queries.
      */
     @Override
-    public List<HubAggregatorBase.ComponentCallable> adjustRequests(
-            SolrParams params, List<HubAggregatorBase.ComponentCallable> components) {
+    public List<ComponentCallable> adjustRequests(
+            SolrParams params, List<ComponentCallable> components) {
         if (!params.getBool(SEARCH_ADJUSTMENT_ENABLED, true)) {
             log.debug("TermStat adjustment skipped as " + SEARCH_ADJUSTMENT_ENABLED + "=false");
             return components;
@@ -128,7 +128,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
         // Cache query time weights for the components
         Map<String, Double> weights = new HashMap<String, Double>(components.size());
         double defaultWeight = params.getDouble(TermStatTarget.SEARCH_WEIGHT, -1.0);
-        for (HubAggregatorBase.ComponentCallable comp: components) {
+        for (ComponentCallable comp: components) {
             double weight = comp.getParams().getDouble(HubComponentImpl.SPECIFIC_PARAM_PREFIX
                     + comp.getComponent().getID() + "." + TermStatTarget.SEARCH_WEIGHT, defaultWeight);
             if (weight >= 0) {
@@ -138,7 +138,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
 
         // Iterate all components with targets and adjust their queries
         comp:
-        for (HubAggregatorBase.ComponentCallable component: components) {
+        for (ComponentCallable component: components) {
             for (TermStatTarget target: targets) {
                 if (component.getComponent().getID().equals(target.getComponentID())) {
                     adjustRequests(component, target, pruned, weights);
@@ -152,7 +152,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
     }
 
     // At this point, only components with term stats are left
-    private void adjustRequests(HubAggregatorBase.ComponentCallable component,
+    private void adjustRequests(ComponentCallable component,
                                 final TermStatTarget target, final List<TermStatTarget> pruned,
                                 final Map<String, Double> weights) {
         final String query = component.getParams().get(CommonParams.Q, null);
@@ -220,9 +220,9 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
      * If a general query is issued, the component specific query need no be present.
      */
     private List<TermStatTarget> getTargets(
-            List<HubAggregatorBase.ComponentCallable> components, String query) {
+            List<ComponentCallable> components, String query) {
         List<TermStatTarget> pruned = new ArrayList<TermStatTarget>(targets.size());
-        for (HubAggregatorBase.ComponentCallable component: components) {
+        for (ComponentCallable component: components) {
             for (TermStatTarget target: targets) {
                 if (component.getComponent().getID().equals(target.getComponentID())) {
                     if (query != null || component.getParams().get(target.getComponentID() + ".q") != null) {
