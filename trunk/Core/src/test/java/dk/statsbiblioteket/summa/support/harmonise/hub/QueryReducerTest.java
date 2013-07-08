@@ -86,6 +86,15 @@ public class QueryReducerTest extends TestCase {
                     "kaos:king", "kaos:king");
     }
 
+    public void testSubORQuery() throws IOException {
+        String QUERY = "+(hello my:world phrase:\"mongo pongo\") +(something OR foo:bar)";
+        String EXPECTED = "+(hello my:world phrase:\"mongo pongo\") +something";
+
+        QueryReducer reducer = getDefaultReducer();
+        assertQuery("The query '" + QUERY + "' should be reduced to '" + EXPECTED + "'", reducer, "MySearcher",
+                    EXPECTED, QUERY);
+    }
+
     private QueryReducer getDefaultReducer() throws IOException {
         return getNamedReducer(""); // "" == match all componentIDs
     }
