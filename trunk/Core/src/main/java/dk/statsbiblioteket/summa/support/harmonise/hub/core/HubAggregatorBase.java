@@ -94,7 +94,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
             return null;
         }
         pruned = adjustRequests(params, pruned);
-        List<NamedResponse> responses = search(pruned);
+        List<ComponentCallable.NamedResponse> responses = search(pruned);
         if (responses.isEmpty()) {
             return null;
         }
@@ -104,7 +104,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
         return merge(params, responses);
     }
 
-    private List<NamedResponse> search(List<ComponentCallable> subs) throws Exception {
+    private List<ComponentCallable.NamedResponse> search(List<ComponentCallable> subs) throws Exception {
         if (executor == null) {
             executor = Executors.newFixedThreadPool(getComponents().size());
         }
@@ -129,7 +129,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
             }
         }
 
-        List<NamedResponse> responses = new ArrayList<NamedResponse>(futures.size());
+        List<ComponentCallable.NamedResponse> responses = new ArrayList<ComponentCallable.NamedResponse>(futures.size());
         for (NamedFuture future: futures) {
             try {
                 responses.add(future.get(timeout, TimeUnit.MILLISECONDS));
@@ -152,7 +152,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
         return responses;
     }
 
-    private static class NamedFuture extends FutureTask<NamedResponse> {
+    private static class NamedFuture extends FutureTask<ComponentCallable.NamedResponse> {
         private final ComponentCallable component;
 
         private NamedFuture(ComponentCallable component) {
@@ -184,67 +184,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
      * @param responses the raw responses from the searches.
      * @return a single response merged from the full set of responses.
      */
-    public abstract QueryResponse merge(SolrParams params, List<NamedResponse> responses);
-
-    public class ComponentCallable implements Callable<NamedResponse> {
-        private final HubComponent component;
-        private Limit limit;
-        private ModifiableSolrParams params;
-
-        public ComponentCallable(HubComponent component, Limit limit, ModifiableSolrParams params) {
-            this.component = component;
-            this.limit = limit;
-            this.params = params;
-        }
-
-        @Override
-        public NamedResponse call() throws Exception {
-            return new NamedResponse(component.getID(), component.search(limit, params));
-        }
-
-        public HubComponent getComponent() {
-            return component;
-        }
-
-        public Limit getLimit() {
-            return limit;
-        }
-
-        public ModifiableSolrParams getParams() {
-            return params;
-        }
-
-        public void setParams(ModifiableSolrParams params) {
-            this.params = params;
-        }
-
-        public void setLimit(Limit limit) {
-            this.limit = limit;
-        }
-
-        @Override
-        public String toString() {
-            return "ComponentCallable(component=" + component + ')';
-        }
-    }
-
-    public static class NamedResponse {
-        private final String id;
-        private final QueryResponse response;
-
-        public NamedResponse(String id, QueryResponse response) {
-            this.id = id;
-            this.response = response;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public QueryResponse getResponse() {
-            return response;
-        }
-    }
+    public abstract QueryResponse merge(SolrParams params, List<ComponentCallable.NamedResponse> responses);
 
     @Override
     protected int maxComponents() {

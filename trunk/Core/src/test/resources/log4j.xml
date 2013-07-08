@@ -37,7 +37,7 @@
     </logger>
 
     <logger name="dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode">
-        <level value="DEBUG" />
+        <level value="INFO" />
         <appender-ref ref="CONSOLE" />
     </logger>
 

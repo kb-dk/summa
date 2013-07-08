@@ -14,7 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
-import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAggregatorBase;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.ComponentCallable;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.List;
@@ -23,12 +23,11 @@ import java.util.List;
  * Modifies incoming requests.
  */
 public interface RequestAdjuster {
-
     /**
      * @param params     original parameters for the calling HubComposite.
      * @param components the components that will be called, including component-specific parameters.
      * @return the adjusted component list.
      */
-    List<HubAggregatorBase.ComponentCallable> adjustRequests(
-            SolrParams params, List<HubAggregatorBase.ComponentCallable> components);
+    List<ComponentCallable> adjustRequests(
+            SolrParams params, List<ComponentCallable> components);
 }

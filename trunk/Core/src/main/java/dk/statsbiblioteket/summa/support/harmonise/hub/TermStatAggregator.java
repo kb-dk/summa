@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.ComponentCallable;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAggregatorBase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -47,7 +48,7 @@ public class TermStatAggregator extends HubAggregatorBase {
     // TODO: Handle paging
 
     @Override
-    public QueryResponse merge(SolrParams params, List<NamedResponse> responses) {
+    public QueryResponse merge(SolrParams params, List<ComponentCallable.NamedResponse> responses) {
         return merger.merge(params, responses);
     }
 

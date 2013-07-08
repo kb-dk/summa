@@ -17,7 +17,7 @@ package dk.statsbiblioteket.summa.support.harmonise.hub;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Pair;
-import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAggregatorBase;
+import dk.statsbiblioteket.summa.support.harmonise.hub.core.ComponentCallable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -209,13 +209,13 @@ public class HubResponseMerger implements Configurable {
      * @param responses the responses from the different sub searchers, including modified parameters.
      * @return an aggregated response.
      */
-    public QueryResponse merge(SolrParams params, List<HubAggregatorBase.NamedResponse> responses) {
+    public QueryResponse merge(SolrParams params, List<ComponentCallable.NamedResponse> responses) {
         if (responses.size() == 1) {
             log.debug("Only a single response received (" + responses.get(0).getId() + "). No merging performed");
             return responses.get(0).getResponse();
         }
         Set<String> keys = new HashSet<String>();
-        for (HubAggregatorBase.NamedResponse responsePair: responses) {
+        for (ComponentCallable.NamedResponse responsePair: responses) {
             //String id = responsePair.getId();
             QueryResponse response = responsePair.getResponse();
             NamedList raw = response.getResponse();
@@ -226,12 +226,12 @@ public class HubResponseMerger implements Configurable {
         log.debug("Located " + keys.size() + " unique keys in " + responses.size() + " responses. Commencing merging");
 
         final NamedList<Object> merged = new NamedList<Object>();
-        final List<HubAggregatorBase.NamedResponse> defined =
-                new ArrayList<HubAggregatorBase.NamedResponse>(responses.size());
+        final List<ComponentCallable.NamedResponse> defined =
+                new ArrayList<ComponentCallable.NamedResponse>(responses.size());
         for (String key: keys) {
             // Isolate the responses that contains the given key
             defined.clear();
-            for (HubAggregatorBase.NamedResponse response: responses) {
+            for (ComponentCallable.NamedResponse response: responses) {
                 if (response.getResponse().getResponse().get(key) != null) {
                     defined.add(response);
                 }
@@ -254,7 +254,7 @@ public class HubResponseMerger implements Configurable {
         return new QueryResponse(merged, null); // TODO: Check if no Solr server is on
     }
 
-    private Object merge(SolrParams params, String key, List<HubAggregatorBase.NamedResponse> responses) {
+    private Object merge(SolrParams params, String key, List<ComponentCallable.NamedResponse> responses) {
         if ("responseHeader".equals(key)) {
             return mergeResponseHeaders(getSimpleOrderedMaps(key, responses));
         }
@@ -269,7 +269,7 @@ public class HubResponseMerger implements Configurable {
         return null;
     }
 
-    private Object mergeResponses(SolrParams params, List<HubAggregatorBase.NamedResponse> responses) {
+    private Object mergeResponses(SolrParams params, List<ComponentCallable.NamedResponse> responses) {
         AdjustWrapper aw = deconstruct(responses);
         merge(params, aw);
         postProcess(params, aw);
@@ -538,9 +538,9 @@ public class HubResponseMerger implements Configurable {
         return Arrays.asList(base.split(" *, *"));
     }
 
-    private AdjustWrapper deconstruct(List<HubAggregatorBase.NamedResponse> responses) {
+    private AdjustWrapper deconstruct(List<ComponentCallable.NamedResponse> responses) {
         AdjustWrapper aw = new AdjustWrapper();
-        for (HubAggregatorBase.NamedResponse response: responses) {
+        for (ComponentCallable.NamedResponse response: responses) {
             SolrDocumentList sdl = (SolrDocumentList) response.getResponse().getResponse().get("response");
             if (sdl == null) {
                 log.warn("deconstruct: No SolrDocumentList for key 'response' in '" + response.getId() + "'");
@@ -555,9 +555,9 @@ public class HubResponseMerger implements Configurable {
         return aw;
     }
 
-    private List<SolrDocumentList> getSolrDocumentList(List<HubAggregatorBase.NamedResponse> responses) {
+    private List<SolrDocumentList> getSolrDocumentList(List<ComponentCallable.NamedResponse> responses) {
         List<SolrDocumentList> sdls = new ArrayList<SolrDocumentList>(responses.size());
-        for (HubAggregatorBase.NamedResponse response: responses) {
+        for (ComponentCallable.NamedResponse response: responses) {
             SolrDocumentList sdl = (SolrDocumentList) response.getResponse().getResponse().get("response");
             if (sdl != null) {
                 sdls.add(sdl);
@@ -629,9 +629,9 @@ public class HubResponseMerger implements Configurable {
         return keys;
     }
 
-    private List<SimpleOrderedMap> getSimpleOrderedMaps(String key, List<HubAggregatorBase.NamedResponse> responses) {
+    private List<SimpleOrderedMap> getSimpleOrderedMaps(String key, List<ComponentCallable.NamedResponse> responses) {
         List<SimpleOrderedMap> soms = new ArrayList<SimpleOrderedMap>(responses.size());
-        for (HubAggregatorBase.NamedResponse response: responses) {
+        for (ComponentCallable.NamedResponse response: responses) {
             SimpleOrderedMap som = (SimpleOrderedMap) response.getResponse().getResponse().get(key);
             if (som != null) {
                 soms.add((SimpleOrderedMap) response.getResponse().getResponse().get(key));
@@ -731,9 +731,9 @@ public class HubResponseMerger implements Configurable {
         }
     }
 
-    private Object mergeFacets(SolrParams params, List<HubAggregatorBase.NamedResponse> responses) {
+    private Object mergeFacets(SolrParams params, List<ComponentCallable.NamedResponse> responses) {
         SimpleOrderedMap<NamedList<Integer>> facetsFields = new SimpleOrderedMap<NamedList<Integer>>();
-        for (HubAggregatorBase.NamedResponse response: responses) {
+        for (ComponentCallable.NamedResponse response: responses) {
             List<FacetField> ffs = response.getResponse().getFacetFields();
             if (ffs == null) {
                 continue;
