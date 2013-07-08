@@ -87,12 +87,19 @@ public class QueryReducerTest extends TestCase {
     }
 
     public void testSubORQuery() throws IOException {
-        String QUERY = "+(hello my:world phrase:\"mongo pongo\") +(something OR foo:bar)";
-        String EXPECTED = "+(hello my:world phrase:\"mongo pongo\") +something";
+        assertDefault("+(hello my:world phrase:\"mongo pongo\") +something",
+                      "+(hello my:world phrase:\"mongo pongo\") +(something OR foo:bar)");
+    }
 
+    public void testSubANDQuery() throws IOException {
+        assertDefault(null,
+                      "+(hello my:world phrase:\"mongo pongo\") +(something AND foo:bar)");
+    }
+
+    private void assertDefault(String expected, String query) throws IOException {
         QueryReducer reducer = getDefaultReducer();
-        assertQuery("The query '" + QUERY + "' should be reduced to '" + EXPECTED + "'", reducer, "MySearcher",
-                    EXPECTED, QUERY);
+        assertQuery("The query '" + query + "' should be reduced to '" + expected + "'", reducer, "MySearcher",
+                    expected, query);
     }
 
     private QueryReducer getDefaultReducer() throws IOException {
