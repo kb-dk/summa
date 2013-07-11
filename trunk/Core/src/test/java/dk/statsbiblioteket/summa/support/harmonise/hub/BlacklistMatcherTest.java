@@ -5,9 +5,14 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.util.BytesRef;
 
 import java.util.Arrays;
-import java.util.HashSet;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -25,7 +30,7 @@ public class BlacklistMatcherTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        blacklistMatcher = new BlacklistMatcher(new HashSet<String>(Arrays.asList("myfield:", "foo:bar", ":myterm")));
+        blacklistMatcher = new BlacklistMatcher(Arrays.asList("myfield:", "foo:bar", ":myterm"));
     }
 
     @Override
@@ -82,5 +87,67 @@ public class BlacklistMatcherTest extends TestCase {
     public void testNonBlacklistedFullySpecifiedTerm() {
         Term term = new Term("baz", "qux");
         assertFalse(blacklistMatcher.blacklistContains(term));
+    }
+
+    public void testBlacklistedTermQuery() {
+        TermQuery termQuery = new TermQuery(new Term("foo", "bar"));
+        assertTrue(blacklistMatcher.blacklistContains(termQuery));
+    }
+
+    public void testNonBlacklistedTermQuery() {
+        TermQuery termQuery = new TermQuery(new Term("fred", "barney"));
+        assertFalse(blacklistMatcher.blacklistContains(termQuery));
+    }
+
+    public void testBlacklistedPhraseQuery1() {
+        PhraseQuery phraseQuery = new PhraseQuery();
+        phraseQuery.add(new Term("foo", "bar"));
+        assertTrue(blacklistMatcher.blacklistContains(phraseQuery));
+    }
+
+    public void testBlacklistedPhraseQuery2() {
+        PhraseQuery phraseQuery = new PhraseQuery();
+        phraseQuery.add(new Term("myfield", "bar"));
+        phraseQuery.add(new Term("myfield", "baz"));
+        assertTrue(blacklistMatcher.blacklistContains(phraseQuery));
+    }
+
+    public void testNonBlacklistedPhraseQuery() {
+        PhraseQuery phraseQuery = new PhraseQuery();
+        phraseQuery.add(new Term("ok", "bar"));
+        phraseQuery.add(new Term("ok", "baz"));
+        assertFalse(blacklistMatcher.blacklistContains(phraseQuery));
+    }
+
+    public void testBlacklistedTermRangeQuery() {
+        TermRangeQuery termRangeQuery =
+                new TermRangeQuery("myfield", new BytesRef("bar"), new BytesRef("baz"), true, true);
+        assertTrue(blacklistMatcher.blacklistContains(termRangeQuery));
+    }
+
+    public void testNonBlacklistedTermRangeQuery() {
+        TermRangeQuery termRangeQuery =
+                new TermRangeQuery("foo", new BytesRef("bar"), new BytesRef("baz"), true, true);
+        assertFalse(blacklistMatcher.blacklistContains(termRangeQuery));
+    }
+
+    public void testBlacklistedPrefixQuery() {
+        PrefixQuery prefixQuery = new PrefixQuery(new Term("myfield", "bar"));
+        assertTrue(blacklistMatcher.blacklistContains(prefixQuery));
+    }
+
+    public void testNonBlacklistedPrefixQuery() {
+        PrefixQuery prefixQuery = new PrefixQuery(new Term("foo", "bar"));
+        assertFalse(blacklistMatcher.blacklistContains(prefixQuery));
+    }
+
+    public void testBlacklistedFuzzyQuery() {
+        FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term("myfield", "bar"));
+        assertTrue(blacklistMatcher.blacklistContains(fuzzyQuery));
+    }
+
+    public void testNonBlacklistedFuzzyQuery() {
+        FuzzyQuery fuzzyQuery = new FuzzyQuery(new Term("foo", "bar"));
+        assertFalse(blacklistMatcher.blacklistContains(fuzzyQuery));
     }
 }

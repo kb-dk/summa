@@ -24,7 +24,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
@@ -33,10 +32,8 @@ import org.apache.solr.common.params.SolrParams;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Parses queries and removes known sub-queries that are guaranteed to be match-all or match-none.
@@ -147,14 +144,17 @@ public class QueryReducer implements Configurable, RequestAdjuster {
         public static final String CONF_MATCH_NONES = "reducertarget.matchnones";
 
         private final String componentID;
-        private final Set<String> matchNones = new HashSet<String>();
+        private final BlacklistMatcher blacklistMatcher;
 
         public ReducerTarget(Configuration conf) {
             componentID = conf.getString(CONF_COMPONENT_ID, "");
-            matchNones.addAll(conf.getStrings(CONF_MATCH_NONES, Collections.<String>emptyList()));
+
+            List<String> matchNones = conf.getStrings(CONF_MATCH_NONES, Collections.<String>emptyList());
             if (matchNones.isEmpty()) {
                 log.warn("The list of non-matching TermQueries for " + componentID + " is empty");
             }
+            blacklistMatcher = new BlacklistMatcher(matchNones);
+
             log.info("Created " + this);
         }
 
@@ -196,7 +196,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
 
         private String reduce(String queryString) {
             try {
-                QueryReducerViaBlackList reducer = new QueryReducerViaBlackList(new BlacklistMatcher(matchNones));
+                QueryReducerViaBlackList reducer = new QueryReducerViaBlackList(blacklistMatcher);
                 Query reducedQuery = reducer.reduce(queryRewriter.createQueryParser().parse(queryString));
                 return reducedQuery == null ? "" : queryRewriter.toString(reducedQuery);
             } catch (ParseException e) {
@@ -214,7 +214,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
 
         public String toString() {
             return String.format("ReducerTarget(componentID='%s', matchNones=%s)",
-                                 componentID, Strings.join(matchNones, 5));
+                                 componentID, Strings.join(blacklistMatcher.getBlacklistPatterns(), 5));
         }
     }
 }

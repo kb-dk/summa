@@ -1,10 +1,8 @@
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
 
 /**
  * Removes blacklisted terms from queries and reduces the resulting query. A blacklisted term is known to give no
@@ -48,10 +46,6 @@ public class QueryReducerViaBlackList {
     }
 
     private Query reduceLeaf(Query query) {
-        if (!(query instanceof TermQuery)) {
-            return query;
-        }
-        Term term = ((TermQuery) query).getTerm();
-        return blacklistMatcher.blacklistContains(term) ? null : query;
+        return blacklistMatcher.blacklistContains(query) ? null : query;
     }
 }
