@@ -72,8 +72,27 @@ public class DatetimeTest extends TestCase {
         assertEquals("Defect", "", Datetime.divide(tDefect, 1, 100));
     }
 
-    public void testDateAndTimeExpand() throws Exception {
-        //TODO: Test goes here...
+    public void testSolrDateTimeYear() {
+        String EXPECTED = "2013-01-01T00:00:00Z";
+        String[] TESTS = new String[]{"2013", "mydate 2013done", "20130a"};
+        assertSolrDates(EXPECTED, TESTS);
     }
 
+    public void testSolrDateTimeMonth() {
+        String EXPECTED = "2013-02-01T00:00:00Z";
+        String[] TESTS = new String[]{"2013-02", "mydate 2013-02done", "2013-020b", "201302", "2013/02"};
+        assertSolrDates(EXPECTED, TESTS);
+    }
+
+    public void testSolrDateTimeDay() {
+        String EXPECTED = "2013-02-03T00:00:00Z";
+        String[] TESTS = new String[]{"2013-02-03", "mydate 2013-02-03done", "2013-02-03f", "20130203"};
+        assertSolrDates(EXPECTED, TESTS);
+    }
+
+    private void assertSolrDates(String expected, String[] tests) {
+        for (String test: tests) {
+            assertEquals("Input is '" + test + "'", expected, Datetime.solrDateTime(test));
+        }
+    }
 }

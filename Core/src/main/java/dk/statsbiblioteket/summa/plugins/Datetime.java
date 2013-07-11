@@ -42,6 +42,39 @@ public class Datetime {
     public static final Pattern timePattern = // Accepts missing seconds
         Pattern.compile("^[0-9]{4}.?[0-9]{2}.?[0-9]{2}.?([0-9]{2}).?([0-9]{2}).?([0-9]{2})?.*");
 
+
+    // TODO: Allow more fuzziness
+    public static final Pattern solrDayPattern =
+            Pattern.compile("[^0-9]*([0-9]{4})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2}).*");
+    public static final Pattern solrMonthPattern = Pattern.compile("[^0-9]*([0-9]{4})[^0-9]?([0-9]{2}).*");
+    public static final Pattern solrYearPattern = Pattern.compile("[^0-9]*([0-9]{4}).*");
+    /**
+     * Extremely lenient date/time-parser that produces SOLR-date-time, as expected by TrieDateField.
+     * {@see https://lucene.apache.org/solr/4_3_1/solr-core/org/apache/solr/schema/TrieDateField.html}.
+     * </p><p>
+     * If no date info could be derived, the empty String is returned. If only the year is provided, the full date
+     * will be {@code YYYY-01-01T00:00:00Z}.
+     * </p><p>
+     * Sample inputs: "Tillæg fra 2008 til Andelsposten", "2008-03-05:middag".
+     * @param datetime dirty text, hopefully with a prefix for a Solr date.
+     * @return Solr date format compliant {@code YYYY-MM-DDTHH:mm:SSZ} or the empty String is no date was extracted.
+     */
+    public static synchronized String solrDateTime(String datetime) {
+        Matcher dayMatcher = solrDayPattern.matcher(datetime);
+        if (dayMatcher.matches()) {
+            return String.format("%s-%s-%sT00:00:00Z", dayMatcher.group(1), dayMatcher.group(2), dayMatcher.group(3));
+        }
+        Matcher monthMatcher = solrMonthPattern.matcher(datetime);
+        if (monthMatcher.matches()) {
+            return String.format("%s-%s-01T00:00:00Z", monthMatcher.group(1), monthMatcher.group(2));
+        }
+        Matcher yearMatcher = solrYearPattern.matcher(datetime);
+        if (yearMatcher.matches()) {
+            return String.format("%s-01-01T00:00:00Z", yearMatcher.group(1));
+        }
+        return "";
+    }
+
     /**
      * Produces tokens with common variations of entering the given date.
      * If the input does not match the pattern {@link #datePattern}, the
