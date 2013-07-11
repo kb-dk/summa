@@ -96,6 +96,32 @@ public class QueryReducerTest extends TestCase {
         assertDefault("whatever", "foo:bar OR whatever");
     }
 
+    public void testRange() throws IOException {
+        assertDefault(null, "myfield:[a TO B]");
+    }
+
+    public void testPhrase() throws IOException {
+        assertDefault(null, "myfield:\"a b\"");
+    }
+
+    public void testPrefix() throws IOException {
+        assertDefault(null, "myfield:a*");
+    }
+
+    public void testFuzzyField() throws IOException {
+        // Fields are not fuzzy
+        assertDefault(null, "myfield:a~");
+    }
+
+    public void testFuzzyPair() throws IOException {
+        // Fuzzy might match something other than bar
+        assertDefault("foo:bar~", "foo:bar~");
+    }
+
+    public void testFuzzyText() throws IOException {
+        assertDefault("myterm~", "myterm~");
+    }
+
     public void testSubORQuery() throws IOException {
         // QueryRewriter removes '+'
         assertDefault("(hello my:world phrase:\"mongo pongo\") (something)",
