@@ -456,11 +456,11 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * @return true if the entry was added to solrParam, else false.
      */
     protected boolean convertSolrParam(Map<String, List<String>> solrParam, Map.Entry<String, Serializable> entry) {
-        if (!entry.getKey().startsWith(CONF_SOLR_PARAM_PREFIX)) {
+        final String key = toSolrKey(entry.getKey());
+        if (key == null) {
             log.trace("convertSolrParam got unsupported key " + entry.getKey() + ". Ignoring entry");
             return false;
         }
-        String key = entry.getKey().substring(CONF_SOLR_PARAM_PREFIX.length(), entry.getKey().length());
         if (entry.getValue() instanceof List) {
             ArrayList<String> values = new ArrayList<String>();
             for (Object v: (List)entry.getValue()) {
@@ -492,6 +492,11 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             }
         }
         return true;
+    }
+
+    /* If the key is prefixed the right way, the prefix is removed and the key returned, else null is returned */
+    protected String toSolrKey(String key) {
+        return !key.startsWith(CONF_SOLR_PARAM_PREFIX) ? null: key.substring(CONF_SOLR_PARAM_PREFIX.length());
     }
 
     private String getEmptyIsNull(Request request, String key) {

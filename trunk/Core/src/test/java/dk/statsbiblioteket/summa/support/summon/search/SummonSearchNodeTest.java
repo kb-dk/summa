@@ -507,8 +507,8 @@ public class SummonSearchNodeTest extends TestCase {
                                            run+1, RUNS, query, searchTime, summon.getLastConnectTime()));
                 } else {
                     log.error(String.format("Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
-                                           "time %d due to unexpected exception",
-                                           run+1, RUNS, query, searchTime, summon.getLastConnectTime()), e);
+                                            "time %d due to unexpected exception",
+                                            run+1, RUNS, query, searchTime, summon.getLastConnectTime()), e);
                 }
             }
 
@@ -795,8 +795,8 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("There should be zero hits for filter with assumed pure negative faceting support", 0,
                      getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE,
                              "true", DocumentKeys.SEARCH_FILTER,
-                                                                                                                    "NOT "
-                                                                                                                    + FACET));
+                             "NOT "
+                             + FACET));
         summon.close();
     }
 
@@ -1771,6 +1771,68 @@ public class SummonSearchNodeTest extends TestCase {
             assertTrue(String.format("There should be at least 1 hit for query '%s' with facet filter '%s'", q, ff),
                        queryCount > 0);
         }
+    }
+
+    public void testFilterEffect() throws RemoteException {
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        String[][] FACET_QUERIES = new String[][]{
+                //{"Ferlay", "Author", "Ferlay\\, Jacques"}, // We need a sample from the Author facet
+                {"foo", "Language", "German"},
+                {"foo", "IsScholarly", "true"},
+                //  {"foo", "IsFullText", "true"},
+                {"foo", "ContentType", "Book / eBook"},
+                {"foo", "SubjectTerms", "biology"}
+        };
+        for (String[] facetQuery: FACET_QUERIES) {
+            String q = facetQuery[0];
+            String ff = facetQuery[1] + ":\"" + facetQuery[2] + "\"";
+
+            long queryCount = getHits(
+                    summon,
+                    DocumentKeys.SEARCH_QUERY, q,
+                    SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+            log.debug(String.format("Searching for query '%s' with no facet filter gave %d hits'", q, queryCount));
+            assertTrue(String.format("There should be at least 1 hit for query '%s' with no facet filter", q),
+                       queryCount > 0);
+
+            long filteredCount = getHits(
+                    summon,
+                    DocumentKeys.SEARCH_QUERY, q,
+                    DocumentKeys.SEARCH_FILTER, ff,
+                    SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+            log.debug(String.format("Searching for query '%s' with facet filter '%s' gave %d hits",
+                                    q, ff, filteredCount));
+
+            assertTrue(String.format("There should not be the same number of hits with and without filtering for " +
+                                     "query '%s' with facet filter '%s but there were %d hits'", q, ff, queryCount),
+                       queryCount != filteredCount);
+        }
+    }
+
+    public void testIsScholarly() throws RemoteException {
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        String q = "foo";
+        long queryCount = getHits(
+                summon,
+                DocumentKeys.SEARCH_QUERY, "foo",
+                SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+        log.debug(String.format("Searching for query '%s' with no special params gave %d hits'", q, queryCount));
+        assertTrue(String.format("There should be at least 1 hit for query '%s' with no special params", q),
+                   queryCount > 0);
+
+        long filteredCount = getHits(
+                summon,
+                DocumentKeys.SEARCH_QUERY, q,
+                "summonparam.s.cmd", "addFacetValueFilters(IsScholarly,true)",
+                SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+        log.debug(String.format("Searching for query '%s' with special param " +
+                                "summonparam.s.cmd=addFacetValueFilters(IsScholarly,true) gave %d hits",
+                                q, filteredCount));
+
+        assertTrue(String.format("There should not be the same number of hits for special param " +
+                                 "summonparam.s.cmd=addFacetValueFilters(IsScholarly,true) with and without " +
+                                 "filtering for query '%s' but there were %d hits'", q, queryCount),
+                   queryCount != filteredCount);
     }
 
     protected long getHits(SearchNode searcher, String... arguments) throws RemoteException {
