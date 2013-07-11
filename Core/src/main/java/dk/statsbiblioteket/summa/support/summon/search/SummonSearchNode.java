@@ -261,6 +261,14 @@ public class SummonSearchNode extends SolrSearchNode {
         return conf;
     }
 
+    @Override
+    protected String toSolrKey(String key) {
+        final String SPREFIX = "summonparam.";
+        String sKey = super.toSolrKey(key);
+        return sKey != null? sKey :
+                !key.startsWith(SPREFIX) ? null: key.substring(SPREFIX.length());
+    }
+
     /**
      * It seems that the Summon query parser does not support ranges. Instead it expects ranges to be stated in 's.rf'
      * as 'field,minvalue:maxvalue'. This method parses the query, extracts & removes the range query parts and adds
