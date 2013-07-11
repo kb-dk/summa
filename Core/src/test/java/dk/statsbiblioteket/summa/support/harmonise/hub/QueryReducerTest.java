@@ -104,6 +104,10 @@ public class QueryReducerTest extends TestCase {
         assertDefault(null, "myfield:\"a b\"");
     }
 
+    public void testPhrase2() throws IOException {
+        assertDefault(null, "whatever:\"myterm\"");
+    }
+
     public void testPrefixField() throws IOException {
         // Should never match on the field
         assertDefault(null, "myfield:a*");
@@ -201,5 +205,4 @@ public class QueryReducerTest extends TestCase {
             }
         }, null, new ModifiableSolrParams());
     }
-
 }
