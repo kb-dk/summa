@@ -104,8 +104,19 @@ public class QueryReducerTest extends TestCase {
         assertDefault(null, "myfield:\"a b\"");
     }
 
-    public void testPrefix() throws IOException {
+    public void testPrefixField() throws IOException {
+        // Should never match on the field
         assertDefault(null, "myfield:a*");
+    }
+
+    public void testPrefixPair() throws IOException {
+        // Might match foo:barista
+        assertDefault("foo:bar*", "foo:bar*");
+    }
+
+    public void testPrefixText() throws IOException {
+        // Might match myterminal
+        assertDefault("myterm*", "myterm*");
     }
 
     public void testFuzzyField() throws IOException {
@@ -115,11 +126,11 @@ public class QueryReducerTest extends TestCase {
 
     public void testFuzzyPair() throws IOException {
         // Fuzzy might match something other than bar
-        assertDefault("foo:bar~", "foo:bar~");
+        assertDefault("foo:bar~2", "foo:bar~");
     }
 
     public void testFuzzyText() throws IOException {
-        assertDefault("myterm~", "myterm~");
+        assertDefault("myterm~2", "myterm~");
     }
 
     public void testSubORQuery() throws IOException {
