@@ -35,7 +35,6 @@ import org.apache.lucene.util.Version;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Make a pool of parsers instead of using synchronized
 /**
  * Lucene query rewriter with callback on various types of queries.
  */

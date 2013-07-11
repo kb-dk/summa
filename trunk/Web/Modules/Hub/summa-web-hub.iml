@@ -28,9 +28,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: dk.statsbiblioteket.summa:summa-core:2.0.0-20130514" level="project" />
-    <orderEntry type="library" name="Maven: dk.statsbiblioteket.summa:summa-exposed:2.0.0-20130514" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: dk.statsbiblioteket.summa:summa-core:test-jar:tests:2.0.0-20130514" level="project" />
     <orderEntry type="library" name="Maven: axis:axis:1.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.axis:axis-jaxrpc:1.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.axis:axis-saaj:1.4" level="project" />
@@ -115,6 +112,7 @@
     <orderEntry type="library" name="Maven: com.carrotsearch.randomizedtesting:randomizedtesting-runner:2.0.9" level="project" />
     <orderEntry type="library" name="Maven: org.hamcrest:hamcrest-core:1.1" level="project" />
     <orderEntry type="module" module-name="summa-core" scope="TEST" production-on-test="" />
+    <orderEntry type="library" scope="TEST" name="Maven: dk.statsbiblioteket.summa:summa-core:test-jar:tests:2.0.0-20130625" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.mortbay.jetty:jetty:6.1.12" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.mortbay.jetty:jetty-util:6.1.12" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.mortbay.jetty:servlet-api-2.5:6.1.12" level="project" />

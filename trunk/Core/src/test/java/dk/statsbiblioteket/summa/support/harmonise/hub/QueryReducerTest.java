@@ -17,7 +17,6 @@ package dk.statsbiblioteket.summa.support.harmonise.hub;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.ComponentCallable;
-import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAggregatorBase;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
@@ -32,7 +31,6 @@ import org.apache.solr.common.params.SolrParams;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -86,8 +84,21 @@ public class QueryReducerTest extends TestCase {
                     "kaos:king", "kaos:king");
     }
 
+    public void testExplicitAnd() throws IOException {
+        assertDefault(null, "foo:bar AND whatever");
+    }
+
+    public void testImplicitAnd() throws IOException {
+        assertDefault(null, "foo:bar whatever");
+    }
+
+    public void testOr() throws IOException {
+        assertDefault("whatever", "foo:bar OR whatever");
+    }
+
     public void testSubORQuery() throws IOException {
-        assertDefault("+(hello my:world phrase:\"mongo pongo\") +something",
+        // QueryRewriter removes '+'
+        assertDefault("(hello my:world phrase:\"mongo pongo\") (something)",
                       "+(hello my:world phrase:\"mongo pongo\") +(something OR foo:bar)");
     }
 
