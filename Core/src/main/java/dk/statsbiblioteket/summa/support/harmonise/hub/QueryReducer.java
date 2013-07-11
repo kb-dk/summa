@@ -19,21 +19,24 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.ComponentCallable;
-import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAggregatorBase;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Parses queries and removes known sub-queries that are guaranteed to be match-all or match-none.
@@ -63,7 +66,6 @@ public class QueryReducer implements Configurable, RequestAdjuster {
 
     // Used by ReducerTarget
     private final QueryRewriter queryRewriter;
-    private QueryParser queryParser;
 
     public QueryReducer(Configuration conf) {
         if (conf.valueExists(CONF_TARGETS)) {
@@ -87,12 +89,12 @@ public class QueryReducer implements Configurable, RequestAdjuster {
             reducerTargets = new HashMap<String, ReducerTarget>(0);
         }
         queryRewriter = new QueryRewriter(conf, null, null);
-        queryParser = queryRewriter.createQueryParser();
         log.info("Created " + this);
     }
 
     /**
      * Reduced the search queries and filters for each component.
+     *
      * @param params     incoming search parameters.
      * @param components the child-components (aka searchers) for the aggregator (includes node-specific queries).
      * @return the child-components with adjusted queries.
@@ -105,7 +107,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
             return components;
         }
 
-        for (ComponentCallable component: components) {
+        for (ComponentCallable component : components) {
             ReducerTarget target = reducerTargets.get(component.getComponent().getID());
             if (target == null && defaultReducerTarget != null) {
                 target = defaultReducerTarget;
@@ -177,7 +179,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
             String[] filters = params.getParams(CommonParams.FQ);
             if (filters != null && filters.length != 0) {
                 List<String> reducedFilters = new ArrayList<String>(filters.length);
-                for (String filter: filters) {
+                for (String filter : filters) {
                     String reduced = reduce(filter);
                     if (reduced == null || reduced.isEmpty()) {
                         log.debug("The filter '" + filter + "' for '" + componentID + "' was reduced to match-none");
@@ -192,11 +194,11 @@ public class QueryReducer implements Configurable, RequestAdjuster {
             }
         }
 
-        // TODO: Check if the QueryParser is thread-safe so that synchronized can be avoided
-        private synchronized String reduce(String queryString) {
-            Query query;
+        private String reduce(String queryString) {
             try {
-                query = queryParser.parse(queryString);
+                QueryReducerViaBlackList reducer = new QueryReducerViaBlackList(new BlacklistMatcher(matchNones));
+                Query reducedQuery = reducer.reduce(queryRewriter.createQueryParser().parse(queryString));
+                return reducedQuery == null ? "" : queryRewriter.toString(reducedQuery);
             } catch (ParseException e) {
                 log.warn("Exception while parsing '" + queryString + "'. Returning unmodified: " + e.getMessage());
                 if (log.isDebugEnabled()) {
@@ -204,23 +206,6 @@ public class QueryReducer implements Configurable, RequestAdjuster {
                 }
                 return queryString;
             }
-
-
-            // TODO: Make a proper implementation below
-            if (query instanceof TermQuery) {
-                Term term = ((TermQuery)query).getTerm();
-                if (matchNones.contains(":" + term.text())) {
-                    return "";
-                }
-                if (term.field() != null && !term.field().isEmpty()
-                    && (matchNones.contains(term.field() + ":")
-                        || matchNones.contains(term.field() + ":" + term.text()))
-                        ) {
-                    return "";
-                }
-            }
-
-            return query == null ? "" : queryRewriter.toString(query);
         }
 
         public String getComponentID() {
