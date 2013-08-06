@@ -90,7 +90,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
     }
 
     /**
-     * Reduced the search queries and filters for each component.
+     * Reduces the search queries and filters for each component.
      *
      * @param params     incoming search parameters.
      * @param components the child-components (aka searchers) for the aggregator (includes node-specific queries).
@@ -115,6 +115,24 @@ public class QueryReducer implements Configurable, RequestAdjuster {
             }
         }
         return components;
+    }
+
+    /**
+     * Direct usage of the reducer.
+     * @param componentID the ID for the specific {@link ReducerTarget} to use.
+     * @param query the query to reduce.
+     * @return the reduced query.
+     */
+    public String reduce(String componentID, String query) {
+        ReducerTarget target = reducerTargets.get(componentID);
+        if (target == null && defaultReducerTarget != null) {
+            target = defaultReducerTarget;
+        }
+        if (target != null) {
+            log.debug("reduce: Reducing query for " + componentID);
+            return target.reduce(query);
+        }
+        return query;
     }
 
     @Override

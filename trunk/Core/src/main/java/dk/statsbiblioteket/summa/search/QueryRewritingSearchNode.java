@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.search.tools.QueryFuzzinator;
 import dk.statsbiblioteket.summa.search.tools.QueryPhraser;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.search.tools.QuerySanitizer;
+import dk.statsbiblioteket.summa.support.harmonise.hub.QueryReducer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -82,6 +83,18 @@ public class QueryRewritingSearchNode implements SearchNode {
     public static final boolean DEFAULT_SANITIZE_NORMALIZE = true;
 
     /**
+     * If true, queries will be passed through a {@link QueryReducer}. See the QueryReducer for setup details.
+     * </p><p>
+     * Important: The Query Reducer works in limited mode for this SearchNode (full mode only available with the
+     * Solr hub framework). The setup for the reducer only has affect if the
+     * {@link dk.statsbiblioteket.summa.support.harmonise.hub.QueryReducer.ReducerTarget#CONF_COMPONENT_ID} is
+     * not defined, thereby making the reducer active for all queries.
+     */
+    public static final String CONF_REDUCE = "rewriter.reduce";
+    public static final String SEARCH_REDUCE = CONF_REDUCE;
+    public static final boolean DEFAULT_REDUCE = true;
+
+    /**
      * If true, queries are routed through {@link dk.statsbiblioteket.summa.search.tools.QueryFuzzinator}.
      * </p><p>
      * Optional. Default is false.
@@ -109,11 +122,13 @@ public class QueryRewritingSearchNode implements SearchNode {
     private final boolean sanitizeFilters;
     private final boolean phrasequeries;
     private final boolean normalize;
+    private final boolean reduce;
     private final SearchNode inner;
     private final QuerySanitizer sanitizer;
     private final QueryRewriter normalizer;
     private final QueryPhraser queryPhraser;
     private final QueryFuzzinator fuzzinator;
+    private final QueryReducer reducer;
     private final String prefix;
 
     public QueryRewritingSearchNode(Configuration conf) {
@@ -143,9 +158,12 @@ public class QueryRewritingSearchNode implements SearchNode {
         sanitizeQueries = conf.getBoolean(CONF_SANITIZE_QUERIES, DEFAULT_SANITIZE_QUERIES);
         sanitizeFilters = conf.getBoolean(CONF_SANITIZE_FILTERS, DEFAULT_SANITIZE_FILTERS);
         normalize = conf.getBoolean(CONF_SANITIZE_NORMALIZE, DEFAULT_SANITIZE_NORMALIZE);
+        reduce = conf.getBoolean(CONF_REDUCE, DEFAULT_REDUCE);
+
         queryPhraser = new QueryPhraser(conf);
         fuzzinator = conf.getBoolean(CONF_FUZZY_QUERIES, DEFAULT_FUZZY_QUERIES) ? new QueryFuzzinator(conf) : null;
         normalizer = new QueryRewriter(conf, QueryRewriter.createDefaultQueryParser(), new QueryRewriter.Event());
+        reducer = conf.getBoolean(CONF_REDUCE, DEFAULT_REDUCE) ? new QueryReducer(conf) : null;
         phrasequeries = conf.getBoolean(CONF_PHRASE_QUERIES, DEFAULT_PHRASE_QUERIES);
         prefix = conf.valueExists(CONF_DESIGNATION) && !"".equals(conf.getString(CONF_DESIGNATION)) ?
                  conf.getString(CONF_DESIGNATION) + "." : "";
@@ -154,10 +172,12 @@ public class QueryRewritingSearchNode implements SearchNode {
 
     private Request process(Request request) throws ParseException {
         final String oldQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
-        if (oldQuery != null // TODO: Feedback should bubble to front end
-            && request.getBoolean(prefix + SEARCH_SANITIZE_QUERIES,
-                                  request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries))) {
+        if (oldQuery != null && request.getBoolean(prefix + SEARCH_SANITIZE_QUERIES,
+                                                   request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries))) {
             String newQuery = sanitizer.sanitize(oldQuery).getLastQuery();
+            if (reducer != null) {
+                newQuery = reducer.reduce(null, newQuery);
+            }
             if (fuzzinator != null) {
                 newQuery = fuzzinator.rewrite(request, newQuery);
             }
@@ -165,7 +185,11 @@ public class QueryRewritingSearchNode implements SearchNode {
                                    request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
                 newQuery = normalizer.rewrite(newQuery);
             }
-            request.put(DocumentKeys.SEARCH_QUERY, newQuery);
+            if (newQuery.isEmpty()) {
+                request.remove(DocumentKeys.SEARCH_QUERY);
+            } else {
+                request.put(DocumentKeys.SEARCH_QUERY, newQuery);
+            }
             if (oldQuery.equals(newQuery)) {
                 log.debug("Sanitized query is unchanged: '" + oldQuery + "'");
             } else {
@@ -177,11 +201,18 @@ public class QueryRewritingSearchNode implements SearchNode {
             && request.getBoolean(prefix + SEARCH_SANITIZE_FILTERS,
                                   request.getBoolean(SEARCH_SANITIZE_FILTERS, sanitizeFilters))) {
             String newFilter = sanitizer.sanitize(oldFilter).getLastQuery();
+            if (reducer != null) {
+                newFilter = reducer.reduce(null, newFilter);
+            }
             if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
                                    request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
                 newFilter = normalizer.rewrite(newFilter);
             }
-            request.put(DocumentKeys.SEARCH_FILTER, newFilter);
+            if (newFilter.isEmpty()) {
+                request.remove(newFilter);
+            } else {
+                request.put(DocumentKeys.SEARCH_FILTER, newFilter);
+            }
             if (oldFilter.equals(newFilter)) {
                 log.debug("Sanitized filter is unchanged: '" + oldFilter + "'");
             } else {
@@ -241,6 +272,6 @@ public class QueryRewritingSearchNode implements SearchNode {
     public String toString() {
         return "QueryRewritingSearchNode(sanitizeQueries=" + sanitizeQueries + ", sanitizeFilters=" + sanitizeFilters +
                ", phrasequeries=" + phrasequeries + ", normalize=" + normalize + ", prefix='" + prefix
-               + "', fuzzyQueries=" + fuzzinator + ", inner=" + inner;
+               + "', fuzzyQueries=" + fuzzinator + ", reducer=" + reducer + ", inner=" + inner + ")";
     }
 }
