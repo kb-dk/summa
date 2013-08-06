@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
+import dk.statsbiblioteket.summa.support.harmonise.hub.QueryReducer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -26,6 +27,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -57,7 +59,7 @@ public class QueryRewritingSearchNodeTest extends TestCase {
                 QueryRewritingSearchNode.CONF_PHRASE_QUERIES, false,
                 QueryRewritingSearchNode.CONF_SANITIZE_QUERIES, false
         ), new String[][]{
-            {"foo:\"bar zoo\"", "foo:bar\\ zoo"}
+            {"foo:\"bar zoo\"", "foo:\"bar zoo\""}
         });
     }
 
@@ -92,6 +94,21 @@ public class QueryRewritingSearchNodeTest extends TestCase {
             {"foo OR bar", "(\"foo\" OR \"bar\")"},
             {"foo -bar", "(+\"foo\" -\"bar\")"}
         });
+    }
+
+    public void testReduce() throws IOException {
+        Configuration conf = Configuration.newMemoryBased(
+                QueryRewritingSearchNode.CONF_REDUCE, true,
+                QueryRewriter.CONF_QUOTE_TERMS, false
+
+        );
+        Configuration reducerConf = conf.createSubConfigurations(QueryReducer.CONF_TARGETS, 1).get(0);
+        reducerConf.set(QueryReducer.ReducerTarget.CONF_MATCH_NONES, "Language:abcde32542f");
+
+        assertTransformations(conf, new String[][]{{
+                "+(hello my:world phrase:\"mongo pongo\") +(something OR Language:abcde32542f)",
+                "(hello my:world phrase:\"mongo pongo\") something"
+        }});
     }
 
     public void assertTransformations(Configuration conf, String[][] tests) throws RemoteException {
