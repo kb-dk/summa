@@ -402,7 +402,13 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             throw new RemoteException("SolrSearchNode.barrierSearch: " + message);
         }
         if (solrResponse == null || "".equals(solrResponse)) {
-            throw new RemoteException("Solr search for '" + query + "' yielded empty result");
+            if (log.isDebugEnabled()) {
+                log.debug("fullSearch(" + request.toString(true) + ", " + filter + ", " + rawQuery + ", " + startIndex
+                          + ", " + maxRecords + ", " + sortKey + ", " + reverseSort + ") did not return a result. " +
+                          "This might be due to missing query and filter");
+            }
+            responses.addTiming(getID() + ".search.total", System.currentTimeMillis() - startTime);
+            return;
         }
         searchTime += System.currentTimeMillis();
 
@@ -571,17 +577,23 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         String queryString = computeSortedQueryString(queryMap, true);
         buildQuery += System.currentTimeMillis();
         log.trace("Parameter preparation done in " + buildQuery + "ms");
-        String result;
-
-        try {
-            result = getData(restCall + "?" + queryString, responses);
-        } catch (Exception e) {
-            throw new RemoteException("SolrSearchNode: Unable to perform remote call to "  + host + restCall
-                                      + " with argument '" + queryString + " and message " + e.getMessage());
+        String result = null;
+        if (validRequest(queryMap)) {
+            try {
+                result = getData(restCall + "?" + queryString, responses);
+            } catch (Exception e) {
+                throw new RemoteException("SolrSearchNode: Unable to perform remote call to "  + host + restCall
+                                          + " with argument '" + queryString + " and message " + e.getMessage());
+            }
         }
         log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
         return new Pair<String, String>(result, "solr.buildquery:" + buildQuery);
 
+    }
+
+    // True if either a query or a filter is present
+    private boolean validRequest(Map<String, List<String>> queryMap) {
+        return queryMap.containsKey("q") || queryMap.containsKey("fq");
     }
        // {start=[0], q=[gense], spellcheck.dictionary=[summa_spell], qt=[/didyoumean], rows=[15]}
     //  {spellcheck=[true], start=[0], q=[gense], spellcheck.dictionary=[summa_spell], spellcheck.count=[5], qt=[/didyoumean], rows=[15]}

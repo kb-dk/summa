@@ -92,8 +92,8 @@ public class SolrSearchNodeTest extends TestCase {
         try {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(new Request(
-                DocumentKeys.SEARCH_QUERY, "fulltext:first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                    DocumentKeys.SEARCH_QUERY, "fulltext:first",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
             ), responses);
             assertTrue("There should be a response", responses.iterator().hasNext());
             assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -148,6 +148,37 @@ public class SolrSearchNodeTest extends TestCase {
             assertPaging("Result for start index 20", docs, PAGE_SIZE, PAGE_SIZE);
         }
         searcher.close();
+    }
+
+    public void testQueryNoFilter() throws Exception {
+        assertResponse(new Request(DocumentKeys.SEARCH_QUERY, "fulltext:first"), true);
+    }
+
+    public void testFilterNoQuery() throws Exception {
+        assertResponse(new Request(DocumentKeys.SEARCH_FILTER, "fulltext:first"), true);
+    }
+
+    public void testFilterAndQuery() throws Exception {
+        assertResponse(new Request(
+                DocumentKeys.SEARCH_QUERY, "fulltext:first",
+                DocumentKeys.SEARCH_FILTER, "fulltext:first"
+        ), true);
+    }
+
+    public void testNoFilterNoQuery() throws Exception {
+        assertResponse(new Request("foo", "bar"), false);
+    }
+
+    private void assertResponse(Request request, boolean responseExpected) throws Exception {
+        performBasicIngest();
+        SearchNode searcher = getSearcher();
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(request, responses);
+        if (responseExpected) {
+            assertTrue("There should be a response for " + request, responses.iterator().hasNext());
+        } else {
+            assertFalse("There should not be a response for " + request, responses.iterator().hasNext());
+        }
     }
 
     private void assertPaging(String message, DocumentResponse docs, int start, int pageSize) {
@@ -228,8 +259,8 @@ public class SolrSearchNodeTest extends TestCase {
         SearchNode searcher = getSearcher();
         try {
             assertResult(searcher, new Request(
-                DocumentKeys.SEARCH_QUERY, "first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                    DocumentKeys.SEARCH_QUERY, "first",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
             ), 1, "Solr sample document");
         } finally {
             searcher.close();
@@ -240,8 +271,8 @@ public class SolrSearchNodeTest extends TestCase {
     public void testParentheses() throws Exception {
         performBasicIngest();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "(+fulltext:first)",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                DocumentKeys.SEARCH_QUERY, "(+fulltext:first)",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
         );
 /*        {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
@@ -263,12 +294,12 @@ public class SolrSearchNodeTest extends TestCase {
     public void testNonQualifiedEdismax() throws Exception {
         performBasicIngest();
         SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-            SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/edismax"
+                SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/edismax"
         ));
         try {
             assertResult(searcher, new Request(
-                DocumentKeys.SEARCH_QUERY, "first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                    DocumentKeys.SEARCH_QUERY, "first",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
             ), 1, "Solr sample document");
         } finally {
             searcher.close();
@@ -276,7 +307,7 @@ public class SolrSearchNodeTest extends TestCase {
     }
 
     private void assertResult(
-        SearchNode searcher, Request request, int expectedResponses, String expectedContent) throws RemoteException {
+            SearchNode searcher, Request request, int expectedResponses, String expectedContent) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(request, responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
@@ -302,22 +333,22 @@ public class SolrSearchNodeTest extends TestCase {
     public void testFacetedSearchSummaDefinedSort() throws Exception {
         int DOC_COUNT= 100;
         String[][] EXPECTED_ALPHA = new String[][] {
-            {"01 quart", Integer.toString(DOC_COUNT/4)},
-            {"02 half", Integer.toString(DOC_COUNT/2)},
-            {"03 all", Integer.toString(DOC_COUNT)},
-            {"solr", Integer.toString(DOC_COUNT)}
+                {"01 quart", Integer.toString(DOC_COUNT/4)},
+                {"02 half", Integer.toString(DOC_COUNT/2)},
+                {"03 all", Integer.toString(DOC_COUNT)},
+                {"solr", Integer.toString(DOC_COUNT)}
         };
         String[][] EXPECTED_COUNT = new String[][] {
-            {"03 all", Integer.toString(DOC_COUNT)},
-            {"02 half", Integer.toString(DOC_COUNT/2)},
-            {"01 quart", Integer.toString(DOC_COUNT/4)},
-            {"solr", Integer.toString(DOC_COUNT)}
+                {"03 all", Integer.toString(DOC_COUNT)},
+                {"02 half", Integer.toString(DOC_COUNT/2)},
+                {"01 quart", Integer.toString(DOC_COUNT/4)},
+                {"solr", Integer.toString(DOC_COUNT)}
         };
 
         ingestFacets(DOC_COUNT);
         {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-                SolrSearchNode.CONF_SOLR_FACETS, "lma_long(ALPHA)"
+                    SolrSearchNode.CONF_SOLR_FACETS, "lma_long(ALPHA)"
             ));
             try {
                 assertFacetOrder("ALPHA", searcher, EXPECTED_ALPHA);
@@ -327,7 +358,7 @@ public class SolrSearchNodeTest extends TestCase {
         }
         {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-                SolrSearchNode.CONF_SOLR_FACETS, "lma_long(COUNT)"
+                    SolrSearchNode.CONF_SOLR_FACETS, "lma_long(COUNT)"
             ));
             try {
                 assertFacetOrder("COUNT", searcher, EXPECTED_COUNT);
@@ -340,16 +371,16 @@ public class SolrSearchNodeTest extends TestCase {
     public void testFacetLimit() throws Exception {
         int DOC_COUNT= 100;
         String[][] EXPECTED_ALPHA = new String[][] {
-            {"01 quart", Integer.toString(DOC_COUNT/4)},
-            {"02 half", Integer.toString(DOC_COUNT/2)},
+                {"01 quart", Integer.toString(DOC_COUNT/4)},
+                {"02 half", Integer.toString(DOC_COUNT/2)},
 //            {"03 all", Integer.toString(DOC_COUNT)},
-            {"solr", Integer.toString(DOC_COUNT)} // Added explicit
+                {"solr", Integer.toString(DOC_COUNT)} // Added explicit
         };
 
         ingestFacets(DOC_COUNT);
         {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-                SolrSearchNode.CONF_SOLR_FACETS, "lma_long(2 ALPHA)"
+                    SolrSearchNode.CONF_SOLR_FACETS, "lma_long(2 ALPHA)"
             ));
             try {
                 assertFacetOrder("ALPHA", searcher, EXPECTED_ALPHA);
@@ -391,8 +422,8 @@ public class SolrSearchNodeTest extends TestCase {
         log.info("Finished ingesting " + docCount + " documents");
         {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-                SolrSearchNode.CONF_SOLR_FACETS, "title(" + docCount + " ALPHA)",
-                SolrSearchNode.CONF_SOLR_FACETS_DEFAULTPAGESIZE, "1" // To ensure that overriding works
+                    SolrSearchNode.CONF_SOLR_FACETS, "title(" + docCount + " ALPHA)",
+                    SolrSearchNode.CONF_SOLR_FACETS_DEFAULTPAGESIZE, "1" // To ensure that overriding works
             ));
             try {
                 for (int i = 0 ; i < docCount ; i++) {
@@ -411,8 +442,8 @@ public class SolrSearchNodeTest extends TestCase {
         Pattern TAGS = Pattern.compile("<tag name=\"([^\"]+)\" addedobjects=\"([^\"]+)\"[^>]*>", Pattern.DOTALL);
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "*:*",
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, true
+                DocumentKeys.SEARCH_QUERY, "*:*",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true
         ), responses);
 
         int count = 0;
@@ -437,10 +468,10 @@ public class SolrSearchNodeTest extends TestCase {
         ));
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "*:*",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
-            FacetKeys.SEARCH_FACET_FACETS, "fulltext"
+                DocumentKeys.SEARCH_QUERY, "*:*",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
 
         assertTrue("There should be a response", responses.iterator().hasNext());
@@ -454,10 +485,10 @@ public class SolrSearchNodeTest extends TestCase {
     private void testFacetedSearch(SearchNode searcher) throws Exception {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
-            FacetKeys.SEARCH_FACET_FACETS, "fulltext"
+                DocumentKeys.SEARCH_QUERY, "first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
 
         assertTrue("There should be a response", responses.iterator().hasNext());
@@ -471,11 +502,11 @@ public class SolrSearchNodeTest extends TestCase {
     private void testFacetedSearchFilter(SearchNode searcher) throws Exception {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_FILTER, "recordBase:dummy",
-            DocumentKeys.SEARCH_QUERY, "first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
-            DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
-            FacetKeys.SEARCH_FACET_FACETS, "fulltext"
+                DocumentKeys.SEARCH_FILTER, "recordBase:dummy",
+                DocumentKeys.SEARCH_QUERY, "first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
         assertTrue("There should be a response with filter", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits with filter. Response was\n" + responses.toXML(),
@@ -490,11 +521,11 @@ public class SolrSearchNodeTest extends TestCase {
         try {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(new Request(
-                DocumentKeys.SEARCH_FILTER, "recordBase:nothere",
-                DocumentKeys.SEARCH_QUERY, "first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
-                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
-                FacetKeys.SEARCH_FACET_FACETS, "fulltext"
+                    DocumentKeys.SEARCH_FILTER, "recordBase:nothere",
+                    DocumentKeys.SEARCH_QUERY, "first",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
+                    DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                    FacetKeys.SEARCH_FACET_FACETS, "fulltext"
             ), responses);
             assertTrue("There should be a response", responses.iterator().hasNext());
             assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -508,7 +539,7 @@ public class SolrSearchNodeTest extends TestCase {
     public void testExposedFacetedSearchAuto() throws Exception {
         performBasicIngest();
         SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased(
-            SBSolrSearchNode.CONF_USE_EFACET, "true"
+                SBSolrSearchNode.CONF_USE_EFACET, "true"
         ));
         try {
             testFacetedSearch(searcher);
@@ -521,16 +552,16 @@ public class SolrSearchNodeTest extends TestCase {
     public void testExposedFacetedSearchRest() throws Exception {
         performBasicIngest();
         SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-            SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/exposed"
+                SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/exposed"
         ));
         try {
             // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
             assertExposed(searcher, new Request(
-                //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
-                FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
+                    //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "exprh",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
+                    FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
             ));
         } finally {
             searcher.close();
@@ -542,11 +573,11 @@ public class SolrSearchNodeTest extends TestCase {
     }
     private void testFuzzySearch(int samples) throws IOException {
         final String QUERIES[] = new String[] {
-            "title:mxyzptll~",
-            "title:mxyzptlk", // Non-fuzzy
-            "title:mxyzpelk~",
-            "title:xmyzpelk~",
-            "title:mxyzptl~"
+                "title:mxyzptll~",
+                "title:mxyzptlk", // Non-fuzzy
+                "title:mxyzpelk~",
+                "title:xmyzpelk~",
+                "title:mxyzptl~"
         };
         ObjectFilter feeder = getFuzzyFeeder(samples, "squid", "mxyzptlk");
         ObjectFilter indexer = getIndexer();
@@ -559,7 +590,7 @@ public class SolrSearchNodeTest extends TestCase {
 
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "foo"
+                DocumentKeys.SEARCH_QUERY, "foo"
         );
         for (String query: QUERIES) {
             request.put(DocumentKeys.SEARCH_QUERY, query);
@@ -579,7 +610,7 @@ public class SolrSearchNodeTest extends TestCase {
         final Random random = getDeterministicRandom();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "foo"
+                DocumentKeys.SEARCH_QUERY, "foo"
         );
         for (int i = 0 ; i < searches ; i++) {
             responses.clear();
@@ -614,17 +645,17 @@ public class SolrSearchNodeTest extends TestCase {
                 profiler.beat();
                 if (profiler.getBeats() % 100000 == 0) {
                     log.info("FuzzyFeeder produced Payload #" + profiler.getBeats() + " at "
-                              + (int)profiler.getBps(true) + " Payloads/sec. Ready in "
-                              + profiler.getTimeLeftAsString(true));
+                             + (int)profiler.getBps(true) + " Payloads/sec. Ready in "
+                             + profiler.getTimeLeftAsString(true));
                 }
                 try {
                     return new Payload(new Record(
-                        "doc" + count, "Dummy",
-                        ("<doc>\n"
-                        + "<field name=\"recordID\">doc" + count + "</field>\n"
-                        + "<field name=\"recordBase\">dummy</field>\n"
-                        + "<field name=\"title\">" + fuzzy + "</field>\n"
-                        + "</doc>\n").getBytes("utf-8")));
+                            "doc" + count, "Dummy",
+                            ("<doc>\n"
+                             + "<field name=\"recordID\">doc" + count + "</field>\n"
+                             + "<field name=\"recordBase\">dummy</field>\n"
+                             + "<field name=\"title\">" + fuzzy + "</field>\n"
+                             + "</doc>\n").getBytes("utf-8")));
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException("UTF-8 should be supported", e);
                 }
@@ -671,11 +702,11 @@ public class SolrSearchNodeTest extends TestCase {
         // qt=exprh&efacet=true&efacet.field=path_ss&q=*%3A*&fl=id&version=2.2&start=0&rows=10&indent=on
         try {
             assertExposed(searcher, new Request(
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "/exposed",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
-                FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "qt", "/exposed",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet", "true",
+                    FacetKeys.SEARCH_FACET_FACETS, "fulltext", // TODO: Remove reliance on this for the SolrResponseBuilder
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
             ));
         } finally {
             searcher.close();
@@ -726,8 +757,8 @@ public class SolrSearchNodeTest extends TestCase {
         List<Payload> samples = new ArrayList<Payload>(SAMPLES);
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
-                "doc" + i, "dummy", Resolver.getUTF8Content(
-                "integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+                    "doc" + i, "dummy", Resolver.getUTF8Content(
+                    "integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
             payload.getRecord().setDeleted(deleted);
             samples.add(payload);
         }
@@ -760,10 +791,10 @@ public class SolrSearchNodeTest extends TestCase {
 
     private IndexController getIndexer() throws IOException {
         Configuration controllerConf = Configuration.newMemoryBased(
-            IndexController.CONF_FILTER_NAME, "testcontroller");
+                IndexController.CONF_FILTER_NAME, "testcontroller");
         controllerConf.set(IndexControllerImpl.CONF_COMMIT_MAX_DOCUMENTS, -1);
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
-            IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
+                IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
         manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, IndexUtils.RECORD_FIELD); // 'id' is the default ID field for Solr
         return new IndexControllerImpl(controllerConf);
@@ -785,8 +816,8 @@ public class SolrSearchNodeTest extends TestCase {
     }
 
     protected void assertHits(
-        String message, SearchNode searcher, String... queries)
-        throws RemoteException {
+            String message, SearchNode searcher, String... queries)
+            throws RemoteException {
         long hits = getHits(searcher, queries);
         assertTrue(message + ". Hits == " + hits, hits > 0);
     }
