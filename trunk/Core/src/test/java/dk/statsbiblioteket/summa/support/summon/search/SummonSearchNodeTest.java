@@ -1835,6 +1835,37 @@ public class SummonSearchNodeTest extends TestCase {
                    queryCount != filteredCount);
     }
 
+    public void testQueryNoFilter() throws Exception {
+        assertResponse(new Request(DocumentKeys.SEARCH_QUERY, "foo"), true);
+    }
+
+    public void testFilterNoQuery() throws Exception {
+        assertResponse(new Request(DocumentKeys.SEARCH_FILTER, "foo"), true);
+    }
+
+    public void testFilterAndQuery() throws Exception {
+        assertResponse(new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_FILTER, "bar"
+        ), true);
+    }
+
+    public void testNoFilterNoQuery() throws Exception {
+        assertResponse(new Request("foo", "bar"), false);
+    }
+
+    private void assertResponse(Request request, boolean responseExpected) throws RemoteException {
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(request, responses);
+        if (responseExpected) {
+            assertTrue("There should be a response for " + request, responses.iterator().hasNext());
+        } else {
+            assertFalse("There should not be a response for " + request, responses.iterator().hasNext());
+        }
+    }
+
+
     protected long getHits(SearchNode searcher, String... arguments) throws RemoteException {
         String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
         ResponseCollection responses = new ResponseCollection();

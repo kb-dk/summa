@@ -442,23 +442,31 @@ public class SummonSearchNode extends SolrSearchNode {
             throw new RemoteException("Unable to build Solr query", e);
         }
 
-        Date date = new Date();
-        String idstring = computeIdString("application/xml", summonDateFormat.format(date), host, restCall, queryMap);
-        String queryString = computeSortedQueryString(queryMap, true);
-        buildQuery += System.currentTimeMillis();
-        log.trace("Parameter preparation done in " + buildQuery + "ms");
-        String result;
+        String retVal = null;
+        if (validRequest(queryMap)) {
+            Date date = new Date();
+            String sumID = computeIdString("application/xml", summonDateFormat.format(date), host, restCall, queryMap);
+            String queryString = computeSortedQueryString(queryMap, true);
+            buildQuery += System.currentTimeMillis();
+            log.trace("Parameter preparation done in " + buildQuery + "ms");
 
-        try {
-            result = getData("http://" + host, restCall + "?" + queryString, date, idstring, null,responses);
-        } catch (Exception e) {
-            throw new RemoteException("SummonSearchNode: Unable to perform remote call to "  + host + restCall
-                                      + " with argument '" + queryString, e);
+            String result;
+            try {
+                result = getData("http://" + host, restCall + "?" + queryString, date, sumID, null,responses);
+            } catch (Exception e) {
+                throw new RemoteException("SummonSearchNode: Unable to perform remote call to "  + host + restCall
+                                          + " with argument '" + queryString, e);
+            }
+            retVal = prefixIDs(result, idPrefix);
         }
         long prefixIDs = -System.currentTimeMillis();
-        String retval = prefixIDs(result, idPrefix);
         prefixIDs += System.currentTimeMillis();
-        return new Pair<String, String>(retval, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
+        return new Pair<String, String>(retVal, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
+    }
+
+    // True if either a query or a filter is present
+    private boolean validRequest(Map<String, List<String>> queryMap) {
+        return queryMap.containsKey("s.q") || queryMap.containsKey("s.fq");
     }
 
     @Override
