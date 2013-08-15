@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.shell.commands.Exec;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubFactory;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -87,8 +89,12 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
         log.info("testMissingSearcher()");
         ingest(0, "fulltext", Arrays.asList("bar", "moo"));
         HubComponent hub = getHubMissing(HubResponseMerger.SEARCH_MODE, HubResponseMerger.MODE.score.toString());
-        QueryResponse response = hub.search(null, new SolrQuery("*:*"));
-        System.out.println("Got response " + response);
+        try {
+            QueryResponse response = hub.search(null, new SolrQuery("*:*"));
+            fail("Got a response instead of an exception for a missing component:\n" + response);
+        } catch (ExecutionException e) {
+            log.info("Got an expected exception when querying a missing searcher", e);
+        }
     }
 
     public void testDocumentTrim() throws Exception {
