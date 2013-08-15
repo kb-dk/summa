@@ -135,6 +135,22 @@ public class QueryReducer implements Configurable, RequestAdjuster {
         return query;
     }
 
+    public SolrParams reduce(String componentID, SolrParams request) {
+        ReducerTarget target = reducerTargets.get(componentID);
+        if (target == null && defaultReducerTarget != null) {
+            target = defaultReducerTarget;
+        }
+        if (target != null) {
+            log.debug("reduce: Reducing query for " + componentID);
+            ModifiableSolrParams modifiable = request instanceof ModifiableSolrParams
+                    ? (ModifiableSolrParams)request
+                    : new ModifiableSolrParams(request);
+            target.reduce(modifiable);
+            return modifiable;
+        }
+        return request;
+    }
+
     @Override
     public String toString() {
         return String.format("QueryReducer(#reducers=%d, default=%s)", reducerTargets.size(), defaultReducerTarget);

@@ -97,12 +97,12 @@ public class RequestPruner extends HubAdjusterBase {
     }
 
     @Override
-    public SolrParams adjustRequest(SolrParams request) {
+    public SolrParams adjustRequest(ModifiableSolrParams request) {
         checkSubComponents();
         ModifiableSolrParams pruned = new ModifiableSolrParams();
         if (whitelist == null) {
             log.debug("adjustRequest: No whitelist regexps. All parameters are discarded");
-            return pruned;
+            return request;
         }
         int inputCount = 0;
         int prunedCount = 0;
