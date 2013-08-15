@@ -23,6 +23,11 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Handles aliasing of fields and values in requests as well as responses.
  * Serves as a normalizer for uncontrolled sources.
@@ -41,7 +46,7 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
      * {@code outer_name - inner_fieldname}.
      * Example: {@code author - AuthorField, title - main_title}.
      * </p><p>
-     * This option is not cumulative. Search-time overrides base configuration.
+     * This option is not cumulative: Search-time overrides base configuration.
      * </p><p>
      * Optional. Default is no rewriting.
      */
@@ -49,8 +54,28 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
     public static final String CONF_ADJUST_DOCUMENT_FIELDS = "adjuster.document.fields";
     public static final String SEARCH_ADJUST_DOCUMENT_FIELDS = CONF_ADJUST_DOCUMENT_FIELDS;
 
+    /**
+     * Maps facet values in responses.
+     * </p><p>
+     * This is a list of sub configurations, each holding a {@link HubTagAdjuster} configuration.
+     * </p><p>
+     * Note: Mapping of facet values is performed after field name mapping.
+     */
+    public static final String CONF_ADJUST_FACET_TAGS = "adjuster.facet.tags";
+    public static final String SEARCH_ADJUST_FACET_TAGS = CONF_ADJUST_FACET_TAGS;
+
+    // This is a list as multiple adjusters/facet is a valid setup
+    private List<HubTagAdjuster> tagAdjusters = new ArrayList<HubTagAdjuster>();
+
     public FieldAndTermAdjuster(Configuration conf) {
         super(conf);
+        if (conf.containsKey(CONF_ADJUST_FACET_TAGS)) {
+            List<Configuration> tagAdjusterConfs = conf.getSubConfigurations(CONF_ADJUST_FACET_TAGS);
+            log.debug("Got " + tagAdjusterConfs + " tag adjuster configurations");
+            for (Configuration tagAdjusterConf: tagAdjusterConfs) {
+                tagAdjusters.add(new HubTagAdjuster(tagAdjusterConf));
+            }
+        }
 
         log.info("Created " + this);
     }
@@ -72,6 +97,7 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
     @Override
     public QueryResponse adjustResponse(SolrParams request, QueryResponse response) {
         // TODO: Implement this
+
         return response;
     }
 
@@ -88,6 +114,7 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
 
     @Override
     public String toString() {
+        // TODO: Implement this
         return "FieldAndTermAdjuster()";
     }
 }
