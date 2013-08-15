@@ -73,10 +73,11 @@ public abstract class HubAdjusterBase extends HubCompositeImpl {
 
     /**
      * Rewrite of the request. Note that prefixed parameters has already been handled at this point.
+     *
      * @param request the request for a search.
-     * @return the request, potentially modified.
+     * @return the request to pass on, potentially the same as the input request.
      */
-    public abstract SolrParams adjustRequest(SolrParams request);
+    public abstract SolrParams adjustRequest(ModifiableSolrParams request);
 
     /**
      * Rewrite of the response.

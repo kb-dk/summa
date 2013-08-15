@@ -137,6 +137,11 @@ public class QueryReducerTest extends TestCase {
         assertDefault("myterm~2", "myterm~");
     }
 
+    public void testSubWeight() throws IOException {
+        assertDefault("moo^7.1898894",
+                      "(moo^7.1898894 OR foo:bar^7.1898894)");
+    }
+
     public void testSubORQuery() throws IOException {
         // QueryRewriter removes '+'
         assertDefault("(hello my:world phrase:\"mongo pongo\") (something)",

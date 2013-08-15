@@ -16,19 +16,12 @@ package dk.statsbiblioteket.summa.support.harmonise.hub;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAdjusterBase;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * Handles aliasing of fields and values in requests as well as responses.
@@ -44,7 +37,7 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
      * Maps from field names to field names, one way when rewriting queries,
      * the other way when adjusting the returned result.
      * </p><p>
-     * This isa comma-separated list of rewrite-rules. The format of a single rule is
+     * This is a comma-separated list of rewrite-rules. The format of a single rule is
      * {@code outer_name - inner_fieldname}.
      * Example: {@code author - AuthorField, title - main_title}.
      * </p><p>
@@ -63,11 +56,10 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
     }
 
     @Override
-    public SolrParams adjustRequest(SolrParams request) {
+    public SolrParams adjustRequest(ModifiableSolrParams request) {
         checkSubComponents();
-        ModifiableSolrParams pruned = new ModifiableSolrParams();
-
-        return pruned;
+        // TODO: Implement this
+        return request;
     }
 
     private void checkSubComponents() {
@@ -79,6 +71,7 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
 
     @Override
     public QueryResponse adjustResponse(SolrParams request, QueryResponse response) {
+        // TODO: Implement this
         return response;
     }
 
