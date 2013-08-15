@@ -81,4 +81,17 @@ public class ManyToManyMapper {
             Collections.addAll(values, destinations);
         }
     }
+
+    public String toString() {
+        return "ManyToManyMapper(forward(" + forward.size() + "->" + countValues(forward)
+               + "), reverse(" + reverse.size() + "->" + countValues(reverse) + "))";
+    }
+    private int countValues(Map<String, Set<String>> map) {
+        int count = 0;
+        for (Map.Entry<String, Set<String>> entry: map.entrySet()) {
+            count += entry.getValue().size();
+        }
+        return count;
+    }
 }
+
