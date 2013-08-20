@@ -71,10 +71,8 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
         segment.filename = alto.getFilename();
         segment.date = getDateFromFilename(segment.filename);
         segment.id = "alto_" + segment.date + "_" + idCounter++;
-        segment.hpos = textBlock.getHpos();
-        segment.vpos = textBlock.getVpos();
-        segment.width = textBlock.getWidth();
-        segment.height = textBlock.getHeight();
+        segment.setBoundingBox(new Alto.Box(textBlock.getHpos(), textBlock.getVpos(),
+                                            textBlock.getWidth(), textBlock.getHeight()));
         segment.pageWidth = alto.getLayout().get(0).getWidth(); // TODO: Remove reliance on page 0
         segment.pageHeight = alto.getLayout().get(0).getHeight(); // TODO: Remove reliance on page 0
         return segment;
@@ -103,10 +101,7 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
         protected String filename = null;
         protected String date = null;
         protected String id = null;
-        protected int hpos = -1;
-        protected int vpos = -1;
-        protected int width = -1;
-        protected int height = -1;
+        protected Alto.Box boundingBox = null;
         protected int pageWidth = -1;
         protected int pageHeight = -1;
 
@@ -142,6 +137,14 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
          * @return the designation for these segments.
          */
         public abstract String getType();
+
+        public void setPageWidth(int pageWidth) {
+            this.pageWidth = pageWidth;
+        }
+
+        public void setPageHeight(int pageHeight) {
+            this.pageHeight = pageHeight;
+        }
 
         public static class Term {
             public final String field;
@@ -180,47 +183,35 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
         }
 
         public int getHpos() {
-            return hpos;
+            return boundingBox == null ? -1 : boundingBox.getHpos();
         }
         public double getHpos(boolean fraction) {
-            return fraction ? hpos * 1.0 / pageWidth : hpos;
-        }
-
-        public void setHpos(int hpos) {
-            this.hpos = hpos;
+            return fraction ? getHpos() * 1.0 / pageWidth : getHpos();
         }
 
         public int getVpos() {
-            return vpos;
+            return boundingBox == null ? -1 : boundingBox.getVpos();
         }
         public double getVpos(boolean fraction) {
-            return fraction ? vpos * 1.0 / pageHeight : vpos;
-        }
-
-        public void setVpos(int vpos) {
-            this.vpos = vpos;
+            return fraction ? getVpos() * 1.0 / pageHeight : getVpos();
         }
 
         public int getWidth() {
-            return width;
+            return boundingBox == null ? -1 : boundingBox.getWidth();
         }
         public double getWidth(boolean fraction) {
-            return fraction ? width * 1.0 / pageWidth : width;
-        }
-
-        public void setWidth(int width) {
-            this.width = width;
+            return fraction ? getWidth() * 1.0 / pageWidth : getWidth();
         }
 
         public int getHeight() {
-            return height;
+            return boundingBox == null ? -1 : boundingBox.getHeight();
         }
         public double getHeight(boolean fraction) {
-            return fraction ? height * 1.0 / pageHeight : height;
+            return fraction ? getHeight() * 1.0 / pageHeight : getHeight();
         }
 
-        public void setHeight(int height) {
-            this.height = height;
+        public void setBoundingBox(Alto.Box boundingBox) {
+            this.boundingBox = boundingBox;
         }
 
         public String getTitle() {
@@ -229,6 +220,23 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
 
         public void setTitle(String title) {
             this.title = title;
+        }
+
+        /**
+         * If the given title is more than maxLength, the substring from 0 to the last space before maxLength is
+         * assigned as title. If there is no space before maxLength, the substring from 0 to maxLength is assigned.
+         * @param title candidate title.
+         * @param maxLength the maximum length of the title.
+         */
+        public void setTitle(String title, int maxLength) {
+            if (title.length() <= maxLength) {
+                setTitle(title);
+                return;
+            }
+            String reduced = title.substring(0, maxLength+1);
+            int lastSPace = reduced.lastIndexOf(' ');
+            lastSPace = lastSPace == -1 ? maxLength+1 : lastSPace;
+            setTitle(reduced.substring(0, lastSPace));
         }
 
         public String getOrigin() {
@@ -256,12 +264,10 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
             return "Segment(filename='" + filename + '\'' +
                     ", date='" + date + '\'' +
                     ", id='" + id + '\'' +
-                    ", hpos=" + hpos +
-                    ", vpos=" + vpos +
-                    ", width=" + width +
-                    ", height=" + height +
+                    ", bounding=" + boundingBox +
                     ", title='" + title + '\'' +
                     ", origin='" + origin + '\'' +
+                    ", URL='" + getURL() + "'" +
                     ", paragraphs=" + Strings.join(paragraphs, 5) +
                     ')';
         }

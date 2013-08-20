@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.alto;
 
+import com.sun.corba.se.impl.presentation.rmi.IDLNameTranslatorImpl;
 import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,6 +27,8 @@ import java.util.*;
 
 /**
  * An object representation of an Alto-file.
+ * </p><p>
+ * Note: The representation does not support the ComposedBlock grouping of elements.
  */
 public class Alto {
     private static Log log = LogFactory.getLog(Alto.class);
@@ -131,6 +134,78 @@ public class Alto {
     }
     public String getOrigin() {
         return origin;
+    }
+
+    private Map<String, List<TextBlock>> textBlockGroups = null;
+    /**
+     * Iterates all TextBlocks on the page and returns them grouped by {@link PositionedElement#idNext}.
+     * If an element is not connected to any other elements, a single-entry group will be created for it.
+     * </p><p>
+     * The generation of groups is lazy but stored for subsequent requests.
+     * </p><p>
+     * The IDs of the groups are auto-generated and only unique within the current Alto object. The IDs are not
+     * guaranteed to follow a consistent numbering pattern. Ordering is attempted but not guaranteed.
+     * @return a map of grouped TextBlocks.
+     */
+    public Map<String, List<TextBlock>> getTextBlockGroups() {
+        if (textBlockGroups != null) {
+            return textBlockGroups;
+        }
+        int counter = 1;
+        int blockCount = 0;
+        Map<String, List<TextBlock>> groups = new LinkedHashMap<String, List<TextBlock>>();
+
+        // This is O(n^2), but normally there are few TextBlocks (10-30) so optimization has low priority
+        for (Page page: getLayout()) {
+            currents:
+            for (TextBlock currentBlock: page.getPrintSpace()) {
+                // Check for links to and from this block
+                for (Map.Entry<String, List<TextBlock>> entry: groups.entrySet()) {
+                    List<TextBlock> groupedBlocks = entry.getValue();
+                    for (TextBlock groupedBlock: groupedBlocks) {
+                        blockCount++;
+                        if (equals(currentBlock.getIDNext(), groupedBlock.getID())
+                            || equals(groupedBlock.getIDNext(), currentBlock.getID())) {
+                            log.debug("Adding block " + currentBlock.getID() + " to group " + entry.getKey());
+                            entry.getValue().add(currentBlock);
+                            continue currents;
+                        }
+                    }
+                }
+                // No links, create a new group
+                String groupID = "segment_" + counter++;
+                log.debug("Creating group " + groupID + " for block " + currentBlock.getID());
+                groups.put(groupID, new ArrayList<TextBlock>(Arrays.asList(currentBlock)));
+            }
+        }
+        log.debug("Created " + groups.size() + " groups with a total of " + blockCount + " TextBlocks");
+        return groups;
+    }
+
+    /**
+     * Calculate the minimum box containing all elements.
+     * @param elements the elements that must be inside the box.
+     * @return a bounding box for the elements.
+     */
+    public static Box getBoundingBox(List<? extends PositionedElement> elements) {
+        int left = Integer.MAX_VALUE;
+        int top = Integer.MAX_VALUE;
+        int right = -1;
+        int bottom = -1;
+        for (PositionedElement element: elements) {
+            left = Math.min(left, element.getHpos());
+            top = Math.min(top, element.getVpos());
+            right = Math.max(right, element.getHpos() + element.getWidth());
+            bottom = Math.max(right, element.getVpos() + element.getHeight());
+        }
+        left = left == Integer.MAX_VALUE ? -1 : left; 
+        top = top == Integer.MAX_VALUE ? -1 : top; 
+        return new Box(left, top, right-left, bottom-top);
+    }
+
+    // null != null
+    private boolean equals(String s1, String s2) {
+        return s1 != null && s2 != null && s1.equals(s2);
     }
 
     // <Page ID="P1" PHYSICAL_IMG_NR="0003" HEIGHT="3605" WIDTH="2557">
@@ -319,19 +394,17 @@ public class Alto {
         }
     }
 
-    public static abstract class PositionedElement {
+    public static abstract class PositionedElement extends Box {
         private final String id;
-        private final int hpos;
-        private final int vpos;
-        private final int width;
-        private final int height;
+        private final String idNext;
 
         public PositionedElement(XMLStreamReader xml) throws XMLStreamException {
+            super(Integer.parseInt(XMLStepper.getAttribute(xml, "HPOS", "-1")),
+                  Integer.parseInt(XMLStepper.getAttribute(xml, "VPOS", "-1")),
+                  Integer.parseInt(XMLStepper.getAttribute(xml, "WIDTH", "-1")),
+                  Integer.parseInt(XMLStepper.getAttribute(xml, "HEIGHT", "-1")));
             id = XMLStepper.getAttribute(xml, "ID", null);
-            hpos = Integer.parseInt(XMLStepper.getAttribute(xml, "HPOS", "-1"));
-            vpos = Integer.parseInt(XMLStepper.getAttribute(xml, "VPOS", "-1"));
-            width = Integer.parseInt(XMLStepper.getAttribute(xml, "WIDTH", "-1"));
-            height = Integer.parseInt(XMLStepper.getAttribute(xml, "HEIGHT", "-1"));
+            idNext = XMLStepper.getAttribute(xml, "IDNEXT", null);
         }
 
         /**
@@ -341,6 +414,23 @@ public class Alto {
 
         public String getID() {
             return id;
+        }
+        public String getIDNext() {
+            return idNext;
+        }
+    }
+
+    public static class Box {
+        protected final int hpos;
+        protected final int vpos;
+        protected final int width;
+        protected final int height;
+
+        public Box(int hpos, int vpos, int width, int height) {
+            this.hpos = hpos;
+            this.vpos = vpos;
+            this.width = width;
+            this.height = height;
         }
         public int getHpos() {
             return hpos;
@@ -353,6 +443,11 @@ public class Alto {
         }
         public int getHeight() {
             return height;
+        }
+
+        @Override
+        public String toString() {
+            return "Box(" + hpos + "," + vpos + " " + width + "x" + height + ")";
         }
     }
 }
