@@ -13,7 +13,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 
 public class VoidTransliterationTest {
 
-	String solrHome = "support/solr_home1"; //data-dir (index) will be created here.  
+    String solrHome = "support/solr_home_default"; //data-dir (index) will be created here.  
 	EmbeddedJettyWithSolrServer server;
 	SolrServer solrServer;
 

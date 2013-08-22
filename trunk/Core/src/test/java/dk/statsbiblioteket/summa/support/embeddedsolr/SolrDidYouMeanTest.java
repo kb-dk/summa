@@ -1,6 +1,10 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Map;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -9,14 +13,11 @@ import org.apache.solr.client.solrj.response.SpellCheckResponse.Suggestion;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 
 public class SolrDidYouMeanTest {
 
-	String solrHome = "support/solr_home1"; //data-dir (index) will be created here.  
+    String solrHome = "support/solr_home_default"; //data-dir (index) will be created here.  
 	EmbeddedJettyWithSolrServer server;
 	SolrServer solrServer;
 
