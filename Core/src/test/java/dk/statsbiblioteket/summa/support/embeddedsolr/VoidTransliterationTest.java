@@ -1,6 +1,6 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
@@ -29,7 +29,7 @@ public class VoidTransliterationTest {
 	@Test
 	public void testVoidTransliteration() throws Exception {
 
-		//the document contains Tho?m:as which is mapped to Thomas
+		//the document contains Tho?m:as which is mapped to Tho)m:as
 		String[] files = new String[]{
 				"support/solr_test_documents/void_transliteration_doc.txt",
 		
@@ -39,7 +39,7 @@ public class VoidTransliterationTest {
 		QueryResponse response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 
-		query = new SolrQuery("Tho?m:as");
+		query = new SolrQuery("Tho)m:as");
 		response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());				
 	}
