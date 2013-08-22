@@ -1,11 +1,11 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
+import java.io.File;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.webapp.WebAppContext;
-
-import java.io.File;
 
 
 
@@ -23,7 +23,6 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 	private static Log log = LogFactory.getLog(EmbeddedJettyWithSolrServer.class);
 
 	private static final String DEFAULT_SOLR_WAR = "support/solr.war";
-	private static final String DEFAULT_SOLR_HOME = "support/solr_home_default";
 	public static final String DEFAULT_CONTEXT = "/solr";
 	public static final int DEFAULT_PORT = 8983;
 	
@@ -49,13 +48,12 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 		solrWar = SolrServerUnitTestUtil.resolve("WAR", solrWar);
 		solrHome = SolrServerUnitTestUtil.resolve("Solr home", solrHome);
 
-		String solrHomeDefault = SolrServerUnitTestUtil.resolve("Solr Home default",DEFAULT_SOLR_HOME);
 
 		// throw new Exception("The Solr war at " + solrWar  + " should exist.
 		// Run 'mvn clean install -DskipTests' in the core-module");
 
 		//Copy solrconfig.xml, schema.xml etc. to the solrhome.
-		SolrServerUnitTestUtil.populateSolrHome( new File(solrHome), new File(solrHomeDefault));
+		SolrServerUnitTestUtil.populateSolrHome( new File(solrHome));
 
 		System.setProperty("solr.solr.home", solrHome+	SolrServerUnitTestUtil.SOLR_HOME_SUFFIX);
 
@@ -93,7 +91,6 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 	public EmbeddedJettyWithSolrServer (String solrHome) throws Exception {
 		this(solrHome, DEFAULT_SOLR_WAR, DEFAULT_CONTEXT, DEFAULT_PORT);
 	}
-
 
 	@SuppressWarnings("CallToPrintStackTrace")
 	@Override

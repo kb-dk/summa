@@ -1,6 +1,6 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
@@ -13,7 +13,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 
 public class CharacterTransliterationTest {
 
-	String solrHome = "support/solr_home1"; //data-dir (index) will be created here.  
+    String solrHome = "support/solr_home_default"; //data-dir (index) will be created here.  
 	EmbeddedJettyWithSolrServer server;
 	SolrServer solrServer;
 

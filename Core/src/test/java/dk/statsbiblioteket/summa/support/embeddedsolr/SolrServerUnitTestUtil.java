@@ -1,5 +1,17 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -10,13 +22,6 @@ import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.support.solr.SolrManipulator;
-import org.apache.commons.io.FileUtils;
-
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SolrServerUnitTestUtil {
 
@@ -75,11 +80,10 @@ public class SolrServerUnitTestUtil {
      * so the solrhome files are not replaced.
      *
      */
-    public static void populateSolrHome(File solr_home, File solr_home_default) throws IOException{
+    public static void populateSolrHome(File solr_home) throws IOException{
         String solrHome_merged=solr_home.getAbsolutePath()+SOLR_HOME_SUFFIX;
         File  solrHome_merged_dir = new File(solrHome_merged);
         FileUtils.deleteDirectory(solrHome_merged_dir); //Clean up first
-        FileUtils.copyDirectory(solr_home_default, solrHome_merged_dir);
         FileUtils.copyDirectory(solr_home, solrHome_merged_dir);
     }
 
