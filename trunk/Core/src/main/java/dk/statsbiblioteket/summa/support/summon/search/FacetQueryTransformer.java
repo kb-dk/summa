@@ -156,7 +156,7 @@ public class FacetQueryTransformer {
     /**
      * Add the facet content query to the given queryMap. The default implementation uses Solr SimpleFacetParameters.
      * Override this to get custom queries for non-standard search backends.
-     * @param queryMap where to put the facet valu requests.
+     * @param queryMap where to put the facet value requests.
      * @param field    the facet field.
      * @param value    the wanted tag value for the field-
      * @param negated  true if the search result should not contain the given field:value.

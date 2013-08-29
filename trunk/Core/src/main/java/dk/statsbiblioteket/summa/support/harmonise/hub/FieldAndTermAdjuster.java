@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubAdjusterBase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -24,9 +25,7 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Handles aliasing of fields and values in requests as well as responses.
@@ -39,8 +38,8 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
     private static Log log = LogFactory.getLog(FieldAndTermAdjuster.class);
 
     /**
-     * Maps from field names to field names, one way when rewriting queries,
-     * the other way when adjusting the returned result.
+     * Maps from field names to field names, one way when rewriting queries, the other way when adjusting the returned
+     * result. This also rewrites facet fields.
      * </p><p>
      * This is a comma-separated list of rewrite-rules. The format of a single rule is
      * {@code outer_name - inner_fieldname}.
@@ -66,6 +65,7 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
 
     // This is a list as multiple adjusters/facet is a valid setup
     private List<HubTagAdjuster> tagAdjusters = new ArrayList<HubTagAdjuster>();
+    private final ManyToManyMapper defaultDocumentFields;
 
     public FieldAndTermAdjuster(Configuration conf) {
         super(conf);
@@ -76,6 +76,9 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
                 tagAdjusters.add(new HubTagAdjuster(tagAdjusterConf));
             }
         }
+        defaultDocumentFields = conf.containsKey(CONF_ADJUST_DOCUMENT_FIELDS) ?
+                new ManyToManyMapper(conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS)) :
+                null;
 
         log.info("Created " + this);
     }
@@ -83,7 +86,10 @@ public class FieldAndTermAdjuster extends HubAdjusterBase {
     @Override
     public SolrParams adjustRequest(ModifiableSolrParams request) {
         checkSubComponents();
-        // TODO: Implement this
+
+        // TODO: Queries and filters
+
+        // TODO: Facet fields
         return request;
     }
 

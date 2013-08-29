@@ -47,9 +47,15 @@ public class ManyToManyMapper {
     public Map<String, Set<String>> getForward() {
         return forward;
     }
+    public Set<String> getForwardSet(String source) {
+        return forward.get(source);
+    }
 
     public Map<String, Set<String>> getReverse() {
         return reverse;
+    }
+    public Set<String> getReverseSet(String destination) {
+        return reverse.get(destination);
     }
 
     private void addRules(List<String> rules) {
