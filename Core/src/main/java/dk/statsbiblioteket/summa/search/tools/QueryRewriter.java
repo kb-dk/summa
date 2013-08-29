@@ -175,7 +175,7 @@ public class QueryRewriter {
         }
     }
 
-    private Event event;
+    protected Event event;
     private QueryParser queryParser;
     private final boolean terse;
     private final boolean quoteTerms;
