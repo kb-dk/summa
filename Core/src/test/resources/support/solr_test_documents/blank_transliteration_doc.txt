@@ -7,3 +7,8 @@
     <field name="year">2012</field>
     <field name="location_normalised">Bjørn</field>
 </doc>
+<doc>
+    <field name="recordID">void_transliteration_test2</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">abc'def</field>    
+</doc>
