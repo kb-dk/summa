@@ -63,14 +63,12 @@ public class SolrAdjuster extends HubAdjusterBase {
     public static final String CONF_ADJUST_FACET_TAGS = "adjuster.facet.tags";
     //public static final String SEARCH_ADJUST_FACET_TAGS = CONF_ADJUST_FACET_TAGS;
 
-    // This is a list as multiple adjusters/facet is a valid setup
-    private List<HubTagAdjuster> tagAdjusters = new ArrayList<HubTagAdjuster>();
-    private final ManyToManyMapper defaultFieldMap;
     private final SolrRequestAdjuster requestAdjuster;
-
+    private final SolrResponseAdjuster responseAdjuster;
 
     public SolrAdjuster(Configuration conf) {
         super(conf);
+        List<HubTagAdjuster> tagAdjusters = new ArrayList<HubTagAdjuster>();
         if (conf.containsKey(CONF_ADJUST_FACET_TAGS)) {
             List<Configuration> tagAdjusterConfs = conf.getSubConfigurations(CONF_ADJUST_FACET_TAGS);
             log.debug("Got " + tagAdjusterConfs + " tag adjuster configurations");
@@ -78,10 +76,12 @@ public class SolrAdjuster extends HubAdjusterBase {
                 tagAdjusters.add(new HubTagAdjuster(tagAdjusterConf));
             }
         }
-        defaultFieldMap = conf.containsKey(CONF_ADJUST_DOCUMENT_FIELDS) ?
+        ManyToManyMapper defaultFieldMap = conf.containsKey(CONF_ADJUST_DOCUMENT_FIELDS) ?
                 new ManyToManyMapper(conf.getStrings(CONF_ADJUST_DOCUMENT_FIELDS)) :
                 null;
+
         requestAdjuster = new SolrRequestAdjuster(conf, defaultFieldMap, tagAdjusters);
+        responseAdjuster = new SolrResponseAdjuster(conf, defaultFieldMap, tagAdjusters);
 
         log.info("Created " + this);
     }
@@ -101,9 +101,8 @@ public class SolrAdjuster extends HubAdjusterBase {
 
     @Override
     public QueryResponse adjustResponse(SolrParams request, QueryResponse response) {
-        // TODO: Implement this
-
-        return response;
+        checkSubComponents();
+        return responseAdjuster.adjust(request, response);
     }
 
     // We do not want bypassing of a white lister
@@ -119,6 +118,6 @@ public class SolrAdjuster extends HubAdjusterBase {
 
     @Override
     public String toString() {
-        return "SolrAdjuster(" + requestAdjuster + ")";
+        return "SolrAdjuster(" + requestAdjuster + ", " + responseAdjuster + ")";
     }
 }

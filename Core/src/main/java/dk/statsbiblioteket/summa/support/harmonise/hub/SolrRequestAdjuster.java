@@ -25,10 +25,7 @@ import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -40,14 +37,15 @@ import java.util.regex.Pattern;
 public class SolrRequestAdjuster {
     private static Log log = LogFactory.getLog(SolrRequestAdjuster.class);
 
-    private List<HubTagAdjuster> tagAdjusters = new ArrayList<HubTagAdjuster>();
+    private final Map<String, ManyToManyMapper> tagAdjusters;
+    //private List<HubTagAdjuster> tagAdjusters = new ArrayList<HubTagAdjuster>();
     private final ManyToManyMapper defaultFieldMap;
     private final QueryAdjuster queryAdjuster;
 
     public SolrRequestAdjuster(Configuration conf, ManyToManyMapper fieldMap, List<HubTagAdjuster> tagAdjusters) {
         defaultFieldMap = fieldMap;
-        this.tagAdjusters = tagAdjusters;
-        queryAdjuster = new QueryAdjuster(conf, defaultFieldMap, null);
+        this.tagAdjusters = HubTagAdjuster.merge(tagAdjusters);
+        queryAdjuster = new QueryAdjuster(conf, defaultFieldMap, this.tagAdjusters);
 
         log.info("Created " + this);
     }
@@ -117,6 +115,6 @@ public class SolrRequestAdjuster {
     @Override
     public String toString() {
         // TODO: Implement this
-        return "SolrAdjuster(fieldMap=" + defaultFieldMap + ", #tagAdjusters=" + tagAdjusters.size() + ")";
+        return "SolrRequestAdjuster(fieldMap=" + defaultFieldMap + ", #tagAdjusters=" + tagAdjusters.size() + ")";
     }
 }
