@@ -19,8 +19,6 @@ import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 import org.apache.lucene.queryparser.classic.ParseException;
 
 import java.util.Arrays;
