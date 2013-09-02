@@ -46,6 +46,26 @@ public class BlankTransliterationTest {
 		query = new SolrQuery("2 3"); //No results
 		response = solrServer.query(query);
 		assertEquals(0L, response.getResults().getNumFound());
+	
+	
+		//testing abc'def
+		query = new SolrQuery("abc'def"); 
+        response = solrServer.query(query);
+        assertEquals(1L, response.getResults().getNumFound());
+	        
+        query = new SolrQuery("abc def"); 
+        response = solrServer.query(query);
+        assertEquals(1L, response.getResults().getNumFound());
+    
+        query = new SolrQuery("abc"); 
+        response = solrServer.query(query);
+        assertEquals(1L, response.getResults().getNumFound());
+        
+        query = new SolrQuery("def"); 
+        response = solrServer.query(query);
+        assertEquals(1L, response.getResults().getNumFound());
+	   
+	
 	}
 
 }
