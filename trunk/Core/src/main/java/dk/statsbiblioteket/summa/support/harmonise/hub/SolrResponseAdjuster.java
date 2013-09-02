@@ -51,25 +51,24 @@ public class SolrResponseAdjuster {
 
     public QueryResponse adjust(SolrParams request, QueryResponse response) {
         adjustDocuments(request, response);
-        adjustFacets(request, response);
-        // TODO: Facets (+range +date...)
-
+        for (HubTagAdjuster hubTagAdjuster: hubTagAdjusters) {
+            hubTagAdjuster.adjust(request, response);
+        }
+        adjustFacetFields(request, response);
         return response;
     }
 
-    private void adjustFacets(SolrParams request, QueryResponse response) {
+    private void adjustFacetFields(SolrParams request, QueryResponse response) {
+        if (fieldMap == null) {
+            return;
+        }
         List<FacetField> facetFields = response.getFacetFields();
         if (facetFields == null) {
             return;
         }
-
         List<FacetField> adjustedFacetFields = new ArrayList<FacetField>(facetFields.size());
         for (FacetField facetField: facetFields) {
-            if (!tagAdjusters.containsKey(facetField.getName())) {
-                adjustedFacetFields.add(facetField);
-            } else {
-                expandFacet(adjustedFacetFields, facetField);
-            }
+            expandFacet(adjustedFacetFields, facetField);
         }
         mergeAssign(facetFields, adjustedFacetFields);
     }
@@ -80,8 +79,8 @@ public class SolrResponseAdjuster {
         facetFields.addAll(adjustedFacetFields);
     }
 
+
     private void expandFacet(List<FacetField> adjustedFacetFields, FacetField facetField) {
-        expandTags(facetField);
         if (fieldMap == null || !fieldMap.getReverse().containsKey(facetField.getName())) {
             adjustedFacetFields.add(facetField);
             return;
@@ -89,47 +88,6 @@ public class SolrResponseAdjuster {
         for (String adjustedField: fieldMap.getReverseSet(facetField.getName())) {
             adjustedFacetFields.add(cloneFacet(facetField, adjustedField));
         }
-    }
-
-    private void expandTags(FacetField facetField) {
-        // Do we have a mapping at all?
-        if (!tagAdjusters.containsKey(facetField.getName())) {
-            return;
-        }
-
-        List<FacetField.Count> tags = facetField.getValues();
-        for (HubTagAdjuster hta: hubTagAdjusters) {
-            if (hta.getFacetNames().contains(facetField.getName())) {
-                tags = expandTags(tags, hta);
-            }
-        }
-        if (tags == facetField.getValues()) {
-            return;
-        }
-        facetField.getValues().clear();
-        for (FacetField.Count tag: tags) {
-            facetField.add(tag.getName(), tag.getCount());
-        }
-    }
-
-    private List<FacetField.Count> expandTags(List<FacetField.Count> tags, HubTagAdjuster hubTagAdjuster) {
-        List<FacetField.Count> expandedTags = new ArrayList<FacetField.Count>((int) (tags.size() * 1.5));
-        for (FacetField.Count tag: tags) {
-            Set<String> ets = hubTagAdjuster.getMap().getReverseSet(tag.getName());
-            if (ets == null) {
-                expandedTags.add(tag);
-            } else {
-                for (String et: ets) {
-                    expandedTags.add(new FacetField.Count(null, et, tag.getCount()));
-                }
-            }
-        }
-        return merge(expandedTags, hubTagAdjuster);
-    }
-
-    private List<FacetField.Count> merge(List<FacetField.Count> tags, HubTagAdjuster hubTagAdjuster) {
-        // TODO: Implement merging
-        return tags;
     }
 
     private FacetField cloneFacet(FacetField facetField, String newFieldName) {

@@ -29,6 +29,9 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.solr.client.solrj.response.FacetField;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.SolrParams;
 
 import java.util.*;
 
@@ -108,88 +111,72 @@ public class HubTagAdjuster implements Configurable {
     public static final String CONF_MERGE_MODE = "tagadjuster.merge.mode";
     public static final MERGE_MODE DEFAULT_MERGE_MODE = MERGE_MODE.sum;
 
-    private final List<String> facetNames;
+    private final Set<String> facetNames;
     private final MERGE_MODE mergeMode;
     private final ManyToManyMapper map;
     private String id; // An id used for timing feedback
 
 
     public HubTagAdjuster(Configuration conf) {
-        facetNames = conf.getStrings(CONF_FACET_NAME);
+        facetNames = new HashSet<String>(conf.getStrings(CONF_FACET_NAME));
         mergeMode = MERGE_MODE.valueOf(conf.getString(CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
         map = new ManyToManyMapper(conf.getStrings(CONF_TAG_MAP));
         log.info("Created " + this);
     }
 
-    public List<String> getFacetNames() {
+    public Set<String> getFacetNames() {
         return facetNames;
     }
 
-    // TODO: Fix super ugly FacetResultExternal-requirement
+    public void adjust(SolrParams request, QueryResponse response) {
+        List<FacetField> facetFields = response.getFacetFields();
+        if (facetFields == null) {
+            return;
+        }
+        List<FacetField> adjustedFacetFields = new ArrayList<FacetField>(facetFields.size());
+        for (FacetField facetField: facetFields) {
+            expandTags(facetField);
+        }
+    }
 
-    /**
-     * Adjusts the given facet result using the mapping stated in the
-     * configuration.
-     *
-     * @param facetResult a Summa facet result.
-     */
-    public void adjust(FacetResultExternal facetResult) {
-        //       long startTime = System.currentTimeMillis();
-        for (String facetName : facetNames) {
-            long singleTime = System.currentTimeMillis();
-            List<FacetResultImpl.Tag<String>> oldTags = facetResult.getMap().get(facetName);
-            if (oldTags == null || oldTags.isEmpty()) {
-                continue;
-            }
-            log.trace("Transforming " + oldTags.size() + " tags for facet " + facetName);
-            LinkedHashMap<String, FacetResultImpl.Tag<String>> newTags = new LinkedHashMap<String,
-                    FacetResultImpl.Tag<String>>((int) (
-                    oldTags.size() * 1.5));
-            for (FacetResultImpl.Tag<String> oldTag : oldTags) {
-                if (map.getForward().containsKey(oldTag.getKey())) {
-                    for (String newName : map.getForward().get(oldTag.getKey())) {
-                        mergePut(newTags, newName, oldTag);
-                    }
-                } else {
-                    mergePut(newTags, oldTag.getKey(), oldTag);
+    private void mergeAssign(List<FacetField> facetFields, List<FacetField> adjustedFacetFields) {
+        facetFields.clear();
+        // TODO: Add with merging in case of same name. Remember sorting
+        facetFields.addAll(adjustedFacetFields);
+    }
+
+    private void expandTags(FacetField facetField) {
+        // Do we have a mapping at all?
+        if (!facetNames.contains(facetField.getName())) {
+            return;
+        }
+
+        List<FacetField.Count> tags = expandTags(facetField.getValues());
+        facetField.getValues().clear();
+        for (FacetField.Count tag: tags) {
+            facetField.add(tag.getName(), tag.getCount());
+        }
+    }
+
+    private List<FacetField.Count> expandTags(List<FacetField.Count> tags) {
+        List<FacetField.Count> expandedTags = new ArrayList<FacetField.Count>((int) (tags.size() * 1.5));
+        for (FacetField.Count tag: tags) {
+            Set<String> ets = map.getReverseSet(tag.getName());
+            if (ets == null) {
+                expandedTags.add(tag);
+            } else {
+                for (String et: ets) {
+                    expandedTags.add(new FacetField.Count(null, et, tag.getCount()));
                 }
             }
-            List<FacetResultImpl.Tag<String>> newListTags = new ArrayList<FacetResultImpl.Tag<String>>(newTags.size());
-            for (Map.Entry<String, FacetResultImpl.Tag<String>> tag : newTags.entrySet()) {
-                newListTags.add(tag.getValue());
-
-            }
-            facetResult.getMap().put(facetName, newListTags);
-            facetResult.addTiming("tagadjuster." + facetName + ".adjust", System.currentTimeMillis() - singleTime);
         }
-/*        facetResult.addTiming(
-            getPrefix() + "tagadjuster.adjust.all." + Strings.join(facetNames, "-"),
-            System.currentTimeMillis() - startTime);*/
+        return merge(expandedTags);
     }
 
-/*    private String getPrefix() {
-        return id == null ? "" : id + ".";
-    }*/
-
-    /**
-     * Performs reverse lookup of the source tags pointing to the given
-     * destination tag. Typically used for re-writing queries.
-     * If the name is unknown, it is returned directly.
-     *
-     * @param tagName a destination tag name.
-     * @return source tag names pointing to the given name.
-     */
-    public Set<String> getReverse(String tagName) {
-        if (log.isTraceEnabled()) {
-            log.trace("getReverse(" + tagName + ") returning " +
-                      (map.getReverse().containsKey(tagName) ? map.getReverse().get(tagName) : tagName));
-        }
-        if (map.getReverse().containsKey(tagName)) {
-            return map.getReverse().get(tagName);
-        }
-        return new HashSet<String>(Arrays.asList(tagName));
+    private List<FacetField.Count> merge(List<FacetField.Count> tags) {
+        // TODO: Implement merging
+        return tags;
     }
-
 
     //TODO. The following method can be improve by using Reliability more instead of just using merge mode.
     // ie MORE 4 and LESS 2 -> 4 MORE  (no matter of merge mode)
