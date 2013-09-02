@@ -190,7 +190,7 @@ public class SummonSearchNode extends SolrSearchNode {
         String[] qt = conf.getString(CONF_NONMATCHING_QUERY, DEFAULT_NONMATCHING_QUERY).split(":");
         nonMatchingQuery = new TermQuery(new Term(qt[0], qt[1]));
 //        boolean fixPublication = conf.getBoolean(CONF_FIX_RANGE_PUBLICATION, DEFAULT_FIX_RANGE_PUBLICATION);
-        readyWithoutOpen();
+        //readyWithoutOpen();  // Already handled in parent class
         log.info(String.format("Created Summon wrapper (host=%s, sabotageDismax=%b)", host, sabotageDismax));
     }
 
