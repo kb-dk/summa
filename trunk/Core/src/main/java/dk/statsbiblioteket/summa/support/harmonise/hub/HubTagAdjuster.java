@@ -79,6 +79,20 @@ public class HubTagAdjuster implements Configurable {
      */
     public static final String CONF_TAG_MAP = "tagadjuster.tags";
 
+    public static Map<String, ManyToManyMapper> merge(List<HubTagAdjuster> tagAdjusters) {
+        Map<String, ManyToManyMapper>  merged = new HashMap<String, ManyToManyMapper>(tagAdjusters.size() * 2);
+        for (HubTagAdjuster tagAdjuster: tagAdjusters) {
+            for (String field: tagAdjuster.getFacetNames()) {
+                if (merged.containsKey(field)) {
+                    throw new IllegalStateException(
+                            "Unable to add field '" + field + "' to merged tag maps as the field already exists");
+                }
+                merged.put(field, tagAdjuster.map);
+            }
+        }
+        return merged;
+    }
+
     /**
      * How to merge the counts for the tags when multiple source tags are mapped
      * to one destination tag (and by implication n:n).
@@ -231,6 +245,10 @@ public class HubTagAdjuster implements Configurable {
 
     public String getId() {
         return id;
+    }
+
+    public ManyToManyMapper getMap() {
+        return map;
     }
 
     @Override
