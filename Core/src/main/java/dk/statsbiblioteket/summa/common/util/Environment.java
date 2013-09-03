@@ -217,7 +217,8 @@ public class Environment {
         Runtime rt = Runtime.getRuntime();
         log.info(String.format(
                 "Java runtime version is %s, Summa version is %s. Xmx=%dMB, processors=%d, machineName=%s. All OK",
-                version, SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(), machineName));
+                version, SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(),
+                getMachineName()));
         return version;
     }
 
