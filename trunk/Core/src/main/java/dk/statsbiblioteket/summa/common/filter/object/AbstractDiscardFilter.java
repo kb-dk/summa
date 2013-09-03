@@ -28,11 +28,21 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te")
 public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
 
+    /**
+     * If true, Payloads determined to be discarded are marked as deleted instead of actually being discarded.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_MARK = "discard.markpayload";
+    public static final boolean DEFAULT_MARK = false;
+
     protected boolean logDiscards = true;
+    protected boolean markDiscards;
 
     @SuppressWarnings({"UnusedDeclaration"})
     public AbstractDiscardFilter(Configuration conf) {
         super(conf);
+        markDiscards = conf.getBoolean(CONF_MARK, DEFAULT_MARK);
     }
 
     /**
@@ -46,12 +56,29 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         boolean discard = checkDiscard(payload);
-        if (logDiscards) {
-            if (discard) {
-                Logging.logProcess(getName(), "Discarding", Logging.LogLevel.DEBUG, payload);
-            } else {
+        if (!discard) {
+            if (logDiscards) {
                 Logging.logProcess(getName(), "Payload not discarded", Logging.LogLevel.TRACE, payload);
             }
+            return true;
+        }
+        // Discard signaled
+            if (markDiscards) {
+                if (payload.getRecord() == null) {
+                    Logging.logProcess(getName(),
+                                       "Payload.record should be marked as deleted but did not contain a Record. " +
+                                       "Discarding Payload", Logging.LogLevel.WARN, payload);
+                    return false;
+                } else {
+                    if (logDiscards) {
+                        Logging.logProcess(getName(), "Marking as deleted", Logging.LogLevel.DEBUG, payload);
+                    }
+                    payload.getRecord().setDeleted(true);
+                    return true;
+                }
+            }
+        if (logDiscards) {
+            Logging.logProcess(getName(), "Discarding payload", Logging.LogLevel.DEBUG, payload);
         }
         return !discard;
     }
