@@ -29,6 +29,11 @@ public interface Timer {
     public static final String TIMING = "timing";
 
     /**
+     * Recommended xml attribute for delivering a best-effort machine name.
+     */
+    public static final String MACHINE = "machine";
+
+    /**
      * Adds the given timing information.
      * @param key the designation for the timing information. Keep it short and
      * simple: "dym", "search,raw", "facet.count", "facet.extract" etc.
