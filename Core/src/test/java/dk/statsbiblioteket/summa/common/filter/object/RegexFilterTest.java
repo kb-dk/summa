@@ -14,11 +14,16 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Test cases for {@link RegexFilter}
@@ -40,6 +45,22 @@ public class RegexFilterTest extends TestCase {
         );
 
         return new RegexFilter(conf);
+    }
+
+    private static final String MULTI_SAMPLE =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<MetadataRecord><recordID>phonofile-0000123456789012</recordID><status>deleted</status></MetadataRecord>";
+    public void testMultiLine() throws UnsupportedEncodingException {
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(new Payload(
+                new Record("foo", "bar", MULTI_SAMPLE.getBytes("utf-8")))));
+        RegexFilter regex = new RegexFilter(Configuration.newMemoryBased(
+                AbstractDiscardFilter.CONF_MARK, true,
+                PayloadMatcher.CONF_CONTENT_REGEX, new ArrayList<String>(Arrays.asList(
+                "(?s).{1,1000}?<status>deleted</status>.*"))
+        ));
+        regex.setSource(feeder);
+        assertTrue("There should be a Payload available", regex.hasNext());
+        assertTrue("The Payload should be marked as deleted", regex.next().getRecord().isDeleted());
     }
 
     public PayloadBufferFilter prepareFilterChain(ObjectFilter filter,
