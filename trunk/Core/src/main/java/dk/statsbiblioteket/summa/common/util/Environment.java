@@ -18,6 +18,8 @@ import dk.statsbiblioteket.summa.common.SummaConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,9 @@ import java.util.regex.Pattern;
  */
 public class Environment {
     private static Log log = LogFactory.getLog(Environment.class);
+
+    private static final Pattern VERSION_PATTERN = Pattern.compile(
+            "([0-9]+)\\.([0-9]+)\\.([0-9]+)\\_([0-9]+)\\-b([0-9]+)");
 
     /**
      * Escape any system properties references in Ant-like syntax, eg. the
@@ -70,6 +75,51 @@ public class Environment {
 
         return result;
     }
+
+    /**
+     * Attempts to resolve the machine name with fallback to IP address. This is not authoritative, but "best effort"
+     * and is meant to help debugging in multi-machine setups.
+     * @return the local machine name if possible, else the empty String.
+     */
+    public static synchronized String getMachineName() {
+        if (machineName != null) {
+            return machineName;
+        }
+        // http://stackoverflow.com/questions/1100266/find-physical-machine-name-in-java
+        try {
+            machineName = InetAddress.getLocalHost().getHostName();
+            if (!"localhost".equals(machineName)) {
+                return machineName;
+            }
+            log.warn("getMachineName(): Got 'localhost' as host name, attempting IP address resolving instead");
+            machineName = null;
+        } catch (UnknownHostException e) {
+            log.warn("getMachineName(): UnknownHostException while attempting to resolve machine name by " +
+                     "InetAddress.getLocalHost().getHostName()");
+        } catch (Exception e) {
+            log.warn("getMachineName(): Unexpected exception while attempting to resolve machine name by " +
+                     "InetAddress.getLocalHost().getHostName()", e);
+        }
+        if (machineName != null) {
+            return machineName;
+        }
+
+        try {
+            machineName = InetAddress.getLocalHost().getHostAddress();
+            if (!"127.0.0.1".equals(machineName)) {
+                return machineName;
+            }
+            log.warn("getMachineName(): Got 'localhost' as host name, attempting IP address resolving instead");
+            machineName = null;
+        } catch (Exception e) {
+            log.warn("getMachineName(): Unexpected exception while attempting to resolve machine name by " +
+                     "InetAddress.getLocalHost().getHostAddress()", e);
+        }
+        log.warn("getMachineName(): Unable to resolve machine name. Giving up and assigning the empty String");
+        machineName = "";
+        return machineName;
+    }
+    private static String machineName = null;
 
     /**
      * Return a copy of {@code a} with all system property references expanded
@@ -145,8 +195,8 @@ public class Environment {
                      + "(see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044) for details");
             Runtime rt = Runtime.getRuntime();
             log.info(String.format(
-                    "Summa version is %s. Xmx=%dMB, processors=%d. All OK",
-                    SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors()));
+                    "Summa version is %s. Xmx=%dMB, processors=%d, machineName?%s. All OK",
+                    SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(), getMachineName()));
             return version;
         }
         // version should be like "1.6.0_10-b33"
@@ -156,7 +206,7 @@ public class Environment {
         }
         int update = Integer.parseInt(matcher.group(4));
         int build = Integer.parseInt(matcher.group(5));
-        if ((update >= 4 && update <= 10) && !(update == 10 && build > 25)) {
+        if (update >= 4 && update <= 10 && !(update == 10 && build > 25)) {
             throw new Error(
                     "Incompatible Java runtime version. Due to the "
                     + "bug http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044, "
@@ -166,11 +216,10 @@ public class Environment {
         }
         Runtime rt = Runtime.getRuntime();
         log.info(String.format(
-                "Java runtime version is %s, Summa version is %s. Xmx=%dMB, processors=%d. All OK",
-                version, SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors()));
+                "Java runtime version is %s, Summa version is %s. Xmx=%dMB, processors=%d, machineName=%s. All OK",
+                version, SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(), machineName));
         return version;
     }
 
-    private static Pattern VERSION_PATTERN = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)\\_([0-9]+)\\-b([0-9]+)");
 }
 

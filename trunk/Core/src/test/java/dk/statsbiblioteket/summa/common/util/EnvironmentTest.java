@@ -36,8 +36,7 @@ public class EnvironmentTest extends TestCase {
         String ioTmpdir = System.getProperty("java.io.tmpdir");
         String source = "${user.home} ${java.io.tmpdir}";
 
-        assertEquals(home + " " + ioTmpdir,
-               Environment.escapeSystemProperties(source));
+        assertEquals(home + " " + ioTmpdir, Environment.escapeSystemProperties(source));
     }
 
     /** Test escape two system properties with spaces. */
@@ -46,8 +45,7 @@ public class EnvironmentTest extends TestCase {
         String ioTmpdir = System.getProperty("java.io.tmpdir");
         String source = " ${user.home}  ${java.io.tmpdir} ";
 
-        assertEquals(" " + home + "  " + ioTmpdir + " ",
-               Environment.escapeSystemProperties(source));
+        assertEquals(" " + home + "  " + ioTmpdir + " ", Environment.escapeSystemProperties(source));
     }
 
     /**
@@ -55,27 +53,25 @@ public class EnvironmentTest extends TestCase {
      */
     public void testEscapeNonExistingSysProp () {
         String source = "${user.homer}";
+        assertEquals(source, Environment.escapeSystemProperties(source));
+    }
 
-        assertEquals(source,
-                     Environment.escapeSystemProperties(source));
+    public void testGetMachineName() {
+        assertFalse("The machine name should be something", Environment.getMachineName().isEmpty());
     }
 
     /** Test unclosed system properties. */
     public void testUnclosedSysProp() {
         String source = "${user.home";
 
-        assertEquals(source,
-                     Environment.escapeSystemProperties(source));
+        assertEquals(source, Environment.escapeSystemProperties(source));
     }
 
     /** Test null in properties. */
     public void testNull() {
-        assertEquals(null,
-                     Environment.escapeSystemProperties((String)null));
-        assertEquals(null,
-                     Environment.escapeSystemProperties((String[])null));
-        assertEquals(null,
-                     Environment.escapeSystemProperties((Iterable<String>)null));
+        assertEquals(null, Environment.escapeSystemProperties((String)null));
+        assertEquals(null, Environment.escapeSystemProperties((String[])null));
+        assertEquals(null, Environment.escapeSystemProperties((Iterable<String>)null));
     }
 
     /**
