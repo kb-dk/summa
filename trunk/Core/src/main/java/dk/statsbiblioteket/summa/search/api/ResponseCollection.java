@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.search.api;
 
+import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -71,8 +72,8 @@ public class ResponseCollection extends TimerImpl
     public synchronized String toXML() {
         StringWriter sw = new StringWriter(5000);
         sw.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
-        sw.append(String.format("<responsecollection %s=\"%s\">\n",
-                                ResponseImpl.TIMING, getTiming()));
+        sw.append(String.format("<responsecollection %s=\"%s\" %s=\"%s\">\n",
+                                ResponseImpl.TIMING, getTiming(), ResponseImpl.MACHINE, Environment.getMachineName()));
         // TODO: We really want to thate the namespace!
 //        sw.append("<responsecollection xmlns:\"http://statsbiblioteket.dk/summa/2009/SearchResponse\">\n");
         for (Map.Entry<String, Response> entry: responses.entrySet()) {
