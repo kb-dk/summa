@@ -90,6 +90,9 @@ public class SolrRequestAdjuster {
         // Facet dates
         expandFields(request, FacetParams.FACET_DATE, true);
 
+        // Facet pivot
+        expandFields(request, FacetParams.FACET_PIVOT, true);
+
         // Facet parameters (prefixed by 'f.')
         // We copy the names to avoid errors when iterating and modifying
         for (String key: new HashSet<String>(request.getParameterNames())) {

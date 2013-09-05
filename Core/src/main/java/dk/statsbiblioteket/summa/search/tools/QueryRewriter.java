@@ -321,6 +321,9 @@ public class QueryRewriter {
      *         parser.
      */
     public synchronized String rewrite(String query) throws ParseException {
+        if (query.isEmpty()) {
+            return "";
+        }
         Query q = queryParser.parse(query);
         Query walked = walkQuery(q);
         return walked == null ? null : convertQueryToString(walked, true);

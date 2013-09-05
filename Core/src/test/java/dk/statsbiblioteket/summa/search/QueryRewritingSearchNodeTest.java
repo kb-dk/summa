@@ -29,6 +29,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -96,14 +98,26 @@ public class QueryRewritingSearchNodeTest extends TestCase {
         });
     }
 
-    public void testReduce() throws IOException {
-        Configuration conf = Configuration.newMemoryBased(
-                QueryRewritingSearchNode.CONF_REDUCE, true,
-                QueryRewriter.CONF_QUOTE_TERMS, false
+    public void testReduceToNull() throws IOException {
+        Configuration conf = getDefaultReducerConf();
 
-        );
-        Configuration reducerConf = conf.createSubConfigurations(QueryReducer.CONF_TARGETS, 1).get(0);
-        reducerConf.set(QueryReducer.ReducerTarget.CONF_MATCH_NONES, "Language:abcde32542f");
+        assertTransformations(conf, new String[][]{{
+                "Language:abcde32542f",
+                null
+        }, {
+                "recordBase:s*",
+                null
+        }, {
+                "(recordBase:s*)",
+                null
+        }, {
+                "(recordBase:s* OR Language:abcde32542f) AND recordBase:c*",
+                null
+        }});
+    }
+
+    public void testComplexReduce() throws IOException {
+        Configuration conf = getDefaultReducerConf();
 
         assertTransformations(conf, new String[][]{{
                 "+(hello my:world phrase:\"mongo pongo\") +(something OR Language:abcde32542f)",
@@ -111,13 +125,34 @@ public class QueryRewritingSearchNodeTest extends TestCase {
         }});
     }
 
+    private Configuration getDefaultReducerConf() throws IOException {
+        Configuration conf = Configuration.newMemoryBased(
+                QueryRewritingSearchNode.CONF_REDUCE, true,
+                QueryRewriter.CONF_QUOTE_TERMS, false
+
+        );
+        Configuration reducerConf = conf.createSubConfigurations(QueryReducer.CONF_TARGETS, 1).get(0);
+        reducerConf.set(QueryReducer.ReducerTarget.CONF_MATCH_NONES, new ArrayList<String>(Arrays.asList(
+                "Language:abcde32542f",
+                "recordBase:")));
+        return conf;
+    }
+
+
     public void assertTransformations(Configuration conf, String[][] tests) throws RemoteException {
         CollectingSearchNode inner = new CollectingSearchNode();
         QueryRewritingSearchNode rewriter = new QueryRewritingSearchNode(conf, inner);
         for (String[] test: tests) {
-            rewriter.search(new Request(DocumentKeys.SEARCH_QUERY, test[0]), new ResponseCollection());
-            assertEquals("The query '" + test[0] + "' should be transformed correctly",
-                         test[1], inner.lastRequest.getString(DocumentKeys.SEARCH_QUERY));
+            final String RAW = test[0];
+            final String EXPECTED = test[1];
+
+            rewriter.search(new Request(DocumentKeys.SEARCH_QUERY, RAW), new ResponseCollection());
+            String actual = inner.lastRequest.getString(DocumentKeys.SEARCH_QUERY, null);
+            if (EXPECTED == null) {
+                assertNull("The query should not be present in the request but was " + actual, actual);
+            }
+            assertEquals("The query '" + RAW + "' should be transformed correctly",
+                         EXPECTED, actual);
         }
     }
 
