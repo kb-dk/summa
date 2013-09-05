@@ -88,6 +88,7 @@ public class XMLSplitterParser extends ThreadedStreamParser implements XMLSplitt
         log.trace("Ready to parse");
         handler.resetForNextRecord();
         lastRecordStart = System.nanoTime();
+        handler.setOrigin(source.toString());
         parser.parse(source.getStream(), handler);
         log.debug("Finished parsing " + source + " with " + thisRunQueued + " records produced");
     }

@@ -49,6 +49,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
 
     private XMLSplitterReceiver receiver;
     private XMLSplitterParserTarget target;
+    private String origin = null; // Non-authoritative origin for the current stream, intended for error messages
 
     @SuppressWarnings({"UnusedDeclaration"})
     public XMLSplitterHandler(Configuration conf, XMLSplitterReceiver receiver, XMLSplitterParserTarget target) {
@@ -235,7 +236,8 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                           insideRecordElementStack.remove(insideRecordElementStack.size() - 1) :
                           "NA";
         if (!expected.equals(qName)) {
-            log.warn("endElement: Expected '" + expected + "', got '" + qName + "'");
+            String message = "endElement: Expected '" + expected + "', got '" + qName + "'";
+            Logging.logProcess("XMLSplitterHandler.endElement", message, Logging.LogLevel.WARN, origin);
         } else {
             log.trace("endElement: " + qName);
         }
@@ -250,18 +252,18 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                     makeRandomID(id);
                 } else {
                     String message = "Record found, but no id could be located. Skipping Record";
-                    Logging.logProcess("XMLSplitterHandler.endElement", message, Logging.LogLevel.WARN, "N/A");
+                    Logging.logProcess("XMLSplitterHandler.endElement", message, Logging.LogLevel.WARN, origin);
                     log.warn(message);
                     if (log.isTraceEnabled()) {
-                        log.trace(String.format("Dumping id-less Record-XML (expected id-element %s#%s):\n%s", 
-                                                target.idElement, target.idTag, sw.toString()));
+                        log.trace(String.format("Dumping id-less Record-XML (expected id-element %s#%s) from '%s':\n%s",
+                                                target.idElement, target.idTag, origin, sw.toString()));
                     }
                     if (!missingIDReported) {
                         String missing = "This is the first time an id could not be located for the target.idElement="
                                          + target.idElement + ", so the constructed output is dumped. This dump will "
-                                         + "not be repeated for the duration of the XMLSplitterHandler instance\n"
+                                         + "not be repeated for the duration of the XMLSplitterHandler instance.\n"
                                          + sw.toString();
-                        Logging.logProcess("XMLSplitterHandler.endElement", missing, Logging.LogLevel.WARN, "N/A");
+                        Logging.logProcess("XMLSplitterHandler.endElement", missing, Logging.LogLevel.WARN, origin);
                         log.warn(missing);
                         missingIDReported = true;
                     }
@@ -362,5 +364,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Ignoring request to resolve entity '" + publicId + "'");
         return new InputSource(new StringReader(""));
+    }
+
+    public void setOrigin(String origin) {
+        this.origin = origin;
     }
 }
