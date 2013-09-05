@@ -40,7 +40,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SolrSearchTestBase extends TestCase {
-    public static final String SOLR_HOME = "support/solr_home1"; //data-dir (index) will be created here.
+    public static final String SOLR_HOME = "support/solr_home_default"; //data-dir (index) will be created here.
 
     protected EmbeddedJettyWithSolrServer server = null;
     protected SolrServer solrServer;
