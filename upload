@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# exit on any errors
+set -e 
+
+USER_FILE="upload.id"
+if [ ! -e $USER_FILE ]; then
+    echo "The file '$USER_FILE' must exist and must contain your SourceForge user-ID."
+    echo ""
+    echo "Warning: Do not add $USER_FILE to the version control system!"
+    exit 2
+fi
+USER=`cat $USER_FILE | head -n 1`
+#echo $ID
+
+echo "Cleaning, deploying to Maven repository and uploading to SourceForge for user $USER"
+
 mvn clean
 mvn deploy -DskipTests
 
@@ -8,15 +23,6 @@ mvn deploy -DskipTests
 # takes summix from Samples/Summix/target and uploads
 # it to SourceForge, effectively creating a release.
 
-# exit on any errors
-set -e 
-
-if [ "." == ".$1" ]
-then
-    echo "Usage: upload <sourceforge_user_name>"
-    exit
-fi
-USER=$1
 
 cd Summix/target
 echo "MD5Sum: `md5sum summix-*-SNAPSHOT.zip`"
