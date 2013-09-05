@@ -92,6 +92,9 @@ public class SolrAdjuster extends HubAdjusterBase {
         return requestAdjuster.adjust(request);
     }
 
+    /**
+     * Verify that there are 1 and only 1 sub component.
+     */
     private void checkSubComponents() {
         if (getComponents().size() != 1) {
             throw new IllegalStateException(
