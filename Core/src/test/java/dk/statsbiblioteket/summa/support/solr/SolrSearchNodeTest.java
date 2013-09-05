@@ -55,7 +55,7 @@ import java.util.regex.Pattern;
 public class SolrSearchNodeTest extends TestCase {
     private static Log log = LogFactory.getLog(SolrSearchNodeTest.class);
 
-    public static final String SOLR_HOME = "support/solr_home1"; //data-dir (index) will be created here.
+    public static final String SOLR_HOME = "support/solr_home_default"; //data-dir (index) will be created here.
 
     private EmbeddedJettyWithSolrServer server = null;
 
@@ -101,6 +101,20 @@ public class SolrSearchNodeTest extends TestCase {
 
             String PHRASE = "Solr sample document";
             assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        } finally {
+            searcher.close();
+        }
+    }
+
+    public void testNoQueryNoResult() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = getSearcher();
+        try {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+            ), responses);
+            assertFalse("There should not be a response", responses.iterator().hasNext());
         } finally {
             searcher.close();
         }
