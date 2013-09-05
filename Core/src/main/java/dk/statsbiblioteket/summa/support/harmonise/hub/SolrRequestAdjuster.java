@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
@@ -39,47 +40,35 @@ public class SolrRequestAdjuster {
 
     private final Map<String, ManyToManyMapper> tagAdjusters;
     //private List<HubTagAdjuster> tagAdjusters = new ArrayList<HubTagAdjuster>();
-    private final ManyToManyMapper defaultFieldMap;
+    private final ManyToManyMapper fieldMap;
     private final QueryAdjuster queryAdjuster;
 
     public SolrRequestAdjuster(Configuration conf, ManyToManyMapper fieldMap, List<HubTagAdjuster> tagAdjusters) {
-        defaultFieldMap = fieldMap;
+        this.fieldMap = fieldMap;
         this.tagAdjusters = HubTagAdjuster.merge(tagAdjusters);
-        queryAdjuster = new QueryAdjuster(conf, defaultFieldMap, this.tagAdjusters);
+        queryAdjuster = new QueryAdjuster(conf, this.fieldMap, this.tagAdjusters);
 
         log.info("Created " + this);
     }
 
     private static final Pattern SPLIT = Pattern.compile(" +| *, *");
 
+    /**
+     * Adjusts fields and terms in the given request, according to {@link #fieldMap} and {@link #tagAdjusters}.
+     * @param request will be modified.
+     * @return the modified request. This might be the request object.
+     */
     public SolrParams adjust(ModifiableSolrParams request) {
         // Only a single query
-        String query = request.get(CommonParams.Q);
-        if (query != null) {
-            try {
-                request.set(CommonParams.Q, queryAdjuster.rewrite(query));
-            } catch (ParseException e) {
-                log.warn("ParseException for query '" + query + "'. Query not rewritten", e);
-            }
-        }
+        expandQuery(request, CommonParams.Q);
 
         // Multiple filters
-        String[] filters = request.getParams(CommonParams.FQ);
-        if (filters != null) {
-            for (int i = 0 ; i < filters.length ; i++) {
-                try {
-                    filters[i] = queryAdjuster.rewrite(filters[i]);
-                } catch (ParseException e) {
-                    log.warn("ParseException for filter '" + query + "'. Filter not rewritten", e);
-                }
-            }
-            request.set(CommonParams.FQ, filters);
-        }
+        expandQuery(request, CommonParams.FQ);
 
         // Default field
         String queryField = request.get(CommonParams.DF);
         if (queryField != null) {
-            Set<String> adjustedQueryFields = defaultFieldMap.getForward().get(queryField);
+            Set<String> adjustedQueryFields = fieldMap.getForward().get(queryField);
             if (adjustedQueryFields != null) {
                 if (adjustedQueryFields.size() != 1) {
                     log.warn(String.format(
@@ -90,31 +79,124 @@ public class SolrRequestAdjuster {
         }
 
         // Field list
-        String[] fls = request.getParams(CommonParams.FL);
-        if (fls !=  null) {
-            Set<String> newFields = new HashSet<String>();
-            for (String fl : fls) {
-                for (String field : SPLIT.split(fl)) {
-                    Set<String> replacements = defaultFieldMap.getForwardSet(field);
-                    if (replacements == null) {
-                        newFields.add(field);
-                    } else {
-                        for (String replacement : replacements) {
-                            newFields.add(replacement);
-                        }
-                    }
-                }
+        expandFields(request, CommonParams.FL, true);
+
+        // Facets
+        expandFields(request, FacetParams.FACET_FIELD, true);
+
+        // Facet ranges
+        expandFields(request, FacetParams.FACET_RANGE, true);
+
+        // Facet dates
+        expandFields(request, FacetParams.FACET_DATE, true);
+
+        // Facet parameters (prefixed by 'f.')
+        // We copy the names to avoid errors when iterating and modifying
+        for (String key: new HashSet<String>(request.getParameterNames())) {
+            if (!key.startsWith("f.")) {
+                continue;
             }
-            request.set(CommonParams.FL, Strings.join(newFields, ","));
+            String[] tokens = DOT_SPLIT.split(key, 3);
+            if (tokens.length == 1) {
+                continue;
+            }
+            String field = tokens[1];
+            Set<String> mappedFields = fieldMap.getForward().get(field);
+            if (mappedFields == null) {
+                continue;
+            }
+            request.remove(key);
+            for (String mappedField: mappedFields) {
+                String mappedKey = "f." + mappedField + (tokens.length == 2 ? "" : tokens[2]);
+                if (request.get(mappedKey) != null) {
+                    log.warn(String.format(
+                            "Mapping '%s' to '%s' in Solr request but the destination key already exists."
+                            + "The destination key will be overwritten", key, mappedKey));
+                    request.remove(mappedKey);
+                }
+                // This always collapses to String so we lose types. That is not optimal
+                request.set(mappedField, request.getParams(key));
+            }
         }
 
-        // TODO: Facet fields
         return request;
+    }
+    private static final Pattern DOT_SPLIT = Pattern.compile("[.]");
+
+    /**
+     * Extracts the queries for the key and rewrites them according to {@link #fieldMap} and
+     * {@link #tagAdjusters}, assigning the result back into the request.
+     * @param request will potentially be modified.
+     * @param key     the key for the values to map.
+     */
+    private void expandQuery(ModifiableSolrParams request, String key) {
+        String[] queries = request.getParams(key);
+        if (queries != null) {
+            for (int i = 0 ; i < queries.length ; i++) {
+                try {
+                    queries[i] = queryAdjuster.rewrite(queries[i]);
+                } catch (ParseException e) {
+                    log.warn("ParseException for query '" + queries[i] + "'. Query not rewritten", e);
+                }
+            }
+            request.remove(key);
+            request.set(key, queries);
+        }
+    }
+
+    /**
+     * If values for the given key exists, they are mapped using the {@link #fieldMap} to new fields, which
+     * are assigned back into the request.
+     * @param request     will potentially be modified.
+     * @param key         the key for the values to map.
+     * @param splitValues if true, values are assumed to be comma-separated and will be split accordingly.
+     */
+    private void expandFields(ModifiableSolrParams request, String key, boolean splitValues) {
+        if (fieldMap == null) {
+            return;
+        }
+        String[] fields = request.getParams(key);
+        if (fields == null) {
+            return;
+        }
+
+        Set<String> newFields = new HashSet<String>();
+        for (String field : fields) {
+            if (splitValues) {
+                for (String subField : SPLIT.split(field)) {
+                    expandFields(newFields, subField);
+                }
+            } else {
+                expandFields(newFields, field);
+            }
+        }
+        request.remove(key);
+        if (newFields.size() == 1) {
+            request.set(key, newFields.iterator().next());
+        } else if (!newFields.isEmpty()) {
+            String[] aFields = new String[newFields.size()];
+            newFields.toArray(aFields);
+            request.set(key, aFields);
+        }
+    }
+
+    /**
+     * Expand the given field according to {@link #fieldMap} and adds the result to fields.
+     * @param fields the sink for the expanded field.
+     * @param field the field to expand.
+     */
+    private void expandFields(Set<String> fields, String field) {
+        Set<String> replacements = fieldMap.getForwardSet(field);
+        if (replacements == null) {
+            fields.add(field);
+        } else {
+            fields.addAll(replacements);
+        }
     }
 
     @Override
     public String toString() {
         // TODO: Implement this
-        return "SolrRequestAdjuster(fieldMap=" + defaultFieldMap + ", #tagAdjusters=" + tagAdjusters.size() + ")";
+        return "SolrRequestAdjuster(fieldMap=" + fieldMap + ", #tagAdjusters=" + tagAdjusters.size() + ")";
     }
 }

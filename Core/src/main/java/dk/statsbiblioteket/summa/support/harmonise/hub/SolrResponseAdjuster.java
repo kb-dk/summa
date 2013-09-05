@@ -49,6 +49,12 @@ public class SolrResponseAdjuster {
         log.info("Created " + this);
     }
 
+    /**
+     * Perform all necessary adjustments of the given response.
+     * @param request  the originating request that lead to the response.
+     * @param response a non-mapped Solr response.
+     * @return the response mapped as specified when creating the SolrResponseAdjuster.
+     */
     public QueryResponse adjust(SolrParams request, QueryResponse response) {
         adjustDocuments(request, response);
         for (HubTagAdjuster hubTagAdjuster: hubTagAdjusters) {
@@ -58,6 +64,11 @@ public class SolrResponseAdjuster {
         return response;
     }
 
+    /**
+     * Adjust field names as well as tag content for the facets in the given response.
+     * @param request  the originating request that lead to the given response.
+     * @param response normally with facet structures.
+     */
     private void adjustFacetFields(SolrParams request, QueryResponse response) {
         if (fieldMap == null) {
             return;
@@ -70,16 +81,64 @@ public class SolrResponseAdjuster {
         for (FacetField facetField: facetFields) {
             expandFacet(adjustedFacetFields, facetField);
         }
-        mergeAssign(facetFields, adjustedFacetFields);
+        merge(request, facetFields, adjustedFacetFields);
     }
 
-    private void mergeAssign(List<FacetField> facetFields, List<FacetField> adjustedFacetFields) {
-        facetFields.clear();
-        // TODO: Add with merging in case of same name. Remember sorting
-        facetFields.addAll(adjustedFacetFields);
+    /**
+     * Merges the source facet fields into the destination list. Duplicate facet fields, identified by name, are
+     * handled by copying the tags from the source into the destination facet field.
+     * @param request     the request that lead to the given source facet fields.
+     * @param destination the facet fields from source are added here.
+     * @param source      facet fields to merge into destination.
+     */
+    private void merge(SolrParams request, List<FacetField> destination, List<FacetField> source) {
+        destination.clear();
+
+        for (FacetField adjusted: source) {
+            FacetField existing = getMatchingField(destination, adjusted);
+            if (existing == null) {
+                destination.add(adjusted);
+                continue;
+            }
+            merge(request, existing, adjusted);
+        }
     }
 
+    /**
+     * Merge the Counts from the source facet field into the existing facet field.
+     * @param request  the request that lead to the facet fields.
+     * @param existing receiving field for the Counts from source.
+     * @param source   the provider of extra Counts.
+     */
+    @SuppressWarnings("UnusedParameters")
+    private void merge(SolrParams request, FacetField existing, FacetField source) {
+        for (FacetField.Count count: source.getValues()) {
+            // TODO: Merge counts - what about min/max/sum?
+            existing.add(count.getName(), count.getCount());
+        }
+    }
 
+    /**
+     * Seeks through existing fields and return the field matching the name in wanted field.
+     * @param existing a list of fields to search through.
+     * @param wanted   the field to search for.
+     * @return a matching field from existing or null if there was no match.
+     */
+    private FacetField getMatchingField(List<FacetField> existing, FacetField wanted) {
+        for (FacetField current: existing) {
+            if (wanted.getName().equals(current.getName())) {
+                return current;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolve the mapped name(s) for facetField and create new facet field(s) with the name(s), adding them to
+     * adjustedFacetFields.
+     * @param adjustedFacetFields the destination for the mapped facetField.
+     * @param facetField a non-mapped facet field.
+     */
     private void expandFacet(List<FacetField> adjustedFacetFields, FacetField facetField) {
         if (fieldMap == null || !fieldMap.getReverse().containsKey(facetField.getName())) {
             adjustedFacetFields.add(facetField);
@@ -90,6 +149,12 @@ public class SolrResponseAdjuster {
         }
     }
 
+    /**
+     * Utility-method for cloning a facet field with a new name.
+     * @param facetField the facet field to clone.
+     * @param newFieldName the new name.
+     * @return the cloned facet field with the new name, fully independent from the old facet field.
+     */
     private FacetField cloneFacet(FacetField facetField, String newFieldName) {
         FacetField newFacet = new FacetField(newFieldName, facetField.getGap(), facetField.getEnd());
         for (FacetField.Count tag: facetField.getValues()) {
@@ -98,6 +163,11 @@ public class SolrResponseAdjuster {
         return newFacet;
     }
 
+    /**
+     * Adjust fields and text in documents according to the original configuration.
+     * @param request  the request that led to the given response.
+     * @param response the document structures in this will be adjusted.
+     */
     @SuppressWarnings("UnusedParameters")
     private void adjustDocuments(SolrParams request, QueryResponse response) {
         SolrDocumentList docs = response.getResults();
@@ -125,6 +195,7 @@ public class SolrResponseAdjuster {
                              entry.getValue().size() == 1 ? entry.getValue().iterator().next() : entry.getValue());
             }
             // TODO: Grouped
+            // TODO: Adjust scores
         }
 
         // TODO: Sort Values

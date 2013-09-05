@@ -79,6 +79,12 @@ public class HubTagAdjuster implements Configurable {
      */
     public static final String CONF_TAG_MAP = "tagadjuster.tags";
 
+    /**
+     * Create a single fieldName -> tagAdjuster structure from the given tagAdjusters.
+     * @param tagAdjusters a list of adjusters.
+     * @return a single mapping from field name to tag maps.
+     * @throws IllegalStateException if two tagAdjusters containg the same field name.
+     */
     public static Map<String, ManyToManyMapper> merge(List<HubTagAdjuster> tagAdjusters) {
         Map<String, ManyToManyMapper>  merged = new HashMap<String, ManyToManyMapper>(tagAdjusters.size() * 2);
         for (HubTagAdjuster tagAdjuster: tagAdjusters) {
@@ -125,6 +131,11 @@ public class HubTagAdjuster implements Configurable {
         return facetNames;
     }
 
+    /**
+     * Adjusts tags in the facets matching this adjuster.
+     * @param request  the quest that resulted in the given response.
+     * @param response facets mapped by this adjuster will be mapped.
+     */
     @SuppressWarnings("UnusedParameters")
     public void adjust(SolrParams request, QueryResponse response) {
         List<FacetField> facetFields = response.getFacetFields();
@@ -136,6 +147,9 @@ public class HubTagAdjuster implements Configurable {
         }
     }
 
+    /**
+     * @param facetField if this adjuster matches the facet field name, the contained tags will be mapped.
+     */
     private void expandTags(FacetField facetField) {
         // Do we have a mapping at all?
         if (!facetNames.contains(facetField.getName())) {
@@ -149,6 +163,11 @@ public class HubTagAdjuster implements Configurable {
         }
     }
 
+    /**
+     * Map and potential expand the tags.
+     * @param tags the original tags to expand.
+     * @return a temporary structure with the expanded tags.
+     */
     private Map<String, Long> expandTags(List<FacetField.Count> tags) {
         Map<String, Long> expandedTags = new LinkedHashMap<String, Long>((int) (tags.size() * 1.5));
         for (FacetField.Count tag: tags) {
@@ -164,22 +183,28 @@ public class HubTagAdjuster implements Configurable {
         return expandedTags;
     }
 
+    /**
+     * Merge the count into the given tags structure. If the tag already exists {@link #mergeMode} defines how the
+     * counts are updated.
+     * @param tags  existing tags.
+     * @param name  the name of the new tag.
+     * @param count the count for the new tag.
+     */
     // TODO: Consider how and if to handle reliability
     private void mergeTag(Map<String, Long> tags, String name, long count) {
         if (!tags.containsKey(name)) {
             tags.put(name, count);
             return;
         }
-        Long oldCount = tags.get(name);
         switch (mergeMode) {
             case min:
-                tags.put(name, Math.min(oldCount, count));
+                tags.put(name, Math.min(tags.get(name), count));
                 break;
             case max:
-                tags.put(name, Math.max(oldCount, count));
+                tags.put(name, Math.max(tags.get(name), count));
                 break;
             case sum:
-                tags.put(name, oldCount + count);
+                tags.put(name, tags.get(name) + count);
                 break;
             default:
                 throw new IllegalArgumentException("The mergeMode '" + mergeMode + "' is unknown");
