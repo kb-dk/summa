@@ -209,7 +209,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
         try {
             XMLStreamReader inXML = xmlInputFactory.createXMLStreamReader(new StringReader(structure));
             XMLStreamWriter outXML = xmlOutputFactory.createXMLStreamWriter(alto);
-            generateXML(inXML, outXML);
+            generateXML(inXML, outXML, id);
         } catch (XMLStreamException e) {
             throw new IllegalStateException("Unable to create XML Stream", e);
         }
@@ -223,7 +223,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
         }
     }
 
-    private void generateXML(XMLStreamReader reader, XMLStreamWriter writer) throws XMLStreamException {
+    private void generateXML(XMLStreamReader reader, XMLStreamWriter writer, String id) throws XMLStreamException {
         while (reader.hasNext()) {
             reader.next();
             switch(reader.getEventType()) {
@@ -248,6 +248,12 @@ public class AltoGeneratorFilter implements ObjectFilter {
                                     reader.getAttributeValue(i);
                         writer.writeAttribute(reader.getAttributeLocalName(i), value);
                     }
+
+                    if ("fileName".equals(reader.getLocalName())) {
+                        writer.writeCharacters(reader.getElementText() + "_" + id);
+                        reader.next(); // End element
+                        writer.writeEndElement();
+                    }
                     break;
                 case XMLStreamConstants.END_ELEMENT:
                     writer.writeEndElement();
@@ -256,7 +262,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
                     writer.writeEndDocument();
                     break;
                 case XMLStreamConstants.CHARACTERS:
-                    writer.writeCharacters(String.valueOf(reader.getTextCharacters()));
+                    writer.writeCharacters(String.valueOf(reader.getText()));
                     break;
                 case XMLStreamConstants.CDATA:
                     writer.writeCData(reader.getPIData());
