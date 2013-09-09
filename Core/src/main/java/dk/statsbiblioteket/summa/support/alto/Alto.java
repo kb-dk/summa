@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.support.alto;
 
 import com.sun.corba.se.impl.presentation.rmi.IDLNameTranslatorImpl;
 import dk.statsbiblioteket.summa.common.xml.XMLStepper;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -81,7 +82,13 @@ public class Alto {
                 if ("MeasurementUnit".equals(current)) {
                     String unit = xml.getElementText();
                     if (!unit.isEmpty()) {
-                        measurementUnit = MEASUREMENT_UNIT.valueOf(unit);
+                        try {
+                            measurementUnit = MEASUREMENT_UNIT.valueOf(unit);
+                        } catch (IllegalArgumentException e) {
+                            throw new IllegalArgumentException("The MeasurementUnit '" + unit
+                                                               + "' is unknown. Only the following units are accepted: "
+                                                               + Strings.join(MEASUREMENT_UNIT.values()), e);
+                        }
                     }
                     return true;
                 }
@@ -166,7 +173,7 @@ public class Alto {
                         blockCount++;
                         if (equals(currentBlock.getIDNext(), groupedBlock.getID())
                             || equals(groupedBlock.getIDNext(), currentBlock.getID())) {
-                            log.debug("Adding block " + currentBlock.getID() + " to group " + entry.getKey());
+                            log.trace("Adding block " + currentBlock.getID() + " to group " + entry.getKey());
                             entry.getValue().add(currentBlock);
                             continue currents;
                         }
@@ -174,11 +181,12 @@ public class Alto {
                 }
                 // No links, create a new group
                 String groupID = "segment_" + counter++;
-                log.debug("Creating group " + groupID + " for block " + currentBlock.getID());
+                log.trace("Creating group " + groupID + " for block " + currentBlock.getID());
                 groups.put(groupID, new ArrayList<TextBlock>(Arrays.asList(currentBlock)));
             }
         }
         log.debug("Created " + groups.size() + " groups with a total of " + blockCount + " TextBlocks");
+        textBlockGroups = groups;
         return groups;
     }
 

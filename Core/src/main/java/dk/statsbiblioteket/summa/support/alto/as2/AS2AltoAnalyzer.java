@@ -173,7 +173,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
         public String getURL() {
             Matcher originMatcher = urlPattern.matcher(getRawDesignation(alto));
             if (!originMatcher.matches()) {
-                throw new IllegalArgumentException("Unable to match '" + getOrigin()
+                throw new IllegalArgumentException("Unable to match '" + getRawDesignation(alto)
                                                    + "' using origin pattern '" + urlPattern.pattern() + "'");
             }
             return originMatcher.replaceAll(urlReplacement);
