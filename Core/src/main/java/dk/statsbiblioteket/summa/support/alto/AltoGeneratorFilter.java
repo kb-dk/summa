@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.util.ReaderInputStream;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
@@ -157,6 +158,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
      */
     private void initialize() {
         log.trace("initialize() called");
+        Profiler profiler = new Profiler();
         Set<String> terms = new HashSet<String>(10000);
         while (source.hasNext()) {
             Payload sourcePayload = source.next();
@@ -170,12 +172,15 @@ public class AltoGeneratorFilter implements ObjectFilter {
                 log.warn("XMLStreamException while reading content from " + sourcePayload + ". Skipping Payload", e);
             }
             sourcePayload.close();
+            profiler.beat();
         }
         source.close(true);
         this.terms.addAll(terms);
         if (this.terms.isEmpty()) {
             throw new IllegalStateException("Unable to extract any terms from source");
         }
+        log.info(String.format("initialize() finished analyzing %d samples and got %d unique terms in %s",
+                               profiler.getBeats(), terms.size(), profiler.getSpendTime()));
     }
 
     // Step through XML and add all terms from String.CONTENT
@@ -386,8 +391,8 @@ public class AltoGeneratorFilter implements ObjectFilter {
     @Override
     public String toString() {
         return String.format("AltoGeneratorFilter(id='%s', base='%s', seed=%d, randomTermChance=%f, createStream=%b, " +
-                             "structured=%d/%d, delivered=%d/%d)",
+                             "structured=%d/%d, terms=%d, delivered=%d/%d)",
                              id, base, seed, randomTermChance, createStream,
-                             structures.size(), maxStructures, delivered, maxRecords);
+                             structures.size(), maxStructures, terms.size(), delivered, maxRecords);
     }
 }
