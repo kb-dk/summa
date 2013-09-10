@@ -22,18 +22,20 @@ import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.summa.support.alto.as2.AS2AltoAnalyzer;
 import dk.statsbiblioteket.summa.support.alto.as2.AS2AltoAnalyzerTest;
 import dk.statsbiblioteket.summa.support.alto.as2.AS2AltoParser;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -54,6 +56,19 @@ public class AltoGeneratorFilterTest extends TestCase {
         assertEquals("The correct number of ALTO records should be produced", RECORDS, received);
     }
 
+    public void testSpeedGenerate() throws IOException {
+        final int RECORDS = 100000;
+        Profiler profiler = new Profiler();
+
+        AltoGeneratorFilter generator = getGenerator(RECORDS);
+        while (generator.pump()) {
+            profiler.beat();
+        }
+        generator.close(true);
+        log.info(String.format("Generated %d ALTO-records at %d records/sec",
+                               profiler.getBeats(), (int) profiler.getBps(true)));
+    }
+
     public void testAnalyzing() throws IOException {
         final int RECORDS = 5;
         final int EXPECTED_SEGMENTS = 35;
@@ -72,6 +87,19 @@ public class AltoGeneratorFilterTest extends TestCase {
         }
         assertEquals("The correct number of ALTO segments should be produced", EXPECTED_SEGMENTS, received);
         assertEquals("IDs should be unique (#segments = #unique_IDs", received, ids.size());
+    }
+
+    public void testSpeedAnalyze() throws IOException {
+        final int RECORDS = 100;
+        Profiler profiler = new Profiler();
+
+        ObjectFilter analyzer = getAnalyzer(RECORDS);
+        while (analyzer.pump()) {
+            profiler.beat();
+        }
+        analyzer.close(true);
+        log.info(String.format("Processed %d ALTO-records which contained %d articles at %d articles/sec",
+                               RECORDS, profiler.getBeats(), (int)profiler.getBps(true)));
     }
 
     private ObjectFilter getAnalyzer(int records) throws IOException {
