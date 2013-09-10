@@ -21,11 +21,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-/**
- *
- */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.QA_OK,
         author = "te")
 public class AS2AltoParser extends AltoParser {
     private static Log log = LogFactory.getLog(AS2AltoParser.class);
@@ -36,6 +33,11 @@ public class AS2AltoParser extends AltoParser {
 
     @Override
     protected AltoAnalyzerBase createAnalyzer(Configuration conf) {
+        log.trace("Creating analyzer");
         return new AS2AltoAnalyzer(conf);
+    }
+
+    public String toString() {
+        return "AS2AltoParser()";
     }
 }

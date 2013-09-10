@@ -121,6 +121,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
 
     private final String id;
     private int delivered = 0;
+    private long genTime = 0;
     private ObjectFilter source = null;
 
     private final List<String> structures;
@@ -205,6 +206,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
      * @return a Payload with Alto XML.
      */
     private Payload generate() {
+        genTime -= System.nanoTime();
         if (structures.isEmpty()) {
             throw new IllegalStateException("No structures in " + this);
         }
@@ -214,21 +216,35 @@ public class AltoGeneratorFilter implements ObjectFilter {
         try {
             XMLStreamReader inXML = xmlInputFactory.createXMLStreamReader(new StringReader(structure));
             XMLStreamWriter outXML = xmlOutputFactory.createXMLStreamWriter(alto);
-            generateXML(inXML, outXML, id);
+            generateXML(inXML, outXML, id, false);
         } catch (XMLStreamException e) {
             throw new IllegalStateException("Unable to create XML Stream", e);
         }
-        if (createStream) {
-            return new Payload(new ReaderInputStream(new StringReader(alto.toString()), "utf-8"), id);
-        }
         try {
-            return new Payload(new Record(id, base, alto.toString().getBytes("utf-8")));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("utf-8 must be supported", e);
+            if (createStream) {
+                return new Payload(new ReaderInputStream(new StringReader(alto.toString()), "utf-8"), id);
+            }
+            try {
+                return new Payload(new Record(id, base, alto.toString().getBytes("utf-8")));
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("utf-8 must be supported", e);
+            }
+        } finally {
+            genTime += System.nanoTime();
         }
     }
 
-    private void generateXML(XMLStreamReader reader, XMLStreamWriter writer, String id) throws XMLStreamException {
+    /**
+     * Transfer the ALTO XML from reader to writer, replacing String.CONTENT attributes and the fileName element.
+     * @param reader ALTO source.
+     * @param writer ALTO destination.
+     * @param id will be appended to the existing fileName.
+     * @param hackedTerms if true, terms are replaced with {@code ¤¤¤termCount¤¤¤}, for example {@code ¤¤¤5¤¤¤}.
+     *                    if false, terms are replaced with new semi-random terms.
+     * @throws XMLStreamException
+     */
+    private void generateXML(XMLStreamReader reader, XMLStreamWriter writer, String id, boolean hackedTerms)
+            throws XMLStreamException {
         while (reader.hasNext()) {
             reader.next();
             switch(reader.getEventType()) {
@@ -249,7 +265,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
                     boolean isStringElement = "String".equals(reader.getLocalName());
                     for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
                         String value = isStringElement && "CONTENT".equals(reader.getAttributeLocalName(i)) ?
-                                transformContent(reader.getAttributeValue(i)) :
+                                transformContent(reader.getAttributeValue(i), hackedTerms) :
                                     reader.getAttributeValue(i);
                         writer.writeAttribute(reader.getAttributeLocalName(i), value);
                     }
@@ -284,17 +300,82 @@ public class AltoGeneratorFilter implements ObjectFilter {
         writer.flush();
     }
 
+    private class Template {
+        private final Random random;
+        private final List<String> terms;
+
+        private final List<String> texts = new ArrayList<String>();
+        private final List<Integer> termCounts = new ArrayList<Integer>();
+        private boolean lastAddWasTerm = false;
+        private final StringBuffer sb = new StringBuffer();
+
+        // terms must be entity-escaped
+        private Template(List<String> terms, Random random) {
+            this.terms = terms;
+            this.random = random;
+        }
+
+        public void add(String text) {
+            if (lastAddWasTerm) {
+                throw new IllegalStateException("A term count must be added at this point");
+            }
+            texts.add(text);
+            lastAddWasTerm = true;
+        }
+
+        public void add(int termCount) {
+            if (!lastAddWasTerm) {
+                throw new IllegalStateException("A text must be added at this point");
+            }
+            termCounts.add(termCount);
+            lastAddWasTerm = false;
+        }
+
+        public synchronized String getRandomAlto() {
+            sb.setLength(0);
+            fillRandomAlto(sb);
+            return sb.toString();
+        }
+
+        public void fillRandomAlto(StringBuffer sb) {
+            for (int i = 0 ; i < texts.size() ; i++) {
+                sb.append(texts.get(i));
+                if (i < termCounts.size()) {
+                    fillRandomTerms(sb, termCounts.get(i));
+                }
+            }
+        }
+
+        private void fillRandomTerms(StringBuffer sb, Integer numTerms) {
+            for (int i = 0 ; i < numTerms ; i++) {
+                if (i > 0) {
+                    sb.append(' ');
+                }
+                if (randomTermChance != 0.0d && random.nextDouble() < randomTermChance) {
+                    addRandomString(sb);
+                } else {
+                    sb.append(terms.get(random.nextInt(terms.size())));
+                }
+            }
+        }
+    }
+
     /**
      * Generates new content with the same number of terms as the old. The new terms are taken at random from the
      * sample ALTO content, with random words generated as per {@link #randomTermChance}.
-     * @param oldContent the old content from an ALTO structure.
+     * @param oldContent  the old content from an ALTO structure.
+     * @param hackedTerms if true, terms are replaced with {@code ¤¤¤termCount¤¤¤}, for example {@code ¤¤¤5¤¤¤}.
+     *                    if false, terms are replaced with new semi-random terms.
      * @return new semi-random content.
      */
-    private synchronized String transformContent(String oldContent) {
+    private synchronized String transformContent(String oldContent, boolean hackedTerms) {
         int numTerms = SPACE_SPLIT.split(oldContent).length;
+        if (hackedTerms) {
+            return "¤¤¤" + numTerms + "¤¤¤";
+        }
         sb.setLength(0);
         for (int i = 0 ; i < numTerms ; i++) {
-            if (sb.length() > 0) {
+            if (i > 0) {
                 sb.append(' ');
             }
             if (randomTermChance != 0.0d && random.nextDouble() < randomTermChance) {
@@ -364,7 +445,8 @@ public class AltoGeneratorFilter implements ObjectFilter {
     }
     @Override
     public void close(boolean success) {
-        log.debug("Closing down " + this + " with success=" + success);
+        log.info(String.format("Closing down %s with success=%b. Generated %d ALTO records at %f ms/record",
+                               this, success, delivered, delivered == 0 ? 0 : genTime * 1.0d / 1000000 / delivered));
         delivered = maxRecords;
     }
 
