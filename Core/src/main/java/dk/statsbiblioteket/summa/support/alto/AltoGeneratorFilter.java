@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import javax.xml.stream.*;
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -109,7 +110,6 @@ public class AltoGeneratorFilter implements ObjectFilter {
     private final double randomTermChance;
     private final static int randomTermMinLength = 2;
     private final static int randomTermMaxLength = 10;
-    private final double structureReplaceChance;
     private final String base;
     private final Random random = new Random();
     private final XMLInputFactory xmlInputFactory = XMLInputFactory.newFactory();
@@ -124,33 +124,26 @@ public class AltoGeneratorFilter implements ObjectFilter {
     private long genTime = 0;
     private ObjectFilter source = null;
 
-    private final List<String> structures;
+    private final RandomList<Template> templates;
+    private final RandomList<String> structures;
     // TODO: Consider using a weighted approach: http://stackoverflow.com/questions/6737283/weighted-randomness-in-java
     private final List<String> terms = new ArrayList<String>();
+
+    private final boolean hackedMode;
 
     public AltoGeneratorFilter(Configuration conf) {
         id = conf.getString(ObjectFilterImpl.CONF_FILTER_NAME, "AltoGenerator");
         maxRecords = conf.getInt(CONF_RECORDS, DEFAULT_RECORDS);
         maxStructures = conf.getInt(CONF_STRUCTURES, DEFAULT_STRUCTURES);
-        structures = new ArrayList<String>(maxStructures) {
-            @Override
-            public boolean add(String s) {
-                while (size() >= maxStructures) {
-                    if (random.nextDouble() <= structureReplaceChance) {
-                        remove(random.nextInt(size()));
-                    } else {
-                        return false;
-                    }
-                }
-                return super.add(s);
-            }
-        };
+        double structureReplaceChance = conf.getDouble(CONF_STRUCTURE_REPLACE_CHANCE, DEFAULT_STRUCTURE_REPLACE_CHANCE);
         seed = conf.getLong(CONF_RANDOM_SEED, random.nextLong());
         random.setSeed(seed);
         randomTermChance = conf.getDouble(CONF_RANDOM_TERM_CHANCE, DEFAULT_RANDOM_TERM_CHANCE);
-        structureReplaceChance = conf.getDouble(CONF_STRUCTURE_REPLACE_CHANCE, DEFAULT_STRUCTURE_REPLACE_CHANCE);
         createStream = conf.getBoolean(CONF_STREAM, DEFAULT_STREAM);
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
+        structures = new RandomList<String>(maxStructures, structureReplaceChance, random);
+        templates = new RandomList<Template>(maxStructures, structureReplaceChance, random);
+        hackedMode = true;
         log.info("Created " + this);
     }
 
@@ -180,6 +173,9 @@ public class AltoGeneratorFilter implements ObjectFilter {
         if (this.terms.isEmpty()) {
             throw new IllegalStateException("Unable to extract any terms from source");
         }
+        for (String structure: structures) {
+            templates.add(generateTemplate(structure, random));
+        }
         log.info(String.format("initialize() finished analyzing %d samples and got %d unique terms in %s",
                                profiler.getBeats(), terms.size(), profiler.getSpendTime()));
     }
@@ -192,7 +188,13 @@ public class AltoGeneratorFilter implements ObjectFilter {
             if (reader.getEventType() == XMLStreamConstants.START_ELEMENT && "String".equals(reader.getLocalName())) {
                 for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
                     if ("CONTENT".equals(reader.getAttributeLocalName(i))) {
-                        Collections.addAll(terms, SPACE_SPLIT.split(reader.getAttributeValue(i)));
+                        if (!hackedMode) {
+                            Collections.addAll(terms, SPACE_SPLIT.split(reader.getAttributeValue(i)));
+                        } else { // Entity-escape as the values will be used directly
+                            for (String term: SPACE_SPLIT.split(reader.getAttributeValue(i))) {
+                                terms.add(XMLUtil.encode(term));
+                            }
+                        }
                         break;
                     }
                 }
@@ -211,7 +213,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
             throw new IllegalStateException("No structures in " + this);
         }
         String id = "random_alto_" + generateID();
-        String structure = structures.get(random.nextInt(structures.size()));
+        String structure = structures.getRandom();
         StringWriter alto = new StringWriter();
         try {
             XMLStreamReader inXML = xmlInputFactory.createXMLStreamReader(new StringReader(structure));
@@ -234,17 +236,41 @@ public class AltoGeneratorFilter implements ObjectFilter {
         }
     }
 
+    private Payload generateFromTemplate() {
+        genTime -= System.nanoTime();
+        if (templates.isEmpty()) {
+            throw new IllegalStateException("No templates in " + this);
+        }
+        String id = "random_alto_" + generateID();
+        Template template = templates.getRandom();
+        try {
+            if (createStream) {
+                return new Payload(new ReaderInputStream(new StringReader(template.getRandomAlto(id)), "utf-8"), id);
+            }
+            try {
+                return new Payload(new Record(id, base, template.getRandomAlto(id).getBytes("utf-8")));
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("utf-8 must be supported", e);
+            }
+        } finally {
+            genTime += System.nanoTime();
+        }
+    }
+
     /**
      * Transfer the ALTO XML from reader to writer, replacing String.CONTENT attributes and the fileName element.
      * @param reader ALTO source.
      * @param writer ALTO destination.
      * @param id will be appended to the existing fileName.
-     * @param hackedTerms if true, terms are replaced with {@code ¤¤¤termCount¤¤¤}, for example {@code ¤¤¤5¤¤¤}.
-     *                    if false, terms are replaced with new semi-random terms.
+     * @param hackedTerms if true, terms are replaced with {@code ¤¤¤termCount¤¤¤}, for example {@code ¤¤¤5¤¤¤} and
+     *                    filename is replaced with {@code ¤¤¤999999999¤¤¤}.
+     *                    if false, terms are replaced with new semi-random terms and filename appended with id.
+     * @return the original filename or null if not located.
      * @throws XMLStreamException
      */
-    private void generateXML(XMLStreamReader reader, XMLStreamWriter writer, String id, boolean hackedTerms)
+    private String generateXML(XMLStreamReader reader, XMLStreamWriter writer, String id, boolean hackedTerms)
             throws XMLStreamException {
+        String filename = null;
         while (reader.hasNext()) {
             reader.next();
             switch(reader.getEventType()) {
@@ -271,7 +297,8 @@ public class AltoGeneratorFilter implements ObjectFilter {
                     }
 
                     if ("fileName".equals(reader.getLocalName())) {
-                        writer.writeCharacters(reader.getElementText() + "_" + id);
+                        filename = reader.getElementText();
+                        writer.writeCharacters(hackedTerms ? FILENAME_PLACEHOLDER : filename + "_" + id);
                         reader.next(); // End element
                         writer.writeEndElement();
                     }
@@ -298,14 +325,50 @@ public class AltoGeneratorFilter implements ObjectFilter {
             }
         }
         writer.flush();
+        return filename;
     }
+    private static final int FILENAME_MAGIC_NUMBER = 999999999;
+    private static final String FILENAME_PLACEHOLDER = "¤¤¤" + FILENAME_MAGIC_NUMBER + "¤¤¤";
 
+    private Template generateTemplate(String sourceContent, Random random) {
+        try {
+            StringWriter templateString = new StringWriter();
+            XMLStreamReader inXML = xmlInputFactory.createXMLStreamReader(new StringReader(sourceContent));
+            XMLStreamWriter outXML = xmlOutputFactory.createXMLStreamWriter(templateString);
+            String filename = generateXML(inXML, outXML, id, true);
+            return generateTemplateFromProcessed(templateString.toString(), filename, random);
+        } catch (XMLStreamException e) {
+            throw new IllegalStateException("Unable to create TemplateString", e);
+        }
+    }
+    private Template generateTemplateFromProcessed(String templateString, String filename, Random random) {
+        Template template = new Template(terms, random);
+        template.setFilename(filename);
+        Matcher termMatcher = TERM_PATTERN.matcher(templateString);
+        int nextStart = 0;
+        while (termMatcher.find()) {
+            if (termMatcher.start() == 0) { // Special case where the first entry is a term
+                template.add("");
+            } else {
+                template.add(templateString.substring(nextStart, termMatcher.start()));
+            }
+            template.add(Integer.parseInt(termMatcher.group(1)));
+            nextStart = termMatcher.start() + termMatcher.group().length();
+        }
+        if (nextStart < templateString.length()-1) {
+            template.add(templateString.substring(nextStart));
+        }
+        return template;
+    }
+    private final static Pattern TERM_PATTERN = Pattern.compile("¤¤¤([0-9]+)¤¤¤");
     private class Template {
         private final Random random;
         private final List<String> terms;
 
         private final List<String> texts = new ArrayList<String>();
         private final List<Integer> termCounts = new ArrayList<Integer>();
+        private String filename = null;
+
         private boolean lastAddWasTerm = false;
         private final StringBuffer sb = new StringBuffer();
 
@@ -331,17 +394,25 @@ public class AltoGeneratorFilter implements ObjectFilter {
             lastAddWasTerm = false;
         }
 
-        public synchronized String getRandomAlto() {
+        public void setFilename(String filename) {
+            this.filename = filename;
+        }
+
+        public synchronized String getRandomAlto(String id) {
             sb.setLength(0);
-            fillRandomAlto(sb);
+            fillRandomAlto(sb, id);
             return sb.toString();
         }
 
-        public void fillRandomAlto(StringBuffer sb) {
+        public void fillRandomAlto(StringBuffer sb, String id) {
             for (int i = 0 ; i < texts.size() ; i++) {
                 sb.append(texts.get(i));
                 if (i < termCounts.size()) {
-                    fillRandomTerms(sb, termCounts.get(i));
+                    if (termCounts.get(i) == FILENAME_MAGIC_NUMBER) {
+                        sb.append(filename == null ? "" : filename).append("_").append(id);
+                    } else {
+                        fillRandomTerms(sb, termCounts.get(i));
+                    }
                 }
             }
         }
@@ -459,7 +530,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
         if (delivered == 0) {
             initialize();
         }
-        Payload altoPayload = generate();
+        Payload altoPayload = hackedMode ? generateFromTemplate() : generate();
         delivered++;
         return altoPayload;
 
@@ -476,5 +547,33 @@ public class AltoGeneratorFilter implements ObjectFilter {
                              "structured=%d/%d, terms=%d, delivered=%d/%d)",
                              id, base, seed, randomTermChance, createStream,
                              structures.size(), maxStructures, terms.size(), delivered, maxRecords);
+    }
+
+    private static class RandomList<T> extends ArrayList<T> {
+        private final int maxElements;
+        private final double replaceChance;
+        private final Random random;
+
+        public RandomList(int maxElements, double replaceChance, Random random) {
+            this.maxElements = maxElements;
+            this.replaceChance = replaceChance;
+            this.random = random;
+        }
+
+        @Override
+        public boolean add(T element) {
+            while (size() >= maxElements) {
+                if (random.nextDouble() <= replaceChance) {
+                    remove(random.nextInt(size()));
+                } else {
+                    return false;
+                }
+            }
+            return super.add(element);
+        }
+
+        public T getRandom() {
+            return get(random.nextInt(size()));
+        }
     }
 }
