@@ -163,7 +163,7 @@ public class Payload {
      */
     public Object getData(String key) {
         try {
-            return data == null ? getObjectData(key) : data.get(key);
+            return data == null || data.get(key) == null ? getObjectData(key) : data.get(key);
         } catch (NullPointerException e) {
             return null;
         }
@@ -340,7 +340,8 @@ public class Payload {
     @Override
     public String toString() {
         return "Payload(" + getId() + ")" + (getData(ORIGIN) == null ? "" : " with origin '" + getData(ORIGIN) + "'")
-               + (hasData() ? " with " + getData().size() + " meta data" : "");
+               + (hasData() ? " with " + getData().size() + " meta data" : "")
+               + (objects != null? " with " + objects.size() + " object data" : " with no object data");
     }
 
     public CharSequence toString(boolean verbose) {
