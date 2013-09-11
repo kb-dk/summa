@@ -163,7 +163,7 @@ public class Payload {
      */
     public Object getData(String key) {
         try {
-            return data == null || data.get(key) == null ? getObjectData(key) : data.get(key);
+            return data == null || !data.containsKey(key) ? getObjectData(key) : data.get(key);
         } catch (NullPointerException e) {
             return null;
         }
@@ -177,7 +177,7 @@ public class Payload {
      */
     protected Object getObjectData(String key) {
         try {
-            return objects == null ? null : objects.get(key);
+            return objects == null || !objects.containsKey(key) ? null : objects.get(key);
         } catch (NullPointerException e) {
             return null;
         }
