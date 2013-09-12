@@ -21,11 +21,13 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
@@ -40,9 +42,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -50,8 +50,8 @@ import java.util.concurrent.atomic.AtomicInteger;
         author = "te")
 public class SolrManipulatorTest extends TestCase {
     private static Log log = LogFactory.getLog(SolrManipulatorTest.class);
- 
-   	public static final String SOLR_HOME = "support/solr_home1"; //data-dir (index) will be created here.
+
+    public static final String SOLR_HOME = "support/solr_home_default"; //data-dir (index) will be created here.
 
     private EmbeddedJettyWithSolrServer server = null;
 
@@ -95,7 +95,7 @@ public class SolrManipulatorTest extends TestCase {
 
     public void testFaultyIngest() throws Exception {
         ObjectFilter data = new PayloadFeederHelper(Arrays.asList(
-            new Payload(new Record("doc1", "dummy", "<doc>Invalid</doc>".getBytes("utf-8")))));
+                new Payload(new Record("doc1", "dummy", "<doc>Invalid</doc>".getBytes("utf-8")))));
         ObjectFilter indexer = getIndexer();
         indexer.setSource(data);
         assertTrue("There should be a next for the indexer", indexer.hasNext());
@@ -106,8 +106,8 @@ public class SolrManipulatorTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "fulltext:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
+                DocumentKeys.SEARCH_QUERY, "fulltext:first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -118,8 +118,8 @@ public class SolrManipulatorTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
-            DocumentKeys.SEARCH_QUERY, "fulltext:first",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
+                DocumentKeys.SEARCH_QUERY, "fulltext:first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         ), responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -136,8 +136,8 @@ public class SolrManipulatorTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "fulltext:solr",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
+                DocumentKeys.SEARCH_QUERY, "fulltext:solr",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         );
         searcher.search(request, responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
@@ -182,8 +182,8 @@ public class SolrManipulatorTest extends TestCase {
         SearchNode searcher = getSearcher();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "fulltext:solr",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
+                DocumentKeys.SEARCH_QUERY, "fulltext:solr",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         );
         searcher.search(request, responses);
         assertTrue("There should be a response", responses.iterator().hasNext());
@@ -210,8 +210,8 @@ public class SolrManipulatorTest extends TestCase {
         testBasicIngest();
         SearchNode searcher = getSearcher();
         Request request = new Request(
-            DocumentKeys.SEARCH_QUERY, "fulltext:solr",
-            SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
+                DocumentKeys.SEARCH_QUERY, "fulltext:solr",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", IndexUtils.RECORD_FIELD + " score title fulltext"
         );
 
         {
@@ -237,13 +237,106 @@ public class SolrManipulatorTest extends TestCase {
         searcher.close();
     }
 
+    public void testDuplicateTerms() throws IOException {
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
+                new Payload(new Record(
+                        "doc_1_0", "dummy",
+                        ("<doc>\n"
+                         + "    <field name=\"recordID\">doc_1_0</field>\n"
+                         + "    <field name=\"recordBase\">dummy</field>\n"
+                         + "    <field name=\"title\">foo goo zoo</field>\n"
+                         + "    <field name=\"fulltext\">bar</field>\n"
+                         + "</doc>").getBytes("utf-8"))),
+                new Payload(new Record(
+                        "doc_0_1", "dummy",
+                        ("<doc>\n"
+                         + "    <field name=\"recordID\">doc_0_1</field>\n"
+                         + "    <field name=\"recordBase\">dummy</field>\n"
+                         + "    <field name=\"title\">bar</field>\n"
+                         + "    <field name=\"fulltext\">foo</field>\n"
+                         + "</doc>").getBytes("utf-8"))),
+                new Payload(new Record(
+                        "doc_2_0", "dummy",
+                        ("<doc>\n"
+                         + "    <field name=\"recordID\">doc_2_0</field>\n"
+                         + "    <field name=\"recordBase\">dummy</field>\n"
+                         + "    <field name=\"title\">foo moo doo foo</field>\n"
+                         + "    <field name=\"fulltext\">bar</field>\n"
+                         + "</doc>").getBytes("utf-8"))),
+                new Payload(new Record(
+                        "doc_1_1", "dummy",
+                        ("<doc>\n"
+                         + "    <field name=\"recordID\">doc_1_1</field>\n"
+                         + "    <field name=\"recordBase\">dummy</field>\n"
+                         + "    <field name=\"title\">foo</field>\n"
+                         + "    <field name=\"fulltext\">foo</field>\n"
+                         + "</doc>").getBytes("utf-8")))
+        ));
+
+        SearchNode searcher = getSearcher();
+
+        ObjectFilter indexer = getIndexer();
+        indexer.setSource(feeder);
+        while (indexer.hasNext()) {
+            indexer.next();
+        }
+        indexer.close(true);
+
+        // Just checking that search works
+        assertHits(searcher, "title:foo",
+                   Arrays.asList("doc_1_0", "doc_2_0", "doc_1_1"));
+        assertHits(searcher, "fulltext:foo",
+                   Arrays.asList("doc_0_1", "doc_1_1"));
+
+        // Only one foo-field, please
+        assertHits(searcher, "(title:foo NOT fulltext:foo) OR (fulltext:foo NOT title:foo)",
+                   Arrays.asList("doc_0_1", "doc_1_0", "doc_2_0"));
+
+        // Double foo-ness
+        assertHits(searcher, "title:\"foo foo\"~1000",
+                   Arrays.asList("doc_2_0"));
+
+        // Only a single foo. Exclamation mark.
+        assertHits(searcher, "((title:foo NOT fulltext:foo) OR (fulltext:foo NOT title:foo)) " +
+                             "NOT title:\"foo foo\"~1000 NOT fulltext:\"foo foo\"~1000",
+                   Arrays.asList("doc_0_1", "doc_1_0"));
+
+        // We wants two foo's now
+        assertHits(searcher, "(title:foo AND fulltext:foo) OR title:\"foo foo\"~1000 OR fulltext:\"foo foo\"~100bc0",
+                   Arrays.asList("doc_2_0", "doc_1_1"));
+
+
+        searcher.close();
+    }
+
+    private void assertHits(SearchNode searcher, String query, List<String> expectedIDs) throws RemoteException {
+
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(DocumentKeys.SEARCH_QUERY, query), responses);
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)response;
+                List<String> actualIDs = new ArrayList<String>(docs.getRecords().size());
+                for (DocumentResponse.Record record: docs.getRecords()) {
+                    actualIDs.add(record.getId());
+                }
+                Collections.sort(expectedIDs);
+                Collections.sort(actualIDs);
+                ExtraAsserts.assertEquals("The query '" + query + "' should give the right IDs",
+                                          expectedIDs, actualIDs);
+                return;
+            }
+        }
+        fail("No document response for query '" + query + "'");
+    }
+
     final int SAMPLES = 2;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
         List<Payload> samples = new ArrayList<Payload>(SAMPLES);
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
-                "doc" + i, "dummy",
-                Resolver.getUTF8Content("integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+                    "doc" + i, "dummy",
+                    Resolver.getUTF8Content("integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
             payload.getRecord().setDeleted(deleted);
             samples.add(payload);
         }
@@ -277,13 +370,13 @@ public class SolrManipulatorTest extends TestCase {
                 int i = count.getAndIncrement() + 1;
                 try {
                     Payload p = new Payload(new Record(
-                        "doc" + i, "dummy",
-                        ("<doc>\n"
-                         + "    <field name=\"recordID\">doc" + i + "</field>\n"
-                         + "    <field name=\"recordBase\">dummy</field>\n"
-                         + "    <field name=\"title\">Document " + i + "</field>\n"
-                         + "    <field name=\"fulltext\">Number " + i + " in the stream of sample documents.</field>\n"
-                         + "</doc>").getBytes("utf-8")));
+                            "doc" + i, "dummy",
+                            ("<doc>\n"
+                             + "    <field name=\"recordID\">doc" + i + "</field>\n"
+                             + "    <field name=\"recordBase\">dummy</field>\n"
+                             + "    <field name=\"title\">Document " + i + "</field>\n"
+                             + "    <field name=\"fulltext\">Number " + i + " in the stream of sample documents.</field>\n"
+                             + "</doc>").getBytes("utf-8")));
                     p.getRecord().setDeleted(deleted);
                     return p;
                 } catch (UnsupportedEncodingException e) {
@@ -298,9 +391,9 @@ public class SolrManipulatorTest extends TestCase {
 
     private IndexController getIndexer() throws IOException {
         Configuration controllerConf = Configuration.newMemoryBased(
-            IndexController.CONF_FILTER_NAME, "testcontroller");
+                IndexController.CONF_FILTER_NAME, "testcontroller");
         Configuration manipulatorConf = controllerConf.createSubConfigurations(
-            IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
+                IndexControllerImpl.CONF_MANIPULATORS, 1).get(0);
         manipulatorConf.set(IndexControllerImpl.CONF_MANIPULATOR_CLASS, SolrManipulator.class.getCanonicalName());
         manipulatorConf.set(SolrManipulator.CONF_ID_FIELD, IndexUtils.RECORD_FIELD); // 'id' is the default ID field for Solr
 //        manipulatorConf.set(SolrManipulator.CONF_SOLR_HOST, "localhost:57008");

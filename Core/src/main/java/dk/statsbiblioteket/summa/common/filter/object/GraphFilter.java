@@ -96,7 +96,7 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
             log.trace("Already visited " + record.getId());
             return true;
         }
-        if (log.isDebugEnabled()) {
+        if (logProcess() && log.isDebugEnabled()) {
             log.debug("Processing " + (tracker == null ? "sub " : "origin ") + record);
         }
         if (!visitChildren && !visitParents) { // No traversal
@@ -116,6 +116,14 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
         }
 
         return tracker.isSuccess();
+    }
+
+    /**
+     * Override this to adjust logging verbosity.
+     * @return true if {@link #processRecord} should log the Record.
+     */
+    protected boolean logProcess() {
+        return true;
     }
 
     /**

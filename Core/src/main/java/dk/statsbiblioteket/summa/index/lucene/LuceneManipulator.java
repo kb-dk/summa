@@ -292,7 +292,8 @@ public class LuceneManipulator implements IndexManipulator {
             author = "te")
     public synchronized boolean update(Payload payload) throws IOException {
         if (payload.getData(Payload.LUCENE_DOCUMENT) == null) {
-            throw new IllegalArgumentException("No Document defined in Payload '" + payload + "'");
+            throw new IllegalArgumentException(
+                    "No Document defined for meta key " + Payload.LUCENE_DOCUMENT + " in " + payload);
         }
         String id = payload.getId();
         if (id == null) {
@@ -588,5 +589,10 @@ public class LuceneManipulator implements IndexManipulator {
     @Override
     public boolean isOrderChangedSinceLastCommit() {
         return orderChanged;
+    }
+
+    @Override
+    public String toString() {
+        return "LuceneManipulator(writerThreads=" + writerThreads + ", indexRoot=" + indexRoot + ")";
     }
 }
