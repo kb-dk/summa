@@ -461,7 +461,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
     private void addRandomString(StringBuffer sb) {
         int length = random.nextInt(randomTermMaxLength - randomTermMinLength) + randomTermMinLength;
         for (int i = 0 ; i < length ; i++) {
-            sb.append('a' + random.nextInt(24));
+            sb.append((char)('a' + random.nextInt(24)));
         }
     }
 

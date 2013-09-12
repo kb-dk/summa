@@ -15,9 +15,12 @@
 package dk.statsbiblioteket.summa.support.alto;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.summa.support.alto.as2.AS2AltoAnalyzer;
 import dk.statsbiblioteket.summa.support.alto.as2.AS2AltoAnalyzerTest;
@@ -104,6 +107,35 @@ public class AltoGeneratorFilterTest extends TestCase {
         analyzer.close(true);
         log.info(String.format("Processed %d ALTO-records which contained %d articles at %d articles/sec",
                                RECORDS, profiler.getBeats(), (int)profiler.getBps(true)));
+    }
+
+    public void testCreator() throws IOException {
+        final int RECORDS = 50;
+
+        ObjectFilter analyzer = getDocumentCreator(RECORDS);
+        assertTrue("There should be a Payload", analyzer.hasNext());
+        int received = 0;
+        Set<String> ids = new HashSet<String>();
+        while (analyzer.hasNext()) {
+            Payload altoPayload = analyzer.next();
+            String id = altoPayload.getId();
+            assertNotNull("The Payload '" + id + "' should have a Lucene document",
+                          altoPayload.getData(Payload.LUCENE_DOCUMENT));
+            ids.add(id);
+            received++;
+        }
+        log.info("Received " + ids.size() + " article records");
+        assertTrue("The number of unique IDs (" + ids.size() + ") should match the number of received Payloads ("
+                   + received + ")", received == ids.size());
+    }
+
+    private ObjectFilter getDocumentCreator(int records) throws IOException {
+        Configuration conf = Configuration.newMemoryBased();
+        Configuration descConf = conf.createSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
+        descConf.set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, "support/alto/AltoIndexDescriptor.xml");
+        StreamingDocumentCreator creator = new StreamingDocumentCreator(conf);
+        creator.setSource(getAnalyzer(records));
+        return creator;
     }
 
     private ObjectFilter getAnalyzer(int records) throws IOException {

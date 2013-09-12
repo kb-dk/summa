@@ -115,7 +115,8 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
             throw new PayloadException("Unable to create Lucene document", payload);
         }
         payload.getObjectData().put(Payload.LUCENE_DOCUMENT, state);
-        Logging.logProcess("StreamingDocumentCreator", "Added Lucene document as meta " + Payload.LUCENE_DOCUMENT,
+        Logging.logProcess("StreamingDocumentCreator", "Added Lucene document with " + state.getFields().size()
+                                                       + " fields as meta " + Payload.LUCENE_DOCUMENT,
                            Logging.LogLevel.DEBUG, payload);
         return true;
     }

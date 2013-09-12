@@ -93,6 +93,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
         maxTitleLength = conf.getInt(CONF_TITLE_MAXLENGTH, DEFAULT_TITLE_MAXLENGTH);
         designationSource = DESIGNATION_SOURCE.valueOf(
                 conf.getString(CONF_DESIGNATION_SOURCE, DEFAULT_DESIGNATION_SOURCE));
+        log.info("Created " + this);
     }
 
     private static Configuration addDefaultDatePattern(Configuration conf) {
@@ -102,6 +103,8 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
         return conf;
     }
 
+    // TODO: Make this configurable
+    private final String ID_PREFIX = "sb_avis_";
     @Override
     public List<AS2Segment> getSegments(Alto alto) {
         String rawDesignation = getRawDesignation(alto);
@@ -118,7 +121,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
             AS2Segment segment = new AS2Segment(alto);
             // TODO: Use alto filename as prefix for ID to make it unique
             // ***
-            segment.setId("sb_avis_" + paperName + "_" + entry.getKey());
+            segment.setId(ID_PREFIX + paperName + "_" + entry.getKey());
 
             segment.setOrigin(alto.getOrigin());
             segment.setFilename(alto.getFilename());
@@ -138,7 +141,10 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
             }
             segments.add(segment);
         }
-        log.debug("Created " + segments.size() + " segments");
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("Created %d segments with base paperName '%s' (constructed from '%s')",
+                                    segments.size(), ID_PREFIX + paperName, rawDesignation));
+        }
         return segments;
     }
 
@@ -193,7 +199,8 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
 
     @Override
     public String toString() {
-        return "AS2AltoAnalyzer(paperIDPattern=" + paperIDPattern.pattern()
-               + ", urlPattern=" + urlPattern.pattern() + ", urlReplacement='" + urlReplacement + "')";
+        return String.format(
+                "AS2AltoAnalyzer(paperIDPattern='%s', paperIDReplacement='%s', urlPattern='%s', urlReplacement='%s')",
+                paperIDPattern.pattern(), paperIDReplacement, urlPattern.pattern(), urlReplacement);
     }
 }

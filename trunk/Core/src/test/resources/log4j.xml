@@ -25,12 +25,12 @@
         <level value="WARN" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+                         <!--
     <logger name="dk.statsbiblioteket.summa.support.alto.Alto">
         <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+                             -->
     <logger name="dk.statsbiblioteket.summa.search.PagingSearchNode">
         <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />

@@ -140,7 +140,7 @@ public abstract class AltoParser extends ThreadedStreamParser {
         }
 
         segment.addIndexTerms(terms);
-        log.debug("getDirectXML: Writing " + terms + " field:text pairs");
+        log.debug("getDirectXML: Writing " + terms.size() + " field:text pairs for '" + segment.getId() + "'");
         for (AltoAnalyzerBase.Segment.Term term: terms) {
             writeField(xml, term.field, term.text);
         }
