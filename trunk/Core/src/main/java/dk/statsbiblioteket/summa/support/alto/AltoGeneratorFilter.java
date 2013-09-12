@@ -112,8 +112,8 @@ public class AltoGeneratorFilter implements ObjectFilter {
     private final static int randomTermMaxLength = 10;
     private final String base;
     private final Random random = new Random();
-    private final XMLInputFactory xmlInputFactory = XMLInputFactory.newFactory();
-    private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newFactory();
+    private final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+    private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     {
         xmlInputFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
         xmlOutputFactory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
@@ -543,10 +543,10 @@ public class AltoGeneratorFilter implements ObjectFilter {
 
     @Override
     public String toString() {
-        return String.format("AltoGeneratorFilter(id='%s', base='%s', seed=%d, randomTermChance=%f, createStream=%b, " +
-                             "structured=%d/%d, terms=%d, delivered=%d/%d)",
+        return String.format("AltoGeneratorFilter(id='%s', base='%s', seed=%d, randomTermChance=%f, createStream=%b, "
+                             + "structures=%d/%d, terms=%d, delivered=%d/%d, hackedMode=%b)",
                              id, base, seed, randomTermChance, createStream,
-                             structures.size(), maxStructures, terms.size(), delivered, maxRecords);
+                             structures.size(), maxStructures, terms.size(), delivered, maxRecords, hackedMode);
     }
 
     private static class RandomList<T> extends ArrayList<T> {

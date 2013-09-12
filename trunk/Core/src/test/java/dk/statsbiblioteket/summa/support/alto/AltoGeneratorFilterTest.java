@@ -60,11 +60,12 @@ public class AltoGeneratorFilterTest extends TestCase {
     }
 
     public void testSpeedGenerate() throws IOException {
-        final int RECORDS = 1000;
-        Profiler profiler = new Profiler();
+        final int RECORDS = 20000;
 
-        AltoGeneratorFilter generator = getGenerator(RECORDS);
+        AltoGeneratorFilter generator = getGenerator(RECORDS+1);
+        generator.pump();
 
+        Profiler profiler = new Profiler(RECORDS, Math.min(RECORDS / 4, 5000));
         do {
             profiler.beat();
         } while (generator.pump());
@@ -96,11 +97,11 @@ public class AltoGeneratorFilterTest extends TestCase {
     public void testSpeedAnalyze() throws IOException {
         final int RECORDS = 1000;
 
-        ObjectFilter analyzer = getAnalyzer(RECORDS);
+        ObjectFilter analyzer = getAnalyzer(RECORDS+1);
         assertTrue("There should be at least 1 payload", analyzer.hasNext());
-        analyzer.next(); // Before measuring time as the first request initializes structures
+        analyzer.pump();
+
         Profiler profiler = new Profiler();
-        profiler.beat(); // From the first request
         while (analyzer.pump()) {
             profiler.beat();
         }
