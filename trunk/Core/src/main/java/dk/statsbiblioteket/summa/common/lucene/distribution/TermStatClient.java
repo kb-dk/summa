@@ -24,7 +24,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.AtomicReader;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.exposed.ExposedFactory;
+import org.apache.lucene.search.exposed.ExposedTuple;
+import org.apache.lucene.search.exposed.TermProvider;
+import org.apache.lucene.search.exposed.compare.ComparatorFactory;
+import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
@@ -37,9 +43,8 @@ import java.util.regex.Pattern;
 /**
  * Creates and merges dumps of the term-statistics for Lucene-indexes.
  * </p><p>
- * The format of the output-file is {@code field:text\tfrequency\n} where
- * line-breaks in text are escaped with \n and frequency is written with
- * {@code Integer.toString()}.
+ * The format of the output-file is {@code field:text\tfrequency\n} where line-breaks in text are escaped with \n and
+ * frequency is written with {@code Integer.toString()}.
  */
 // TODO: Add Java String order to BytesRef order sorter
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -57,6 +62,7 @@ public class TermStatClient implements Configurable {
         this(Configuration.newMemoryBased());
     }
 
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public static void main(String[] args) throws IOException {
         if (args.length < 3) {
             usage();
@@ -68,9 +74,11 @@ public class TermStatClient implements Configurable {
             extract(arguments);
         } else if ("-m".equals(first)) {
             merge(arguments);
+        } else if ("-u".equals(first)) {
+            unique(arguments);
         } else {
-            System.out.println(
-                "First argument must be -e or -m but was " + first);
+            System.err.println("First argument must be -e or -m but was " + first);
+            usage();
         }
     }
 
@@ -85,22 +93,19 @@ public class TermStatClient implements Configurable {
         boolean fieldsActive = false;
         while (!arguments.isEmpty()) {
             String argument = arguments.remove(0);
-            if ("-i".equals((argument))) {
+            if ("-i".equals(argument)) {
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-i must be followed by a path");
+                    throw new IllegalArgumentException("-i must be followed by a path");
                 }
                 index = new File(arguments.remove(0));
             } else if ("-d".equals(argument)) {
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-d must be followed by a path");
+                    throw new IllegalArgumentException("-d must be followed by a path");
                 }
                 destination = arguments.remove(0);
             } else if ("-c".equals(argument)) {
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-c must be followed by a column name");
+                    throw new IllegalArgumentException("-c must be followed by a column name");
                 }
                 columnname = arguments.remove(0);
             } else if ("-f".equals(argument)) {
@@ -110,27 +115,23 @@ public class TermStatClient implements Configurable {
                 skipSpace = true;
             } else if ("-mdf".equals(argument)) {
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-mdf must be followed by an integer");
+                    throw new IllegalArgumentException("-mdf must be followed by an integer");
                 }
                 mdf = Integer.parseInt(arguments.remove(0));
             } else if ("-mtl".equals(argument)) {
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-mtl must be followed by an integer");
+                    throw new IllegalArgumentException("-mtl must be followed by an integer");
                 }
                 mtl = Integer.parseInt(arguments.remove(0));
             } else if (fieldsActive) {
                 fields.add(argument);
                 continue;
             } else {
-                throw new IllegalArgumentException(
-                    "Unknown argument: " + argument);
+                throw new IllegalArgumentException("Unknown argument: " + argument);
             }
             fieldsActive = false;
         }
-        new TermStatClient().extract(
-            index, destination, columnname, fields, mdf, mtl, skipSpace);
+        new TermStatClient().extract(index, destination, columnname, fields, mdf, mtl, skipSpace);
     }
 
     private enum MODE {none, input, column}
@@ -144,28 +145,24 @@ public class TermStatClient implements Configurable {
             String argument = arguments.remove(0);
             if ("-d".equals(argument)) {
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-d must be followed by a path");
+                    throw new IllegalArgumentException("-d must be followed by a path");
                 }
                 destination = arguments.remove(0);
             } else if ("-c".equals(argument)) {
                 mode = MODE.column;
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-f must be followed by one or more fields");
+                    throw new IllegalArgumentException("-f must be followed by one or more fields");
                 }
                 continue;
             } else if ("-i".equals(argument)) {
                 mode = MODE.input;
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-i must be followed by one or more fields");
+                    throw new IllegalArgumentException("-i must be followed by one or more fields");
                 }
                 continue;
             } else if ("-mdf".equals(argument)) {
                 if (arguments.isEmpty()) {
-                    throw new IllegalArgumentException(
-                        "-mdf must be followed by an integer");
+                    throw new IllegalArgumentException("-mdf must be followed by an integer");
                 }
                 mdf = Integer.parseInt(arguments.remove(0));
             } else if (mode == MODE.column) {
@@ -175,27 +172,51 @@ public class TermStatClient implements Configurable {
                 inputs.add(new File(argument));
                 continue;
             } else {
-                throw new IllegalArgumentException(
-                    "Unknown argument: " + argument);
+                throw new IllegalArgumentException("Unknown argument: " + argument);
             }
             mode = MODE.none;
         }
         new TermStatClient().merge(inputs, columns, destination, mdf);
     }
 
+    public static void unique(List<String> arguments) throws IOException {
+        File index = null;
+        List<String> fields = new ArrayList<String>(10);
+        boolean fieldsActive = false;
+        while (!arguments.isEmpty()) {
+            String argument = arguments.remove(0);
+            if ("-i".equals(argument)) {
+                if (arguments.isEmpty()) {
+                    throw new IllegalArgumentException("-i must be followed by a path");
+                }
+                index = new File(arguments.remove(0));
+            } else if ("-f".equals(argument)) {
+                fieldsActive = true;
+                continue;
+            } else if (fieldsActive) {
+                fields.add(argument);
+                continue;
+            } else {
+                throw new IllegalArgumentException("Unknown argument: " + argument);
+            }
+            fieldsActive = false;
+        }
+        new TermStatClient().unique(index, fields);
+    }
+
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public static void usage() {
         System.out.println(
                 "Usage:\n"
-                + "TermStatClient -e [-mdf minimumdocumentfrequency] "
-                +                    "-i index -d destination [-f field*] "
-                +                    "-c columnprefix [-s] "
-                +                    "[-mtl maxtermlength]\n"
-                + "TermStatClient -m [-mdf minimumdocumentfrequency] "
-                +                    "-i termstat* -d destination "
-                +                    "-c columnregexp*\n"
+                + "TermStatClient -u -i index [-f field*]"
+                + "TermStatClient -e [-mdf minimumdocumentfrequency] -i index -d destination [-f field*] "
+                +                    "-c columnprefix [-s] [-mtl maxtermlength]\n"
+                + "TermStatClient -m [-mdf minimumdocumentfrequency] -i termstat* -d destination -c columnregexp*\n"
+                + "-u: Return the number of unique terms\n"
+                + " -i: Lucene index\n"
+                + " -f: Lucene fields as regexp\n"
                 + "\n"
-                + "-e: Extract termstats from index and store the stats at "
-                + "destination\n"
+                + "-e: Extract termstats from index and store the stats at destination\n"
                 + " -i: Lucene index\n"
                 + " -f: Lucene fields as regexp\n"
                 + " -c: Destination column prefix\n"
@@ -206,17 +227,15 @@ public class TermStatClient implements Configurable {
                 + " -c: column names as regexp\n"
                 + " -d: Destination for the merged term stats\n"
                 + "\n"
-                + "-mdf: Only store terms where the document frequency is the "
-                + "given number or above\n"
+                + "-mdf: Only store terms where the document frequency is the given number or above\n"
                 + "-mtl: Only store terms when the length is <= this\n"
                 + " -s: Skip terms containing space\n"
         );
         // TODO: Add skipSpace + mtl to merge
     }
 
-    public void extract(
-        File index, String destination, String columnPrefix,
-        List<String> fieldRegexps, int mdf, int mtl, boolean skipSpace)
+    public void extract(File index, String destination, String columnPrefix,
+                        List<String> fieldRegexps, int mdf, int mtl, boolean skipSpace)
         throws IOException {
         if (mtl == -1) {
             mtl = Integer.MAX_VALUE;
@@ -231,9 +250,8 @@ public class TermStatClient implements Configurable {
             log.info("No fields specified. Extracting all fields");
             fieldRegexps.add(".*");
         }
-        log.info(String.format(
-            "Extracting fields %s from %s with mdf=%d to %s",
-            Strings.join(fieldRegexps, ", "), index, mdf, destination));
+        log.info(String.format("Extracting fields %s from %s with mdf=%d to %s",
+                               Strings.join(fieldRegexps, ", "), index, mdf, destination));
         Profiler profiler = new Profiler();
 
         IndexReader ir = IndexReader.open(new NIOFSDirectory(index));
@@ -242,11 +260,9 @@ public class TermStatClient implements Configurable {
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         TermStat termStat = new TermStat(Configuration.newMemoryBased());
         // TODO: Add timestamp for extraction
-        String header = String.format(
-            "TermStats created from %s at %2$tF %2$tT",
-            index, System.currentTimeMillis());
-        final String[] columns = new String[]{
-            "term", "tf_" + columnPrefix, "df_" + columnPrefix};
+        String header = String.format("TermStats created from %s at %2$tF %2$tT",
+                                      index, System.currentTimeMillis());
+        final String[] columns = new String[]{ "term", "tf_" + columnPrefix, "df_" + columnPrefix};
         termStat.create(new File(destination), header, columns);
         termStat.setDocCount(getDocCount(ir));
         termStat.setSource(index.toString());
@@ -288,8 +304,36 @@ public class TermStatClient implements Configurable {
         log.info("Finished extraction in " + profiler.getSpendTime());
     }
 
-    private Set<String> getFields(IndexReader ir, List<String> fieldRegexps,
-                                  File index) throws IOException {
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    public void unique(File index, List<String> fieldRegexps) throws IOException {
+        if (index == null) {
+            throw new IllegalArgumentException("No index specified");
+        }
+        if (fieldRegexps.isEmpty()) {
+            log.info("No fields specified. Extracting unique terms for all fields");
+            fieldRegexps.add(".*");
+        }
+        log.info(String.format("Extracting unique terms for fields %s from %s", 
+                               Strings.join(fieldRegexps, ", "), index));
+
+        Profiler profiler = new Profiler();
+        IndexReader ir = DirectoryReader.open(new NIOFSDirectory(index));
+        Set<String> fields = getFields(ir, fieldRegexps, index);
+
+        TermProvider termProvider = ExposedFactory.createProvider(
+                ir, "all", new ArrayList<String>(fields), new NamedNaturalComparator());
+        Iterator<ExposedTuple> terms = termProvider.getIterator(false);
+        int termCount = 0;
+        while (terms.hasNext()) {
+            System.out.println(terms.next().term.utf8ToString());
+            termCount++;
+        }
+        ir.close();
+        log.info("Finished extraction in " + profiler.getSpendTime() + " with " + termCount
+                 + " unique terms from fields " + Strings.join(fields));
+    }
+
+    private Set<String> getFields(IndexReader ir, List<String> fieldRegexps, File index) throws IOException {
         Set<String> fields = new HashSet<String>(20);
 
         List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
@@ -330,8 +374,7 @@ public class TermStatClient implements Configurable {
         return count;
     }
 
-    public void merge(
-        List<File> inputs, List<String> columns, String destination, int mdf) {
+    public void merge(List<File> inputs, List<String> columns, String destination, int mdf) {
         if (inputs.isEmpty()) {
             throw new IllegalArgumentException("One or more inputs must be specified");
         }
