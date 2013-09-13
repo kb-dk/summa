@@ -105,11 +105,18 @@ public class TermStatClientTest extends TestCase {
         }
     }
 
-    public void testUnique() throws Exception {
+    public void testUniqueList() throws Exception {
         generateIndex(100);
         Configuration conf = Configuration.newMemoryBased();
         TermStatClient extractor = new TermStatClient(conf);
-        extractor.unique(INDEX_LOCATION, new ArrayList<String>());
+        extractor.unique(INDEX_LOCATION, new ArrayList<String>(), false);
+    }
+
+    public void testUniqueCount() throws Exception {
+        generateIndex(100);
+        Configuration conf = Configuration.newMemoryBased();
+        TermStatClient extractor = new TermStatClient(conf);
+        extractor.unique(INDEX_LOCATION, new ArrayList<String>(), true);
     }
 
     // Disabled due to deprecation
