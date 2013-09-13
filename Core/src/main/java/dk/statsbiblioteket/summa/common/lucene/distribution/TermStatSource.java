@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.*;
+import org.apache.lucene.search.exposed.ExposedFactory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.BytesRef;
 
@@ -80,8 +81,7 @@ public class TermStatSource implements Closeable {
         return new Merger(providers, field);
     }
 
-    public Iterator<Triple<BytesRef, Long, Long>> getTerms(
-        Collection<String> fields) throws IOException {
+    public Iterator<Triple<BytesRef, Long, Long>> getTerms(Collection<String> fields) throws IOException {
         String designation = Strings.join(fields, ", ");
         log.debug("Creating multi field iterator for " + designation);
         List<Iterator<Triple<BytesRef, Long, Long>>> sources = new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(fields.size());
@@ -91,8 +91,7 @@ public class TermStatSource implements Closeable {
         return new TermStatSource.Merger(sources, "multi(" + designation + ")");
     }
 
-    public static class Merger implements
-                               Iterator<Triple<BytesRef, Long, Long>> {
+    public static class Merger implements Iterator<Triple<BytesRef, Long, Long>> {
         private List<Iterator<Triple<BytesRef, Long, Long>>> providers;
         private List<Triple<BytesRef, Long, Long>> values;
         private String designation;
@@ -149,8 +148,7 @@ public class TermStatSource implements Closeable {
 
             if (term == null) {
                 throw new IllegalStateException(
-                    "Term was null which is illegal at this execution point. "
-                    + "There is an error in program logic");
+                    "Term was null which is illegal at this execution point. There is an error in program logic");
             }
 
             for (int i = values.size()-1 ; i >= index ; i--) {
@@ -171,8 +169,7 @@ public class TermStatSource implements Closeable {
                 new Triple<BytesRef, Long, Long>(term, tf, df);
             termCount++;
             if (termCount == 0) {
-                log.debug(
-                    "Merger for " + designation + " depleted with " + termCount + " delivered terms");
+                log.debug("Merger for " + designation + " depleted with " + termCount + " delivered terms");
             }
             if (log.isTraceEnabled()) {
                 log.trace("Merging iterator delivered " + result);

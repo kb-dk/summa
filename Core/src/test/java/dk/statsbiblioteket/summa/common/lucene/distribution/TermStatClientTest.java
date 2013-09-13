@@ -32,6 +32,8 @@ import org.apache.lucene.util.Version;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 @SuppressWarnings({"ALL"})
 public class TermStatClientTest extends TestCase {
@@ -101,6 +103,13 @@ public class TermStatClientTest extends TestCase {
         for (int i = 0 ; i < termStat.size() ; i++) {
             termStat.get(i);
         }
+    }
+
+    public void testUnique() throws Exception {
+        generateIndex(100);
+        Configuration conf = Configuration.newMemoryBased();
+        TermStatClient extractor = new TermStatClient(conf);
+        extractor.unique(INDEX_LOCATION, new ArrayList<String>());
     }
 
     // Disabled due to deprecation
