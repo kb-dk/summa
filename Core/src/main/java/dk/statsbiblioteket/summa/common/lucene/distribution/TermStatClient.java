@@ -183,6 +183,7 @@ public class TermStatClient implements Configurable {
         File index = null;
         List<String> fields = new ArrayList<String>(10);
         boolean fieldsActive = false;
+        boolean countOnly = false;
         while (!arguments.isEmpty()) {
             String argument = arguments.remove(0);
             if ("-i".equals(argument)) {
@@ -193,6 +194,8 @@ public class TermStatClient implements Configurable {
             } else if ("-f".equals(argument)) {
                 fieldsActive = true;
                 continue;
+            } else if ("-c".equals(argument)) {
+                countOnly = true;
             } else if (fieldsActive) {
                 fields.add(argument);
                 continue;
@@ -201,7 +204,7 @@ public class TermStatClient implements Configurable {
             }
             fieldsActive = false;
         }
-        new TermStatClient().unique(index, fields);
+        new TermStatClient().unique(index, fields, countOnly);
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
@@ -214,6 +217,7 @@ public class TermStatClient implements Configurable {
                 + "TermStatClient -m [-mdf minimumdocumentfrequency] -i termstat* -d destination -c columnregexp*\n"
                 + "-u: Return the number of unique terms\n"
                 + " -i: Lucene index\n"
+                + " -c: Count only, no term listing\n"
                 + " -f: Lucene fields as regexp\n"
                 + "\n"
                 + "-e: Extract termstats from index and store the stats at destination\n"
@@ -305,7 +309,7 @@ public class TermStatClient implements Configurable {
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    public void unique(File index, List<String> fieldRegexps) throws IOException {
+    public void unique(File index, List<String> fieldRegexps, boolean countOnly) throws IOException {
         if (index == null) {
             throw new IllegalArgumentException("No index specified");
         }
@@ -322,6 +326,11 @@ public class TermStatClient implements Configurable {
 
         TermProvider termProvider = ExposedFactory.createProvider(
                 ir, "all", new ArrayList<String>(fields), new NamedNaturalComparator());
+        if (countOnly) {
+            System.out.println(termProvider.getUniqueTermCount());
+            return;
+        }
+
         Iterator<ExposedTuple> terms = termProvider.getIterator(false);
         int termCount = 0;
         while (terms.hasNext()) {
