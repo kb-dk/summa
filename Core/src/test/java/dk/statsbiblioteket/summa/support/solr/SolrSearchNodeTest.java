@@ -172,6 +172,10 @@ public class SolrSearchNodeTest extends TestCase {
         assertResponse(new Request(DocumentKeys.SEARCH_FILTER, "fulltext:first"), true);
     }
 
+    public void testFilterEmptyQuery() throws Exception {
+        assertResponse(new Request(DocumentKeys.SEARCH_FILTER, "fulltext:first", DocumentKeys.SEARCH_QUERY, ""), false);
+    }
+
     public void testFilterAndQuery() throws Exception {
         assertResponse(new Request(
                 DocumentKeys.SEARCH_QUERY, "fulltext:first",

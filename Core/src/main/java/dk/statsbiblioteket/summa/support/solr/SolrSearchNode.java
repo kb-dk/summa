@@ -201,6 +201,22 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public static final String CONF_EXPLICIT_FACET_FILTERING = "solr.facet.explicit.filter";
     public static final boolean DEFAULT_EXPLICIT_FACET_FILTERING = false;
 
+    /**
+     * If true, querying for the empty string will result in no search being performed.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_EMPTY_QUERY_NO_SEARCH = "solr.query.emptymatchesnone";
+    public static final boolean DEFAULT_EMPTY_QUERY_NO_SEARCH = true;
+
+    /**
+     * If true, filtering for the empty string will result in no search being performed.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_EMPTY_FILTER_NO_SEARCH = "solr.filter.emptymatchesnone";
+    public static final boolean DEFAULT_EMPTY_FILTER_NO_SEARCH = true;
+
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     protected SolrResponseBuilder responseBuilder;
@@ -220,6 +236,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final Set<String> nonescapedFields = new HashSet<String>(10);
     protected final String fieldID;
     protected final boolean explicitFacetFilter;
+    protected final boolean emptyQueryNoSearch;
+    protected final boolean emptyFilterNoSearch;
 
     // Debug & feedback
     protected long lastConnectTime = -1;
@@ -253,6 +271,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                      + " serves no purpose in Solr 4 BETA+ and should be removed");
         }
         explicitFacetFilter = conf.getBoolean(CONF_EXPLICIT_FACET_FILTERING, DEFAULT_EXPLICIT_FACET_FILTERING);
+        emptyQueryNoSearch = conf.getBoolean(CONF_EMPTY_QUERY_NO_SEARCH, DEFAULT_EMPTY_QUERY_NO_SEARCH);
+        emptyFilterNoSearch = conf.getBoolean(CONF_EMPTY_FILTER_NO_SEARCH, DEFAULT_EMPTY_FILTER_NO_SEARCH);
         readyWithoutOpen();
         log.info("Created SolrSearchNode(" + getID() + ")");
     }
@@ -333,8 +353,15 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                     "The ID-search API at summon only goes live 2013-03-07 and needs to be tested before this " +
                             "functionality is made available i Summa");
         }
-        String rawQuery = getEmptyIsNull(request, DocumentKeys.SEARCH_QUERY);
-        String filter =  getEmptyIsNull(request, DocumentKeys.SEARCH_FILTER);
+//        String rawQuery = getEmptyIsNull(request, DocumentKeys.SEARCH_QUERY);
+//        String filter =  getEmptyIsNull(request, DocumentKeys.SEARCH_FILTER);
+
+        // Due to reasons unknown, an empty value is returned as null.
+        // We perform this ugly hack to get the empty string back if the value is the empty string.
+        String rawQuery = request.getString(DocumentKeys.SEARCH_QUERY,
+                                            request.containsKey(DocumentKeys.SEARCH_QUERY) ? "" : null);
+        String filter =  request.getString(DocumentKeys.SEARCH_FILTER,
+                                                    request.containsKey(DocumentKeys.SEARCH_FILTER) ? "" : null);
         String sortKey = getEmptyIsNull(request, DocumentKeys.SEARCH_SORTKEY);
         if (DocumentKeys.SORT_ON_SCORE.equals(sortKey)) {
             sortKey = null; // null equals relevance ranking
@@ -367,12 +394,21 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             query = convertQuery(query, solrSearchParams);
         }
         if ("".equals(query)) {
+            if (emptyQueryNoSearch) {
+                log.debug("Query was empty string and emptyQueryNoSearch==true");
+                return;
+            }
             query = null;
         }
         if (filter != null && !passThroughQuery && !request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
             filter = convertQuery(filter, solrSearchParams);
         }
         if ("".equals(filter)) {
+            if (emptyFilterNoSearch) {
+                log.debug("Filter was empty string and emptyFilterNoSearch==true for query='" + query + "'. " +
+                          "Returning without search");
+                return;
+            }
             filter = null;
         }
 
