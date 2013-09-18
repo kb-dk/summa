@@ -20,8 +20,6 @@ import dk.statsbiblioteket.summa.support.harmonise.hub.core.ComponentCallable;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.CommonParams;
@@ -37,8 +35,6 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class QueryReducerTest extends TestCase {
-    private static Log log = LogFactory.getLog(QueryReducerTest.class);
-
     public QueryReducerTest(String name) {
         super(name);
     }
@@ -51,13 +47,13 @@ public class QueryReducerTest extends TestCase {
     public void testDefaultFullMatch() throws IOException {
         QueryReducer reducer = getDefaultReducer();
         assertQuery("The query 'foo:bar' should be reduced to none", reducer, "MySearcher",
-                    null, "foo:bar");
+                    "", "foo:bar");
     }
 
     public void testNamedFullMatch() throws IOException {
         QueryReducer reducer = getNamedReducer("MySearcher");
         assertQuery("The query 'foo:bar' should be reduced to none", reducer, "MySearcher",
-                    null, "foo:bar");
+                    "", "foo:bar");
     }
 
     public void testNamedFullMatchNoNameMatch() throws IOException {
@@ -69,13 +65,25 @@ public class QueryReducerTest extends TestCase {
     public void testDefaultField() throws IOException {
         QueryReducer reducer = getDefaultReducer();
         assertQuery("The query 'myfield:whatever' should be reduced to none", reducer, "MySearcher",
-                    null, "myfield:whatever");
+                    "", "myfield:whatever");
+    }
+
+    public void testEmptyIn() throws IOException {
+        QueryReducer reducer = getDefaultReducer();
+        assertQuery("The empty query should be removed", reducer, "MySearcher",
+                    null, "");
+    }
+
+    public void testEmptyOut() throws IOException {
+        QueryReducer reducer = getDefaultReducer();
+        assertQuery("The query 'myfield:whatever' should be reduced to none", reducer, "MySearcher",
+                    "", "myfield:whatever");
     }
 
     public void testDefaultTextMatch() throws IOException {
         QueryReducer reducer = getDefaultReducer();
         assertQuery("The query 'whatever:myterm' should be reduced to none", reducer, "MySearcher",
-                    null, "whatever:myterm");
+                    "", "whatever:myterm");
     }
 
     public void testDefaultNoMatch() throws IOException {
@@ -85,11 +93,11 @@ public class QueryReducerTest extends TestCase {
     }
 
     public void testExplicitAnd() throws IOException {
-        assertDefault(null, "foo:bar AND whatever");
+        assertDefault("", "foo:bar AND whatever");
     }
 
     public void testImplicitAnd() throws IOException {
-        assertDefault(null, "foo:bar whatever");
+        assertDefault("", "foo:bar whatever");
     }
 
     public void testOr() throws IOException {
@@ -97,20 +105,20 @@ public class QueryReducerTest extends TestCase {
     }
 
     public void testRange() throws IOException {
-        assertDefault(null, "myfield:[a TO B]");
+        assertDefault("", "myfield:[a TO B]");
     }
 
     public void testPhrase() throws IOException {
-        assertDefault(null, "myfield:\"a b\"");
+        assertDefault("", "myfield:\"a b\"");
     }
 
     public void testPhrase2() throws IOException {
-        assertDefault(null, "whatever:\"myterm\"");
+        assertDefault("", "whatever:\"myterm\"");
     }
 
     public void testPrefixField() throws IOException {
         // Should never match on the field
-        assertDefault(null, "myfield:a*");
+        assertDefault("", "myfield:a*");
     }
 
     public void testPrefixPair() throws IOException {
@@ -125,7 +133,7 @@ public class QueryReducerTest extends TestCase {
 
     public void testFuzzyField() throws IOException {
         // Fields are not fuzzy
-        assertDefault(null, "myfield:a~");
+        assertDefault("", "myfield:a~");
     }
 
     public void testFuzzyPair() throws IOException {
@@ -149,7 +157,7 @@ public class QueryReducerTest extends TestCase {
     }
 
     public void testSubANDQuery() throws IOException {
-        assertDefault(null,
+        assertDefault("",
                       "+(hello my:world phrase:\"mongo pongo\") +(something AND foo:bar)");
     }
 
@@ -173,7 +181,7 @@ public class QueryReducerTest extends TestCase {
     }
 
     private void assertQuery(String message, QueryReducer reducer, String componentID, String expected, String query) {
-        ComponentCallable componentCallable = createCC(componentID, query);
+        ComponentCallable componentCallable = createCC(componentID);
         componentCallable.getParams().set(CommonParams.Q, query);
         List<ComponentCallable> ccs = Arrays.asList(componentCallable);
         reducer.adjustRequests(new SolrQuery(), ccs);
@@ -182,7 +190,7 @@ public class QueryReducerTest extends TestCase {
         // TODO: Also check filter(s)
     }
 
-    private ComponentCallable createCC(final String componentID, String query) {
+    private ComponentCallable createCC(final String componentID) {
         return new ComponentCallable(new HubComponent() {
             @Override
             public String getID() {

@@ -1809,6 +1809,16 @@ public class SummonSearchNodeTest extends TestCase {
         }
     }
 
+    public void testEmptyQuerySkip() throws RemoteException {
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        long hits = getHits(
+                summon,
+                DocumentKeys.SEARCH_QUERY, "",
+                SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
+        summon.close();
+        assertEquals("There should be zero hits", 0, hits);
+    }
+
     public void testIsScholarly() throws RemoteException {
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
         String q = "foo";

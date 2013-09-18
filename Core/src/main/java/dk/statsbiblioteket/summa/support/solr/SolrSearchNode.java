@@ -380,10 +380,10 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         query = "*".equals(rawQuery) ? "*:*" : rawQuery;
 
         String facetsDef =  request.getString(FacetKeys.SEARCH_FACET_FACETS, defaultFacets);
-        if ("".equals(facetsDef)) {
+        if (facetsDef != null && facetsDef.isEmpty()) {
             facetsDef = null;
         }
-        SolrFacetRequest facets = null == facetsDef || "".equals(facetsDef) ? null :
+        SolrFacetRequest facets = null == facetsDef || facetsDef.isEmpty() ? null :
                                   createFacetRequest(facetsDef, minCount, defaultFacetPageSize, combineMode);
 
         Map<String, List<String>> solrSearchParams = new HashMap<String, List<String>>(solrDefaultParams);
@@ -414,7 +414,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
 
         long searchTime = -System.currentTimeMillis();
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
-            if (fieldID != null && !"".equals(fieldID)) {
+            if (fieldID != null && !fieldID.isEmpty()) {
                 query = fieldID + ":\"" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) + "\"";
             } else {
                 query = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
@@ -437,7 +437,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             log.error(message, e);
             throw new RemoteException("SolrSearchNode.barrierSearch: " + message);
         }
-        if (solrResponse == null || "".equals(solrResponse)) {
+        if (solrResponse == null || solrResponse.isEmpty()) {
             if (log.isDebugEnabled()) {
                 log.debug("fullSearch(" + request.toString(true) + ", " + filter + ", " + rawQuery + ", " + startIndex
                           + ", " + maxRecords + ", " + sortKey + ", " + reverseSort + ") did not return a result. " +
@@ -543,7 +543,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
 
     private String getEmptyIsNull(Request request, String key) {
         String response = request.getString(key, null);
-        return "".equals(response) ? null : response;
+        return response == null || response.isEmpty() ? null : response;
     }
 
     private boolean warmupCalled = false;

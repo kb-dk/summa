@@ -39,6 +39,7 @@ import java.util.Map;
  * Parses queries and removes known sub-queries that are guaranteed to be match-all or match-none.
  * </p><p>
  * When queries can be fully reduced to match-none, they should be serialized to the empty String.
+ * If the input is the empty String, the key for the value will be removed.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -97,8 +98,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
      * @return the child-components with adjusted queries.
      */
     @Override
-    public List<ComponentCallable> adjustRequests(
-            SolrParams params, List<ComponentCallable> components) {
+    public List<ComponentCallable> adjustRequests(SolrParams params, List<ComponentCallable> components) {
         if (!params.getBool(SEARCH_ADJUSTMENT_ENABLED, true)) {
             log.debug("Query reduction skipped as " + SEARCH_ADJUSTMENT_ENABLED + "=false");
             return components;
@@ -124,6 +124,9 @@ public class QueryReducer implements Configurable, RequestAdjuster {
      * @return the reduced query.
      */
     public String reduce(String componentID, String query) {
+        if (query.isEmpty()) {
+            return null;
+        }
         ReducerTarget target = reducerTargets.get(componentID);
         if (target == null && defaultReducerTarget != null) {
             target = defaultReducerTarget;
@@ -193,35 +196,61 @@ public class QueryReducer implements Configurable, RequestAdjuster {
         }
 
         public void reduce(ModifiableSolrParams params) {
+            reduceQuery(params);
+            reduceFilters(params);
+        }
 
+        private void reduceQuery(ModifiableSolrParams params) {
             // Query
             String query = params.get(CommonParams.Q, null);
-            {
-                if (query != null) {
-                    String reduced = reduce(query);
-                    if (reduced == null || reduced.isEmpty()) {
-                        log.debug("The query '" + query + "' for '" + componentID + "' was reduced to match-none");
-                        params.remove(CommonParams.Q);
-                    } else {
-                        log.debug("Reduced query '" + query + "' -> '" + reduced + "' for '" + componentID + "'");
-                        params.set(CommonParams.Q, reduced);
-                    }
-                }
+            if (query == null) {
+                return;
             }
+            if (query.isEmpty()) {
+                log.debug("The input query was empty. Removing query key");
+                params.remove(CommonParams.Q);
+                return;
+            }
+            String reduced = reduce(query);
+            if (reduced == null || reduced.isEmpty()) {
+                log.debug("The query '" + query + "' for '" + componentID + "' was reduced to match-none. " +
+                          "Assigning empty string");
+                params.set(CommonParams.Q, "");
+            } else {
+                log.debug("Reduced query '" + query + "' -> '" + reduced + "' for '" + componentID + "'");
+                params.set(CommonParams.Q, reduced);
+            }
+        }
 
+        private void reduceFilters(ModifiableSolrParams params) {
             // Filters (same syntax as query, but multiple filters are possible)
             String[] filters = params.getParams(CommonParams.FQ);
-            if (filters != null && filters.length != 0) {
-                List<String> reducedFilters = new ArrayList<String>(filters.length);
-                for (String filter : filters) {
+            if (filters == null) {
+                return;
+            }
+            if (filters.length == 0) {
+                params.remove(CommonParams.FQ);
+                return;
+            }
+            List<String> reducedFilters = new ArrayList<String>(filters.length);
+            for (String filter : filters) {
+                if (!filter.isEmpty()) { // Ignore empty incoming
                     String reduced = reduce(filter);
                     if (reduced == null || reduced.isEmpty()) {
-                        log.debug("The filter '" + filter + "' for '" + componentID + "' was reduced to match-none");
+                        log.debug("The filter '" + filter + "' for '" + componentID
+                                  + "' was reduced to match-none. Assigning empty String and exiting");
+                        params.set(CommonParams.FQ, "");
+                        return;
                     } else {
-                        log.debug("Reduced filter '" + query + "' -> '" + reduced + "' for '" + componentID + "'");
+                        log.debug("Reduced filter '" + filter + "' -> '" + reduced + "' for '" + componentID + "'");
                         reducedFilters.add(reduced);
                     }
                 }
+            }
+            if (reducedFilters.isEmpty()) {
+                log.debug("Reduced " + filters.length + " filters to none. Assigning empty String");
+                params.set(CommonParams.FQ, "");
+            } else {
                 String[] rf = new String[reducedFilters.size()];
                 rf = reducedFilters.toArray(rf);
                 params.set(CommonParams.FQ, rf);

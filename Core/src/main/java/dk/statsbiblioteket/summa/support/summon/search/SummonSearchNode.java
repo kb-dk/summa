@@ -466,7 +466,27 @@ public class SummonSearchNode extends SolrSearchNode {
 
     // True if either a query or a filter is present
     private boolean validRequest(Map<String, List<String>> queryMap) {
+        if (emptyQueryNoSearch && containsEmpty(queryMap, "s.q")) {
+            log.debug("Empty query. Skipping search");
+            return false;
+        }
+        if (emptyFilterNoSearch && containsEmpty(queryMap, "s.fq")) {
+            log.debug("Empty filter. Skipping search");
+            return false;
+        }
         return queryMap.containsKey("s.q") || queryMap.containsKey("s.fq");
+    }
+
+    private boolean containsEmpty(Map<String, List<String>> queryMap, String key) {
+        if (!queryMap.containsKey(key)) {
+            return false;
+        }
+        for (String value: queryMap.get(key)) {
+            if (value.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -641,7 +661,7 @@ public class SummonSearchNode extends SolrSearchNode {
         conn.setRequestProperty("Accept-Charset", "utf-8");
         conn.setRequestProperty("x-summon-date", summonDateFormat.format(date));
         conn.setRequestProperty("Authorization", "Summon " + accessID + ";" + buildDigest(accessKey, idstring));
-        if (sessionId != null && !"".equals(sessionId)) {
+        if (sessionId != null && !sessionId.isEmpty()) {
             conn.setRequestProperty("x-summon-session-id", sessionId);
         }
         conn.setConnectTimeout(connectionTimeout);
