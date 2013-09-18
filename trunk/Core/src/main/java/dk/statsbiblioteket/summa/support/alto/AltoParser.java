@@ -140,7 +140,9 @@ public abstract class AltoParser extends ThreadedStreamParser {
         }
 
         segment.addIndexTerms(terms);
-        log.debug("getDirectXML: Writing " + terms.size() + " field:text pairs for '" + segment.getId() + "'");
+        if (logTermGeneration() && log.isDebugEnabled()) {
+            log.debug("getDirectXML: Writing " + terms.size() + " field:text pairs for '" + segment.getId() + "'");
+        }
         for (AltoAnalyzerBase.Segment.Term term: terms) {
             writeField(xml, term.field, term.text);
         }
@@ -159,6 +161,13 @@ public abstract class AltoParser extends ThreadedStreamParser {
         xml.writeEndDocument();
         xml.flush();
         return out.toByteArray();
+    }
+
+    /**
+     * @return true if the amount of terms should be logged for {@link #getDirectXML}.
+     */
+    protected boolean logTermGeneration() {
+        return true;
     }
 
     private String getShortFormat(AltoAnalyzerBase.Segment segment) throws XMLStreamException {
