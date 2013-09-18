@@ -288,7 +288,7 @@ public class XMLTransformer extends GraphFilter<Object> {
                 throw new ConfigurationException("Unable to construct Transformer for xslt '" + xsltLocation + "'", e);
             } catch (TransformerException e) {
                 throw new ConfigurationException(String.format(
-                    "Unable to create transformer based on '%s'", xsltLocation));
+                    "Unable to create transformer based on '%s'", xsltLocation), e);
             }
             if (entityResolver != null && stripXMLNamespaces) {
                 log.warn("entityResolver does not support stripXMLNamespaces");
