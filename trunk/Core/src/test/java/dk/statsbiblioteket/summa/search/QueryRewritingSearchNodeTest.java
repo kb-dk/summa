@@ -99,7 +99,7 @@ public class QueryRewritingSearchNodeTest extends TestCase {
     }
 
     public void testReduceToNull() throws IOException {
-        Configuration conf = getDefaultReducerConf();
+        Configuration conf = getDefaultReducerConf(false);
 
         assertTransformations(conf, new String[][]{{
                 "Language:abcde32542f",
@@ -116,8 +116,26 @@ public class QueryRewritingSearchNodeTest extends TestCase {
         }});
     }
 
+    public void testReduceToEmpty() throws IOException {
+        Configuration conf = getDefaultReducerConf(true);
+
+        assertTransformations(conf, new String[][]{{
+                "Language:abcde32542f",
+                ""
+        }, {
+                "recordBase:s*",
+                ""
+        }, {
+                "(recordBase:s*)",
+                ""
+        }, {
+                "(recordBase:s* OR Language:abcde32542f) AND recordBase:c*",
+                ""
+        }});
+    }
+
     public void testComplexReduce() throws IOException {
-        Configuration conf = getDefaultReducerConf();
+        Configuration conf = getDefaultReducerConf(false);
 
         assertTransformations(conf, new String[][]{{
                 "+(hello my:world phrase:\"mongo pongo\") +(something OR Language:abcde32542f)",
@@ -125,11 +143,12 @@ public class QueryRewritingSearchNodeTest extends TestCase {
         }});
     }
 
-    private Configuration getDefaultReducerConf() throws IOException {
+    private Configuration getDefaultReducerConf(boolean keepEmpty) throws IOException {
         Configuration conf = Configuration.newMemoryBased(
                 QueryRewritingSearchNode.CONF_REDUCE, true,
-                QueryRewriter.CONF_QUOTE_TERMS, false
-
+                QueryRewriter.CONF_QUOTE_TERMS, false,
+                QueryRewritingSearchNode.CONF_KEEP_EMPTY_QUERIES, keepEmpty,
+                QueryRewritingSearchNode.CONF_KEEP_EMPTY_FILTERS, keepEmpty
         );
         Configuration reducerConf = conf.createSubConfigurations(QueryReducer.CONF_TARGETS, 1).get(0);
         reducerConf.set(QueryReducer.ReducerTarget.CONF_MATCH_NONES, new ArrayList<String>(Arrays.asList(
@@ -148,8 +167,11 @@ public class QueryRewritingSearchNodeTest extends TestCase {
 
             rewriter.search(new Request(DocumentKeys.SEARCH_QUERY, RAW), new ResponseCollection());
             String actual = inner.lastRequest.getString(DocumentKeys.SEARCH_QUERY, null);
+            if (actual == null && inner.lastRequest.containsKey(DocumentKeys.SEARCH_QUERY)) {
+                actual = "";
+            }
             if (EXPECTED == null) {
-                assertNull("The query should not be present in the request but was " + actual, actual);
+                assertNull("The query should not be present in the request but was '" + actual + "'", actual);
             }
             assertEquals("The query '" + RAW + "' should be transformed correctly",
                          EXPECTED, actual);

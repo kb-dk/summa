@@ -118,6 +118,22 @@ public class QueryRewritingSearchNode implements SearchNode {
      */
     public static final String CONF_INNER_SEARCHNODE = "queryrewriter.inner.searchnode";
 
+    /**
+     * If true, queries reduced to the empty String are kept instead of resulting in no query key-value pair.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_KEEP_EMPTY_QUERIES = "queryrewriter.query.keepempty";
+    public static final boolean DEFAULT_KEEP_EMPTY_QUERIES = true;
+
+    /**
+     * If true, filters reduced to the empty String are kept instead of resulting in no filter key-value pair.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_KEEP_EMPTY_FILTERS = "queryrewriter.filter.keepempty";
+    public static final boolean DEFAULT_KEEP_EMPTY_FILTERS = true;
+
     private final boolean sanitizeQueries;
     private final boolean sanitizeFilters;
     private final boolean phrasequeries;
@@ -130,6 +146,8 @@ public class QueryRewritingSearchNode implements SearchNode {
     private final QueryFuzzinator fuzzinator;
     private final QueryReducer reducer;
     private final String prefix;
+    private final boolean keepEmptyQueries;
+    private final boolean keepEmptyFilters;
 
     public QueryRewritingSearchNode(Configuration conf) {
         this(conf, resolveInner(conf));
@@ -143,12 +161,12 @@ public class QueryRewritingSearchNode implements SearchNode {
         try {
             return SearchNodeFactory.createSearchNode(conf.getSubConfiguration(CONF_INNER_SEARCHNODE));
         } catch (RemoteException e) {
-            throw new ConfigurationException(
-                "Unable to create inner search node, although a value were present for key " + CONF_INNER_SEARCHNODE);
+            throw new ConfigurationException("Unable to create inner search node, although a value were present for " +
+                                             "key " + CONF_INNER_SEARCHNODE, e);
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException(
                 "A configuration with support for sub configurations must be provided for the adjuster and must "
-                + "contain a sub configuration with key " + CONF_INNER_SEARCHNODE);
+                + "contain a sub configuration with key " + CONF_INNER_SEARCHNODE, e);
         }
     }
 
@@ -167,6 +185,8 @@ public class QueryRewritingSearchNode implements SearchNode {
         phrasequeries = conf.getBoolean(CONF_PHRASE_QUERIES, DEFAULT_PHRASE_QUERIES);
         prefix = conf.valueExists(CONF_DESIGNATION) && !"".equals(conf.getString(CONF_DESIGNATION)) ?
                  conf.getString(CONF_DESIGNATION) + "." : "";
+        keepEmptyQueries = conf.getBoolean(CONF_KEEP_EMPTY_QUERIES, DEFAULT_KEEP_EMPTY_QUERIES);
+        keepEmptyFilters = conf.getBoolean(CONF_KEEP_EMPTY_FILTERS, DEFAULT_KEEP_EMPTY_FILTERS);
         log.debug("Created " + this);
     }
 
@@ -185,7 +205,7 @@ public class QueryRewritingSearchNode implements SearchNode {
                                    request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
                 newQuery = normalizer.rewrite(newQuery);
             }
-            if (newQuery.isEmpty()) {
+            if (!keepEmptyQueries && newQuery.isEmpty()) {
                 request.remove(DocumentKeys.SEARCH_QUERY);
             } else {
                 request.put(DocumentKeys.SEARCH_QUERY, newQuery);
@@ -208,7 +228,7 @@ public class QueryRewritingSearchNode implements SearchNode {
                                    request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
                 newFilter = normalizer.rewrite(newFilter);
             }
-            if (newFilter.isEmpty()) {
+            if (!keepEmptyFilters && newFilter.isEmpty()) {
                 request.remove(newFilter);
             } else {
                 request.put(DocumentKeys.SEARCH_FILTER, newFilter);
@@ -272,6 +292,7 @@ public class QueryRewritingSearchNode implements SearchNode {
     public String toString() {
         return "QueryRewritingSearchNode(sanitizeQueries=" + sanitizeQueries + ", sanitizeFilters=" + sanitizeFilters +
                ", phrasequeries=" + phrasequeries + ", normalize=" + normalize + ", prefix='" + prefix
-               + "', fuzzyQueries=" + fuzzinator + ", reducer=" + reducer + ", inner=" + inner + ")";
+               + "', fuzzyQueries=" + fuzzinator + ", reducer=" + reducer + ", inner=" + inner
+               + ", keepEmptyQueries=" + keepEmptyQueries + ", keepEmptyFilters=" + keepEmptyFilters + ")";
     }
 }
