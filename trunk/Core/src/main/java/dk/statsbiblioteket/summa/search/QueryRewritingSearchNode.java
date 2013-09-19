@@ -123,7 +123,7 @@ public class QueryRewritingSearchNode implements SearchNode {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_KEEP_EMPTY_QUERIES = "queryrewriter.query.keepempty";
+    public static final String CONF_KEEP_EMPTY_QUERIES = "queryrewriter.query.nomatchisempty";
     public static final boolean DEFAULT_KEEP_EMPTY_QUERIES = true;
 
     /**
@@ -131,7 +131,7 @@ public class QueryRewritingSearchNode implements SearchNode {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_KEEP_EMPTY_FILTERS = "queryrewriter.filter.keepempty";
+    public static final String CONF_KEEP_EMPTY_FILTERS = "queryrewriter.filter.nomatchisempty";
     public static final boolean DEFAULT_KEEP_EMPTY_FILTERS = true;
 
     private final boolean sanitizeQueries;
@@ -191,52 +191,62 @@ public class QueryRewritingSearchNode implements SearchNode {
     }
 
     private Request process(Request request) throws ParseException {
-        final String oldQuery = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        final String oldQuery = request.getStringAlsoEmpty(DocumentKeys.SEARCH_QUERY, null);
         if (oldQuery != null && request.getBoolean(prefix + SEARCH_SANITIZE_QUERIES,
                                                    request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries))) {
-            String newQuery = sanitizer.sanitize(oldQuery).getLastQuery();
-            if (reducer != null) {
-                newQuery = reducer.reduce(null, newQuery);
-            }
-            if (fuzzinator != null) {
-                newQuery = fuzzinator.rewrite(request, newQuery);
-            }
-            if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
-                                   request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
-                newQuery = normalizer.rewrite(newQuery);
-            }
-            if (!keepEmptyQueries && newQuery.isEmpty()) {
+            if ("".equals(oldQuery)) {
+                log.debug("Input query was empty. Removing " + DocumentKeys.SEARCH_FILTER + " from request");
                 request.remove(DocumentKeys.SEARCH_QUERY);
             } else {
-                request.put(DocumentKeys.SEARCH_QUERY, newQuery);
-            }
-            if (oldQuery.equals(newQuery)) {
-                log.debug("Sanitized query is unchanged: '" + oldQuery + "'");
-            } else {
-                log.debug("Sanitized query '" + oldQuery + "' to '" + newQuery + "'");
+                String newQuery = sanitizer.sanitize(oldQuery).getLastQuery();
+                if (reducer != null) {
+                    newQuery = reducer.reduce(null, newQuery);
+                }
+                if (fuzzinator != null) {
+                    newQuery = fuzzinator.rewrite(request, newQuery);
+                }
+                if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
+                                       request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
+                    newQuery = normalizer.rewrite(newQuery);
+                }
+                if (!keepEmptyQueries && newQuery.isEmpty()) {
+                    request.remove(DocumentKeys.SEARCH_QUERY);
+                } else {
+                    request.put(DocumentKeys.SEARCH_QUERY, newQuery);
+                }
+                if (oldQuery.equals(newQuery)) {
+                    log.debug("Sanitized query is unchanged: '" + oldQuery + "'");
+                } else {
+                    log.debug("Sanitized query '" + oldQuery + "' to '" + newQuery + "'");
+                }
             }
         }
-        final String oldFilter = request.getString(DocumentKeys.SEARCH_FILTER, null);
+        final String oldFilter = request.getStringAlsoEmpty(DocumentKeys.SEARCH_FILTER, null);
         if (oldFilter != null // TODO: Feedback should bubble to front end
             && request.getBoolean(prefix + SEARCH_SANITIZE_FILTERS,
                                   request.getBoolean(SEARCH_SANITIZE_FILTERS, sanitizeFilters))) {
-            String newFilter = sanitizer.sanitize(oldFilter).getLastQuery();
-            if (reducer != null) {
-                newFilter = reducer.reduce(null, newFilter);
-            }
-            if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
-                                   request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
-                newFilter = normalizer.rewrite(newFilter);
-            }
-            if (!keepEmptyFilters && newFilter.isEmpty()) {
-                request.remove(newFilter);
+            if ("".equals(oldFilter)) {
+                log.debug("Input filter was empty. Removing " + DocumentKeys.SEARCH_FILTER + " from request");
+                request.remove(DocumentKeys.SEARCH_FILTER);
             } else {
-                request.put(DocumentKeys.SEARCH_FILTER, newFilter);
-            }
-            if (oldFilter.equals(newFilter)) {
-                log.debug("Sanitized filter is unchanged: '" + oldFilter + "'");
-            } else {
-                log.debug("Sanitized filter '" + oldFilter + "' to '" + newFilter + "'");
+                String newFilter = sanitizer.sanitize(oldFilter).getLastQuery();
+                if (reducer != null) {
+                    newFilter = reducer.reduce(null, newFilter);
+                }
+                if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
+                                       request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
+                    newFilter = normalizer.rewrite(newFilter);
+                }
+                if (!keepEmptyFilters && newFilter.isEmpty()) {
+                    request.remove(newFilter);
+                } else {
+                    request.put(DocumentKeys.SEARCH_FILTER, newFilter);
+                }
+                if (oldFilter.equals(newFilter)) {
+                    log.debug("Sanitized filter is unchanged: '" + oldFilter + "'");
+                } else {
+                    log.debug("Sanitized filter '" + oldFilter + "' to '" + newFilter + "'");
+                }
             }
         }
         final String query = request.getString(DocumentKeys.SEARCH_QUERY, null);

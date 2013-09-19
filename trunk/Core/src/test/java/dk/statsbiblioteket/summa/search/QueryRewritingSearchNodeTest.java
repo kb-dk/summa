@@ -134,6 +134,12 @@ public class QueryRewritingSearchNodeTest extends TestCase {
         }});
     }
 
+    // No matter what, the empty Query should result in null
+    public void testNonexistingToNull() throws IOException {
+        assertTransformations(getDefaultReducerConf(true), new String[][]{{"", null}});
+        assertTransformations(getDefaultReducerConf(false), new String[][]{{"", null}});
+    }
+
     public void testComplexReduce() throws IOException {
         Configuration conf = getDefaultReducerConf(false);
 
@@ -171,7 +177,8 @@ public class QueryRewritingSearchNodeTest extends TestCase {
                 actual = "";
             }
             if (EXPECTED == null) {
-                assertNull("The query should not be present in the request but was '" + actual + "'", actual);
+                assertNull("The query should not be present in the request but was '" + actual
+                           + "' for input '" + RAW + "'", actual);
             }
             assertEquals("The query '" + RAW + "' should be transformed correctly",
                          EXPECTED, actual);
