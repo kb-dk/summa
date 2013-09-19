@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
         author = "te",
         comment = "Some methods needs JavaDoc")
 public class ConvenientMap extends HashMap<String, Serializable> {
-    public static final long serialVersionUID = 384681319L;
+    public static final long serialVersionUID = 384681318L;
     private static Log log = LogFactory.getLog(ConvenientMap.class);
 
     public ConvenientMap(Serializable... args) {
@@ -105,11 +105,6 @@ public class ConvenientMap extends HashMap<String, Serializable> {
     public String getString(String key, String defaultValue) {
         String res = getStringNONPE(key);
         return res == null ? defaultValue : res;
-    }
-
-    public String getStringAlsoEmpty(String key, String defaultValue) {
-        Object o = super.get(key);
-        return o == null ? defaultValue : (String)o;
     }
 
     public Integer getInt(String key) {
