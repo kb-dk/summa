@@ -191,7 +191,7 @@ public class QueryRewritingSearchNode implements SearchNode {
     }
 
     private Request process(Request request) throws ParseException {
-        final String oldQuery = request.getStringAlsoEmpty(DocumentKeys.SEARCH_QUERY, null);
+        final String oldQuery = getAlsoEmpty(request, DocumentKeys.SEARCH_QUERY, null);
         if (oldQuery != null && request.getBoolean(prefix + SEARCH_SANITIZE_QUERIES,
                                                    request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries))) {
             if ("".equals(oldQuery)) {
@@ -221,7 +221,7 @@ public class QueryRewritingSearchNode implements SearchNode {
                 }
             }
         }
-        final String oldFilter = request.getStringAlsoEmpty(DocumentKeys.SEARCH_FILTER, null);
+        final String oldFilter = getAlsoEmpty(request, DocumentKeys.SEARCH_FILTER, null);
         if (oldFilter != null // TODO: Feedback should bubble to front end
             && request.getBoolean(prefix + SEARCH_SANITIZE_FILTERS,
                                   request.getBoolean(SEARCH_SANITIZE_FILTERS, sanitizeFilters))) {
@@ -265,6 +265,11 @@ public class QueryRewritingSearchNode implements SearchNode {
             }
         }
         return request;
+    }
+
+    private String getAlsoEmpty(Request request, String key, String defaultValue) {
+        String result = request.getString(key, defaultValue);
+        return result == null && request.containsKey(key) ? "" : result;
     }
 
     /* Delegations below */
