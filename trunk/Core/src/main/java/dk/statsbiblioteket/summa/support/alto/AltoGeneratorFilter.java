@@ -27,11 +27,14 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -130,6 +133,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
     private final List<String> terms = new ArrayList<String>();
 
     private final boolean hackedMode;
+    private String stats = null;
 
     public AltoGeneratorFilter(Configuration conf) {
         id = conf.getString(ObjectFilterImpl.CONF_FILTER_NAME, "AltoGenerator");
@@ -154,12 +158,22 @@ public class AltoGeneratorFilter implements ObjectFilter {
         log.trace("initialize() called");
         Profiler profiler = new Profiler();
         Set<String> terms = new HashSet<String>(10000);
+        StringWriter stats = new StringWriter();
+        stats.write("Payload# terms totalTerms delta Payload");
+        int payloadCount = 0;
         while (source.hasNext()) {
             Payload sourcePayload = source.next();
+            payloadCount++;
             try {
                 String sourceContent = Strings.flush(RecordUtil.getReader(sourcePayload));
                 structures.add(sourceContent);
-                extractTerms(sourceContent, terms);
+                int oldTotalCount = terms.size();
+                int termCount = extractTerms(sourceContent, terms);
+                Object originO = sourcePayload.getData(Payload.ORIGIN);
+                String origin = originO == null ? "NA" : (String)originO;
+                origin = origin.substring(origin.lastIndexOf("/") + 1);
+                stats.write("\n" + payloadCount + " " + termCount + " " + terms.size()
+                            + " " + (terms.size() - oldTotalCount) + " " + origin);
             } catch (IOException e) {
                 log.warn("IOException while reading content from " + sourcePayload + ". Skipping Payload", e);
             } catch (XMLStreamException e) {
@@ -168,6 +182,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
             sourcePayload.close();
             profiler.beat();
         }
+        this.stats = stats.toString();
         source.close(true);
         this.terms.addAll(terms);
         if (this.terms.isEmpty()) {
@@ -176,30 +191,34 @@ public class AltoGeneratorFilter implements ObjectFilter {
         for (String structure: structures) {
             templates.add(generateTemplate(structure, random));
         }
-        log.info(String.format("initialize() finished analyzing %d samples and got %d unique terms in %s",
-                               profiler.getBeats(), terms.size(), profiler.getSpendTime()));
+        log.info(String.format("initialize() finished analyzing %d samples and got %d unique terms in %s\n%s",
+                               profiler.getBeats(), terms.size(), profiler.getSpendTime(), stats));
     }
 
     // Step through XML and add all terms from String.CONTENT
-    private void extractTerms(String sourceContent, Set<String> terms) throws XMLStreamException {
+    private int extractTerms(String sourceContent, Set<String> terms) throws XMLStreamException {
         XMLStreamReader reader = xmlInputFactory.createXMLStreamReader(new StringReader(sourceContent));
+        int termCount = 0;
         while (reader.hasNext()) {
             reader.next();
             if (reader.getEventType() == XMLStreamConstants.START_ELEMENT && "String".equals(reader.getLocalName())) {
                 for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
                     if ("CONTENT".equals(reader.getAttributeLocalName(i))) {
+                        String[] splitTerms = SPACE_SPLIT.split(reader.getAttributeValue(i));
                         if (!hackedMode) {
-                            Collections.addAll(terms, SPACE_SPLIT.split(reader.getAttributeValue(i)));
+                            Collections.addAll(terms, splitTerms);
                         } else { // Entity-escape as the values will be used directly
-                            for (String term: SPACE_SPLIT.split(reader.getAttributeValue(i))) {
+                            for (String term: splitTerms) {
                                 terms.add(XMLUtil.encode(term));
                             }
                         }
+                        termCount += splitTerms.length;
                         break;
                     }
                 }
             }
         }
+        return termCount;
     }
     private final static Pattern SPACE_SPLIT = Pattern.compile(" ");
 
