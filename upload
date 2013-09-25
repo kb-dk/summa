@@ -25,7 +25,7 @@ mvn deploy -DskipTests
 
 
 cd Summix/target
-echo "MD5Sum: `md5sum summix-*-SNAPSHOT.zip`"
+echo "MD5Sum: `md5sum summix-*.zip`"
 
 #VERSION=`ls *SNAPSHOT.zip | tail -n 1 | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*SNAPSHOT[.]zip/\\1/"`
 VERSION=`ls summix-*.zip | tail -n 1 | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*[.]zip/\\1/"`
