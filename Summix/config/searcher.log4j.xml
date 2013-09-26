@@ -3,35 +3,69 @@
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
 
-    <appender name="FILE" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+    <!-- A time/date based rolling appender -->
+    <appender name="LAST" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="DEBUG"/>
-        <param name="File" value="log/searcher.log"/>
+        <param name="File" value="log/last_searcher.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
-        <param name="MaxBackupIndex" value="5"/>
+        <param name="MaxBackupIndex" value="1"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
     </appender>
 
-    <appender name="QUERIES" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+    <appender name="STATIC" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="DEBUG"/>
-        <param name="File" value="log/queries.log"/>
+        <param name="File" value="log/static_searcher.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
-        <param name="MaxBackupIndex" value="5"/>
+        <param name="MaxBackupIndex" value="0"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="LAST_QUERIES" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="log/last_queries.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="1"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="STATIC_QUERIES" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="log/static_queries.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="0"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
     </appender>
 
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
-    <appender name="FATAL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+    <appender name="LAST_FATAL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="ERROR"/>
-        <param name="File" value="log/searcher.fatal.log"/>
+        <param name="File" value="log/last_searcher.fatal.log"/>
         <param name="Append" value="true"/>
-        <param name="MaxFileSize" value="1MB"/>
-        <param name="MaxBackupIndex" value="5"/>
+        <param name="MaxFileSize" value="10MB"/>
+        <param name="MaxBackupIndex" value="1"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="STATIC_FATAL_LOG" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="ERROR"/>
+        <param name="File" value="log/static_searcher.fatal.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="100MB"/>
+        <param name="MaxBackupIndex" value="0"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
         </layout>
@@ -44,19 +78,22 @@
          as it helps tremendously with load measurement. -->
     <logger name="queries">
         <level value="debug" />
-        <appender-ref ref="QUERIES" />
+        <appender-ref ref="LAST_QUERIES" />
+        <appender-ref ref="STATIC_QUERIES" />
     </logger>
 
     <logger name="dk.statsbiblioteket">
         <level value="debug" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="LAST" />
+        <appender-ref ref="STATIC" />
     </logger>
 
     <!-- The fatal-logger is special as it is guaranteed from the code that only fatalities are logged here.
          However, due to slf4j, the highest level is ERROR and thus we need to set that as our level -->
     <logger name="fatal">
         <level value="ERROR" />
-        <appender-ref ref="FATAL_LOG" />
+        <appender-ref ref="LAST_FATAL_LOG" />
+        <appender-ref ref="STATIC_FATAL_LOG" />
     </logger>
 
     <!-- all loggers inherit the root logger - so don't include the root appenders in the other loggers

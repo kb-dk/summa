@@ -4,46 +4,90 @@
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
 
     <!-- A time/date based rolling appender -->
-    <appender name="FILE" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+    <appender name="LAST" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="DEBUG"/>
-        <param name="File" value="log/ingest.log"/>
+        <param name="File" value="log/last_ingest.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
-        <param name="MaxBackupIndex" value="5"/>
+        <param name="MaxBackupIndex" value="1"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
     </appender>
 
-    <appender name="PROCESS" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+    <appender name="STATIC" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="DEBUG"/>
-        <param name="File" value="log/process_ingest.log"/>
+        <param name="File" value="log/static_ingest.log"/>
         <param name="Append" value="true"/>
-        <param name="MaxFileSize" value="50MB"/>
-        <param name="MaxBackupIndex" value="5"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="0"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
     </appender>
 
-    <appender name="PROCESS_FAILED" class="org.apache.log4j.RollingFileAppender">
-        <param name="Threshold" value="WARN"/>
-        <param name="File" value="log/process_ingest.failed.log"/>
+    <appender name="LAST_PROCESS" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="log/last_process_ingest.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="50MB"/>
-        <param name="MaxBackupIndex" value="5"/>
+        <param name="MaxBackupIndex" value="1"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="STATIC_PROCESS" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="log/static_process_ingest.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="200MB"/>
+        <param name="MaxBackupIndex" value="0"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="LAST_PROCESS_FAILED" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+        <param name="Threshold" value="WARN"/>
+        <param name="File" value="log/last_process_ingest.failed.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="200MB"/>
+        <param name="MaxBackupIndex" value="1"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="STATIC_PROCESS_FAILED" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="WARN"/>
+        <param name="File" value="log/static_process_ingest.failed.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="200MB"/>
+        <param name="MaxBackupIndex" value="0"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
     </appender>
 
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
-    <appender name="FATAL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+    <appender name="LAST_FATAL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="ERROR"/>
-        <param name="File" value="log/ingest.fatal.log"/>
+        <param name="File" value="log/last_ingest.fatal.log"/>
         <param name="Append" value="true"/>
-        <param name="MaxFileSize" value="1MB"/>
-        <param name="MaxBackupIndex" value="5"/>
+        <param name="MaxFileSize" value="10MB"/>
+        <param name="MaxBackupIndex" value="1"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="STATIC_FATAL_LOG" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="ERROR"/>
+        <param name="File" value="log/static_ingest.fatal.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="100MB"/>
+        <param name="MaxBackupIndex" value="0"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
         </layout>
@@ -51,24 +95,28 @@
 
     <appender name="NULL" class="org.apache.log4j.varia.NullAppender"/>
 
-    <!-- Records dropped from the index workflow go here -->
+    <!-- Records processed by the ingest workflow go here -->
     <logger name="process">
         <level value="debug" />
-        <appender-ref ref="PROCESS" />
+        <appender-ref ref="LAST_PROCESS" />
+        <appender-ref ref="STATIC_PROCESS" />
         <!-- Records dropped due to errors in the Records (i.e. Records that were expected to pass) go here -->
-        <appender-ref ref="PROCESS_FAILED" />
+        <appender-ref ref="LAST_PROCESS_FAILED" />
+        <appender-ref ref="STATIC_PROCESS_FAILED" />
     </logger>
 
     <logger name="dk.statsbiblioteket">
         <level value="debug" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="LAST" />
+        <appender-ref ref="STATIC" />
     </logger>
 
     <!-- The fatal-logger is special as it is guaranteed from the code that only fatalities are logged here.
          However, due to slf4j, the highest level is ERROR and thus we need to set that as our level -->
     <logger name="fatal">
         <level value="ERROR" />
-        <appender-ref ref="FATAL_LOG" />
+        <appender-ref ref="LAST_FATAL_LOG" />
+        <appender-ref ref="STATIC_FATAL_LOG" />
     </logger>
 
     <!-- all loggers inherit the root logger - so don't include the root appenders in the other loggers
