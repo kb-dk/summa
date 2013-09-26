@@ -98,7 +98,10 @@ public class ZIPParser extends ThreadedStreamParser {
             final MonitoredPipedInputStream payloadIn = new MonitoredPipedInputStream();
             PipedOutputStream payloadPipe = new PipedOutputStream();
             payloadPipe.connect(payloadIn);
-            Payload payload = new Payload(payloadIn, "Copied from " + source.getId());
+            String origin = source.getId() == null ?
+                    "origin '" + source.getData(Payload.ORIGIN) + "'" :
+                    "Payload " + source.getId();
+            Payload payload = new Payload(payloadIn, "Copied from " + origin);
             payload.getData().put(Payload.ORIGIN, source.getData(Payload.ORIGIN) + "!" + entry.getName());
             addToQueue(payload);
 

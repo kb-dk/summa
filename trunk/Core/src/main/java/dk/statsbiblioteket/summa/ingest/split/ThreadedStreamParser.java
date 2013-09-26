@@ -84,7 +84,8 @@ public abstract class ThreadedStreamParser implements StreamParser {
     private int queueTimeout = DEFAULT_QUEUE_TIMEOUT;
 
     //private static final long HASNEXT_SLEEP = 50; // Sleep-ms between polls
-    private static final Payload INTERRUPTOR = new Payload(new Record("dummyID", "dummyStreamBase", new byte[0]));
+    private static final Payload INTERRUPTOR =
+            new Payload(new Record("InterruptorPayload", "dummyStreamBase", new byte[0]));
 
     /*
      * Holds the produced Payloads. Generated Payloads will always be followed
