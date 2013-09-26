@@ -276,9 +276,10 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public synchronized void commit() throws IOException {
+        log.debug("commit(): Flushing batcher");
         batcher.flush();
         orderChanged  = false;
-        log.debug("Attempting commit of " + updatesSinceLastCommit + " updates to Solr");
+        log.info("Attempting commit of " + updatesSinceLastCommit + " updates to Solr");
         send(null, "<commit/>");
         log.info("Committed " + updatesSinceLastCommit + " updates ("
                  + (updatesSinceLastCommit - deletesSinceLastCommit) + " adds, " + deletesSinceLastCommit
