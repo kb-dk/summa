@@ -6,7 +6,7 @@
     <!-- A time/date based rolling appender -->
     <appender name="LAST" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="DEBUG"/>
-        <param name="File" value="log/last_indexer.log"/>
+        <param name="File" value="log/last_index.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="1"/>
@@ -17,7 +17,7 @@
 
     <appender name="STATIC" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="DEBUG"/>
-        <param name="File" value="log/static_indexer.log"/>
+        <param name="File" value="log/static_index.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="0"/>
