@@ -381,7 +381,7 @@ public class SBMARCParser extends MARCParser {
             record.setChildIds(childrenIDs);
         }
         if (log.isTraceEnabled()) {
-            Logs.log(log, Logs.Level.TRACE, "Children for Record " + id + ": ", children);
+            Logs.logExpand(log, Logs.Level.TRACE, "Children for Record " + id + ": ", children);
         }
         return record;
     }

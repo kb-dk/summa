@@ -192,7 +192,8 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
 //                System.out.println("Acquiring with overall " + freeSlots.getOverallPermits() + " with " + freeSlots.availablePermits() + " available: " + concurrentSearches.get());
                 if (!freeSlots.tryAcquire(1, searcherAvailabilityTimeout, TimeUnit.MILLISECONDS)) {
                     throw new RemoteException(
-                            "Timeout in search: The limit of " + searcherAvailabilityTimeout + " ms was exceeded");
+                            "Timeout in search: The limit of " + searcherAvailabilityTimeout + " ms was exceeded while "
+                            + "waiting for a free slot");
                 }
             } catch (InterruptedException e) {
                 throw new RemoteException("Interrupted while waiting for free slot", e);

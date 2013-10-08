@@ -114,9 +114,10 @@ public class IndexUtils {
         String[] ids = document.getValues(RECORD_FIELD);
         if (ids != null && ids.length > 0) {
             if (ids.length > 1) {
-                Logs.log(log, Logs.Level.WARN,
-                         "Multiple RecordIDs defined in Document '" + document + "'. Returning first RecordID out of: ",
-                         (Object)ids);
+                Logs.logExpand(
+                        log, Logs.Level.WARN,
+                        "Multiple RecordIDs defined in Document '" + document + "'. Returning first RecordID out of: ",
+                        (Object)ids);
             }
             return ids[0];
         }
