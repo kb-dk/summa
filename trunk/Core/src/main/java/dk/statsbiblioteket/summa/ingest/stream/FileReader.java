@@ -186,7 +186,7 @@ public class FileReader extends FileSystemReader {
                         "Queueing " + files.length + " files or folders from '" + start + "'. Queue size before: "
                         + todo.size());
                 if (log.isTraceEnabled()) {
-                    Logs.log(log, Logs.Level.TRACE, "Queueing Files: ", Arrays.toString(files));
+                    Logs.logExpand(log, Logs.Level.TRACE, "Queueing Files: ", Arrays.toString(files));
                 }
                 todo.addAll(0, Arrays.asList(files));
             } catch (Exception e) {
