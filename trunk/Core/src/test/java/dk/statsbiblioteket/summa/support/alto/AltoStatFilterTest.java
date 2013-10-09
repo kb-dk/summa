@@ -53,10 +53,10 @@ public class AltoStatFilterTest extends TestCase {
         ObjectFilter feeder = getFeeder(source);
         Configuration conf = Configuration.newMemoryBased(
                 AltoStatFilter.CONF_REGEXPS, new String[] {
-                "(?:^| )(ca[^a-z0-9]+{1,10}min)",
-                "(?:^| )(ca[^a-z0-9]+{1,10}timer)",
-                "(?:^| )(ca[^a-z0-9]+[^ ]+)",
-                "(?:^| )(cirka[^a-z0-9]+[^ ]+)"},
+                "(?:^| )(.{1,10} middag)",
+                "(?:^| )(c(?:irk)?a[^a-z0-9]+{1,10}min)",
+                "(?:^| )(c(?:irk)?a[^a-z0-9]+{1,10}timer)",
+                "(?:^| )(c(?:irk)?a[^a-z0-9]+[^ ]+)"},
                 AltoStatFilter.CONF_REPLACEMENTS, new String[] {
                 "$1",
                 "$1",
