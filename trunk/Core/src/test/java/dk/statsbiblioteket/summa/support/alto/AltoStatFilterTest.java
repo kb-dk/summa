@@ -54,10 +54,12 @@ public class AltoStatFilterTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased(
                 AltoStatFilter.CONF_REGEXPS, new String[] {
                 "(?:^| )([cC][aA][.] [^ ]+)",
-                "(?:^| )([cC][iI][rR][cCkK][aA][.] [^ ]+)"}
+                "(?:^| )([cC][iI][rR][cCkK][aA][.] [^ ]+)"},
                 AltoStatFilter.CONF_REPLACEMENTS, new String[] {
                 "$1",
-                "$1"}
+                "$1"},
+                AltoStatFilter.CONF_LOWERCASE, true,
+                AltoStatFilter.CONF_LINEBASED, false
         );
         dumpStats(feeder, conf);
     }

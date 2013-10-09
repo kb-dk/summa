@@ -18,7 +18,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -136,10 +138,14 @@ public class AltoStatFilter extends ObjectFilterImpl {
     private void extractStats(Alto alto) {
         altoCount++;
         if (!linebased) {
-            extract();
+            for (Alto.Page page: alto.getLayout()) {
+                extract(Strings.join(page.getAllTexts(), " ", Integer.MAX_VALUE));
+            }
+            return;
         }
-        for (Map.Entry<String, List<Alto.TextBlock>> groups: alto.getTextBlockGroups().entrySet()) {
-            for (Alto.TextBlock block: groups.getValue()) {
+
+        for (Alto.Page page: alto.getLayout()) {
+            for (Alto.TextBlock block: page.getPrintSpace()) {
                 blockCount++;
                 for (Alto.TextLine line: block.getLines()) {
                     lineCount++;
@@ -150,24 +156,27 @@ public class AltoStatFilter extends ObjectFilterImpl {
     }
 
     private void extract(Alto.TextLine line) {
+        final String input = lowercase ? line.getAllText().toLowerCase(LOCALE) : line.getAllText();
         for (int i = 0 ; i < regexps.size() ; i++) {
-            extract(regexps.get(i), replacements == null ? null : replacements.get(i), line.getAllText());
+            extract(regexps.get(i), replacements == null ? null : replacements.get(i), input);
         }
     }
 
-    private void extract(Alto alto) {
+    private static final Locale LOCALE = new Locale("da");
+    private void extract(String text) {
+        final String input = lowercase ? text.toLowerCase(LOCALE) : text;
         for (int i = 0 ; i < regexps.size() ; i++) {
-            extract(regexps.get(i), replacements == null ? null : replacements.get(i), alto.getAllText());
+            extract(regexps.get(i), replacements == null ? null : replacements.get(i), input);
         }
     }
 
     private void extract(Pattern regexp, String replacement, String text) {
         Matcher matcher = regexp.matcher(text);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             result.setLength(0);
             if (replacement != null) {
-                matcher.appendReplacement(result, replacement);
+                applyReplacement(matcher, replacement, result);
             } else if (matcher.groupCount() == 0) {
                 result.append(matcher.group());
             } else {
@@ -186,6 +195,37 @@ public class AltoStatFilter extends ObjectFilterImpl {
         }
     }
 
+    /**
+     * Applies the replacement String to the current match in the matcher.
+     * @param matcher     a matcher positioned at the start of a match.
+     * @param replacement as used by {@link Matcher#replaceAll(String)}.
+     * @return the replacement for the given match.
+     */
+    private Object createReplacement(Matcher matcher, String replacement) {
+        StringBuilder result = new StringBuilder();
+        applyReplacement(matcher, replacement, result);
+        return result.toString();
+    }
+    /**
+     * Applies the replacement String to the current match in the matcher.
+     * @param matcher     a matcher positioned at the start of a match.
+     * @param replacement as used by {@link Matcher#replaceAll(String)}.
+     * @param result      the replacement will be appended to this builder.
+     */
+    @SuppressWarnings("AssignmentToForLoopParameter")
+    private void applyReplacement(Matcher matcher, String replacement, StringBuilder result) {
+        int pos = 0;
+        while (pos < replacement.length()) {
+            if (replacement.charAt(pos) != '$') {
+                result.append(replacement.charAt(pos++));
+                continue;
+            }
+            pos++;
+            int group = replacement.charAt(pos++) - '0';
+            result.append(matcher.group(group));
+        }
+    }
+
     public String getStats() {
         StringBuilder sb = new StringBuilder(500);
         sb.append("Processed ALTOs: ").append(altoCount).append("\n");
@@ -193,9 +233,18 @@ public class AltoStatFilter extends ObjectFilterImpl {
         sb.append("Processed lines: ").append(lineCount).append("\n");
         sb.append("Matches:\n");
         for (Map.Entry<Pattern, HashMap<String, Integer>> entry: matches.entrySet()) {
-            sb.append("  Regexp ").append(entry.getKey().pattern()).append("\n");
+            sb.append(String.format("  Regexp %s had %d unique matches:\n",
+                                    entry.getKey().pattern(), entry.getValue().size()));
+            // We want this sorted by occurrence
+            List<FlexiblePair<String, Integer>> matches =
+                    new ArrayList<FlexiblePair<String, Integer>>(entry.getValue().size());
             for (Map.Entry<String, Integer> match: entry.getValue().entrySet()) {
-                sb.append("    ").append(match.getKey()).append(": ").append(match.getValue()).append("\n");
+                matches.add(new FlexiblePair<String, Integer>(
+                        match.getKey(), match.getValue(), FlexiblePair.SortType.SECONDARY_DESCENDING));
+            }
+            Collections.sort(matches);
+            for (FlexiblePair<String, Integer> match: matches) {
+                sb.append(String.format("  %8d: %s\n", match.getValue(), match.getKey()));
             }
         }
         return sb.toString();
