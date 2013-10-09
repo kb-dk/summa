@@ -40,7 +40,7 @@ public class AltoStatFilter extends ObjectFilterImpl {
 
     /**
      * Outputs a complete list of matches from the given regexps applied to each line in the given ALTOs.
-     * Groups are concatenated unless {@link #CONF_REPLACMENT} are defined.
+     * Groups are concatenated unless {@link #CONF_REPLACEMENTS} are defined.
      * </p><p>
      * Example: "(?:^| )(ca[.] [^ ]+)", "(?:^| )(cirka [^ ]+)" ->
      * "ca. midnat (54)"
@@ -56,7 +56,24 @@ public class AltoStatFilter extends ObjectFilterImpl {
      * </p><p>
      * List of replacements for the regexps. Optional. Default is not defined (all groups are concatenated).
      */
-    public static final String CONF_REPLACMENT = "altostatfilter.replacements";
+    public static final String CONF_REPLACEMENTS = "altostatfilter.replacements";
+
+    /**
+     * Lowercase all text with "da" locale before matching.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_LOWERCASE = "altostatfilter.lowercase";
+    public static final boolean DEFAULT_LOWERCASE = true;
+
+    /**
+     * If true, all matching are done on lines. If false, matching is done on all test concatenated with spaces
+     * between each word.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_LINEBASED = "altostatfilter.linebased";
+    public static final boolean DEFAULT_LINEBASED = true;
 
     private int altoCount = 0;
     private int blockCount = 0;
@@ -64,6 +81,8 @@ public class AltoStatFilter extends ObjectFilterImpl {
     private final List<Pattern> regexps;
     private final List<String> replacements;
     private final HashMap<Pattern, HashMap<String, Integer>> matches;
+    private final boolean lowercase;
+    private final boolean linebased;
 
     private final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     {
@@ -75,7 +94,7 @@ public class AltoStatFilter extends ObjectFilterImpl {
         String[] regStrs = conf.getStrings(CONF_REGEXPS, (String[])null);
         regexps = new ArrayList<Pattern>(regStrs == null ? 0 : regStrs.length);
         if (regStrs != null) {
-            String[] repStrs = conf.getStrings(CONF_REPLACMENT, (String[])null);
+            String[] repStrs = conf.getStrings(CONF_REPLACEMENTS, (String[])null);
             replacements = repStrs == null ? null : Arrays.asList(repStrs);
             if (repStrs != null && repStrs.length != regStrs.length) {
                 throw new ConfigurationException("The number of replacements was " + repStrs.length + " but there was "
@@ -92,6 +111,8 @@ public class AltoStatFilter extends ObjectFilterImpl {
         for (Pattern pattern: regexps) {
             matches.put(pattern, new HashMap<String, Integer>());
         }
+        lowercase = conf.getBoolean(CONF_LOWERCASE, DEFAULT_LOWERCASE);
+        linebased = conf.getBoolean(CONF_LINEBASED, DEFAULT_LINEBASED);
         log.info("Created " + this);
     }
 
@@ -114,6 +135,9 @@ public class AltoStatFilter extends ObjectFilterImpl {
 
     private void extractStats(Alto alto) {
         altoCount++;
+        if (!linebased) {
+            extract();
+        }
         for (Map.Entry<String, List<Alto.TextBlock>> groups: alto.getTextBlockGroups().entrySet()) {
             for (Alto.TextBlock block: groups.getValue()) {
                 blockCount++;
@@ -128,6 +152,12 @@ public class AltoStatFilter extends ObjectFilterImpl {
     private void extract(Alto.TextLine line) {
         for (int i = 0 ; i < regexps.size() ; i++) {
             extract(regexps.get(i), replacements == null ? null : replacements.get(i), line.getAllText());
+        }
+    }
+
+    private void extract(Alto alto) {
+        for (int i = 0 ; i < regexps.size() ; i++) {
+            extract(regexps.get(i), replacements == null ? null : replacements.get(i), alto.getAllText());
         }
     }
 
