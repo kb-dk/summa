@@ -276,7 +276,7 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public synchronized void commit() throws IOException {
-        log.debug("commit(): Flushing batcher");
+        log.info("commit(): Flushing batcher with " + batcher.size() + " pending Payloads");
         batcher.flush();
         orderChanged  = false;
         log.info("Attempting commit of " + updatesSinceLastCommit + " updates to Solr");
@@ -291,7 +291,7 @@ public class SolrManipulator implements IndexManipulator {
     @Override
     public synchronized void consolidate() throws IOException {
         log.info("Consolidate called. Currently there is no implementation of this functionality besides requesting a "
-                 + "commit. Note that consolidate is becoming increasingly less important as Lucene/Solr develops");
+                 + "commit. Note that consolidate is generally now recommended for Solr 4+.");
         commit(); // Just to make sure
     }
 

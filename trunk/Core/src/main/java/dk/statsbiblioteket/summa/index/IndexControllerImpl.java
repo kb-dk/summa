@@ -573,7 +573,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
     @Override
     public synchronized void consolidate() throws IOException {
         long startTime = System.currentTimeMillis();
-        log.debug("Consolidate called");
+        log.info("consolidate() called");
         if (updatesSinceLastConsolidate == 0 && !forceConsolidateOnClose) {
             log.trace("No updates since last Consolidate");
             lastConsolidate = System.currentTimeMillis();
@@ -592,8 +592,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         updatesSinceLastConsolidate = 0;
         commitsSinceLastConsolidate = 0;
         orderChangedSinceLastCommit = false;
-        log.info(String.format("consolidate() finished in %d ms",
-                               System.currentTimeMillis() - startTime));
+        log.info(String.format("consolidate() finished in %d ms", System.currentTimeMillis() - startTime));
     }
 
     /**
@@ -628,7 +627,17 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         if (consolidateOnClose && updatesSinceLastConsolidate > 0 || forceConsolidateOnClose) {
             log.debug("Calling consolidate because of close. " + updatesSinceLastConsolidate
                       + " updates since last consolidate");
-            consolidate();
+            try {
+                consolidate();
+            } catch (Exception e) {
+                String message = "Exception consolidating with "+ updatesSinceLastConsolidate + " pending Payloads";
+                Logging.fatal(log, "IndexControllerImpl.close()", message, e);
+                throw new IOException(message, e);
+            } catch (Error e) {
+                String message = "Error consolidating with "+ updatesSinceLastConsolidate + " pending Payloads";
+                Logging.fatal(log, "IndexControllerImpl.close()", message, e);
+                throw new Error(message, e);
+            }
         } else {
             log.debug("Calling commit from close with " + updatesSinceLastCommit + " updates since last commit");
             commit();
