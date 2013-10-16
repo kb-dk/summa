@@ -26,7 +26,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.*;
-import org.apache.lucene.search.exposed.ExposedFactory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.BytesRef;
 
@@ -97,9 +96,7 @@ public class TermStatSource implements Closeable {
         private String designation;
         private long termCount = 0;
 
-        public Merger(
-            List<Iterator<Triple<BytesRef, Long, Long>>> providers,
-            String designation) {
+        public Merger(List<Iterator<Triple<BytesRef, Long, Long>>> providers, String designation) {
             log.debug("Creating Merger(" + designation + ")");
             this.providers = providers;
             this.designation = designation;
@@ -130,19 +127,16 @@ public class TermStatSource implements Closeable {
                     + "the same. There is an error in the internal bookkeeping");
             }
 
-            int index = -1;
             BytesRef term = null;
 
-            int counter = 0;
+            // Locate next term
             for (Triple<BytesRef, Long, Long> value: values) {
                 if (term == null || term.compareTo(value.getValue1()) > 0) {
                     term = value.getValue1();
-                    index = counter;
                 }
-                counter++;
             }
 
-            // Found the term, now sum the stats
+            // Found the term, now sum the stats and cleanup depleted providers
             long tf = 0;
             long df = 0;
 
@@ -151,7 +145,7 @@ public class TermStatSource implements Closeable {
                     "Term was null which is illegal at this execution point. There is an error in program logic");
             }
 
-            for (int i = values.size()-1 ; i >= index ; i--) {
+            for (int i = values.size()-1 ; i >= 0 ; i--) {
                 Triple<BytesRef, Long, Long> value = values.get(i);
                 if (term.equals(value.getValue1())) {
                     tf += value.getValue2();
@@ -165,8 +159,7 @@ public class TermStatSource implements Closeable {
                 }
             }
 
-            Triple<BytesRef, Long, Long> result =
-                new Triple<BytesRef, Long, Long>(term, tf, df);
+            Triple<BytesRef, Long, Long> result = new Triple<BytesRef, Long, Long>(term, tf, df);
             termCount++;
             if (termCount == 0) {
                 log.debug("Merger for " + designation + " depleted with " + termCount + " delivered terms");
@@ -230,7 +223,7 @@ public class TermStatSource implements Closeable {
                 }
                 BytesRef text = new BytesRef();
                 text.copyBytes(current);
-                final Triple<BytesRef, Long, Long> result = new Triple<BytesRef, Long, Long>(current, tf, df);
+                final Triple<BytesRef, Long, Long> result = new Triple<BytesRef, Long, Long>(text, tf, df);
                 termCount++;
                 depleted = termsEnum.next() == null;
                 if (depleted) {
