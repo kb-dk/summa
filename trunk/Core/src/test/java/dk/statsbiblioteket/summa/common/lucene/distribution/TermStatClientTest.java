@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.support.lucene.LuceneUtil;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
@@ -25,16 +26,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Version;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @SuppressWarnings({"ALL"})
 public class TermStatClientTest extends TestCase {
@@ -114,6 +111,25 @@ public class TermStatClientTest extends TestCase {
         }
     }
 
+    public void testTermIteration() throws Exception {
+        generateDuplicateIndex(3, INDEX_LOCATION);
+        IndexReader ir = DirectoryReader.open(new NIOFSDirectory(INDEX_LOCATION));
+        List<AtomicReader> irs = LuceneUtil.gatherSubReaders(ir);
+        for (AtomicReader reader: irs) {
+            Terms terms = reader.fields().terms("fieldA");
+            TermsEnum termsEnum = terms.iterator(null);
+            Set<String> received = new HashSet<String>();
+            while (termsEnum.next() != null) {
+                String term = termsEnum.term().utf8ToString();
+                if (received.contains(term)) {
+                    fail("Already received " + term);
+                }
+                received.add(term);
+            }
+        }
+        ir.close();
+    }
+
     public void testStoredUnique() throws Exception {
 //        generateIndex(100);
 //        generateDuplicateIndex(INDEX_LOCATION);
@@ -126,20 +142,25 @@ public class TermStatClientTest extends TestCase {
         log.info("Dump-filter contains " + Strings.join(dumpLocation.listFiles(), ", "));
 
         TermStat termStat = new TermStat(conf);
-        Set<String> retrieved = new HashSet<String>();
+        Set<String> retrieved = new LinkedHashSet<String>();
         Set<String> duplicates = new HashSet<String>();
         try {
             termStat.open(dumpLocation);
+            log.info("Opened termstats from " + dumpLocation + " containing " + termStat.size() + " terms");
             for (int i = 0 ; i < termStat.size() ; i++) {
                 TermEntry entry = termStat.get(i);
-                if (termStat.contains(entry.getTerm())) {
+                if (retrieved.contains(entry.getTerm())) {
                     duplicates.add(entry.getTerm());
+                } else {
+                    retrieved.add(entry.getTerm());
                 }
             }
         } finally {
             termStat.close();
             Files.delete(dumpLocation);
         }
+        assertEquals("The correct terms should be retrieved in the correct order",
+                     "bar0, bar1, bar2, foo", Strings.join(retrieved));
         if (!duplicates.isEmpty()) {
             fail("Got duplicates: " + Strings.join(duplicates));
         }
@@ -306,31 +327,8 @@ public class TermStatClientTest extends TestCase {
                 new IndexWriterConfig(Version.LUCENE_43, new StandardAnalyzer(Version.LUCENE_43)));
         for (int i = 0 ; i < docCount ; i++) {
             Document doc = new Document();
-            doc.add(new Field("fieldA", "foo hello" + i, Field.Store.YES, Field.Index.ANALYZED));
+            doc.add(new Field("fieldA", "foo bar" + i, Field.Store.YES, Field.Index.ANALYZED));
             writer.addDocument(doc);
-        }
-        writer.close();
-    }
-
-    private void generateDuplicateIndex2(File location) throws IOException {
-        IndexWriter writer = new IndexWriter(
-                new NIOFSDirectory(location),
-                new IndexWriterConfig(Version.LUCENE_43, new StandardAnalyzer(Version.LUCENE_43)));
-        {
-            Document doc = new Document();
-            doc.add(new Field("id", "doc1", Field.Store.YES, Field.Index.ANALYZED));
-            doc.add(new Field("fieldA", "myterm,", Field.Store.YES, Field.Index.ANALYZED));
-            doc.add(new Field("fieldB", "myterm,", Field.Store.YES, Field.Index.ANALYZED));
-            writer.addDocument(doc);
-        }
-        writer.commit();
-        {
-            Document doc = new Document();
-            doc.add(new Field("id", "doc2", Field.Store.YES, Field.Index.ANALYZED));
-            doc.add(new Field("fieldA", "myterm,", Field.Store.YES, Field.Index.ANALYZED));
-            doc.add(new Field("fieldB", "myterm,", Field.Store.YES, Field.Index.ANALYZED));
-            writer.addDocument(doc);
-            writer.commit();
         }
         writer.close();
     }

@@ -29,7 +29,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.exposed.ExposedFactory;
 import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.TermProvider;
-import org.apache.lucene.search.exposed.compare.ComparatorFactory;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.util.Bits;
@@ -416,10 +415,8 @@ public class TermStatClient implements Configurable {
      */
     public void dumpStats(File index, File destination) throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.debug(String.format("dumpStats(%s, %s) called",
-                                index, destination));
-        extract(index, destination.toString(), "dumpstats",
-                Arrays.asList(".*"), 1, -1, false);
+        log.debug(String.format("dumpStats(%s, %s) called", index, destination));
+        extract(index, destination.toString(), "dumpstats", Arrays.asList(".*"), 1, -1, false);
     }
 
     /**
