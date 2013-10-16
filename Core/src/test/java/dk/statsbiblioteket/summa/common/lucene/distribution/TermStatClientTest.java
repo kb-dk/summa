@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 
 @SuppressWarnings({"ALL"})
 public class TermStatClientTest extends TestCase {
@@ -50,16 +51,20 @@ public class TermStatClientTest extends TestCase {
             log.debug("Removing previous test-files from " + TEST_DIR);
             Files.delete(TEST_DIR);
         }
+        if (INDEX_LOCATION.exists()) {
+            log.debug("Removing previous index from " + INDEX_LOCATION);
+            Files.delete(INDEX_LOCATION);
+        }
         TEST_DIR.mkdirs();
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        try {
-            Files.delete(TEST_DIR);
-        } catch (IOException e) {
-            fail("Unable to delete the folder " + TEST_DIR);
+        Files.delete(TEST_DIR);
+
+        if (INDEX_LOCATION.exists()) {
+            Files.delete(INDEX_LOCATION);
         }
     }
 
@@ -96,12 +101,47 @@ public class TermStatClientTest extends TestCase {
         TermStatClient extractor = new TermStatClient(conf);
         File dumpLocation = new File(TEST_DIR, "dump");
         extractor.dumpStats(INDEX_LOCATION, dumpLocation);
-        log.info("Dump-filder contains " + Strings.join(dumpLocation.listFiles(), ", "));
+        log.info("Dump-filter contains " + Strings.join(dumpLocation.listFiles(), ", "));
 
         TermStat termStat = new TermStat(conf);
-        termStat.open(dumpLocation);
-        for (int i = 0 ; i < termStat.size() ; i++) {
-            termStat.get(i);
+        try {
+            termStat.open(dumpLocation);
+            for (int i = 0 ; i < termStat.size() ; i++) {
+                termStat.get(i);
+            }
+        } finally {
+            Files.delete(dumpLocation);
+        }
+    }
+
+    public void testStoredUnique() throws Exception {
+//        generateIndex(100);
+//        generateDuplicateIndex(INDEX_LOCATION);
+        generateDuplicateIndex(3, INDEX_LOCATION);
+
+        Configuration conf = Configuration.newMemoryBased();
+        TermStatClient extractor = new TermStatClient(conf);
+        File dumpLocation = new File(TEST_DIR, "dump2");
+        extractor.dumpStats(INDEX_LOCATION, dumpLocation);
+        log.info("Dump-filter contains " + Strings.join(dumpLocation.listFiles(), ", "));
+
+        TermStat termStat = new TermStat(conf);
+        Set<String> retrieved = new HashSet<String>();
+        Set<String> duplicates = new HashSet<String>();
+        try {
+            termStat.open(dumpLocation);
+            for (int i = 0 ; i < termStat.size() ; i++) {
+                TermEntry entry = termStat.get(i);
+                if (termStat.contains(entry.getTerm())) {
+                    duplicates.add(entry.getTerm());
+                }
+            }
+        } finally {
+            termStat.close();
+            Files.delete(dumpLocation);
+        }
+        if (!duplicates.isEmpty()) {
+            fail("Got duplicates: " + Strings.join(duplicates));
         }
     }
 
@@ -225,9 +265,11 @@ public class TermStatClientTest extends TestCase {
         The number of unique terms is 4 (fixed) + (docCount * 4 (variable))
      */
     private void generateIndex(int docCount, File location) throws Exception {
+        // Attempt to produce multiple segments
+        final int COMMIT_FREQUENCY = docCount > 1 ? docCount / 2 : Integer.MAX_VALUE;
         IndexWriter writer = new IndexWriter(
-            new NIOFSDirectory(location),
-            new IndexWriterConfig(Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30)));
+                new NIOFSDirectory(location),
+                new IndexWriterConfig(Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30)));
 /*        IndexWriter writer = new IndexWriter(
                 new NIOFSDirectory(location),
                 new StandardAnalyzer(Version.LUCENE_30),
@@ -236,7 +278,7 @@ public class TermStatClientTest extends TestCase {
             Document doc = new Document();
             doc.add(new Field("fixed", "fixedcontent",
                               Field.Store.YES, Field.Index.ANALYZED));
-            doc.add(new Field("duplicatefixed", "hello world hello world",
+            doc.add(new Field("duplicatefixed", "hello world Hello World",
                               Field.Store.YES, Field.Index.ANALYZED));
 
             doc.add(new Field("duplicatemixed", "hello" + i + " world hello" + i + " world",
@@ -251,6 +293,44 @@ public class TermStatClientTest extends TestCase {
             doc.add(new Field("nonindexed", "content",
                               Field.Store.YES, Field.Index.NO));
             writer.addDocument(doc);
+            if (i > 0 && i % COMMIT_FREQUENCY == 0) {
+                writer.commit();
+            }
+        }
+        writer.close();
+    }
+
+    private void generateDuplicateIndex(int docCount, File location) throws Exception {
+        IndexWriter writer = new IndexWriter(
+                new NIOFSDirectory(location),
+                new IndexWriterConfig(Version.LUCENE_43, new StandardAnalyzer(Version.LUCENE_43)));
+        for (int i = 0 ; i < docCount ; i++) {
+            Document doc = new Document();
+            doc.add(new Field("fieldA", "foo hello" + i, Field.Store.YES, Field.Index.ANALYZED));
+            writer.addDocument(doc);
+        }
+        writer.close();
+    }
+
+    private void generateDuplicateIndex2(File location) throws IOException {
+        IndexWriter writer = new IndexWriter(
+                new NIOFSDirectory(location),
+                new IndexWriterConfig(Version.LUCENE_43, new StandardAnalyzer(Version.LUCENE_43)));
+        {
+            Document doc = new Document();
+            doc.add(new Field("id", "doc1", Field.Store.YES, Field.Index.ANALYZED));
+            doc.add(new Field("fieldA", "myterm,", Field.Store.YES, Field.Index.ANALYZED));
+            doc.add(new Field("fieldB", "myterm,", Field.Store.YES, Field.Index.ANALYZED));
+            writer.addDocument(doc);
+        }
+        writer.commit();
+        {
+            Document doc = new Document();
+            doc.add(new Field("id", "doc2", Field.Store.YES, Field.Index.ANALYZED));
+            doc.add(new Field("fieldA", "myterm,", Field.Store.YES, Field.Index.ANALYZED));
+            doc.add(new Field("fieldB", "myterm,", Field.Store.YES, Field.Index.ANALYZED));
+            writer.addDocument(doc);
+            writer.commit();
         }
         writer.close();
     }
