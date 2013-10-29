@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -63,10 +64,20 @@ public class SearchStorageTest extends TestCase {
         testSearcherStorage(fakeStorage);
     }
 
+    public void testSBSpecificStorages() throws IOException {
+        final String HUB = "//mars:47500/hub-storage";
+        StorageReaderClient storage = new StorageReaderClient(Configuration.newMemoryBased(
+                ConnectionConsumer.CONF_RPC_TARGET, HUB
+
+        ));
+        Record record = storage.getRecord("ebog_ssj0000325811", null);
+        assertNotNull("There should be an ebog Record", record);
+    }
+
     private void testSearcherStorage(Storage storage) throws IOException {
         Record record = storage.getRecord("someRecord", null);
         assertNotNull("There should be a record", record);
-        //System.out.println(record.getContentAsUTF8());
+        System.out.println(record.getContentAsUTF8());
     }
 
     public void testFakeSearchPlain() throws IOException {
