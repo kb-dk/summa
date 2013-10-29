@@ -21,16 +21,26 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Little tool to hook up to a {@link SummaSearcher} and launch a search
  * on it and print the result to stdout.
  */
+@SuppressWarnings("UseOfSystemOutOrSystemErr")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,
         author = "mke")
 public class SearchTool {
+
+    public static final String[][] SHORTCUTS= new String[][] {
+            {DocumentKeys.SEARCH_QUERY, "q"},
+            {DocumentKeys.SEARCH_FILTER, "f"},
+            {DocumentKeys.SEARCH_COLLECT_DOCIDS, "docids"},
+            {DocumentKeys.SEARCH_SORTKEY, "sort"}
+    };
+
     /**
      * Main method, for this commandline helper tool.
      *
@@ -117,8 +127,17 @@ public class SearchTool {
                 throw new RuntimeException(
                         "Argument '" + arg + "' is not a valid assignment string. Fx summa.foo=bar");
             }
-            rq.put(keyVal[0], keyVal[1]);
+            rq.put(alias(keyVal[0]), keyVal[1]);
         }
         return rq;
+    }
+
+    private static String alias(String command) {
+        for (String[] pair: SHORTCUTS) {
+            if (pair[1].equals(command)) {
+                return pair[0];
+            }
+        }
+        return command;
     }
 }
