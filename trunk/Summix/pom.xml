@@ -6,7 +6,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>2.0.0-20131003-SNAPSHOT</version>
+        <version>2.1.0-20131029-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 
@@ -71,7 +71,7 @@
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.sbutil</groupId>
-            <artifactId>sbutil</artifactId>
+            <artifactId>sbutil-common</artifactId>
         </dependency>
         <dependency>
             <groupId>fastutil</groupId>

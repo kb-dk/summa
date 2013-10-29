@@ -171,19 +171,22 @@ public class OrdinalTermsEnum extends TermsEnum {
     return inner.attributes();
   }
 
-  @Override
   public boolean seekExact(BytesRef text, boolean useCache) throws IOException {
     ordOK = false;
-    return inner.seekExact(text, useCache);
+    return inner.seekExact(text);
   }
 
-  @Override
   public SeekStatus seekCeil(BytesRef text, boolean useCache) throws IOException {
     ordOK = false;
-    return inner.seekCeil(text, useCache);
+    return inner.seekCeil(text);
   }
 
   @Override
+  public SeekStatus seekCeil(BytesRef bytesRef) throws IOException {
+      return seekCeil(bytesRef, true);
+  }
+
+    @Override
   public void seekExact(BytesRef term, TermState state) throws IOException {
     ordOK = false;
     inner.seekExact(term, state);
