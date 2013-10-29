@@ -130,11 +130,13 @@ public class TermStatClientTest extends TestCase {
         ir.close();
     }
 
-    public void testStoredUnique() throws Exception {
-//        generateIndex(100);
-//        generateDuplicateIndex(INDEX_LOCATION);
+    // Triggered bug present before 2013-10-16
+    public void testStoredUniqueThree() throws Exception {
         generateDuplicateIndex(3, INDEX_LOCATION);
+        storedUniqueHelper("bar0, bar1, bar2, foo");
+    }
 
+    public void storedUniqueHelper(String expected) throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         TermStatClient extractor = new TermStatClient(conf);
         File dumpLocation = new File(TEST_DIR, "dump2");
@@ -160,7 +162,7 @@ public class TermStatClientTest extends TestCase {
             Files.delete(dumpLocation);
         }
         assertEquals("The correct terms should be retrieved in the correct order",
-                     "bar0, bar1, bar2, foo", Strings.join(retrieved));
+                     expected, Strings.join(retrieved));
         if (!duplicates.isEmpty()) {
             fail("Got duplicates: " + Strings.join(duplicates));
         }
