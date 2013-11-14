@@ -543,14 +543,4 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         return true;
     }
 
-    /**
-     * Return the given SQL statement with a LIMIT statement.
-     *
-     * @param sql The SQL statement which should be added page statement.
-     * @return The given SQL statement with a LIMIT statement.
-     */
-    @Override
-    public String getPagingStatement(String sql) {
-        return sql + " LIMIT " + getPageSize();
-    }
 }
