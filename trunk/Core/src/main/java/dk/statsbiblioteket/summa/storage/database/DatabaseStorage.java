@@ -223,15 +223,26 @@ public abstract class DatabaseStorage extends StorageBase {
      * Number of hits to return per-page. This configuration option is only
      * used if the actual storage implementation request that a paging model
      * be used to scan large result sets.
-     * <p/>
-     * The default value for this property is {@link #DEFAULT_PAGE_SIZE}
+     * </p><p>
+     * Note: This page size is used for read-operations as SQL addition 'LIMIT xxx'.
+     * See {@link #CONF_PAGE_SIZE_UPDATE}.
+     * </p><p>
+     * Optional. The default value for this property is 500.
      */
     public static final String CONF_PAGE_SIZE = "summa.storage.database.pagesize";
+    public static final int DEFAULT_PAGE_SIZE = 500;
 
     /**
-     * Default value for the {@link #CONF_PAGE_SIZE} property.
+     * Number of rows to lock when performing updates.  This configuration option is only
+     * used if the actual storage implementation request that a paging model be used to scan large sets.
+     * </p><p>
+     * Note: This page size is used for update-operations as SQL addition 'LIMIT xxx'.
+     * See {@link #CONF_PAGE_SIZE}.
+     * </p><p>
+     * Optional. The default value for this property is {@link #CONF_PAGE_SIZE} if defines, else 100.
      */
-    public static final int DEFAULT_PAGE_SIZE = 500;
+    public static final String CONF_PAGE_SIZE_UPDATE = "summa.storage.database.pagesize.update";
+    public static final int DEFAULT_PAGE_SIZE_UPDATE = 100;
 
     /**
      * The name of the main table in the database in which record metadata
@@ -380,7 +391,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * The fetch size.
      */
-    private static final int FETCH_SIZE = 100;
+    public static final int FETCH_SIZE = 100;
 
     /**
      * An empty iterator key.
@@ -446,10 +457,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * True if paging model should be used.
      */
     private boolean usePagingModel;
-    /**
-     * The page size.
-     */
     private int pageSize;
+    private int pageSizeUpdate;
 
     private StatementHandler statementHandler;
 
@@ -599,8 +608,8 @@ public abstract class DatabaseStorage extends StorageBase {
         final DatabaseStorage myself = this;
         statementHandler = new StatementHandler(useLazyRelationLookups()) {
             @Override
-            public String getPagingStatement(String sql) {
-                return usePagingResultSets() ? myself.getPagingStatement(sql) : sql;
+            public String getPagingStatement(String sql, boolean readOnly) {
+                return usePagingResultSets() ? myself.getPagingStatement(sql, readOnly) : sql;
             }
 
             @Override
@@ -617,10 +626,13 @@ public abstract class DatabaseStorage extends StorageBase {
 
         if (usePagingModel) {
             pageSize = conf.getInt(CONF_PAGE_SIZE, DEFAULT_PAGE_SIZE);
+            pageSizeUpdate = conf.getInt(CONF_PAGE_SIZE_UPDATE,
+                                         conf.containsKey(CONF_PAGE_SIZE) ? pageSize : DEFAULT_PAGE_SIZE_UPDATE);
             log.debug("Using paging model for large result sets. Page size: " + pageSize);
         } else {
             log.debug("Using default model for large result sets");
             pageSize = -1;
+            pageSizeUpdate = -1;
         }
 
         if (useLazyRelations) {
@@ -636,6 +648,7 @@ public abstract class DatabaseStorage extends StorageBase {
         } else {
             log.info("Disabling relationships tracking on: " + Strings.join(disabledRelationsTracking, ", "));
         }
+        log.info("Constructed " + this);
     }
 
     /**
@@ -813,7 +826,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * again.
      * <p/>
      * If this method returns {@code true} the
-     * {@link #getPagingStatement(String)} will be called with the SQL
+     * {@link #getPagingStatement(String, boolean)} will be called with the SQL
      * statements the DatabaseStorage wants paging versions of.
      * <p/>
      * The default implementation of this method returns {@code false}
@@ -846,8 +859,19 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
+     * If {@link #usePagingModel} is true, ' LIMIT xxx' will be appended to the given sql. The value of xxx is
+     * {@link #pageSize} if readOnly is true, else {@link #pageSizeUpdate}.
+     * @param sql      SQL expression.
+     * @param readOnly if true, the expression is expected to be read only.
+     * @return the statement modified with LIMIT.
+     */
+    protected String getPagingStatement(String sql, boolean readOnly) {
+        return usePagingModel ? getPagingStatement(sql, readOnly ? pageSize : pageSizeUpdate) : sql;
+    }
+
+    /**
      * Return an altered version of the input {@code sql} which adds one extra
-     * '?' parameter, <i>to the end of the SQL statement</i>, which can be used
+     * parameter, <i>to the end of the SQL statement</i>, which is used
      * to limit the number of rows returned.
      * <p/>
      * For many databases a legal implementation of this method would simply
@@ -855,25 +879,14 @@ public abstract class DatabaseStorage extends StorageBase {
      * <pre>
      *   sql + " LIMIT " + getPageSize()
      * </pre>
-     * <p/>
-     * The default implementation of this method throws an
-     * {@link UnsupportedOperationException}.
      *
      * @param sql Input SQL statement on which to append another parameter that
      *            limits the number of rows returned
-     * @return A modified version of {@code sql} that adds a new '?' parameter
+     * @return A modified version of {@code sql} that adds a parameter
      *         to the statement that will limit the number of rows returned
      */
-    protected String getPagingStatement(String sql) {
-        throw new UnsupportedOperationException(
-                "Non-paging data model. You must override DatabaseStorage.getPagingStatement when using paging result "
-                + "sets");
-    }
-
-
     protected String getPagingStatement(String sql, int limit) {
         return sql + " LIMIT " + limit;
-
     }
 
     /**
@@ -892,6 +905,10 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public int getPageSize() {
         return pageSize;
+    }
+
+    public int getPageSizeUpdate() {
+        return pageSizeUpdate;
     }
 
     /**
@@ -1547,11 +1564,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.getConnection().setReadOnly(true);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
-            if (usePagingModel) {
-                stmt.setFetchSize(pageSize);
-            } else {
-                stmt.setFetchSize(FETCH_SIZE);
-            }
+            assignFetchSize(stmt, true);
         } catch (SQLException e) {
             throw new IOException("Error preparing connection for cursoring", e);
         }
@@ -2544,9 +2557,7 @@ public abstract class DatabaseStorage extends StorageBase {
         final int _DELETED = 3;
         String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? AND "
                      + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
-        if (usePagingModel) {
-            sql = getPagingStatement(sql);
-        }
+        sql = getPagingStatement(sql, true);
 
         PreparedStatement stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
         // Set the statement up for fetching of large result sets, see fx.
@@ -2558,11 +2569,7 @@ public abstract class DatabaseStorage extends StorageBase {
             conn.setReadOnly(false);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
-            if (usePagingModel) {
-                stmt.setFetchSize(pageSize);
-            } else {
-                stmt.setFetchSize(FETCH_SIZE);
-            }
+            assignFetchSize(stmt, false);
         } catch (SQLException e) {
             closeStatement(stmt);
             throw new IOException("Error preparing connection for clearing base '" + base + "': " + e.getMessage(), e);
@@ -2573,11 +2580,11 @@ public abstract class DatabaseStorage extends StorageBase {
         long startTimestamp = timestampGenerator.next();
         String id = null;
         long totalCount = 0;
-        long pageCount = pageSize;
+        long pageCount = pageSizeUpdate;
         try {
             // Page through all records in base and mark them as deleted
             // in one transaction
-            while (pageCount >= pageSize) {
+            while (pageCount >= pageSizeUpdate) {
                 log.debug(String.format("Preparing page for deletion on base '%s' for records "
                                         + "in the range %s to %s", base, timestampGenerator.formatTimestamp
                         (lastMtimeTimestamp), timestampGenerator.formatTimestamp(startTimestamp)));
@@ -2761,13 +2768,7 @@ public abstract class DatabaseStorage extends StorageBase {
             conn.setReadOnly(false);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
-
-/*          // Already done in StatementHandler.getBatchJob
-            if (usePagingModel) {
-                stmt.setFetchSize(pageSize);
-            } else {
-                stmt.setFetchSize(FETCH_SIZE);
-            }*/
+            assignFetchSize(stmt, false);
         } catch (SQLException e) {
             closeStatement(stmt);
             throw new IOException("Error preparing connection for batch job", e);
@@ -2786,7 +2787,7 @@ public abstract class DatabaseStorage extends StorageBase {
         long minTimestamp = timestampGenerator.baseTimestamp(
                 minMtime > UniqueTimestampGenerator.MAX_TIME ? UniqueTimestampGenerator.MAX_TIME : minMtime);
         long totalCount = 0;
-        long pageCount = getPageSize();
+        long pageCount = getPageSizeUpdate();
         String previousRecordId = null;
         Record previousRecord = null;
         try {
@@ -2795,7 +2796,7 @@ public abstract class DatabaseStorage extends StorageBase {
             // when we are at the last record and set 'last' variable in
             // the batch job context correctly upon the last iteration. This
             // is also why we need the odd -1 in the while-condition below
-            while (pageCount >= getPageSize() - 1) {
+            while (pageCount >= getPageSizeUpdate() - 1) {
                 pageCount = 0;
                 stmt.setLong(1, maxTimestamp);
                 stmt.setLong(2, minTimestamp);
@@ -2845,6 +2846,14 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         return job.getOutput();
+    }
+
+    private void assignFetchSize(PreparedStatement stmt, boolean readOnly) throws SQLException {
+        if (usePagingModel) {
+            stmt.setFetchSize(readOnly ? pageSize : pageSizeUpdate);
+        } else {
+            stmt.setFetchSize(FETCH_SIZE);
+        }
     }
 
     /**
@@ -4088,7 +4097,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public String toString() {
-        return "DatabaseStorage(#iterators=" + iterators.size() + ", useLazyRelations=" + useLazyRelations +
-               ", usePagingModel=" + usePagingModel + ", pageSize=" + pageSize + ')';
+        return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d,"
+                             + "pageSizeUpdate=%d)",
+                             iterators.size(), useLazyRelations, usePagingModel, pageSize, pageSizeUpdate);
     }
 }

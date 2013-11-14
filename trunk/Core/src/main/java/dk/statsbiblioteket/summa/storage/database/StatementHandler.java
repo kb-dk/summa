@@ -41,7 +41,7 @@ public abstract class StatementHandler {
         this.lazy = lazy;
     }
 
-    public abstract String getPagingStatement(String sql);
+    public abstract String getPagingStatement(String sql, boolean readOnly);
     public abstract MiniConnectionPoolManager.StatementHandle prepareStatement(String sql) throws SQLException;
 
     private static final String RELATIONS_CLAUSE=
@@ -70,7 +70,8 @@ public abstract class StatementHandler {
             + " ON " + RELATIONS_CLAUSE
             + " WHERE " + DatabaseStorage.BASE_COLUMN + "=?"
             + " AND " + DatabaseStorage.MTIME_COLUMN + ">?"
-            + " ORDER BY " + DatabaseStorage.MTIME_COLUMN
+            + " ORDER BY " + DatabaseStorage.MTIME_COLUMN,
+            true
         ));
     }
 
@@ -92,7 +93,8 @@ public abstract class StatementHandler {
             + " LEFT JOIN " + DatabaseStorage.RELATIONS
             + " ON " + RELATIONS_CLAUSE
             + " WHERE " + DatabaseStorage.MTIME_COLUMN + ">?"
-            + " ORDER BY " + DatabaseStorage.MTIME_COLUMN
+            + " ORDER BY " + DatabaseStorage.MTIME_COLUMN,
+            true
         ));
     }
 
@@ -236,7 +238,8 @@ public abstract class StatementHandler {
             + " FROM " + DatabaseStorage.RECORDS
             + " WHERE ( mtime<? AND mtime>? )"
             + (base == null ? "" : " AND base=?")
-            + " ORDER BY " + DatabaseStorage.MTIME_COLUMN
+            + " ORDER BY " + DatabaseStorage.MTIME_COLUMN,
+            false
         ));
     }
 
