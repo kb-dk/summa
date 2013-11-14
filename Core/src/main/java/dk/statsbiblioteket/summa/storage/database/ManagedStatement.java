@@ -531,12 +531,15 @@ public class ManagedStatement implements PreparedStatement {
 
     //@Override
     public boolean isCloseOnCompletion() throws SQLException {
-        return stmt.isCloseOnCompletion();
+        //return stmt.isCloseOnCompletion();
+     throw new UnsupportedOperationException("Can not be implemented before switching to java7");
+    
     }
      
     //@Override
     public void closeOnCompletion() throws SQLException {
-         stmt.closeOnCompletion();
+         //stmt.closeOnCompletion();
+        throw new UnsupportedOperationException("Can not be implemented before switching to java7");
     }
     
     
