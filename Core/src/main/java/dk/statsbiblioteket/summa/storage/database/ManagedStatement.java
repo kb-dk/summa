@@ -529,6 +529,17 @@ public class ManagedStatement implements PreparedStatement {
         return stmt.isPoolable();
     }
 
+    //@Override
+    public boolean isCloseOnCompletion() throws SQLException {
+        return stmt.isCloseOnCompletion();
+    }
+     
+    //@Override
+    public void closeOnCompletion() throws SQLException {
+         stmt.closeOnCompletion();
+    }
+    
+    
     @Override
     public <T> T unwrap(Class<T> tClass) throws SQLException {
         return stmt.unwrap(tClass);
