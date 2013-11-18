@@ -21,6 +21,7 @@ import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.io.input.CharSequenceReader;
 
 import javax.xml.stream.*;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +68,29 @@ public class XMLStepper {
             xml.next();
         }
     }
+
+    private static final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
+
+    /**
+     * Equivalent to {@link #pipeXML(javax.xml.stream.XMLStreamReader, javax.xml.stream.XMLStreamWriter, boolean)} but
+     * returns the sub XML as a String instead of piping the result. For performance, it is recommended to
+     * @param in must be positioned at START_ELEMENT and be coalescing.
+     * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
+     *                    if false, unrecognized elements will be ignored.
+     * @return the sub XML as a String.
+     * @throws XMLStreamException if in was faulty.
+     */
+    public static String getSubXML(XMLStreamReader in, boolean failOnError) throws XMLStreamException {
+        if (in.getProperty(XMLInputFactory.IS_COALESCING) == null ||
+            Boolean.TRUE != in.getProperty(XMLInputFactory.IS_COALESCING)) {
+            throw new IllegalArgumentException("The XMLInputStream must be coalescing but was not");
+        }
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
+        pipeXML(in, out, 0, failOnError);
+        return os.toString();
+    }
+
 
     /**
      * Traverses all parts in the given element, including sub elements etc., and pipes the parts to out.
