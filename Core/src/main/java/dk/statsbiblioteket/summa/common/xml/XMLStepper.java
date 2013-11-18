@@ -17,11 +17,10 @@ package dk.statsbiblioteket.summa.common.xml;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.io.input.CharSequenceReader;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,8 +56,8 @@ public class XMLStepper {
                 }
                 if (!currentTag.equals(tagStack.get(tagStack.size()-1))) {
                     throw new IllegalStateException(String.format(
-                        "Encountered end tag '%s' where '%s' from the stack %s were expected",
-                        currentTag, tagStack.get(tagStack.size()-1), Strings.join(tagStack, ", ")));
+                            "Encountered end tag '%s' where '%s' from the stack %s were expected",
+                            currentTag, tagStack.get(tagStack.size()-1), Strings.join(tagStack, ", ")));
                 }
                 callback.elementEnd(tagStack.remove(tagStack.size()-1));
             } else if (xml.getEventType() == XMLStreamReader.END_DOCUMENT) {
@@ -66,6 +65,84 @@ public class XMLStepper {
                 return;
             }
             xml.next();
+        }
+    }
+
+    /**
+     * Traverses all parts in the given element, including sub elements etc., and pipes the parts to out.
+     * Used for copying snippets verbatim from one XML structure to another.
+     * Leaves in positioned immediately after the END_ELEMENT matching the START_ELEMENT.
+     * </p><p>
+     * Note: The piper does not repair namespaces. If in uses namespaces defined previously in the XML and out does
+     * not have these definitions, they will not be transferred.
+     * @param in must be positioned at START_ELEMENT and be coalescing.
+     * @param out the destination for the traversed XML.
+     * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
+     *                    if false, unrecognized elements will be ignored.
+     * @throws XMLStreamException if in was faulty.
+     */
+    public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError) throws XMLStreamException {
+        if (in.getProperty(XMLInputFactory.IS_COALESCING) == null ||
+            Boolean.TRUE != in.getProperty(XMLInputFactory.IS_COALESCING)) {
+            throw new IllegalArgumentException("The XMLInputStream must be coalescing but was not");
+        }
+        pipeXML(in, out, 0, failOnError);
+    }
+    private static void pipeXML(XMLStreamReader in, XMLStreamWriter out, final int level, boolean ignoreErrors)
+            throws XMLStreamException {
+        if (XMLStreamReader.START_ELEMENT != in.getEventType()) {
+            throw new IllegalStateException(
+                    "Must be positioned at START_ELEMENT but was at " + XMLUtil.eventID2String(in.getEventType()));
+        }
+        // TODO: Add better namespace support by matching NameSpaceContexts for in and out
+
+        out.writeStartElement(in.getPrefix(), in.getLocalName(), in.getNamespaceURI());
+        for (int i = 0 ; i < in.getNamespaceCount() ; i++) {
+            out.writeNamespace(in.getNamespacePrefix(i), in.getNamespaceURI(i));
+        }
+        for (int i = 0 ; i < in.getAttributeCount() ; i++) {
+            out.writeAttribute(in.getAttributeNamespace(i), in.getAttributeLocalName(i), in.getAttributeValue(i));
+        }
+        out:
+        while (in.getEventType() != XMLStreamConstants.END_DOCUMENT) {
+            in.next();
+            switch (in.getEventType()) {
+                case XMLStreamReader.END_DOCUMENT: {
+                    out.writeEndDocument();
+                    break;
+                }
+                case XMLStreamReader.START_ELEMENT: {
+                    pipeXML(in, out, level + 1, ignoreErrors);
+                    break;
+                }
+                case XMLStreamReader.END_ELEMENT: {
+                    out.writeEndElement();
+                    break out;
+                }
+                case XMLStreamReader.SPACE:
+                case XMLStreamReader.CHARACTERS: {
+                    out.writeCharacters(in.getText());
+                    break;
+                }
+                case XMLStreamReader.CDATA: {
+                    out.writeCData(in.getText());
+                    break;
+                }
+                case XMLStreamReader.COMMENT: {
+                    out.writeComment(in.getText());
+                    break;
+                }
+                default: if (!ignoreErrors) {
+                    throw new UnsupportedOperationException(
+                            "pipeXML does not support event type " + XMLUtil.eventID2String(in.getEventType()));
+                }
+            }
+        }
+        if (level == 0) {
+            if (in.getEventType() == XMLStreamConstants.END_ELEMENT) {
+                in.next();
+            }
+            out.flush();
         }
     }
 
@@ -100,7 +177,7 @@ public class XMLStepper {
      * accessing the xml stream.
      */
     public static String jumpToNextTagStart(XMLStreamReader xml)
-        throws XMLStreamException {
+            throws XMLStreamException {
         if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
             xml.next(); // Skip if already located at a start
         }
@@ -184,7 +261,7 @@ public class XMLStepper {
      * be iterated or an error occured during callback.
      */
     public static void iterateElements(
-        XMLStreamReader xml, String endElement, String actionElement, XMLCallback callback) throws XMLStreamException {
+            XMLStreamReader xml, String endElement, String actionElement, XMLCallback callback) throws XMLStreamException {
         while (true) {
             if (xml.getEventType() == XMLStreamReader.END_DOCUMENT ||
                 (xml.getEventType() == XMLStreamReader.END_ELEMENT && xml.getLocalName().equals(endElement))) {
@@ -201,7 +278,7 @@ public class XMLStepper {
         iterateTags(xml, new Callback() {
             @Override
             public boolean elementStart(
-                XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                    XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 return false; // Ignore everything until end of sub tree
             }
         });
@@ -218,13 +295,15 @@ public class XMLStepper {
          * @param current    the local name of the current tag.
          * @return true if the implementation called {@code xml.next()} one or more times, else false.
          */
+        // TODO: Can we avoid the return value by using Location?
         public abstract boolean elementStart(
-            XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException;
+                XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException;
 
         /**
          * Called for each encountered ELEMENT_END in the part of the XML that is within scope.
          * @param element the name of the element that ends.
          */
+        @SuppressWarnings("UnusedParameters")
         public void elementEnd(String element) { }
 
         /**
