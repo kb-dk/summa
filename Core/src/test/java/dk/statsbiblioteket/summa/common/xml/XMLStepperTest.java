@@ -89,6 +89,16 @@ public class XMLStepperTest extends TestCase {
         assertPipe(EXPECTED, in);
     }
 
+    public void testExtract() throws XMLStreamException {
+        final String EXPECTED =
+                "<bar xmlns=\"http://www.example.com/bar_ns/\">"
+                + "<nam:subsub xmlns:nam=\"http://example.com/subsub_ns\">content1<!-- Sub comment --></nam:subsub>"
+                + "<!-- Comment --></bar>";
+        XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(SAMPLE));
+        assertTrue("The first 'bar' should be findable", XMLStepper.findTagStart(in, "bar"));
+        assertEquals(EXPECTED, XMLStepper.getSubXML(in, true));
+    }
+
     // Currently there is no namespace repair functionality
     public void disabletestPipeNamespace() throws XMLStreamException {
         final String EXPECTED = "<bar xmlns=\"http://www.example.com/foo_ns/\">simple bar</bar>";
