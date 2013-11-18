@@ -45,7 +45,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import javax.xml.transform.TransformerException;
-import java.io.*;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -313,6 +313,21 @@ public class SummonSearchNodeTest extends TestCase {
         //System.out.println(responses.toXML());
         assertTrue("The result should contain at least one record", responses.toXML().contains("<record score"));
         assertTrue("The result should contain at least one tag", responses.toXML().contains("<tag name"));
+        System.out.println(responses.getTransient().get(SummonResponseBuilder.SUMMON_RESPONSE));
+    }
+
+    public void testXMLTree() throws RemoteException {
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(SummonResponseBuilder.CONF_XML_FIELD_HANDLING, SummonResponseBuilder.XML_MODE.mixed);
+        SummonSearchNode summon = new SummonSearchNode(conf);
+
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+
+        final Pattern XML_FIELDS = Pattern.compile("(<field name=\"[^\"]*_xml\">.+?</field>)", Pattern.DOTALL);
+        List<String> xmlFields = getPattern(summon, request, XML_FIELDS, false);
+        log.info("Got XML-fields\n" + Strings.join(xmlFields, "\n"));
     }
 
     public void testMultiID() throws RemoteException {
