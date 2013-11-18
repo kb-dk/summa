@@ -142,8 +142,13 @@ public class ResultSetCursor implements Cursor {
         if (!anonymous) {
             log.trace("Constructed with initial hasNext: " + resultSetHasNext + ", on base " + base);
         }
-        log.debug("Constructed with initial hasNext: " + resultSetHasNext + ", nextValidRecord: '" + nextRecord
-                  + "', on base " + base);
+        if (resultSetHasNext) {
+            log.debug("Constructed with initial hasNext: " + resultSetHasNext + ", nextValidRecord: '" + nextRecord
+                      + "', on base " + base);
+        } else {
+            log.trace("Constructed with initial hasNext: " + resultSetHasNext + ", nextValidRecord: '" + nextRecord
+                      + "', on base " + base);
+        }
     }
 
     /**
