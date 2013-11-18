@@ -125,7 +125,11 @@ public class XMLStepper {
             out.writeNamespace(in.getNamespacePrefix(i), in.getNamespaceURI(i));
         }
         for (int i = 0 ; i < in.getAttributeCount() ; i++) {
-            out.writeAttribute(in.getAttributeNamespace(i), in.getAttributeLocalName(i), in.getAttributeValue(i));
+            if (in.getAttributeNamespace(i) == null) {
+                out.writeAttribute(in.getAttributeLocalName(i), in.getAttributeValue(i));
+            } else {
+                out.writeAttribute(in.getAttributeNamespace(i), in.getAttributeLocalName(i), in.getAttributeValue(i));
+            }
         }
         out:
         while (in.getEventType() != XMLStreamConstants.END_DOCUMENT) {
