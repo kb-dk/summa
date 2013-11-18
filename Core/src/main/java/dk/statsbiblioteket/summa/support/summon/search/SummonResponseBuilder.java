@@ -55,6 +55,12 @@ import java.util.*;
 public class SummonResponseBuilder extends SolrResponseBuilder {
     private static Log log = LogFactory.getLog(SummonResponseBuilder.class);
 
+    /**
+     * The raw summon response is stored transient in the ResponseCollection for debug and error handling.
+     */
+    public static final String SUMMON_RESPONSE = "summon.rawresponse";
+
+
     public static final String DEFAULT_SUMMON_SORT_FIELD_REDIRECT = "PublicationDate - PublicationDate_xml_iso";
 
     /**
@@ -79,13 +85,30 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 
     public static final String DEFAULT_SUMMON_RECORDBASE = "summon";
 
+
+    public static final String CONF_XML_FIELD_HANDLING = "summonresponsebuilder.xmlhandling";
+    public static final String SEARCH_XML_FIELD_HANDLING = CONF_XML_FIELD_HANDLING;
+    public static final String DEFAULT_XML_FIELD_HANDLING = XML_MODE.selected.toString();
+
+    /**
+     * How to handle "fieldname_xml"-fields.<br/>
+     * skip: Skip all _xml fields<br/>
+     * selected: Explicit handling of date and author XML fields, skip of other _xml fields.<br/>
+     * mixed: Explicit handling of date and author XML fields, pass through of other _xml fields.<br/>
+     * full: Pass through of all _xml fields by direct copying.<br/>
+     */
+    public static enum XML_MODE {skip, selected, mixed, full}
+
     private final boolean shortDate;
     private final boolean xmlOverrides;
+    private final String defaultXmlHandling;
 
     public SummonResponseBuilder(Configuration conf) {
         super(adjust(conf));
         shortDate = conf.getBoolean(CONF_SHORT_DATE, DEFAULT_SHORT_DATE);
         xmlOverrides = conf.getBoolean(CONF_XML_OVERRIDES_NONXML, DEFAULT_XML_OVERRIDES_NONXML);
+        defaultXmlHandling = XML_MODE.valueOf( // To enum and back to fail early
+                conf.getString(CONF_XML_FIELD_HANDLING, DEFAULT_XML_FIELD_HANDLING)).toString();
         log.info("Created SummonResponseBuilder inherited from SolrResponseBuilder");
     }
 
@@ -115,7 +138,10 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                                String solrResponse, String solrTiming) throws XMLStreamException {
         //System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
-        boolean facetingEnabled = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        final boolean facetingEnabled = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        final XML_MODE xmlMode = XML_MODE.valueOf(
+                request.getString(SEARCH_XML_FIELD_HANDLING, defaultXmlHandling));
+
         XMLStreamReader xml;
         try {
             xml = xmlFactory.createXMLStreamReader(new StringReader(solrResponse));
@@ -162,7 +188,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             if ("documents".equals(currentTag)) {
 //                recordTime = -System.currentTimeMillis();
                 String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, null);
-                records = extractRecords(xml, sortKey);
+                records = extractRecords(xml, sortKey, xmlMode);
 //                recordTime += System.currentTimeMillis();
             }
         }
@@ -183,6 +209,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         documentResponse.addTiming("buildresponses.documents", System.currentTimeMillis() - startTime);
         responses.add(documentResponse);
         responses.addTiming(searcherID + ".buildresponses.total", System.currentTimeMillis() - startTime);
+        responses.getTransient().put(SUMMON_RESPONSE, solrResponse);
         return documentResponse.getHitCount();
     }
 
@@ -303,8 +330,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * during stream access.
      */
-    private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml, final String sortKey)
-        throws XMLStreamException {
+    private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml, final String sortKey,
+                                                         final XML_MODE xmlMode) throws XMLStreamException {
         // Positioned at documents
         final List<DocumentResponse.Record> records = new ArrayList<DocumentResponse.Record>(50);
         XMLStepper.iterateElements(xml, "documents", "document", new XMLStepper.XMLCallback() {
@@ -312,7 +339,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
-                DocumentResponse.Record record = extractRecord(xml, sortKey, lastScore);
+                DocumentResponse.Record record = extractRecord(xml, sortKey, lastScore, xmlMode);
                 if (record != null) {
                     records.add(record);
                     lastScore = record.getScore();
@@ -351,8 +378,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * accessing the xml stream.
      */
-    private DocumentResponse.Record extractRecord(XMLStreamReader xml, String sortKey, float lastScore)
-        throws XMLStreamException {
+    private DocumentResponse.Record extractRecord(XMLStreamReader xml, String sortKey, float lastScore,
+                                                  final XML_MODE xmlMode) throws XMLStreamException {
     // http://api.summon.serialssolutions.com/help/api/search/response/documents
         String openUrl = XMLStepper.getAttribute(xml, "openUrl", null);
         if (openUrl == null) {
@@ -375,7 +402,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         XMLStepper.iterateElements(xml, "document", "field", new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
-                DocumentResponse.Field field = extractField(xml);
+                DocumentResponse.Field field = extractField(xml, xmlMode);
                 if (field != null) {
                     if (wanted.contains(field.getName())) {
                         extracted.put(field.getName(), field.getContent());
@@ -460,101 +487,132 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private boolean warnedOnMissingFullname = false;
     private boolean xmlFieldsWarningFired = false;
     /**
-     * Extracts a Summon document field and converts it to
-     * {@link }DocumentResponse#Field}.
+     * Extracts a Summon document field and converts it to {@link }DocumentResponse#Field}.
      * </p><p>
-     * While this implementation tries to produce fields for all inputs,
-     * it is not guaranteed that it will be usable as no authoritative list
-     * of possible micro formats used by Summon has been found.
-     * @param xml the stream to extract the field from. Must be positioned at
-     * ELEMENT_START for "field".
+     * While this implementation tries to produce fields for all inputs, it is not guaranteed that it will be usable
+     * as no authoritative list of possible micro formats used by Summon has been found.
+     * @param xml the stream to extract the field from. Must be positioned at ELEMENT_START for "field".
      * @return a field or null if no field could be extracted.
-     * @throws javax.xml.stream.XMLStreamException if there was an error
-     * accessing the xml stream.
+     * @throws javax.xml.stream.XMLStreamException if there was an error accessing the xml stream.
      */
-    private DocumentResponse.Field extractField(XMLStreamReader xml) throws XMLStreamException {
+    private DocumentResponse.Field extractField(XMLStreamReader xml, XML_MODE xmlMode) throws XMLStreamException {
         String name = XMLStepper.getAttribute(xml, "name", null);
         if (name == null) {
             log.warn("Could not extract name for field. Skipping field");
             return null;
         }
-        // TODO: Implement XML handling and multiple values properly
-        if (name.endsWith("_xml")) {
-            if ("PublicationDate_xml".equals(name)) {
-                /*
+
+        if (!name.endsWith("_xml")) {
+            final StringBuffer value = new StringBuffer(50);
+            XMLStepper.iterateElements(xml, "field", "value", new XMLStepper.XMLCallback() {
+                @Override
+                public void execute(XMLStreamReader xml) throws XMLStreamException {
+                    value.append(value.length() == 0 ? xml.getElementText() : "\n" + xml.getElementText());
+                }
+            });
+            if (value.length() == 0) {
+                log.debug("No value for field '" + name + "'");
+                return null;
+            }
+            return new DocumentResponse.Field(name, value.toString(), true);
+        }
+
+        // Entering embedded XML land
+
+        if (xmlMode == XML_MODE.skip) {
+            log.debug("Skipping _xml field " + name + " as XML_MODE == skip");
+            return null;
+        }
+        if (xmlMode == XML_MODE.full) {
+                log.debug("Direct pipe of _xml field " + name);
+            return pipe(name, xml);
+        }
+
+        log.debug("Checking for explicit processing of _xml field " + name + " as XML_MODE == " + xmlMode);
+
+        if ("PublicationDate_xml".equals(name)) {
+            /*
                   <field name="PublicationDate_xml">
                     <datetime text="20081215" month="12" year="2008" day="15"/>
                   </field>
                  */
-                XMLStepper.findTagStart(xml, "datetime");
-                String year = XMLStepper.getAttribute(xml, "year", null);
-                if (year == null) {
-                    return null;
-                }
-                String month = XMLStepper.getAttribute(xml, "month", null);
-                String day = XMLStepper.getAttribute(xml, "day", null);
-                return new DocumentResponse.Field(
-                    name, year + (month == null ? "" : month + (day == null ? "" : day)), false);
+            XMLStepper.findTagStart(xml, "datetime");
+            String year = XMLStepper.getAttribute(xml, "year", null);
+            if (year == null) {
+                return null;
             }
+            String month = XMLStepper.getAttribute(xml, "month", null);
+            String day = XMLStepper.getAttribute(xml, "day", null);
+            return new DocumentResponse.Field(
+                    name, year + (month == null ? "" : month + (day == null ? "" : day)), false);
+        }
 
-            if ("Author_xml".equals(name)) {
-                /*
+        if ("Author_xml".equals(name)) {
+            /*
                   <field name="Author_xml">
                     <contributor middlename="A" givenname="CHRISTY" surname="VISHER" fullname="VISHER, CHRISTY A"/>
                     <contributor middlename="L" givenname="RICHARD" surname="LINSTER" fullname="LINSTER, RICHARD L"/>
                     <contributor middlename="K" givenname="PAMELA" surname="LATTIMORE" fullname="LATTIMORE, PAMELA K"/>
                   </field>
                  */
-                final StringBuffer value = new StringBuffer(50);
-                XMLStepper.iterateElements(xml, "field", "contributor", new XMLStepper.XMLCallback() {
-                    @Override
-                    public void execute(XMLStreamReader xml) throws XMLStreamException {
-                        boolean found = false;
-                        for (int i = 0; i < xml.getAttributeCount(); i++) {
-                            if ("fullname".equals(xml.getAttributeLocalName(i))) {
-                                if (value.length() != 0) {
-                                    value.append("\n");
-                                }
-                                value.append(xml.getAttributeValue(i));
-                                found = true;
-                                break;
+            final StringBuffer value = new StringBuffer(50);
+            XMLStepper.iterateElements(xml, "field", "contributor", new XMLStepper.XMLCallback() {
+                @Override
+                public void execute(XMLStreamReader xml) throws XMLStreamException {
+                    boolean found = false;
+                    for (int i = 0; i < xml.getAttributeCount(); i++) {
+                        if ("fullname".equals(xml.getAttributeLocalName(i))) {
+                            if (value.length() != 0) {
+                                value.append("\n");
                             }
-                        }
-                        if (!found && !warnedOnMissingFullname) {
-                            log.warn("Unable to locate attribute 'fullname' in 'contributor' element in 'Author_xml'. "
-                                     + "This warning will not be repeated");
-                            warnedOnMissingFullname = true;
+                            value.append(xml.getAttributeValue(i));
+                            found = true;
+                            break;
                         }
                     }
-                });
-                if (value.length() == 0) {
-                    log.debug("No value for field '" + name + "'");
-                    return null;
-                } else if (log.isTraceEnabled()) {
-                    log.trace("Extracted Author_xml: " + value.toString().replace("\n", ", "));
+                    if (!found && !warnedOnMissingFullname) {
+                        log.warn("Unable to locate attribute 'fullname' in 'contributor' element in 'Author_xml'. "
+                                 + "This warning will not be repeated");
+                        warnedOnMissingFullname = true;
+                    }
                 }
+            });
+            if (value.length() == 0) {
+                log.debug("No value for field '" + name + "'");
+                return null;
+            } else if (log.isTraceEnabled()) {
+                log.trace("Extracted Author_xml: " + value.toString().replace("\n", ", "));
+            }
 //                System.out.println(value);
-                return new DocumentResponse.Field(name, value.toString(), true);
-            }
+            return new DocumentResponse.Field(name, value.toString(), true);
+        }
 
-            if (!xmlFieldsWarningFired) {
-                log.warn("XML fields are not supported yet. Skipping '" + name + "'");
-                xmlFieldsWarningFired = true;
-            }
-            return null;
+        if (xmlMode == XML_MODE.mixed) {
+            log.debug("_xml field " + name + " was not explicitly handled. Piping content verbatim");
+            // TODO: Check if the following tag is skipped
+            return pipe(name, xml);
         }
-        final StringBuffer value = new StringBuffer(50);
-        XMLStepper.iterateElements(xml, "field", "value", new XMLStepper.XMLCallback() {
-            @Override
-            public void execute(XMLStreamReader xml) throws XMLStreamException {
-                value.append(value.length() == 0 ? xml.getElementText() : "\n" + xml.getElementText());
-            }
-        });
-        if (value.length() == 0) {
-            log.debug("No value for field '" + name + "'");
-            return null;
+
+        if (!xmlFieldsWarningFired) {
+            log.warn("XML_MODE == selected and field " + name + " was not explicit supported. Skipping field");
+            xmlFieldsWarningFired = true;
         }
-        return new DocumentResponse.Field(name, value.toString(), true);
+        return null;
+    }
+
+    private boolean xmlFieldAttributeWarningFired = false;
+    private DocumentResponse.Field pipe(String name, XMLStreamReader xml) throws XMLStreamException {
+        if (xml.getAttributeCount() != 0 && !xmlFieldAttributeWarningFired) {
+            log.warn("Encountered " + xml.getAttributeCount() + " attributes on _xml field " + name + " where 0 was "
+                     + "expected. These attributes are ignored. Further warnings of this type will be skipped");
+            xmlFieldAttributeWarningFired = true;
+        }
+        xml.next();
+        if (xml.getEventType() == XMLStreamReader.END_ELEMENT) {
+            log.debug("The element " + name + " had empty content");
+            return new DocumentResponse.Field(name, "", false);
+        }
+        return new DocumentResponse.Field(name, XMLStepper.getSubXML(xml, false), false);
     }
 
 }
