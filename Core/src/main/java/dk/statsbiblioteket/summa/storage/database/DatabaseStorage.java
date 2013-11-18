@@ -2159,9 +2159,6 @@ public abstract class DatabaseStorage extends StorageBase {
         Map<String, Boolean> bases = new HashMap<String, Boolean>();
         try {
             for (Record r : recs) {
-                if (isDebug) {
-                    log.debug("Flushing: " + r.getId());
-                }
                 lastRecord = r;
                 flushWithConnection(r, options, conn);
                 bases.put(r.getBase(), true);
@@ -2230,7 +2227,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (log.isTraceEnabled()) {
             log.trace("Flushing: " + r.toString(true));
         } else if (log.isDebugEnabled()) {
-            log.debug("Flushing: " + r.toString(false));
+            log.debug("Flushing with connection: " + r.toString(false));
         }
 
         // Update the timestamp we check against in getRecordsModifiedAfter
