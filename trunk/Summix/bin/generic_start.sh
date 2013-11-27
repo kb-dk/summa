@@ -85,14 +85,21 @@ if [ "$LIBDIRS" == "" ]; then
 fi
 for libdir in $LIBDIRS # This is why Summix don't support spaces
 do
-    for lib in `ls $libdir/*.jar`
-    do
-        if [ -z "$CLASSPATH" ]; then
-            CLASSPATH=$lib
-        else
-            CLASSPATH=$CLASSPATH:$lib
-        fi
-    done
+    # As of Java 1.6, the singular wildcard '*' means all jar files
+    if [ -z "$CLASSPATH" ]; then
+        CLASSPATH="${libdir%/}/*"
+    else
+        CLASSPATH="$CLASSPATH:${libdir%/}/*"
+    fi
+    
+#    for lib in `ls $libdir/*.jar`
+#    do
+#        if [ -z "$CLASSPATH" ]; then
+#            CLASSPATH=$lib
+#        else
+#            CLASSPATH=$CLASSPATH:$lib
+#        fi
+#    done
     CLASSPATH=$CLASSPATH:$libdir
 done
 CLASSPATH="$CLASSPATH:$DEPLOY/config/:$MAINJAR"
@@ -123,7 +130,7 @@ if [ "$ENABLE_JMX" == "true" ]; then
 fi;
 
 if [ "$NAME" != "" ]; then
-		VISUALVM_NAME="-Dvisualvm.display.name=$NAME"
+    VISUALVM_NAME="-Dvisualvm.display.name=$NAME"
 fi
 
 SYS_PROPS=""
@@ -145,7 +152,8 @@ fi
 # of the local computer.
 LOCALRMI="-Djava.rmi.server.hostname=localhost"
 
-COMMAND="$JAVA_HOME/bin/java $LOCALRMI $JVM_OPTS $CONFIGURATION $SECURITY_POLICY $JMX -VISUALVM_NAME -cp $CLASSPATH $MAINCLASS"
+# The quotes around classpath are essential as we use wildcards
+COMMAND="$JAVA_HOME/bin/java $LOCALRMI $JVM_OPTS $CONFIGURATION $SECURITY_POLICY $JMX -VISUALVM_NAME -cp \"$CLASSPATH\" $MAINCLASS"
 
 # Report settings
 if [ ! -z $PRINT_CONFIG ]; then
@@ -163,7 +171,8 @@ fi
 
 if [ ! -z "$SYS_PROPS" ]; then
     # We need 'eval' to get system property quoting right
-    eval "exec $JAVA_HOME/bin/java $LOCALRMI $SYS_PROPS $CONFIGURATION $JVM_OPTS $SECURITY_POLICY $JMX $VISUALVM_NAME -cp $CLASSPATH $MAINCLASS $@"
+    eval "exec $JAVA_HOME/bin/java $LOCALRMI $SYS_PROPS $CONFIGURATION $JVM_OPTS $SECURITY_POLICY $JMX $VISUALVM_NAME -cp \"$CLASSPATH\" $MAINCLASS $@"
 else
+#echo "generic_start just exec: $COMMAND"
     exec $COMMAND "$@"
 fi
