@@ -169,12 +169,19 @@ public class SummonSearchNode extends SolrSearchNode {
     public static final String CONF_FIX_RANGE_PUBLICATION = "summon.range.publication.fix";
     public static final boolean DEFAULT_FIX_RANGE_PUBLICATION = true;
 
+    // http://api.summon.serialssolutions.com/help/api/search/healthcheck
+    public static final String CONF_SUMMON_PING_REST = "summon.ping.restcall";
+    public static final String DEFAULT_SUMMON_PING_REST = "/2.0.0/search/ping";
+
+//    public static final String PING_URL = "http://api.summon.serialssolutions.com/2.0.0/search/ping";
+
     private final String accessID;
     private final String accessKey;
     private final Configuration conf; // Used when constructing QueryRewriter
     private final boolean sabotageDismax;
     private final String nonMatchingFacet;
     private final TermQuery nonMatchingQuery;
+    private final String pingRest;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(legacyConvert(conf));
@@ -189,6 +196,7 @@ public class SummonSearchNode extends SolrSearchNode {
         nonMatchingFacet = conf.getString(CONF_NONMATCHING_FACET, DEFAULT_NONMATCHING_FACET);
         String[] qt = conf.getString(CONF_NONMATCHING_QUERY, DEFAULT_NONMATCHING_QUERY).split(":");
         nonMatchingQuery = new TermQuery(new Term(qt[0], qt[1]));
+        pingRest = conf.getString(CONF_SUMMON_PING_REST, DEFAULT_SUMMON_PING_REST);
 //        boolean fixPublication = conf.getBoolean(CONF_FIX_RANGE_PUBLICATION, DEFAULT_FIX_RANGE_PUBLICATION);
         //readyWithoutOpen();  // Already handled in parent class
         log.info(String.format("Created Summon wrapper (host=%s, sabotageDismax=%b)", host, sabotageDismax));
@@ -443,6 +451,26 @@ public class SummonSearchNode extends SolrSearchNode {
         }
 
         String retVal = null;
+        if (isPingRequest(request)) {
+            log.trace("Ping requested");
+            Date date = new Date();
+            String sumID = computeIdString("application/xml", summonDateFormat.format(date), host, pingRest, null);
+            buildQuery += System.currentTimeMillis();
+            log.trace("Ping preparation done in " + buildQuery + "ms");
+
+            long pingTime = -System.currentTimeMillis();
+            String result;
+            try {
+                result = getData("http://" + host, pingRest, date, sumID, null,responses);
+                pingTime += System.currentTimeMillis();
+                if (log.isDebugEnabled()) {
+                    log.debug("Ping returned in " + pingTime + "ms with result " + result);
+                }
+            } catch (Exception e) {
+                throw new RemoteException("SummonSearchNode: Unable to ping "  + host + restCall, e);
+            }
+            return new Pair<String, String>(retVal, "summon.pingtime:" + pingTime);
+        }
         if (validRequest(queryMap)) {
             Date date = new Date();
             String sumID = computeIdString("application/xml", summonDateFormat.format(date), host, restCall, queryMap);
@@ -462,6 +490,10 @@ public class SummonSearchNode extends SolrSearchNode {
         long prefixIDs = -System.currentTimeMillis();
         prefixIDs += System.currentTimeMillis();
         return new Pair<String, String>(retVal, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
+    }
+
+    private boolean isPingRequest(Request request) {
+        return request.isEmpty();
     }
 
     // True if either a query or a filter is present

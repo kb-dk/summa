@@ -304,6 +304,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * @return A sorted and urlencoded query string
      */
     protected static String computeSortedQueryString(Map<String, List<String>> queryParameters, boolean urlencode) {
+        if (queryParameters == null) {
+            return "";
+        }
         List<String> parameterStrings = new ArrayList<String>();
 
         // for each parameter, get its key and values
@@ -444,6 +447,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                           "This might be due to missing query and filter");
             }
             responses.addTiming(getID() + ".search.total", System.currentTimeMillis() - startTime);
+            responses.addTiming(solrTiming);
             return;
         }
         searchTime += System.currentTimeMillis();

@@ -163,6 +163,7 @@ public class SolrResponseBuilder implements Configurable {
         }
         xml.next();
         final DocumentResponse documentResponse = createBasicDocumentResponse(request);
+        documentResponse.addTiming(solrTiming); // No matter what, we want the timing
         final boolean mlt = request.getBoolean(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, null) != null;
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
@@ -234,7 +235,6 @@ public class SolrResponseBuilder implements Configurable {
         addRecordBase(responses, documentResponse.getHitCount());
         documentResponse.addTiming("reportedtime", documentResponse.getSearchTime());
         documentResponse.addTiming("buildresponses.total", System.currentTimeMillis() - startTime);
-        documentResponse.addTiming(solrTiming);
         responses.add(documentResponse);
         return documentResponse.getHitCount();
     }
