@@ -106,9 +106,12 @@ public class SearchTool {
         System.err.println("\tsearch-tool.sh search.index.field=lme search.index.term=danmark\n");
         System.err.println("\tsearch-tool.sh "
                            + "summa.support.didyoumean.query=dolfinns summa.support.didyoumean.maxresults=5\n");
-        System.err.println("Optionally you may set the CONFIGURATION" +
-                           "variable in your shell and it will be used for" +
-                           "the summa.configuration property\n");
+        System.err.println("Optionally you may set the CONFIGURATION variable in your shell and it will be used for"
+                           + "the summa.configuration property\n");
+        System.err.println("Shortcuts:");
+        for (String[] s: SHORTCUTS) {
+            System.err.println("\t" + s[1] + ": " + s[0]);
+        }
     }
 
     /**
@@ -124,8 +127,7 @@ public class SearchTool {
         for (String arg : args) {
             String[] keyVal = arg.split("=");
             if (keyVal.length != 2) {
-                throw new RuntimeException(
-                        "Argument '" + arg + "' is not a valid assignment string. Fx summa.foo=bar");
+                throw new RuntimeException("Argument '" + arg + "' is not a valid assignment string. Fx summa.foo=bar");
             }
             rq.put(alias(keyVal[0]), keyVal[1]);
         }
