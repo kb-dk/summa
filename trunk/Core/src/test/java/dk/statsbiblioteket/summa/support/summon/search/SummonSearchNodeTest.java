@@ -22,9 +22,11 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
@@ -981,6 +983,19 @@ public class SummonSearchNodeTest extends TestCase {
                         Strings.join(ids0, ", "), Strings.join(ids1, ", "));
         assertNotEquals("The hits should differ from page 1 and 2",
                         Strings.join(ids1, ", "), Strings.join(ids2, ", "));
+    }
+
+    public void testPingFromSummaSearcher() throws IOException {
+        Configuration conf = Configuration.newMemoryBased();
+        SimplePair<String, String> credentials = SummonTestHelper.getCredentials();
+        conf.set(SearchNodeFactory.CONF_NODE_CLASS, SummonSearchNode.class);
+        conf.set(SummonSearchNode.CONF_SUMMON_ACCESSID, credentials.getKey());
+        conf.set(SummonSearchNode.CONF_SUMMON_ACCESSKEY, credentials.getValue());
+
+        SummaSearcher searcher = new SummaSearcherImpl(conf);
+        ResponseCollection responses = searcher.search(new Request());
+        assertTrue("The response collection should be empty", responses.isEmpty());
+        assertTrue("The timing should contain summon.pingtime", responses.getTiming().contains("summon.pingtime"));
     }
 
     private void assertNotEquals(String message, String expected, String actual) {
