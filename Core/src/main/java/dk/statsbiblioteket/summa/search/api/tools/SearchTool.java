@@ -84,9 +84,9 @@ public class SearchTool {
         Request rq = parseArgs(args);
 
         System.err.print("Performing search ... ");
-        long time = System.currentTimeMillis();
+        long time = -System.currentTimeMillis();
         ResponseCollection resp = searcher.search(rq);
-        time = System.currentTimeMillis() - time;
+        time += System.currentTimeMillis();
         System.err.println("[OK]");
 
         System.err.println("Result:");
@@ -101,17 +101,19 @@ public class SearchTool {
     private static void printUsage() {
         System.err.println("USAGE:\n\tsearch-tool.sh <key=val> [key=val]...");
         System.err.println("Examples:");
-        System.err.println("\tsearch-tool.sh search.document.query=foo\n");
-        System.err.println("\tsearch-tool.sh search.document.lucene.morelikethis.recordid=myRecordId27\n");
-        System.err.println("\tsearch-tool.sh search.index.field=lme search.index.term=danmark\n");
+        System.err.println("\tsearch-tool.sh search.document.query=foo");
+        System.err.println("\tsearch-tool.sh search.document.lucene.morelikethis.recordid=myRecordId27");
+        System.err.println("\tsearch-tool.sh search.index.field=lme search.index.term=danmark");
         System.err.println("\tsearch-tool.sh "
-                           + "summa.support.didyoumean.query=dolfinns summa.support.didyoumean.maxresults=5\n");
-        System.err.println("Optionally you may set the CONFIGURATION variable in your shell and it will be used for"
-                           + "the summa.configuration property\n");
+                           + "summa.support.didyoumean.query=dolfinns summa.support.didyoumean.maxresults=5");
+        System.err.println("Special:");
+        System.err.println("\tsearch-tool.sh ping");
         System.err.println("Shortcuts:");
         for (String[] s: SHORTCUTS) {
             System.err.println("\t" + s[1] + ": " + s[0]);
         }
+        System.err.println("\nOptionally you may set the CONFIGURATION variable in your shell and it will be used for "
+                           + "the summa.configuration property\n");
     }
 
     /**
@@ -123,7 +125,9 @@ public class SearchTool {
      */
     private static Request parseArgs(String[] args) {
         Request rq = new Request();
-
+        if (args.length == 1 && "ping".equals(args[0])) {
+            return rq;
+        }
         for (String arg : args) {
             String[] keyVal = arg.split("=");
             if (keyVal.length != 2) {
