@@ -53,6 +53,8 @@
                     specified, it is used for sorting. If no sortLocale is
                     specified, sort is done by unicode position.
                 sortLocale: the locale to use for sorting if sort==ALPHA.
+                reverse: Boolean. If true, the facet content is sorted in reverse.
+                         Default is false.
             </xsd:documentation>
         </xsd:annotation>
         <xsd:attribute name="ref" type="xsd:string" use="required"/>
@@ -68,6 +70,7 @@
             </xsd:simpleType>
         </xsd:attribute>
         <xsd:attribute name="sortLocale" type="xsd:string" use="optional"/>
+        <xsd:attribute name="reverse" type="xsd:boolean" use="optional"/>
         <xsd:anyAttribute processContents="lax"/>
     </xsd:complexType>
 </xsd:schema>

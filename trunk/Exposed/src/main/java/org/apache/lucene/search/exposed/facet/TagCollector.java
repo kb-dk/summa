@@ -256,8 +256,7 @@ public class TagCollector extends Collector {
     return response;
   }
 
-  private FacetResponse.Group extractResult(
-      FacetRequestGroup requestGroup, int groupID) throws IOException {
+  private FacetResponse.Group extractResult(FacetRequestGroup requestGroup, int groupID) throws IOException {
 /*    if (!FacetRequest.ORDER_COUNT.equals(requestGroup.getOrder())) {
       throw new UnsupportedOperationException("The order '"
           + requestGroup.getOrder() + " is not supported yet for result " +
@@ -266,8 +265,7 @@ public class TagCollector extends Collector {
   */
     int startTermPos = map.getIndirectStarts()[groupID];   // Inclusive
     int endTermPos =   map.getIndirectStarts()[groupID+1]; // Exclusive
-    return new TagExtractor(requestGroup).extract(
-        groupID, map, tagCounts, startTermPos, endTermPos);
+    return new TagExtractor(requestGroup).extract(groupID, map, tagCounts, startTermPos, endTermPos);
   }
 
 

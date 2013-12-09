@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.web.services;
 
-import com.google.common.io.LimitInputStream;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
