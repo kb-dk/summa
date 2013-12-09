@@ -120,6 +120,7 @@ public class FacetResponse {
       if (request.getLocale() != null) {
         out.writeAttribute("locale", request.getLocale());
       }
+      out.writeAttribute("reverse", Boolean.toString(request.isReverse()));
       out.writeAttribute("maxtags",  Integer.toString(
           request.getMaxTags() == Integer.MAX_VALUE ? -1 :
               request.getMaxTags()));
