@@ -160,6 +160,8 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         int defaultTags = FacetStructure.DEFAULT_TAGS_WANTED;
         String sort = FacetStructure.DEFAULT_FACET_SORT_TYPE;
         String sortLocale = null;
+        boolean reverse = false;
+
         NamedNodeMap attributes = node.getAttributes();
         for (int i = 0 ; i < attributes.getLength() ; i++) {
             Node attribute = attributes.item(i);
@@ -171,6 +173,8 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                 maxTags = Integer.parseInt(attribute.getNodeValue());
             } else if ("defaultTags".equals(attribute.getNodeName())) {
                 defaultTags = Integer.parseInt(attribute.getNodeValue());
+            } else if ("reverse".equals(attribute.getNodeName())) {
+                reverse = Boolean.parseBoolean(attribute.getNodeValue());
             } else if ("sort".equals(attribute.getNodeName())) {
                 sort = attribute.getNodeValue();
                 if (!sort.equals(FacetStructure.SORT_ALPHA)
@@ -207,7 +211,7 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
             fieldNames.add(fieldRef.getName());
         }
         return new FacetStructure(name, facetID, fieldNames.toArray(new String[fieldNames.size()]), defaultTags,
-                                  maxTags, sortLocale, sort);
+                                  maxTags, sortLocale, sort, reverse);
     }
 
     /**

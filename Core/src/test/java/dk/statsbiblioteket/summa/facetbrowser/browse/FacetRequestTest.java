@@ -14,17 +14,17 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.Strings;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
-import java.util.Map;
 import java.io.StringWriter;
+import java.util.Map;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class FacetRequestTest extends TestCase {
@@ -54,23 +54,16 @@ public class FacetRequestTest extends TestCase {
     }
 
     public void testAdvancedParse() throws Exception {
-        Structure structure = new Structure(Resolver.getURL(
-                "facetbrowser/TestIndexDescriptor.xml"));
+        Structure structure = new Structure(Resolver.getURL("facetbrowser/TestIndexDescriptor.xml"));
         // input, expected
         String[][] TESTS = new String[][]{
                 {"a", "a (15 POPULARITY)"},
-                {"a(2),foo(9 POPULARITY)",
-                        "a (2 POPULARITY), foo (9 POPULARITY)"},
-                {"a(3), foo(9 POPULARITY)",
-                        "a (3 POPULARITY), foo (9 POPULARITY)"},
-                {"a(4 ALPHA),  foo(9 POPULARITY)",
-                        "a (4 ALPHA), foo (9 POPULARITY)"},
-                {"  a( 5  ALPHA ),  foo(9 POPULARITY) ",
-                        "a (5 ALPHA), foo (9 POPULARITY)"},
-                {"a(ALPHA),  foo(7 POPULARITY)",
-                        "a (15 ALPHA), foo (7 POPULARITY)"},
-                {"a  (6),foo(9 POPULARITY)",
-                        "a (6 POPULARITY), foo (9 POPULARITY)"}
+                {"a(2),foo(9 POPULARITY)", "a (2 POPULARITY), foo (9 POPULARITY)"},
+                {"a(3), foo(9 POPULARITY)", "a (3 POPULARITY), foo (9 POPULARITY)"},
+                {"a(4 ALPHA),  foo(9 POPULARITY)", "a (4 ALPHA), foo (9 POPULARITY)"},
+                {"  a( 5  ALPHA ),  foo(9 POPULARITY) ", "a (5 ALPHA), foo (9 POPULARITY)"},
+                {"a(ALPHA),  foo(7 POPULARITY)", "a (15 ALPHA), foo (7 POPULARITY)"},
+                {"a  (6),foo(9 POPULARITY)", "a (6 POPULARITY), foo (9 POPULARITY)"}
         };
         for (String[] test: TESTS) {
             FacetRequest request = new FacetRequest(
@@ -78,6 +71,12 @@ public class FacetRequestTest extends TestCase {
             assertEquals("The request '" + test[0] + " should be parsable",
                          test[1], toString(request));
         }
+    }
+
+    public void testReverseSort() throws Exception {
+        Structure structure = new Structure(Resolver.getURL("facetbrowser/ReverseSortIndexDescriptor.xml"));
+        FacetRequest request = new FacetRequest(new DocIDCollector(), "foo", structure);
+        assertTrue("The request should have reverse=true: " + request, request.toString().contains("reverse=true"));
     }
 
     private String toString(FacetRequest fr) {

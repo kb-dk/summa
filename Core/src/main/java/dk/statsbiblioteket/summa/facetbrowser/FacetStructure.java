@@ -98,9 +98,10 @@ public class FacetStructure implements Serializable {
     private String locale = null;
     private String sortType = DEFAULT_FACET_SORT_TYPE;
     private Integer id = null;
+    private boolean reverse = false;
 
-    public FacetStructure(
-            String name, int id, String[] fields, int wantedTags, int maxTags, String locale, String sortType) {
+    public FacetStructure(String name, int id, String[] fields, int wantedTags, int maxTags, String locale,
+                          String sortType, boolean reverse) {
         log.trace("Creating FacetStructure for '" + name + "'");
         if (fields == null || fields.length == 0) {
             throw new IllegalArgumentException(String.format(
@@ -113,6 +114,7 @@ public class FacetStructure implements Serializable {
         setWantedTags(wantedTags);
         setLocale(locale);
         setSortType(sortType == null ? this.sortType : sortType);
+        setReverse(reverse);
     }
 
     /**
@@ -142,6 +144,7 @@ public class FacetStructure implements Serializable {
         // "5  ALPHA" | "5" | "ALPHA" | "vgfsd"
         String[] facetArgs = noParen.split(" +", 2);
         // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
+        // TODO: Add reverse
         for (String facetArg: facetArgs) {
             if (FacetStructure.SORT_POPULARITY.equals(facetArg)) {
                 sortType = FacetStructure.SORT_POPULARITY;
@@ -151,9 +154,8 @@ public class FacetStructure implements Serializable {
                 try {
                     wantedTags = Integer.parseInt(facetArg);
                 } catch (NumberFormatException e) {
-                    log.warn(String.format(
-                        "Argument '%s' in FacetDef '%s'",
-                        facetArg, facetDef));
+                    log.warn(String.format("Argument '%s' in FacetDef '%s'",
+                                           facetArg, facetDef));
                 }
             }
         }
@@ -201,13 +203,10 @@ public class FacetStructure implements Serializable {
 
 
     /**
-     * Construct a new FacetStructure from the existing one, optionally
-     * overriding wantedTags and sortType.
-     * @param wantedTags The number of wanted tags. This is limited by
-     *                   {@link #maxTags}. If wantedTags is null, the
+     * Construct a new FacetStructure from the existing one, optionally overriding wantedTags and sortType.
+     * @param wantedTags The number of wanted tags. This is limited by {@link #maxTags}. If wantedTags is null, the
      *                   value is ignored.
-     * @param sortType   The wanted sort-type. If sort-type is null, the
-     *                   value is ignored.
+     * @param sortType   The wanted sort-type. If sort-type is null, the value is ignored.
      * @return A clone of this updated with the specified values.
      */
     public FacetStructure getRequestFacet(Integer wantedTags, String sortType) {
@@ -217,8 +216,7 @@ public class FacetStructure implements Serializable {
         if (sortType == null) {
             sortType = this.sortType;
         }
-        return new FacetStructure(name, id, fields, wantedTags, maxTags,
-                                  locale, sortType);
+        return new FacetStructure(name, id, fields, wantedTags, maxTags, locale, sortType, reverse);
     }
 
     /* Mutators and Accessors*/
@@ -229,8 +227,7 @@ public class FacetStructure implements Serializable {
     public String[] getFields() {
         return fields;
     }
-    public static final String NO_FIELDS_SPECIFIED =
-            "No fields specified, using name '";
+    public static final String NO_FIELDS_SPECIFIED = "No fields specified, using name '";
     private void setFields(String[] fields) {
         if (fields == null || fields.length == 0) {
             log.debug(NO_FIELDS_SPECIFIED + name + "'");
@@ -284,13 +281,11 @@ public class FacetStructure implements Serializable {
         return sortType;
     }
     private void setSortType(String sortType) {
-        if (SORT_ALPHA.equals(sortType)
-            || SORT_POPULARITY.equals(sortType)) {
+        if (SORT_ALPHA.equals(sortType) || SORT_POPULARITY.equals(sortType)) {
             this.sortType = sortType;
         } else {
-            log.warn(String.format(
-                    "Invalid sortType '%s' specified for Facet '%s'. Using '%s' instead",
-                    sortType, name, this.sortType));
+            log.warn(String.format("Invalid sortType '%s' specified for Facet '%s'. Using '%s' instead",
+                                   sortType, name, this.sortType));
         }
         // TODO: Implement this
     }
@@ -299,9 +294,8 @@ public class FacetStructure implements Serializable {
     }
     private void setWantedTags(int wantedTags) {
         if (wantedTags > maxTags) {
-            log.warn(String.format(
-                    "Requested %d wanted tags, but the maximum is %d. Rounding down to maximum",
-                    wantedTags, maxTags));
+            log.warn(String.format("Requested %d wanted tags, but the maximum is %d. Rounding down to maximum",
+                                   wantedTags, maxTags));
             this.wantedTags = maxTags;
         } else {
             this.wantedTags = wantedTags;
@@ -327,9 +321,8 @@ public class FacetStructure implements Serializable {
     public String toString() {
         return String.format(
                 "FacetStructure(id=%s, name='%s', fields='%s', defaultTags=%s, maxTags=%d, sortType=%s, "
-                + "sortLocale='%s')",
-                id, name, Strings.join(fields, ", "), wantedTags, maxTags, sortType,
-                locale);
+                + "sortLocale='%s', reverse=%b)",
+                id, name, Strings.join(fields, ", "), wantedTags, maxTags, sortType, locale, reverse);
     }
 
     /**
@@ -339,7 +332,19 @@ public class FacetStructure implements Serializable {
      */
     public void absorb(FacetStructure other) {
         this.setSortType(other.getSortType());
+        this.setReverse(other.isReverse());
         this.setWantedTags(other.getWantedTags());
         this.setMaxTags(other.getMaxTags());
+    }
+
+    /**
+     * @return true if the facet should be sorted in reverse.
+     */
+    public boolean isReverse() {
+        return reverse;
+    }
+
+    public void setReverse(boolean reverse) {
+        this.reverse = reverse;
     }
 }

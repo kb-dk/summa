@@ -86,7 +86,7 @@ public class TestExposedFacets extends TestCase {
       "        <field name=\"evennull\" />\n" +
       "      </fields>\n" +
       "    </group>\n" +
-//          "    <group name=\"multi\" order=\"index\" prefix=\"B\">\n" +
+      //          "    <group name=\"multi\" order=\"index\" prefix=\"B\">\n" +
       "    <group name=\"multi\" order=\"index\" offset=\"-2\" prefix=\"F\">\n" +
       "      <fields>\n" +
       "        <field name=\"facet\" />\n" +
@@ -95,6 +95,49 @@ public class TestExposedFacets extends TestCase {
       "  </groups>\n" +
       "</facetrequest>";
   public void testSimpleFacet() throws Exception {
+    FacetResponse response = baseFacetSearch(SIMPLE_REQUEST);
+    if (response != null) {
+      System.out.println(response.toXML());
+    }
+  }
+
+  public static final String REVERSE_REQUEST =
+      "<?xml version='1.0' encoding='utf-8'?>\n" +
+      "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"5\">\n" +
+      "  <query>even:true</query>\n" +
+      "  <groups>\n" +
+      "    <group name=\"multi\" order=\"index\" reverse=\"true\">\n" +
+      "      <fields>\n" +
+      "        <field name=\"facet\" />\n" +
+      "      </fields>\n" +
+      "    </group>\n" +
+      "  </groups>\n" +
+      "</facetrequest>";
+  public static final String NON_REVERSE_REQUEST =
+      "<?xml version='1.0' encoding='utf-8'?>\n" +
+      "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"5\">\n" +
+      "  <query>even:true</query>\n" +
+      "  <groups>\n" +
+      "    <group name=\"multi\" order=\"index\" reverse=\"false\">\n" +
+      "      <fields>\n" +
+      "        <field name=\"facet\" />\n" +
+      "      </fields>\n" +
+      "    </group>\n" +
+      "  </groups>\n" +
+      "</facetrequest>";
+
+  public void testReverseFacet() throws Exception {
+    FacetResponse nonResponse = baseFacetSearch(NON_REVERSE_REQUEST);
+    long nonCount = nonResponse.getGroups().get(0).getTags().getTags().size();
+    FacetResponse response = baseFacetSearch(REVERSE_REQUEST);
+    System.out.println(response.toXML());
+    long count = response.getGroups().get(0).getTags().getTags().size();
+    assertEquals("The count for reverse should match non-reverse",
+                 nonCount, count);
+    assertEquals("The number of tags should be correct", 5, count);
+  }
+
+  private FacetResponse baseFacetSearch(String facetRequest) throws Exception {
     final int DOCCOUNT = 1000; // Try with 5
     final int TERM_LENGTH = 20;
     final int MIN_SEGMENTS = 2;
@@ -112,7 +155,7 @@ public class TestExposedFacets extends TestCase {
 
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
 
-    FacetRequest request = FacetRequest.parseXML(SIMPLE_REQUEST);
+    FacetRequest request = FacetRequest.parseXML(facetRequest);
     CollectorPool collectorPool = poolFactory.acquire(reader, request);
     facetStructureTime = System.currentTimeMillis() - facetStructureTime;
 
@@ -139,14 +182,14 @@ public class TestExposedFacets extends TestCase {
           + getTime(System.currentTimeMillis()-countStart));*/
       collectorPool.release(sQuery, collector);
     }
+    reader.close();
     System.out.println("Document count = " + DOCCOUNT);
     System.out.println("Facet startup time = " + getTime(facetStructureTime));
     System.out.println("Mem usage: preFacet=" + preMem + " MB, postFacet=" + getMem() + " MB");
-    if (response != null) {
-      System.out.println(response.toXML());
-    }
-    reader.close();
+    return response;
   }
+
+
 
   public static final String DELETE_REQUEST =
       "<?xml version='1.0' encoding='utf-8'?>\n" +
@@ -163,7 +206,7 @@ public class TestExposedFacets extends TestCase {
       "  </groups>\n" +
       "</facetrequest>";
   public void testDelete() throws IOException, XMLStreamException,
-                                  ParseException {
+      ParseException {
     w = ExposedHelper.getWriter();
     {
       ExposedHelper.addDocument(w,
@@ -243,7 +286,7 @@ public class TestExposedFacets extends TestCase {
   }
 
   public void testTwoTag() throws IOException, XMLStreamException,
-                                  ParseException {
+      ParseException {
     w = ExposedHelper.getWriter();
     {
       ExposedHelper.addDocument(w,
@@ -475,7 +518,7 @@ public class TestExposedFacets extends TestCase {
   }
 
   private FacetResponse getFacetResult(String facetRequest, File index, String defaultField, String query)
-          throws IOException, ParseException, XMLStreamException {
+      throws IOException, ParseException, XMLStreamException {
     IndexReader reader = ExposedIOFactory.getReader(index);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
@@ -1158,8 +1201,8 @@ public class TestExposedFacets extends TestCase {
       CollectorPool collectorPool = poolFactory.acquire(reader, request);
       if (firstTime == -1) {
         poolTime = System.currentTimeMillis() - poolTime;
-          result.append("Facet pool acquisition for \"" + sQuery + "\" with structure "
-                        + request.getGroupKey() + ": " + getTime(poolTime) + "\n");
+        result.append("Facet pool acquisition for \"" + sQuery + "\" with structure "
+                      + request.getGroupKey() + ": " + getTime(poolTime) + "\n");
       }
 
       long countStart = System.currentTimeMillis();
@@ -1302,9 +1345,9 @@ public class TestExposedFacets extends TestCase {
 
     helper.createIndex(3, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
     DirectoryReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
-      CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
-      {
-          FacetResponse response = performFaceting(
+    CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
+    {
+      FacetResponse response = performFaceting(
           poolFactory, reader, "true", UPDATE_REQUEST);
       assertFalse("The initial response should not contain the id " + ID4,
                   response.toXML().contains(

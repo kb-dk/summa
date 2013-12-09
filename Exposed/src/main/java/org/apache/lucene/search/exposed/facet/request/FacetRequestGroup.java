@@ -37,8 +37,7 @@ public final class FacetRequestGroup implements SubtagsConstraints {
       XMLStreamReader reader, String request, NamedComparator.ORDER order,
       boolean defaultReverse, String locale, int maxTags, int minCount,
       int offset, String prefix, boolean defaultHierarchical, int defaultLevels,
-      String defaultDelimiter, String defaultStartPath)
-                                                     throws XMLStreamException {
+      String defaultDelimiter, String defaultStartPath) throws XMLStreamException {
     String name = null;
     boolean hierarchical = defaultHierarchical;
     String delimiter = defaultDelimiter;
@@ -92,9 +91,7 @@ public final class FacetRequestGroup implements SubtagsConstraints {
     this.startPath = startPath;
 
     if (name == null) {
-      throw new XMLStreamException(
-          "FacetGroup name must be specified with the attribute 'name' in "
-              + request);
+      throw new XMLStreamException("FacetGroup name must be specified with the attribute 'name' in " + request);
     }
     List<String> fieldNames = new ArrayList<String>();
     reader.nextTag();
@@ -103,9 +100,7 @@ public final class FacetRequestGroup implements SubtagsConstraints {
         try {
           reader.nextTag();
         } catch (Exception e) {
-          throw new XMLStreamException(
-              "Exception while getting next tag in fields for group '"
-                  + name + "'", e);
+          throw new XMLStreamException("Exception while getting next tag in fields for group '" + name + "'", e);
         }
         while (!ParseHelper.atEnd(reader, "fields")) {
           if (ParseHelper.atStart(reader, "field")) {
@@ -116,13 +111,10 @@ public final class FacetRequestGroup implements SubtagsConstraints {
               }
             }
             if (fieldName == null) {
-              throw new XMLStreamException(
-                  "Unable to determine name for field in group " + name
-                      + " in " + request);
+              throw new XMLStreamException("Unable to determine name for field in group " + name + " in " + request);
             }
             if ("".equals(fieldName)) {
-              throw new XMLStreamException(
-                  "Encountered empty field in group '" + name + "'");
+              throw new XMLStreamException("Encountered empty field in group '" + name + "'");
             }
             fieldNames.add(fieldName);
           }
@@ -133,8 +125,7 @@ public final class FacetRequestGroup implements SubtagsConstraints {
       }
       reader.nextTag(); // until /group
     }
-    NamedComparator comp = ComparatorFactory.create(
-          locale == null ? null : new Locale(locale));
+    NamedComparator comp = ComparatorFactory.create(locale == null ? null : new Locale(locale));
     comp.setReverse(reverse);
     group = createGroup(name, fieldNames, comp);
     buildKey = createBuildKey();
@@ -142,9 +133,8 @@ public final class FacetRequestGroup implements SubtagsConstraints {
 
   // Simple non-hierarchical constructor
   public FacetRequestGroup(
-      ExposedRequest.Group group, NamedComparator.ORDER order,
-      boolean reverse, String locale, int offset, int maxTags, int minCount,
-      String prefix) {
+      ExposedRequest.Group group, NamedComparator.ORDER order, boolean reverse, String locale, int offset,
+      int maxTags, int minCount, String prefix) {
     this.group = group;
     this.order = order;
     this.reverse = reverse;
@@ -163,11 +153,9 @@ public final class FacetRequestGroup implements SubtagsConstraints {
 
   // Creates a group based on a single field
   public FacetRequestGroup(
-      String field, NamedComparator.ORDER order, boolean reverse,
-      String locale, int maxTags, int minCount, int offset, String prefix,
-      boolean hierarchical, int levels, String delimiter, String startPath) {
-    NamedComparator comparator = ComparatorFactory.create(
-      locale == null ? null : new Locale(locale));
+      String field, NamedComparator.ORDER order, boolean reverse, String locale, int maxTags, int minCount,
+      int offset, String prefix, boolean hierarchical, int levels, String delimiter, String startPath) {
+    NamedComparator comparator = ComparatorFactory.create(locale == null ? null : new Locale(locale));
     comparator.setReverse(reverse);
     List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>(1);
     fields.add(new ExposedRequest.Field(field, comparator));
@@ -223,8 +211,7 @@ public final class FacetRequestGroup implements SubtagsConstraints {
     if (locale != null) {
       out.writeAttribute("locale", locale);
     }
-    out.writeAttribute("maxtags",  Integer.toString(
-        maxTags == Integer.MAX_VALUE ? -1 : maxTags));
+    out.writeAttribute("maxtags",  Integer.toString(maxTags == Integer.MAX_VALUE ? -1 : maxTags));
     out.writeAttribute("mincount", Integer.toString(minCount));
     out.writeAttribute("offset",   Integer.toString(offset));
     out.writeAttribute("prefix",   prefix);
@@ -288,8 +275,7 @@ public final class FacetRequestGroup implements SubtagsConstraints {
 
   @Override
   public SUBTAGS_ORDER getSubtagsOrder() {
-    return order == NamedComparator.ORDER.count ?
-           SUBTAGS_ORDER.count : SUBTAGS_ORDER.base;
+    return order == NamedComparator.ORDER.count ? SUBTAGS_ORDER.count : SUBTAGS_ORDER.base;
   }
 
   @Override
@@ -317,19 +303,15 @@ public final class FacetRequestGroup implements SubtagsConstraints {
       String name, List<String> fieldNames, NamedComparator comparator) {
     return createGroup(name, fieldNames, comparator, null);
   }
-    public static ExposedRequest.Group createGroup(
-        String name, List<String> fieldNames, NamedComparator comparator,
-        String concatCollatorID) {
+    public static ExposedRequest.Group createGroup(String name, List<String> fieldNames, NamedComparator comparator,
+                                                   String concatCollatorID) {
     if (fieldNames.isEmpty()) {
       throw new IllegalArgumentException("There must be at least 1 field name");
     }
-    List<ExposedRequest.Field> fieldRequests =
-        new ArrayList<ExposedRequest.Field>(fieldNames.size());
+    List<ExposedRequest.Field> fieldRequests = new ArrayList<ExposedRequest.Field>(fieldNames.size());
     for (String fieldName: fieldNames) {
-      fieldRequests.add(new ExposedRequest.Field(
-          fieldName, comparator, concatCollatorID));
+      fieldRequests.add(new ExposedRequest.Field(fieldName, comparator, concatCollatorID));
     }
-    return new ExposedRequest.Group(
-        name, fieldRequests, comparator, concatCollatorID);
+    return new ExposedRequest.Group(name, fieldRequests, comparator, concatCollatorID);
   }
 }

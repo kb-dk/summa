@@ -77,10 +77,8 @@ public class FacetRequest {
    * @return a facet request in Object-form.
    * @throws XMLStreamException if the request could not be parsed.
    */
-  public static FacetRequest parseXML(String request)
-                                                     throws XMLStreamException {
-    XMLStreamReader reader =
-        xmlFactory.createXMLStreamReader(new StringReader(request));
+  public static FacetRequest parseXML(String request) throws XMLStreamException {
+    XMLStreamReader reader = xmlFactory.createXMLStreamReader(new StringReader(request));
     List<FacetRequestGroup> groups = null;
 
     String stringQuery = null;

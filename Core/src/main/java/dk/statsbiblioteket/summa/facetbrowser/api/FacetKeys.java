@@ -42,6 +42,7 @@ public interface FacetKeys {
      * This is all optional. If no facets are specified, the default facets
      * are requested.
      */
+    // TODO: Add reverse option
     public static final String SEARCH_FACET_FACETS = "search.facet.facets";
 
     /**

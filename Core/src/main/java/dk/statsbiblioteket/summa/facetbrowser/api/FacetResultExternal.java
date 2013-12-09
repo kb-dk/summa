@@ -176,20 +176,33 @@ public class FacetResultExternal extends FacetResultImpl<String> {
     }
 
     private static class PopularityComparator implements Comparator<Tag<String>> {
-
         @Override
         public int compare(Tag<String> t1, Tag<String> t2) {
             return t2.getCount() - t1.getCount();  //Highest number first. (descending)
         }
     }
 
+    private static class ReverseComparator implements Comparator<Tag<String>> {
+        private final Comparator<Tag<String>> inner;
+
+        private ReverseComparator(Comparator<Tag<String>> comparator) {
+            this.inner = comparator;
+        }
+
+        @Override
+        public int compare(Tag<String> o1, Tag<String> o2) {
+            return -1 * inner.compare(o1, o2);
+        }
+    }
+
     @Override
     protected Comparator<Tag<String>> getTagComparator(String facet) {
         FacetStructure fc = structure.getFacet(facet);
-        if (fc == null || !FacetStructure.SORT_ALPHA.equals(fc.getSortType())) {
-            return new PopularityComparator();
-        }
-        return new AlphaComparator(fc.getLocale());
+        Comparator<Tag<String>> comparator;
+        comparator = fc == null || !FacetStructure.SORT_ALPHA.equals(fc.getSortType()) ?
+                new PopularityComparator() :
+                new AlphaComparator(fc.getLocale());
+        return fc == null || !fc.isReverse() ? comparator : new ReverseComparator(comparator);
     }
 
     @Override

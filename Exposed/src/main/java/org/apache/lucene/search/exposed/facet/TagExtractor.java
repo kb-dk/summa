@@ -24,43 +24,32 @@ public class TagExtractor {
 
   public TagExtractor(FacetRequestGroup requestGroup) {
     this.requestGroup = requestGroup;
-    splitPattern = requestGroup.isHierarchical() ?
-        Pattern.compile(requestGroup.getDelimiter()) :
-        null;
+    splitPattern = requestGroup.isHierarchical() ? Pattern.compile(requestGroup.getDelimiter()) : null;
   }
 
-  public FacetResponse.Group extract(
-      int groupID, FacetMap map,
-      int[] tagCounts, int startPos, int endPos) throws IOException {
+  public FacetResponse.Group extract(int groupID, FacetMap map, int[] tagCounts, int startPos, int endPos)
+      throws IOException {
 
     if (requestGroup.isHierarchical()) {
       TermProvider provider = map.getProviders().get(groupID);
       if (!(provider instanceof HierarchicalTermProvider)) {
         throw new IllegalStateException(
-            "Internal inconsistency: The provider for "
-                + requestGroup.getGroup().getName()
-                + " should be hierarchical" +
-                " but is " + provider.getClass());
+            "Internal inconsistency: The provider for " + requestGroup.getGroup().getName()
+            + " should be hierarchical but is " + provider.getClass());
       }
       int delta = -map.getIndirectStarts()[groupID];
       return new FacetResponse.Group(
-          requestGroup,
-          extractHierarchical(requestGroup.getDeeperLevel(), 1,
-              (HierarchicalTermProvider)provider, delta,
-              map, tagCounts, startPos, endPos));
+          requestGroup, extractHierarchical(requestGroup.getDeeperLevel(), 1,
+              (HierarchicalTermProvider)provider, delta, map, tagCounts, startPos, endPos));
     }
 
     NamedComparator.ORDER order = requestGroup.getOrder();
     if (NamedComparator.ORDER.count == order) {
-      return extractCountResult(
-          requestGroup, map, tagCounts, startPos, endPos);
-    } else if (NamedComparator.ORDER.index == order
-        || NamedComparator.ORDER.locale == order) {
-      return extractOrderResult(
-          groupID, map, tagCounts, startPos, endPos);
+      return extractCountResult(requestGroup, map, tagCounts, startPos, endPos);
+    } else if (NamedComparator.ORDER.index == order || NamedComparator.ORDER.locale == order) {
+      return extractOrderResult(groupID, map, tagCounts, startPos, endPos);
     }
-    throw new UnsupportedOperationException(
-        "The order '" + order + "' is unknown");
+    throw new UnsupportedOperationException("The order '" + order + "' is unknown");
   }
 
   private FacetResponse.TagCollection extractHierarchical(
@@ -76,11 +65,9 @@ public class TagExtractor {
     // TODO: Support count, offset, path etc.
     switch( constraints.getSubtagsOrder()) {
       case base: return extractHierarchicalOrder(
-          constraints, currentLevel, provider, delta, map,
-          tagCounts, startPos, endPos);
+          constraints, currentLevel, provider, delta, map, tagCounts, startPos, endPos);
      case count: return extractHierarchicalCount(
-          constraints, currentLevel, provider, delta, map,
-          tagCounts, startPos, endPos);
+         constraints, currentLevel, provider, delta, map, tagCounts, startPos, endPos);
       default: throw new IllegalArgumentException(
           "The order '" + constraints.getSubtagsOrder() + "' is unknown");
     }
@@ -114,25 +101,20 @@ public class TagExtractor {
   }
 
   private FacetResponse.TagCollection extractHierarchicalCount(
-      final SubtagsConstraints constraints, final int level,
-      final HierarchicalTermProvider provider, final int delta,
-      final FacetMap map,
-      final int[] tagCounts, final int startPos, final int endPos)
-                                                            throws IOException {
+      final SubtagsConstraints constraints, final int level, final HierarchicalTermProvider provider, final int delta,
+      final FacetMap map, final int[] tagCounts, final int startPos, final int endPos) throws IOException {
     HCEPQ pq = new HCEPQ(Math.min(constraints.getMaxTags(), endPos - startPos));
     long validTags = 0;
     long totalCount = 0;
     long count = 0;
     { // Find most popular tags
       final TagSumIterator tagIterator = new TagSumIterator(
-          provider, constraints,
-          tagCounts, startPos, endPos, level, delta);
+          provider, constraints, tagCounts, startPos, endPos, level, delta);
       while (tagIterator.next()) {
         totalCount += tagIterator.getTotalCount();
         count += tagIterator.getCount();
         final HCElement current = new HCElement(
-            tagIterator.tagStartPos, tagIterator.tagEndPos,
-            tagIterator.count, tagIterator.totalCount);
+            tagIterator.tagStartPos, tagIterator.tagEndPos, tagIterator.count, tagIterator.totalCount);
         pq.insertWithOverflow(current); // TODO: Consider reusing objects
         validTags++;
       }
@@ -141,14 +123,11 @@ public class TagExtractor {
     FacetResponse.Tag[] tags = new FacetResponse.Tag[pq.size()];
     for (int i = pq.size()-1 ; i >= 0 ; i--) {
       HCElement element = pq.pop();
-      String term = provider.getOrderedDisplayTerm(element.tagStartPos + delta).
-          utf8ToString();
-      FacetResponse.Tag tag = new FacetResponse.Tag(
-          getLevelTerm(term, level), element.count, element.totalCount);
+      String term = provider.getOrderedDisplayTerm(element.tagStartPos + delta).utf8ToString();
+      FacetResponse.Tag tag = new FacetResponse.Tag(getLevelTerm(term, level), element.count, element.totalCount);
       tags[i] = tag;
       if (level < requestGroup.getLevels() &&
-          !(provider.getLevel(element.tagStartPos) < level+1 &&
-              element.tagStartPos+1 == element.tagEndPos)) {
+          !(provider.getLevel(element.tagStartPos) < level+1 && element.tagStartPos+1 == element.tagEndPos)) {
         tag.setSubTags(extractHierarchical(
             constraints.getDeeperLevel(), level+1, provider, delta, map,
             tagCounts, element.tagStartPos, element.tagEndPos));
@@ -170,14 +149,11 @@ public class TagExtractor {
       final int level,
       final HierarchicalTermProvider provider,
       final int delta, final FacetMap map,
-      final int[] tagCounts, final int startTermPos, final int endTermPos)
-                                                            throws IOException {
+      final int[] tagCounts, final int startTermPos, final int endTermPos) throws IOException {
     final TagSumIterator tagIterator = new TagSumIterator(
-        provider, constraints,
-        tagCounts, startTermPos, endTermPos, level, delta);
+        provider, constraints, tagCounts, startTermPos, endTermPos, level, delta);
     // TODO: Consider optimization by not doing totalTags, count and totalCount
-    List<FacetResponse.Tag> tags = new ArrayList<FacetResponse.Tag>(
-        Math.max(1, Math.min(constraints.getMaxTags(), 100000)));
+    List<FacetResponse.Tag> tags = new ArrayList<FacetResponse.Tag>(Math.max(1, Math.min(constraints.getMaxTags(), 100000)));
     long validTags = 0;
     long totalCount = 0;
     long count = 0;
@@ -185,11 +161,9 @@ public class TagExtractor {
       totalCount += tagIterator.getTotalCount();
       count += tagIterator.getCount();
       if (validTags < constraints.getMaxTags()) {
-        String term = provider.getOrderedDisplayTerm(
-            tagIterator.tagStartPos + delta).utf8ToString();
+        String term = provider.getOrderedDisplayTerm(tagIterator.tagStartPos + delta).utf8ToString();
         FacetResponse.Tag tag =
-            new FacetResponse.Tag(getLevelTerm(term, level),
-                tagIterator.getCount(), tagIterator.getTotalCount());
+            new FacetResponse.Tag(getLevelTerm(term, level), tagIterator.getCount(), tagIterator.getTotalCount());
         tags.add(tag);
         if (level < requestGroup.getLevels() &&
             !(provider.getLevel(tagIterator.tagStartPos) < level+1 &&
@@ -217,7 +191,7 @@ public class TagExtractor {
     } catch (ArrayIndexOutOfBoundsException e) {
       ArrayIndexOutOfBoundsException ex = new ArrayIndexOutOfBoundsException(
           "Unable to split '" + term + "' with delimiter '"
-              + splitPattern.pattern() + "' into " + level + " parts or more");
+          + splitPattern.pattern() + "' into " + level + " parts or more");
       ex.initCause(e);
       throw ex;
     }
@@ -225,24 +199,21 @@ public class TagExtractor {
 
   private FacetResponse.Group extractOrderResult(
       final int groupID, final FacetMap map,
-      final int[] tagCounts, final int startTermPos, final int endTermPos)
-                                                            throws IOException {
+      final int[] tagCounts, final int startTermPos, final int endTermPos) throws IOException {
     long extractionTime = System.currentTimeMillis();
     // Locate prefix
-    int origo = startTermPos;
-    if (requestGroup.getPrefix() != null
-        && !"".equals(requestGroup.getPrefix())) {
-      int tpOrigo = map.getProviders().get(groupID).getNearestTermIndirect(
-          new BytesRef(requestGroup.getPrefix()));
+    int origo = requestGroup.isReverse() ? endTermPos-1 : startTermPos;
+    if (requestGroup.getPrefix() != null && !"".equals(requestGroup.getPrefix())) {
+      int tpOrigo = map.getProviders().get(groupID).getNearestTermIndirect(new BytesRef(requestGroup.getPrefix()));
       origo = tpOrigo + map.getIndirectStarts()[groupID];
       //origo = origo < 0 ? (origo + 1) * -1 : origo; // Ignore missing match
     }
 
-    // TODO: Add sort order
+    final int reverseDir = requestGroup.isReverse() ? -1 : 1;
     // skip to offset (only valid)
     final int minCount = requestGroup.getMinCount();
-    final int direction = requestGroup.getOffset() < 0 ? -1 : 1;
-    int delta = Math.abs(requestGroup.getOffset());
+    final int direction = (requestGroup.getOffset() < 0 ? -1 : 1) * reverseDir;
+    int delta =  Math.abs(requestGroup.getOffset());
     while (delta > 0) {
       origo += direction;
       if (origo < startTermPos || origo >= endTermPos) {
@@ -258,20 +229,24 @@ public class TagExtractor {
     if (origo < startTermPos) {
       collectedTags = startTermPos - origo;
       origo = startTermPos;
+    } else if (origo >= endTermPos) {
+      collectedTags = origo - (endTermPos-1);
+      origo = endTermPos-1;
     }
     List<FacetResponse.Tag> tags = new ArrayList<FacetResponse.Tag>(
-        Math.max(0, Math.min(requestGroup.getMaxTags(), endTermPos-origo)));
+        Math.max(0, Math.min(
+            requestGroup.getMaxTags(), requestGroup.isReverse() ? origo - startTermPos : endTermPos-origo)));
     for (int termPos = origo ;
-         termPos < endTermPos & collectedTags < requestGroup.getMaxTags() ;
-         termPos++) {
+         ((requestGroup.isReverse() && termPos >= startTermPos) ||
+          (!requestGroup.isReverse() && termPos < endTermPos))
+         && collectedTags < requestGroup.getMaxTags() ;
+         termPos += reverseDir) {
       if (tagCounts[termPos] >= minCount) {
-        tags.add(new FacetResponse.Tag(map.getOrderedDisplayTerm(
-            termPos).utf8ToString(), tagCounts[termPos]));
+        tags.add(new FacetResponse.Tag(map.getOrderedDisplayTerm(termPos).utf8ToString(), tagCounts[termPos]));
         collectedTags++;
       }
     }
-    FacetResponse.Group responseGroup =
-        new FacetResponse.Group(requestGroup, tags);
+    FacetResponse.Group responseGroup = new FacetResponse.Group(requestGroup, tags);
     extractionTime = System.currentTimeMillis() - extractionTime;
     responseGroup.setExtractionTime(extractionTime);
     responseGroup.setPotentialTags(endTermPos - startTermPos);
@@ -284,11 +259,12 @@ public class TagExtractor {
       final int startTermPos, final int endTermPos) throws IOException {
     long extractionTime = System.currentTimeMillis();
     // Sort tag references by count
-    final int maxSize = Math.min(
-        endTermPos- startTermPos, requestGroup.getMaxTags());
+    final int maxSize = Math.min(endTermPos - startTermPos, requestGroup.getMaxTags());
     final int minCount = requestGroup.getMinCount();
     ExposedPriorityQueue pq = new ExposedPriorityQueue(
-        new ComparatorFactory.IndirectComparator(tagCounts), maxSize);
+        requestGroup.isReverse() ?
+            new ComparatorFactory.IndirectComparatorReverse(tagCounts) :
+            new ComparatorFactory.IndirectComparator(tagCounts), maxSize);
     long totalRefs = 0;
     long totalValidTags = 0;
     for (int termPos = startTermPos ; termPos < endTermPos ; termPos++) {
@@ -304,13 +280,11 @@ public class TagExtractor {
     int pos = pq.size()-1;
     while (pq.size() > 0) {
       final int termIndex = pq.pop();
-      tags[pos--] =  new FacetResponse.Tag(map.getOrderedDisplayTerm(
-          termIndex).utf8ToString(), tagCounts[termIndex]);
+      tags[pos--] =  new FacetResponse.Tag(map.getOrderedDisplayTerm(termIndex).utf8ToString(), tagCounts[termIndex]);
     }
 
     // Create response
-    FacetResponse.Group responseGroup =
-        new FacetResponse.Group(requestGroup, Arrays.asList(tags));
+    FacetResponse.Group responseGroup = new FacetResponse.Group(requestGroup, Arrays.asList(tags));
     extractionTime = System.currentTimeMillis() - extractionTime;
     responseGroup.setExtractionTime(extractionTime);
     responseGroup.setPotentialTags(endTermPos-startTermPos);
@@ -318,5 +292,4 @@ public class TagExtractor {
     responseGroup.setValidTags(totalValidTags);
     return responseGroup;
   }
-
 }

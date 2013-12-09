@@ -284,7 +284,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 + "node in order to make faceting work");
         }
         org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest =
-            constructFacetRequest(request, query);
+                constructFacetRequest(request, query);
 
         SimplePair<CollectorPool, TagCollector> pair;
         try {
@@ -348,14 +348,12 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     }*/
 
     // Not hierarchical
-    private Response newResponseToOldResult(
-        FacetResponse newResponse, Request request) {
+    private Response newResponseToOldResult(FacetResponse newResponse, Request request) {
         String facets = request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
                         request.getString(FacetKeys.SEARCH_FACET_FACETS) :
                         null;
         // FIXME: The Structure should be derived from the request
         dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest oldFR = new FacetRequest(null, facets, structure);
-
         FacetResultExternal oldResult = new FacetResultExternal(
             oldFR.getMaxTags(), oldFR.getFacetIDs(), oldFR.getFacetFields(), structure);
         oldResult.setPrefix("");
@@ -410,8 +408,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 null, facets, structure);
         //ExposedRequest.
 
-        List<FacetRequestGroup>
-            groups = new ArrayList<FacetRequestGroup>();
+        List<FacetRequestGroup> groups = new ArrayList<FacetRequestGroup>();
 
         for (Map.Entry<String, FacetStructure> facet:
             oldFacetRequest.getFacets().entrySet()) {
@@ -420,6 +417,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             comparator = structure.getSortType().equals(FacetStructure.SORT_ALPHA) ?
                          ComparatorFactory.create(structure.getLocale()) :
                          new NamedOrderDefaultComparator();
+            comparator.setReverse(structure.isReverse());
 
             List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>();
             for (String fieldName: structure.getFields()) {
@@ -428,7 +426,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             // TODO: Add reverse to request and here
             ExposedRequest.Group group = new ExposedRequest.Group(structure.getName(), fields, comparator);
             FacetRequestGroup facetGroup = new FacetRequestGroup(
-                group, comparator.getOrder(), false, structure.getLocale(),
+                group, comparator.getOrder(), comparator.isReverse(), structure.getLocale(),
                 0, structure.getWantedTags(), 1, null);
             groups.add(facetGroup);
         }

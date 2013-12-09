@@ -124,6 +124,27 @@ public class ComparatorFactory {
     }
   }
 
+  /**
+   * Uses the given values as indexes in a backing int[], comparing the values
+   * from the int[] directly. If the values are the same, natural integer order
+   * for the values are used.
+   * </p></p>
+   * Reverse version of {@link IndirectComparator}.
+   */
+  public static final class IndirectComparatorReverse implements OrdinalComparator {
+    private final int[] values;
+
+    public IndirectComparatorReverse(int[] values) {
+      this.values = values;
+    }
+
+    @Override
+    public final int compare(final int value1, final int value2) {
+      final int diff = values[value2]-values[value1];
+      return diff == 0 ? value1 - value2 : diff;
+    }
+  }
+
   private static class BytesRefWrapper implements OrdinalComparator {
     private final TermProvider provider;
     private final Comparator<BytesRef> comparator;
