@@ -95,7 +95,7 @@ public class TestExposedFacets extends TestCase {
       "  </groups>\n" +
       "</facetrequest>";
   public void testSimpleFacet() throws Exception {
-    FacetResponse response = baseFacetSearch(SIMPLE_REQUEST);
+    FacetResponse response = baseFacetSearch(FacetRequest.parseXML(SIMPLE_REQUEST));
     if (response != null) {
       System.out.println(response.toXML());
     }
@@ -127,21 +127,24 @@ public class TestExposedFacets extends TestCase {
       "</facetrequest>";
 
   public void testReverseFacet() throws Exception {
-    FacetResponse nonResponse = baseFacetSearch(NON_REVERSE_REQUEST);
+    FacetResponse nonResponse = baseFacetSearch(FacetRequest.parseXML(NON_REVERSE_REQUEST));
     long nonCount = nonResponse.getGroups().get(0).getTags().getTags().size();
-    FacetResponse response = baseFacetSearch(REVERSE_REQUEST);
+    FacetResponse response = baseFacetSearch(FacetRequest.parseXML(REVERSE_REQUEST));
     System.out.println(response.toXML());
     long count = response.getGroups().get(0).getTags().getTags().size();
     assertEquals("The count for reverse should match non-reverse",
                  nonCount, count);
     assertEquals("The number of tags should be correct", 5, count);
+    assertEquals("The reverse result should be as expected",
+                 "[facet:Y(36), facet:X(37), facet:W(27), facet:V(23), facet:U(21)]", extractTags(response).toString());
   }
 
-  private FacetResponse baseFacetSearch(String facetRequest) throws Exception {
+  private FacetResponse baseFacetSearch(FacetRequest facetRequest) throws Exception {
     final int DOCCOUNT = 1000; // Try with 5
     final int TERM_LENGTH = 20;
     final int MIN_SEGMENTS = 2;
     final List<String> FIELDS = Arrays.asList("a", "b");
+    String request = facetRequest.getBuildKey();
 
     helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
     IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
@@ -153,15 +156,14 @@ public class TestExposedFacets extends TestCase {
     long preMem = getMem();
     long facetStructureTime = System.currentTimeMillis();
 
-    CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
 
-    FacetRequest request = FacetRequest.parseXML(facetRequest);
-    CollectorPool collectorPool = poolFactory.acquire(reader, request);
+    CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
+    CollectorPool collectorPool = poolFactory.acquire(reader, facetRequest);
     facetStructureTime = System.currentTimeMillis() - facetStructureTime;
 
     TagCollector collector;
     FacetResponse response = null;
-    String sQuery = request.getQuery();
+    String sQuery = facetRequest.getQuery();
     for (int i = 0 ; i < 5 ; i++) {
       collector = collectorPool.acquire(sQuery);
       long countStart = System.currentTimeMillis();
@@ -171,7 +173,7 @@ public class TestExposedFacets extends TestCase {
         long countTime = System.currentTimeMillis() - countStart;
         collector.setCountTime(countTime);
       }
-      response = collector.extractResult(request);
+      response = collector.extractResult(facetRequest);
       if (collector.getQuery() != null) { // Cached count
         response.setCountingCached(true);
       }
