@@ -362,7 +362,8 @@ public class SummonSearchNodeTest extends TestCase {
         }
 
         assertEquals(
-                "There should be a result for each id from search '" + IDS_QUERY + "'", IDs.size(), returnedIDs.size());
+                "Pre 2013-12-13 Serial Solutions only returned 1 hit for multiple ID searches. That has now changed " +
+                "for query '" + IDS_QUERY + "'", 1, returnedIDs.size());
     }
 
     public void testShortFormat() throws RemoteException {
