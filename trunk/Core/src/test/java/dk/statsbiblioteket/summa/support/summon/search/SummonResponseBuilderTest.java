@@ -67,7 +67,8 @@ public class SummonResponseBuilderTest extends TestCase {
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         SummonResponseBuilder rb = new SummonResponseBuilder(Configuration.newMemoryBased(
-                SummonResponseBuilder.CONF_COLLAPSE_MULTI_FIELDS, false
+                SummonResponseBuilder.CONF_COLLAPSE_MULTI_FIELDS, false,
+                SummonResponseBuilder.CONF_XML_FIELD_HANDLING, SummonResponseBuilder.XML_MODE.full
         ));
         ResponseCollection rc = new ResponseCollection();
 
