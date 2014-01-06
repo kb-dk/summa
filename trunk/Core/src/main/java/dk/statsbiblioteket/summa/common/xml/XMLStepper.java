@@ -107,10 +107,10 @@ public class XMLStepper {
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
         out.writeStartElement("a");
         pipeXML(in, out, failOnError, onlyInner);
-        out.writeEndElement();
         out.flush();
         String xml = os.toString();
-        return xml.substring(3, xml.length() - 4); // We remove the enclosing a-element from the String
+        // TODO: How can this ever be less than 3? A search for 'foo' against summon has this problem in the test gui
+        return xml.length() < 3 ? "" : xml.substring(3); // We remove the start <a> from the String
     }
 
 
