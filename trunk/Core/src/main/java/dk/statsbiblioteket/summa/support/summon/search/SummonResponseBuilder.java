@@ -85,6 +85,12 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 
     public static final String DEFAULT_SUMMON_RECORDBASE = "summon";
 
+    /**
+     * If true, fields with multiple values are collapsed into a single newline-delimited value.
+     * If false, such multi-value fields are represented as multiple fields, each containing a single value.
+     */
+    public static final String CONF_COLLAPSE_MULTI_FIELDS = "summonresponsebuilder.multifields.collapse";
+    public static final boolean DEFAULT_COLLAPSE_MULTI_FIELDS = true;
 
     public static final String CONF_XML_FIELD_HANDLING = "summonresponsebuilder.xmlhandling";
     public static final String SEARCH_XML_FIELD_HANDLING = CONF_XML_FIELD_HANDLING;
@@ -102,13 +108,17 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private final boolean shortDate;
     private final boolean xmlOverrides;
     private final String defaultXmlHandling;
+    private final boolean collapseMultiValue;
+
+    // TODO: isFullTextHit, boolean in document -> field
 
     public SummonResponseBuilder(Configuration conf) {
         super(adjust(conf));
         shortDate = conf.getBoolean(CONF_SHORT_DATE, DEFAULT_SHORT_DATE);
         xmlOverrides = conf.getBoolean(CONF_XML_OVERRIDES_NONXML, DEFAULT_XML_OVERRIDES_NONXML);
+        collapseMultiValue = conf.getBoolean(CONF_COLLAPSE_MULTI_FIELDS, DEFAULT_COLLAPSE_MULTI_FIELDS);
         defaultXmlHandling = XML_MODE.valueOf( // To enum and back to fail early
-                conf.getString(CONF_XML_FIELD_HANDLING, DEFAULT_XML_FIELD_HANDLING)).toString();
+                                               conf.getString(CONF_XML_FIELD_HANDLING, DEFAULT_XML_FIELD_HANDLING)).toString();
         log.info("Created SummonResponseBuilder inherited from SolrResponseBuilder");
     }
 
@@ -231,27 +241,28 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     }
 
     private void extractRecommendationList(
-        XMLStreamReader xml, RecommendationResponse response) throws XMLStreamException {
+            XMLStreamReader xml, RecommendationResponse response) throws XMLStreamException {
         String type = XMLStepper.getAttribute(xml, "type", null);
         if (type == null) {
             throw new IllegalArgumentException("Type required for recommendationList");
         }
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         final RecommendationResponse.RecommendationList recList = response.newList(type);
-        XMLStepper.iterateElements(xml, "recommendationList", "recommendation",
-                                   new XMLStepper.XMLCallback() {
-                                       @Override
-                                       public void execute(XMLStreamReader xml)
-                                           throws XMLStreamException {
-                                           String title = XMLStepper.getAttribute(xml, "title", null);
-                                           if (title == null) {
-                                               throw new IllegalArgumentException("Title required for recommendationList");
-                                           }
-                                           String description = XMLStepper.getAttribute(xml, "description", "");
-                                           String link = XMLStepper.getAttribute(xml, "link", "");
-                                           recList.addResponse(title, description, link);
-                                       }
-                                   });
+        XMLStepper.iterateElements(
+                xml, "recommendationList", "recommendation",
+                new XMLStepper.XMLCallback() {
+                    @Override
+                    public void execute(XMLStreamReader xml)
+                            throws XMLStreamException {
+                        String title = XMLStepper.getAttribute(xml, "title", null);
+                        if (title == null) {
+                            throw new IllegalArgumentException("Title required for recommendationList");
+                        }
+                        String description = XMLStepper.getAttribute(xml, "description", "");
+                        String link = XMLStepper.getAttribute(xml, "link", "");
+                        recList.addResponse(title, description, link);
+                    }
+                });
     }
 
     /**
@@ -262,7 +273,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * @throws javax.xml.stream.XMLStreamException if there was an error accessing the xml stream.
      */
     private FacetResult<String> extractFacetResult(XMLStreamReader xml, SolrFacetRequest facets)
-        throws XMLStreamException {
+            throws XMLStreamException {
         long startTime = System.currentTimeMillis();
         HashMap<String, Integer> facetIDs = new HashMap<String, Integer>(facets.getFacets().size());
         // 1 facet = 1 field in Summon-world
@@ -274,7 +285,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             fields.put(facet.getField(), new String[]{facet.getField()});
         }
         final FacetResultExternal summaFacetResult = new FacetResultExternal(
-            facets.getMaxTags(), facetIDs, fields, facets.getOriginalStructure());
+                facets.getMaxTags(), facetIDs, fields, facets.getOriginalStructure());
         summaFacetResult.setPrefix(searcherID + ".");
         XMLStepper.iterateElements(xml, "facetFields", "facetField", new XMLStepper.XMLCallback() {
             @Override
@@ -296,8 +307,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * accessing the xml stream.
      */
     private void extractFacet(XMLStreamReader xml, final FacetResultExternal summaFacetResult)
-        throws XMLStreamException {
-         // TODO: Consider fieldname and other attributes?
+            throws XMLStreamException {
+        // TODO: Consider fieldname and other attributes?
         final String facetName = XMLStepper.getAttribute(xml, "displayName", null);
         XMLStepper.iterateElements(xml, "facetField", "facetCount", new XMLStepper.XMLCallback() {
             @Override
@@ -380,7 +391,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      */
     private DocumentResponse.Record extractRecord(XMLStreamReader xml, String sortKey, float lastScore,
                                                   final XML_MODE xmlMode) throws XMLStreamException {
-    // http://api.summon.serialssolutions.com/help/api/search/response/documents
+        // http://api.summon.serialssolutions.com/help/api/search/response/documents
         String openUrl = XMLStepper.getAttribute(xml, "openUrl", null);
         if (openUrl == null) {
             log.warn("Encountered a document without openUrl. Discarding");
@@ -388,43 +399,45 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         }
         String availibilityToken = XMLStepper.getAttribute(xml, "availabilityToken", null);
         String hasFullText =       XMLStepper.getAttribute(xml, "hasFullText", "false");
+        String isFullTextHit =     XMLStepper.getAttribute(xml, "isFullTextHit", "false");
         String inHoldings =        XMLStepper.getAttribute(xml, "inHoldings", "false");
 
         final Set<String> wanted = new HashSet<String>(Arrays.asList(
-            "ID", "Score", "Title", "Subtitle", "Author", "ContentType", "PublicationDate_xml", "Author_xml"));
+                "ID", "Score", "Title", "Subtitle", "Author", "ContentType", "PublicationDate_xml", "Author_xml"));
         // PublicationDate_xml is a hack
         final String[] sortValue = new String[1]; // Hack to make final mutable
         final ConvenientMap extracted = new ConvenientMap();
         final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>(50);
         final String sortField = sortRedirect.containsKey(sortKey) ?
-                                 sortRedirect.get(sortKey) : sortKey;
+                sortRedirect.get(sortKey) : sortKey;
 
         XMLStepper.iterateElements(xml, "document", "field", new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
-                DocumentResponse.Field field = extractField(xml, xmlMode);
-                if (field != null) {
-                    if (wanted.contains(field.getName())) {
-                        extracted.put(field.getName(), field.getContent());
-                        if ("PublicationDate_xml".equals(field.getName())) {
-                            // The iso-thing is a big kludge. If we move the
-                            // sort code outside of this loop, it would be
-                            // cleaner.
-                            extracted.put("PublicationDate_xml_iso", field.getContent());
-                            fields.add(new DocumentResponse.Field(
-                                "PublicationDate_xml_iso", field.getContent(), false));
-                            if ("PublicationDate_xml_iso".equals(sortField)) {
-                                sortValue[0] = field.getContent();
+                List<DocumentResponse.Field> rawFields = extractFields(xml, xmlMode);
+                if (rawFields != null) {
+                    for (DocumentResponse.Field field: rawFields) {
+                        if (wanted.contains(field.getName())) {
+                            extracted.put(field.getName(), field.getContent());
+                            if ("PublicationDate_xml".equals(field.getName())) {
+                                // The iso-thing is a big kludge. If we move the
+                                // sort code outside of this loop, it would be
+                                // cleaner.
+                                extracted.put("PublicationDate_xml_iso", field.getContent());
+                                fields.add(new DocumentResponse.Field(
+                                        "PublicationDate_xml_iso", field.getContent(), false));
+                                if ("PublicationDate_xml_iso".equals(sortField)) {
+                                    sortValue[0] = field.getContent();
+                                }
                             }
                         }
-                    }
-                    fields.add(field);
-                    if (sortField != null && sortField.equals(field.getName())) {
-                        sortValue[0] = field.getContent();
+                        fields.add(field);
+                        if (sortField != null && sortField.equals(field.getName())) {
+                            sortValue[0] = field.getContent();
+                        }
                     }
                 }
             }
-
         });
 
         if (xmlOverrides) {
@@ -456,6 +469,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         fields.add(new DocumentResponse.Field(DocumentKeys.RECORD_ID, recordID, true));
         fields.add(new DocumentResponse.Field("availibilityToken", availibilityToken, true));
         fields.add(new DocumentResponse.Field("hasFullText", hasFullText, true));
+        fields.add(new DocumentResponse.Field("isFullTextHit", isFullTextHit, true));
         fields.add(new DocumentResponse.Field("inHoldings", inHoldings, true));
 
         fields.add(new DocumentResponse.Field("shortformat", createShortformat(extracted), false));
@@ -469,13 +483,12 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             log.debug("The record '" + recordID + "' did not contain a Score. Assigning " + lastScore);
         }
         DocumentResponse.Record record = new DocumentResponse.Record(
-            recordID, searcherID, extracted.getFloat("Score", lastScore), sortV);
+                recordID, searcherID, extracted.getFloat("Score", lastScore), sortV);
         for (DocumentResponse.Field field: fields) {
             record.addField(field);
         }
         return record;
     }
-
     @Override
     protected String createShortformat(ConvenientMap extracted) {
         String date = extracted.getString("PublicationDate_xml", "????");
@@ -492,29 +505,38 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * While this implementation tries to produce fields for all inputs, it is not guaranteed that it will be usable
      * as no authoritative list of possible micro formats used by Summon has been found.
      * @param xml the stream to extract the field from. Must be positioned at ELEMENT_START for "field".
-     * @return a field or null if no field could be extracted.
+     * @return fields or null if no fields could be extracted.
      * @throws javax.xml.stream.XMLStreamException if there was an error accessing the xml stream.
      */
-    private DocumentResponse.Field extractField(XMLStreamReader xml, XML_MODE xmlMode) throws XMLStreamException {
-        String name = XMLStepper.getAttribute(xml, "name", null);
+    private List<DocumentResponse.Field> extractFields(XMLStreamReader xml, XML_MODE xmlMode)
+            throws XMLStreamException {
+        final String name = XMLStepper.getAttribute(xml, "name", null);
         if (name == null) {
             log.warn("Could not extract name for field. Skipping field");
             return null;
         }
+        final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>();
 
         if (!name.endsWith("_xml")) {
             final StringBuffer value = new StringBuffer(50);
             XMLStepper.iterateElements(xml, "field", "value", new XMLStepper.XMLCallback() {
                 @Override
                 public void execute(XMLStreamReader xml) throws XMLStreamException {
-                    value.append(value.length() == 0 ? xml.getElementText() : "\n" + xml.getElementText());
+                    final String text = xml.getElementText();
+                    if (!collapseMultiValue) {
+                        fields.add(new DocumentResponse.Field(name, text, true));
+                    }
+                    value.append(value.length() == 0 ? text : "\n" + text);
                 }
             });
             if (value.length() == 0) {
                 log.debug("No value for field '" + name + "'");
                 return null;
             }
-            return new DocumentResponse.Field(name, value.toString(), true);
+            if (collapseMultiValue) {
+                fields.add(new DocumentResponse.Field(name, value.toString(), true));
+            }
+            return fields;
         }
 
         // Entering embedded XML land
@@ -524,8 +546,9 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             return null;
         }
         if (xmlMode == XML_MODE.full) {
-                log.debug("Direct pipe of _xml field " + name);
-            return pipe(name, xml);
+            log.debug("Direct pipe of _xml field " + name);
+            fields.add(pipe(name, xml));
+            return fields;
         }
 
         log.debug("Checking for explicit processing of _xml field " + name + " as XML_MODE == " + xmlMode);
@@ -543,8 +566,9 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             }
             String month = XMLStepper.getAttribute(xml, "month", null);
             String day = XMLStepper.getAttribute(xml, "day", null);
-            return new DocumentResponse.Field(
-                    name, year + (month == null ? "" : month + (day == null ? "" : day)), false);
+            fields.add(new DocumentResponse.Field(
+                    name, year + (month == null ? "" : month + (day == null ? "" : day)), false));
+            return fields;
         }
 
         if ("Author_xml".equals(name)) {
@@ -562,6 +586,9 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                     boolean found = false;
                     for (int i = 0; i < xml.getAttributeCount(); i++) {
                         if ("fullname".equals(xml.getAttributeLocalName(i))) {
+                            if (!collapseMultiValue) {
+                                fields.add(new DocumentResponse.Field(name, xml.getAttributeValue(i), true));
+                            }
                             if (value.length() != 0) {
                                 value.append("\n");
                             }
@@ -584,13 +611,17 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                 log.trace("Extracted Author_xml: " + value.toString().replace("\n", ", "));
             }
 //                System.out.println(value);
-            return new DocumentResponse.Field(name, value.toString(), true);
+            if (collapseMultiValue) {
+                fields.add(new DocumentResponse.Field(name, value.toString(), true));
+            }
+            return fields;
         }
 
         if (xmlMode == XML_MODE.mixed) {
             log.debug("_xml field " + name + " was not explicitly handled. Piping content verbatim");
             // TODO: Check if the following tag is skipped
-            return pipe(name, xml);
+            fields.add(pipe(name, xml));
+            return fields;
         }
 
         if (!xmlFieldsWarningFired) {
@@ -607,12 +638,12 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                      + "expected. These attributes are ignored. Further warnings of this type will be skipped");
             xmlFieldAttributeWarningFired = true;
         }
-        xml.next();
+/*        xml.next();
         if (xml.getEventType() == XMLStreamReader.END_ELEMENT) {
             log.debug("The element " + name + " had empty content");
             return new DocumentResponse.Field(name, "", false);
-        }
-        return new DocumentResponse.Field(name, XMLStepper.getSubXML(xml, false), false);
+        }*/
+        return new DocumentResponse.Field(name, XMLStepper.getSubXML(xml, false, true), false);
     }
 
 }

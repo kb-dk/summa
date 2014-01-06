@@ -41,6 +41,9 @@ public class XMLStepperTest extends TestCase {
     private static final String DERIVED_NAMESPACE =
             "<foo xmlns=\"http://www.example.com/foo_ns/\"><bar>simple bar</bar></foo>";
 
+    private static final String OUTER_SNIPPET = "<bar>bar1</bar><bar>bar2</bar>";
+    private static final String OUTER_FULL = "<major><foo>" + OUTER_SNIPPET + "</foo>\n<foo>next</foo></major>";
+
     private XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
@@ -77,6 +80,13 @@ public class XMLStepperTest extends TestCase {
         assertEquals("The reader should be positioned at a character tag (newline) but was positioned at "
                      + XMLUtil.eventID2String(in.getEventType()),
                      XMLStreamConstants.CHARACTERS, in.getEventType());
+    }
+
+    public void testGetSubXML_NoOuter() throws XMLStreamException {
+        XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(OUTER_FULL));
+        assertTrue("The first 'foo' should be findable", XMLStepper.findTagStart(in, "foo"));
+        String piped = XMLStepper.getSubXML(in, false, true);
+        assertEquals("The output should contain only the inner XML", OUTER_SNIPPET, piped);
     }
 
     public void testPipeComments() throws XMLStreamException {

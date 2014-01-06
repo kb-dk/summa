@@ -61,4 +61,18 @@ public class SummonResponseBuilderTest extends TestCase {
                           Resolver.getUTF8Content("support/summon/search/summon_response.xml"), "");
         System.out.println(rc.toXML());
     }
+
+    public void testConvertMulti() throws Exception {
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        SummonResponseBuilder rb = new SummonResponseBuilder(Configuration.newMemoryBased(
+                SummonResponseBuilder.CONF_COLLAPSE_MULTI_FIELDS, false
+        ));
+        ResponseCollection rc = new ResponseCollection();
+
+        rb.buildResponses(request, new SolrFacetRequest("foo", 0, 10, "and"), rc,
+                          Resolver.getUTF8Content("support/summon/search/summon_response.xml"), "");
+        System.out.println(rc.toXML());
+    }
 }
