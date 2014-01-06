@@ -81,14 +81,36 @@ public class XMLStepper {
      * @throws XMLStreamException if in was faulty.
      */
     public static String getSubXML(XMLStreamReader in, boolean failOnError) throws XMLStreamException {
-        if (in.getProperty(XMLInputFactory.IS_COALESCING) == null ||
-            Boolean.TRUE != in.getProperty(XMLInputFactory.IS_COALESCING)) {
-            throw new IllegalArgumentException("The XMLInputStream must be coalescing but was not");
-        }
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
-        pipeXML(in, out, 0, failOnError);
+        pipeXML(in, out, failOnError);
         return os.toString();
+    }
+
+    /**
+     * Equivalent to
+     * {@link #pipeXML(javax.xml.stream.XMLStreamReader, javax.xml.stream.XMLStreamWriter, boolean, boolean)} but
+     * returns the sub XML as a String instead of piping the result.
+     * </p><p>
+     * Note: This methods is resilient against the multiple root-problem in pipeXML. This also means that the returned
+     *       String is not necessarily valid XML.
+     * @param in must be positioned at START_ELEMENT and be coalescing.
+     * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
+     *                    if false, unrecognized elements will be ignored.
+     * @return the sub XML as a String.
+     * @param onlyInner  if true, the start- and end-tag of the current element are not piped to out.
+     * @throws XMLStreamException if in was faulty.
+     */
+    public static String getSubXML(XMLStreamReader in, boolean failOnError, boolean onlyInner)
+            throws XMLStreamException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
+        out.writeStartElement("a");
+        pipeXML(in, out, failOnError, onlyInner);
+        out.writeEndElement();
+        out.flush();
+        String xml = os.toString();
+        return xml.substring(3, xml.length() - 4); // We remove the enclosing a-element from the String
     }
 
 
@@ -106,29 +128,56 @@ public class XMLStepper {
      * @throws XMLStreamException if in was faulty.
      */
     public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError) throws XMLStreamException {
+        pipeXML(in, out, 0, failOnError, false);
+    }
+    /**
+     * Traverses all parts in the given element, including sub elements etc., and pipes the parts to out.
+     * Used for copying snippets verbatim from one XML structure to another.
+     * Leaves in positioned immediately after the END_ELEMENT matching the START_ELEMENT.
+     * </p><p>
+     * Note: The piper does not repair namespaces. If in uses namespaces defined previously in the XML and out does
+     * not have these definitions, they will not be transferred.
+     * </p><p>
+     * Warning: Skipping the outer element is dangerous as the outer element can contain multiple inner elements.
+     * If the destination (out) is empty and in contains multiple sub-elements, the piping will fail with an Exception
+     * stating "Trying to output second root". In order to avoid that, the destination needs to have at least one
+     * open element.
+     * @param in must be positioned at START_ELEMENT and be coalescing.
+     * @param out the destination for the traversed XML.
+     * @param failOnError if true, unrecognized elements will result in an UnsupportedOperationException.
+     *                    if false, unrecognized elements will be ignored.
+     * @param onlyInner  if true, the start- and end-tag of the current element are not piped to out.
+     * @throws XMLStreamException if in was faulty.
+     */
+    public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError, boolean onlyInner)
+            throws XMLStreamException {
+        pipeXML(in, out, 0, failOnError, onlyInner);
+    }
+
+    private static void pipeXML(XMLStreamReader in, XMLStreamWriter out, final int level, boolean ignoreErrors,
+                                boolean onlyInner) throws XMLStreamException {
         if (in.getProperty(XMLInputFactory.IS_COALESCING) == null ||
             Boolean.TRUE != in.getProperty(XMLInputFactory.IS_COALESCING)) {
             throw new IllegalArgumentException("The XMLInputStream must be coalescing but was not");
         }
-        pipeXML(in, out, 0, failOnError);
-    }
-    private static void pipeXML(XMLStreamReader in, XMLStreamWriter out, final int level, boolean ignoreErrors)
-            throws XMLStreamException {
         if (XMLStreamReader.START_ELEMENT != in.getEventType()) {
             throw new IllegalStateException(
                     "Must be positioned at START_ELEMENT but was at " + XMLUtil.eventID2String(in.getEventType()));
         }
         // TODO: Add better namespace support by matching NameSpaceContexts for in and out
 
-        out.writeStartElement(in.getPrefix(), in.getLocalName(), in.getNamespaceURI());
-        for (int i = 0 ; i < in.getNamespaceCount() ; i++) {
-            out.writeNamespace(in.getNamespacePrefix(i), in.getNamespaceURI(i));
-        }
-        for (int i = 0 ; i < in.getAttributeCount() ; i++) {
-            if (in.getAttributeNamespace(i) == null) {
-                out.writeAttribute(in.getAttributeLocalName(i), in.getAttributeValue(i));
-            } else {
-                out.writeAttribute(in.getAttributeNamespace(i), in.getAttributeLocalName(i), in.getAttributeValue(i));
+        if (!onlyInner) {
+            out.writeStartElement(in.getPrefix(), in.getLocalName(), in.getNamespaceURI());
+            for (int i = 0 ; i < in.getNamespaceCount() ; i++) {
+                out.writeNamespace(in.getNamespacePrefix(i), in.getNamespaceURI(i));
+            }
+            for (int i = 0 ; i < in.getAttributeCount() ; i++) {
+                if (in.getAttributeNamespace(i) == null) {
+                    out.writeAttribute(in.getAttributeLocalName(i), in.getAttributeValue(i));
+                } else {
+                    out.writeAttribute(
+                            in.getAttributeNamespace(i), in.getAttributeLocalName(i), in.getAttributeValue(i));
+                }
             }
         }
         out:
@@ -140,11 +189,13 @@ public class XMLStepper {
                     break;
                 }
                 case XMLStreamReader.START_ELEMENT: {
-                    pipeXML(in, out, level + 1, ignoreErrors);
+                    pipeXML(in, out, level + 1, ignoreErrors, false);
                     break;
                 }
                 case XMLStreamReader.END_ELEMENT: {
-                    out.writeEndElement();
+                    if (level != 0 || !onlyInner) {
+                        out.writeEndElement();
+                    }
                     break out;
                 }
                 case XMLStreamReader.SPACE:
