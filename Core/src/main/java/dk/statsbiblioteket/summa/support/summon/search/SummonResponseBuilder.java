@@ -414,25 +414,13 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         XMLStepper.iterateElements(xml, "document", "field", new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
-                List<DocumentResponse.Field> rawFields = extractFields(xml, xmlMode);
+                List<DocumentResponse.Field> rawFields = extractFields(xml, xmlMode, wanted, extracted);
                 if (rawFields != null) {
                     for (DocumentResponse.Field field: rawFields) {
-                        if (wanted.contains(field.getName())) {
-                            extracted.put(field.getName(), field.getContent());
-                            if ("PublicationDate_xml".equals(field.getName())) {
-                                // The iso-thing is a big kludge. If we move the
-                                // sort code outside of this loop, it would be
-                                // cleaner.
-                                extracted.put("PublicationDate_xml_iso", field.getContent());
-                                fields.add(new DocumentResponse.Field(
-                                        "PublicationDate_xml_iso", field.getContent(), false));
-                                if ("PublicationDate_xml_iso".equals(sortField)) {
-                                    sortValue[0] = field.getContent();
-                                }
-                            }
-                        }
                         fields.add(field);
-                        if (sortField != null && sortField.equals(field.getName())) {
+                        if (sortField != null && (sortField.equals(field.getName()) ||
+                                                  "PublicationDate_xml_iso".equals(field.getName()) &&
+                                                  "PublicationDate_xml".equals(sortField))) {
                             sortValue[0] = field.getContent();
                         }
                     }
@@ -456,6 +444,14 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                     }
 
                     break;
+                }
+            }
+        } else {
+            // Get first author for shortformat
+            for (DocumentResponse.Field field: fields) {
+                if ("Author_xml".equals(field.getName())) {
+                    extracted.put("Author", field.getContent());
+                    break; // First one only
                 }
             }
         }
@@ -491,7 +487,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     }
     @Override
     protected String createShortformat(ConvenientMap extracted) {
-        String date = extracted.getString("PublicationDate_xml", "????");
+        String date = extracted.getString("PublicationDate_xml_iso", "????");
         date = shortDate && date.length() > 4 ? date.substring(0, 4) : date;
         extracted.put("Date", date);
         return super.createShortformat(extracted);
@@ -504,11 +500,15 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * </p><p>
      * While this implementation tries to produce fields for all inputs, it is not guaranteed that it will be usable
      * as no authoritative list of possible micro formats used by Summon has been found.
+     *
      * @param xml the stream to extract the field from. Must be positioned at ELEMENT_START for "field".
+     * @param wanted fields requested for specific processing, such af record ID.
+     * @param extracted the wanted fields and their content will be added to this.
      * @return fields or null if no fields could be extracted.
      * @throws javax.xml.stream.XMLStreamException if there was an error accessing the xml stream.
      */
-    private List<DocumentResponse.Field> extractFields(XMLStreamReader xml, XML_MODE xmlMode)
+    private List<DocumentResponse.Field> extractFields(
+            XMLStreamReader xml, XML_MODE xmlMode, final Set<String> wanted, final ConvenientMap extracted)
             throws XMLStreamException {
         final String name = XMLStepper.getAttribute(xml, "name", null);
         if (name == null) {
@@ -516,7 +516,6 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             return null;
         }
         final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>();
-
         if (!name.endsWith("_xml")) {
             final StringBuffer value = new StringBuffer(50);
             XMLStepper.iterateElements(xml, "field", "value", new XMLStepper.XMLCallback() {
@@ -527,12 +526,16 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                         fields.add(new DocumentResponse.Field(name, text, true));
                     }
                     value.append(value.length() == 0 ? text : "\n" + text);
+                    if (wanted.contains(name) && !extracted.containsKey(name)) { // Only the first one
+                        extracted.put(name, text);
+                    }
                 }
             });
             if (value.length() == 0) {
                 log.debug("No value for field '" + name + "'");
                 return null;
             }
+
             if (collapseMultiValue) {
                 fields.add(new DocumentResponse.Field(name, value.toString(), true));
             }
@@ -540,6 +543,52 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         }
 
         // Entering embedded XML land
+
+        // We want the ISO-date, but we might also want the XML content copied
+        if ("PublicationDate_xml".equals(name) && wanted.contains(name)) {
+            /*
+                  <field name="PublicationDate_xml">
+                    <datetime text="20081215" month="12" year="2008" day="15"/>
+                  </field>
+                 */
+            XMLStepper.findTagStart(xml, "datetime");
+            String year = XMLStepper.getAttribute(xml, "year", null);
+            if (year != null) {
+                String month = XMLStepper.getAttribute(xml, "month", null);
+                String day = XMLStepper.getAttribute(xml, "day", null);
+                String isodate = year + (month == null ? "" : month + (day == null ? "" : day));
+                fields.add(new DocumentResponse.Field("PublicationDate_xml_iso", isodate, false));
+                extracted.put("PublicationDate_xml_iso", isodate);
+
+                switch (xmlMode) {
+                    case selected:
+                    case mixed: {
+                        fields.add(new DocumentResponse.Field("PublicationDate", isodate, false));
+                        break;
+                    }
+                    case full: {
+                        String datexml = "<datetime text=\"" + isodate + "\"";
+                        if (month != null) {
+                            datexml += " month=\"" + month + "\"";
+                        }
+                        datexml += " year=\"" + year + "\"";
+                        if (day != null) {
+                            datexml += " day=\"" + day + "\"";
+                        }
+                        datexml += "/>";
+                        fields.add(new DocumentResponse.Field(name, datexml, false));
+                        break;
+                    }
+                    case skip: {
+                        log.trace("Skipping PublicationDate_xml output");
+                        break;
+                    }
+                    default: throw new IllegalStateException("Unhandled switch case " + xmlMode);
+                }
+                xml.next();
+            }
+            return fields;
+        }
 
         if (xmlMode == XML_MODE.skip) {
             log.debug("Skipping _xml field " + name + " as XML_MODE == skip");
@@ -552,24 +601,6 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         }
 
         log.debug("Checking for explicit processing of _xml field " + name + " as XML_MODE == " + xmlMode);
-
-        if ("PublicationDate_xml".equals(name)) {
-            /*
-                  <field name="PublicationDate_xml">
-                    <datetime text="20081215" month="12" year="2008" day="15"/>
-                  </field>
-                 */
-            XMLStepper.findTagStart(xml, "datetime");
-            String year = XMLStepper.getAttribute(xml, "year", null);
-            if (year == null) {
-                return null;
-            }
-            String month = XMLStepper.getAttribute(xml, "month", null);
-            String day = XMLStepper.getAttribute(xml, "day", null);
-            fields.add(new DocumentResponse.Field(
-                    name, year + (month == null ? "" : month + (day == null ? "" : day)), false));
-            return fields;
-        }
 
         if ("Author_xml".equals(name)) {
             /*
