@@ -495,12 +495,12 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 
     private boolean warnedOnMissingFullname = false;
     private boolean xmlFieldsWarningFired = false;
+
     /**
-     * Extracts a Summon document field and converts it to {@link }DocumentResponse#Field}.
+     * Extracts a Summon document field and converts it to 0 or more {@link }DocumentResponse#Field}s.
      * </p><p>
      * While this implementation tries to produce fields for all inputs, it is not guaranteed that it will be usable
      * as no authoritative list of possible micro formats used by Summon has been found.
-     *
      * @param xml the stream to extract the field from. Must be positioned at ELEMENT_START for "field".
      * @param wanted fields requested for specific processing, such af record ID.
      * @param extracted the wanted fields and their content will be added to this.
@@ -516,7 +516,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             return null;
         }
         final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>();
-        if (!name.endsWith("_xml")) {
+
+        if (!name.endsWith("_xml")) { // Not an XML field, so we just copy, extract & return
             final StringBuffer value = new StringBuffer(50);
             XMLStepper.iterateElements(xml, "field", "value", new XMLStepper.XMLCallback() {
                 @Override
@@ -543,9 +544,41 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         }
 
         // Entering embedded XML land
+        XMLStreamReader subXML = xml;
 
-        // We want the ISO-date, but we might also want the XML content copied
-        if ("PublicationDate_xml".equals(name) && wanted.contains(name)) {
+        if ("PublicationDate_xml".equals(name) || "Author_xml".equals(name)) {
+            // We need specific as well as general extraction so we extract the snippet and duplicate it
+            String snippet = XMLStepper.getSubXML(xml, true);
+
+            extractSpecific(
+                    xmlFactory.createXMLStreamReader(new StringReader(snippet)), xmlMode, name, fields, extracted);
+
+            if (xmlMode == XML_MODE.selected) { // Only these two XML fields
+                return fields;
+            }
+            // TODO: Check skip
+
+            // The subXML is passed onwards
+            subXML = xmlFactory.createXMLStreamReader(new StringReader(snippet));
+            subXML.next();
+        }
+
+        // Handle
+
+        if (xmlMode == XML_MODE.skip) {
+            log.debug("Skipping _xml field " + name + " as XML_MODE == skip");
+            return null;
+        }
+        // xmlMode == XML_MODE.full
+        log.debug("Direct pipe of _xml field " + name);
+        fields.add(pipe(name, subXML));
+        return fields;
+    }
+
+    private void extractSpecific(
+            XMLStreamReader xml, final XML_MODE xmlMode, final String fieldName, final List<DocumentResponse.Field> fields,
+            final ConvenientMap extracted) throws XMLStreamException {
+        if ("PublicationDate_xml".equals(fieldName)) {
             /*
                   <field name="PublicationDate_xml">
                     <datetime text="20081215" month="12" year="2008" day="15"/>
@@ -564,45 +597,17 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                     case selected:
                     case mixed: {
                         fields.add(new DocumentResponse.Field("PublicationDate", isodate, false));
-                        break;
                     }
-                    case full: {
-                        String datexml = "<datetime text=\"" + isodate + "\"";
-                        if (month != null) {
-                            datexml += " month=\"" + month + "\"";
-                        }
-                        datexml += " year=\"" + year + "\"";
-                        if (day != null) {
-                            datexml += " day=\"" + day + "\"";
-                        }
-                        datexml += "/>";
-                        fields.add(new DocumentResponse.Field(name, datexml, false));
-                        break;
-                    }
-                    case skip: {
-                        log.trace("Skipping PublicationDate_xml output");
-                        break;
-                    }
+                    case full:
+                    case skip: break;
                     default: throw new IllegalStateException("Unhandled switch case " + xmlMode);
                 }
                 xml.next();
             }
-            return fields;
+            return;
         }
 
-        if (xmlMode == XML_MODE.skip) {
-            log.debug("Skipping _xml field " + name + " as XML_MODE == skip");
-            return null;
-        }
-        if (xmlMode == XML_MODE.full) {
-            log.debug("Direct pipe of _xml field " + name);
-            fields.add(pipe(name, xml));
-            return fields;
-        }
-
-        log.debug("Checking for explicit processing of _xml field " + name + " as XML_MODE == " + xmlMode);
-
-        if ("Author_xml".equals(name)) {
+        if ("Author_xml".equals(fieldName)) {
             /*
                   <field name="Author_xml">
                     <contributor middlename="A" givenname="CHRISTY" surname="VISHER" fullname="VISHER, CHRISTY A"/>
@@ -617,15 +622,21 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                     boolean found = false;
                     for (int i = 0; i < xml.getAttributeCount(); i++) {
                         if ("fullname".equals(xml.getAttributeLocalName(i))) {
+                            String content = xml.getAttributeValue(i);
+                            if (!found) { // First
+                                extracted.put(fieldName, content);
+                                if (xmlMode != XML_MODE.mixed && xmlMode != XML_MODE.selected) {
+                                    return; // Nu further fiddling
+                                }
+                            }
                             if (!collapseMultiValue) {
-                                fields.add(new DocumentResponse.Field(name, xml.getAttributeValue(i), true));
+                                fields.add(new DocumentResponse.Field("Author_xml", content, true));
                             }
                             if (value.length() != 0) {
                                 value.append("\n");
                             }
-                            value.append(xml.getAttributeValue(i));
+                            value.append(content);
                             found = true;
-                            break;
                         }
                     }
                     if (!found && !warnedOnMissingFullname) {
@@ -636,30 +647,16 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                 }
             });
             if (value.length() == 0) {
-                log.debug("No value for field '" + name + "'");
-                return null;
-            } else if (log.isTraceEnabled()) {
+                log.debug("No value for field '" + fieldName + "'");
+                return;
+            }
+            if (log.isTraceEnabled()) {
                 log.trace("Extracted Author_xml: " + value.toString().replace("\n", ", "));
             }
-//                System.out.println(value);
             if (collapseMultiValue) {
-                fields.add(new DocumentResponse.Field(name, value.toString(), true));
+                fields.add(new DocumentResponse.Field(fieldName, value.toString(), true));
             }
-            return fields;
         }
-
-        if (xmlMode == XML_MODE.mixed) {
-            log.debug("_xml field " + name + " was not explicitly handled. Piping content verbatim");
-            // TODO: Check if the following tag is skipped
-            fields.add(pipe(name, xml));
-            return fields;
-        }
-
-        if (!xmlFieldsWarningFired) {
-            log.warn("XML_MODE == selected and field " + name + " was not explicit supported. Skipping field");
-            xmlFieldsWarningFired = true;
-        }
-        return null;
     }
 
     private boolean xmlFieldAttributeWarningFired = false;
