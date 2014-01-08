@@ -368,22 +368,21 @@ public class RecordWriter extends ObjectFilterImpl {
 
     @Override
     public void close(boolean success) {
-        log.debug(String.format("close(%s) with eofReached == %b called",
-                                success, eofReached));
+        log.info(String.format("close(%s) with eofReached == %b called", success, eofReached));
         boolean initialEofReached = eofReached;
         if (initialEofReached && success) {
-            log.debug(
+            log.info(
                 "close(true) with eofReached == true: Flushing and closing batcher before calling close on source");
             try {
                 batcher.stop();
-
             } catch (Exception e) {
                 log.warn("Exception while closing down batcher", e);
             }
         }
         try {
-            log.debug(String.format("close(%s): Closing super (which closes source)", success));
+            log.info(String.format("close(%s): Closing super (which closes source)", success));
             super.close(success);
+            log.info(String.format("close(%s): super closed without any known problems", success));
         } finally {
             if (!(initialEofReached && success)) {
                 log.info("Waiting for batch jobs to be committed");
