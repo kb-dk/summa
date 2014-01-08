@@ -173,6 +173,22 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(1, base.getLiveCount());
     }
 
+    public void testSelfReference() throws IOException {
+        Record r1 = new Record(testId1, testBase1, testContent1);
+        storage.flushAll(Arrays.asList(r1));
+        storage.getRecord(testId1, null);
+        log.info("Putting and getting a standard Record works as intended");
+
+        Record r2 = new Record(testId2, testBase1, testContent1);
+        r2.setChildIds(Arrays.asList(testId2));
+        log.info("Adding self-referencing Record " + testId2);
+        storage.flushAll(Arrays.asList(r2));
+        log.info("Attempting to retrieve self-referencing Record " + testId2);
+        storage.getRecord(testId2, null);
+
+        log.info("Putting and getting a single self-referencing Record works as intended");
+    }
+
     /**
      * This loops forever (or at least a long time) as setting deleted = true updates modification-time.
      * @throws IOException if the test failed due to database problems.
