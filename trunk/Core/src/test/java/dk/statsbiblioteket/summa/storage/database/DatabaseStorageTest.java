@@ -189,6 +189,52 @@ public class DatabaseStorageTest extends StorageTestBase {
         log.info("Putting and getting a single self-referencing Record works as intended");
     }
 
+    public void testTwoLevelCycle() throws IOException {
+        Record r1 = new Record(testId1, testBase1, testContent1);
+        r1.setChildIds(Arrays.asList(testId2));
+        Record r2 = new Record(testId2, testBase1, testContent1);
+        r2.setChildIds(Arrays.asList(testId1));
+        log.info("testTwoLevelCycle: Flushing 2 Records, referencing each other as children");
+        storage.flushAll(Arrays.asList(r1, r2));
+        log.info("testTwoLevelCycle: Getting first record in cycle");
+        storage.getRecord(testId1, null);
+        log.info("testTwoLevelCycle: Getting second record in cycle");
+        storage.getRecord(testId2, null);
+        log.info("testTwoLevelCycle: Records retrieved successfully");
+    }
+
+    public void testTwoLevelCycleParent() throws IOException {
+        Record r1 = new Record(testId1, testBase1, testContent1);
+        r1.setParentIds(Arrays.asList(testId2));
+        Record r2 = new Record(testId2, testBase1, testContent1);
+        r2.setParentIds(Arrays.asList(testId1));
+        log.info("testTwoLevelCycleParent: Flushing 2 Records, referencing each other as parents");
+        storage.flushAll(Arrays.asList(r1, r2));
+        log.info("testTwoLevelCycleParent: Getting first record in cycle");
+        storage.getRecord(testId1, null);
+        log.info("testTwoLevelCycleParent: Getting second record in cycle");
+        storage.getRecord(testId2, null);
+        log.info("testTwoLevelCycleParent: Records retrieved successfully");
+    }
+
+    public void testThreeLevelCycle() throws IOException {
+        Record r1 = new Record(testId1, testBase1, testContent1);
+        r1.setChildIds(Arrays.asList(testId2));
+        Record r2 = new Record(testId2, testBase1, testContent1);
+        r2.setChildIds(Arrays.asList(testId3));
+        Record r3 = new Record(testId3, testBase1, testContent1);
+        r3.setChildIds(Arrays.asList(testId1));
+        log.info("testThreeLevelCycle: Flushing 3 Records, referencing each other as children");
+        storage.flushAll(Arrays.asList(r1, r2, r3));
+        log.info("testThreeLevelCycle: Getting first record in cycle");
+        storage.getRecord(testId1, null);
+        log.info("testThreeLevelCycle: Getting second record in cycle");
+        storage.getRecord(testId2, null);
+        log.info("testThreeLevelCycle: Getting third record in cycle");
+        storage.getRecord(testId3, null);
+        log.info("testThreeLevelCycle: Records retrieved successfully");
+    }
+
     /**
      * This loops forever (or at least a long time) as setting deleted = true updates modification-time.
      * @throws IOException if the test failed due to database problems.
