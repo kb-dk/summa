@@ -1677,6 +1677,7 @@ public abstract class DatabaseStorage extends StorageBase {
             Boolean mayHaveParent = true;
             String parentId = recordId; // For each parent found, this value will be overwritten
 
+            HashSet<String> parents = new HashSet<String>();//cycle detection
             while (mayHaveParent) {
                 StatementHandle handle = statementHandler.getParentIds();
                 // TODO: Use handle directly
@@ -1685,7 +1686,13 @@ public abstract class DatabaseStorage extends StorageBase {
                 ResultSet parentRS = pstmtParentIdOnly.executeQuery();
                 mayHaveParent = parentRS.next();
                 if (mayHaveParent) {
-                    parentId = parentRS.getString("parentID"); //Set new Parent
+                   parentId = parentRS.getString("parentID"); //Set new Parent
+                   if (parents.contains(parentId)){
+                       log.warn("Parent-child cycle detected for id:"+parentId);
+                      mayHaveParent=false; //stop resolving parents
+                  }
+                   parents.add(parentId); 
+                   
                 }
                 parentRS.close();
             }
@@ -1721,7 +1728,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests
             }
 
-            loadAndSetChildRelations(topParentRecord, conn);
+            loadAndSetChildRelations(topParentRecord, conn,null);
 
             //Find the recordId in the object tree and return this. Minimal performance overhead here.
             //Post-order transversal algorithm
@@ -1766,7 +1773,11 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     //This method will call itself recursively
-    private void loadAndSetChildRelations(Record parentRecord, Connection conn) throws SQLException {
+    private void loadAndSetChildRelations(Record parentRecord, Connection conn, HashSet<String> previousIdsForCycleDetection) throws SQLException {
+
+        if (previousIdsForCycleDetection== null){            
+            previousIdsForCycleDetection = new HashSet<String>();            
+        }
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getGetChildren(null);
         PreparedStatement pstmtSelectChildren = conn.prepareStatement(handle.getSql());
@@ -1778,7 +1789,12 @@ public abstract class DatabaseStorage extends StorageBase {
             Record child = constructRecordFromRSNoRelationsSet(childrenRS);
             child.setParents(Arrays.asList(parentRecord));
             children.add(child);
-            loadAndSetChildRelations(child, conn); //This is the recursive call
+            if(previousIdsForCycleDetection.contains(child.getId())){
+                log.warn("Parent-child cycle detected for recordId:"+child.getId() + ". Stopped loading rest of hierachy");
+                break;
+            }
+            previousIdsForCycleDetection.add(child.getId());
+            loadAndSetChildRelations(child, conn, previousIdsForCycleDetection); //This is the recursive call
         }
         childrenRS.close();
         if (!children.isEmpty()) { //Keep current API where it is null if none exist instead of empty list
