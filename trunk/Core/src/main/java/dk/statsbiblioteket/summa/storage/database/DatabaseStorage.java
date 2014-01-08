@@ -1688,7 +1688,8 @@ public abstract class DatabaseStorage extends StorageBase {
                 if (mayHaveParent) {
                    parentId = parentRS.getString("parentID"); //Set new Parent
                    if (parents.contains(parentId)){
-                       log.warn("Parent-child cycle detected for id:"+parentId);
+                       Logging.logProcess(this.getClass().getName(), "Parent-child cycle detected for id",
+                               Logging.LogLevel.WARN, parentId);
                       mayHaveParent=false; //stop resolving parents
                   }
                    parents.add(parentId); 
@@ -1790,7 +1791,8 @@ public abstract class DatabaseStorage extends StorageBase {
             child.setParents(Arrays.asList(parentRecord));
             children.add(child);
             if(previousIdsForCycleDetection.contains(child.getId())){
-                log.warn("Parent-child cycle detected for recordId:"+child.getId() + ". Stopped loading rest of hierachy");
+                Logging.logProcess(this.getClass().getName(), "Parent-child cycle detected for id(stopped loading rest of hierachy)",
+                        Logging.LogLevel.WARN, child.getId());              
                 break;
             }
             previousIdsForCycleDetection.add(child.getId());
