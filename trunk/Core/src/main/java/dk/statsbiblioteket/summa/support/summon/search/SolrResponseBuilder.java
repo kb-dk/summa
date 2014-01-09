@@ -740,4 +740,12 @@ public class SolrResponseBuilder implements Configurable {
         this.nonescapedFields = new HashSet<String>(nonescapedFields);
         log.debug("setNonescapedFields(" + Strings.join(nonescapedFields, ", ") + ")");
     }
+
+    @Override
+    public String toString() {
+        return "SolrResponseBuilder(, recordBase='" + recordBase + '\'' +
+               ", searcherID='" + searcherID + "', nonescapedFields=" + nonescapedFields
+               + ", defaultIndexRequest=" + defaultIndexRequest + ", idField='" + idField
+               + "', baseField='" + baseField + '\'' + ')';
+    }
 }
