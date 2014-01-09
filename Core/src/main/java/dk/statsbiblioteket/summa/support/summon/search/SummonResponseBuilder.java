@@ -119,7 +119,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         collapseMultiValue = conf.getBoolean(CONF_COLLAPSE_MULTI_FIELDS, DEFAULT_COLLAPSE_MULTI_FIELDS);
         defaultXmlHandling = XML_MODE.valueOf( // To enum and back to fail early
                                                conf.getString(CONF_XML_FIELD_HANDLING, DEFAULT_XML_FIELD_HANDLING)).toString();
-        log.info("Created SummonResponseBuilder inherited from SolrResponseBuilder");
+        log.info("Created " + this);
     }
 
     private static Configuration adjust(Configuration conf) {
@@ -674,4 +674,11 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         return new DocumentResponse.Field(name, XMLStepper.getSubXML(xml, false, true), false);
     }
 
+
+    @Override
+    public String toString() {
+        return "SummonResponseBuilder(shortDate=" + shortDate + ", xmlOverrides=" + xmlOverrides
+               + ", defaultXmlHandling='" + defaultXmlHandling + "', collapseMultiValue=" + collapseMultiValue
+               + ", " + super.toString() + ')';
+    }
 }
