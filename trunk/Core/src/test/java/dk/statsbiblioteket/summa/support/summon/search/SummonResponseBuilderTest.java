@@ -62,9 +62,11 @@ public class SummonResponseBuilderTest extends TestCase {
         System.out.println(rc.toXML());
     }
 
+
+
     public void testConvertMulti() throws Exception {
         Request request = new Request();
-        request.put(DocumentKeys.SEARCH_QUERY, "foo");
+        request.put(DocumentKeys.SEARCH_QUERY, "reactive arthritis a review");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         SummonResponseBuilder rb = new SummonResponseBuilder(Configuration.newMemoryBased(
                 SummonResponseBuilder.CONF_COLLAPSE_MULTI_FIELDS, false,

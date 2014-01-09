@@ -389,8 +389,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * accessing the xml stream.
      */
-    private DocumentResponse.Record extractRecord(XMLStreamReader xml, String sortKey, float lastScore,
-                                                  final XML_MODE xmlMode) throws XMLStreamException {
+    private DocumentResponse.Record extractRecord(
+            XMLStreamReader xml, String sortKey, float lastScore, final XML_MODE xmlMode) throws XMLStreamException {
         // http://api.summon.serialssolutions.com/help/api/search/response/documents
         String openUrl = XMLStepper.getAttribute(xml, "openUrl", null);
         if (openUrl == null) {
@@ -408,8 +408,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         final String[] sortValue = new String[1]; // Hack to make final mutable
         final ConvenientMap extracted = new ConvenientMap();
         final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>(50);
-        final String sortField = sortRedirect.containsKey(sortKey) ?
-                sortRedirect.get(sortKey) : sortKey;
+        final String sortField = sortRedirect.containsKey(sortKey) ? sortRedirect.get(sortKey) : sortKey;
 
         XMLStepper.iterateElements(xml, "document", "field", new XMLStepper.XMLCallback() {
             @Override
@@ -429,27 +428,26 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         });
 
         if (xmlOverrides) {
-            // Author
+            // Author_xml
             for (DocumentResponse.Field field: fields) {
-                if ("Author_xml".equals(field.getName())) {
+                if ("Author_xml_name".equals(field.getName())) {
                     for (int i = fields.size() - 1 ; i >= 0 ; i--) {
                         if ("Author".equals(fields.get(i).getName())) {
                             fields.remove(i);
                         }
                     }
-                    field.setName("Author");
-
-                    if (extracted.containsKey("Author")) {
-                        extracted.put("Author", field.getContent());
+                    for (DocumentResponse.Field afield: fields) {
+                        if ("Author_xml_name".equals(afield.getName())) {
+                            afield.setName("Author");
+                        }
                     }
-
                     break;
                 }
             }
-        } else {
-            // Get first author for shortformat
+        }
+        if (!extracted.containsKey("Author")) {
             for (DocumentResponse.Field field: fields) {
-                if ("Author_xml".equals(field.getName())) {
+                if ("Author".equals(field.getName())) {
                     extracted.put("Author", field.getContent());
                     break; // First one only
                 }
@@ -624,13 +622,13 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                         if ("fullname".equals(xml.getAttributeLocalName(i))) {
                             String content = xml.getAttributeValue(i);
                             if (!found) { // First
-                                extracted.put(fieldName, content);
-                                if (xmlMode != XML_MODE.mixed && xmlMode != XML_MODE.selected) {
-                                    return; // Nu further fiddling
-                                }
+                                extracted.put("Author", content);
                             }
                             if (!collapseMultiValue) {
-                                fields.add(new DocumentResponse.Field("Author_xml", content, true));
+                                fields.add(new DocumentResponse.Field("Author_xml_name", content, true));
+                                if (xmlMode == XML_MODE.mixed || xmlMode == XML_MODE.selected) {
+                                    fields.add(new DocumentResponse.Field("Author_xml", content, true));
+                                }
                             }
                             if (value.length() != 0) {
                                 value.append("\n");
@@ -654,7 +652,10 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                 log.trace("Extracted Author_xml: " + value.toString().replace("\n", ", "));
             }
             if (collapseMultiValue) {
-                fields.add(new DocumentResponse.Field(fieldName, value.toString(), true));
+                if (xmlMode == XML_MODE.mixed || xmlMode == XML_MODE.selected) {
+                    fields.add(new DocumentResponse.Field("Author_xml", value.toString(), true));
+                }
+                fields.add(new DocumentResponse.Field("Author_xml_name", value.toString(), true));
             }
         }
     }
