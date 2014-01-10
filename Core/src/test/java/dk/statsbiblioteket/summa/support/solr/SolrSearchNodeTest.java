@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.Profiler;
@@ -726,6 +727,29 @@ public class SolrSearchNodeTest extends TestCase {
                     SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "efacet.field", "fulltext",
                     SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "solr"
             ));
+        } finally {
+            searcher.close();
+        }
+    }
+
+    public void testMoreLikeThis() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = new SBSolrSearchNode(Configuration.newMemoryBased());
+        try {
+            Request request = new Request(
+                    //DocumentKeys.SEARCH_QUERY, "recordID:doc1"
+                    LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "doc1",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "mlt.fl", "recordBase,fulltext"
+            );
+
+            ResponseCollection responses = new ResponseCollection();
+            log.info("Issuing MLT request");
+            searcher.search(request, responses);
+            assertTrue("There should be a response", responses.iterator().hasNext());
+            assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                         1, ((DocumentResponse) responses.iterator().next()).getHitCount());
+//            assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
+//                       responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
         } finally {
             searcher.close();
         }

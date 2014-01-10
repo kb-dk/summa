@@ -344,11 +344,21 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         }
     }
 
+    private static final String MLT_KEY = CONF_SOLR_PARAM_PREFIX + "mlt";
     private void barrierSearch(Request request, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
-            log.trace("MoreLikeThis search is not supported yet, returning immediately");
-            return;
+            String id = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
+            if (!request.containsKey(MLT_KEY)) {
+                log.debug("Setting " + MLT_KEY + "=true as " + LuceneKeys.SEARCH_MORELIKETHIS_RECORDID
+                          + " is set with '" + id);
+                request.put(MLT_KEY, true);
+            }
+            String q = IndexUtils.RECORD_FIELD + ":\"" + id + "\"";
+            log.debug("Setting " + DocumentKeys.SEARCH_QUERY + "=" + q + " and removing filter as "
+                      + LuceneKeys.SEARCH_MORELIKETHIS_RECORDID + " is defined");
+            request.put(DocumentKeys.SEARCH_QUERY, q);
+            request.remove(DocumentKeys.SEARCH_FILTER);
         }
 
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
@@ -416,7 +426,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         }
 
         long searchTime = -System.currentTimeMillis();
-        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+/*        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
             if (fieldID != null && !fieldID.isEmpty()) {
                 query = fieldID + ":\"" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) + "\"";
             } else {
@@ -424,7 +434,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             }
             solrSearchParams.put("mlt", Arrays.asList("true"));
             log.debug("Performing MoreLikeThis search for '" + query);
-        }
+        }*/
         log.trace("Performing search for '" + query + "' with facets '" + facets + "'");
         String solrResponse;
         String solrTiming;
