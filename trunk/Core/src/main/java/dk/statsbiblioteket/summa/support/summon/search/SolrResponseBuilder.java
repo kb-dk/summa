@@ -599,7 +599,7 @@ public class SolrResponseBuilder implements Configurable {
                     log.debug("Encountered result group " + responseCount.getAndIncrement() + " with id='" + currentName
                               + "' and numFound=" + currentHitCount + " in MLT");
                     if (Long.parseLong(currentHitCount) == 0) {
-                        log.debug("No MoreLikeThis for '" + currentName + "'. Skippind document extraction");
+                        log.debug("No MoreLikeThis for '" + currentName + "'. Skipping document extraction");
                         return false;
                     }
                     xml.next();
