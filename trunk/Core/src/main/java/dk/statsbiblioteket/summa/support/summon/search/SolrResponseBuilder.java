@@ -45,6 +45,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Takes a Solr response and converts it to a {@link dk.statsbiblioteket.summa.search.api.document.DocumentResponse} and
@@ -169,13 +171,20 @@ public class SolrResponseBuilder implements Configurable {
             @Override
             public boolean elementStart(
                 XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                // MLT-results are just plain results(?)
                 if (mlt && "lst".equals(current) && "moreLikeThis".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     log.debug("Parsing MoreLikeThis response");
-                    parseResponse(xml, documentResponse);
+                    parseMLTResponse(xml, documentResponse);
                     // TODO: Remove query-id
                     return true;
                 }
-                if (!mlt && "result".equals(current)) {
+                if ("result".equals(current)) {
+                    if (mlt) {
+                        log.debug("Skipping plain document response as mlt=true");
+                        XMLStepper.findTagEnd(xml, "result");
+                        return true;
+                    }
+                    log.debug("Parsing document response");
                     String name = XMLStepper.getAttribute(xml, "name", null);
                     if (name == null) {
                         log.warn("Expected attribute 'name' in tag result. Skipping content for result");
@@ -558,13 +567,68 @@ public class SolrResponseBuilder implements Configurable {
         });
     }
 
-    private void parseResponse(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
-        log.trace("parseResponse(...) called");
-        response.setHitCount(Long.parseLong(XMLStepper.getAttribute(xml, "numFound", "-1")));
+    /*
+      <lst name="moreLikeThis">
+          <result name="sb_pure_ddfmxd:42657" numFound="2169" start="0">
+              <doc>
+                  <str name="recordID">sb_pure_ddfmxd:42663</str>
+     */
+    private boolean mltWarnFired = false;
+    private void parseMLTResponse(XMLStreamReader xml, final DocumentResponse documentResponse)
+            throws XMLStreamException {
+        log.debug("parseXMLResponse called");
+        final AtomicLong hitCount = new AtomicLong(0);
+        final AtomicInteger responseCount = new AtomicInteger(0);
         xml.next();
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                if ("result".equals(current)) {
+                    String currentName;
+                    String currentHitCount;
+                    if ((currentName = XMLStepper.getAttribute(xml, "name", null)) == null ||
+                        (currentHitCount = XMLStepper.getAttribute(xml, "numFound", null)) == null) {
+                        if (!mltWarnFired) {
+                            log.warn("While stepping through the MoreLikeThis result, the element 'result' did not "
+                                     + "contain the attributes name and NumFound. This warning will not be repeated");
+                            mltWarnFired = true;
+                        }
+                        return false;
+                    }
+                    hitCount.addAndGet(Long.parseLong(currentHitCount));
+                    log.debug("Encountered result group " + responseCount.getAndIncrement() + " with id='" + currentName
+                              + "' and numFound=" + currentHitCount + " in MLT");
+                    if (Long.parseLong(currentHitCount) == 0) {
+                        log.debug("No MoreLikeThis for '" + currentName + "'. Skippind document extraction");
+                        return false;
+                    }
+                    xml.next();
+                    parseDocumentsInResponse(xml, documentResponse);
+                    return true;
+                }
+                return false;
+            }
+        });
+        documentResponse.setHitCount(hitCount.get());
+    }
+    /*
+   <result name="response" numFound="1" start="0">
+       <doc>
+           <str name="recordID">sb_pure_ddfmxd:42657</str>
+     */
+    private void parseResponse(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
+        log.trace("parseResponse(...) called");
+        response.setHitCount(Long.parseLong(XMLStepper.getAttribute(xml, "numFound", "-1")));
+        xml.next();
+        parseDocumentsInResponse(xml, response);
+    }
+
+    private void parseDocumentsInResponse(XMLStreamReader xml, final DocumentResponse response)
+            throws XMLStreamException {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+            @Override
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
+                    throws XMLStreamException {
                 if ("doc".equals(current)) {
                     xml.next();
                     parseDoc(xml, response);

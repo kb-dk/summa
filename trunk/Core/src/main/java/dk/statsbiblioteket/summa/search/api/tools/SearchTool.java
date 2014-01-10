@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -38,7 +39,8 @@ public class SearchTool {
             {DocumentKeys.SEARCH_QUERY, "q"},
             {DocumentKeys.SEARCH_FILTER, "f"},
             {DocumentKeys.SEARCH_COLLECT_DOCIDS, "docids"},
-            {DocumentKeys.SEARCH_SORTKEY, "sort"}
+            {DocumentKeys.SEARCH_SORTKEY, "sort"},
+            {LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "mlt"}
     };
 
     /**
