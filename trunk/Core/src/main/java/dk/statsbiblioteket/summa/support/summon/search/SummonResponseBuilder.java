@@ -38,6 +38,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Takes a Summon response as per
@@ -492,7 +493,6 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     }
 
     private boolean warnedOnMissingFullname = false;
-    private boolean xmlFieldsWarningFired = false;
 
     /**
      * Extracts a Summon document field and converts it to 0 or more {@link }DocumentResponse#Field}s.
@@ -615,33 +615,30 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                  */
             final StringBuffer value = new StringBuffer(50);
             XMLStepper.iterateElements(xml, "field", "contributor", new XMLStepper.XMLCallback() {
+                private final AtomicBoolean found = new AtomicBoolean(false);
                 @Override
                 public void execute(XMLStreamReader xml) throws XMLStreamException {
-                    boolean found = false;
-                    for (int i = 0; i < xml.getAttributeCount(); i++) {
-                        if ("fullname".equals(xml.getAttributeLocalName(i))) {
-                            String content = xml.getAttributeValue(i);
-                            if (!found) { // First
-                                extracted.put("Author", content);
-                            }
-                            if (!collapseMultiValue) {
-                                fields.add(new DocumentResponse.Field("Author_xml_name", content, true));
-                                if (xmlMode == XML_MODE.mixed || xmlMode == XML_MODE.selected) {
-                                    fields.add(new DocumentResponse.Field("Author_xml", content, true));
-                                }
-                            }
-                            if (value.length() != 0) {
-                                value.append("\n");
-                            }
-                            value.append(content);
-                            found = true;
-                        }
-                    }
-                    if (!found && !warnedOnMissingFullname) {
+                    String fullname = XMLStepper.getAttribute(xml, "fullname", null);
+                    if (fullname == null && !warnedOnMissingFullname) {
                         log.warn("Unable to locate attribute 'fullname' in 'contributor' element in 'Author_xml'. "
                                  + "This warning will not be repeated");
                         warnedOnMissingFullname = true;
+                        return;
                     }
+                    if (!found.get()) { // First
+                        extracted.put("Author", fullname);
+                        found.set(true);
+                    }
+                    if (!collapseMultiValue) {
+                        fields.add(new DocumentResponse.Field("Author_xml_name", fullname, true));
+                        if (xmlMode == XML_MODE.mixed || xmlMode == XML_MODE.selected) {
+                            fields.add(new DocumentResponse.Field("Author_xml", fullname, true));
+                        }
+                    }
+                    if (value.length() != 0) {
+                        value.append("\n");
+                    }
+                    value.append(fullname);
                 }
             });
             if (value.length() == 0) {

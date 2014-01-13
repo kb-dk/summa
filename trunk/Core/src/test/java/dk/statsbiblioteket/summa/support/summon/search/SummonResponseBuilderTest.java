@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -70,12 +71,47 @@ public class SummonResponseBuilderTest extends TestCase {
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         SummonResponseBuilder rb = new SummonResponseBuilder(Configuration.newMemoryBased(
                 SummonResponseBuilder.CONF_COLLAPSE_MULTI_FIELDS, false,
+                SummonResponseBuilder.CONF_XML_FIELD_HANDLING, SummonResponseBuilder.XML_MODE.selected
+        ));
+        ResponseCollection rc = new ResponseCollection();
+
+        rb.buildResponses(request, new SolrFacetRequest("foo", 0, 10, "and"), rc,
+                          Resolver.getUTF8Content("support/summon/search/summon_response.xml"), "");
+        DocumentResponse docs = (DocumentResponse) rc.iterator().next();
+        System.out.println(rc.toXML());
+    }
+
+    public void testAuthorOrder() throws Exception {
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "reactive arthritis a review");
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        SummonResponseBuilder rb = new SummonResponseBuilder(Configuration.newMemoryBased(
+                SummonResponseBuilder.CONF_COLLAPSE_MULTI_FIELDS, false,
                 SummonResponseBuilder.CONF_XML_FIELD_HANDLING, SummonResponseBuilder.XML_MODE.full
         ));
         ResponseCollection rc = new ResponseCollection();
 
         rb.buildResponses(request, new SolrFacetRequest("foo", 0, 10, "and"), rc,
                           Resolver.getUTF8Content("support/summon/search/summon_response.xml"), "");
-        System.out.println(rc.toXML());
+        DocumentResponse docs = (DocumentResponse) rc.iterator().next();
+        for (DocumentResponse.Record rec: docs.getRecords()) {
+            int authorCount = 0;
+            for (DocumentResponse.Field field: rec.getFields()) {
+                if ("Author".equals(field.getName())) {
+                    authorCount++;
+                }
+            }
+            if (authorCount <= 1) {
+                continue;
+            }
+            // Only the ones with more than 1 author are interesting
+            for (DocumentResponse.Field field: rec.getFields()) {
+                if (field.getName().startsWith("Author")) {
+                    System.out.println(field.getName() + ": " + field.getContent());
+                } else if ("shortformat".equals(field.getName())) {
+                    System.out.println(field.getContent());
+                }
+            }
+        }
     }
 }
