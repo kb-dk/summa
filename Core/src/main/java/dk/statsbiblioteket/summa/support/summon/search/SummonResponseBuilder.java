@@ -396,6 +396,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         String openUrl = XMLStepper.getAttribute(xml, "openUrl", null);
         if (openUrl == null) {
             log.warn("Encountered a document without openUrl. Discarding");
+            // TODO: Log with ID
             return null;
         }
         String availibilityToken = XMLStepper.getAttribute(xml, "availabilityToken", null);
@@ -466,6 +467,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         fields.add(new DocumentResponse.Field("hasFullText", hasFullText, true));
         fields.add(new DocumentResponse.Field("isFullTextHit", isFullTextHit, true));
         fields.add(new DocumentResponse.Field("inHoldings", inHoldings, true));
+        fields.add(new DocumentResponse.Field("openUrl", openUrl, true));
 
         fields.add(new DocumentResponse.Field("shortformat", createShortformat(extracted), false));
 
