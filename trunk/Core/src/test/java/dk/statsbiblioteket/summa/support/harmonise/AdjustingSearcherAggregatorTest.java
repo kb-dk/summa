@@ -9,8 +9,8 @@ import dk.statsbiblioteket.summa.search.api.Timer;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,8 +43,26 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         return new TestSuite(AdjustingSearcherAggregatorTest.class);
     }
 
-    // Very bogus as it requires already running searchers at specific
-    // addresses on the local machine
+    // Very bogus as it requires already running searchers at specific addresses on localhost
+    public void testPagingFacet() throws IOException, SubConfigurationsNotSupportedException {
+        AdjustingSearcherAggregator aggregator = getAggregator();
+        Request request = new Request();
+        request.addJSON(
+                "{\"search.document.query\":\"peter\"," +
+                "\"search.document.startindex\":40," +
+                "\"search.document.maxrecords\":20," +
+                "\"search.document.collectdocids\":true," +
+                "\"solr.filterisfacet\":\"true\"," +
+                "\"search.document.filter\":\"lsubject:\\\"athletes\\\"\"}"
+        );
+        ResponseCollection responses = aggregator.search(request);
+        if (!responses.toXML().contains("facet name")) {
+            fail("The responses should contain at least one facet\n" + responses.toXML());
+        }
+        aggregator.close();
+    }
+
+    // Very bogus as it requires already running searchers at specific addresses on localhost
     // TODO: Create a unit test that works independently of running searchers
     public void testAggregator() throws IOException, SubConfigurationsNotSupportedException {
         AdjustingSearcherAggregator aggregator = getAggregator();
