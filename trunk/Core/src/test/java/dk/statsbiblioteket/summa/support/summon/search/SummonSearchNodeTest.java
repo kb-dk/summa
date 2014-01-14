@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.common.util.StringExtraction;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
+import dk.statsbiblioteket.summa.search.PagingSearchNode;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
@@ -167,8 +168,10 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testNegativeFacet() throws RemoteException {
         final String JSON =
-                "{\"search.document.query\":\"darkmans barker\",\"search.document.collectdocids\":\"true\","
-                + "\"solr.filterisfacet\":\"true\",\"solrparam.s.ho\":\"true\","
+                "{\"search.document.query\":\"darkmans barker\"," +
+                "\"search.document.collectdocids\":\"true\","
+                + "\"solr.filterisfacet\":\"true\"," +
+                "\"solrparam.s.ho\":\"true\","
                 + "\"search.document.filter\":\" NOT ContentType:\\\"Newspaper Article\\\"\","
                 + "\"search.document.filter.purenegative\":\"true\"}";
         SearchNode summon = SummonTestHelper.createSummonSearchNode();
@@ -178,6 +181,30 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         assertFalse("The response should not have Newspaper Article as facet. total response was\n" + responses.toXML(),
                     responses.toXML().contains("<tag name=\"Newspaper Article\""));
+        summon.close();
+    }
+
+    public void testPagedFacet() throws RemoteException {
+        final String JSON =
+                "{\"search.document.query\":\"peter\"," +
+                "\"search.document.startindex\":0," +
+                "\"search.document.maxrecords\":60," +
+                "\"search.document.collectdocids\":true," +
+                "\"solr.filterisfacet\":\"true\"," +
+                "\"search.document.filter\":\"SubjectTerms:\\\"athletes\\\"\"}";
+
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        PagingSearchNode pager = new PagingSearchNode(Configuration.newMemoryBased(
+                PagingSearchNode.CONF_SEQUENTIAL, true,
+                PagingSearchNode.CONF_GUIPAGESIZE, 20,
+                PagingSearchNode.CONF_MAXPAGESIZE, 50
+        ), summon);
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        pager.search(request, responses);
+        assertTrue("The response should contain some facets\n" + responses.toXML(),
+                    responses.toXML().contains("facet name"));
         summon.close();
     }
 

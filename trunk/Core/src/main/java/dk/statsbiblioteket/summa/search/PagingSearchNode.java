@@ -104,13 +104,24 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
     private int requestPagesize;
 
     public PagingSearchNode(Configuration conf) throws RemoteException {
-        sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
+        init(conf);
         if (!conf.containsKey(CONF_SUBCONF)) {
             log.warn("It is highly recommended to store the setup for the sub searcher under " + CONF_SUBCONF);
             subNode = SearchNodeFactory.createSearchNode(conf);
         } else {
             subNode = SearchNodeFactory.createSearchNode(conf, CONF_SUBCONF);
         }
+        log.info("Constructed " + this);
+    }
+
+    public PagingSearchNode(Configuration conf, SearchNode subNode) {
+        init(conf);
+        this.subNode = subNode;
+        log.info("Constructed " + this);
+    }
+
+    private void init(Configuration conf) {
+        sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
         if (!conf.containsKey(CONF_MAXPAGESIZE)) {
             throw new ConfigurationException("The property " + CONF_MAXPAGESIZE + " is mandatory");
         }
@@ -118,7 +129,6 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
         guiPagesize = conf.getInt(CONF_GUIPAGESIZE, maxPagesize);
         requestPagesize = maxPagesize / guiPagesize * guiPagesize;
         timeout = conf.getInt(CONF_TIMEOUT, DEFAULT_TIMEOUT);
-        log.info("Constructed " + this);
     }
 
     @Override
@@ -132,9 +142,9 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
             if (log.isDebugEnabled()) {
                 log.debug("Passing request directly: Start index " + origiStart
                           + ", requested records " + requestedRecords + " <= max page size " + maxPagesize);
-                subNode.search(request, responses);
-                return;
             }
+            subNode.search(request, responses);
+            return;
         }
 
         final int requestCount = (int) Math.ceil(1.0 * requestedRecords / requestPagesize);
