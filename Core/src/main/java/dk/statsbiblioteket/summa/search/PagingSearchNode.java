@@ -27,9 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -226,8 +224,26 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
             }
             mergedDocs.getRecords().addAll(docs.getRecords());
         }
+
         // TODO: Fix timing info
         merged.add(mergedDocs);
+
+        boolean warned = false;
+        // Copy first of everything that is not DocumentResponse
+        Set<Class> encountered = new HashSet<Class>();
+        for (ResponseCollection collection: responses) {
+            for (Response res: collection) {
+                if (encountered.add(res.getClass())) {
+                    merged.add(res);
+                } else {
+                    if (!warned) {
+                        log.warn("While merging, the Response type'" + res.getClass()
+                                 + " was encountered more than once for " + request);
+                        warned = true;
+                    }
+                }
+            }
+        }
     }
 
     private void optimizeSubsequent(Request request) {
