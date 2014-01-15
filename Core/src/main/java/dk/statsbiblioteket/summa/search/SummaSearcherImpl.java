@@ -244,7 +244,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                             hits = Long.toString(((DocumentResponse)response).getHitCount());
                         }
                     }
-                    queries.info("SummaSearcherImpl finished "
+                    queries.info(this.getClass().getSimpleName() + " finished "
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.nanoTime() - fullStartTime) / 1000000
                                  + "ms with " + hits + " hits. "
