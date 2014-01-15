@@ -320,6 +320,7 @@ public class SummonSearchNode extends SolrSearchNode {
                                 }
                                 // MUST_NOT unfulfilled queries does not affect the evaluation as Lucene does not
                                 // support all negative clauses
+                                noMatches = false;
                             } else { // SHOULD
                                 if (baseMatch) {
                                     noMatches = false; // Match encountered

@@ -505,7 +505,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * Extracts parameters with key prefix "solrparam." and stores the truncated keys with their value(s) as a list of
      * Strings.
      * </p><p>
-     * If the key is not prefixed by "solrparam.", it is ignored.
+     * If the key is not prefixed by "solrparam." or id+".solrparam., it is ignored.
      * </p>
      * @param solrParam the map where the converted key/value will be stored.
      * @param entry the source for the key/value pair.
@@ -792,10 +792,29 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             facets.addFacetQueries(queryMap);
         }
 
-        if (solrParams != null) {
-            queryMap.putAll(solrParams);
-        }
+        append(solrParams, queryMap);
         return queryMap;
+    }
+
+    private void append(Map<String, List<String>> src, Map<String, List<String>> dest) {
+        for (Map.Entry<String, List<String>> entry: src.entrySet()) {
+            if (dest.containsKey(entry.getKey())) {
+                // TODO: Find fuller list of single value
+                if ("q".equals(entry.getKey())) {
+                    log.warn(String.format(
+                            "The solr params contained q='%s' while the explicit params contained q='%s'. "
+                            + "The solr param will overwrite the explicit param",
+                            Strings.join(entry.getValue()), Strings.join(dest.get(entry.getKey()))));
+                    dest.put(entry.getKey(), entry.getValue());
+                    continue;
+                }
+                List<String> combined = new ArrayList<String>(entry.getValue());
+                combined.addAll(dest.get(entry.getKey()));
+                dest.put(entry.getKey(), combined);
+            } else {
+                dest.put(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     /**

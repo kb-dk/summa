@@ -147,6 +147,36 @@ public class SummonSearchNodeTest extends TestCase {
   */
 
 
+    public void testEmptyFilter() throws IOException, TransformerException {
+        String QUERY = "gene and protein evolution";
+        String FILTER = "";
+
+        log.debug("Creating SummonSearchNode");
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        Request req = new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                DocumentKeys.SEARCH_FILTER, FILTER,
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        List<String> ids = getAttributes(summon, req, "id", false);
+        assertEquals("There should be no results", 0, ids.size());
+        summon.close();
+    }
+
+    public void testNotRecordBase() throws IOException, TransformerException {
+        String QUERY = "gene and protein evolution";
+        String FILTER = "NOT recordBase:something";
+
+        log.debug("Creating SummonSearchNode");
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        Request req = new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                DocumentKeys.SEARCH_FILTER, FILTER,
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        List<String> ids = getAttributes(summon, req, "id", false);
+        assertTrue("There should be some results", !ids.isEmpty());
+        summon.close();
+    }
+
     public void testIDResponse() throws IOException, TransformerException {
         String QUERY = "gene and protein evolution";
 
