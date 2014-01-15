@@ -158,10 +158,10 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     @Override
     public ResponseCollection search(Request request) throws RemoteException {
         if (log.isTraceEnabled()) {
-            log.trace("Search called with parameters\n" + request.toString(true));
+            log.trace("Search called with parameters\n" + request.toString());
         }
         final long fullStartTime = System.nanoTime();
-        final String originalRequest = request.toString(true);
+        final String originalRequest = request.toString();
         if (searchQueue.availablePermits() == 0) {
             throw new RemoteException(
                     "Could not perform search as the queue of requests exceed " + searchQueue.getOverallPermits());
