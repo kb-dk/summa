@@ -29,11 +29,7 @@ import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Parses queries and removes known sub-queries that are guaranteed to be match-all or match-none.
@@ -179,6 +175,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
          * Optional but highly recommended as the ReducerTarget will have no effect without at least 1 value.
          */
         public static final String CONF_MATCH_NONES = "reducertarget.matchnones";
+        // TODO: Add matchall for recordBase:summon
 
         private final String componentID;
         private final BlacklistMatcher blacklistMatcher;

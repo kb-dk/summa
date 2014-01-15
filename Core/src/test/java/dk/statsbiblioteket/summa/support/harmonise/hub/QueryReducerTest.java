@@ -68,6 +68,22 @@ public class QueryReducerTest extends TestCase {
                     "", "myfield:whatever");
     }
 
+    public void testBooleanDefaultField() throws IOException {
+        assertDefault("", "cheese:ham AND myfield:whatever");
+    }
+
+    public void testBooleanNotDefaultField() throws IOException {
+        assertDefault("cheese:ham", "cheese:ham NOT myfield:whatever");
+        assertDefault("cheese:ham", "cheese:ham AND NOT myfield:whatever");
+    }
+
+    public void testNotDefaultField() throws IOException {
+        final String QUERY = "NOT myfield:whatever";
+        QueryReducer reducer = getDefaultReducer();
+        assertQuery("The query '" + QUERY + "' should be reduced to none", reducer, "MySearcher",
+                    "", QUERY);
+    }
+
     public void testEmptyIn() throws IOException {
         QueryReducer reducer = getDefaultReducer();
         assertQuery("The empty query should be removed", reducer, "MySearcher",
