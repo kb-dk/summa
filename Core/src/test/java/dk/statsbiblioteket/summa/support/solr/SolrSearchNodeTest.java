@@ -107,6 +107,26 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
+    public void testSolrParamPrefix() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = getSearcher();
+        try {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    "foosearch." + SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "fulltext:first",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+            ), responses);
+            assertTrue("There should be a response", responses.iterator().hasNext());
+            assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                         1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+            String PHRASE = "Solr sample document";
+            assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        } finally {
+            searcher.close();
+        }
+    }
+
     public void testNoQueryNoResult() throws Exception {
         performBasicIngest();
         SearchNode searcher = getSearcher();
@@ -844,7 +864,9 @@ public class SolrSearchNodeTest extends TestCase {
     }
 
     private SolrSearchNode getSearcher() throws RemoteException {
-        return new SolrSearchNode(Configuration.newMemoryBased());
+        return new SolrSearchNode(Configuration.newMemoryBased(
+                SolrSearchNode.CONF_ID, "foosearch"
+        ));
     }
 
     protected long getHits(SearchNode searcher, String... arguments) throws RemoteException {

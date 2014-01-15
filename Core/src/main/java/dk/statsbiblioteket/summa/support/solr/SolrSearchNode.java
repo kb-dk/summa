@@ -552,6 +552,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
 
     /* If the key is prefixed the right way, the prefix is removed and the key returned, else null is returned */
     protected String toSolrKey(String key) {
+        if (key.startsWith(getID() + ".")) {
+            key = key.substring((getID() + ".").length());
+        }
         return !key.startsWith(CONF_SOLR_PARAM_PREFIX) ? null: key.substring(CONF_SOLR_PARAM_PREFIX.length());
     }
 
