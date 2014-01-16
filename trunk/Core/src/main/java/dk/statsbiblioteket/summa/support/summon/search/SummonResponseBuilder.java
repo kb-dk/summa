@@ -399,17 +399,37 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             // TODO: Log with ID
             return null;
         }
-        String availibilityToken = XMLStepper.getAttribute(xml, "availabilityToken", null);
-        String hasFullText =       XMLStepper.getAttribute(xml, "hasFullText", "false");
-        String isFullTextHit =     XMLStepper.getAttribute(xml, "isFullTextHit", "false");
-        String inHoldings =        XMLStepper.getAttribute(xml, "inHoldings", "false");
+
+        final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>(50);
+        // We transfer all document-start-tag attributes to fields
+        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
+//            <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+//            openUrl="ctx_ver=Z39.88-2004&amp;ct..."
+//            link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvH...">
+            final String key = xml.getAttributeLocalName(i);
+            final String value = xml.getAttributeValue(i);
+            if (log.isDebugEnabled()) {
+                log.debug("Document attribute " + key + "=\"" + value + "\"");
+            }
+            fields.add(new DocumentResponse.Field(key, value, true));
+        }
+
+//        String availibilityToken = XMLStepper.getAttribute(xml, "availabilityToken", null);
+//        String hasFullText =       XMLStepper.getAttribute(xml, "hasFullText", "false");
+//        String isFullTextHit =     XMLStepper.getAttribute(xml, "isFullTextHit", "false");
+//        String inHoldings =        XMLStepper.getAttribute(xml, "inHoldings", "false");
+
+//        fields.add(new DocumentResponse.Field("availibilityToken", availibilityToken, true));
+//        fields.add(new DocumentResponse.Field("hasFullText", hasFullText, true));
+//        fields.add(new DocumentResponse.Field("isFullTextHit", isFullTextHit, true));
+//        fields.add(new DocumentResponse.Field("inHoldings", inHoldings, true));
+//        fields.add(new DocumentResponse.Field("openUrl", openUrl, true));
 
         final Set<String> wanted = new HashSet<String>(Arrays.asList(
                 "ID", "Score", "Title", "Subtitle", "Author", "ContentType", "PublicationDate_xml", "Author_xml"));
         // PublicationDate_xml is a hack
         final String[] sortValue = new String[1]; // Hack to make final mutable
         final ConvenientMap extracted = new ConvenientMap();
-        final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>(50);
         final String sortField = sortRedirect.containsKey(sortKey) ? sortRedirect.get(sortKey) : sortKey;
 
         XMLStepper.iterateElements(xml, "document", "field", new XMLStepper.XMLCallback() {
@@ -457,23 +477,15 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         }
 
         String recordID = extracted.getString("ID", null);
-
         if (recordID == null) {
             log.warn("Unable to locate field 'ID' in Summon document. Skipping document");
             return null;
         }
-        fields.add(new DocumentResponse.Field(DocumentKeys.RECORD_ID, recordID, true));
-        fields.add(new DocumentResponse.Field("availibilityToken", availibilityToken, true));
-        fields.add(new DocumentResponse.Field("hasFullText", hasFullText, true));
-        fields.add(new DocumentResponse.Field("isFullTextHit", isFullTextHit, true));
-        fields.add(new DocumentResponse.Field("inHoldings", inHoldings, true));
-        fields.add(new DocumentResponse.Field("openUrl", openUrl, true));
-
-        fields.add(new DocumentResponse.Field("shortformat", createShortformat(extracted), false));
-
+        fields.add(0, new DocumentResponse.Field("shortformat", createShortformat(extracted), false));
         if (recordBase != null) {
-            fields.add(new DocumentResponse.Field("recordBase", recordBase, false));
+            fields.add(0, new DocumentResponse.Field("recordBase", recordBase, false));
         }
+        fields.add(0, new DocumentResponse.Field(DocumentKeys.RECORD_ID, recordID, true));
 
         String sortV = sortKey == null || sortValue[0] == null ? null : sortValue[0];
         if (!extracted.containsKey("Score")) {
