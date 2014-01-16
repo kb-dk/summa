@@ -372,7 +372,9 @@ public class SummonSearchNodeTest extends TestCase {
         //System.out.println(responses.toXML());
         assertTrue("The result should contain at least one record", responses.toXML().contains("<record score"));
         assertTrue("The result should contain at least one tag", responses.toXML().contains("<tag name"));
-        System.out.println(responses.getTransient().get(SummonResponseBuilder.SUMMON_RESPONSE));
+        log.info("Raw Summon response:\n"
+                + responses.getTransient().get(SummonResponseBuilder.SUMMON_RESPONSE).toString().replace("<", "\n<"));
+        log.info("Parsed Summa response:\n" + responses.toXML());
     }
 
     public void testXMLTree() throws RemoteException {
