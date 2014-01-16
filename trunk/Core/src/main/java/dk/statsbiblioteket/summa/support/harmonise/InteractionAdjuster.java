@@ -906,4 +906,25 @@ public class InteractionAdjuster implements Configurable {
     public String getId() {
         return id;
     }
+
+    @Override
+    public String toString() {
+        return "InteractionAdjuster(id='" + id + '\'' +
+               ", baseFactor=" + baseFactor +
+               ", baseAddition=" + baseAddition +
+               ", simpleBaseFactor=" + simpleBaseFactor +
+               ", simpleBaseAddition=" + simpleBaseAddition +
+               ", #defaultDocumentFields=" + (defaultDocumentFields == null ? "0" :
+                defaultDocumentFields.getForward().size()) +
+               ", #defaultFacetFields=" + (defaultFacetFields == null ? "0" : defaultFacetFields.getForward().size()) +
+               ", #tagAdjusters=" + (tagAdjusters == null ? "0" : tagAdjusters.size()) +
+               ", unsupportedFields=" + unsupportedFields +
+               ", unsupportedQuery=" + unsupportedQuery +
+               ", enabled=" + enabled +
+               ", adjustResponseFieldsEnabled=" + adjustResponseFieldsEnabled +
+               ", adjustResponseFacetsEnabled=" + adjustResponseFacetsEnabled +
+               ", pureNegativeNotSimple=" + pureNegativeNotSimple +
+               ", warnedOnIncompleteFacetMap=" + warnedOnIncompleteFacetMap +
+               ')';
+    }
 }

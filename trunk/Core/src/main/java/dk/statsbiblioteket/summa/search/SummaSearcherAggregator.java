@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -111,7 +112,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         log.debug("Creating Executor with " + threadCount + " threads");
         executor = Executors.newFixedThreadPool(threadCount);
 
-        log.debug("Finished connecting to " + searchers.size() + ". Ready for use");
+        log.debug("Finished connecting to " + Strings.join(searchers) + ". Ready for use");
     }
 
     protected void preConstruction(Configuration conf) {
