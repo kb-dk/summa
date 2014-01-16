@@ -59,14 +59,13 @@ public class AdjustingSearchClient extends SearchClient {
         adjuster = new InteractionAdjuster(conf);
         id = adjuster.getId();
         this.rewriter = rewriter;
-        log.debug("Created AdjustingSearchClient for " + id + " with term stat query rewriter "
-                  + (rewriter == null ? "not " : "") + "present");
+        log.debug("Created " + this);
     }
 
     @Override
     public ResponseCollection search(Request request) throws IOException {
         final long startTime = System.currentTimeMillis();
-        final String originalRequest = request.toString(true);
+        final String originalRequest = request.toString();
         ResponseCollection responses = null;
         boolean success = false;
         try {
@@ -127,5 +126,10 @@ public class AdjustingSearchClient extends SearchClient {
 
     public InteractionAdjuster getAdjuster() {
         return adjuster;
+    }
+
+    @Override
+    public String toString() {
+        return "AdjustingSearchClient(id='" + id + "', adjuster=" + adjuster + ", rewriter=" + rewriter + ")";
     }
 }
