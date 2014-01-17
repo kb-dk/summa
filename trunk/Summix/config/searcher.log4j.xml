@@ -20,7 +20,7 @@
         <param name="File" value="log/static_searcher.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
-        <param name="MaxBackupIndex" value="0"/>
+        <param name="MaxBackupIndex" value="1"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -42,7 +42,7 @@
         <param name="File" value="log/static_queries.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
-        <param name="MaxBackupIndex" value="0"/>
+        <param name="MaxBackupIndex" value="1"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -65,7 +65,7 @@
         <param name="File" value="log/static_searcher.fatal.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="100MB"/>
-        <param name="MaxBackupIndex" value="0"/>
+        <param name="MaxBackupIndex" value="1"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
         </layout>
