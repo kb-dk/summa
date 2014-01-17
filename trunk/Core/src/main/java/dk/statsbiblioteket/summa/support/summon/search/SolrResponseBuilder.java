@@ -776,14 +776,20 @@ public class SolrResponseBuilder implements Configurable {
         shortformat.append("</dc:title>\n");
         addMultiple(extracted, shortformat, "        ", "dc:creator", "Author");
         shortformat.append("        <dc:type xml:lang=\"da\">").
-            append(XMLUtil.encode(extracted.getString("ContentType", ""))).
-            append("</dc:type>\n");
+                append(XMLUtil.encode(extracted.getString("ContentType", ""))).
+                append("</dc:type>\n");
         shortformat.append("        <dc:type xml:lang=\"en\">").
             append(XMLUtil.encode(extracted.getString("ContentType", ""))).
             append("</dc:type>\n");
         shortformat.append("        <dc:date>").
-            append(XMLUtil.encode(extracted.getString("Date", "???"))).append("</dc:date>\n");
+                append(XMLUtil.encode(extracted.getString("Date", "???"))).
+                append("</dc:date>\n");
         shortformat.append("        <dc:format></dc:format>\n");
+        if (extracted.containsKey("openUrl")) {
+            shortformat.append("        <dc:identifier>").
+                    append(XMLUtil.encode(extracted.getString("openUrl"))).
+                    append("</dc:identifier>\n");
+        }
         shortformat.append("      </rdf:Description>\n");
         shortformat.append("    </rdf:RDF>\n");
         shortformat.append("  </shortrecord>\n");

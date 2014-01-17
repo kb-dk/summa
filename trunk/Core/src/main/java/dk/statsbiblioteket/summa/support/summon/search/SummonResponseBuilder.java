@@ -400,6 +400,11 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             return null;
         }
 
+        final Set<String> wanted = new HashSet<String>(Arrays.asList(
+                "ID", "Score", "Title", "Subtitle", "Author", "ContentType", "PublicationDate_xml", "Author_xml",
+                "openUrl"));
+        final ConvenientMap extracted = new ConvenientMap();
+
         final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>(50);
         // We transfer all document-start-tag attributes to fields
         for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
@@ -412,6 +417,9 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                 log.debug("Document attribute " + key + "=\"" + value + "\"");
             }
             fields.add(new DocumentResponse.Field(key, value, true));
+            if (wanted.contains(key)) {
+                extracted.put(key, value);
+            }
         }
 
 //        String availibilityToken = XMLStepper.getAttribute(xml, "availabilityToken", null);
@@ -425,11 +433,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 //        fields.add(new DocumentResponse.Field("inHoldings", inHoldings, true));
 //        fields.add(new DocumentResponse.Field("openUrl", openUrl, true));
 
-        final Set<String> wanted = new HashSet<String>(Arrays.asList(
-                "ID", "Score", "Title", "Subtitle", "Author", "ContentType", "PublicationDate_xml", "Author_xml"));
         // PublicationDate_xml is a hack
         final String[] sortValue = new String[1]; // Hack to make final mutable
-        final ConvenientMap extracted = new ConvenientMap();
         final String sortField = sortRedirect.containsKey(sortKey) ? sortRedirect.get(sortKey) : sortKey;
 
         XMLStepper.iterateElements(xml, "document", "field", new XMLStepper.XMLCallback() {
