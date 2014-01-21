@@ -53,8 +53,7 @@ public class StorageWS {
     /**
      * Records namespace, used in response.
      */
-    public static final String RECORDS_NAMESPACE =
-                                "http://statsbiblioteket.dk/summa/2009/Records";
+    public static final String RECORDS_NAMESPACE = "http://statsbiblioteket.dk/summa/2009/Records";
 
     /**
      * Record collection tag, used for returning multiple records with method
@@ -94,15 +93,13 @@ public class StorageWS {
                 return;
             }
             log.debug("Creating " + NUMBER_OF_MERGERS + " multi volume mergers");
-            mergers =
-               new ArrayBlockingQueue<MarcMultiVolumeMerger>(NUMBER_OF_MERGERS);
+            mergers = new ArrayBlockingQueue<MarcMultiVolumeMerger>(NUMBER_OF_MERGERS);
             for (int i = 0; i < NUMBER_OF_MERGERS; i++) {
                 try {
                     mergers.put(new MarcMultiVolumeMerger(getConfiguration()));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(
-                        "Interrupted while trying to add MarcMultiVolumeMergers"
-                        + " to the queue", e);
+                            "Interrupted while trying to add MarcMultiVolumeMergers to the queue", e);
                 }
             }
             log.info("StorageWS ready");
@@ -117,8 +114,7 @@ public class StorageWS {
     private synchronized StorageReaderClient getStorageClient() {
         if (storage == null) {
             Configuration conf = getConfiguration();
-            escapeContent = conf.getBoolean(
-                    RecordUtil.CONF_ESCAPE_CONTENT, escapeContent);
+            escapeContent = conf.getBoolean(RecordUtil.CONF_ESCAPE_CONTENT, escapeContent);
             storage = new StorageReaderClient(conf);
         }
         return storage;
@@ -137,8 +133,7 @@ public class StorageWS {
             InitialContext context;
             try {
                 context = new InitialContext();
-                String paramValue =
-                          (String) context.lookup("java:comp/env/confLocation");
+                String paramValue = (String) context.lookup("java:comp/env/confLocation");
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
             } catch (NamingException e) {
@@ -187,8 +182,7 @@ public class StorageWS {
     @WebMethod
     public String getRecords(String[] ids) {
         List<String> list = Arrays.asList(ids);
-        log.info("getRecords, fetching " + list.size()
-                                         + " records from storage.");
+        log.info("getRecords, fetching " + list.size() + " records from storage.");
         return realGetRecords(list);
     }
 
@@ -226,8 +220,7 @@ public class StorageWS {
         try {
             QueryOptions queryOptions = null;
             totalTime = System.currentTimeMillis();
-            List<Record> records = getStorageClient().getRecords(
-                ids, queryOptions);
+            List<Record> records = getStorageClient().getRecords(ids, queryOptions);
             time = System.currentTimeMillis() - totalTime;
 
             xmlTime = -System.currentTimeMillis();
@@ -246,10 +239,8 @@ public class StorageWS {
             retXML = sw.toString();
             xmlTime += System.currentTimeMillis();
         } catch(IOException e) {
-            log.error("Error getting #" + ids.size() + " records from "
-                    + "storage. Total processing time was "
-                    + (System.currentTimeMillis() - totalTime)
-                    + "ms. Error was: " + e, e);
+            log.error("Error getting #" + ids.size() + " records from storage. Total processing time was "
+                    + (System.currentTimeMillis() - totalTime) + "ms. Error was: " + e, e);
             retXML = null;
         } catch(XMLStreamException e) {
             log.error("Error converting records to XML");
@@ -275,8 +266,7 @@ public class StorageWS {
      * @return A String with the contents of the record or null if unable to
      * retrieve record.
      */
-    private String realGetRecord(
-        String id, boolean expand, boolean legacyMerge) {
+    private String realGetRecord(String id, boolean expand, boolean legacyMerge) {
         if (log.isTraceEnabled()) {
             log.trace(String.format(
                     "realGetRecord('%s', expand=%b, legacyMerge=%b)",
@@ -295,8 +285,7 @@ public class StorageWS {
             }
             long getTime = System.currentTimeMillis();
             Record record = getStorageClient().getRecord(id, q);
-            timing = "storage.getrecord.raw:"
-                     + (System.currentTimeMillis() - getTime);
+            timing = "storage.getrecord.raw:" + (System.currentTimeMillis() - getTime);
 
             if (record == null) {
                 retXML = null;
@@ -315,18 +304,15 @@ public class StorageWS {
                 xmlTime = System.currentTimeMillis() - xmlTime;
             }
         } catch (IOException e) {
-            log.error("Error while getting record with id: " + id
-                    + ". Error was: ", e);
+            log.error("Error while getting record with id: " + id, e);
             // an error occurred while retrieving the record. We simply return
             // null to indicate the record was not found.
             retXML = null;
         }
 
         log.debug(String.format(
-                "realGetRecord('%s', expand=%b, legacyMerge=%b) finished in %d"
-                + " ms (%dms spend on XML creation)", id, expand, legacyMerge, 
-                         System.currentTimeMillis() - startTime,
-                         xmlTime));
+                "realGetRecord('%s', expand=%b, legacyMerge=%b) finished in %d ms (%dms spend on XML creation)",
+                id, expand, legacyMerge, System.currentTimeMillis() - startTime, xmlTime));
         return retXML;
     }
 
@@ -339,8 +325,7 @@ public class StorageWS {
             return mergers.take();
         } catch (InterruptedException e) {
             throw new RuntimeException(
-                "Interrupted while trying to retrieve a MarcMultiVolumeMerger"
-                + " from the queue", e);
+                "Interrupted while trying to retrieve a MarcMultiVolumeMerger from the queue", e);
         }
     }
 
@@ -353,8 +338,7 @@ public class StorageWS {
             mergers.put(m);
         } catch (InterruptedException e) {
             throw new RuntimeException(
-                "Interrupted while trying to add a MarcMultiVolumeMerger"
-                + " to the queue", e);
+                "Interrupted while trying to add a MarcMultiVolumeMerger to the queue", e);
         }
     }
 }
