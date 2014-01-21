@@ -171,6 +171,7 @@ public class Environment {
         return result;
     }
 
+    private static String javaVersion = null;
     /**
      * Determines the version of the running JVM. If the version is incompatible
      * with Lucene (See
@@ -186,9 +187,11 @@ public class Environment {
      * @throws Error if the version is incompatible with Lucene.
      */
     public static String checkJavaVersion() throws Error {
+        if (javaVersion != null) {
+            return javaVersion;
+        }
         String version = System.getProperty("java.runtime.version");
-        Matcher matcher = version == null ? null :
-                          VERSION_PATTERN.matcher(version);
+        Matcher matcher = version == null ? null : VERSION_PATTERN.matcher(version);
         if (version == null || !matcher.matches()) {
             log.warn("Unable to determine Java runtime version by property 'java.runtime.version'. Please check that "
                      + "the JVM does not have bug #6707044 "
@@ -197,11 +200,12 @@ public class Environment {
             log.info(String.format(
                     "Summa version is %s. Xmx=%dMB, processors=%d, machineName?%s. All OK",
                     SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(), getMachineName()));
+            javaVersion = version;
             return version;
         }
         // version should be like "1.6.0_10-b33"
-        if (!("1".equals(matcher.group(1)) && "6".equals(matcher.group(2))
-              && "0".equals(matcher.group(3)))) {
+        if (!("1".equals(matcher.group(1)) && "6".equals(matcher.group(2)) && "0".equals(matcher.group(3)))) {
+            javaVersion = version;
             return version; // Only versions 1.6.0_* are critical
         }
         int update = Integer.parseInt(matcher.group(4));
@@ -219,8 +223,21 @@ public class Environment {
                 "Java runtime version is %s, Summa version is %s. Xmx=%dMB, processors=%d, machineName=%s. All OK",
                 version, SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(),
                 getMachineName()));
+        javaVersion = version;
         return version;
     }
 
+    /**
+     * Adds a hook to the JVM listening for shutdown and logging when it happens.
+     */
+    public static void addLoggingShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new CustomShutdownHook());
+    }
+    private static class CustomShutdownHook extends Thread {
+        @Override
+        public void run(){
+            log.info("JVM shutdown detected");
+        }
+    }
 }
 
