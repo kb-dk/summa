@@ -84,6 +84,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
         } else {
             sanitizer = null;
         }
+        log.info("Constructed " + this);
     }
 
     @Override
@@ -144,5 +145,11 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
     protected ResponseCollection merge(Request request, List<ResponseHolder> responses) {
         log.debug("Merging " + responses.size() + " responses");
         return responseMerger.merge(request, responses);
+    }
+
+    @Override
+    public String toString() {
+        return "AdjustingSearcherAggregator(responseMerger=" + responseMerger +
+               ", sanitizer=" + sanitizer + ", adjuster=" + adjuster + ", super=" + super.toString() + ")";
     }
 }
