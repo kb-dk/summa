@@ -51,6 +51,13 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
      */
     private static transient String version = Environment.checkJavaVersion();
 
+    /**
+     * Add shutdown hook for logging.
+     */
+    static {
+        Environment.addLoggingShutdownHook();
+    }
+
     private ConfigurationStorage storage;
 
     /**
