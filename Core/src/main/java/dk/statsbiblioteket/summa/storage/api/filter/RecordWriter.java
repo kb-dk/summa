@@ -14,12 +14,14 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
@@ -31,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.net.NoRouteToHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -235,6 +238,11 @@ public class RecordWriter extends ObjectFilterImpl {
                         stats, (System.nanoTime() - start)/1000000D,
                         totalCommits, (System.nanoTime() - lastCommit)/1000000D));
                 lastCommit = System.nanoTime();
+            } catch (NoRouteToHostException e) {
+                Logging.fatal(log, "RecordWriter.forceCommit",
+                              "Unable to flush " + records.size() + " due to no Storage connection. " +
+                              "System will be shut down in 1 second", e);
+                new DeferredSystemExit(66, 1000);
             } catch (Exception e) {
                 log.error("Dropped " + records.size() + " records in commit", e);
                 for (Record r: records) {
