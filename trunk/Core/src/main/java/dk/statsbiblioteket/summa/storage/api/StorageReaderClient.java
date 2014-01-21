@@ -20,6 +20,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -46,6 +48,7 @@ import java.util.NoSuchElementException;
         state = QAInfo.State.QA_NEEDED,
         author = "te, mke, hbk")
 public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> implements Configurable, ReadableStorage {
+    private static Log log = LogFactory.getLog(StorageReaderClient.class);
 
     /**
      * Create a new storage reader. If no RPC vendor is defined in the
@@ -57,6 +60,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
      */
     public StorageReaderClient(Configuration conf) {
         super(conf, "//localhost:28000/summa-storage");
+        log.info("Created " + this);
     }
 
     /**
@@ -133,7 +137,8 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
         } catch (Throwable t) {
             connectionError(t);
             throw new IOException("getRecord(" + id + ", options=" + options + ") with vendor=" + getVendorId()
-                                  + " failed: " + t.getMessage(), t);
+                                  + " failed with storage connection " + (storage == null ? "=" : "!=") + " null: "
+                                  + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
@@ -201,6 +206,17 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
         } finally {
             releaseConnection();
         }
+    }
+
+    @Override
+    public synchronized ReadableStorage getConnection() {
+        ReadableStorage storage = super.getConnection();
+        if (storage != null) {
+            return storage;
+        }
+        final String message = "Unable to connect to remote storage " + connId;
+        log.error(message);
+        throw new NullPointerException(message);
     }
 
     @Override
