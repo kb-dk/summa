@@ -112,7 +112,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         log.debug("Creating Executor with " + threadCount + " threads");
         executor = Executors.newFixedThreadPool(threadCount);
 
-        log.debug("Finished connecting to " + Strings.join(searchers) + ". Ready for use");
+        log.info("Constructed " + this);
     }
 
     protected void preConstruction(Configuration conf) {
@@ -324,5 +324,18 @@ public class SummaSearcherAggregator implements SummaSearcher {
         public String getDesignation() {
             return designation;
         }
+    }
+
+    @Override
+    public String toString() {
+        String s = "";
+        for (Pair<String, SearchClient> searcher: searchers) {
+            if (!s.isEmpty()) {
+                s += ", ";
+            }
+            s+= searcher.getKey();
+        }
+        return "SummaSearcherAggregator(searchers=[" + s + "], defaultSearchers=[" + Strings.join(defaultSearchers)
+               + "])";
     }
 }

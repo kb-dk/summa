@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.QueryException;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -71,6 +72,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
             log.trace("Sub-node: " + node.getClass().getName());
         }
         addAll(nodes);
+        log.info("Constructed " + this);
     }
 
     @Override
@@ -178,5 +180,10 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
             }
         }
 
+    }
+
+    @Override
+    public String toString() {
+        return "SearchNodeAggregator(sequential=" + sequential + ", nodes=[" + Strings.join(this) + "])";
     }
 }
