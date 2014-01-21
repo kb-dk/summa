@@ -79,6 +79,12 @@ public class SummaSearcherAggregator implements SummaSearcher {
     public static final String CONF_ACTIVE = "search.aggregator.active";
     public static final String SEARCH_ACTIVE = CONF_ACTIVE;
 
+    /**
+     * A list of searchers that are not active. This is search-time only and meant for easy
+     * disabling of specific searchers, instead of explicitly stating all the active searchers.
+     */
+    public static final String SEARCH_NOT_ACTIVE = "search.aggregator.notactive";
+
     private List<Pair<String, SearchClient>> searchers;
     private ExecutorService executor;
     private final List<String> defaultSearchers;
@@ -181,6 +187,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
             }
 
             List<String> selected = request.getStrings(SEARCH_ACTIVE, defaultSearchers);
+            List<String> notActives = request.getStrings(SEARCH_NOT_ACTIVE, (List<String>)null);
+            if (notActives != null) {
+                selected.removeAll(notActives);
+            }
             List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<Pair<String, Future<ResponseCollection>>>(selected.size());
             for (Pair<String, SearchClient> searcher: searchers) {
                 if (selected.contains(searcher.getKey())) {
