@@ -51,6 +51,14 @@ public class AltoTest extends TestCase {
     }
 
     public void testBasicParse() throws XMLStreamException, FileNotFoundException {
-        new Alto(new File(alto1977));
+        Alto alto = new Alto(new File(alto1977));
+        assertFalse("The number of groups should be > 0", alto.getTextBlockGroups().isEmpty());
+    }
+
+    public void testGroupMinWordCount() throws XMLStreamException, FileNotFoundException {
+        Alto alto = new Alto(new File(alto1977));
+        int m50 = alto.getTextBlockGroups(50).size();
+        int m10 = alto.getTextBlockGroups(10).size();
+        assertNotSame("The group count for minWords=50 and minWords=10 should differ", m50, m10);
     }
 }

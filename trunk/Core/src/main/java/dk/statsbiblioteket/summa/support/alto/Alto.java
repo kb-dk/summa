@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.support.alto;
 
-import com.sun.corba.se.impl.presentation.rmi.IDLNameTranslatorImpl;
 import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
@@ -30,9 +29,16 @@ import java.util.*;
  * An object representation of an Alto-file.
  * </p><p>
  * Note: The representation does not support the ComposedBlock grouping of elements.
+ * TODO: Add ComposedBlock support.
  */
 public class Alto {
     private static Log log = LogFactory.getLog(Alto.class);
+
+    /**
+     * When requesting groups with {@link #getTextBlockGroups(int)}, blocks not satisfying the minWord constraint
+     * will be put in a group with this name.
+     */
+    public static final String NOGROUP = "_nogroup_";
 
     /**
      * http://www.loc.gov/standards/alto/techcenter/elementSet/index.php#ALTO_DescriptionElements
@@ -85,9 +91,9 @@ public class Alto {
                         try {
                             measurementUnit = MEASUREMENT_UNIT.valueOf(unit);
                         } catch (IllegalArgumentException e) {
-                            throw new IllegalArgumentException("The MeasurementUnit '" + unit
-                                                               + "' is unknown. Only the following units are accepted: "
-                                                               + Strings.join(MEASUREMENT_UNIT.values()), e);
+                            throw new IllegalArgumentException(String.format(
+                                    "The MeasurementUnit '%s' is unknown. Only the following units are accepted: %s",
+                                    unit, Strings.join(MEASUREMENT_UNIT.values())), e);
                         }
                     }
                     return true;
@@ -188,6 +194,45 @@ public class Alto {
         log.debug("Created " + groups.size() + " groups with a total of " + blockCount + " TextBlocks");
         textBlockGroups = groups;
         return groups;
+    }
+
+    private Map<Integer, Map<String, List<TextBlock>>> minGroups = new HashMap<Integer, Map<String, List<TextBlock>>>();
+    /**
+     * Works like {@link #getTextBlockGroups()} with the differences that groups containing less than minWords are
+     * collapsed into the single group NOGROUP.
+     * @param minWords the minimum amount of words needed to constitute a group.
+     * @return the groups as described above.
+     */
+    public Map<String, List<TextBlock>> getTextBlockGroups(int minWords) {
+        if (minGroups.containsKey(minWords)) {
+            return minGroups.get(minWords);
+        }
+        Map<String, List<TextBlock>> all = getTextBlockGroups();
+        List<TextBlock> no = new ArrayList<TextBlock>();
+        Map<String, List<TextBlock>> pruned = new HashMap<String, List<TextBlock>>(all.size());
+
+        for (Map.Entry<String, List<TextBlock>> entry: all.entrySet()) {
+            if (countWords(entry.getValue()) < minWords) {
+                no.addAll(entry.getValue());
+            } else {
+                pruned.put(entry.getKey(), entry.getValue());
+            }
+        }
+        if (!no.isEmpty()) {
+            pruned.put(NOGROUP, no);
+        }
+        minGroups.put(minWords, pruned);
+        return pruned;
+    }
+
+    private int countWords(List<? extends PositionedElement> elements) {
+        int count = 0;
+        for (PositionedElement element: elements) {
+            for (String text: element.getAllTexts()) {
+                count += text.split(" ").length;
+            }
+        }
+        return count;
     }
 
     /**
