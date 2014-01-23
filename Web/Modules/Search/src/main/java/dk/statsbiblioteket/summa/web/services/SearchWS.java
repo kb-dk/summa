@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
@@ -538,6 +539,7 @@ public class SearchWS {
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
         req.put(DocumentKeys.SEARCH_SORTKEY, DocumentKeys.SORT_ON_SCORE);
         req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        req.put(DocumentKeys.SEARCH_RESULT_FIELDS, IndexUtils.RECORD_FIELD + ", shortformat, score");
 
         try {
             res = getSearchClient().search(req);
