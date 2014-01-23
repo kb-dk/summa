@@ -175,6 +175,7 @@ public class SummonSearchNode extends SolrSearchNode {
 
 //    public static final String PING_URL = "http://api.summon.serialssolutions.com/2.0.0/search/ping";
 
+
     private final String accessID;
     private final String accessKey;
     private final Configuration conf; // Used when constructing QueryRewriter
@@ -265,6 +266,11 @@ public class SummonSearchNode extends SolrSearchNode {
         }
         if (!conf.valueExists(CONF_EXPLICIT_FACET_FILTERING)) {
             conf.set(CONF_EXPLICIT_FACET_FILTERING, DEFAULT_SUMMON_EXPLICIT_FACET_FILTERING);
+        }
+
+        // summon does not support MoreLikeThis (TODO: Confirm this) so default is off
+        if (!conf.valueExists(CONF_MLT_ENABLED)) {
+            conf.set(CONF_MLT_ENABLED, false);
         }
         return conf;
     }

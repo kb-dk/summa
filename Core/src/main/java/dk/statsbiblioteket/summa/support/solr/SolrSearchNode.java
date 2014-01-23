@@ -217,6 +217,14 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public static final String CONF_EMPTY_FILTER_NO_SEARCH = "solr.filter.emptymatchesnone";
     public static final boolean DEFAULT_EMPTY_FILTER_NO_SEARCH = true;
 
+    /**
+     * If true, MoreLikeThis functionality is enabled. If false, the searcher returns immediately.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_MLT_ENABLED = "solr.mlt.enabled";
+    public static final boolean DEFAULT_MLT_ENABLED = true;
+
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     protected SolrResponseBuilder responseBuilder;
@@ -238,6 +246,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final boolean explicitFacetFilter;
     protected final boolean emptyQueryNoSearch;
     protected final boolean emptyFilterNoSearch;
+    protected final boolean mltEnabled;
 
     // Debug & feedback
     protected long lastConnectTime = -1;
@@ -273,8 +282,10 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         explicitFacetFilter = conf.getBoolean(CONF_EXPLICIT_FACET_FILTERING, DEFAULT_EXPLICIT_FACET_FILTERING);
         emptyQueryNoSearch = conf.getBoolean(CONF_EMPTY_QUERY_NO_SEARCH, DEFAULT_EMPTY_QUERY_NO_SEARCH);
         emptyFilterNoSearch = conf.getBoolean(CONF_EMPTY_FILTER_NO_SEARCH, DEFAULT_EMPTY_FILTER_NO_SEARCH);
+        mltEnabled = conf.getBoolean(CONF_MLT_ENABLED, DEFAULT_MLT_ENABLED);
         readyWithoutOpen();
         log.info("Created SolrSearchNode(" + getID() + ")");
+        // TODO: Add proper toString;
     }
 
     /**
@@ -347,6 +358,11 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     private static final String MLT_KEY = CONF_SOLR_PARAM_PREFIX + "mlt";
     private void barrierSearch(Request request, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
+        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) || request.getBoolean(MLT_KEY, true)) {
+            log.debug("Received MLT for '" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "N/A") + "'. "
+                      + "Skipping MoreLikeThis as this is not enabled for this search node");
+            return;
+        }
         if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
             String id = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
             if (!request.containsKey(MLT_KEY)) {
@@ -841,4 +857,6 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public long getLastDataTime() {
         return lastDataTime;
     }
+
+
 }
