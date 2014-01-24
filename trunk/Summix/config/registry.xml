@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- Sample config for a generic Summa Registry -->
+<properties>
+
+    <!-- The port for the Summa registry -->
+    <entry key="registry.port">-1</entry>
+
+</properties>
+
