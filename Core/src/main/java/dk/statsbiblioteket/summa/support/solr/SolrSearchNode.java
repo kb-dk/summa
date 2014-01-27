@@ -358,7 +358,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     private static final String MLT_KEY = CONF_SOLR_PARAM_PREFIX + "mlt";
     private void barrierSearch(Request request, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
-        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) || request.getBoolean(MLT_KEY, true)) {
+        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) || request.getBoolean(MLT_KEY, false)) {
             log.debug("Received MLT for '" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "N/A") + "'. "
                       + "Skipping MoreLikeThis as this is not enabled for this search node");
             return;
