@@ -37,7 +37,12 @@
     </logger>
 
     <logger name="dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode">
-        <level value="INFO" />
+        <level value="DEBUG" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.support.solr.SolrSearchNode">
+        <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </logger>
 

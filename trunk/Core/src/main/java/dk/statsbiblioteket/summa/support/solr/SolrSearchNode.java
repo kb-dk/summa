@@ -358,29 +358,11 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     private static final String MLT_KEY = CONF_SOLR_PARAM_PREFIX + "mlt";
     private void barrierSearch(Request request, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
-        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) || request.getBoolean(MLT_KEY, false)) {
-            log.debug("Received MLT for '" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "N/A") + "'. "
-                      + "Skipping MoreLikeThis as this is not enabled for this search node");
+        if (!handleMLT(request, responses)) {
             return;
         }
-        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
-            String id = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
-            if (!request.containsKey(MLT_KEY)) {
-                log.debug("Setting " + MLT_KEY + "=true as " + LuceneKeys.SEARCH_MORELIKETHIS_RECORDID
-                          + " is set with '" + id);
-                request.put(MLT_KEY, true);
-            }
-            String q = IndexUtils.RECORD_FIELD + ":\"" + id + "\"";
-            log.debug("Setting " + DocumentKeys.SEARCH_QUERY + "=" + q + " and removing filter as "
-                      + LuceneKeys.SEARCH_MORELIKETHIS_RECORDID + " is defined");
-            request.put(DocumentKeys.SEARCH_QUERY, q);
-            request.remove(DocumentKeys.SEARCH_FILTER);
-        }
-
-        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
-            throw new UnsupportedOperationException(
-                    "The ID-search API at summon only goes live 2013-03-07 and needs to be tested before this " +
-                            "functionality is made available i Summa");
+        if (!handleDocIDs(request, responses)) {
+            return;
         }
 //        String rawQuery = getEmptyIsNull(request, DocumentKeys.SEARCH_QUERY);
 //        String filter =  getEmptyIsNull(request, DocumentKeys.SEARCH_FILTER);
@@ -509,6 +491,60 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         }
         responses.addTiming(getID() + ".search.buildresponses", buildResponseTime);
         responses.addTiming(getID() + ".search.total", System.currentTimeMillis() - startTime);
+    }
+
+    /**
+     * Rewrite or explicitly process requests for docIDs.
+     * @param request   a Solr request.
+     * @param responses responses so far.
+     * @return true if standard processing should commence, false if the searcher should return immediately.
+     */
+    private boolean handleDocIDs(Request request, ResponseCollection responses) {
+        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            StringBuilder sb = new StringBuilder(200);
+            for (String id: request.getStrings(DocumentKeys.SEARCH_IDS)) {
+                if (sb.length() != 0) {
+                    sb.append(" OR ");
+                }
+                sb.append(fieldID).append(":\"").append(id.replace("\"", "\\\"")).append("\"");
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("Expanded " + DocumentKeys.SEARCH_IDS + " query to '" + sb.toString() + "'");
+            }
+            request.put(DocumentKeys.SEARCH_QUERY, sb.toString());
+        }
+        return true;
+    }
+
+    /**
+     * Rewrite the MoreLikeThis requests or discard the request altogether if MLT is requested but not supported.
+     * @param request   a Solr request.
+     * @param responses responses so far.
+     * @return true if standard processing should commence, false if the searcher should return immediately.
+     */
+    protected boolean handleMLT(Request request, ResponseCollection responses) {
+        if (!mltEnabled && (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID) ||
+                            request.getBoolean(MLT_KEY, false))) {
+            log.debug("Received MLT for '" + request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "N/A") + "'. "
+                      + "Skipping MoreLikeThis as this is not enabled for this search node");
+            return false;
+        }
+
+        // MoreLikeThis
+        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+            String id = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
+            if (!request.containsKey(MLT_KEY)) {
+                log.debug("Setting " + MLT_KEY + "=true as " + LuceneKeys.SEARCH_MORELIKETHIS_RECORDID
+                          + " is set with '" + id);
+                request.put(MLT_KEY, true);
+            }
+            String q = IndexUtils.RECORD_FIELD + ":\"" + id + "\"";
+            log.debug("Setting " + DocumentKeys.SEARCH_QUERY + "=" + q + " and removing filter as "
+                      + LuceneKeys.SEARCH_MORELIKETHIS_RECORDID + " is defined");
+            request.put(DocumentKeys.SEARCH_QUERY, q);
+            request.remove(DocumentKeys.SEARCH_FILTER);
+        }
+        return true;
     }
 
     // Override this to get search backend specific facet request syntax
