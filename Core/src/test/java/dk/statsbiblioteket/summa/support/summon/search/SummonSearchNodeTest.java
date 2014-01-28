@@ -177,6 +177,36 @@ public class SummonSearchNodeTest extends TestCase {
         summon.close();
     }
 
+    /*
+    dl reported that some fields were skipped. Investigations showed that the processing of *_xml-fields skipped
+    the following field.
+     */
+    public void testFieldExtraction() throws IOException, TransformerException {
+        // Random record that contains PublicationTitle immediately after an *_xml-field
+        String QUERY =
+                "recordID:summon_FETCH-LOGICAL-g1031-b913763956b78eef2fe5ce46ded8b8ea40871499f685c91b65d45db8b0900b8a1";
+
+        log.debug("Creating SummonSearchNode");
+        SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
+        Request req = new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                SummonResponseBuilder.SEARCH_DUMP_RAW, true,
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        ResponseCollection result = search(req);
+        DocumentResponse docs = (DocumentResponse)result.iterator().next();
+        assertEquals("There should only be a single result", 1, docs.size());
+        boolean pubFound = false;
+        for (DocumentResponse.Field field: docs.getRecords().get(0).getFields()) {
+            if ("PublicationTitle".equals(field.getName())) {
+                pubFound = true;
+                break;
+            }
+        }
+        assertTrue("The document should contain a field with the name 'DocumentTitle'\n" + result.toXML(), pubFound);
+
+        summon.close();
+    }
+
     public void testIDResponse() throws IOException, TransformerException {
         String QUERY = "gene and protein evolution";
 
@@ -1680,24 +1710,20 @@ public class SummonSearchNodeTest extends TestCase {
 
         { // shortformat should match Author
             String expected =
-                    "  <shortrecord>\n"
-                    + "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" "
-                    + "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
-                    + "      <rdf:Description>\n"
-                    + "        <dc:title>Estimates of worldwide burden of cancer in 2008: GLOBOCAN 2008</dc:title>\n"
-                    + "        <dc:creator>Ferlay, Jacques</dc:creator>\n"
-                    + "        <dc:creator>Shin, Hai-Rim</dc:creator>\n"
-                    + "        <dc:creator>Bray, Freddie</dc:creator>\n"
-                    + "        <dc:creator>Forman, David</dc:creator>\n"
-                    + "        <dc:creator>Mathers, Colin</dc:creator>\n"
-                    + "        <dc:creator>Parkin, Donald Maxwell</dc:creator>\n"
-                    + "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n"
-                    + "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n"
-                    + "        <dc:date>2010</dc:date>\n"
-                    + "        <dc:format></dc:format>\n"
-                    + "      </rdf:Description>\n"
-                    + "    </rdf:RDF>\n"
-                    + "  </shortrecord>\n";
+                    "  <shortrecord>\n" +
+                    "    <rdf:RDF xmlns:dc=\"http://purl.org/dc/elements/1.1/\" " +
+                    "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n" +
+                    "      <rdf:Description>\n" +
+                    "        <dc:title>Estimates of worldwide burden of cancer in 2008: GLOBOCAN 2008</dc:title>\n" +
+                    "        <dc:creator>Ferlay, Jacques</dc:creator>\n" +
+                    "        <dc:type xml:lang=\"da\">Journal Article</dc:type>\n" +
+                    "        <dc:type xml:lang=\"en\">Journal Article</dc:type>\n" +
+                    "        <dc:date>2010</dc:date>\n" +
+                    "        <dc:format></dc:format>\n" +
+                    "        <dc:identifier>ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Estimates+of+worldwide+burden+of+cancer+in+2008%3A+GLOBOCAN+2008&amp;rft.jtitle=International+journal+of+cancer.+Journal+international+du+cancer&amp;rft.au=Ferlay%2C+Jacques&amp;rft.au=Shin%2C+Hai-Rim&amp;rft.au=Bray%2C+Freddie&amp;rft.au=Forman%2C+David&amp;rft.date=2010-12-15&amp;rft.eissn=1097-0215&amp;rft.volume=127&amp;rft.issue=12&amp;rft.spage=2893&amp;rft_id=info:pmid/21351269&amp;rft.externalDocID=21351269</dc:identifier>\n" +
+                    "      </rdf:Description>\n" +
+                    "    </rdf:RDF>\n" +
+                    "  </shortrecord>\n";
             SearchNode summon = SummonTestHelper.createSummonSearchNode();
             assertFieldContent("shortformat", summon, query, "shortformat", expected, false);
             summon.close();

@@ -87,6 +87,13 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     public static final String DEFAULT_SUMMON_RECORDBASE = "summon";
 
     /**
+     * If true, the raw XML-result from Summon is logged at INFO level. Used for debugging.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String SEARCH_DUMP_RAW = "summonresponsebuilder.dumpraw";
+
+    /**
      * If true, fields with multiple values are collapsed into a single newline-delimited value.
      * If false, such multi-value fields are represented as multiple fields, each containing a single value.
      */
@@ -149,6 +156,9 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                                String solrResponse, String solrTiming) throws XMLStreamException {
         //System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
+        if (request.getBoolean(SEARCH_DUMP_RAW, false)) {
+            log.info("Raw summon result:\n" + solrResponse.replace(">", ">\n"));
+        }
         final boolean facetingEnabled = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         final XML_MODE xmlMode = XML_MODE.valueOf(
                 request.getString(SEARCH_XML_FIELD_HANDLING, defaultXmlHandling));
@@ -437,7 +447,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         final String[] sortValue = new String[1]; // Hack to make final mutable
         final String sortField = sortRedirect.containsKey(sortKey) ? sortRedirect.get(sortKey) : sortKey;
 
-        XMLStepper.iterateElements(xml, "document", "field", new XMLStepper.XMLCallback() {
+        XMLStepper.iterateElements(xml, "document", "field", false, new XMLStepper.XMLCallback() {
             @Override
             public void execute(XMLStreamReader xml) throws XMLStreamException {
                 List<DocumentResponse.Field> rawFields = extractFields(xml, xmlMode, wanted, extracted);
@@ -530,6 +540,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         final String name = XMLStepper.getAttribute(xml, "name", null);
         if (name == null) {
             log.warn("Could not extract name for field. Skipping field");
+            xml.next();
             return null;
         }
         final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>();
@@ -549,6 +560,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
                     }
                 }
             });
+            xml.next(); // Not really needed due to callers iterate on start tag, but it is the clean thing to do
             if (value.length() == 0) {
                 log.debug("No value for field '" + name + "'");
                 return null;
