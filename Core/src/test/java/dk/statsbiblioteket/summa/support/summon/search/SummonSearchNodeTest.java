@@ -87,6 +87,24 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("A search with a MoreLikeThis ID should not give hits", 0, mlt);
     }
 
+    public void testDocIDRequest() throws RemoteException {
+        List<String> IDs = Arrays.asList(
+                "FETCH-proquest_dll_11531932811",
+                "FETCH-proquest_dll_6357072911",
+                "FETCH-proquest_dll_15622214411"
+        );
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        {
+            long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "recordID:" + IDs.get(0));
+            assertEquals("A search for '" + IDs.get(0) + "' should give 1 hit", 1, standard);
+        }
+        {
+            long idSpecific = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
+            assertEquals("A search with search.document.ids should give all hits", 3, idSpecific);
+        }
+        summon.close();
+    }
+
     public void testPageFault() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
@@ -264,7 +282,7 @@ public class SummonSearchNodeTest extends TestCase {
         request.addJSON(JSON);
         pager.search(request, responses);
         assertTrue("The response should contain some facets\n" + responses.toXML(),
-                    responses.toXML().contains("facet name"));
+                   responses.toXML().contains("facet name"));
         summon.close();
     }
 
@@ -403,7 +421,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("The result should contain at least one record", responses.toXML().contains("<record score"));
         assertTrue("The result should contain at least one tag", responses.toXML().contains("<tag name"));
         log.info("Raw Summon response:\n"
-                + responses.getTransient().get(SummonResponseBuilder.SUMMON_RESPONSE).toString().replace("<", "\n<"));
+                 + responses.getTransient().get(SummonResponseBuilder.SUMMON_RESPONSE).toString().replace("<", "\n<"));
         log.info("Parsed Summa response:\n" + responses.toXML());
     }
 

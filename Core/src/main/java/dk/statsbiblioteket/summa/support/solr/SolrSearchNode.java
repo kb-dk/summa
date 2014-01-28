@@ -499,7 +499,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * @param responses responses so far.
      * @return true if standard processing should commence, false if the searcher should return immediately.
      */
-    private boolean handleDocIDs(Request request, ResponseCollection responses) {
+    protected boolean handleDocIDs(Request request, ResponseCollection responses) {
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
             StringBuilder sb = new StringBuilder(200);
             for (String id: request.getStrings(DocumentKeys.SEARCH_IDS)) {

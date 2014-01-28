@@ -421,6 +421,17 @@ public class SummonSearchNode extends SolrSearchNode {
         }
     }
 
+    @Override
+    protected boolean handleDocIDs(Request request, ResponseCollection responses) {
+        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            // TODO: Integrate with summon's first class document request mechanism
+            // Remember to remove 'summon_'-prefix and to convert the response as usual
+            log.debug("Summa Summon-integration does not support " + DocumentKeys.SEARCH_IDS + " at this time");
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Perform a search in Summon.
      *
