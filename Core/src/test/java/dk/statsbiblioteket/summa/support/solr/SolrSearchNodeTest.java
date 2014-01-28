@@ -294,6 +294,17 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
+    public void testDocIDRequest() throws Exception {
+        performBasicIngest();
+        SearchNode searcher = getSearcher();
+        try {
+            assertEquals("There should be 2 hits for request for 2 IDs",
+                         2, getHits(searcher, DocumentKeys.SEARCH_IDS, "doc1, doc2"));
+        } finally {
+            searcher.close();
+        }
+    }
+
     public void testFilterFacetsNoHits() throws Exception {
         performBasicIngest();
         final String QUERY = "recordID:doc1";
