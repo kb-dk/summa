@@ -339,8 +339,9 @@ public class XMLStepper {
      * @throws javax.xml.stream.XMLStreamException if the stream could not
      * be iterated or an error occured during callback.
      */
-    public static void iterateElements(
-            XMLStreamReader xml, String endElement, String actionElement, XMLCallback callback) throws XMLStreamException {
+    public static void iterateElements(XMLStreamReader xml, String endElement, String actionElement,
+                                       XMLCallback callback) throws XMLStreamException {
+        iterateElements(xml, endElement, actionElement, true, callback);
         while (true) {
             if (xml.getEventType() == XMLStreamReader.END_DOCUMENT ||
                 (xml.getEventType() == XMLStreamReader.END_ELEMENT && xml.getLocalName().equals(endElement))) {
@@ -350,6 +351,39 @@ public class XMLStepper {
                 callback.execute(xml);
             }
             xml.next();
+        }
+    }
+
+    /**
+     * Iterates over elements in the stream until end element is encountered
+     * or end of document is reached. For each element matching actionElement,
+     * callback is called.
+     *
+     * @param xml        the stream to iterate.
+     * @param endElement the stopping element.
+     * @param actionElement callback is activated when encountering elements
+     *                   with this name.
+     * @param advanceOnHit if true, the iterator always calls {@code xml.next()}. If false, next is only called if
+     *                     no callback has been issued.
+     * @param callback   called for each encountered element.
+     * @throws javax.xml.stream.XMLStreamException if the stream could not
+     * be iterated or an error occured during callback.
+     */
+    public static void iterateElements(XMLStreamReader xml, String endElement, String actionElement,
+                                       boolean advanceOnHit, XMLCallback callback) throws XMLStreamException {
+        while (true) {
+            if (xml.getEventType() == XMLStreamReader.END_DOCUMENT ||
+                (xml.getEventType() == XMLStreamReader.END_ELEMENT && xml.getLocalName().equals(endElement))) {
+                break;
+            }
+            if (xml.getEventType() == XMLStreamReader.START_ELEMENT && xml.getLocalName().equals(actionElement)) {
+                callback.execute(xml);
+                if (advanceOnHit) {
+                    xml.next();
+                }
+            } else {
+                xml.next();
+            }
         }
     }
 
