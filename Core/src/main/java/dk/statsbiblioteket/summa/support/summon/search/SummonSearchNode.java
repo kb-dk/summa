@@ -424,10 +424,15 @@ public class SummonSearchNode extends SolrSearchNode {
     @Override
     protected boolean handleDocIDs(Request request, ResponseCollection responses) {
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
-            // TODO: Integrate with summon's first class document request mechanism
-            // Remember to remove 'summon_'-prefix and to convert the response as usual
-            log.debug("Summa Summon-integration does not support " + DocumentKeys.SEARCH_IDS + " at this time");
-            return false;
+            List<String> ids = request.getStrings(DocumentKeys.SEARCH_IDS);
+            if (ids.size() > 100) {
+                // TODO: Implement paging
+                throw new IllegalArgumentException("Summon only supports up to 100 document requests at a time");
+            }
+            // http://api.summon.serialssolutions.com/help/api/search/parameters
+            log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
+                      + ids.size() + " document IDs");
+            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(ids));
         }
         return true;
     }
@@ -516,6 +521,9 @@ public class SummonSearchNode extends SolrSearchNode {
 
     // True if either a query or a filter is present
     private boolean validRequest(Map<String, List<String>> queryMap) {
+        if (queryMap.containsKey("s.fids") || queryMap.containsKey(DocumentKeys.SEARCH_IDS)) {
+            return true;
+        }
         if (emptyQueryNoSearch && containsEmpty(queryMap, "s.q")) {
             log.debug("Empty query. Skipping search");
             return false;
