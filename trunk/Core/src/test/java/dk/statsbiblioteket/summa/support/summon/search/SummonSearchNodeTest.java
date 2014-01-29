@@ -95,7 +95,8 @@ public class SummonSearchNodeTest extends TestCase {
         );
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         {
-            long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "recordID:" + IDs.get(0));
+            long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "recordID:" + IDs.get(0),
+                                    "summonresponsebuilder.dumpraw", "true");
             assertEquals("A search for '" + IDs.get(0) + "' should give 1 hit", 1, standard);
         }
         {
