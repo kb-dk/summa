@@ -432,9 +432,18 @@ public class SummonSearchNode extends SolrSearchNode {
             // http://api.summon.serialssolutions.com/help/api/search/parameters
             log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
                       + ids.size() + " document IDs");
-            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(ids));
+            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(removePrefix(idPrefix, ids)));
         }
         return true;
+    }
+
+    private List<String> removePrefix(String prefix, List<String> strs) {
+        for (int i = 0 ; i < strs.size() ; i++) {
+            if (strs.get(i).startsWith(prefix)) {
+                strs.set(i, strs.get(i).substring(prefix.length()));
+            }
+        }
+        return strs;
     }
 
     /**
