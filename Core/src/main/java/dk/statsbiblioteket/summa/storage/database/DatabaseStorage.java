@@ -53,6 +53,7 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te, teg, mke")
 public abstract class DatabaseStorage extends StorageBase {
+    private static Log recordlog = LogFactory.getLog("storagequeries");
     private static Log log = LogFactory.getLog(DatabaseStorage.class);
 
     /**
@@ -1620,10 +1621,10 @@ public abstract class DatabaseStorage extends StorageBase {
 
         try {
             List<Record> result = getRecordsWithConnection(ids, options, conn);
-            if (log.isDebugEnabled()) {
-                log.debug("Finished getRecords(" + ids.size() + " ids, ...) in "
-                          + (System.currentTimeMillis() - startTime) + "ms");
-            }
+            String message = "Finished getRecords(" + ids.size() + " ids, ...) with " + result.size() + " results in "
+                             + (System.currentTimeMillis() - startTime) + "ms";
+            log.debug(message);
+            recordlog.info(message);
             return result;
         } finally {
             closeConnection(conn);
@@ -1860,10 +1861,15 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
 
             Record record = getRecordWithConnection(id, options, conn);
-            log.debug("Finished getRecord(" + id + ", ...) in " + (System.currentTimeMillis() - startTime) + "ms");
+            String m = "Finished getRecord(" + id + ", ...) " + (record == null ? "without" : "with")
+                       + " result in " + (System.currentTimeMillis() - startTime) + "ms";
+            log.debug(m);
+            recordlog.info(m);
             return record;
         } catch (SQLException e) {
-            log.error(String.format("Failed to get record '%s'", id), e);
+            String m = "Failed getRecord(" + id + ", ...) in " + (System.currentTimeMillis() - startTime) + "ms";
+            log.error(m, e);
+            recordlog.error(m);
             return null;
         } finally {
             closeConnection(conn);
