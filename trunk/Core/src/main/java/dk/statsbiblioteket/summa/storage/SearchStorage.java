@@ -54,6 +54,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SearchStorage implements Storage {
+    private static Log recordlog = LogFactory.getLog("storagequeries");
     private static Log log = LogFactory.getLog(SearchStorage.class);
 
     private final SearchNode searchNode;
@@ -122,37 +123,46 @@ public class SearchStorage implements Storage {
      */
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
+        return getRecords(ids, options, true);
+    }
+    // TODO: Use the first class document retrieval instead
+    public List<Record> getRecords(List<String> ids, QueryOptions options, boolean doLog) throws IOException {
+        final long startTime = System.currentTimeMillis();
         List<Record> result = new ArrayList<Record>(ids.size());
         if (ids.size() > batchSize) {
             List<String> subIDs = new ArrayList<String>(batchSize);
             for (String id: ids) {
                 subIDs.add(id);
                 if (subIDs.size() == batchSize) {
-                    result.addAll(getRecords(subIDs, options));
+                    result.addAll(getRecords(subIDs, options, doLog));
                     subIDs.clear();
                 }
             }
             if (!subIDs.isEmpty()) {
-                result.addAll(getRecords(subIDs, options));
+                result.addAll(getRecords(subIDs, options, doLog));
             }
             return result;
-        } else {
-            StringWriter sw = new StringWriter();
-            for (int i = 0 ; i < ids.size() ; i++) {
-                if (i != 0) {
-                    sw.append(" OR ");
-                }
-                sw.append(makeQuery(ids.get(i)));
+        }
+
+        StringWriter sw = new StringWriter();
+        for (int i = 0 ; i < ids.size() ; i++) {
+            if (i != 0) {
+                sw.append(" OR ");
             }
-            DocumentResponse documents = getDocumentResponse(sw.toString());
-            if (documents != null) { // Null means no hits
-                result = convertDocuments(documents);
-            }
+            sw.append(makeQuery(ids.get(i)));
+        }
+        DocumentResponse documents = getDocumentResponse(sw.toString());
+        if (documents != null) { // Null means no hits
+            result = convertDocuments(documents);
         }
         if (ids.size() == 1) {
             log.debug("Returning 1 record with ID " + ids.get(0));
         } else {
             log.debug("Returning " + result.size() + " records from " + ids.size() + " IDs");
+        }
+        if (doLog) {
+            recordlog.info("Finished getRecords( " + ids.size() + " IDs) with " + result.size() + " records in " +
+                           (System.currentTimeMillis()-startTime) + "ms");
         }
         return result;
     }
@@ -194,8 +204,12 @@ public class SearchStorage implements Storage {
 
     @Override
     public Record getRecord(String id, QueryOptions options) throws IOException {
-        List<Record> records = getRecords(Arrays.asList(id), options);
+        long startTime = System.currentTimeMillis();
+        List<Record> records = getRecords(Arrays.asList(id), options, false);
         log.debug("getRecord(" + id + ", ...) returned " + records.size() + " records");
+        String m = "Finished getRecord(" + id + ", ...) " + (records.isEmpty() ? "without" : "with")
+                   + " result in " + (System.currentTimeMillis() - startTime) + "ms";
+        recordlog.info(m);
         return records.isEmpty() ? null : records.get(0);
     }
 

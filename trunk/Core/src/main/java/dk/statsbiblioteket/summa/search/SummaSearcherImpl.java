@@ -225,10 +225,10 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         } finally {
             searchQueue.release();
             // TODO: Make this cleaner with no explicit dependency
-            if (responses == null) {
-                queries.info("SummaSearcherImpl finished "
+            if (responses.isEmpty()) {
+                queries.info(this.getClass().getSimpleName() + " finished "
                              + (success ? "successfully" : "unsuccessfully (see logs for errors)")
-                             + " in " + (System.nanoTime() - fullStartTime) / 1000000
+                             + " without responses in " + (System.nanoTime() - fullStartTime) / 1000000
                              + "ms. Request was " + originalRequest);
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
@@ -242,6 +242,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                     for (Response response: responses) {
                         if (response instanceof DocumentResponse) {  // If it's there, we might as well get some stats
                             hits = Long.toString(((DocumentResponse)response).getHitCount());
+                            break;
                         }
                     }
                     queries.info(this.getClass().getSimpleName() + " finished "

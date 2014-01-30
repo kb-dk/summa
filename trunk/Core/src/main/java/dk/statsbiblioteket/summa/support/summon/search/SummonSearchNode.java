@@ -423,6 +423,7 @@ public class SummonSearchNode extends SolrSearchNode {
 
     @Override
     protected boolean handleDocIDs(Request request, ResponseCollection responses) {
+        log.debug("handleDocIDs called with ids-key " + request.getStrings(DocumentKeys.SEARCH_IDS, Arrays.asList("none")));
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
             List<String> ids = request.getStrings(DocumentKeys.SEARCH_IDS);
             if (ids.size() > 100) {
