@@ -59,13 +59,11 @@ import java.util.ArrayList;
  * {@link dk.statsbiblioteket.summa.search.SummaSearcherImpl#CONF_STATIC_ROOT}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class SuggestSearchNode extends SearchNodeImpl {
-    /**
-     * Logger for this class.
-     */
     private static Log log = LogFactory.getLog(SuggestSearchNode.class);
+    private static Log qlog = LogFactory.getLog("suggestqueries");
 
     /**
      * The maximum number of results to return. This cannot be overruled in the
@@ -195,9 +193,9 @@ public class SuggestSearchNode extends SearchNodeImpl {
         storageClass = Configuration.getClass(CONF_STORAGE_CLASS, SuggestStorage.class, DEFAULT_STORAGE, conf);
 
         storage = Configuration.create(storageClass, conf);
-        log.info(String.format("Created SuggestSearchNode with maxResults=%d, "
-                               + " defaultMaxResults=%d and storage=%s", maxResults, defaultMaxResults,
-                               storageClass.getSimpleName()));
+        log.info(String.format(
+                "Created SuggestSearchNode with maxResults=%d,  defaultMaxResults=%d and storage=%s",
+                maxResults, defaultMaxResults, storageClass.getSimpleName()));
     }
 
     /**
@@ -272,9 +270,9 @@ public class SuggestSearchNode extends SearchNodeImpl {
         if (maintenance) {
             return;
         }
-        log.debug(String.format("None of the expected keys %s, %s, %s, %s or %s encountered,"
-                                + " no suggest will be performed", SuggestKeys.SEARCH_PREFIX,
-                                SuggestKeys.SEARCH_UPDATE_QUERY, SEARCH_CLEAR, SEARCH_IMPORT, SEARCH_EXPORT));
+        log.debug(String.format("None of the expected keys %s, %s, %s, %s or %s encountered, no suggest will be" +
+                                " performed", SuggestKeys.SEARCH_PREFIX, SuggestKeys.SEARCH_UPDATE_QUERY, SEARCH_CLEAR,
+                                SEARCH_IMPORT, SEARCH_EXPORT));
     }
 
     /**
@@ -299,7 +297,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
         log.trace("Performing Suggest search on prefix '" + prefix + " with maxResults=" + maxResults);
         SuggestResponse response = storage.getSuggestion(prefix, maxResults);
         double time = (System.nanoTime() - startTime) / 1000000D;
-        log.debug("Completed Suggest for prefix '" + prefix + "' with maxResults=" + maxResults + " in " + time + "ms");
+        dualLog("Completed Suggest for prefix '" + prefix + "' with maxResults=" + maxResults + " in " + time + "ms");
         response.addTiming("suggest.search", Math.round(time));
         responses.add(response);
     }
@@ -325,9 +323,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
         log.trace("Performing suggestRecent search within " + ageSeconds + "s with maxResults=" + maxResults);
         responses.add(storage.getRecentSuggestions(ageSeconds, maxResults));
-        log.debug(
-                "Completed suggestRecent for updates within " + ageSeconds + "s with maxResults=" + maxResults + " in "
-                + (System.nanoTime() - startTime) / 1000000D + "ms");
+        dualLog("Completed suggestRecent for updates within " + ageSeconds + "s with maxResults=" + maxResults
+                + " in " + (System.nanoTime() - startTime) / 1000000D + "ms");
     }
 
     /**
@@ -353,13 +350,13 @@ public class SuggestSearchNode extends SearchNodeImpl {
         int hits = request.getInt(SuggestKeys.SEARCH_UPDATE_HITCOUNT);
         if (!request.containsKey(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT)) {
             storage.addSuggestion(query, hits);
-            log.debug("Completed addSuggestion(" + query + ", " + hits + ") in "
-                      + (System.nanoTime() - startTime) / 1000000D + "ms");
+            dualLog("Completed addSuggestion(" + query + ", " + hits + ") in "
+                    + (System.nanoTime() - startTime) / 1000000D + "ms");
         } else {
             int queryCount = request.getInt(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT);
             storage.addSuggestion(query, hits, queryCount);
-            log.debug("Completed extended addSuggestion(" + query + ", " + hits + ", " + queryCount + ") in "
-                      + (System.nanoTime() - startTime) / 1000000D + "ms");
+            dualLog("Completed extended addSuggestion(" + query + ", " + hits + ", " + queryCount + ") in "
+                    + (System.nanoTime() - startTime) / 1000000D + "ms");
         }
         responses.add(new SuggestResponse("addSuggestion of query '" + query + "'", 10));
     }
@@ -436,5 +433,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
      */
     public boolean deleteSuggestion(String suggestion) {
         return storage.deleteSuggestion(suggestion);
+    }
+
+    private void dualLog(String message) {
+        log.debug(message);
+        qlog.info(message);
     }
 }
