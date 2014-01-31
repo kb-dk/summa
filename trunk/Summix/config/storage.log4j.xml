@@ -26,6 +26,28 @@
         </layout>
     </appender>
 
+    <appender name="LAST_REQUESTS" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="log/last_storage_queries.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="1"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="STATIC_REQUESTS" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="DEBUG"/>
+        <param name="File" value="log/static_storage_queries.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="1"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
     <appender name="LAST_FATAL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="ERROR"/>
@@ -50,6 +72,12 @@
     </appender>
 
     <appender name="NULL" class="org.apache.log4j.varia.NullAppender"/>
+
+    <logger name="storagequeries">
+        <level value="debug" />
+        <appender-ref ref="LAST_REQUESTS" />
+        <appender-ref ref="STATIC_REQUESTS" />
+    </logger>
 
     <logger name="dk.statsbiblioteket">
         <level value="debug" />
