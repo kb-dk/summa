@@ -94,6 +94,12 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     public static final String CONF_USE_LOCAL_INDEX = "summa.search.uselocalindex";
     public static final boolean DEFAULT_USE_LOCAL_INDEX = true;
 
+    /**
+     * If true, empty searches are processed. If false, the searcher returns immediately.
+     */
+    public static final String CONF_ALLOW_EMPTY_SEARCH = "summa.search.allowempty";
+    public static final boolean DEFAULT_ALLOW_EMPTY_SEARCH = false;
+
     private int searcherAvailabilityTimeout = DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
 
     private ChangingSemaphore searchQueue;
@@ -106,6 +112,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     private AtomicLong queryCount = new AtomicLong(0);
     private AtomicLong totalResponseTime = new AtomicLong(0);
     private AtomicInteger concurrentSearches = new AtomicInteger(0);
+    private final boolean emptySearchAllowed;
 
     private int maxConcurrent = 0; // Non-authoritative, used for loose inspection only
 
@@ -129,6 +136,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         searchQueue = new ChangingSemaphore(searchQueueMaxSize, true);
         log.trace("Constructing search node");
         searchNode = SearchNodeFactory.createSearchNode(conf, SearchNodeDummy.class);
+        emptySearchAllowed = conf.getBoolean(CONF_ALLOW_EMPTY_SEARCH, DEFAULT_ALLOW_EMPTY_SEARCH);
 
         // Ready for open
         if (conf.getBoolean(CONF_USE_LOCAL_INDEX, DEFAULT_USE_LOCAL_INDEX)) {
@@ -157,6 +165,11 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
      */
     @Override
     public ResponseCollection search(Request request) throws RemoteException {
+        ResponseCollection responses = new ResponseCollection();
+        if (!emptySearchAllowed && request.isEmpty()) {
+            log.debug("search: No content in request and empty search not allowed. No search is performed");
+            responses.addTiming("summasearcher.emptysearch", 0);
+        }
         if (log.isTraceEnabled()) {
             log.trace("Search called with parameters\n" + request.toString());
         }
@@ -173,7 +186,6 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
             throw new RemoteException("Interrupted while waiting for search queue access", e);
         }
         boolean success = false;
-        ResponseCollection responses = new ResponseCollection();
         try {
             try {
                 if (freeSlots.getOverallPermits() == 0) {
