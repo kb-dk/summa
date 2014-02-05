@@ -155,14 +155,11 @@ public class SearchStorage implements Storage {
         if (documents != null) { // Null means no hits
             result = convertDocuments(documents);
         }
-        if (ids.size() == 1) {
-            log.debug("Returning 1 record with ID " + ids.get(0));
-        } else {
-            log.debug("Returning " + result.size() + " records from " + ids.size() + " IDs");
-        }
+        String message = "Finished getRecords(" + (ids.size() == 1 ? ids.get(0) : ids.size() + " record ids") + ") "
+                       + "-> " + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms";
+        log.debug(message);
         if (doLog) {
-            recordlog.info("Finished getRecords( " + ids.size() + " IDs) with " + result.size() + " records in " +
-                           (System.currentTimeMillis()-startTime) + "ms");
+            recordlog.info(message);
         }
         return result;
     }
