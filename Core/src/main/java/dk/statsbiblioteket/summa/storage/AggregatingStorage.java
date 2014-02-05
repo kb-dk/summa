@@ -735,14 +735,8 @@ public class AggregatingStorage extends StorageBase {
         }
 
         //noinspection DuplicateStringLiteralInspection
-        String message;
-        if (ids.size() == 1) {
-            message = "Finished getRecords(" + ids.get(0) + ", ...) -> " + result.size() + " records in " + (
-                    System.currentTimeMillis() - startTime);
-        } else {
-            message = "Finished getRecords(" + ids.size() + " records ids, ...) -> " + result.size() + "records in " + (
-                    System.currentTimeMillis() - startTime);
-        }
+        String message= "Finished getRecords(" + (ids.size() == 1 ? ids.get(0) : ids.size() + " record ids") + ") -> "
+                        + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms";
         log.debug(message);
         recordlog.info(message);
         return result;
