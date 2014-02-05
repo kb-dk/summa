@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
         state = QAInfo.State.QA_NEEDED,
         author = "te, mke, hbk")
 public class AggregatingStorage extends StorageBase {
+    private static Log recordlog = LogFactory.getLog("storagequeries");
 
     /**
      * A list of sub configurations, one for each base name the aggregating
@@ -734,13 +735,16 @@ public class AggregatingStorage extends StorageBase {
         }
 
         //noinspection DuplicateStringLiteralInspection
+        String message;
         if (ids.size() == 1) {
-            log.debug("Finished getRecords(" + ids.get(0) + ", ...) -> " + result.size() + " records in " + (
-                    System.currentTimeMillis() - startTime));
+            message = "Finished getRecords(" + ids.get(0) + ", ...) -> " + result.size() + " records in " + (
+                    System.currentTimeMillis() - startTime);
         } else {
-            log.debug("Finished getRecords(" + ids.size() + " records ids, ...) -> " + result.size() + "records in " + (
-                    System.currentTimeMillis() - startTime));
+            message = "Finished getRecords(" + ids.size() + " records ids, ...) -> " + result.size() + "records in " + (
+                    System.currentTimeMillis() - startTime);
         }
+        log.debug(message);
+        recordlog.info(message);
         return result;
     }
 
