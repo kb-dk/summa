@@ -164,14 +164,8 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
         }
         long startTime = System.currentTimeMillis();
 
-        String query;
-        String filter = null;
-        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
-            query = makeIDQuery(request.getStrings(DocumentKeys.SEARCH_IDS));
-        } else {
-            query = request.getString(DocumentKeys.SEARCH_QUERY, null);
-            filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
-        }
+        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         //noinspection OverlyBroadCatchBlock
         long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX, this.startIndex);
         long records = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, this.records);
@@ -237,13 +231,6 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
         }
         responses.addTiming("documentsearcher.total", System.currentTimeMillis() - startTime);
     }
-
-    /**
-     * Create a query that matches any of the given IDs, e.g. "recordID:\"id1\" OR recordID:\"id2\"".
-     * @param ids the document IDs to search for.
-     * @return a quiry that matches any of the provided IDs.
-     */
-    protected abstract String makeIDQuery(List<String> ids);
 
     /**
      * Calculate the total number of hits for the given query and filter.

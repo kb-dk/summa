@@ -437,6 +437,12 @@ public class SummonSearchNode extends SolrSearchNode {
         }
     }
 
+    // This is handled by {@link #handleDocIDs}.
+    @Override
+    protected boolean rewriteIDRequestToLuceneQuery(Request request) {
+        return true;
+    }
+
     @Override
     protected boolean handleDocIDs(Request request, ResponseCollection responses) throws RemoteException {
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {

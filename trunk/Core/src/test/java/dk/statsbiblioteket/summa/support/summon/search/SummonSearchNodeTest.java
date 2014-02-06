@@ -100,8 +100,7 @@ public class SummonSearchNodeTest extends TestCase {
             assertEquals("A search for '" + IDs.get(0) + "' should give 1 hit", 1, standard);
         }
         {
-            long idSpecific = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs),
-                                                "summonresponsebuilder.dumpraw", "true");
+            long idSpecific = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
             assertEquals("A search with search.document.ids should give all hits", 3, idSpecific);
         }
         {
