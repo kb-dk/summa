@@ -104,6 +104,11 @@ public class SummonSearchNodeTest extends TestCase {
                                                 "summonresponsebuilder.dumpraw", "true");
             assertEquals("A search with search.document.ids should give all hits", 3, idSpecific);
         }
+        {
+            long idInvalid = getHits(summon, DocumentKeys.SEARCH_IDS, "nonexisting",
+                                                "summonresponsebuilder.dumpraw", "true");
+            assertEquals("A search with no valid IDs in search.document.ids should give zero hits", 0, idInvalid);
+        }
         summon.close();
     }
 

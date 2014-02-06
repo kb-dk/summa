@@ -431,6 +431,10 @@ public class SummonSearchNode extends SolrSearchNode {
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
             List<String> allIDs = request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>());
             List<String> summonIDs = extractSummonIDs(allIDs);
+            if (summonIDs.isEmpty()) {
+                log.debug("handleDocIDs: No summon IDs in request. Exiting");
+                return false;
+            }
             if (log.isDebugEnabled()) {
                 log.debug("handleDocIDs called with " + allIDs.size() + " IDs, pruned to summon-IDs: "
                           + Strings.join(summonIDs, 10));
