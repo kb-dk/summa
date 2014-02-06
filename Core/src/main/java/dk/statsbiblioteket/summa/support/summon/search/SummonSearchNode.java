@@ -423,28 +423,33 @@ public class SummonSearchNode extends SolrSearchNode {
 
     @Override
     protected boolean handleDocIDs(Request request, ResponseCollection responses) {
-        log.debug("handleDocIDs called with ids-key " + request.getStrings(DocumentKeys.SEARCH_IDS, Arrays.asList("none")));
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
-            List<String> ids = request.getStrings(DocumentKeys.SEARCH_IDS);
-            if (ids.size() > 100) {
+            List<String> allIDs = request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>());
+            List<String> summonIDs = extractSummonIDs(allIDs);
+            if (log.isDebugEnabled()) {
+                log.debug("handleDocIDs called with " + allIDs.size() + " IDs, pruned to summon-IDs: "
+                          + Strings.join(summonIDs, 10));
+            }
+            if (summonIDs.size() > 100) {
                 // TODO: Implement paging
                 throw new IllegalArgumentException("Summon only supports up to 100 document requests at a time");
             }
             // http://api.summon.serialssolutions.com/help/api/search/parameters
             log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
-                      + ids.size() + " document IDs");
-            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(removePrefix(idPrefix, ids)));
+                      + summonIDs.size() + " document IDs");
+            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(summonIDs));
         }
         return true;
     }
 
-    private List<String> removePrefix(String prefix, List<String> strs) {
-        for (int i = 0 ; i < strs.size() ; i++) {
-            if (strs.get(i).startsWith(prefix)) {
-                strs.set(i, strs.get(i).substring(prefix.length()));
+    private List<String> extractSummonIDs(List<String> ids) {
+        List<String> summonIDs = new ArrayList<String>(ids.size());
+        for (String id: ids) {
+            if (id.startsWith(idPrefix)) {
+                summonIDs.add(id.substring(idPrefix.length()));
             }
         }
-        return strs;
+        return summonIDs;
     }
 
     /**
