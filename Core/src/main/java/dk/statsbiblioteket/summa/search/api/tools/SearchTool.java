@@ -40,7 +40,8 @@ public class SearchTool {
             {DocumentKeys.SEARCH_FILTER, "f"},
             {DocumentKeys.SEARCH_COLLECT_DOCIDS, "docids"},
             {DocumentKeys.SEARCH_SORTKEY, "sort"},
-            {LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "mlt"}
+            {LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "mlt"},
+            {DocumentKeys.SEARCH_IDS, "ids"}
     };
 
     /**
