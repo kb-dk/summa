@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
@@ -82,6 +83,16 @@ public class SummonSearchNode extends SolrSearchNode {
      * All summon record IDs starts with this. Used for ID-lookup.
      */
     private static final String SUMMON_ID_PREFIX = "FETCH-";
+
+    /**
+     * The maximum number of documents to request in one call when performing lookups on IDs.
+     */
+    public static final int SUMMON_MAX_IDS = 100; // TODO: Set this to 100
+
+    /**
+     * When performing a paged ID-search, wait this number of milliseconds between request.
+     */
+    private static final long SUMMON_ID_SEARCH_WAIT = 200;
 
     /**
      * If true, all configuration parameters, except the explicit ones in this class, that starts with "summon."
@@ -427,7 +438,7 @@ public class SummonSearchNode extends SolrSearchNode {
     }
 
     @Override
-    protected boolean handleDocIDs(Request request, ResponseCollection responses) {
+    protected boolean handleDocIDs(Request request, ResponseCollection responses) throws RemoteException {
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
             List<String> allIDs = request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>());
             List<String> summonIDs = extractSummonIDs(allIDs);
@@ -439,9 +450,9 @@ public class SummonSearchNode extends SolrSearchNode {
                 log.debug("handleDocIDs called with " + allIDs.size() + " IDs, pruned to summon-IDs: "
                           + Strings.join(summonIDs, 10));
             }
-            if (summonIDs.size() > 100) {
-                // TODO: Implement paging
-                throw new IllegalArgumentException("Summon only supports up to 100 document requests at a time");
+            if (summonIDs.size() > SUMMON_MAX_IDS) {
+                handleDocIDsPaged(summonIDs, request, responses);
+                return false;
             }
             // http://api.summon.serialssolutions.com/help/api/search/parameters
             log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
@@ -449,6 +460,52 @@ public class SummonSearchNode extends SolrSearchNode {
             request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(summonIDs));
         }
         return true;
+    }
+
+    private void handleDocIDsPaged(List<String> summonIDs, Request request, ResponseCollection responses)
+            throws RemoteException {
+        log.debug("handleDocIDsPaged(" + summonIDs.size() +", ..., ...) called");
+        List<ResponseCollection> rawResponses = new ArrayList<ResponseCollection>(summonIDs.size()/SUMMON_MAX_IDS+1);
+        ArrayList<String> notProcessed = new ArrayList<String>(summonIDs);
+        // We do this iteratively so we do not overwhelm summon
+        while (!notProcessed.isEmpty()) {
+            ArrayList<String> sub;
+            if (notProcessed.size() > SUMMON_MAX_IDS) {
+                sub = new ArrayList<String>(notProcessed.subList(0, SUMMON_MAX_IDS));
+                notProcessed = new ArrayList<String>(notProcessed.subList(SUMMON_MAX_IDS, notProcessed.size()));
+            } else {
+                sub = notProcessed;
+            }
+            ResponseCollection subResponses = new ResponseCollection();
+            Request subReques = new Request();
+            subReques.putAll(request);
+            subReques.put(DocumentKeys.SEARCH_IDS, sub);
+            barrierSearch(subReques, responses);
+            rawResponses.add(subResponses);
+            if (sub != notProcessed) { // More to come
+                synchronized (this) {
+                    try {
+                        this.wait(SUMMON_ID_SEARCH_WAIT);
+                    } catch (InterruptedException e) {
+                        log.debug("handleDocIDsPaged: Interrupted while waiting. Not a problem as it was just a delay");
+                    }
+                }
+            } else {
+                notProcessed.clear();
+            }
+        }
+        // All paged searched done. Merge time
+        for (ResponseCollection rc: rawResponses) {
+            for (Response r: rc) {
+                if (r instanceof DocumentResponse) {
+                    DocumentResponse docs = (DocumentResponse)r;
+                    docs.setMaxRecords(Integer.MAX_VALUE);
+                    responses.add(docs);
+                }
+            }
+            log.warn("handleDocIDsPaged: Encountered ResponseCollection without a DocumentResponse. " +
+                     "Request was: " + request);
+        }
     }
 
     private List<String> extractSummonIDs(List<String> ids) {
