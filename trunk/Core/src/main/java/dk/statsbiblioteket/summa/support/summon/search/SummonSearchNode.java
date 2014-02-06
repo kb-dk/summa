@@ -79,6 +79,11 @@ public class SummonSearchNode extends SolrSearchNode {
     private static Log log = LogFactory.getLog(SummonSearchNode.class);
 
     /**
+     * All summon record IDs starts with this. Used for ID-lookup.
+     */
+    private static final String SUMMON_ID_PREFIX = "FETCH-";
+
+    /**
      * If true, all configuration parameters, except the explicit ones in this class, that starts with "summon."
      * are converted to start with "solr." in order to conform with the superclass.
      * </p><p>
@@ -447,6 +452,8 @@ public class SummonSearchNode extends SolrSearchNode {
         for (String id: ids) {
             if (id.startsWith(idPrefix)) {
                 summonIDs.add(id.substring(idPrefix.length()));
+            } else if (id.startsWith(SUMMON_ID_PREFIX)) {
+                summonIDs.add(id);
             }
         }
         return summonIDs;
