@@ -356,7 +356,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     }
 
     private static final String MLT_KEY = CONF_SOLR_PARAM_PREFIX + "mlt";
-    private void barrierSearch(Request request, ResponseCollection responses) throws RemoteException {
+    protected void barrierSearch(Request request, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
         if (!handleMLT(request, responses)) {
             return;
@@ -499,7 +499,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * @param responses responses so far.
      * @return true if standard processing should commence, false if the searcher should return immediately.
      */
-    protected boolean handleDocIDs(Request request, ResponseCollection responses) {
+    protected boolean handleDocIDs(Request request, ResponseCollection responses) throws RemoteException {
         if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
             StringBuilder sb = new StringBuilder(200);
             for (String id: request.getStrings(DocumentKeys.SEARCH_IDS)) {
@@ -512,6 +512,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                 log.debug("Expanded " + DocumentKeys.SEARCH_IDS + " query to '" + sb.toString() + "'");
             }
             request.put(DocumentKeys.SEARCH_QUERY, sb.toString());
+            request.put(DocumentKeys.SEARCH_MAX_RECORDS, 10000);
         }
         return true;
     }
