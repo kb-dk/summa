@@ -90,7 +90,7 @@ public class SummonSearchNodeTest extends TestCase {
     public void testDocIDRequest() throws RemoteException {
         List<String> IDs = Arrays.asList(
                 "summon_FETCH-proquest_dll_11531932811",
-                "summon_FETCH-proquest_dll_6357072911",
+                "FETCH-proquest_dll_6357072911",
                 "summon_FETCH-proquest_dll_15622214411",
                 "InvalidID"
         );
