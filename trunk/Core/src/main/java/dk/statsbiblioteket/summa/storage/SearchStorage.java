@@ -87,9 +87,19 @@ public class SearchStorage implements Storage {
     public static final String CONF_RECORD_BASE = "searchstorage.recordbase";
     public static final String DEFAULT_RECORD_BASE = "searchstorage";
 
+    /**
+     * If true the remote searcher is expected to support {@link DocumentKeys#SEARCH_IDS}. If false, non-optimized
+     * Lucene queries are used.
+     * </p><p>
+     * Optional. Default is true as all Summa-searchers supports this.
+     */
+    public static final String CONF_EXPLICIT_ID_SUPPORTED = "searchstorage.explicitidsearch";
+    public static final boolean DEFAULT_EXPLICIT_ID_SUPPORTED = true;
+
     private final int batchSize;
     private final String idField;
     private final String recordBase;
+    private final boolean explicitIDSearch;
 
     public SearchStorage(Configuration conf) throws RemoteException {
         if (conf.valueExists(SummaSearcher.CONF_CLASS)) {
@@ -107,8 +117,9 @@ public class SearchStorage implements Storage {
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         idField = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         recordBase = conf.getString(CONF_RECORD_BASE, DEFAULT_RECORD_BASE);
+        explicitIDSearch = conf.getBoolean(CONF_EXPLICIT_ID_SUPPORTED, DEFAULT_EXPLICIT_ID_SUPPORTED);
         log.info("Created SearchStorage with batchSize=" + batchSize + ", idField='" + idField
-                 + "', recordBase='" + recordBase + "', backed by "
+                 + "', recordBase='" + recordBase + "', explicitIDSearch=" + explicitIDSearch + ", backed by "
                  + (searchNode == null ? "SearchClient(" + conf.getString(ConnectionConsumer.CONF_RPC_TARGET) + ")" :
                     "embedded SearchNode(" + conf.getString(SummaSearcher.CONF_CLASS) + ")"));
     }
@@ -125,8 +136,30 @@ public class SearchStorage implements Storage {
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         return getRecords(ids, options, true);
     }
-    // TODO: Use the first class document retrieval instead
+
     public List<Record> getRecords(List<String> ids, QueryOptions options, boolean doLog) throws IOException {
+        return explicitIDSearch ?
+                getRecordsExplicitIDSearch(ids, options, doLog) :
+                getRecordsNoExplicitIDSearch(ids, options, doLog);
+    }
+    protected List<Record> getRecordsExplicitIDSearch(List<String> ids, QueryOptions options, boolean doLog)
+            throws IOException {
+        final long startTime = System.currentTimeMillis();
+        DocumentResponse documents = getDocumentResponse(new Request(
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, new ArrayList<String>(ids)));
+        List<Record> result = documents != null ? convertDocuments(documents) : new ArrayList<Record>(0);
+        String message = "Finished getRecords(" + (ids.size() == 1 ? ids.get(0) : ids.size() + " record ids") + ") "
+                       + "-> " + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms";
+        log.debug(message);
+        if (doLog) {
+            recordlog.info(message);
+        }
+        return result;
+
+    }
+    // TODO: Use the first class document retrieval instead
+    protected List<Record> getRecordsNoExplicitIDSearch(List<String> ids, QueryOptions options, boolean doLog)
+            throws IOException {
         final long startTime = System.currentTimeMillis();
         List<Record> result = new ArrayList<Record>(ids.size());
         if (ids.size() > batchSize) {
@@ -184,6 +217,10 @@ public class SearchStorage implements Storage {
             DocumentKeys.SEARCH_MAX_RECORDS, batchSize,
             DocumentKeys.SEARCH_COLLECT_DOCIDS, false
         );
+        return getDocumentResponse(request);
+    }
+
+    private DocumentResponse getDocumentResponse(Request request) throws IOException {
         ResponseCollection responses;
         if (searchClient == null) {
             responses = new ResponseCollection();
