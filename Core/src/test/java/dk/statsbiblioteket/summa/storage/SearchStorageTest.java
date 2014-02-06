@@ -64,7 +64,7 @@ public class SearchStorageTest extends TestCase {
         testSearcherStorage(fakeStorage);
     }
 
-    public void testSBSpecificStorages() throws IOException {
+    public void disabledtestSBSpecificStorages() throws IOException {
         final String HUB = "//mars:47500/hub-storage";
         StorageReaderClient storage = new StorageReaderClient(Configuration.newMemoryBased(
                 ConnectionConsumer.CONF_RPC_TARGET, HUB

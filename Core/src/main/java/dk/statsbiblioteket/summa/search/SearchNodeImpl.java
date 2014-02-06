@@ -371,6 +371,7 @@ public abstract class SearchNodeImpl implements SearchNode {
             if (!request.containsKey(DocumentKeys.SEARCH_MAX_RECORDS)) {
                 request.put(DocumentKeys.SEARCH_MAX_RECORDS, ids.size());
             }
+            request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         }
         return true;
     }
