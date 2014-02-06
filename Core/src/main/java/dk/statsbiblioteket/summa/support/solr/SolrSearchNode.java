@@ -500,21 +500,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * @return true if standard processing should commence, false if the searcher should return immediately.
      */
     protected boolean handleDocIDs(Request request, ResponseCollection responses) throws RemoteException {
-        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
-            StringBuilder sb = new StringBuilder(200);
-            for (String id: request.getStrings(DocumentKeys.SEARCH_IDS)) {
-                if (sb.length() != 0) {
-                    sb.append(" OR ");
-                }
-                sb.append(fieldID).append(":\"").append(id.replace("\"", "\\\"")).append("\"");
-            }
-            if (log.isDebugEnabled()) {
-                log.debug("Expanded " + DocumentKeys.SEARCH_IDS + " query to '" + sb.toString() + "'");
-            }
-            request.put(DocumentKeys.SEARCH_QUERY, sb.toString());
-            request.put(DocumentKeys.SEARCH_MAX_RECORDS, 10000);
-        }
-        return true;
+        return true; // Handled by {@link DocumentSearcherImpl#adjustRequest}.
     }
 
     /**

@@ -16,9 +16,11 @@ package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -331,10 +334,45 @@ public abstract class SearchNodeImpl implements SearchNode {
             throw new RemoteException("Interrupted while waiting for free slot for search");
         }
         try {
+            if (!adjustRequest(request)) {
+                log.debug("adjustRequest returned false. Skipping search");
+                return;
+            }
             managedSearch(request, responses);
         } finally {
             slots.release();
         }
+    }
+
+    /**
+     * Optional adjustment of the request before search is called. Default behaviour is to rewrite
+     * {@link DocumentKeys#SEARCH_IDS} by callink {@link #rewriteIDRequestToLuceneQuery}.
+     * @param request the original and unmodified request;
+     * @return true if search should commence. Else false.
+     */
+    protected boolean adjustRequest(Request request) {
+        return rewriteIDRequestToLuceneQuery(request);
+    }
+
+    protected boolean rewriteIDRequestToLuceneQuery(Request request) {
+        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            StringBuilder sb = new StringBuilder(200);
+            List<String> ids = request.getStrings(DocumentKeys.SEARCH_IDS);
+            for (String id: ids) {
+                if (sb.length() != 0) {
+                    sb.append(" OR ");
+                }
+                sb.append(IndexUtils.RECORD_FIELD).append(":\"").append(id.replace("\"", "\\\"")).append("\"");
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("Expanded " + DocumentKeys.SEARCH_IDS + " query to '" + sb.toString() + "'");
+            }
+            request.put(DocumentKeys.SEARCH_QUERY, sb.toString());
+            if (!request.containsKey(DocumentKeys.SEARCH_MAX_RECORDS)) {
+                request.put(DocumentKeys.SEARCH_MAX_RECORDS, ids.size());
+            }
+        }
+        return true;
     }
 
     /**
