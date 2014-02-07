@@ -296,7 +296,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
         log.trace("Performing Suggest search on prefix '" + prefix + " with maxResults=" + maxResults);
         SuggestResponse response = storage.getSuggestion(prefix, maxResults);
-        double time = (System.nanoTime() - startTime) / 1000000D;
+        long time = (System.nanoTime() - startTime) / 1000000;
         dualLog("Completed Suggest for prefix '" + prefix + "' with maxResults=" + maxResults + " in " + time + "ms");
         response.addTiming("suggest.search", Math.round(time));
         responses.add(response);
