@@ -18,7 +18,7 @@ export PRINT_CONFIG=
 export LOG4J=tools.log4j.xml
 ###LIBDIRS=
 ###JAVA_HOME=
-export JVM_OPTS="$JVM_OPTS -Xmx640m "
+export JVM_OPTS="-Xmx640m $JVM_OPTS"
 export SECURITY_POLICY="$DEPLOY/config/server.policy"
 ###ENABLE_JMX=
 

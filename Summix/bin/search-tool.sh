@@ -18,7 +18,7 @@ export DEFAULT_CONFIGURATION=$DEPLOY/config/search-tool.configuration.xml
 export LOG4J=tools.log4j.xml
 ###LIBDIRS=
 ###JAVA_HOME=
-export JVM_OPTS="$JVM_OPTS -Xmx64m "
+export JVM_OPTS="-Xmx64m $JVM_OPTS"
 export SECURITY_POLICY="$DEPLOY/config/server.policy"
 ###ENABLE_JMX=
 
