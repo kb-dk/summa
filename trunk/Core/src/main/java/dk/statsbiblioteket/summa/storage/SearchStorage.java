@@ -146,7 +146,7 @@ public class SearchStorage implements Storage {
             throws IOException {
         final long startTime = System.currentTimeMillis();
         DocumentResponse documents = getDocumentResponse(new Request(
-                DocumentKeys.SEARCH_COLLECT_DOCIDS, new ArrayList<String>(ids)));
+                DocumentKeys.SEARCH_IDS, new ArrayList<String>(ids)));
         List<Record> result = documents != null ? convertDocuments(documents) : new ArrayList<Record>(0);
         String message = "Finished getRecords(" + (ids.size() == 1 ? ids.get(0) : ids.size() + " record ids") + ") "
                        + "-> " + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms";
