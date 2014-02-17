@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -178,10 +179,11 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * The suggest storage holding the suggestion.
      */
     private SuggestStorage storage;
+    private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
+    private final Profiler uProfiler = new Profiler(Integer.MAX_VALUE, 100);
 
     /**
      * Create a suggest search node.
-     *
      * @param conf The configuration for setting up the search node.
      */
     public SuggestSearchNode(Configuration conf) {
@@ -277,9 +279,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     /**
      * Suggestion search.
-     *
-     * @param request   The request. This should contain
-     *                  {@link SuggestKeys#SEARCH_PREFIX}.
+     * @param request   The request. This should contain {@link SuggestKeys#SEARCH_PREFIX}.
      * @param responses The response collection.
      * @throws IOException If error occur while doing search.
      */
@@ -297,16 +297,16 @@ public class SuggestSearchNode extends SearchNodeImpl {
         log.trace("Performing Suggest search on prefix '" + prefix + " with maxResults=" + maxResults);
         SuggestResponse response = storage.getSuggestion(prefix, maxResults);
         long time = (System.nanoTime() - startTime) / 1000000;
-        dualLog("Completed Suggest for prefix '" + prefix + "' with maxResults=" + maxResults + " in " + time + "ms");
+        profiler.beat();
+        dualLog("Completed Suggest for prefix '" + prefix + "' with maxResults=" + maxResults + " in " + time + "ms. "
+                + getRequestStats());
         response.addTiming("suggest.search", Math.round(time));
         responses.add(response);
     }
 
     /**
      * Perform a suggest recent on the suggest storage.
-     *
-     * @param request   The request. This should contain
-     *                  {@link SuggestKeys#SEARCH_RECENT}
+     * @param request   The request. This should contain {@link SuggestKeys#SEARCH_RECENT}
      * @param responses The response.
      * @throws IOException If error occur while querying.
      */
@@ -330,8 +330,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
     /**
      * Perform a suggestion update.
      *
-     * @param request   The request. This should contain
-     *                  {@link SuggestKeys#SEARCH_UPDATE_QUERY} and
+     * @param request   The request. This should contain {@link SuggestKeys#SEARCH_UPDATE_QUERY} and
      *                  {@link SuggestKeys#SEARCH_UPDATE_HITCOUNT}.
      * @param responses The response.
      * @throws IOException If error occur while querying.
@@ -348,15 +347,16 @@ public class SuggestSearchNode extends SearchNodeImpl {
             return;
         }
         int hits = request.getInt(SuggestKeys.SEARCH_UPDATE_HITCOUNT);
+        uProfiler.beat();
         if (!request.containsKey(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT)) {
             storage.addSuggestion(query, hits);
             dualLog("Completed addSuggestion(" + query + ", " + hits + ") in "
-                    + (System.nanoTime() - startTime) / 1000000D + "ms");
+                    + (System.nanoTime() - startTime) / 1000000D + "ms. " + getUpdateStats());
         } else {
             int queryCount = request.getInt(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT);
             storage.addSuggestion(query, hits, queryCount);
             dualLog("Completed extended addSuggestion(" + query + ", " + hits + ", " + queryCount + ") in "
-                    + (System.nanoTime() - startTime) / 1000000D + "ms");
+                    + (System.nanoTime() - startTime) / 1000000D + "ms. " + getUpdateStats());
         }
         responses.add(new SuggestResponse("addSuggestion of query '" + query + "'", 10));
     }
@@ -364,9 +364,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
     /**
      * Opens any existing suggest storage at the given location. If no storage
      * is present, a new storage will be created.
-     *
-     * @param location where the storage is or should be. This must be parsable
-     *                 by {@code new File(...)}.
+     * @param location where the storage is or should be. This must be parsable by {@code new File(...)}.
      * @throws RemoteException if the storage could not be opened or created.
      */
     @Override
@@ -393,8 +391,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     /**
      * No warmup is needed for suggestions.
-     *
-     * @param request No used
+     * @param request Not used.
      */
     @Override
     protected void managedWarmup(String request) {
@@ -403,7 +400,6 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     /**
      * Wrapper for {@link SuggestStorage#listSuggestions}.
-     *
      * @param start the position from which to start extraction.
      * @param max   the maximum number of suggestions to extract.
      * @return a list of suggestions. Each suggest-entry if represented as
@@ -416,7 +412,6 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     /**
      * Wrapper for {@link SuggestStorage#addSuggestions}.
-     *
      * @param suggestions a list of suggestions.
      * @throws IOException if the suggestions could not be added.
      */
@@ -426,9 +421,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     /**
      * Delete all suggestion in storage, not depended on case.
-     *
-     * @param suggestion The suggestion string to remove from
-     *                   storage.
+     * @param suggestion The suggestion string to remove from storage.
      * @return True if suggestion isn't present i storage anymore.
      */
     public boolean deleteSuggestion(String suggestion) {
@@ -438,5 +431,14 @@ public class SuggestSearchNode extends SearchNodeImpl {
     private void dualLog(String message) {
         log.debug(message);
         qlog.info(message);
+    }
+
+    private String getRequestStats() {
+        return "Stats(#getSuggests=" + profiler.getBeats()
+               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
+    }
+    private String getUpdateStats() {
+        return "Stats(#updates=" + uProfiler.getBeats()
+               + ", u/s(last " + uProfiler.getBpsSpan() + "=" + uProfiler.getBps(true) + ")";
     }
 }

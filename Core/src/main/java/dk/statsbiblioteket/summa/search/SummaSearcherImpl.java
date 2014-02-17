@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -115,6 +116,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     private final boolean emptySearchAllowed;
 
     private int maxConcurrent = 0; // Non-authoritative, used for loose inspection only
+    private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
 
     /**
      * Extracts basic settings from the configuration and constructs the
@@ -236,12 +238,13 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
             }
         } finally {
             searchQueue.release();
+            profiler.beat();
             // TODO: Make this cleaner with no explicit dependency
             if (responses.isEmpty()) {
                 queries.info(this.getClass().getSimpleName() + " finished "
                              + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                              + " without responses in " + (System.nanoTime() - fullStartTime) / 1000000
-                             + "ms. Request was " + originalRequest);
+                             + "ms. Request was " + originalRequest + ". " + getStats());
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
@@ -262,7 +265,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                                  + " in " + (System.nanoTime() - fullStartTime) / 1000000
                                  + "ms with " + hits + " hits. "
                                  + "Request was " + originalRequest
-                                 + " with Timing(" + responses.getTiming() + ")");
+                                 + " with Timing(" + responses.getTiming() + "). " + getStats());
                 }
             }
         }
@@ -464,6 +467,11 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     }
 
     //
+
+    private String getStats() {
+        return "Stats(#queries=" + profiler.getBeats()
+               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
+    }
 
     /**
      * Clear the statistic numbers from this searcher. This means set query count to zero, total

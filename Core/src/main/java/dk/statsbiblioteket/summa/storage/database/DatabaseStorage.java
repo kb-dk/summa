@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.storage.database.cursors.CursorReaper;
 import dk.statsbiblioteket.summa.storage.database.cursors.PagingCursor;
 import dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -462,6 +463,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private int pageSizeUpdate;
 
     private StatementHandler statementHandler;
+    private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
 
     /**
      * A variation of {@link QueryOptions} used to keep track of recursion
@@ -1621,8 +1623,9 @@ public abstract class DatabaseStorage extends StorageBase {
 
         try {
             List<Record> result = getRecordsWithConnection(ids, options, conn);
+            profiler.beat();
             String message = "Finished getRecords(" + ids.size() + " ids, ...) with " + result.size() + " results in "
-                             + (System.currentTimeMillis() - startTime) + "ms";
+                             + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(message);
             recordlog.info(message);
             return result;
@@ -1861,13 +1864,15 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
 
             Record record = getRecordWithConnection(id, options, conn);
+            profiler.beat();
             String m = "Finished getRecord(" + id + ", ...) " + (record == null ? "without" : "with")
-                       + " result in " + (System.currentTimeMillis() - startTime) + "ms";
+                       + " result in " + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(m);
             recordlog.info(m);
             return record;
         } catch (SQLException e) {
-            String m = "Failed getRecord(" + id + ", ...) in " + (System.currentTimeMillis() - startTime) + "ms";
+            String m = "Failed getRecord(" + id + ", ...) in " + (System.currentTimeMillis() - startTime)
+                       + "ms. " + getRequestStats();
             log.error(m, e);
             recordlog.error(m);
             return null;
@@ -1875,6 +1880,11 @@ public abstract class DatabaseStorage extends StorageBase {
             closeConnection(conn);
         }
 
+    }
+
+    private String getRequestStats() {
+        return "Stats(#getRecords=" + profiler.getBeats()
+               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
     }
 
     private Record getRecordWithConnection(

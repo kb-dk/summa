@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -100,6 +101,7 @@ public class SearchStorage implements Storage {
     private final String idField;
     private final String recordBase;
     private final boolean explicitIDSearch;
+    private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
 
     public SearchStorage(Configuration conf) throws RemoteException {
         if (conf.valueExists(SummaSearcher.CONF_CLASS)) {
@@ -148,8 +150,10 @@ public class SearchStorage implements Storage {
         DocumentResponse documents = getDocumentResponse(new Request(
                 DocumentKeys.SEARCH_IDS, new ArrayList<String>(ids)));
         List<Record> result = documents != null ? convertDocuments(documents) : new ArrayList<Record>(0);
+        profiler.beat();
         String message = "Finished getRecords(" + (ids.size() == 1 ? ids.get(0) : ids.size() + " record ids") + ") "
-                       + "-> " + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms";
+                       + "-> " + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms. "
+                       + getRequestStats();
         log.debug(message);
         if (doLog) {
             recordlog.info(message);
@@ -189,7 +193,8 @@ public class SearchStorage implements Storage {
             result = convertDocuments(documents);
         }
         String message = "Finished getRecords(" + (ids.size() == 1 ? ids.get(0) : ids.size() + " record ids") + ") "
-                       + "-> " + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms";
+                       + "-> " + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms. "
+                       + getRequestStats();
         log.debug(message);
         if (doLog) {
             recordlog.info(message);
@@ -242,9 +247,14 @@ public class SearchStorage implements Storage {
         List<Record> records = getRecords(Arrays.asList(id), options, false);
         log.debug("getRecord(" + id + ", ...) returned " + records.size() + " records");
         String m = "Finished getRecord(" + id + ", ...) " + (records.isEmpty() ? "without" : "with")
-                   + " result in " + (System.currentTimeMillis() - startTime) + "ms";
+                   + " result in " + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
         recordlog.info(m);
         return records.isEmpty() ? null : records.get(0);
+    }
+
+    private String getRequestStats() {
+        return "Stats(#getRecords=" + profiler.getBeats()
+               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
     }
 
     private String makeQuery(String id) {
