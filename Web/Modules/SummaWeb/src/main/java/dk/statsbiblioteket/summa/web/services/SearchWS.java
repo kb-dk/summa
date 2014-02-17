@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
@@ -84,6 +85,8 @@ public class SearchWS {
     public static final String VERSION_TAG = "version";
     /** XML version attribute value. */
     public static final String VERSION = "1.0";
+
+    private static final String DEFAULT_CONF_FILE = "configuration_search.xml";
 
     /**
      * Default constructor.
@@ -155,27 +158,30 @@ public class SearchWS {
      *
      * @return The Configuration object.
      */
-    private synchronized Configuration getConfiguration() {
+    private Configuration getConfiguration() {
         final String LOCATION = "java:comp/env/confLocation";
         if (conf == null) {
             InitialContext context;
             try {
                 context = new InitialContext();
-                String paramValue = (String)context.lookup(LOCATION);
+                String paramValue = (String) context.lookup(LOCATION);
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
+                log.info("Configuration loaded from " + paramValue);
             } catch (NamingException e) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Failed to lookup env-entry " + LOCATION + ". Trying to load system configuration", e);
+                if (Resolver.getURL(DEFAULT_CONF_FILE) != null) {
+                    log.info("Failed to lookup env-entry but '" + DEFAULT_CONF_FILE + "' exists. Attempting load");
+                    System.setProperty("SearchWS_config", DEFAULT_CONF_FILE);
+                    conf = Configuration.getSystemConfiguration("SearchWS_config", true);
                 } else {
-                    log.info("Failed to lookup env-entry " + LOCATION + ". Trying to load system configuration");
+                    log.warn("Failed to lookup env-entry. Attempting load of default system configuration");
+                    conf = Configuration.getSystemConfiguration(true);
                 }
-                conf = Configuration.getSystemConfiguration(true);
-                log.info("Successfully called Configuration.getSystemConfiguration(true)");
             }
         }
         return conf;
     }
+
 
     /**
      * Given search query and maximum number of result, this method returns a
