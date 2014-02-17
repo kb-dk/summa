@@ -58,6 +58,21 @@
         <url-pattern>/services/*</url-pattern>
     </servlet-mapping>
 
+    <!-- For backwards compatibility we need both search/services and storage/services.
+         Apparently we can define an arbitrary number of mappings. The only downside is
+         all the web services can be found at all the locations: search/services/StorageWS
+         is perfectly valid in this context, although this is clearly the wrong combination
+         of url-pattern and web service. -->
+    <servlet-mapping>
+        <servlet-name>AxisServlet</servlet-name>
+        <url-pattern>/search/services/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AxisServlet</servlet-name>
+        <url-pattern>/storage/services/*</url-pattern>
+    </servlet-mapping>
+
     <!--
     <servlet-mapping>
         <servlet-name>SOAPMonitorService</servlet-name>
