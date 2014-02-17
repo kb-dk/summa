@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -127,6 +128,7 @@ public class AggregatingStorage extends StorageBase {
      * Local log instance.
      */
     private Log log;
+    private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
 
     /**
      * Merging context class.
@@ -733,10 +735,11 @@ public class AggregatingStorage extends StorageBase {
                 result.addAll(recs);
             }
         }
-
+        profiler.beat();
         //noinspection DuplicateStringLiteralInspection
         String message= "Finished getRecords(" + (ids.size() == 1 ? ids.get(0) : ids.size() + " record ids") + ") -> "
-                        + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms";
+                        + result.size() + " records in " + (System.currentTimeMillis() - startTime) + "ms. "
+                        + getRequestStats();
         log.debug(message);
         recordlog.info(message);
         return result;
@@ -979,5 +982,10 @@ public class AggregatingStorage extends StorageBase {
      */
     protected StorageWriterClient getSubStorageWriter(String base) {
         return writers.get(base);
+    }
+
+    private String getRequestStats() {
+        return "Stats(#getRecords=" + profiler.getBeats()
+               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
     }
 }

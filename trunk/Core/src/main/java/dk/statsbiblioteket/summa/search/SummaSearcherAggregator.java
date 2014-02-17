@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -88,6 +89,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
     private List<Pair<String, SearchClient>> searchers;
     private ExecutorService executor;
     private final List<String> defaultSearchers;
+    private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
 
     public SummaSearcherAggregator(Configuration conf) {
         preConstruction(conf);
@@ -229,11 +231,12 @@ public class SummaSearcherAggregator implements SummaSearcher {
             log.warn(message, e);
             throw new IOException(message, e);
         } finally {
+            profiler.beat();
             if (merged == null) {
                 queries.info("SummaSearcherAggregator finished "
                              + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                              + " in " + (System.currentTimeMillis()-startTime) + "ms. "
-                             + "Request was " + originalRequest);
+                             + "Request was " + originalRequest + ". " + getStats());
             } else {
                 if (merged.getTransient() != null && merged.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = merged.getTransient().get(DocumentSearcher.DOCIDS);
@@ -252,7 +255,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.currentTimeMillis()-startTime) / 1000000 + "ms with "
                                  + hits + " hits. Request was " + originalRequest
-                                 + " with Timing(" + merged.getTiming() + ")");
+                                 + " with Timing(" + merged.getTiming() + "). " + getStats());
                 }
             }
         }
@@ -336,6 +339,11 @@ public class SummaSearcherAggregator implements SummaSearcher {
         }
     }
 
+    private String getStats() {
+        return "Stats(#queries=" + profiler.getBeats()
+               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
+    }
+
     @Override
     public String toString() {
         String s = "";
@@ -346,6 +354,6 @@ public class SummaSearcherAggregator implements SummaSearcher {
             s+= searcher.getKey();
         }
         return "SummaSearcherAggregator(searchers=[" + s + "], defaultSearchers=[" + Strings.join(defaultSearchers)
-               + "])";
+               + "], " + getStats() + ")";
     }
 }

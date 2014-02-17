@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +50,7 @@ public class AdjustingSearchClient extends SearchClient {
     private final InteractionAdjuster adjuster;
     private final TermStatQueryRewriter rewriter;
     private final String id;
+    private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
 
     public AdjustingSearchClient(Configuration conf) {
         this(conf, null);
@@ -94,11 +96,12 @@ public class AdjustingSearchClient extends SearchClient {
             success = true;
             return responses;
         } finally {
+            profiler.beat();
             if (responses == null) {
                 queries.info("AdjustingSearchClient finished "
                              + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                               + " in " + (System.currentTimeMillis() - startTime)
-                              + "ms. Request was " + originalRequest);
+                              + "ms. Request was " + originalRequest + ". " + getStats());
             } else {
                 if (responses.getTransient() != null && responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
                     Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
@@ -117,7 +120,7 @@ public class AdjustingSearchClient extends SearchClient {
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.currentTimeMillis() - startTime) + "ms with " + hits + " hits. "
                                  + "Request was " + originalRequest
-                                 + " with Timing(" + responses.getTiming() + ")");
+                                 + " with Timing(" + responses.getTiming() + "). " + getStats());
                 }
             }
 
@@ -132,4 +135,10 @@ public class AdjustingSearchClient extends SearchClient {
     public String toString() {
         return "AdjustingSearchClient(id='" + id + "', adjuster=" + adjuster + ", rewriter=" + rewriter + ")";
     }
+
+    private String getStats() {
+        return "Stats(#queries=" + profiler.getBeats()
+               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
+    }
+
 }
