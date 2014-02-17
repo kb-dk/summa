@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
@@ -65,6 +66,11 @@ public class StorageWS {
      * storage, used in {@link #realGetRecords(java.util.List)}.
      */
     public static final String QUERYTIME = "querytime";
+
+    /**
+     * If not existing, the fallbacks in Configuration are tried.
+     */
+    public static final String DEFAULT_CONF_FILE = "configuration_storage.xml";
 
     /** A merger pool. */
     static ArrayBlockingQueue<MarcMultiVolumeMerger> mergers;
@@ -129,17 +135,24 @@ public class StorageWS {
      * @return The Configuration object.
      */
     private Configuration getConfiguration() {
+        final String LOCATION = "java:comp/env/confLocation";
         if (conf == null) {
             InitialContext context;
             try {
                 context = new InitialContext();
-                String paramValue = (String) context.lookup("java:comp/env/confLocation");
+                String paramValue = (String) context.lookup(LOCATION);
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
+                log.info("Configuration loaded from " + paramValue);
             } catch (NamingException e) {
-                log.warn("Failed to lookup env-entry.");
-                log.info("Trying to load system configuration.");
-                conf = Configuration.getSystemConfiguration(true);
+                if (Resolver.getURL(DEFAULT_CONF_FILE) != null) {
+                    log.info("Failed to lookup env-entry but '" + DEFAULT_CONF_FILE + "' exists. Attempting load");
+                    System.setProperty("StorageWS_config", DEFAULT_CONF_FILE);
+                    conf = Configuration.getSystemConfiguration("StorageWS_config", true);
+                } else {
+                    log.warn("Failed to lookup env-entry. Attempting load of default system configuration");
+                    conf = Configuration.getSystemConfiguration(true);
+                }
             }
         }
         return conf;
