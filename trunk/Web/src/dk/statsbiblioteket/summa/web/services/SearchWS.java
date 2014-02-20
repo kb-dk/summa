@@ -204,13 +204,13 @@ public class SearchWS {
                     + "DidYouMeanResponse");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
-            log.warn("Error executing didYouMean: '" + query + "', " +
+            log.error("Error executing didYouMean: '" + query + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
             String mes = "Error performing didYouMean query";
             retXML = getErrorXML(DidYouMeanResponse.DIDYOUMEANRESPONSE, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error executing didYouMean: '" + query + "', " +
+            log.error("Error executing didYouMean: '" + query + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
             String mes = "Error performing didYouMean query";
@@ -254,13 +254,13 @@ public class SearchWS {
                     + "QueryResponse/suggestions");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
-            log.warn("Error executing getSuggestions: '" + prefix + "', " +
+            log.error("Error executing getSuggestions: '" + prefix + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
             String mes = "Error performing getSuggestions";
             retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error executing getSuggestions: '" + prefix + "', " +
+            log.error("Error executing getSuggestions: '" + prefix + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
             String mes = "Error performing getSuggestions";
@@ -322,12 +322,12 @@ public class SearchWS {
                     + "QueryResponse/suggestions");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
-            log.warn("Error executing getRecentSuggestions: " + ageSeconds
+            log.error("Error executing getRecentSuggestions: " + ageSeconds
                      + "s, " + maxSuggestions + ". Error was: ", e);
             String mes = "Error performing getRecentSuggestions";
             retXML = getErrorXML(SuggestResponse.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error executing getRecentSuggestions: "
+            log.error("Error executing getRecentSuggestions: "
                      + ageSeconds + "s, " + maxSuggestions
                      + ". Error was: ", e);
             String mes = "Error performing getRecentSuggestions";
@@ -415,12 +415,12 @@ public class SearchWS {
                           + "was\n" + res.toXML());
             }
         } catch (IOException e) {
-            log.warn("Error querying for id: '" + id + "'." +
+            log.error("Error querying for id: '" + id + "'." +
                     "Error was: ", e);
             String mes = "Error performing query";
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error querying for id: '" + id + "'." +
+            log.error("Error querying for id: '" + id + "'." +
                     "Error was: ", e);
             String mes = "Error performing query";
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
@@ -570,7 +570,7 @@ public class SearchWS {
             res = getSearchClient().search(req);
             retXML = res.toXML();
         } catch (IOException e) {
-            log.warn("Error executing morelikethis: '" + id + "', " +
+            log.error("Error executing morelikethis: '" + id + "', " +
                     numberOfRecords +
                     ". Error was: ", e);
             String mes = "Error performing morelikethis";
@@ -743,7 +743,7 @@ public class SearchWS {
                                         query));
             }
         } catch (Exception e) {
-            log.warn(String.format(
+            log.error(String.format(
                     "Exception while extracting processing options from query "
                     + "'%s'. Options are skipped and the query left unchanged",
                     query));
@@ -837,7 +837,7 @@ public class SearchWS {
         } catch (IOException e) {
             String mes = String.format("Error pinging with message '%s': %s",
                                        message, e.getMessage());
-            log.warn(mes, e);
+            log.error(mes, e);
             return  getErrorXML("PingResponse", mes, e);
         }
 
@@ -947,12 +947,12 @@ public class SearchWS {
             // transform dom back into a string
             retXML = DOM.domToString(dom);
         } catch (IOException e) {
-            log.warn("Error faceting exposed request: '" + request + "'" +
+            log.error("Error faceting exposed request: '" + request + "'" +
                     ". Error was: ", e);
             String mes = "Error performing request";
             retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error faceting request: '" + request + "'" +
+            log.error("Error faceting request: '" + request + "'" +
                     ". Error was: ", e);
             String mes = "Error performing request";
             retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
@@ -1030,12 +1030,12 @@ public class SearchWS {
             // transform dom back into a string
             retXML = DOM.domToString(dom);
         } catch (IOException e) {
-            log.warn("Error faceting query: '" + query + "'" +
+            log.error("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
             String mes = "Error performing query";
             retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error faceting query: '" + query + "'" +
+            log.error("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
             String mes = "Error performing query";
             retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
