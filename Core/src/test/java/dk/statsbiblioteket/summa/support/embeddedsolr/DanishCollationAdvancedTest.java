@@ -88,8 +88,9 @@ public class DanishCollationAdvancedTest {
 
 	    int index=0;
 	    while(iterator.hasNext()){
-	        assertEquals(correctOrder[index++], iterator.next().getFieldValue("shortformat"));
-	    //    System.out.println();
+	        Object fieldValue = iterator.next().getFieldValue("shortformat");
+	        assertEquals(correctOrder[index++],fieldValue.toString());
+	        System.out.println(fieldValue.toString());
 	        
 	    }
 	 // Thread.sleep(50000000000L);	    
