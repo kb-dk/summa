@@ -147,7 +147,6 @@
     <field name="shortformat">Åen, der hadede løgn</field>
 </doc>
 
-
 <doc>
     <field name="recordID">sort_advanced_doc19</field>
     <field name="recordBase">aleph</field>
@@ -155,4 +154,87 @@
     <field name="sort_title">Åen der vendte tilbage</field>
     <field name="shortformat">Åen der vendte tilbage</field>
 </doc>
+
+
+<doc>
+    <field name="recordID">sort_advanced_doc20</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">10</field>
+    <field name="sort_title">10</field>
+    <field name="shortformat">10</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc21</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">1.000.000 (single)</field>
+    <field name="sort_title">1.000.000 (single)</field>
+    <field name="shortformat">1.000.000 (single)</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc22</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">100000 volts (single)e</field>
+    <field name="sort_title">100000 volts (single)</field>
+    <field name="shortformat">100000 volts (single)</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc23</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">100 70'er Hits</field>
+    <field name="sort_title">100 70'er Hits</field>
+    <field name="shortformat">100 70'er Hits</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc24</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">100 80's Hits</field>
+    <field name="sort_title">100 80's Hits</field>
+    <field name="shortformat">100 80's Hits</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc25</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">100 Country</field>
+    <field name="sort_title">100 Country</field>
+    <field name="shortformat">100 Country</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc26</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">100 Hits Of The '70s</field>
+    <field name="sort_title">100 Hits Of The '70s</field>
+    <field name="shortformat">100 Hits Of The '70s</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc27</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">100 Hits Of The '90s</field>
+    <field name="sort_title">100 Hits Of The '90s</field>
+    <field name="shortformat">100 Hits Of The '90s</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc28</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">100 Hits of the 80's - Volume 2</field>
+    <field name="sort_title">100 Hits of the 80's - Volume 2</field>
+    <field name="shortformat">100 Hits of the 80's - Volume 2</field>
+</doc>
+
+<doc>
+    <field name="recordID">sort_advanced_doc29</field>
+    <field name="recordBase">aleph</field>
+    <field name="title">100 Movie Hits</field>
+    <field name="sort_title">100 Movie Hits</field>
+    <field name="shortformat">100 Movie Hits</field>
+</doc>
+
+
 
