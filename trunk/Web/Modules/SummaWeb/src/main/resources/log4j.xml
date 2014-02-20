@@ -33,7 +33,7 @@
 
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
-        <param name="File" value="${catalina.home}/logs/searchWS.log"/>
+        <param name="File" value="${catalina.home}/logs/stack.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="5"/>
