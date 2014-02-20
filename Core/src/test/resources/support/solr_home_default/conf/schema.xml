@@ -29,26 +29,28 @@
              <analyzer type="index">
                 <tokenizer class="solr.KeywordTokenizerFactory"/>
                 <charFilter class="dk.statsbiblioteket.summa.common.solr.analysis.LowerCaseCharFilterFactory"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="sort_fields_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="void_analyse_only_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
                 <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>                                
-                <filter class="solr.ICUCollationKeyFilterFactory" locale="da" strength="primary" alternate="non-ignorable"/>
                 <filter class="solr.TrimFilterFactory"/>
+                <filter class="solr.ICUCollationKeyFilterFactory" locale="da" strength="primary" alternate="non-ignorable"/>                
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
              <analyzer type="query">
                 <tokenizer class="solr.KeywordTokenizerFactory"/>
                 <charFilter class="dk.statsbiblioteket.summa.common.solr.analysis.LowerCaseCharFilterFactory"/>
+                <charFilter class="solr.MappingCharFilterFactory" mapping="sort_fields_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="keywords_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="default_replace_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="void_transliterations.txt"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="blank_transliterations.txt"/>
                 <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="\s+" replacement=" "/>                                
-                <filter class="solr.ICUCollationKeyFilterFactory" locale="da" strength="primary" alternate="non-ignorable"/>
                 <filter class="solr.TrimFilterFactory"/>
+                <filter class="solr.ICUCollationKeyFilterFactory" locale="da" strength="primary" alternate="non-ignorable"/>                
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
         </fieldType>
