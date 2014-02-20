@@ -51,11 +51,20 @@ public class DanishCollationAdvancedTest {
 		};
 		SolrServerUnitTestUtil.indexFiles(files);
 	
-
-		//Notice the first two should be switched. Try fix this in solr 5.0. 
+ 
 		String[] correctOrder = new String[]{
-		        "§14 af ophavsretsloven",
-		        "$4 er prisen",
+		        "§14 af ophavsretsloven", 
+		        "$4 er prisen",		      
+		        "10",
+		        "100 70'er Hits",
+		        "100 80's Hits",
+		        "100 Country",
+		        "100 Hits Of The '70s",
+		        "100 Hits of the 80's - Volume 2",
+		        "100 Hits Of The '90s",
+		        "100 Movie Hits",
+		        "100000 volts (single)",
+		        "1.000.000 (single)",
 		        "Analyse og teori",
 		        "Analysen af teksten",
 		        "Dagen derpå",
