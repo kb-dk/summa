@@ -526,7 +526,7 @@ public class ResponseMerger implements Configurable {
         // Extract the needed records from the non-showing entries
         List<AdjustWrapper.AdjustRecord> promotees = new ArrayList<AdjustWrapper.AdjustRecord>(required);
         int position = firstInsertPos;
-        while (position < records.size() && promotees.size() < needed) {
+        while (position >= 0 && position < records.size() && promotees.size() < needed) {
             if (searchID.equals(records.get(position).getSearcherID())) {
                 promotees.add(records.remove(position));
                 continue;
