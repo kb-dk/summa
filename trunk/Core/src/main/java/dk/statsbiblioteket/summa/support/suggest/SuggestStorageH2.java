@@ -64,14 +64,6 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
      */
     public static final int MAX_SUGGESTIONS = 1000;
 
-    private File location = null;
-    private Connection connection;
-    private boolean closed = true;
-    private Analyzer normalizer, sanitizer;
-    private boolean normalizeQueries;
-    private int updateCount = 0;
-    private boolean useL2cache;
-    private UniqueTimestampGenerator timestamps;
     public static final int ANALYZE_INTERVAL = 50000;
 
     /**
@@ -125,27 +117,30 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
      */
     public static final Class<? extends Analyzer> DEFAULT_SANITIZER = WhitespaceAnalyzer.class;
 
-    private ThreadLocal<StringBuilder> threadLocalBuilder = new ThreadLocal<StringBuilder>() {
-        @Override
-        protected StringBuilder initialValue() {
-            return new StringBuilder();
-        }
+    /**
+     * Suggestion requests with prefixes shorter than this are not processed.
+     * </p><p>
+     * Optional. Default is 1.
+     */
+    public static final String CONF_MIN_SUGGEST_LENGTH = "summa.support.suggest.minlength";
+    public static final int DEFAULT_MIN_SUGGEST_LENGTH = 1;
 
-        @Override
-        public StringBuilder get() {
-            StringBuilder b = super.get();
-            b.setLength(0); // clear/reset the buffer
-            return b;
-        }
-
-    };
+    private File location = null;
+    private Connection connection;
+    private boolean closed = true;
+    private Analyzer normalizer, sanitizer;
+    private boolean normalizeQueries;
+    private int updateCount = 0;
+    private boolean useL2cache;
+    private UniqueTimestampGenerator timestamps;
+    private final int minLength;
 
     @SuppressWarnings("unused")
     public SuggestStorageH2(Configuration conf) {
         log.debug("Creating SuggestStorageH2");
 
-        normalizeQueries = conf.getBoolean(SuggestSearchNode.CONF_NORMALIZE_QUERIES,
-                                           SuggestSearchNode.DEFAULT_NORMALIZE_QUERIES);
+        normalizeQueries = conf.getBoolean(
+                SuggestSearchNode.CONF_NORMALIZE_QUERIES, SuggestSearchNode.DEFAULT_NORMALIZE_QUERIES);
 
         /* Initialize query normalizer */
         Class<? extends Analyzer> analyzerClass =
@@ -164,6 +159,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         } catch (Exception e) {
             throw new ConfigurationException("Unable to instantiate query sanitizer", e);
         }
+
+        minLength = conf.getInt(CONF_MIN_SUGGEST_LENGTH, DEFAULT_MIN_SUGGEST_LENGTH);
 
         useL2cache = conf.getBoolean(CONF_L2CACHE, DEFAULT_L2CACHE);
         timestamps = new UniqueTimestampGenerator();
@@ -352,6 +349,10 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         if (log.isTraceEnabled()) {
             log.trace("getSuggestion(" + prefix + ", " + maxResults + ")");
         }
+        if (prefix.length() < minLength) {
+            return new SuggestResponse(prefix, maxResults);
+        }
+
 
         try {
             long startTime = System.nanoTime();
@@ -938,4 +939,20 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             return "ERROR";
         }
     }
+
+    private ThreadLocal<StringBuilder> threadLocalBuilder = new ThreadLocal<StringBuilder>() {
+        @Override
+        protected StringBuilder initialValue() {
+            return new StringBuilder();
+        }
+
+        @Override
+        public StringBuilder get() {
+            StringBuilder b = super.get();
+            b.setLength(0); // clear/reset the buffer
+            return b;
+        }
+
+    };
+
 }
