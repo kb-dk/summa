@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.support.suggest;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.xml.DOM;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
@@ -25,6 +26,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Test class for the {@link SuggestStorage}.
@@ -38,9 +42,7 @@ public class SuggestStorageTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         if (storage != null) {
-            dbLocation = new File(
-                    "target/test/",
-                    "suggest-" + ++dbCount);
+            dbLocation = new File("target/test/", "suggest-" + ++dbCount);
             storage.open(dbLocation);
         } else {
             dbCount = 0;            
@@ -54,6 +56,72 @@ public class SuggestStorageTest extends TestCase {
     public void tearDown() throws Exception {
         storage.close();
         Files.delete(dbLocation);
+    }
+
+    public void testSpecialFile() throws IOException {
+        File location = new File("/home/te/tmp/trier_te/suggest_storage_slow_ps1/suggest");
+        //File location = new File("/mnt/bulk/suggest_storage_slow_ps1/suggest");
+        //File location = new File("/home/te/tmp/suggest_storage_slow_ps1/suggest");
+        final long TIMEOUT = 500000L;
+
+        if (!location.exists()) {
+            log.info("The suggest storage files at '" + location +" did not exist. Skipping test");
+            return;
+        }
+        storage = new SuggestStorageH2(Configuration.newMemoryBased());
+        storage.open(location);
+        testPerformance(storage, 100, TIMEOUT);
+        storage.close();
+    }
+
+    public void testPerformance(SuggestStorage storage, int runs, Long maxMS) throws IOException {
+        final String[] QUERIES =
+                ("foo,fo,re,p,s,kompendium aftageligt,d,analysestrategi,bar,hest,ha,the ,ged,os,as,rt,er,zy," +
+                 "bom,kalkun,g,h,j,k,l,æ,hanegal,ander,anders,rødhætte").split(",");
+        final String[] ADDITIONS =
+                ("foo,hanegal,ander,anders,rødhætte,unique " + System.currentTimeMillis() + ",something " ).split(",");
+        for (int r = 1 ; r <= runs ; r++) {
+            List<Long> mss = measureSuggestPerformance(storage, QUERIES);
+            for (long ms: mss) {
+                assertTrue("All suggest milliseconds should be <= " + maxMS + " but got " + ms, ms <= maxMS);
+            }
+            log.info("suggests " + r + "/" + runs + " took " + Strings.join(mss, ", ", 50));
+
+            List<Long> amss = measureAddPerformance(storage, ADDITIONS);
+            for (long ms: amss) {
+                assertTrue("All add milliseconds should be <= " + maxMS + " but got " + ms, ms <= maxMS);
+            }
+            log.info("adds " + r + "/" + runs + " took " + Strings.join(mss, ", ", 50));
+
+        }
+    }
+
+    private List<Long> measureAddPerformance(SuggestStorage storage, String[] additions) throws IOException {
+        List<Long> mss = new ArrayList<Long>(additions.length);
+        for (String addition: additions) {
+            long spend = -System.currentTimeMillis();
+            storage.addSuggestion(addition, addition.length() + 10);
+            spend += System.currentTimeMillis();
+            mss.add(spend);
+            if (spend > 10000L) {
+                log.info("- addition of '" + addition + "' took " + spend + " ms");
+            }
+        }
+        return mss;
+    }
+
+    public List<Long> measureSuggestPerformance(SuggestStorage storage, String[] queries) throws IOException {
+        List<Long> mss = new ArrayList<Long>(queries.length);
+        for (String query: queries) {
+            long spend = -System.currentTimeMillis();
+            storage.getSuggestion(query, 5);
+            spend += System.currentTimeMillis();
+            mss.add(spend);
+            if (spend > 10000L) {
+                log.info("- query for '" + query + "' took " + spend + " ms");
+            }
+        }
+        return mss;
     }
 
     /**
