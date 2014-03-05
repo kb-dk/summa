@@ -87,7 +87,7 @@ public class SummonSearchNode extends SolrSearchNode {
     /**
      * The maximum number of documents to request in one call when performing lookups on IDs.
      */
-    public static final int SUMMON_MAX_IDS = 100; // TODO: Set this to 100
+    public static final int SUMMON_MAX_IDS = 20; // Experimentally verified at 20140305
 
     /**
      * When performing a paged ID-search, wait this number of milliseconds between request.

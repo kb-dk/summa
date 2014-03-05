@@ -87,6 +87,24 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("A search with a MoreLikeThis ID should not give hits", 0, mlt);
     }
 
+    // 20140305: The service reportedly returns a maximum of 20 records from IDs
+    public void testMultipleDocIDRequest() throws RemoteException {
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        List<String> ids = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, 25
+        ), "id", false);
+        assertEquals("The must be the correct number of hits to generate a list of test-IDs for lookup",
+                     25, ids.size());
+
+        List<String> idsFromLookup = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_IDS, Strings.join(ids)
+        ), "id", false);
+        assertEquals("There should be the right number of returned documents from explicit ID lookup. " +
+                     "Returned IDs were\n" + Strings.join(idsFromLookup),
+                     25, idsFromLookup.size());
+    }
+
     public void testDocIDRequest() throws RemoteException {
         List<String> IDs = Arrays.asList(
                 "summon_FETCH-proquest_dll_11531932811",
