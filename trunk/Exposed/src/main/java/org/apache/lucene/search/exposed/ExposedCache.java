@@ -14,11 +14,9 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
 
   private final Set<IndexReader> readers = new HashSet<IndexReader>();
   private final ArrayList<TermProvider> cache = new ArrayList<TermProvider>(5);
-  private final List<PurgeCallback> remoteCaches =
-      new ArrayList<PurgeCallback>();
+  private final List<PurgeCallback> remoteCaches = new ArrayList<PurgeCallback>();
   // field, collatorID. collatorID is used by ExposedUtil
-  private final static Map<String, String> concatFields =
-      new HashMap<String, String>();
+  private final static Map<String, String> concatFields = new HashMap<String, String>();
 
   private static final ExposedCache exposedCache;
   static {
@@ -40,22 +38,18 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
   }
 
   // NOTE: Reverse is ignored in providers
-  public TermProvider getProvider(
-      IndexReader reader, ExposedRequest.Group group) throws IOException {
-    return getProvider(reader, group.getName(), group.getFieldNames(), 
-        group.getComparator());
+  public TermProvider getProvider(IndexReader reader, ExposedRequest.Group group) throws IOException {
+    return getProvider(reader, group.getName(), group.getFieldNames(), group.getComparator());
   }
 
-  public TermProvider getProvider(
-      IndexReader reader, String groupName, List<String> fieldNames,
-      NamedComparator comparator) throws IOException {
+  public TermProvider getProvider(IndexReader reader, String groupName, List<String> fieldNames,
+                                  NamedComparator comparator) throws IOException {
     if (readers.add(reader)) {
       reader.addReaderClosedListener(this);
     }
 
     ExposedRequest.Group groupRequest = FacetRequestGroup.createGroup(
-        groupName, fieldNames, comparator,
-        getConcatCollatorID(groupName, fieldNames));
+        groupName, fieldNames, comparator, getConcatCollatorID(groupName, fieldNames));
 
     for (TermProvider provider: cache) {
       if (provider instanceof GroupTermProvider
@@ -81,8 +75,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
       isSingle = false;
     }
 
-    List<TermProvider> fieldProviders =
-        new ArrayList<TermProvider>(readers.size() * fieldNames.size());
+    List<TermProvider> fieldProviders = new ArrayList<TermProvider>(readers.size() * fieldNames.size());
 
     long fieldProviderConstruction = -System.currentTimeMillis();
     // TODO: Switch to using context with docBase
@@ -92,8 +85,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
 /*      int docBase = ((IndexReader.AtomicReaderContext)sub.getTopReaderContext()).docBase;
       System.out.println("Skipping to reader of type " + sub.getClass().getSimpleName() + " with docBase=" + docBase + " and maxDoc=" + sub.maxDoc());*/
       for (ExposedRequest.Field fieldRequest: groupRequest.getFields()) {
-        fieldProviders.add(getProvider(
-            sub, isSingle ? 0 : docBase, fieldRequest, true, true));
+        fieldProviders.add(getProvider(sub, isSingle ? 0 : docBase, fieldRequest, true, true));
       }
       // Used in DirectoryReader.initialize so it should be fairly safe
       docBase += sub.maxDoc();
@@ -101,8 +93,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     fieldProviderConstruction += System.currentTimeMillis();
 
     long groupProviderconstruction = -System.currentTimeMillis();
-    TermProvider groupProvider = new GroupTermProvider(
-        reader.hashCode(), fieldProviders, groupRequest, true);
+    TermProvider groupProvider = new GroupTermProvider(reader.hashCode(), fieldProviders, groupRequest, true);
     groupProviderconstruction += System.currentTimeMillis();
     cache.add(groupProvider);
 
@@ -116,22 +107,19 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     String concat = concatFields.get(fieldNames.get(0));
     for (String field: fieldNames) {
       String currentConcat = concatFields.get(field);
-      if (concat != null && currentConcat == null
-          || concat == null && currentConcat != null
-        || concat != null && !concat.equals(currentConcat)) {
+      if (concat != null && currentConcat == null || concat == null && currentConcat != null
+          || concat != null && !concat.equals(currentConcat)) {
         throw new IllegalArgumentException(String.format(
-            "The fields for the group %s did not have the same concat flags. "
-            + "First field '%s' had concat=%s, the field '%s' has concat=%s",
-            groupName,
-            fieldNames.get(0), concat, field, concatFields.get(field)));
+            "The fields for the group %s did not have the same concat flags. " +
+            "First field '%s' had concat=%s, the field '%s' has concat=%s",
+            groupName, fieldNames.get(0), concat, field, concatFields.get(field)));
       }
     }
     return concat;
   }
 
-  FieldTermProvider getProvider(
-      IndexReader segmentReader, int docIDBase, ExposedRequest.Field request,
-      boolean cacheTables, boolean cacheProvider) throws IOException {
+  FieldTermProvider getProvider(IndexReader segmentReader, int docIDBase, ExposedRequest.Field request,
+                                boolean cacheTables, boolean cacheProvider) throws IOException {
     if (readers.add(segmentReader)) {
       segmentReader.addReaderClosedListener(this);
     }
@@ -143,8 +131,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
         }
       }
     }
-    FieldTermProvider provider =
-        new FieldTermProvider(segmentReader, docIDBase, request, cacheTables);
+    FieldTermProvider provider = new FieldTermProvider(segmentReader, docIDBase, request, cacheTables);
     if (cacheProvider) {
       cache.add(provider);
     }
@@ -194,12 +181,10 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     if (ExposedSettings.debug) {
       System.out.println("ExposedCache.purge(" + r + ") called");
     }
-    Iterator<TermProvider> remover =
-        cache.iterator();
+    Iterator<TermProvider> remover = cache.iterator();
     while (remover.hasNext()) {
       TermProvider provider = remover.next();
-      if (!(provider instanceof FieldTermProvider) ||
-          provider.getRecursiveHash() == r.hashCode()) {
+      if (!(provider instanceof FieldTermProvider) || provider.getRecursiveHash() == r.hashCode()) {
         remover.remove();
       }
     }

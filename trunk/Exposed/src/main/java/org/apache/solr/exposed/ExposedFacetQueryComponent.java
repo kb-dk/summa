@@ -73,8 +73,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
   @Override
   public void process(ResponseBuilder rb) throws IOException {
     if (poolFactory == null) {
-      throw new IllegalStateException("CollectorPoolFactory not initialized. " +
-          "Init must be called before process");
+      throw new IllegalStateException("CollectorPoolFactory not initialized. Init must be called before process");
     }
 
     SolrQueryRequest req = rb.req;
@@ -149,8 +148,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     NamedList<Object> content = new SimpleOrderedMap<Object>();
     content.add("field", group.getFieldsStr());
     FacetResponse.TagCollection tags = group.getTags();
-    content.add("paths", expandHierarchical(
-        tags, group.getRequest().getDelimiter(), 0));
+    content.add("paths", expandHierarchical(tags, group.getRequest().getDelimiter(), 0));
     fields.add(group.getFieldsStr(), content);
   }
 
@@ -181,15 +179,13 @@ public class ExposedFacetQueryComponent extends QueryComponent {
   private FacetRequest createRequest(SolrParams params) {
     String query = params.get("q");
     if (query == null) {
-      throw new IllegalArgumentException(
-          "The parameter 'q' must be specified");
+      throw new IllegalArgumentException("The parameter 'q' must be specified");
     }
 
 
     String[] fieldNames = params.getParams(EFACET_FIELD);
     if (fieldNames == null) {
-      throw new IllegalArgumentException(
-          "At least one field must be specified with " + EFACET_FIELD);
+      throw new IllegalArgumentException("At least one field must be specified with " + EFACET_FIELD);
     }
 
     FacetRequest eReq = new FacetRequest(query);
@@ -211,10 +207,8 @@ public class ExposedFacetQueryComponent extends QueryComponent {
         eReq.setOrder(NamedComparator.ORDER.count); // default
     }
     eReq.setHierarchical(params.getBool(EFACET_HIERARCHICAL, false));
-    eReq.setDelimiter(params.get(
-        EFACET_HIERARCHICAL_DELIMITER, EFACET_HIERARCHICAL_DELIMITER_DEFAULT));
-    eReq.setLevels(params.getInt(
-        EFACET_HIERARCHICAL_LEVELS, Integer.MAX_VALUE));
+    eReq.setDelimiter(params.get(EFACET_HIERARCHICAL_DELIMITER, EFACET_HIERARCHICAL_DELIMITER_DEFAULT));
+    eReq.setLevels(params.getInt(EFACET_HIERARCHICAL_LEVELS, Integer.MAX_VALUE));
 
     eReq.setReverse(reverse);
 
@@ -233,6 +227,6 @@ public class ExposedFacetQueryComponent extends QueryComponent {
   // key("efacet.offset", "title") -> "efacet.title.offset"
   private String key(String majorKey, String fieldName) {
     return majorKey.substring(0, EFACET.length()) + "." + fieldName
-        + majorKey.substring(EFACET.length(), majorKey.length());
+           + majorKey.substring(EFACET.length(), majorKey.length());
   }
 }

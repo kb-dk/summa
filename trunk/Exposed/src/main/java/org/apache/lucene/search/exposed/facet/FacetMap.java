@@ -74,8 +74,7 @@ public class FacetMap {
       }
     }
     throw new ArrayIndexOutOfBoundsException(
-        "The indirect " + termIndirect + " was too high. The maximum indirect "
-        + "supported by the current map is "
+        "The indirect " + termIndirect + " was too high. The maximum indirect supported by the current map is "
         + indirectStarts[indirectStarts.length-1]);
   }
 
@@ -83,13 +82,11 @@ public class FacetMap {
       throws IOException {
     for (int i = 0 ; i < providers.size() ; i++) {
       if (termIndirect < indirectStarts[i+1]) {
-        return providers.get(i).getOrderedDisplayTerm(
-            termIndirect- indirectStarts[i]);
+        return providers.get(i).getOrderedDisplayTerm(termIndirect- indirectStarts[i]);
       }
     }
     throw new ArrayIndexOutOfBoundsException(
-        "The indirect " + termIndirect + " was too high. The maximum indirect "
-        + "supported by the current map is "
+        "The indirect " + termIndirect + " was too high. The maximum indirect supported by the current map is "
         + indirectStarts[indirectStarts.length-1]);
   }
 

@@ -117,8 +117,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
       this.groupName = groupName;
       this.fieldNames = fieldNames;
       // TODO: Logging would be real nice here
-      this.provider = ExposedCache.getInstance().getProvider(
-          reader, groupName, fieldNames, comparator);
+      this.provider = ExposedCache.getInstance().getProvider(reader, groupName, fieldNames, comparator);
 
       this.numHits = numHits;
       this.sortPos = sortPos;
@@ -208,11 +207,9 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
             + (resolvedDocOrder == undefinedTerm ? "null" :reader.getTermText(
             (int)termOrder.get((int)resolvedDocOrder))));
   */
-        return resolvedDocOrder == undefinedTerm ? EMPTY :
-            provider.getOrderedTerm(resolvedDocOrder);
+        return resolvedDocOrder == undefinedTerm ? EMPTY : provider.getOrderedTerm(resolvedDocOrder);
       } catch (IOException e) {
-        throw new RuntimeException(
-            "IOException while extracting term String", e);
+        throw new RuntimeException("IOException while extracting term String", e);
       }
     }
 

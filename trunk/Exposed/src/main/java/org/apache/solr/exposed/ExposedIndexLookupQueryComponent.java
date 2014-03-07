@@ -104,8 +104,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
 
     CollectorPool collectorPool;
     try {
-      collectorPool = poolFactory.acquire(
-        req.getSearcher().getIndexReader(), eReq);
+      collectorPool = poolFactory.acquire(req.getSearcher().getIndexReader(), eReq);
     } catch (IOException e) {
       throw new RuntimeException(
         "Unable to acquire a CollectorPool for " + eReq, e);
@@ -183,8 +182,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
       String localeStr = params.get(ELOOKUP_SORT_LOCALE_VALUE, null);
       if (localeStr == null) {
         throw new IllegalArgumentException(
-          ELOOKUP_SORT + "=" + ELOOKUP_SORT_BYLOCALE
-          + " specified without corresponding " + ELOOKUP_SORT_LOCALE_VALUE);
+          ELOOKUP_SORT + "=" + ELOOKUP_SORT_BYLOCALE + " specified without corresponding " + ELOOKUP_SORT_LOCALE_VALUE);
       }
       locale = new Locale(localeStr);
     }
@@ -244,6 +242,11 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
       return term.compareTo(other.getTerm());
     }
 
+    @Override
+    public boolean equals(Object obj) {
+      return obj instanceof LookupTag && compareTo((LookupTag)obj) == 0;
+    }
+
     public String getTerm() {
       return term;
     }
@@ -261,11 +264,9 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
   private Object getOrigo(List<LookupTag> tags, SolrQueryRequest req) {
     String term = req.getParams().get(ELOOKUP_TERM, "");
     String sort = req.getParams().get(ELOOKUP_SORT, ELOOKUP_DEFAULT_SORT);
-    Boolean sensitive = req.getParams().getBool(
-      ELOOKUP_CASE_SENSITIVE, ELOOKUP_DEFAULT_CASE_SENSITIVE);
+    Boolean sensitive = req.getParams().getBool(ELOOKUP_CASE_SENSITIVE, ELOOKUP_DEFAULT_CASE_SENSITIVE);
     Comparator<LookupTag> sorter;
-    Collator collator = ELOOKUP_SORT_BYINDEX.equals(sort) ?
-                        null : createCollator(new Locale(sort));
+    Collator collator = ELOOKUP_SORT_BYINDEX.equals(sort) ? null : createCollator(new Locale(sort));
     sorter = sensitive ? new Sensitive(collator) : new Insensitive(collator);
     int origo = Collections.binarySearch(tags, new LookupTag(term, 0), sorter);
     return origo < 0 ? (origo + 1) * -1 : origo;
@@ -278,8 +279,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
           // as significant as letters (and comes before them)
           ((RuleBasedCollator)collator).setAlternateHandlingShifted(false);
       } else {
-          log.warn("Expected the ICU Collator to be a "
-                   + RuleBasedCollator.class.getSimpleName()
+          log.warn("Expected the ICU Collator to be a " + RuleBasedCollator.class.getSimpleName()
                    + " but got " + collator.getClass());
       }
       return collator;

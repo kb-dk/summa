@@ -1020,6 +1020,78 @@ public class TestExposedFacets extends TestCase {
     System.out.println(sw.toString());
   }
 
+  public static final String SCALE_MANY_DOCS_REQUEST =
+      "<?xml version='1.0' encoding='utf-8'?>\n" +
+      "<facetrequest xmlns=\"http://lucene.apache.org/exposed/facet/request/1.0\" maxtags=\"5\">\n" +
+      "  <query>even:true</query>\n" +
+      "  <groups>\n" +
+      "    <group name=\"count\" order=\"count\" mincount=\"1\">\n" +
+      "      <fields>\n" +
+      "        <field name=\"a\" />\n" +
+      "      </fields>\n" +
+      "    </group>\n" +
+      "  </groups>\n" +
+      "</facetrequest>";
+  private final File PREFERRED_ROOT = new File("/home/te/tmp/");
+  public void testScaleOptimizedFacet() throws Exception {
+    long totalTime = -System.currentTimeMillis();
+
+    ExposedSettings.priority = ExposedSettings.PRIORITY.memory;
+    ExposedSettings.debug = true;
+    FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
+    final int DOCCOUNT = 5000000;
+    final int TERM_LENGTH = 20;
+    final List<String> FIELDS = Arrays.asList("a");
+    final File LOCATION = PREFERRED_ROOT.exists() ?  new File(PREFERRED_ROOT, "index5M") : ExposedHelper.INDEX_LOCATION;
+
+    if (!LOCATION.exists()) {
+      System.err.println("No index at " + LOCATION + ". A test index with " + DOCCOUNT + " documents will be build at "
+                         + LOCATION );
+      helper.createIndex(LOCATION, DOCCOUNT, FIELDS, 1, TERM_LENGTH, 1, 1, 1);
+      helper.optimize(LOCATION);
+    }
+    assertTrue("No index at " + LOCATION.getAbsolutePath()
+               + ". Please build a test index (you can use one from on of the "
+               + "other JUnit tests in TestExposedFacets) and correct the path",
+               LOCATION.exists());
+
+    IndexReader reader = ExposedIOFactory.getReader(LOCATION);
+    IndexSearcher searcher = new IndexSearcher(reader);
+    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    Query q = qp.parse("true");
+
+    StringWriter sw = new StringWriter(10000);
+    sw.append("Index = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc() + " documents)\n");
+
+    searcher.search(q, TopScoreDocCollector.create(10, false));
+    sw.append("Used heap after loading index and performing a simple search: " + getMem() + " MB\n");
+    sw.append("Maximum possible memory (Runtime.getRuntime().maxMemory()): "
+              + Runtime.getRuntime().maxMemory() / 1048576 + " MB\n");
+    System.out.println("Index " + LOCATION + " opened and test search performed successfully");
+
+    sw.append("\n");
+
+    // Tests
+    CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 4, 2);
+
+    qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    q = qp.parse("true");
+    String sQuery = "even:true";
+
+    testFaceting(poolFactory, searcher, q, sQuery, sw, SCALE_MANY_DOCS_REQUEST);
+
+    System.out.println("**************************\n");
+
+    sw.append("\nUsed memory with sort, facet and index lookup structures intact: " + getMem() + " MB\n");
+    totalTime += System.currentTimeMillis();
+    sw.append("Total test time: " + getTime(totalTime));
+
+    System.out.println("");
+    System.out.println(sw.toString());
+    System.out.println(ExposedCache.getInstance());
+    System.out.println(CollectorPoolFactory.getLastFactory());
+  }
+
   private void testScale(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query query, String sQuery,
                          StringWriter result) throws IOException, XMLStreamException {
     System.out.println("- Testing sorted search for " + sQuery);
@@ -1187,7 +1259,7 @@ public class TestExposedFacets extends TestCase {
 
     FacetResponse response = null;
     int DOCCOUNT = reader.maxDoc();
-    assertTrue("There must be at least 10 documents in the index",
+    assertTrue("There must be at least 10 documents in the index at ",
                DOCCOUNT >= 10);
     final int span = DOCCOUNT / 10;
     long firstTime = -1;
@@ -1222,8 +1294,7 @@ public class TestExposedFacets extends TestCase {
       long totalTime = System.currentTimeMillis() - countStart;
       if (firstTime == -1) {
         firstTime = totalTime;
-        result.append(
-            "First faceting for " + sQuery + ": " + getTime(totalTime) + "\n");
+        result.append("First faceting for " + sQuery + ": " + getTime(totalTime) + "\n");
       } else {
         subCount++;
         subsequents += totalTime;
@@ -1234,9 +1305,8 @@ public class TestExposedFacets extends TestCase {
             + (System.currentTimeMillis()-countStart) + "ms");*/
       collectorPool.release(null, collector); // No caching
     }
-    result.append(
-        "Subsequent " + subCount + " faceting calls (count caching " +
-        "disabled) response times: " + getTime(subsequents / subCount) + "\n");
+    result.append("Subsequent " + subCount + " faceting calls (count caching " +
+                  "disabled) response times: " + getTime(subsequents / subCount) + "\n");
     assertNotNull("There should be a response", response);
     result.append(response.toXML()).append("\n");
   }

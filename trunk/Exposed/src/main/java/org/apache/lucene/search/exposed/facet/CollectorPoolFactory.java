@@ -20,8 +20,7 @@ import java.util.*;
  * automatically updated (aka cleared) when the index is reloaded and IndexCache
  * is notified about it.
  */
-public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
-                                             IndexReader.ReaderClosedListener {
+public class CollectorPoolFactory implements ExposedCache.PurgeCallback, IndexReader.ReaderClosedListener {
   private Map<String, CollectorPool> poolMap;
   // Readers used by the pools
   private Set<IndexReader> readers = new HashSet<IndexReader>();
@@ -58,12 +57,10 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
    * @param freshCollectors the maximum number of fresh collectors in each pool.
    * see {@link CollectorPool}.
    */
-  public CollectorPoolFactory(
-      final int maxSize, int filledCollectors, int freshCollectors) {
+  public CollectorPoolFactory(final int maxSize, int filledCollectors, int freshCollectors) {
     poolMap = new LinkedHashMap<String, CollectorPool>(maxSize, 0.75f, true) {
       @Override
-      protected boolean removeEldestEntry(
-          Map.Entry<String, CollectorPool> eldest) {
+      protected boolean removeEldestEntry(Map.Entry<String, CollectorPool> eldest) {
         return size() > maxSize;
       }
     };
@@ -98,8 +95,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
    * @throws java.io.IOException if the reader could not be accessed.
    */
   // TODO: Make more fine grained synchronization so that existing structures can be returned
-  public synchronized CollectorPool acquire(
-      IndexReader reader, FacetRequest request) throws IOException {
+  public synchronized CollectorPool acquire(IndexReader reader, FacetRequest request) throws IOException {
     if (readers.add(reader)) {
       reader.addReaderClosedListener(this);
     }
@@ -114,14 +110,11 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback,
       System.out.println("CollectorPoolFactory: Creating pool for " + key);
     }
     List<FacetRequestGroup> groups = request.getGroups();
-    List<TermProvider> termProviders =
-        new ArrayList<TermProvider>(groups.size());
+    List<TermProvider> termProviders = new ArrayList<TermProvider>(groups.size());
     for (FacetRequestGroup group: groups) {
-      TermProvider provider = ExposedCache.getInstance().getProvider(
-          reader, group.getGroup());
+      TermProvider provider = ExposedCache.getInstance().getProvider(reader, group.getGroup());
       if (group.isHierarchical()) {
-        provider = new HierarchicalTermProvider(
-            provider, group.getDelimiter());
+        provider = new HierarchicalTermProvider(provider, group.getDelimiter());
       }
       termProviders.add(provider);
     }

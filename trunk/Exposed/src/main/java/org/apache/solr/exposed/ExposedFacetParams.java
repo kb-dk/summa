@@ -93,8 +93,7 @@ public interface ExposedFacetParams {
    *
    * This can be overridden on a per field basis.
    */
-  public static final String EFACET_HIERARCHICAL_DELIMITER =
-      EFACET + ".hierarchical.delimiter";
+  public static final String EFACET_HIERARCHICAL_DELIMITER = EFACET + ".hierarchical.delimiter";
   public static final String EFACET_HIERARCHICAL_DELIMITER_DEFAULT = "/";
 
   /**
@@ -103,8 +102,7 @@ public interface ExposedFacetParams {
    *
    * This can be overridden on a per field basis.
    */
-  public static final String EFACET_HIERARCHICAL_LEVELS =
-      EFACET + ".hierarchical.levels";
+  public static final String EFACET_HIERARCHICAL_LEVELS = EFACET + ".hierarchical.levels";
 
   // TODO: Mimic params from SOLR-64
 

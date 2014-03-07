@@ -46,9 +46,7 @@ public class ExposedTuple {
 
   public static long instances = 0;
 
-  public ExposedTuple(String field, BytesRef term,
-                      long ordinal, long indirect,
-                      DocsEnum docIDs, long docIDBase) {
+  public ExposedTuple(String field, BytesRef term, long ordinal, long indirect, DocsEnum docIDs, long docIDBase) {
     this.field = field;
     this.term = term;
     this.ordinal = ordinal;
@@ -81,14 +79,12 @@ public class ExposedTuple {
 
   public String toString() {
     return "ExposedTuple(" + field + ":"
-        + (term == null ? "null" : term.utf8ToString()) + ", ord=" + ordinal
-        + ", indirect=" + indirect
+        + (term == null ? "null" : term.utf8ToString()) + ", ord=" + ordinal + ", indirect=" + indirect
         + ", docIDs " + (docIDs == null ? "not " : "") + "present)";
   }
 
   // Convenience
-  public void set(String field, BytesRef term,
-                  long ordinal, long indirect, DocsEnum docIDs, long docIDBase) {
+  public void set(String field, BytesRef term, long ordinal, long indirect, DocsEnum docIDs, long docIDBase) {
     this.field = field;
     this.term = term;
     this.ordinal = ordinal;

@@ -45,6 +45,13 @@ public class GroupTermProvider extends TermProviderImpl {
   // Starting points for term ordinals in the providers list
   private final long[] termOrdinalStarts;
 
+  /**
+   * Warning: Highly experimental!
+   *
+   * If true and there is only a single provider, sortOrdinals simply returns the order from the provider.
+   */
+  public boolean COPY_ORDER_ON_SINGLE_PROVIDER = false;
+
   // FIXME: this should be relative to segments, not providers.
   //Current implementation is not valid for multiple fields in the same segment
   private final long[] docIDStarts;
@@ -251,14 +258,19 @@ public class GroupTermProvider extends TermProviderImpl {
       return newOrder;
     }
 
-    private PackedInts.Reader sortOrdinals(final OrderedDecorator decorator)
-            throws IOException {
+  // TODO: If there is only a single provider and no decorator, there is no need for another run. Just copy the order
+  private PackedInts.Reader sortOrdinals(final OrderedDecorator decorator) throws IOException {
 //    System.out.println("GroupTermProvider: Sorting ordinals from "
 //                       + providers.size() + " providers");
+    if (COPY_ORDER_ON_SINGLE_PROVIDER && providers.size() ==  1 && decorator == null) {
+      if (ExposedSettings.debug) {
+        System.out.println("GroupTermProvider.sortOrdinals: Copying order from single provider");
+        return providers.get(0).getOrderedOrdinals();
+      }
+    }
     int maxTermCount = (int)termOrdinalStarts[termOrdinalStarts.length-1];
     long iteratorConstruction = System.currentTimeMillis();
-    PackedInts.Mutable collector = ExposedSettings.getMutable(
-        maxTermCount, maxTermCount);
+    PackedInts.Mutable collector = ExposedSettings.getMutable(maxTermCount, maxTermCount);
         //new GrowingMutable(0, maxTermCount, 0, maxTermCount);
     long iteratorTime = -System.currentTimeMillis();
     Iterator<ExposedTuple> iterator = getIterator(false);
@@ -288,8 +300,7 @@ public class GroupTermProvider extends TermProviderImpl {
 //    System.out.println("Sorted merged term ordinals to " + collector);
 
     long reducetime = -System.currentTimeMillis();
-    PackedInts.Mutable result = ExposedSettings.getMutable(
-        uniqueTermCount, maxTermCount);
+    PackedInts.Mutable result = ExposedSettings.getMutable(uniqueTermCount, maxTermCount);
     for (int i = 0 ; i < uniqueTermCount ; i++) {
       result.set(i, collector.get(i));
     }
@@ -298,8 +309,7 @@ public class GroupTermProvider extends TermProviderImpl {
     extractionTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-          "GroupTermProvider: Group ordinal iterator depletion from "
-          + providers.size() + " providers: "
+          "GroupTermProvider: Group ordinal iterator depletion from " + providers.size() + " providers: "
           + ExposedUtil.time("ordinals", result.size(), extractionTime)
           + " (Memory optimize time: " + reducetime + " ms)");
     }
