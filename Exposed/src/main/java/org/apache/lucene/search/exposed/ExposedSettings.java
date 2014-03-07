@@ -10,8 +10,7 @@ public class ExposedSettings {
       } else if (speed.toString().equals(p)) {
         return speed;
       }
-      throw new IllegalArgumentException(
-          "The String '" + p + "' was not recognized as a priority");
+      throw new IllegalArgumentException("The String '" + p + "' was not recognized as a priority");
     }
   }
   public static final PRIORITY DEFAULT_PRIORITY = PRIORITY.memory;
@@ -55,12 +54,9 @@ public class ExposedSettings {
           valueCount, bitsRequired, PackedInts.COMPACT);
       case speed:
         return bitsRequired <= 4 || bitsRequired > 32 && bitsRequired < 40 ?
-               PackedInts.getMutable(
-                   valueCount, bitsRequired, PackedInts.COMPACT) :
-               PackedInts.getMutable(
-                   valueCount, bitsRequired, PackedInts.FASTEST);
-      default: throw new IllegalArgumentException(
-          "The priority " + priority + " is unknown");
+               PackedInts.getMutable(valueCount, bitsRequired, PackedInts.COMPACT) :
+               PackedInts.getMutable(valueCount, bitsRequired, PackedInts.FASTEST);
+      default: throw new IllegalArgumentException("The priority " + priority + " is unknown");
     }
   }
 }

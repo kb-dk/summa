@@ -3,6 +3,7 @@ package org.apache.lucene.search.exposed;
 import com.ibm.icu.text.Collator;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.IndexSearcher;
@@ -17,10 +18,8 @@ import java.util.Random;
 
 public class ExposedHelper {
   static final char[] CHARS = // Used for random content
-      ("abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ" +
-          "1234567890      ").toCharArray();
-  public static final File INDEX_LOCATION =
-      new File("tmp/testfieldtermprovider");
+      ("abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ1234567890      ").toCharArray();
+  public static final File INDEX_LOCATION = new File("tmp/testfieldtermprovider");
 
   // Fields in the test index
   public static final String ID = "id";     // doc #0 = "0", doc #1 = "1" etc
@@ -102,7 +101,11 @@ public class ExposedHelper {
   }
 
   public static IndexWriter getWriter() throws IOException {
-    return ExposedIOFactory.getWriter(INDEX_LOCATION);
+    return getWriter(INDEX_LOCATION);
+  }
+
+  public static IndexWriter getWriter(File location) throws IOException {
+    return ExposedIOFactory.getWriter(location);
   }
 
   public static IndexReader getReader() throws IOException {
@@ -151,43 +154,56 @@ public class ExposedHelper {
     createIndex(docCount, fields, 1, fieldContentLength, 0, 6, minSegments);
   }
 
+  public void optimize() throws IOException {
+    optimize(INDEX_LOCATION);
+  }
+  public void optimize(File location) throws IOException {
+    IndexWriter writer = ExposedIOFactory.getWriter(location);
+    writer.forceMerge(1, true);
+    writer.close(true);
+  }
+
   public void createIndex(
       int docCount, List<String> fields,  int fieldFactor,
       int fieldContentLength, int minFacets, int maxFacets, int minSegments)
       throws IOException {
+    createIndex(INDEX_LOCATION, docCount, fields, fieldFactor, fieldContentLength, minFacets, maxFacets, minSegments);
+  }
+  public void createIndex(File location,
+        int docCount, List<String> fields,  int fieldFactor,
+        int fieldContentLength, int minFacets, int maxFacets, int minSegments)
+        throws IOException {
     long startTime = System.nanoTime();
-    File location = INDEX_LOCATION;
     Random random = new Random(87);
     int every = Math.max(1, docCount / 100);
 
-    IndexWriter writer = getWriter();
+    for (int i = 0 ; i < 100 ; i++) {
+      System.out.print("-");
+    }
+    System.out.println("");
+
+    IndexWriter writer = getWriter(location);
     for (int docID = 0 ; docID < docCount ; docID++) {
       Document doc = new Document();
       for (String field: fields) {
         for (int f = 0 ; f < fieldFactor ; f++) {
-          doc.add(new Field(
+          doc.add(new StringField(
               field,
-              getRandomString(
-                  random, CHARS, 1, fieldContentLength) + docID + field,
-              Field.Store.YES, Field.Index.NOT_ANALYZED));
+              getRandomString(random, CHARS, 1, fieldContentLength) + docID + field,
+              Field.Store.YES));
         }
       }
-      doc.add(new Field(ID, ID_FORMAT.format(docID),
-          Field.Store.YES, Field.Index.NOT_ANALYZED));
-      doc.add(new Field(EVEN, docID % 2 == 0 ? "true" : "false",
-          Field.Store.YES, Field.Index.NOT_ANALYZED));
+      doc.add(new StringField(ID, ID_FORMAT.format(docID), Field.Store.YES));
+      doc.add(new StringField(EVEN, docID % 2 == 0 ? "true" : "false", Field.Store.YES));
       int facets = random.nextInt(maxFacets-minFacets+1) + minFacets;
       for (int i = 0 ; i < facets ; i++) {
-        doc.add(new Field(MULTI,
-            Character.toString((char)(random.nextInt(25) + 'A')),
-            Field.Store.NO, Field.Index.NOT_ANALYZED));
+        doc.add(new StringField(MULTI, Character.toString((char)(random.nextInt(25) + 'A')), Field.Store.NO));
       }
       if (docID % 2 == 1) {
-        doc.add(new Field(EVEN_NULL, getRandomString(
-            random, CHARS, 1, fieldContentLength) + docID,
-            Field.Store.YES, Field.Index.NOT_ANALYZED));
+        doc.add(new StringField(EVEN_NULL, getRandomString(random, CHARS, 1, fieldContentLength) + docID,
+                                Field.Store.YES));
       }
-      doc.add(new Field(ALL, ALL, Field.Store.YES, Field.Index.NOT_ANALYZED));
+      doc.add(new StringField(ALL, ALL, Field.Store.YES));
       writer.addDocument(doc);
       if (docID == docCount / minSegments) {
         writer.commit(); // Ensure minSegments
@@ -198,6 +214,7 @@ public class ExposedHelper {
     }
     System.out.print("Closing");
 //    writer.optimize();
+    writer.commit();
     writer.close();
     System.out.println("");
     System.out.println(String.format(

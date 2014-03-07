@@ -50,8 +50,7 @@ public class ExposedRequest {
     public Group(String name, List<Field> fields, NamedComparator comparator) {
       this(name, fields, comparator, null);
     }
-    public Group(String name, List<Field> fields, NamedComparator comparator,
-                 String concatCollatorID) {
+    public Group(String name, List<Field> fields, NamedComparator comparator, String concatCollatorID) {
       this.name = name;
       this.fields = fields;
       this.comparator = comparator;

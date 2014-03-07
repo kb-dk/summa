@@ -7,7 +7,7 @@ import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.GroupTermProvider;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.DoubleIntArrayList;
+import org.apache.lucene.util.packed.IdentityReader;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
@@ -23,7 +23,7 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
   public static FacetMap createMap(int docCount, List<TermProvider> providers)
       throws IOException {
     if (ExposedSettings.debug) {
-      System.out.println("FacetMap: Creating 2 pass map for " + providers.size()
+      System.out.println("FacetMapDual: Creating 2 pass map for " + providers.size()
           + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount
           + " documents)");
     }
@@ -44,16 +44,18 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
 
       // No need to collect both - we just store the ordinal directly at the
       // indirect position
-      PackedInts.Mutable i2o =  PackedInts.getMutable(
+      final PackedInts.Mutable i2o =  PackedInts.getMutable(
           (int) providers.get(i).getOrdinalTermCount(),
           PackedInts.bitsRequired(providers.get(i).getOrdinalTermCount()), 0);
       Iterator<ExposedTuple> tuples = providers.get(i).getIterator(true);
       long uniqueCount = 0;
       BytesRef last = null;
+      boolean allEqual = true;
       while (tuples.hasNext()) {
         ExposedTuple tuple = tuples.next();
         //indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
         i2o.set((int) tuple.indirect, tuple.ordinal);
+        allEqual = allEqual && (tuple.indirect == tuple.ordinal);
         int docID;
         while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
           tagCounts[(int) (tuple.docIDBase + docID)]++;
@@ -64,20 +66,26 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
 //          System.out.println("FaM got: " + last.utf8ToString());
         }
       }
+      PackedInts.Reader i2oReader = i2o;
+      if (allEqual) {
+        if (ExposedSettings.debug) {
+          System.out.println(
+              "FacetMapDual.createMap: All indirects are equal to their ordinals. Using compressed representation");
+        }
+        i2oReader = new IdentityReader(i2o.size());
+      }
       if (providers.get(i) instanceof GroupTermProvider) {
         // Not at all OO
 //        PackedInts.Reader i2o = indirectToOrdinal.getPacked();
-        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
+        ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2oReader);
         if (ExposedSettings.debug) {
           System.out.println(String.format(
-              "FacetMap: Assigning ordered ordinals to %s: %s",
-              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(),
-              i2o));
+              "FacetMapDual: Assigning ordered ordinals to %s: %s",
+              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(), i2oReader));
         }
       } else if (ExposedSettings.debug) {
         System.out.println(String.format(
-            "FacetMap: Hoped for GroupTermProvider, but got %s. " +
-            "Collected ordered ordinals are discarded",
+            "FacetMapDual: Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
             providers.get(i).getClass()));
       }
 
@@ -117,10 +125,8 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
     final PackedInts.Reader refs = pair.getValue();
     if (ExposedSettings.debug) {
       System.out.println(
-              "FacetMap: Unique count, tag counts and tag fill (" + docCount
-              + " documents, "
-              + providers.size() + " providers): "
-              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
+              "FacetMapDual: Unique count, tag counts and tag fill (" + docCount + " documents, "
+              + providers.size() + " providers): " + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     }
     return new FacetMap(providers, indirectStarts, doc2ref, refs);
   }

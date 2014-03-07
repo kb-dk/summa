@@ -74,31 +74,27 @@ public class FieldTermProvider extends TermProviderImpl {
   private final Terms terms;
   private final TermsEnum termsEnum;
 
-  public FieldTermProvider(IndexReader reader, int docIDBase,
-                           ExposedRequest.Field request,
+  public FieldTermProvider(IndexReader reader, int docIDBase, ExposedRequest.Field request,
                            boolean cacheTables) throws IOException {
     super(checkReader(reader), docIDBase, request.getComparator(),
-        "Field " + request.getField(), cacheTables,
-        request.getConcatCollatorID());
+        "Field " + request.getField(), cacheTables, request.getConcatCollatorID());
     if (!(reader instanceof AtomicReader)) {
       throw new IllegalArgumentException(
           "The IndexReader should be a leaf (no sub readers). It contained "
-              + IndexUtil.flatten(reader).size() + " sub readers");
+          + IndexUtil.flatten(reader).size() + " sub readers");
     }
     this.request = request;
 
     terms = ((AtomicReader)reader).fields().terms(request.getField());
     // TODO: Make an OrdTermsEnum to handle Variable Gap and other non-ord-codec
 //    termsEnum = terms == null ? null : terms.iterator(); // It's okay to be empty
-    termsEnum = OrdinalTermsEnum.createEnum(
-        (AtomicReader)reader, request.getField(), 128);
+    termsEnum = OrdinalTermsEnum.createEnum((AtomicReader)reader, request.getField(), 128);
     sortCacheSize = getSortCacheSize(reader);
   }
 
   private static IndexReader checkReader(IndexReader reader) {
     if (!(reader instanceof AtomicReader)) {
-      throw new IllegalArgumentException(
-          "The reader for a FieldTermProvider must not contain sub readers");
+      throw new IllegalArgumentException("The reader for a FieldTermProvider must not contain sub readers");
     }
     return reader;
   }
@@ -123,8 +119,7 @@ public class FieldTermProvider extends TermProviderImpl {
   public synchronized BytesRef getTerm(final long ordinal) throws IOException {
     if (termsEnum == null) {
       throw new IOException("No terms for field " + request.getField()
-          + " in segment " + getReader()
-          + ". Requested ordinal was " + ordinal);
+          + " in segment " + getReader() + ". Requested ordinal was " + ordinal);
     }
     // TODO: Upstream this simple sequential access optimization
     if (lastOrdinalRequest != -1 && lastOrdinalRequest <= ordinal &&
@@ -134,8 +129,7 @@ public class FieldTermProvider extends TermProviderImpl {
         term = termsEnum.next();
         if (term == null) {
           throw new IOException(
-              "Unable to locate term for ordinal " + ordinal
-              + ". Last ordinalRequest was " + lastOrdinalRequest);
+              "Unable to locate term for ordinal " + ordinal + ". Last ordinalRequest was " + lastOrdinalRequest);
         }
         lastOrdinalRequest++;
       }
@@ -163,13 +157,11 @@ public class FieldTermProvider extends TermProviderImpl {
   @Override
   public DocsEnum getDocsEnum(long ordinal, DocsEnum reuse) throws IOException {
     if (termsEnum == null) {
-      throw new IOException("No terms or docIDs for field " + request.getField()
-          + " in segment " + getReader()
+      throw new IOException("No terms or docIDs for field " + request.getField() + " in segment " + getReader()
           + ". Requested ordinal was " + ordinal);
     }
 
-    if (lastOrdinalRequest != -1 && lastOrdinalRequest < ordinal &&
-        ordinal <= lastOrdinalRequest + ITERATE_LIMIT) {
+    if (lastOrdinalRequest != -1 && lastOrdinalRequest < ordinal && ordinal <= lastOrdinalRequest + ITERATE_LIMIT) {
       while (lastOrdinalRequest != ordinal) {
         termsEnum.next();
         lastOrdinalRequest++;
@@ -199,15 +191,12 @@ public class FieldTermProvider extends TermProviderImpl {
 
   @Override
   public long getUniqueTermCount() throws IOException {
-    long termCount = terms == null ? 0 :
-        termsEnum instanceof OrdinalTermsEnum ?
-            ((OrdinalTermsEnum) termsEnum).getTermCount() :
-            terms.size();
+    long termCount = terms == null ? 0 : termsEnum instanceof OrdinalTermsEnum ?
+            ((OrdinalTermsEnum) termsEnum).getTermCount() : terms.size();
     // TODO: terms.size() does not handle deleted documents and might return -1
     if (termCount == -1) {
       throw new UnsupportedOperationException(
-        "The Terms.size() returned -1 and explicit counting is not "
-        + "implemented yet");
+          "The Terms.size() returned -1 and explicit counting is not implemented yet");
     }
     return termCount;
   }
@@ -272,8 +261,7 @@ public class FieldTermProvider extends TermProviderImpl {
       return new TermDocIterator(this, true);
     }
     this.order = order;
-    CachedTermProvider cache = new CachedTermProvider(
-        this, iteratorCacheSize, iteratorReadAhead);
+    CachedTermProvider cache = new CachedTermProvider(this, iteratorCacheSize, iteratorReadAhead);
     return new TermDocIterator(cache, false);
   }
 
@@ -286,14 +274,13 @@ public class FieldTermProvider extends TermProviderImpl {
 
     long startTime = System.nanoTime();
     sort(ordered);
-    long sortTime = (System.nanoTime() - startTime);
+    long sortTime = System.nanoTime() - startTime;
 
 
     // TODO: Remove this
     if (ExposedSettings.debug) {
       System.out.println("Chunk total sort for field " + getField(0)
-          + ": " + ExposedUtil.time(
-          "terms", ordered.length, sortTime / 1000000));
+          + ": " + ExposedUtil.time("terms", ordered.length, sortTime / 1000000));
     }
 /*    System.out.println(String.format(
             "Sorted %d Terms in %s out of which %s (%s%%) was lookups and " +
@@ -307,8 +294,7 @@ public class FieldTermProvider extends TermProviderImpl {
             sortCacheSize, cacheRequests,
             cacheMisses, cacheMisses * 100 / cacheRequests));
   */
-    PackedInts.Mutable packed =
-        ExposedSettings.getMutable(termCount, termCount);
+    PackedInts.Mutable packed = ExposedSettings.getMutable(termCount, termCount);
     for (int i = 0 ; i < termCount ; i++) {
       packed.set(i, ordered[i]); // Save space by offsetting min to 0
     }
@@ -327,8 +313,7 @@ public class FieldTermProvider extends TermProviderImpl {
     // than processing power.
 
     // We sort in chunks so the cache is 100% effective
-    if (optimizeCollator
-        && request.getComparator() instanceof NamedCollatorComparator) {
+    if (optimizeCollator && request.getComparator() instanceof NamedCollatorComparator) {
 //      System.out.println("Using CollatorKey optimized chunk sort");
       optimizedChunkSort(ordinals, chunkSize);
     } else {
@@ -354,16 +339,13 @@ public class FieldTermProvider extends TermProviderImpl {
     // it is a block start index in which case it is just discarded.
 
     if (ExposedSettings.debug) {
-      System.out.println("Beginning merge sort of " + ordinals.length
-          + " ordinals in " + chunkCount + " chunks");
+      System.out.println("Beginning merge sort of " + ordinals.length + " ordinals in " + chunkCount + " chunks");
     }
     long mergeTime = System.currentTimeMillis();
     CachedProvider cache;
     ComparatorFactory.OrdinalComparator indirectComparator;
-    if (optimizeCollator
-        && request.getComparator() instanceof NamedCollatorComparator) {
-      Collator collator =
-        ((NamedCollatorComparator)request.getComparator()).getCollator();
+    if (optimizeCollator && request.getComparator() instanceof NamedCollatorComparator) {
+      Collator collator = ((NamedCollatorComparator)request.getComparator()).getCollator();
       // TODO: Hanele isReverse & isNullFirst
       CachedCollatorKeyProvider keyCache = new CachedCollatorKeyProvider(
           this, collator, sortCacheSize, chunkSize-1);
@@ -385,13 +367,11 @@ public class FieldTermProvider extends TermProviderImpl {
       for (int i = 0 ; i < ordinals.length ; i += chunkSize) {
         termCache.getTerm(i); // Warm cache
       }
-      indirectComparator = ComparatorFactory.wrapIndirect(
-        termCache, ordinals, request.getComparator());
+      indirectComparator = ComparatorFactory.wrapIndirect(termCache, ordinals, request.getComparator());
       cache = termCache;
     }
 
-    ExposedPriorityQueue pq = new ExposedPriorityQueue(
-        indirectComparator, chunkCount);
+    ExposedPriorityQueue pq = new ExposedPriorityQueue(indirectComparator, chunkCount);
     for (int i = 0 ; i < ordinals.length ; i += chunkSize) {
       pq.add(i);
     }
