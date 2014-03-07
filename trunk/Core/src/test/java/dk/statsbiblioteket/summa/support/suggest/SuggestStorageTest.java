@@ -40,9 +40,10 @@ public class SuggestStorageTest extends TestCase {
     int dbCount;
 
     @Override
-    public void setUp() throws Exception {
+    public void setUp() throws Exception {        
         if (storage != null) {
             dbLocation = new File("target/test/", "suggest-" + ++dbCount);
+            
             storage.open(dbLocation);
         } else {
             dbCount = 0;            
@@ -57,7 +58,8 @@ public class SuggestStorageTest extends TestCase {
         storage.close();
         Files.delete(dbLocation);
     }
-
+    
+    
     public void testSpecialFile() throws IOException {
         File location = new File("/home/te/tmp/trier_te/suggest_storage_slow_ps1/suggest");
         //File location = new File("/mnt/bulk/suggest_storage_slow_ps1/suggest");
@@ -124,22 +126,7 @@ public class SuggestStorageTest extends TestCase {
         return mss;
     }
 
-    /**
-     * Test deletion of suggestion in storage.
-     * @throws Exception If error.
-     */
-    public void testDeleteSuggestions() throws Exception {
-        storage.addSuggestion("foo", 1, 1);
-        
-        SuggestResponse resp = storage.getSuggestion("f", 10);
-        String xml = resp.toXML();
-        assertTrue(xml.contains("foo"));
-
-        storage.deleteSuggestion("foo");
-        resp = storage.getSuggestion("f", 10);
-        xml = resp.toXML();
-        assertFalse(xml.contains("foo"));
-    }
+    
     
     public void testRecentSuggestions() throws Exception {
         storage.addSuggestion("old-1", 1, 1);
