@@ -31,6 +31,6 @@ public class LowerCaseCharFilterFactory extends CharFilterFactory {
 
     @Override
     public Reader create(Reader input) {
-        return new LowerCaseCharFilter(Version.LUCENE_43, input);
+        return new LowerCaseCharFilter(Version.LUCENE_46, input);
     }
 }

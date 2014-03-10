@@ -14,7 +14,7 @@
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
     </ciManagement>
-    <inceptionYear>2013</inceptionYear>
+    <inceptionYear>2014</inceptionYear>
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
     <name>Summa</name>
@@ -200,7 +200,7 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-core</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 
 <!--            <dependency>
@@ -261,7 +261,7 @@
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
                 <classifier>sources</classifier>
                 <exclusions>
                     <exclusion>
@@ -275,13 +275,13 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-common</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-icu</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
        <!--
             <dependency>
@@ -319,25 +319,25 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-uima</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 
            <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-analysis-extras</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queryparser</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queries</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 <!--
             <dependency>
@@ -355,32 +355,32 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-test-framework</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
                 <type>war</type>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-test-framework</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-solrj</artifactId>
-                <version>4.5.1</version>
+                <version>4.6.1</version>
             </dependency>                    
             
             <!-- commons-httpclient is deprecated, but needed for heritrix in core -->

@@ -1039,10 +1039,10 @@ public class TestExposedFacets extends TestCase {
     ExposedSettings.priority = ExposedSettings.PRIORITY.memory;
     ExposedSettings.debug = true;
     FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
-    final int DOCCOUNT = 5000000;
+    final int DOCCOUNT = 50000000;
     final int TERM_LENGTH = 20;
     final List<String> FIELDS = Arrays.asList("a");
-    final File LOCATION = PREFERRED_ROOT.exists() ?  new File(PREFERRED_ROOT, "index5M") : ExposedHelper.INDEX_LOCATION;
+    final File LOCATION = PREFERRED_ROOT.exists() ?  new File(PREFERRED_ROOT, "index50M") : ExposedHelper.INDEX_LOCATION;
 
     if (!LOCATION.exists()) {
       System.err.println("No index at " + LOCATION + ". A test index with " + DOCCOUNT + " documents will be build at "

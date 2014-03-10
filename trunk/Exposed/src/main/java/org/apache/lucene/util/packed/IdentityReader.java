@@ -4,7 +4,7 @@ package org.apache.lucene.util.packed;
  * Returns the index as the value in {@link #get}. Useful for representing a 1:1
  * mapping of another structure.
  */
-public class IdentityReader implements PackedInts.Reader {
+public class IdentityReader extends PackedInts.Reader {
   private final int size;
 
   public IdentityReader(int size) {
