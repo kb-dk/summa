@@ -1039,7 +1039,7 @@ public class TestExposedFacets extends TestCase {
     ExposedSettings.priority = ExposedSettings.PRIORITY.memory;
     ExposedSettings.debug = true;
     FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
-    final int DOCCOUNT = 50000000;
+    final int DOCCOUNT = 500000;
     final int TERM_LENGTH = 20;
     final List<String> FIELDS = Arrays.asList("a");
     final File LOCATION = PREFERRED_ROOT.exists() ?  new File(PREFERRED_ROOT, "index50M") : ExposedHelper.INDEX_LOCATION;
@@ -1177,7 +1177,7 @@ public class TestExposedFacets extends TestCase {
 
     FacetRequest request = FacetRequest.parseXML(requestStr);
     request.setQuery(ExposedHelper.ALL + ":" + ExposedHelper.ALL);
-    FacetMap stableMap = poolFactory.acquire(reader, request).getMap();
+    FacetMapMulti stableMap = poolFactory.acquire(reader, request).getMap();
 
     for (FacetMapFactory.IMPL impl: FacetMapFactory.IMPL.values()) {
       if (impl == FacetMapFactory.IMPL.stable) {
@@ -1185,14 +1185,14 @@ public class TestExposedFacets extends TestCase {
       }
       FacetMapFactory.defaultImpl = impl;
       poolFactory.clear();
-      FacetMap map = poolFactory.acquire(reader, request).getMap();
+      FacetMapMulti map = poolFactory.acquire(reader, request).getMap();
       assertEquals(stableMap, impl, map);
     }
 
     searcher.getIndexReader().close();
   }
 
-  private void assertEquals(FacetMap expected, FacetMapFactory.IMPL impl, FacetMap actual) {
+  private void assertEquals(FacetMapMulti expected, FacetMapFactory.IMPL impl, FacetMapMulti actual) {
     int[] eStable = expected.getIndirectStarts();
     int[] aStable = actual.getIndirectStarts();
     assertEquals(impl + ": The indirects.length should match",

@@ -231,7 +231,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     public static final String DEFAULT_FILTER_MATCHALL = "recordBase:sb*";
 
     /**
-     * FacetMap implementation for Exposed faceting. Valid values are {@link FacetMapFactory.IMPL}:
+     * FacetMapMulti implementation for Exposed faceting. Valid values are {@link FacetMapFactory.IMPL}:
      * <ul>
      *     <li>stable: Well tested triple pass: Low mem, long startup</li>
      *     <li>pass2: Slightly tweaked dual pass: Same mem, 75% startup time, relative to stable</li>
@@ -313,7 +313,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         {
             if (conf.containsKey(CONF_EXPOSED_FACET_MAP)) {
                 String impl = conf.getString(CONF_EXPOSED_FACET_MAP);
-                exposedFeedback += " Exposed FacetMap impl=" + impl;
+                exposedFeedback += " Exposed FacetMapMulti impl=" + impl;
                 FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.valueOf(impl);
             }
           if (conf.containsKey(CONF_EXPOSED_DEBUG)) {

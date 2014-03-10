@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Battle-tested construction of FacetMap.
+ * Battle-tested construction of FacetMapMulti.
  */
 public class FacetMapTripleFactory {
 
@@ -23,10 +23,10 @@ public class FacetMapTripleFactory {
   // 1. Generate sorted and de-duplicated ordinals list
   // 2. Count references from documents to tags
   // 3. Update map with references from documents to tags
-  public static FacetMap createMap(int docCount, List<TermProvider> providers)
+  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
       throws IOException {
     if (ExposedSettings.debug) {
-      System.out.println("FacetMap: Creating map for " + providers.size()
+      System.out.println("FacetMapMulti: Creating map for " + providers.size()
           + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount
           + " documents)");
     }
@@ -50,10 +50,10 @@ public class FacetMapTripleFactory {
     final PackedInts.Reader refs = pair.getValue();
     if (ExposedSettings.debug) {
       System.out.println(
-              "FacetMap: Unique count (" + providers.size() + " providers): "
+              "FacetMapMulti: Unique count (" + providers.size() + " providers): "
               + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     }
-    return new FacetMap(providers, indirectStarts, doc2ref, refs);
+    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
   }
 
   private static Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
@@ -116,7 +116,7 @@ public class FacetMapTripleFactory {
     tagCountTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMap: Counted " + referenceCount + " tag references for "
+          "FacetMapMulti: Counted " + referenceCount + " tag references for "
           + ExposedUtil.time("documents", tagCounts.length, tagCountTime)
           + ". Retrieved "
           + ExposedUtil.time("tuples", tupleCount, tupleTime / 1000000));
@@ -343,7 +343,7 @@ public class FacetMapTripleFactory {
     }
     fillTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
-      System.out.println("FacetMap: Filled map with "
+      System.out.println("FacetMapMulti: Filled map with "
           + ExposedUtil.time("references", totalRefs, fillTime)
           + " out of which was " +
           ExposedUtil.time("nextDocs", nextDocCount, nextDocTime / 1000000));

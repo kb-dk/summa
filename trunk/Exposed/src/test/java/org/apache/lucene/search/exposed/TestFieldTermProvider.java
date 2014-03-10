@@ -6,8 +6,8 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
-import org.apache.lucene.search.exposed.facet.FacetMap;
 import org.apache.lucene.search.exposed.facet.FacetMapFactory;
+import org.apache.lucene.search.exposed.facet.FacetMapMulti;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IndexUtil;
 
@@ -383,7 +383,7 @@ public class TestFieldTermProvider extends TestCase {
                     providers.get(providers.size()-1));
       }
     }
-    FacetMap map = FacetMapFactory.createMap(1, providers);
+    FacetMapMulti map = FacetMapFactory.createMap(1, providers);
     if (termCount != map.getTermsForDocID(0).length) {
       for (BytesRef term: map.getTermsForDocID(0)) {
         System.err.println(term.utf8ToString());

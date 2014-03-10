@@ -105,7 +105,7 @@ public class TestHierarchicalFacets extends TestCase {
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     TermProvider basic = ExposedCache.getInstance().getProvider(
         reader, "myGroup", Arrays.asList("deep"), new NamedNaturalComparator());
-    FacetMap map = FacetMapFactory.createMap(reader.maxDoc(), Arrays.asList(basic));
+    FacetMapMulti map = FacetMapFactory.createMap(reader.maxDoc(), Arrays.asList(basic));
     for (int i = 0 ; i < reader.maxDoc() ; i++) {
       System.out.print("Doc " + i + ":");
       BytesRef[] terms = map.getTermsForDocID(i);
@@ -125,7 +125,7 @@ public class TestHierarchicalFacets extends TestCase {
         ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     TermProvider basic = ExposedCache.getInstance().getProvider(
         reader, "myGroup", Arrays.asList("deep"), new NamedNaturalComparator());
-    FacetMap map = FacetMapFactory.createMap(reader.maxDoc(), Arrays.asList(basic));
+    FacetMapMulti map = FacetMapFactory.createMap(reader.maxDoc(), Arrays.asList(basic));
     for (int i = 0 ; i < reader.maxDoc() ; i++) {
       System.out.print("Doc " + i + ":");
       BytesRef[] terms = map.getTermsForDocID(i);

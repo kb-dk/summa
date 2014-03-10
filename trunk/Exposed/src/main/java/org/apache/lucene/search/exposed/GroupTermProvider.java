@@ -235,7 +235,7 @@ public class GroupTermProvider extends TermProviderImpl {
     return getOrderedOrdinals(null);
   }
 
-  // TODO: This is an ugly performance hack tied to FacetMap
+  // TODO: This is an ugly performance hack tied to FacetMapMulti
   public void setOrderedOrdinals(PackedInts.Reader ordered) {
     order = ordered;
   }

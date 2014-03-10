@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class FacetMapDualFactory extends FacetMapTripleFactory {
 
-  public static FacetMap createMap(int docCount, List<TermProvider> providers)
+  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
       throws IOException {
     if (ExposedSettings.debug) {
       System.out.println("FacetMapDual: Creating 2 pass map for " + providers.size()
@@ -128,7 +128,7 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
               "FacetMapDual: Unique count, tag counts and tag fill (" + docCount + " documents, "
               + providers.size() + " providers): " + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     }
-    return new FacetMap(providers, indirectStarts, doc2ref, refs);
+    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
   }
 
 }

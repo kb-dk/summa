@@ -134,7 +134,7 @@ public class IterativeTest extends NoExitTestCase {
         updateIndex();
         assertEquals("The number of processed ids should be correct",
                      1, IterativeHelperDocCreator.processedIDs.size());
-/*        FacetMap facetMap = getFacetMap();
+/*        FacetMapMulti facetMap = getFacetMap();
         assertEquals("The TagHandler should have the correct number of Facets",
                      4, facetMap.getTagHandler().getFacets().size());
         assertEquals("The coreMap should have the correct number of docs",
@@ -394,7 +394,7 @@ public class IterativeTest extends NoExitTestCase {
         }
     }
   */
-   /* private FacetMap getFacetMap() throws Exception {
+   /* private FacetMapMulti getFacetMap() throws Exception {
         Configuration conf = Configuration.load(
                 "iterative/IterativeTest_FacetSearchConfiguration.xml");
         Structure structure = new Structure(conf);
@@ -403,7 +403,7 @@ public class IterativeTest extends NoExitTestCase {
         TagHandler tagHandler =
                 TagHandlerFactory.getTagHandler(conf, structure, false);
         CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
-        FacetMap facetMap =  new FacetMap(structure, coreMap, tagHandler, true);
+        FacetMapMulti facetMap =  new FacetMapMulti(structure, coreMap, tagHandler, true);
         facetMap.open(new File(getIndexLocation(), FacetCore.FACET_FOLDER));
         return facetMap;
     }

@@ -21,12 +21,12 @@ import java.util.concurrent.*;
  */
 public class FacetMapSinglePackedFactory {
 
-  public static FacetMap createMap(int docCount, List<TermProvider> providers)
+  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
       throws IOException {
     final long startTime = System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMap: Creating packed single pass map for "
+          "FacetMapMulti: Creating packed single pass map for "
           + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
           + " with " + docCount + " documents)");
     }
@@ -58,7 +58,7 @@ public class FacetMapSinglePackedFactory {
 
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMap: Full index iteration in "
+          "FacetMapMulti: Full index iteration in "
           + (System.currentTimeMillis() - startTime) + "ms. "
           + "Commencing extraction of structures");
     }
@@ -71,12 +71,12 @@ public class FacetMapSinglePackedFactory {
     final PackedInts.Reader refs = pair.getValue();
     if (ExposedSettings.debug) {
       System.out.println(String.format(
-          "FacetMap: docs=%s, terms=%s, refs=%d. Term extraction time=%dms,"
+          "FacetMapMulti: docs=%s, terms=%s, refs=%d. Term extraction time=%dms,"
           + " Secondary structure processing time=%dms",
           docCount, totalUniqueTerms, refCount, indexExtractTime,
           tagExtractTime));
     }
-    return new FacetMap(providers, indirectStarts, doc2ref, refs);
+    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
   }
 
   private static List<ProviderData> extractProviderDatas(
@@ -86,7 +86,7 @@ public class FacetMapSinglePackedFactory {
     if (ExposedSettings.threads == 1 || providers.size() == 1) {
       if (ExposedSettings.debug) {
         System.out.println(String.format(
-            "FacetMap: Performing single threaded extraction of term " +
+            "FacetMapMulti: Performing single threaded extraction of term " +
             "data from %d providers",
             providers.size()));
       }
@@ -103,7 +103,7 @@ public class FacetMapSinglePackedFactory {
 
     if (ExposedSettings.debug) {
       System.out.println(String.format(
-          "FacetMap: Starting a maximum of %d threads for extracting term " +
+          "FacetMapMulti: Starting a maximum of %d threads for extracting term " +
           "data from %d providers",
           ExposedSettings.threads, providers.size()));
     }
@@ -132,7 +132,7 @@ public class FacetMapSinglePackedFactory {
     realTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(String.format(
-          "FacetMap: Finished running max %d threads for %d providers. " +
+          "FacetMapMulti: Finished running max %d threads for %d providers. " +
           "Real time spend: %dms. Summed thread time: %dms",
           ExposedSettings.threads, providers.size(), realTime, summedTime));
     }
@@ -205,7 +205,7 @@ public class FacetMapSinglePackedFactory {
       ((GroupTermProvider)provider).setOrderedOrdinals(i2o);
       if (ExposedSettings.debug) {
         System.out.println(String.format(
-            "FacetMap: Assigning indirects for %d unique terms, " +
+            "FacetMapMulti: Assigning indirects for %d unique terms, " +
             "%d references, extracted in %d ms, to %s: %s",
             uniqueTerms, providerMap.size(), processingTime,
             ((GroupTermProvider)provider).getRequest().getFieldNames(),
@@ -213,7 +213,7 @@ public class FacetMapSinglePackedFactory {
       }
     } else if (ExposedSettings.debug) {
       System.out.println(String.format(
-          "FacetMap: Hoped for GroupTermProvider, but got %s. " +
+          "FacetMapMulti: Hoped for GroupTermProvider, but got %s. " +
           "Collected ordered ordinals are discarded",
           provider.getClass()));
     }
@@ -275,7 +275,7 @@ public class FacetMapSinglePackedFactory {
     }
     if (ExposedSettings.debug) {
       System.out.println(String.format(
-          "FacetMap: Extracted doc2in and refs %s from %d pairs for %d docIDs "
+          "FacetMapMulti: Extracted doc2in and refs %s from %d pairs for %d docIDs "
           + "in %d seconds (%d of these seconds used for counting docID "
           + "frequencies and creating doc2in structure)",
           refs, fullSize, docCount,

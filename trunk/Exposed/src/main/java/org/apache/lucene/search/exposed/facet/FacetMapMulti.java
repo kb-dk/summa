@@ -24,7 +24,7 @@ import java.util.List;
  * The distribution of the entries in refs is defined by the index layout and
  * is assumed to be random.
  */
-public class FacetMap {
+public class FacetMapMulti {
 
   private final List<TermProvider> providers;
   private final int[] indirectStarts;
@@ -32,7 +32,7 @@ public class FacetMap {
   private final PackedInts.Reader doc2ref;
   private final PackedInts.Reader refs;
 
-  protected FacetMap(List<TermProvider> providers, int[] indirectStarts,
+  protected FacetMapMulti(List<TermProvider> providers, int[] indirectStarts,
                   PackedInts.Reader doc2ref, PackedInts.Reader refs) {
     this.providers = providers;
     this.indirectStarts = indirectStarts;

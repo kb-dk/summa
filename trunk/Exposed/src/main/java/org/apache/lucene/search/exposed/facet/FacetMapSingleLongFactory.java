@@ -18,19 +18,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Single pass FacetMap builder that uses long[]s to hold all termID-docID
+ * Single pass FacetMapMulti builder that uses long[]s to hold all termID-docID
  * pairs. While this is markedly faster than {@link FacetMapDualFactory}, the
  * memory overhead is significant, especially when the number of references is
  * high (1.5-3x when testing with the corpus at Statsbiblioteket).
  */
 public class FacetMapSingleLongFactory {
 
-  public static FacetMap createMap(int docCount, List<TermProvider> providers)
+  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
       throws IOException {
     final long startTime = System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMap: Creating long single pass map for "
+          "FacetMapMulti: Creating long single pass map for "
           + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
           + " with " + docCount + " documents)");
     }
@@ -82,7 +82,7 @@ public class FacetMapSingleLongFactory {
         ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
         if (ExposedSettings.debug) {
           System.out.println(String.format(
-              "FacetMap: Assigning indirects for %d unique terms, " +
+              "FacetMapMulti: Assigning indirects for %d unique terms, " +
               "%d references, extracted in %d ms, to %s: %s",
               localUniqueTerms, pairs.size()-pairsStartSize, localTime,
               ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(),
@@ -90,7 +90,7 @@ public class FacetMapSingleLongFactory {
         }
       } else if (ExposedSettings.debug) {
         System.out.println(String.format(
-            "FacetMap: Hoped for GroupTermProvider, but got %s. " +
+            "FacetMapMulti: Hoped for GroupTermProvider, but got %s. " +
             "Collected ordered ordinals are discarded",
             providers.get(i).getClass()));
       }
@@ -124,7 +124,7 @@ public class FacetMapSingleLongFactory {
     indirectStarts[indirectStarts.length-1] = start;
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMap: Full index iteration in "
+          "FacetMapMulti: Full index iteration in "
           + (System.currentTimeMillis() - startTime) + "ms. "
           + "Commencing extraction of structures. Temporary map: "
           + pairs);
@@ -137,11 +137,11 @@ public class FacetMapSingleLongFactory {
     final PackedInts.Reader refs = pair.getValue();
     if (ExposedSettings.debug) {
       System.out.println(
-              "FacetMap: Unique count, tag counts and tag fill (" + docCount
+              "FacetMapMulti: Unique count, tag counts and tag fill (" + docCount
               + " documents, " + providers.size() + " providers): "
               + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     }
-    return new FacetMap(providers, indirectStarts, doc2ref, refs);
+    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
   }
 
   /**
@@ -199,7 +199,7 @@ public class FacetMapSingleLongFactory {
 
     if (ExposedSettings.debug) {
       System.out.println(String.format(
-          "FacetMap: Extracted doc2in and refs %s from %d pairs for %d docIDs "
+          "FacetMapMulti: Extracted doc2in and refs %s from %d pairs for %d docIDs "
           + "in %d seconds (%d of these seconds used for counting docID "
           + "frequencies and creating doc2in structure)",
           refs, pairs.size(), docCount,
