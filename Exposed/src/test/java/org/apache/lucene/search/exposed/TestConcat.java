@@ -78,7 +78,7 @@ public class TestConcat extends TestCase {
         ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_43, "id", new WhitespaceAnalyzer(Version.LUCENE_43));
+        Version.LUCENE_46, "id", new WhitespaceAnalyzer(Version.LUCENE_46));
     Query q = qp.parse(query);
     searcher.search(q, TopScoreDocCollector.create(10, false));
 
@@ -124,11 +124,11 @@ public class TestConcat extends TestCase {
     Map<String, Analyzer> map = new HashMap<String, Analyzer>();
     map.put(CONFIELD, new ConcatICUCollationAnalyzer(
             Collator.getInstance(new Locale("da"))));
-    map.put(IDFIELD, new WhitespaceAnalyzer(Version.LUCENE_43));
+    map.put(IDFIELD, new WhitespaceAnalyzer(Version.LUCENE_46));
     PerFieldAnalyzerWrapper perField = new PerFieldAnalyzerWrapper(
-        new WhitespaceAnalyzer(Version.LUCENE_43), map);
+        new WhitespaceAnalyzer(Version.LUCENE_46), map);
     IndexWriter w  = new IndexWriter(
-        dir, new IndexWriterConfig(Version.LUCENE_43, perField));
+        dir, new IndexWriterConfig(Version.LUCENE_46, perField));
 
     Document doc = new Document();
     IndexableField plain = new TextField(IDFIELD, "doc0", Field.Store.NO);

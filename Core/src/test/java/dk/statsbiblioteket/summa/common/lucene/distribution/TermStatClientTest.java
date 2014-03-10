@@ -326,7 +326,7 @@ public class TermStatClientTest extends TestCase {
     private void generateDuplicateIndex(int docCount, File location) throws Exception {
         IndexWriter writer = new IndexWriter(
                 new NIOFSDirectory(location),
-                new IndexWriterConfig(Version.LUCENE_43, new StandardAnalyzer(Version.LUCENE_43)));
+                new IndexWriterConfig(Version.LUCENE_46, new StandardAnalyzer(Version.LUCENE_46)));
         for (int i = 0 ; i < docCount ; i++) {
             Document doc = new Document();
             doc.add(new Field("fieldA", "foo bar" + i, Field.Store.YES, Field.Index.ANALYZED));
