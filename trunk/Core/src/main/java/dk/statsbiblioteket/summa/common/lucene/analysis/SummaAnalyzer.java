@@ -54,9 +54,9 @@ public class SummaAnalyzer extends Analyzer {
 
     @Override
     protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-        //return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_43, reader));
+        //return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_46, reader));
         if (collator == null) {
-            return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_43, reader));
+            return new TokenStreamComponents(new WhitespaceTokenizer(Version.LUCENE_46, reader));
         }
         KeywordTokenizer tokenizer = new KeywordTokenizer(factory, reader, KeywordTokenizer.DEFAULT_BUFFER_SIZE);
         return new TokenStreamComponents(tokenizer, tokenizer);

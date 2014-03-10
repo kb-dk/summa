@@ -60,7 +60,7 @@ public class SummaNumberAnalyzer extends Analyzer {
 
         public TokenStreamContext() {
             buf = new StringBuffer();
-            standardAnalyzer = new StandardAnalyzer(Version.LUCENE_43);
+            standardAnalyzer = new StandardAnalyzer(Version.LUCENE_46);
             seq = new CharSequenceReader(buf);
         }
     }
@@ -104,7 +104,7 @@ public class SummaNumberAnalyzer extends Analyzer {
         } catch (IOException e) {
             log.error("", e);
         }
-        return new StandardAnalyzer(Version.LUCENE_43).tokenStream(fieldName, new StringReader(b.toString()));
+        return new StandardAnalyzer(Version.LUCENE_46).tokenStream(fieldName, new StringReader(b.toString()));
     }
   */
     /**

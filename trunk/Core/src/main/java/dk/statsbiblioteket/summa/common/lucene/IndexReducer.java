@@ -90,7 +90,7 @@ public class IndexReducer {
 
         System.out.println("Opening index writer...");
         IndexWriterConfig writerConfig = new IndexWriterConfig(
-            Version.LUCENE_43, new SimpleAnalyzer(Version.LUCENE_43));
+            Version.LUCENE_46, new SimpleAnalyzer(Version.LUCENE_46));
         // FIXME: Set max field length to unlimited
 //        writerConfig.setMaxFieldLength(
 //                                   IndexWriterConfig.UNLIMITED_FIELD_LENGTH);
@@ -111,7 +111,7 @@ public class IndexReducer {
         final DirectoryReader ir = DirectoryReader.open(new NIOFSDirectory(location));
         IndexWriter writer = new IndexWriter(
             new NIOFSDirectory(location),
-            new IndexWriterConfig(Version.LUCENE_43, new WhitespaceAnalyzer(Version.LUCENE_43)));
+            new IndexWriterConfig(Version.LUCENE_46, new WhitespaceAnalyzer(Version.LUCENE_46)));
         final int docCount = ir.maxDoc();
         System.out.println("Reducing '" + location + "' to " + fraction + " size (" + ir.maxDoc() + " => "
                            + (int)(ir.maxDoc() * fraction) + " documents...)");

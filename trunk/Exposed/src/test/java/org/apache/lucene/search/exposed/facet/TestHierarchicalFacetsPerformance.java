@@ -29,7 +29,10 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopScoreDocCollector;
-import org.apache.lucene.search.exposed.*;
+import org.apache.lucene.search.exposed.ExposedCache;
+import org.apache.lucene.search.exposed.ExposedHelper;
+import org.apache.lucene.search.exposed.ExposedIOFactory;
+import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.util.Version;
 
@@ -250,8 +253,8 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     IndexReader reader = ExposedIOFactory.getReader(location);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_43, ExposedHelper.ALL,
-        new WhitespaceAnalyzer(Version.LUCENE_43));
+        Version.LUCENE_46, ExposedHelper.ALL,
+        new WhitespaceAnalyzer(Version.LUCENE_46));
       //MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false));
     Query q = qp.parse(ExposedHelper.ALL);
     TopScoreDocCollector sanityCollector =

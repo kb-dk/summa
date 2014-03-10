@@ -63,7 +63,7 @@ public class ExposedIOFactory {
 
     Directory dir = FSDirectory.open(location);
     IndexWriter writer  = new IndexWriter(
-        dir, new IndexWriterConfig(Version.LUCENE_43, new WhitespaceAnalyzer(Version.LUCENE_43)));
+        dir, new IndexWriterConfig(Version.LUCENE_46, new WhitespaceAnalyzer(Version.LUCENE_46)));
 
     writer.getConfig().setRAMBufferSizeMB(16.0);
 

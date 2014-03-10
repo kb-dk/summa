@@ -149,7 +149,7 @@ public class TestExposedFacets extends TestCase {
     helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
     IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
 //        new MockAnalyzer(new Random()new Random()));
     Query q = qp.parse("true");
     searcher.search(q, TopScoreDocCollector.create(10, false));
@@ -524,7 +524,7 @@ public class TestExposedFacets extends TestCase {
     IndexReader reader = ExposedIOFactory.getReader(index);
     IndexSearcher searcher = new IndexSearcher(reader);
     QueryParser qp = new QueryParser(
-        Version.LUCENE_43, defaultField, getAnalyzer());
+        Version.LUCENE_46, defaultField, getAnalyzer());
     Query q = qp.parse(query);
     searcher.search(q, TopScoreDocCollector.create(10, false));
 
@@ -551,7 +551,7 @@ public class TestExposedFacets extends TestCase {
   }
 
   private Analyzer getAnalyzer() {
-    return new WhitespaceAnalyzer(Version.LUCENE_43);
+    return new WhitespaceAnalyzer(Version.LUCENE_46);
 //    return new MockAnalyzer(new Random(), MockTokenizer.WHITESPACE, false);
   }
 
@@ -682,7 +682,7 @@ public class TestExposedFacets extends TestCase {
 
     DirectoryReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.ALL, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.ALL, getAnalyzer());
     Query q = qp.parse(ExposedHelper.ALL);
 
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(2, 4, 2);
@@ -732,7 +732,7 @@ public class TestExposedFacets extends TestCase {
 
     String FIELD = "hits10000";
 
-    QueryParser qp = new QueryParser(Version.LUCENE_43, FIELD, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, FIELD, getAnalyzer());
     Query q = qp.parse("true");
     searcher.search(q, TopScoreDocCollector.create(10, false));
     System.out.println("Used heap after loading index and performing a simple search: " + getMem() + " MB\n");
@@ -813,7 +813,7 @@ public class TestExposedFacets extends TestCase {
     helper.createIndex(DOCCOUNT, FIELDS, TERM_LENGTH, MIN_SEGMENTS);
     IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
     searcher.search(q, TopScoreDocCollector.create(10, false));
     System.out.println("Index opened and test-sort performed, commencing faceting...");
@@ -904,7 +904,7 @@ public class TestExposedFacets extends TestCase {
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, field, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, field, getAnalyzer());
     Query q = qp.parse(term);
     System.out.println(q.toString());
     String sQuery = field + ":" + term;
@@ -970,7 +970,7 @@ public class TestExposedFacets extends TestCase {
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
     String sQuery = "even:true";
 
@@ -989,7 +989,7 @@ public class TestExposedFacets extends TestCase {
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 4, 2);
 
     qp = new QueryParser(
-        Version.LUCENE_43, ExposedHelper.EVEN,
+        Version.LUCENE_46, ExposedHelper.EVEN,
         getAnalyzer());
     q = qp.parse("true");
     sQuery = "even:true";
@@ -1003,7 +1003,7 @@ public class TestExposedFacets extends TestCase {
   */
 
     qp = new QueryParser(
-        Version.LUCENE_43, ExposedHelper.MULTI,
+        Version.LUCENE_46, ExposedHelper.MULTI,
         getAnalyzer());
     q = qp.parse("A");
     sQuery = "multi:A"; // Strictly it's "facet:A", but that is too confusing
@@ -1057,7 +1057,7 @@ public class TestExposedFacets extends TestCase {
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
 
     StringWriter sw = new StringWriter(10000);
@@ -1074,7 +1074,7 @@ public class TestExposedFacets extends TestCase {
     // Tests
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 4, 2);
 
-    qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     q = qp.parse("true");
     String sQuery = "even:true";
 
@@ -1133,7 +1133,7 @@ public class TestExposedFacets extends TestCase {
     final File LOCATION = createFacetScaleIndex(1000000);
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
 
     StringWriter sw = new StringWriter(10000);
@@ -1147,7 +1147,7 @@ public class TestExposedFacets extends TestCase {
     // Tests
     CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 4, 2);
 
-    qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     q = qp.parse("true");
     String sQuery = "even:true";
 
@@ -1390,7 +1390,7 @@ public class TestExposedFacets extends TestCase {
     StringWriter sw = new StringWriter();
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse("true");
     String sQuery = "even:true";
     testSortedSearch(searcher, "a", q, sQuery, null, sw);
@@ -1445,7 +1445,7 @@ public class TestExposedFacets extends TestCase {
   private FacetResponse performFaceting(CollectorPoolFactory poolFactory, IndexReader reader, String query,
                                         String requestXML) throws ParseException, IOException, XMLStreamException {
     IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_43, ExposedHelper.EVEN, getAnalyzer());
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     Query q = qp.parse(query);
     searcher.search(q, TopScoreDocCollector.create(10, false));
     long preMem = getMem();

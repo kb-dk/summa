@@ -115,7 +115,7 @@ public class SortHelper {
         File root = createIndex(sortTerms);
         DirectoryReader reader = DirectoryReader.open(new NIOFSDirectory(root));
         IndexSearcher searcher = new IndexSearcher(reader);
-        QueryParser qp = new QueryParser(Version.LUCENE_43, "all", new StandardAnalyzer(Version.LUCENE_43));
+        QueryParser qp = new QueryParser(Version.LUCENE_46, "all", new StandardAnalyzer(Version.LUCENE_46));
         TopDocs result = searcher.search(qp.parse(query), null, 10000, sortFactory.getSort(searcher.getIndexReader()));
         List<String> sortfields = new ArrayList<String>(result.scoreDocs.length);
         for (ScoreDoc sd: result.scoreDocs) {

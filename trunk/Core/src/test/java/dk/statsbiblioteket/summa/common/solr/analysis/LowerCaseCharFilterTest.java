@@ -17,8 +17,8 @@ package dk.statsbiblioteket.summa.common.solr.analysis;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.util.Version;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class LowerCaseCharFilterTest extends TestCase {
     }
 
     private String process(String input) throws IOException {
-        LowerCaseCharFilter filter = new LowerCaseCharFilter(Version.LUCENE_43, new StringReader(input));
+        LowerCaseCharFilter filter = new LowerCaseCharFilter(Version.LUCENE_46, new StringReader(input));
         return Strings.flush(filter);
     }
 }
