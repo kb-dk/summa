@@ -5,13 +5,13 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa-web</artifactId>
-        <version>2.1.0-20140212</version>
+        <version>2.1.0-20140310-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 
-  <artifactId>summaWeb</artifactId>
-  <name>Summa Web e</name>
-  <description>Creates summa search/storage/website WAR file for deployment in Web container.</description>
+  <artifactId>summa-web-stack</artifactId>
+  <name>Summa Web Stack</name>
+  <description>Creates summa search/storage/website-stack WAR file for deployment in Web container.</description>
   <packaging>war</packaging>
 
   <reporting>
