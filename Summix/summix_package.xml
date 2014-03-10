@@ -56,7 +56,7 @@
             <directoryMode>0755</directoryMode>
             <outputDirectory>${project.build.finalName}/web/</outputDirectory>
             <includes>
-                <include>summaWeb.war</include>
+                <include>summa-web-stack.war</include>
             </includes>
         </fileSet>        
         <fileSet>

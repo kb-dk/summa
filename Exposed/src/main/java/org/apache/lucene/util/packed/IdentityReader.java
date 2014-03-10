@@ -48,4 +48,9 @@ public class IdentityReader implements PackedInts.Reader {
     public boolean hasArray() {
         return false;
     }
+
+  @Override
+  public String toString() {
+    return "IdentityReader(size=" + size + ')';
+  }
 }
