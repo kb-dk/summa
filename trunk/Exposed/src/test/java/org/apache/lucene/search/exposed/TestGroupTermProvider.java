@@ -7,6 +7,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
+import org.apache.lucene.search.exposed.facet.FacetMap;
 import org.apache.lucene.search.exposed.facet.FacetMapFactory;
 import org.apache.lucene.search.exposed.facet.FacetMapMulti;
 import org.apache.lucene.util.BytesRef;
@@ -36,15 +37,12 @@ public class TestGroupTermProvider extends TestCase {
 
   public void testIndexGeneration() throws Exception {
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     long termCount = 0;
-    TermsEnum terms = MultiFields.getFields(reader).
-        terms(ExposedHelper.ID).iterator(null);
+    TermsEnum terms = MultiFields.getFields(reader).terms(ExposedHelper.ID).iterator(null);
     while (terms.next() != null) {
       assertEquals("The ID-term #" + termCount + " should be correct",
-          ExposedHelper.ID_FORMAT.format(termCount),
-          terms.term().utf8ToString());
+          ExposedHelper.ID_FORMAT.format(termCount), terms.term().utf8ToString());
       termCount++;
     }
 
@@ -56,22 +54,19 @@ public class TestGroupTermProvider extends TestCase {
   public void testOrdinalAccess() throws IOException {
     String[] fieldNames = new String[]{"a"};
     helper.createIndex( DOCCOUNT, Arrays.asList(fieldNames), 20, 2);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
 
     ArrayList<String> plainExtraction = new ArrayList<String>(DOCCOUNT);
     for (String fieldName: fieldNames) {
       // FIXME: The ordinals are not comparable to the exposed ones!
-      TermsEnum terms =
-          MultiFields.getFields(reader).terms(fieldName).iterator(null);
+      TermsEnum terms = MultiFields.getFields(reader).terms(fieldName).iterator(null);
       while (terms.next() != null) {
         plainExtraction.add(terms.term().utf8ToString());
       }
     }
 
     TermProvider groupProvider = ExposedFactory.createProvider(
-        reader, "TestGroup", Arrays.asList(fieldNames),
-        new NamedNaturalComparator());
+        reader, "TestGroup", Arrays.asList(fieldNames), new NamedNaturalComparator());
 
     ArrayList<String> exposedOrdinals = new ArrayList<String>(DOCCOUNT);
     for (int i = 0 ; i < groupProvider.getOrdinalTermCount() ; i++) {
@@ -116,27 +111,22 @@ public class TestGroupTermProvider extends TestCase {
 
     System.out.println("Extracted and sorted " + 20 + " terms in "
                        + extractTime/1000 + " seconds");
-
-
     reader.close();
   }
 
   public void testTermSortAllScarce() throws IOException {
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     testTermSort(reader, Arrays.asList("even"));
     reader.close();
   }
 
-  private void testTermSort(IndexReader index, List<String> fieldNames)
-                                                            throws IOException {
+  private void testTermSort(IndexReader index, List<String> fieldNames) throws IOException {
     Collator sorter = Collator.getInstance(new Locale("da"));
 
     ArrayList<String> plainExtraction = new ArrayList<String>(DOCCOUNT);
     // TODO: Make this handle multiple field names
-    TermsEnum terms =
-        MultiFields.getFields(index).terms(fieldNames.get(0)).iterator(null);
+    TermsEnum terms = MultiFields.getFields(index).terms(fieldNames.get(0)).iterator(null);
     while (terms.next() != null) {
       String next = terms.term().utf8ToString();
       plainExtraction.add(next);
@@ -146,8 +136,7 @@ public class TestGroupTermProvider extends TestCase {
     Collections.sort(plainExtraction, sorter);
 
     TermProvider groupProvider = ExposedFactory.createProvider(
-        index, "a-group", fieldNames,
-        new NamedCollatorComparator(sorter));
+        index, "a-group", fieldNames, new NamedCollatorComparator(sorter));
     
     ArrayList<String> exposedExtraction = new ArrayList<String>(DOCCOUNT);
     Iterator<ExposedTuple> ei = groupProvider.getIterator(false);
@@ -168,25 +157,21 @@ public class TestGroupTermProvider extends TestCase {
 
   public void testDocIDMapping() throws IOException {
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     Collator sorter = Collator.getInstance(new Locale("da"));
 
     ArrayList<ExposedHelper.Pair> plain =
         new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
     for (int docID = 0 ; docID < reader.maxDoc() ; docID++) {
-      plain.add(new ExposedHelper.Pair(
-          docID, reader.document(docID).get("a"), sorter));
+      plain.add(new ExposedHelper.Pair(docID, reader.document(docID).get("a"), sorter));
 //      System.out.println("Plain access added " + plain.get(plain.size()-1));
     }
     Collections.sort(plain);
 
     TermProvider index = ExposedFactory.createProvider(
-      reader, "docIDGroup", Arrays.asList("a"),
-      new NamedCollatorComparator(sorter));
+        reader, "docIDGroup", Arrays.asList("a"), new NamedCollatorComparator(sorter));
 
-    ArrayList<ExposedHelper.Pair> exposed =
-        new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
+    ArrayList<ExposedHelper.Pair> exposed = new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
     Iterator<ExposedTuple> ei = index.getIterator(true);
 
     while (ei.hasNext()) {
@@ -195,8 +180,7 @@ public class TestGroupTermProvider extends TestCase {
         int doc;
         // TODO: Test if bulk reading (which includes freqs) is faster
         while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-          exposed.add(new ExposedHelper.Pair(
-              doc + tuple.docIDBase, tuple.term.utf8ToString(), sorter));
+          exposed.add(new ExposedHelper.Pair(doc + tuple.docIDBase, tuple.term.utf8ToString(), sorter));
         }
       }
     }
@@ -246,32 +230,26 @@ public class TestGroupTermProvider extends TestCase {
     Collections.sort(exposed);
 
     for (int i = 0 ; i < exposed.size() && i < 10 ; i++) {
-      System.out.println("Sorted docID, term #" + i + ". Exposed="
-          + exposed.get(i));
+      System.out.println("Sorted docID, term #" + i + ". Exposed=" + exposed.get(i));
     }
     reader.close();
-    assertEquals("The maximum docID in tuples should be equal to the maximum " +
-        "from the reader", reader.maxDoc() - 1, maxID);
+    assertEquals("The maximum docID in tuples should be equal to the maximum from the reader",
+                 reader.maxDoc() - 1, maxID);
   }
 
   public void testTermCount() throws IOException {
     helper.createIndex(100, Arrays.asList("a"), 20, 2);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     NamedComparator comp = new NamedNaturalComparator();
-    ExposedRequest.Field fieldRequest = new ExposedRequest.Field(
-        ExposedHelper.MULTI, comp);
-    ExposedRequest.Group groupRequest = new ExposedRequest.Group(
-      "TestGroup", Arrays.asList(fieldRequest), comp);
-    TermProvider provider = ExposedCache.getInstance().getProvider(
-        reader, groupRequest);
+    ExposedRequest.Field fieldRequest = new ExposedRequest.Field(ExposedHelper.MULTI, comp);
+    ExposedRequest.Group groupRequest = new ExposedRequest.Group("TestGroup", Arrays.asList(fieldRequest), comp);
+    TermProvider provider = ExposedCache.getInstance().getProvider(reader, groupRequest);
     
     assertEquals("The number of unique terms for multi should match",
         25, provider.getUniqueTermCount());
   }
 
-  public void testVerifyCorrectCountWithMap()
-                        throws IOException, XMLStreamException, ParseException {
+  public void testVerifyCorrectCountWithMap() throws IOException, XMLStreamException, ParseException {
     String[] FIELDS = new String[]{"recordBase", "lsubject"};
     IndexWriter w = ExposedHelper.getWriter();
     ExposedHelper.addDocument(w,
@@ -318,12 +296,9 @@ public class TestGroupTermProvider extends TestCase {
     verifyGroupElements("Single group with empty term", FIELDS, 1);
   }
 
-  private void verifyGroupElements(
-      String message, String[] fields, int termCount) throws IOException {
-    IndexReader reader = ExposedIOFactory.getReader(
-        ExposedHelper.INDEX_LOCATION);
-    List<TermProvider> providers = createGroupProviders(
-        message, fields, reader);
+  private void verifyGroupElements(String message, String[] fields, int termCount) throws IOException {
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    List<TermProvider> providers = createGroupProviders(message, fields, reader);
     long uniques = 0;
     for (TermProvider provider: providers) {
       uniques += provider.getUniqueTermCount();
@@ -333,15 +308,13 @@ public class TestGroupTermProvider extends TestCase {
     reader.close();
   }
 
-  private void verifyMapElements(String message, String[] fields, int termCount)
-                                                            throws IOException {
+  private void verifyMapElements(String message, String[] fields, int termCount) throws IOException {
     IndexReader reader = ExposedIOFactory.getReader(
         ExposedHelper.INDEX_LOCATION);
 
     List<TermProvider> providers = createGroupProviders(message, fields, reader);
-    FacetMapMulti map = FacetMapFactory.createMap(1, providers);
-    assertEquals(message + ". There should be the correct number of terms for " +
-        "the single document in the map",
+    FacetMap map = FacetMapFactory.createMap(1, providers);
+    assertEquals(message + ". There should be the correct number of terms for the single document in the map",
         termCount, map.getTermsForDocID(0).length);
     assertEquals(message + ". There should be the correct number of indirects",
         termCount, map.getIndirectStarts()[map.getIndirectStarts().length-1]);
@@ -362,13 +335,10 @@ public class TestGroupTermProvider extends TestCase {
     List<TermProvider> providers = new ArrayList<TermProvider>(fields.length);
     NamedComparator comp = new NamedNaturalComparator();
     for (String field: fields) {
-      List<ExposedRequest.Field> fieldRequests =
-          new ArrayList<ExposedRequest.Field>(fields.length);
+      List<ExposedRequest.Field> fieldRequests = new ArrayList<ExposedRequest.Field>(fields.length);
       fieldRequests.add(new ExposedRequest.Field(field, comp));
-      ExposedRequest.Group groupRequest = new ExposedRequest.Group(
-        "TestGroup", fieldRequests, comp);
-      TermProvider provider = ExposedCache.getInstance().getProvider(
-          reader, groupRequest);
+      ExposedRequest.Group groupRequest = new ExposedRequest.Group("TestGroup", fieldRequests, comp);
+      TermProvider provider = ExposedCache.getInstance().getProvider(reader, groupRequest);
       assertTrue(message + ". The provider for " + field + " should be a " +
           "GroupTermProvider but was a " + provider.getClass().getSimpleName(),
           provider instanceof GroupTermProvider);

@@ -27,13 +27,13 @@ public class TagCollector extends Collector {
   private long countTime = -1;
   private int docBase;
   private final int[] tagCounts;
-  private final FacetMapMulti map;
+  private final FacetMap map;
   private boolean clearRunning = false;
   private long hitCount = 0;
   private boolean newborn = true;
 
 // TODO: Remember query for caching of results
-  public TagCollector(FacetMapMulti map) {
+  public TagCollector(FacetMap map) {
     this.map = map;
     try {
       this.tagCounts = new int[map.getTagCount()];
