@@ -27,7 +27,7 @@ public class TagExtractor {
     splitPattern = requestGroup.isHierarchical() ? Pattern.compile(requestGroup.getDelimiter()) : null;
   }
 
-  public FacetResponse.Group extract(int groupID, FacetMapMulti map, int[] tagCounts, int startPos, int endPos)
+  public FacetResponse.Group extract(int groupID, FacetMap map, int[] tagCounts, int startPos, int endPos)
       throws IOException {
 
     if (requestGroup.isHierarchical()) {
@@ -56,9 +56,8 @@ public class TagExtractor {
       final SubtagsConstraints constraints,
       final int currentLevel,
       final HierarchicalTermProvider provider, final int delta,
-      final FacetMapMulti map,
-      final int[] tagCounts, final int startPos, final int endPos)
-                                                            throws IOException {
+      final FacetMap map,
+      final int[] tagCounts, final int startPos, final int endPos) throws IOException {
     if (currentLevel > requestGroup.getLevels()) {
       return null; // Stop descending
     }
@@ -102,7 +101,7 @@ public class TagExtractor {
 
   private FacetResponse.TagCollection extractHierarchicalCount(
       final SubtagsConstraints constraints, final int level, final HierarchicalTermProvider provider, final int delta,
-      final FacetMapMulti map, final int[] tagCounts, final int startPos, final int endPos) throws IOException {
+      final FacetMap map, final int[] tagCounts, final int startPos, final int endPos) throws IOException {
     HCEPQ pq = new HCEPQ(Math.min(constraints.getMaxTags(), endPos - startPos));
     long validTags = 0;
     long totalCount = 0;
@@ -148,7 +147,7 @@ public class TagExtractor {
       final SubtagsConstraints constraints,
       final int level,
       final HierarchicalTermProvider provider,
-      final int delta, final FacetMapMulti map,
+      final int delta, final FacetMap map,
       final int[] tagCounts, final int startTermPos, final int endTermPos) throws IOException {
     final TagSumIterator tagIterator = new TagSumIterator(
         provider, constraints, tagCounts, startTermPos, endTermPos, level, delta);
@@ -198,7 +197,7 @@ public class TagExtractor {
   }
 
   private FacetResponse.Group extractOrderResult(
-      final int groupID, final FacetMapMulti map,
+      final int groupID, final FacetMap map,
       final int[] tagCounts, final int startTermPos, final int endTermPos) throws IOException {
     long extractionTime = System.currentTimeMillis();
     // Locate prefix
@@ -255,7 +254,7 @@ public class TagExtractor {
   }
 
   private FacetResponse.Group extractCountResult(
-      FacetRequestGroup requestGroup, FacetMapMulti map, final int[] tagCounts,
+      FacetRequestGroup requestGroup, FacetMap map, final int[] tagCounts,
       final int startTermPos, final int endTermPos) throws IOException {
     long extractionTime = System.currentTimeMillis();
     // Sort tag references by count
