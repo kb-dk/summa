@@ -45,7 +45,7 @@ import java.io.IOException;
  * for {@link #get}s so access is still fast.
  */
 // TODO: Optimize the speed of array length growth
-public class GrowingMutable implements PackedInts.Mutable {
+public class GrowingMutable extends PackedInts.Mutable {
   // Grow array length with this factor beyond the immediate need
   private static final double GROWTH_FACTOR = 1.2;
 

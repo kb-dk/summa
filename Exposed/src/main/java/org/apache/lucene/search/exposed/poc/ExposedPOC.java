@@ -22,8 +22,7 @@ import java.util.Locale;
 public class ExposedPOC {
   private static final double MAX_HITS = 20;
 
-  public static void main(String[] args)
-      throws IOException, InterruptedException, ParseException {
+  public static void main(String[] args) throws IOException, InterruptedException, ParseException {
     if (args.length == 2 && "optimize".equals(args[0])) {
       optimize(new File(args[1]));
       return;
@@ -36,11 +35,9 @@ public class ExposedPOC {
     String method = args[0];
     File location = new File(args[1]);
     String field = args[2];
-    Locale locale =
-        "null".equalsIgnoreCase(args[3]) ? null : new Locale(args[3]);
+    Locale locale = "null".equalsIgnoreCase(args[3]) ? null : new Locale(args[3]);
     String defaultField = args[4];
-    ExposedSettings.PRIORITY priority =
-        ExposedSettings.PRIORITY.fromString(args[5]);
+    ExposedSettings.PRIORITY priority = ExposedSettings.PRIORITY.fromString(args[5]);
     try {
       shell(method, location, field, locale, defaultField, priority);
     } catch (Exception e) {
@@ -55,14 +52,12 @@ public class ExposedPOC {
     long startTimeOptimize = System.nanoTime();
     IndexWriter writer = ExposedIOFactory.getWriter(location);
     writer.forceMerge(1);
-    System.out.println("Optimized index in " + nsToString(
-        System.nanoTime() - startTimeOptimize));
+    System.out.println("Optimized index in " + nsToString(System.nanoTime() - startTimeOptimize));
     writer.close(true);
   }
 
   private static void shell(
-      String method, File location, String field, Locale locale,
-      String defaultField, ExposedSettings.PRIORITY priority)
+      String method, File location, String field, Locale locale, String defaultField, ExposedSettings.PRIORITY priority)
       throws IOException, InterruptedException, org.apache.lucene.queryparser.classic.ParseException {
     System.out.println(String.format(
         "Testing sorted search for index at '%s' with sort on field %s with " +
@@ -72,12 +67,9 @@ public class ExposedPOC {
 
     org.apache.lucene.index.IndexReader reader = ExposedIOFactory.getReader(location);
     System.out.println(String.format(
-        "Opened index of size %s from %s. the indes has %d documents and %s" +
-            " deletions. Heap: %s",
-        readableSize(calculateSize(location)), location,
-        reader.maxDoc(),
-        reader.hasDeletions() ? "some" : " no",
-        getHeap()));
+        "Opened index of size %s from %s. the indes has %d documents and %s deletions. Heap: %s",
+        readableSize(calculateSize(location)), location, reader.maxDoc(),
+        reader.hasDeletions() ? "some" : " no", getHeap()));
 
 /*    System.out.println(String.format(
         "Creating %s Sort for field %s with locale %s... Heap: %s",
@@ -86,15 +78,13 @@ public class ExposedPOC {
     long startTimeSort = System.nanoTime();
     Sort sort;
     if ("exposed".equals(method) || "expose".equals(method)) {
-      ExposedFieldComparatorSource exposedFCS =
-          new ExposedFieldComparatorSource(reader, locale);
+      ExposedFieldComparatorSource exposedFCS = new ExposedFieldComparatorSource(reader, locale);
       sort = new Sort(new SortField(field, exposedFCS));
     } else if ("default".equals(method)) {
       if (locale == null) {
         sort = new Sort(new SortField(field, SortField.Type.STRING));
       } else {
-        throw new UnsupportedOperationException(
-            "native sort by locale not supported in Lucene 4 trunk");
+        throw new UnsupportedOperationException("native sort by locale not supported in Lucene 4 trunk");
 /*
       sort = locale == null ?
           new Sort(new SortField(field, SortField.STRING)) :
@@ -103,8 +93,7 @@ public class ExposedPOC {
  */
       }
     } else {
-      throw new IllegalArgumentException(
-          "The sort method " + method + " is unsupported");
+      throw new IllegalArgumentException("The sort method " + method + " is unsupported");
     }
     long sortTime = System.nanoTime() - startTimeSort;
 
@@ -123,13 +112,12 @@ public class ExposedPOC {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     org.apache.lucene.queryparser.classic.QueryParser qp =
         new org.apache.lucene.queryparser.classic.QueryParser(
-            Version.LUCENE_43, defaultField, new WhitespaceAnalyzer(Version.LUCENE_43));
+            Version.LUCENE_46, defaultField, new WhitespaceAnalyzer(Version.LUCENE_46));
 
     boolean first = true;
     while (true) {
       if (first) {
-        System.out.print("\nQuery (" + method + " sort, first search might take " +
-            "a while): ");
+        System.out.print("\nQuery (" + method + " sort, first search might take a while): ");
         first = false;
       } else {
         System.out.print("Query (" + method + " sort): ");
@@ -152,24 +140,18 @@ public class ExposedPOC {
         TopFieldDocs topDocs = searcher.search(q, 20, sort);
         long searchTime = System.nanoTime() - startTimeSearch;
         System.out.println(String.format(
-            "The search for '%s' got %d hits in %s (+ %s for query parsing). "
-                + "Showing %d hits.",
-            query, topDocs.totalHits,
-            nsToString(searchTime),
-            nsToString(queryTime),
+            "The search for '%s' got %d hits in %s (+ %s for query parsing). Showing %d hits.",
+            query, topDocs.totalHits, nsToString(searchTime), nsToString(queryTime),
             (int)Math.min(topDocs.totalHits, MAX_HITS)));
         long startTimeDisplay = System.nanoTime();
         for (int i = 0 ; i < Math.min(topDocs.totalHits, MAX_HITS) ; i++) {
           int docID = topDocs.scoreDocs[i].doc;
           System.out.println(String.format(
               "Hit #%d was doc #%d with %s:%s",
-              i, docID, field,
-              ((BytesRef)((FieldDoc)topDocs.scoreDocs[i]).fields[0]).
-                  utf8ToString()));
+              i, docID, field, ((BytesRef)((FieldDoc)topDocs.scoreDocs[i]).fields[0]).utf8ToString()));
         }
         System.out.print("Displaying the search result took "
-            + nsToString(
-            System.nanoTime() - startTimeDisplay) + ". ");
+                         + nsToString(System.nanoTime() - startTimeDisplay) + ". ");
         System.out.println("Heap: " + getHeap());
       } catch (Exception e) {
         //noinspection CallToPrintStackTrace
@@ -181,18 +163,14 @@ public class ExposedPOC {
 
   private static void usage() {
     System.out.println(
-        "Usage: ExposedPOC exposed|default <index> <sortField> <locale>" +
-            " <defaultField> <optimization>\n"
+        "Usage: ExposedPOC exposed|default <index> <sortField> <locale> <defaultField> <optimization>\n"
             + "exposed:         Uses the expose sorter\n"
             + "default:        Uses the default sorter\n"
             + "<index>:        The location of an optimized Lucene index\n"
             + "<sortField>:    The field to use for sorting\n"
-            + "<locale>:       The locale to use for sorting. If null is "
-                             + "specified, natural term order is used\n"
-            + "<defaultField>: The field to search when no explicit field is " +
-            "given\n"
-            + "<optimization>: Either speed or memory. Only relevant for " +
-            "exposed\n"
+            + "<locale>:       The locale to use for sorting. If null is specified, natural term order is used\n"
+            + "<defaultField>: The field to search when no explicit field is given\n"
+            + "<optimization>: Either speed or memory. Only relevant for exposed\n"
             + "\n"
             + "Example:\n"
             + "ExposedPOC expose /mnt/bulk/40GB_index author da freetext"
@@ -215,9 +193,8 @@ public class ExposedPOC {
   }
 
   private static String getHeapDirect() {
-    return readableSize(Runtime.getRuntime().totalMemory()
-            - Runtime.getRuntime().freeMemory()) + "/"
-        + readableSize(Runtime.getRuntime().totalMemory());
+    return readableSize(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) + "/"
+           + readableSize(Runtime.getRuntime().totalMemory());
   }
 
   static String readableSize(long size) {
@@ -278,6 +255,4 @@ public class ExposedPOC {
     }
     return min + ":" + s;
   }
-  
-  
 }
