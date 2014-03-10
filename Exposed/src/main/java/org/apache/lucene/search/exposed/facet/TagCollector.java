@@ -27,19 +27,19 @@ public class TagCollector extends Collector {
   private long countTime = -1;
   private int docBase;
   private final int[] tagCounts;
-  private final FacetMap map;
+  private final FacetMapMulti map;
   private boolean clearRunning = false;
   private long hitCount = 0;
   private boolean newborn = true;
 
 // TODO: Remember query for caching of results
-  public TagCollector(FacetMap map) {
+  public TagCollector(FacetMapMulti map) {
     this.map = map;
     try {
       this.tagCounts = new int[map.getTagCount()];
     } catch (OutOfMemoryError e) {
       throw (OutOfMemoryError)new OutOfMemoryError(String.format(
-              "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMap was %s",
+              "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMapMulti was %s",
               map.getTagCount(), map.getTagCount() / 1048576, map.toString())).initCause(e);
     }
   }
@@ -237,7 +237,7 @@ public class TagCollector extends Collector {
     newborn = false;
     if (map.getIndirectStarts().length-1 != request.getGroups().size()) {
       throw new IllegalStateException(
-          "The number of term providers in the FacetMap was "
+          "The number of term providers in the FacetMapMulti was "
               + (map.getIndirectStarts().length-1)
               + ", while the number of groups in the request was "
               + request.getGroups().size() + ". The two numbers must match");

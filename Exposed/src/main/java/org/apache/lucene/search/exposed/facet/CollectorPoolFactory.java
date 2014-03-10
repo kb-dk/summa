@@ -120,7 +120,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback, IndexRe
     }
 
     long mapTime = -System.currentTimeMillis();
-    FacetMap facetMap = FacetMapFactory.createMap(reader.maxDoc(), termProviders);
+    FacetMapMulti facetMap = FacetMapFactory.createMap(reader.maxDoc(), termProviders);
     mapTime += System.currentTimeMillis();
 //    System.out.println("Map time: " + mapTime + "ms");
     pool = new CollectorPool(key, facetMap, filledCollectors, freshCollectors);

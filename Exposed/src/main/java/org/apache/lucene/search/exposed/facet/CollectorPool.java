@@ -3,7 +3,7 @@ package org.apache.lucene.search.exposed.facet;
 import java.util.*;
 
 /**
- * Holds a number of {@link TagCollector}s tied to a single {@link FacetMap}
+ * Holds a number of {@link TagCollector}s tied to a single {@link FacetMapMulti}
  * and ensures that they are cleared and ready for use. If there are no
  * collectors in the pool when a new one is acquired, a new collector will be
  * created.
@@ -27,7 +27,7 @@ public class CollectorPool {
   public enum AVAILABILITY {
       hasFresh, hasFilled, mightCreateNew, mustCreateNew, mustWait}
 
-  private final FacetMap map;
+  private final FacetMapMulti map;
   private final String key;
 
   private final List<TagCollector> fresh;
@@ -65,7 +65,7 @@ public class CollectorPool {
    * @param freshCollectors the maximum number of fresh collectors.
    */
   public CollectorPool(
-      String key, FacetMap map, int filledCollectors, int freshCollectors) {
+      String key, FacetMapMulti map, int filledCollectors, int freshCollectors) {
     this.map = map;
     this.key = key;
 
@@ -86,10 +86,10 @@ public class CollectorPool {
   }
 
   /**
-   * @deprecated use {@link CollectorPool(String, FacetMap, int, int)}.
+   * @deprecated use {@link CollectorPool(String, FacetMapMulti , int, int)}.
    */
   public CollectorPool(
-          FacetMap map, int filledCollectors, int freshCollectors) {
+          FacetMapMulti map, int filledCollectors, int freshCollectors) {
     this("N/A", map, filledCollectors, freshCollectors);
   }
 
@@ -309,7 +309,7 @@ public class CollectorPool {
     filled.clear();
   }
 
-  public FacetMap getMap() {
+  public FacetMapMulti getMap() {
     return map;
   }
 }
