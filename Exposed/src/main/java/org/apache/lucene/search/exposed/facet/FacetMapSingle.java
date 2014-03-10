@@ -39,7 +39,7 @@ public class FacetMapSingle implements FacetMap {
   private final TermProvider provider;
   private final PackedInts.Reader refs;
 
-  private final int[] indirectStarts = new int[]{1};
+  private final int[] indirectStarts = new int[]{1, 1};
 
   /**
    * Important: index 0 in refs indicates no value.
@@ -49,6 +49,7 @@ public class FacetMapSingle implements FacetMap {
   public FacetMapSingle(TermProvider provider, PackedInts.Reader refs) {
     this.provider = provider;
     this.refs = refs;
+    indirectStarts[1] = refs.size()+1;
   }
 
   @Override
@@ -111,7 +112,7 @@ public class FacetMapSingle implements FacetMap {
 
   @Override
   public int[] getIndirectStarts() {
-    return new int[] {1};
+    return indirectStarts;
   }
 
   @Override

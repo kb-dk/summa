@@ -6,20 +6,18 @@ import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.GroupTermProvider;
 import org.apache.lucene.search.exposed.TermProvider;
-import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.packed.IdentityReader;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Highly specialized factory for single field, single value, popularity ordered facet.
  */
 public class FacetMapSingleFactory extends FacetMapTripleFactory {
 
+  // Returns null if the source is not single valued
   public static FacetMapSingle createMap(int docCount, TermProvider provider) throws IOException {
     if (ExposedSettings.debug) {
       System.out.println(
@@ -27,7 +25,7 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
     }
 
     PackedInts.Mutable refs = PackedInts.getMutable(
-        docCount, (int) (provider.getOrdinalTermCount()+1), PackedInts.COMPACT);
+        docCount, PackedInts.bitsRequired(provider.getOrdinalTermCount()+1), PackedInts.COMPACT);
 
     long fillTime = -System.currentTimeMillis();
 
@@ -42,8 +40,12 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
       int docID;
       while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
         if (refs.get(docID) != 0) {
-          throw new IllegalStateException(
-              "The docID " + docID + " was already assigned when assigning term '" + tuple.term.utf8ToString() + "'");
+          if (ExposedSettings.debug) {
+            System.out.println(
+                "FacetMapSingleFactory: The docID " + docID + " was already assigned when assigning term '"
+                + tuple.term.utf8ToString() + "'. Returning null instead of map");
+          }
+          return null;
         }
         refs.set(docID, tuple.indirect+1);
       }

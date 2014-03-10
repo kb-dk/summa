@@ -82,8 +82,7 @@ public interface TermProvider {
    * @return the indirect for the best matching term.
    * @throws java.io.IOException if the terms could not be accessed.
    */
-  public int getNearestTermIndirect(
-      BytesRef key, int startTermPos, int endTermPos) throws IOException;
+  public int getNearestTermIndirect(BytesRef key, int startTermPos, int endTermPos) throws IOException;
 
   /**
    * @return a comparator used for sorting. If this is null, natural BytesRef

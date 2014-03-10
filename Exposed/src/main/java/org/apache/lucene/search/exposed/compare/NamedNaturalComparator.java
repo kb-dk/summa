@@ -68,4 +68,10 @@ public class NamedNaturalComparator implements NamedComparator {
   public void setNullFirst(boolean nullFirst) {
     isNullFirst = nullFirst;
   }
+
+  @Override
+  public String toString() {
+    return "NamedNaturalComparator(isReverse=" + isReverse + ", isNullFirst=" + isNullFirst
+           + ", orderFactor=" + orderFactor + ')';
+  }
 }

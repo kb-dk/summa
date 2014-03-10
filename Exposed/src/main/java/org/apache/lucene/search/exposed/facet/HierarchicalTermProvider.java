@@ -55,8 +55,7 @@ public class HierarchicalTermProvider implements TermProvider {
    *                    A/B/C, the regexp would be "/".
    * @throws java.io.IOException if the source could not be accessed.
    */
-  public HierarchicalTermProvider(TermProvider source, String splitRegexp)
-                                                            throws IOException {
+  public HierarchicalTermProvider(TermProvider source, String splitRegexp) throws IOException {
     long buildTime = -System.currentTimeMillis();
     this.source = source;
     splitType = SPLIT_TYPE.regexp;
@@ -68,9 +67,9 @@ public class HierarchicalTermProvider implements TermProvider {
     pLevels = lInfo.getVal2();
     buildTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
-      System.out.println("Extracted Hierarchical information from source with "
-                         + source.getUniqueTermCount() + " unique terms in "
-                         + buildTime + "ms using regexp '" + splitRegexp + "'");
+      System.out.println(
+          "Extracted Hierarchical information from source with " + source.getUniqueTermCount() + " unique terms in "
+          + buildTime + "ms using regexp '" + splitRegexp + "'");
     }
   }
 
@@ -87,12 +86,9 @@ public class HierarchicalTermProvider implements TermProvider {
    * @throws java.io.IOException if the source could not be accessed.
    */
   // TODO: Remove the decorate parameter
-  public HierarchicalTermProvider(TermProvider source, int splitByte, boolean decorate)
-    throws IOException {
+  public HierarchicalTermProvider(TermProvider source, int splitByte, boolean decorate) throws IOException {
     if (splitByte < 0 || splitByte > 255) {
-      throw new IllegalArgumentException(
-        "The splitByte must be between 0 and 255, inclusive. It was "
-        + splitByte);
+      throw new IllegalArgumentException("The splitByte must be between 0 and 255, inclusive. It was " + splitByte);
     }
     long buildTime = -System.currentTimeMillis();
     this.source = source;
@@ -100,15 +96,14 @@ public class HierarchicalTermProvider implements TermProvider {
     splitType = SPLIT_TYPE.byteEntry;
     this.splitByte = splitByte;
     splitPattern = null;
-    Pair<PackedInts.Reader, PackedInts.Reader> lInfo =
-        decorate ? getLevelsDecorating() : getLevelsFast();
+    Pair<PackedInts.Reader, PackedInts.Reader> lInfo = decorate ? getLevelsDecorating() : getLevelsFast();
     levels = lInfo.getVal1();
     pLevels = lInfo.getVal2();
     buildTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
-      System.out.println("Extracted Hierarchical information from source with "
-                         + source.getUniqueTermCount() + " unique terms in "
-                         + buildTime + "ms using splitByte " + splitByte);
+      System.out.println(
+          "Extracted Hierarchical information from source with " + source.getUniqueTermCount() + " unique terms in "
+          + buildTime + "ms using splitByte " + splitByte);
     }
   }
 
@@ -141,27 +136,21 @@ public class HierarchicalTermProvider implements TermProvider {
     return (int)pLevels.get(indirect);
   }
 
-  private Pair<PackedInts.Reader, PackedInts.Reader> getLevels() throws
-                                                                   IOException {
+  private Pair<PackedInts.Reader, PackedInts.Reader> getLevels() throws IOException {
     PackedInts.Reader ordered = source.getOrderedOrdinals();
     // FIXME: GrowingMutable should grow up to upper limit for bitsPerValue
-    final GrowingMutable levels = new GrowingMutable(
-        0, ordered.size(), 0, 1, true);
-    final GrowingMutable pLevels = new GrowingMutable(
-        0, ordered.size(), 0, 1, true);
+    final GrowingMutable levels = new GrowingMutable(0, ordered.size(), 0, 1, true);
+    final GrowingMutable pLevels = new GrowingMutable(0, ordered.size(), 0, 1, true);
     String[] previous = new String[0];
     // TODO: Consider speeding up by sorting indirect chunks for seq. access
     // TODO: Consider using StringTokenizer or custom split
     long splitTime = 0;
     for (int index = 0 ; index < ordered.size() ; index++) {
       splitTime -= System.nanoTime();
-      final String[] current = splitPattern.split(
-          source.getOrderedTerm(index).utf8ToString());
+      final String[] current = splitPattern.split(source.getOrderedTerm(index).utf8ToString());
       splitTime += System.nanoTime();
       int pLevel = 0;
-      for (int level = 0 ;
-           level < current.length && level < previous.length ;
-           level++) {
+      for (int level = 0 ; level < current.length && level < previous.length ; level++) {
         if (current[level].equals(previous[level])) {
           pLevel = level+1;
         }
@@ -171,24 +160,18 @@ public class HierarchicalTermProvider implements TermProvider {
       previous = current;
     }
     if (ExposedSettings.debug) {
-      System.out.println("Spend " + splitTime / 1000000 + " ms on "
-                         + ordered.size() + " splits: "
-                         + (ordered.size() * 1000000L / splitTime)
-                         + " splits/ms");
+      System.out.println("Spend " + splitTime / 1000000 + " ms on " + ordered.size() + " splits: "
+                         + (ordered.size() * 1000000L / splitTime) + " splits/ms");
     }
-    return new Pair<PackedInts.Reader, PackedInts.Reader>(
-        reduce(levels), reduce(pLevels));
+    return new Pair<PackedInts.Reader, PackedInts.Reader>(reduce(levels), reduce(pLevels));
   }
 
-  private Pair<PackedInts.Reader, PackedInts.Reader> getLevelsFast() throws
-                                                                     IOException {
+  private Pair<PackedInts.Reader, PackedInts.Reader> getLevelsFast() throws IOException {
     long initTime = -System.currentTimeMillis();
     PackedInts.Reader ordered = source.getOrderedOrdinals();
     // FIXME: GrowingMutable should grow up to upper limit for bitsPerValue
-    final GrowingMutable levels = new GrowingMutable(
-      0, ordered.size(), 0, 1, true);
-    final GrowingMutable pLevels = new GrowingMutable(
-      0, ordered.size(), 0, 1, true);
+    final GrowingMutable levels = new GrowingMutable(0, ordered.size(), 0, 1, true);
+    final GrowingMutable pLevels = new GrowingMutable(0, ordered.size(), 0, 1, true);
     List<BytesRef> previous = new ArrayList<BytesRef>(10);
     int previousParts = 0;
     // TODO: Consider speeding up by sorting indirect chunks for seq. access
@@ -205,9 +188,7 @@ public class HierarchicalTermProvider implements TermProvider {
 //            source.getOrderedTerm(indirect).utf8ToString());
       splitTime += System.nanoTime();
       int pLevel = 0;
-      for (int level = 0 ;
-           level < parts && level < previousParts ;
-           level++) {
+      for (int level = 0 ; level < parts && level < previousParts ; level++) {
         if (current.get(level).equals(previous.get(level))) {
           pLevel = level+1;
         }
@@ -219,8 +200,7 @@ public class HierarchicalTermProvider implements TermProvider {
     }
     long reduceTime = -System.currentTimeMillis();
     Pair<PackedInts.Reader, PackedInts.Reader> reduced =
-      new Pair<PackedInts.Reader, PackedInts.Reader>(
-        reduce(levels), reduce(pLevels));
+      new Pair<PackedInts.Reader, PackedInts.Reader>(reduce(levels), reduce(pLevels));
     reduceTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
@@ -234,8 +214,7 @@ public class HierarchicalTermProvider implements TermProvider {
     return reduced;
   }
 
-  private Pair<PackedInts.Reader, PackedInts.Reader> getLevelsDecorating()
-    throws IOException {
+  private Pair<PackedInts.Reader, PackedInts.Reader> getLevelsDecorating() throws IOException {
     long decorateTime = -System.currentTimeMillis();
     final GrowingMutable levels = new GrowingMutable(0, 1, 0, 1, true);
     final GrowingMutable pLevels = new GrowingMutable(0, 1, 0, 1, true);
@@ -253,9 +232,7 @@ public class HierarchicalTermProvider implements TermProvider {
           int parts = fastSplit(current, term, '/');
           timings[0] += System.nanoTime();
           int pLevel = 0;
-          for (int level = 0 ;
-               level < parts && level < previousParts ;
-               level++) {
+          for (int level = 0 ; level < parts && level < previousParts ; level++) {
             if (current.get(level).equals(previous.get(level))) {
               pLevel = level+1;
             }
@@ -272,21 +249,16 @@ public class HierarchicalTermProvider implements TermProvider {
 
     long reduceTime = -System.currentTimeMillis();
     Pair<PackedInts.Reader, PackedInts.Reader> reduced =
-      new Pair<PackedInts.Reader, PackedInts.Reader>(
-        reduce(levels), reduce(pLevels));
+      new Pair<PackedInts.Reader, PackedInts.Reader>(reduce(levels), reduce(pLevels));
     reduceTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
         "getLevelsDecorating(): Total time: " + decorateTime / 1000000
-        + ", splits " + timings[0] / 1000000 + " ms on "
-        + ordered.size() + " splits ("
-        + (ordered.size() * 1000000L / timings[0])
-        + " splits/ms)"
+        + ", splits " + timings[0] / 1000000 + " ms on " + ordered.size() + " splits ("
+        + (ordered.size() * 1000000L / timings[0]) + " splits/ms)"
         + ", assignments " + timings[1] / 1000000 + " ms on "
-        + ordered.size() + " level-assignments ("
-        + (ordered.size() * 1000000L / timings[1])
-        + " splits/ms). "
-        + "Mutable size optimization: " + reduceTime + " ms");
+        + ordered.size() + " level-assignments (" + (ordered.size() * 1000000L / timings[1])
+        + " splits/ms). Mutable size optimization: " + reduceTime + " ms");
     }
     return reduced;
   }
@@ -299,12 +271,9 @@ public class HierarchicalTermProvider implements TermProvider {
    * @param splitByte the byte to split on.
    * @return the number of valid elements n the reuse list.
    */
-  private int fastSplit(final List<BytesRef> reuse, BytesRef input,
-                        int splitByte) {
+  private int fastSplit(final List<BytesRef> reuse, BytesRef input, int splitByte) {
     if (reuse == null) {
-      throw new IllegalArgumentException(
-        "A valid list of BytesRefs must be provided. "
-        + "The given list was null");
+      throw new IllegalArgumentException("A valid list of BytesRefs must be provided. The given list was null");
     }
     int elementCount = 0;
     int start = input.offset;
@@ -319,8 +288,7 @@ public class HierarchicalTermProvider implements TermProvider {
     return elementCount;
   }
 
-  private void assign(final List<BytesRef> reuse, int elementCount,
-                      BytesRef input, int offset, int length) {
+  private void assign(final List<BytesRef> reuse, int elementCount, BytesRef input, int offset, int length) {
     if (reuse.size() < elementCount) {
       reuse.add(new BytesRef(input.bytes, offset, length));
     } else {
@@ -332,8 +300,7 @@ public class HierarchicalTermProvider implements TermProvider {
   }
 
   private PackedInts.Reader reduce(GrowingMutable grower) {
-    PackedInts.Mutable reduced = PackedInts.getMutable(
-        grower.size(), grower.getBitsPerValue(), PackedInts.COMPACT);
+    PackedInts.Mutable reduced = PackedInts.getMutable(grower.size(), grower.getBitsPerValue(), PackedInts.COMPACT);
     for (int i = 0 ; i < grower.size() ; i++) {
       reduced.set(i, grower.get(i));
     }

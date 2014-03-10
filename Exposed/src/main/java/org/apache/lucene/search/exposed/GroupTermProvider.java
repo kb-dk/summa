@@ -212,8 +212,10 @@ public class GroupTermProvider extends TermProviderImpl {
 
   @Override
   public IndexReader getReader() {
-    throw new UnsupportedOperationException(
-        "Cannot request a reader from a collection of readers");
+    if (providers.size() == 1) {
+      return providers.get(0).getReader();
+    }
+    throw new UnsupportedOperationException("Cannot request a reader from a collection of readers");
   }
 
   @Override
