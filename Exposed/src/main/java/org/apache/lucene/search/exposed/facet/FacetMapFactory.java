@@ -16,12 +16,12 @@ public class FacetMapFactory {
   // stable is well-tested, pass2 is deprecated and pass1long is experimental
   public static IMPL defaultImpl = IMPL.pass2;
 
-  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
+  public static FacetMap createMap(int docCount, List<TermProvider> providers)
       throws IOException {
     return createMap(docCount, providers, defaultImpl);
   }
 
-  public static FacetMapMulti createMap(
+  public static FacetMap createMap(
       int docCount, List<TermProvider> providers, IMPL impl)
       throws IOException {
     switch (impl) {

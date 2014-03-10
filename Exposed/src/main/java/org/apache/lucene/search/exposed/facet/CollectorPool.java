@@ -24,10 +24,9 @@ import java.util.*;
  */
 // TODO: Consider introducing an allowance for extra allocations above pool size
 public class CollectorPool {
-  public enum AVAILABILITY {
-      hasFresh, hasFilled, mightCreateNew, mustCreateNew, mustWait}
+  public enum AVAILABILITY {hasFresh, hasFilled, mightCreateNew, mustCreateNew, mustWait}
 
-  private final FacetMapMulti map;
+  private final FacetMap map;
   private final String key;
 
   private final List<TagCollector> fresh;
@@ -64,8 +63,7 @@ public class CollectorPool {
    * @param filledCollectors the maximum number of previously filled collectors.
    * @param freshCollectors the maximum number of fresh collectors.
    */
-  public CollectorPool(
-      String key, FacetMapMulti map, int filledCollectors, int freshCollectors) {
+  public CollectorPool(String key, FacetMap map, int filledCollectors, int freshCollectors) {
     this.map = map;
     this.key = key;
 
@@ -75,8 +73,7 @@ public class CollectorPool {
     maxFilled = filledCollectors;
     filled = new LinkedHashMap<String, TagCollector>(filledCollectors) {
       @Override
-      protected boolean removeEldestEntry(
-          Map.Entry<String, TagCollector> eldest) {
+      protected boolean removeEldestEntry(Map.Entry<String, TagCollector> eldest) {
         if (size() > maxFilled) {
           releaseFresh(remove(eldest.getKey())); // Send it to the fresh cache
         }
@@ -88,8 +85,7 @@ public class CollectorPool {
   /**
    * @deprecated use {@link CollectorPool(String, FacetMapMulti , int, int)}.
    */
-  public CollectorPool(
-          FacetMapMulti map, int filledCollectors, int freshCollectors) {
+  public CollectorPool(FacetMap map, int filledCollectors, int freshCollectors) {
     this("N/A", map, filledCollectors, freshCollectors);
   }
 
@@ -145,9 +141,8 @@ public class CollectorPool {
     if (retries == maxRetries) {
       throw new MissingResourceException(
           String.format(
-              "Tried acquiring TagCollector from %s %d times @ %dms. "
-              + "Filled collectors: %d/%d, fresh collectors: %d/%d, "
-              + "active collectors: %d",
+              "Tried acquiring TagCollector from %s %d times @ %dms. Filled collectors: %d/%d, fresh collectors: %d/%d,"
+              + " active collectors: %d",
               this, retries, retryDelay,
               filled.size(), maxFilled, fresh.size(), maxFresh,
               activeCollectors),
@@ -193,11 +188,9 @@ public class CollectorPool {
    * will affect them.
    * @param query     the query to use as storage key. null is allowed.
    * @param collector the collector to release.
-   * @return true if a release will result is a TagCollector being
-   *              freed.
+   * @return true if a release will result is a TagCollector being freed.
    */
-  public synchronized boolean releaseWillFree(
-          String query, TagCollector collector){
+  public synchronized boolean releaseWillFree(String query, TagCollector collector){
       if (query != null) {
           // If filled overflows, it will spill over in fresh
           return filled.size() >= maxFilled && fresh.size() >= maxFresh;
@@ -309,7 +302,7 @@ public class CollectorPool {
     filled.clear();
   }
 
-  public FacetMapMulti getMap() {
+  public FacetMap getMap() {
     return map;
   }
 }

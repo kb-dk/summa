@@ -23,12 +23,10 @@ public class FacetMapTripleFactory {
   // 1. Generate sorted and de-duplicated ordinals list
   // 2. Count references from documents to tags
   // 3. Update map with references from documents to tags
-  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
-      throws IOException {
+  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers) throws IOException {
     if (ExposedSettings.debug) {
-      System.out.println("FacetMapMulti: Creating map for " + providers.size()
-          + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount
-          + " documents)");
+      System.out.println("FacetMapMulti: Creating map for " + providers.size() + " group"
+                         + (providers.size() == 1 ? "" : "s") + " with " + docCount + " documents)");
     }
 
     final int[] indirectStarts = new int[providers.size() +1];
@@ -76,8 +74,7 @@ public class FacetMapTripleFactory {
    * @param tagCounts #tag-references, one entry/document.
    * @throws IOException if the tags could not be iterated.
    */
-  private static void countTags(List<TermProvider> providers,
-                                final int[] tagCounts) throws IOException {
+  private static void countTags(List<TermProvider> providers, final int[] tagCounts) throws IOException {
     long tagCountTime = -System.currentTimeMillis();
     long tupleCount = 0;
     long referenceCount = 0;
@@ -118,8 +115,7 @@ public class FacetMapTripleFactory {
       System.out.println(
           "FacetMapMulti: Counted " + referenceCount + " tag references for "
           + ExposedUtil.time("documents", tagCounts.length, tagCountTime)
-          + ". Retrieved "
-          + ExposedUtil.time("tuples", tupleCount, tupleTime / 1000000));
+          + ". Retrieved " + ExposedUtil.time("tuples", tupleCount, tupleTime / 1000000));
     }
   }
 
@@ -136,8 +132,7 @@ public class FacetMapTripleFactory {
   If the offset was larger than 0, it it decreased.
    */
   static Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
-      List<TermProvider> providers, int[] indirectStarts, int docCount,
-      final int[] tagCounts) throws IOException {
+      List<TermProvider> providers, int[] indirectStarts, int docCount, final int[] tagCounts) throws IOException {
     long totalRefs = 0;
 
     {
@@ -146,14 +141,12 @@ public class FacetMapTripleFactory {
       }
       if (totalRefs > Integer.MAX_VALUE) {
         throw new IllegalStateException(
-            "The current implementations does not support more that " +
-                "Integer.MAX_VALUE references to tags. The number of " +
-                "references was " + totalRefs);
+            "The current implementations does not support more that Integer.MAX_VALUE references to tags. " +
+            "The number of references was " + totalRefs);
       }
     }
 
-    final PackedInts.Mutable doc2ref =
-        ExposedSettings.getMutable(docCount+1, totalRefs);
+    final PackedInts.Mutable doc2ref = ExposedSettings.getMutable(docCount+1, totalRefs);
 
     // With the tag counts and the refBase in place, it is possible to fill the
     // doc2ref with the correct pointers into the (still non-existing) refs.
@@ -165,8 +158,7 @@ public class FacetMapTripleFactory {
     System.out.println("");
   */
     // As we know the number of references we can create the refs-array.
-    final PackedInts.Mutable refs = ExposedSettings.getMutable(
-        (int)totalRefs, indirectStarts[indirectStarts.length-1]);
+    final PackedInts.Mutable refs = ExposedSettings.getMutable((int)totalRefs, indirectStarts[indirectStarts.length-1]);
 
     // We could save a lot of memory by discarding the tagCounts at this point
     // and use doc2ref to keep track of pointers. However, this adds some time
@@ -304,12 +296,9 @@ public class FacetMapTripleFactory {
             } catch (ArrayIndexOutOfBoundsException e) {
               throw new RuntimeException(
                   "Array index out of bounds. refs.size=" + refs.size()
-                      + ", refs.bitsPerValue=" + refs.getBitsPerValue()
-                      + ", refsPos="
-                      + refsPos
-                      + ", tuple.indirect+termOffset="
-                      + tuple.indirect + "+" + termOffset + "="
-                      + (tuple.indirect+termOffset), e);
+                  + ", refs.bitsPerValue=" + refs.getBitsPerValue()
+                  + ", refsPos=" + refsPos + ", tuple.indirect+termOffset="
+                  + tuple.indirect + "+" + termOffset + "=" + (tuple.indirect+termOffset), e);
             }
           }
           nextDocTime += System.nanoTime();
@@ -344,8 +333,7 @@ public class FacetMapTripleFactory {
     fillTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println("FacetMapMulti: Filled map with "
-          + ExposedUtil.time("references", totalRefs, fillTime)
-          + " out of which was " +
+          + ExposedUtil.time("references", totalRefs, fillTime) + " out of which was " +
           ExposedUtil.time("nextDocs", nextDocCount, nextDocTime / 1000000));
     }
   }

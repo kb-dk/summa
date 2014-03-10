@@ -24,7 +24,7 @@ import java.util.List;
  * The distribution of the entries in refs is defined by the index layout and
  * is assumed to be random.
  */
-public class FacetMapMulti {
+public class FacetMapMulti implements FacetMap {
 
   private final List<TermProvider> providers;
   private final int[] indirectStarts;
@@ -40,6 +40,7 @@ public class FacetMapMulti {
     this.refs = refs;
   }
 
+  @Override
   public int getTagCount() {
     return indirectStarts[indirectStarts.length-1];
   }
@@ -51,6 +52,7 @@ public class FacetMapMulti {
    * @param docID an absolute document ID from which to extract tagIDs.
    */
   // TODO: Check if static helps speed in this inner loop method
+  @Override
   public final void updateCounter(final int[] tagCounts, final int docID) {
     final int start = (int)doc2ref.get(docID);
     final int end = (int)doc2ref.get(docID+1);
@@ -67,6 +69,7 @@ public class FacetMapMulti {
     }
   }
 
+  @Override
   public BytesRef getOrderedTerm(final int termIndirect) throws IOException {
     for (int i = 0 ; i < providers.size() ; i++) {
       if (termIndirect < indirectStarts[i+1]) {
@@ -78,8 +81,8 @@ public class FacetMapMulti {
         + indirectStarts[indirectStarts.length-1]);
   }
 
-  public BytesRef getOrderedDisplayTerm(final int termIndirect)
-      throws IOException {
+  @Override
+  public BytesRef getOrderedDisplayTerm(final int termIndirect) throws IOException {
     for (int i = 0 ; i < providers.size() ; i++) {
       if (termIndirect < indirectStarts[i+1]) {
         return providers.get(i).getOrderedDisplayTerm(termIndirect- indirectStarts[i]);
@@ -97,6 +100,7 @@ public class FacetMapMulti {
    * @return the terms for a given docID.
    * @throws java.io.IOException if the terms could not be accessed.
    */
+  @Override
   public BytesRef[] getTermsForDocID(int docID) throws IOException {
     final int start = (int)doc2ref.get(docID);
     final int end = (int) doc2ref.get(docID+1);
@@ -110,7 +114,7 @@ public class FacetMapMulti {
 
   public String toString() {
     StringWriter sw = new StringWriter();
-    sw.append("FacetMap(#docs=").append(Integer.toString(doc2ref.size()-1));
+    sw.append("FacetMapMulti(#docs=").append(Integer.toString(doc2ref.size()-1));
     sw.append(" (").append(packedSize(doc2ref)).append(")");
     sw.append(", #refs=").append(Integer.toString(refs.size()));
     sw.append(" (").append(packedSize(refs)).append(")");
@@ -136,10 +140,12 @@ public class FacetMapMulti {
     return bytes + " bytes";
   }
 
+  @Override
   public int[] getIndirectStarts() {
     return indirectStarts;
   }
 
+  @Override
   public List<TermProvider> getProviders() {
     return providers;
   }
