@@ -145,8 +145,6 @@ public class TestSingleSegmentOptimization extends TestCase {
   private void testFaceting(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q, String sQuery,
                             StringWriter result, String requestString) throws XMLStreamException, IOException {
     IndexReader reader = searcher.getIndexReader();
-    long facetStructureTime = -System.currentTimeMillis();
-
     FacetResponse response = null;
     int DOCCOUNT = reader.maxDoc();
     assertTrue("There must be at least 10 documents in the index at ",
