@@ -161,8 +161,8 @@ public class TagExtractor {
       count += tagIterator.getCount();
       if (validTags < constraints.getMaxTags()) {
         String term = provider.getOrderedDisplayTerm(tagIterator.tagStartPos + delta).utf8ToString();
-        FacetResponse.Tag tag =
-            new FacetResponse.Tag(getLevelTerm(term, level), tagIterator.getCount(), tagIterator.getTotalCount());
+        FacetResponse.Tag tag = new FacetResponse.Tag(
+            getLevelTerm(term, level), tagIterator.getCount(), tagIterator.getTotalCount());
         tags.add(tag);
         if (level < requestGroup.getLevels() &&
             !(provider.getLevel(tagIterator.tagStartPos) < level+1 &&

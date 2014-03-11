@@ -19,8 +19,7 @@ public class ExposedUtil {
     if (ms == 0) {
       return num + " " + type + " in 0 ms";
     }
-    return num + " " + type + " in " + ms + " ms: ~= "
-        + num/ms + " " + type + "/ms";
+    return num + " " + type + " in " + ms + " ms: ~= " + num/ms + " " + type + "/ms";
   }
 
   /**
@@ -39,8 +38,7 @@ public class ExposedUtil {
             } else if (reuse.bytes.length < concat.length-i+1) {
                 reuse.bytes = new byte[concat.length-i+1];
             }
-            System.arraycopy(concat.bytes, concat.offset+i+1,
-                             reuse.bytes, 0, concat.length-i-1);
+            System.arraycopy(concat.bytes, concat.offset+i+1, reuse.bytes, 0, concat.length-i-1);
             reuse.offset = 0;
             reuse.length = concat.length-i-1;
 
@@ -69,8 +67,7 @@ public class ExposedUtil {
    * @return the old collator for the given collatorID or null if no previous
    *         collator were assigned.
    */
-  public static Collator addCollator(
-      String collatorID, Collator collator, String... fields) {
+  public static Collator addCollator(String collatorID, Collator collator, String... fields) {
     for (String field: fields) {
       ExposedCache.getInstance().addConcatField(field, collatorID);
     }
@@ -78,13 +75,11 @@ public class ExposedUtil {
   }
 
   private final static RawCollationKey key = new RawCollationKey();
-  public static synchronized BytesRef concat(
-      String collatorID, BytesRef plain, BytesRef reuse) {
+  public static synchronized BytesRef concat(String collatorID, BytesRef plain, BytesRef reuse) {
     Collator collator = collators.get(collatorID);
     if (collator == null) {
       throw new IllegalArgumentException(
-          "No collator with ID '" + collatorID + "'. "
-          + "Please add it with ExposedUtil.addCollator");
+          "No collator with ID '" + collatorID + "'. Please add it with ExposedUtil.addCollator");
     }
 
     collator.getRawCollationKey(plain.utf8ToString(), key);
@@ -94,10 +89,8 @@ public class ExposedUtil {
     } else if(reuse.bytes.length < length) {
       reuse.bytes = new byte[length];
     }
-    System.arraycopy(
-        key.bytes, 0, reuse.bytes, 0, key.size);
-    System.arraycopy(
-        plain.bytes, plain.offset, reuse.bytes, key.size, plain.length);
+    System.arraycopy(key.bytes, 0, reuse.bytes, 0, key.size);
+    System.arraycopy(plain.bytes, plain.offset, reuse.bytes, key.size, plain.length);
     reuse.offset = 0;
     reuse.length = length;
     return reuse;

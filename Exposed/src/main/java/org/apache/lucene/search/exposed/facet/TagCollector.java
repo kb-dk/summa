@@ -203,8 +203,7 @@ public class TagCollector extends Collector {
   }
 
   public String toString() {
-    return "TagCollector(" + tagCounts.length + " potential tags from "
-        + map.toString();
+    return "TagCollector(" + tagCounts.length + " potential tags from " + map.toString();
   }
 
   public String toString(boolean verbose) {
@@ -237,21 +236,18 @@ public class TagCollector extends Collector {
     newborn = false;
     if (map.getIndirectStarts().length-1 != request.getGroups().size()) {
       throw new IllegalStateException(
-          "The number of term providers in the FacetMapMulti was "
-              + (map.getIndirectStarts().length-1)
-              + ", while the number of groups in the request was "
-              + request.getGroups().size() + ". The two numbers must match");
+          "The number of term providers in the FacetMapMulti was " + (map.getIndirectStarts().length-1)
+              + ", while the number of groups in the request was " + request.getGroups().size()
+              + ". The two numbers must match");
     }
-    List<FacetResponse.Group> responseGroups =
-        new ArrayList<FacetResponse.Group>(request.getGroups().size());
+    List<FacetResponse.Group> responseGroups = new ArrayList<FacetResponse.Group>(request.getGroups().size());
     // TODO: Consider threading larger facets, but beware of cache blowout
     for (int i = 0 ; i < request.getGroups().size() ; i++) {
       FacetRequestGroup requestGroup = request.getGroups().get(i);
 //      System.out.println("Extracting for " + requestGroup.getGroup().getName() + ": " + startTermPos + " -> " + endTermPos);
       responseGroups.add(extractResult(requestGroup, i));
     }
-    FacetResponse response = new FacetResponse(
-        request, responseGroups, hitCount);
+    FacetResponse response = new FacetResponse(request, responseGroups, hitCount);
     response.setCountingTime(getCountTime());
     return response;
   }

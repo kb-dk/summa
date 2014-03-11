@@ -897,10 +897,8 @@ public class TestExposedFacets extends TestCase {
     final String field = "facet";
     final String term = "A";
 
-    assertTrue("No index at " + LOCATION.getAbsolutePath()
-               + ". Please build a test index (you can use one from on of the "
-               + "other JUnit tests in TestExposedFacets) and correct the path",
-               LOCATION.exists());
+    assertTrue("No index at " + LOCATION.getAbsolutePath() + ". Please build a test index (you can use one from on" +
+               " of the other JUnit tests in TestExposedFacets) and correct the path", LOCATION.exists());
 
     IndexReader reader = ExposedIOFactory.getReader(LOCATION);
     IndexSearcher searcher = new IndexSearcher(reader);

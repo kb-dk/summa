@@ -163,8 +163,7 @@ public class ExposedRequest {
     public Field(String field, NamedComparator comparator) {
       this(field, comparator, null);
     }
-    public Field(String field, NamedComparator comparator,
-                 String concatCollatorID) {
+    public Field(String field, NamedComparator comparator, String concatCollatorID) {
       this.field = field;
       this.comparator = comparator;
       concat = concatCollatorID != null;
@@ -182,8 +181,7 @@ public class ExposedRequest {
         return false;
       }
       Field other = (Field)obj;
-      return field.equals(other.field)
-          && comparator.getID().equals(other.comparator.getID());
+      return field.equals(other.field) && comparator.getID().equals(other.comparator.getID());
     }
 
     /**
@@ -194,8 +192,7 @@ public class ExposedRequest {
      **/
     // TODO: All structures works when count order is requested
     public boolean worksfor(Field other) {
-      return field.equals(other.field)
-          && comparator.getID().equals(other.comparator.getID());
+      return field.equals(other.field) && comparator.getID().equals(other.comparator.getID());
     }
 
     public String getField() {
@@ -212,7 +209,7 @@ public class ExposedRequest {
 
     public boolean equals(Field otherField) {
       return getField().equals(otherField.getField()) &&
-          getComparator().getID().equals(otherField.getComparator().getID());
+             getComparator().getID().equals(otherField.getComparator().getID());
     }
 
     public String getConcatCollatorID() {

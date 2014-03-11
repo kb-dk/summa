@@ -55,8 +55,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
    * @param reader        the reader to sort for.
    * @param comparator    a custom comparator.
    */
-  public ExposedFieldComparatorSource(
-    IndexReader reader, NamedComparator comparator) {
+  public ExposedFieldComparatorSource(IndexReader reader, NamedComparator comparator) {
     this.reader = reader;
     this.comparator = comparator;
   }
@@ -167,9 +166,8 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
           //return (int)(bottomOrder - docOrderR);
         } catch (ArrayIndexOutOfBoundsException e) {
           throw new ArrayIndexOutOfBoundsException(
-              "Exception requesting at index " + (doc+docBase)
-                    + " with docOrder.size==" + docOrder.size() + ", doc==" + doc
-                  + ", docBase==" + docBase + ", reader maxDoc==" + maxDoc);
+              "Exception requesting at index " + (doc+docBase) + " with docOrder.size==" + docOrder.size()
+              + ", doc==" + doc + ", docBase==" + docBase + ", reader maxDoc==" + maxDoc);
         }
       }
       // No check for null as null-values are always assigned -1

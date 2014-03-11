@@ -49,8 +49,7 @@ public class TermDocIterator implements Iterator<ExposedTuple> {
       }
       if (position >= order.size()) {
         if (source instanceof CachedTermProvider && ExposedSettings.debug) {
-          System.out.println("TermDocsIterator: Depleted. "
-              + ((CachedTermProvider)source).getStats());
+          System.out.println("TermDocsIterator: Depleted. " + ((CachedTermProvider)source).getStats());
         }
         return false;
       }
@@ -84,8 +83,7 @@ public class TermDocIterator implements Iterator<ExposedTuple> {
         tuple.term = source.getTerm(tuple.ordinal);
       } catch (IOException e) {
         throw new RuntimeException(
-            "Unable to resolve the term at order="
-                + order + ", ordinal=" + order.get(position), e);
+            "Unable to resolve the term at order=" + order + ", ordinal=" + order.get(position), e);
       }
       position++;
       if (!collectDocIDs) {

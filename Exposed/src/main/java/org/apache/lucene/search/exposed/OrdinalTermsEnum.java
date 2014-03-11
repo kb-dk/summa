@@ -130,8 +130,7 @@ public class OrdinalTermsEnum extends TermsEnum {
   public long ord() throws IOException {
     if (!ordOK) {
       throw new IllegalStateException(
-          "ord() can only be called when the last position-changing call was to " +
-              "seek(long) or next()");
+          "ord() can only be called when the last position-changing call was to seek(long) or next()");
     }
     return ordinal;
   }
@@ -213,8 +212,7 @@ public class OrdinalTermsEnum extends TermsEnum {
   }
 
   @Override
-  public DocsAndPositionsEnum docsAndPositions(
-      Bits skipDocs, DocsAndPositionsEnum reuse, int flags)
+  public DocsAndPositionsEnum docsAndPositions(Bits skipDocs, DocsAndPositionsEnum reuse, int flags)
       throws IOException {
     return inner.docsAndPositions(skipDocs, reuse, flags);
   }

@@ -66,8 +66,7 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
     fillTime += System.currentTimeMillis();
 
     if (ExposedSettings.debug) {
-      System.out.println(
-          "FacetMapSingleFactory: Tag fill (" + docCount + " documents): " + fillTime + "ms");
+      System.out.println("FacetMapSingleFactory: Tag fill (" + docCount + " documents): " + fillTime + "ms");
     }
     return new FacetMapSingle(provider, refs);
   }

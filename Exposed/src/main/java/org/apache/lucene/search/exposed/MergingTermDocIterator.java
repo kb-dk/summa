@@ -55,8 +55,7 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
   /**
    * If pending is true, this is ready for delivery.
    */
-  private final ExposedTuple tuple =
-      new ExposedTuple("", new BytesRef("UniqueStringNotInIndex¤#%##¤¤&¤/"),
+  private final ExposedTuple tuple = new ExposedTuple("", new BytesRef("UniqueStringNotInIndex¤#%##¤¤&¤/"),
           -1, -1, null, -1);
   /**
    * If pending is true, this is the index for the source responsible for
@@ -82,9 +81,7 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
     backingTuples = new ExposedTuple[sources.size()];
 
     collator = optimizeCollator &&
-        comparator instanceof NamedCollatorComparator ?
-               ((NamedCollatorComparator)comparator).getCollator()
-                                                      : null;
+        comparator instanceof NamedCollatorComparator ? ((NamedCollatorComparator)comparator).getCollator() : null;
     backingKeys = new RawCollationKey[sources.size()];
 
     ComparatorFactory.OrdinalComparator wrappedComparator =
@@ -102,8 +99,7 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
         backingTuples[index] = tuple;
         if (collator != null) {
           RawCollationKey key = new RawCollationKey();
-          backingKeys[index] =
-              collator.getRawCollationKey(tuple.term.utf8ToString(), key);
+          backingKeys[index] = collator.getRawCollationKey(tuple.term.utf8ToString(), key);
         }
         pq.add(index);
       }
@@ -153,10 +149,8 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
     // TODO: Avoid the creation of a new tuple by assigning to existing tuple
     ExposedTuple nextTuple = new ExposedTuple(iterators.get(index).next());
     long s = nextTuple.docIDBase;
-    nextTuple.docIDBase = (int) groupProvider.segmentToIndexDocID(
-        index, nextTuple.docIDBase);
-    nextTuple.ordinal = groupProvider.segmentToIndexTermOrdinal(
-            index, nextTuple.ordinal);
+    nextTuple.docIDBase = (int) groupProvider.segmentToIndexDocID(index, nextTuple.docIDBase);
+    nextTuple.ordinal = groupProvider.segmentToIndexTermOrdinal(index, nextTuple.ordinal);
     nextTuple.indirect = -1; // Just for good measure: It will be updated later
     return nextTuple;
   }
@@ -215,14 +209,11 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
       if (collator != null) {
         RawCollationKey key = new RawCollationKey();
         try {
-          backingKeys[currentIndex] = collator.getRawCollationKey(
-            newTuple.term.utf8ToString(), key);
+          backingKeys[currentIndex] = collator.getRawCollationKey(newTuple.term.utf8ToString(), key);
         } catch (StringIndexOutOfBoundsException e) {
-            throw (StringIndexOutOfBoundsException)
-              new StringIndexOutOfBoundsException(
+            throw (StringIndexOutOfBoundsException) new StringIndexOutOfBoundsException(
                 "StringIndexOutOfBoundsException calling collator.getRawCollationKey("
-                + newTuple.term.utf8ToString() + ") with collator "
-                + collator.toString()).initCause(e);
+                + newTuple.term.utf8ToString() + ") with collator " + collator.toString()).initCause(e);
         }
       }
       pq.add(currentIndex);

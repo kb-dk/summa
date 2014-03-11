@@ -246,8 +246,7 @@ public class FacetResponse {
       return constraints;
     }
 
-    public void toXML(XMLStreamWriter out, String prefix)
-                                                     throws XMLStreamException {
+    public void toXML(XMLStreamWriter out, String prefix) throws XMLStreamException {
       writeIfDefined(out, "potentialtags", getPotentialTags());
       writeIfDefined(out, "count", getCount());
       writeIfDefined(out, "totalCount", getTotalCount());
@@ -279,8 +278,7 @@ public class FacetResponse {
       this.totalCount = totalCount;
     }
 
-    public void toXML(XMLStreamWriter out, String prefix)
-                                                     throws XMLStreamException {
+    public void toXML(XMLStreamWriter out, String prefix) throws XMLStreamException {
       out.writeCharacters(prefix);
       out.writeStartElement("tag");
       out.writeAttribute("count", Integer.toString(count));
@@ -325,16 +323,16 @@ public class FacetResponse {
     }
   }
 
-  private static void writeIfDefined(XMLStreamWriter out, String attributeName,
-                                     long value) throws XMLStreamException {
+  private static void writeIfDefined(
+      XMLStreamWriter out, String attributeName, long value) throws XMLStreamException {
     if (value == -1) {
       return;
     }
     out.writeAttribute(attributeName, Long.toString(value));
   }
 
-  private static void writeIfDefined(XMLStreamWriter out, String attributeName,
-                                     String value) throws XMLStreamException {
+  private static void writeIfDefined(
+      XMLStreamWriter out, String attributeName, String value) throws XMLStreamException {
     if (value == null || "".equals(value)) {
       return;
     }

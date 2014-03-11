@@ -121,9 +121,7 @@ public class CollectorPool {
         }
       }
 
-      if (!enforceLimits
-          || activeCollectors + filled.size() + fresh.size() <
-             maxFilled + maxFresh) {
+      if (!enforceLimits || activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh) {
         // It would be great to have standardized logging available here
         // as creating a TagCollector is potentially a very costly process
         TagCollector collector = new TagCollector(map);
@@ -152,9 +150,7 @@ public class CollectorPool {
   }
 
   private synchronized boolean isFurtherAllocationAllowed() {
-    return !enforceLimits
-           || activeCollectors + filled.size() + fresh.size() <
-              maxFilled + maxFresh;
+    return !enforceLimits || activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh;
   }
 
   /**

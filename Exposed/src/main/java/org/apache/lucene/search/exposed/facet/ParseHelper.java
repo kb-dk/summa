@@ -9,8 +9,7 @@ import javax.xml.stream.XMLStreamReader;
 import java.util.Comparator;
 
 public class ParseHelper {
-  public static int getInteger(String request, String attribute, String value)
-                                                     throws XMLStreamException {
+  public static int getInteger(String request, String attribute, String value) throws XMLStreamException {
     try {
       return Integer.parseInt(value);
     } catch (NumberFormatException e) {

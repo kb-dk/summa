@@ -138,5 +138,4 @@ public class FacetMapSingle implements FacetMap {
     }
     return bytes + " bytes";
   }
-
 }

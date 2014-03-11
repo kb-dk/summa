@@ -24,8 +24,7 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
       throws IOException {
     if (ExposedSettings.debug) {
       System.out.println("FacetMapDual: Creating 2 pass map for " + providers.size()
-          + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount
-          + " documents)");
+          + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount + " documents)");
     }
     final int[] indirectStarts = new int[providers.size() +1];
     int start = 0;
