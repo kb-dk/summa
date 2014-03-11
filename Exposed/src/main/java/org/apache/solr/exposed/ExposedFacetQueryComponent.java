@@ -124,6 +124,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
   private void exposedToSolr(FacetResponse fr, SolrQueryResponse rsp) {
     NamedList<Object> res = new SimpleOrderedMap<Object>();
     NamedList<Object> fields = new SimpleOrderedMap<Object>(); // Skip groups
+    NamedList<Object> fieldsMeta = new SimpleOrderedMap<Object>(); // Skip groups
 
     for (FacetResponse.Group group: fr.getGroups()) {
       if (group.isHierarchical()) {
@@ -134,9 +135,17 @@ public class ExposedFacetQueryComponent extends QueryComponent {
           field.add(tag.getTerm(), tag.getCount());
         }
         fields.add(group.getFieldsStr(), field);
+
+        NamedList<Object> meta = new SimpleOrderedMap<Object>();
+        FacetResponse.TagCollection tags = group.getTags();
+        meta.add("potentialtags", tags.getPotentialTags());
+        meta.add("totaltags", tags.getTotalTags());
+        meta.add("count", tags.getCount());
+        fieldsMeta.add(group.getFieldsStr(), meta);
       }
     }
     res.add(EFACET + "_fields", fields);
+    res.add(EFACET + "_fields_meta", fieldsMeta);
     rsp.add(EFACET + "_counts", res);
   }
 

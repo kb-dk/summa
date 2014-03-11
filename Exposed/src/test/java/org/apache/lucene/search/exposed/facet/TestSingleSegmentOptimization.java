@@ -92,6 +92,7 @@ public class TestSingleSegmentOptimization extends TestCase {
     ExposedSettings.priority = ExposedSettings.PRIORITY.memory;
     ExposedSettings.debug = true;
     FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
+
     final int DOCCOUNT = 5000000;
     final int TERM_LENGTH = 20;
     final List<String> FIELDS = Arrays.asList("a");
@@ -122,7 +123,7 @@ public class TestSingleSegmentOptimization extends TestCase {
     sw.append("\n");
 
     // Tests
-    CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 4, 2);
+    CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 0, 1);
 
     qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
     q = qp.parse("true");

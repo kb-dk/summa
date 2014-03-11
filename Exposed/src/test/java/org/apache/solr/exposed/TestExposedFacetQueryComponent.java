@@ -64,11 +64,10 @@ public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
         EFACET_MINCOUNT, "1",
         EFACET_FIELD, "modulo5_s"));
 
-    assertTrue("The response '" + response
-        + "' should contain a count of 10 for tag mod1",
-        response.contains("<int name=\"mod1\">10</int>"));
+    assertTrue("The response '" + response + "' should contain a count of 10 for tag mod1",
+               response.contains("<int name=\"mod1\">10</int>"));
 
-//    System.out.println(response.replace("><", ">\n<"));
+    System.out.println(response.replace("><", ">\n<"));
   }
 
   public void testPathField() throws Exception {
@@ -80,9 +79,8 @@ public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
         EFACET_MINCOUNT, "1",
         EFACET_FIELD, "path_ss"));
 
-    assertTrue("The facet response '" + response
-        + "' should contain tags for field 'path'",
-        response.contains("<lst name=\"path_ss\">"));
+    assertTrue("The facet response '" + response + "' should contain tags for field 'path'",
+               response.contains("<lst name=\"path_ss\">"));
 
 //    System.out.println(response.replace("><", ">\n<"));
   }
@@ -225,12 +223,10 @@ public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
     assertU(commit());
   }
 
-  private int addExp(String[] values,
-                     int[] elements, int[] uniques, int[] counters) {
+  private int addExp(String[] values, int[] elements, int[] uniques, int[] counters) {
     return addExp(values, 3, "", 0, elements, uniques, counters);
   }
-  private int addExp(String[] values, int pos, String path, int level,
-                      int[] elements, int[] uniques, int[] counters) {
+  private int addExp(String[] values, int pos, String path, int level, int[] elements, int[] uniques, int[] counters) {
     if (level == elements.length) {
       values[pos] = path;
       return pos+2;
@@ -240,14 +236,12 @@ public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
     }
     for (int e = 0 ; e < elements[level] ; e++) {
       String val = "L" + level + "_T" + incGet(counters, uniques, level);
-      pos = addExp(
-          values, pos, path + val, level+1, elements, uniques, counters);
+      pos = addExp(values, pos, path + val, level+1, elements, uniques, counters);
     }
     return pos;
   }
 
-  private void addPivot(String[] values, int pos,
-                        int[] elements, int[] uniques, int[] counters) {
+  private void addPivot(String[] values, int pos, int[] elements, int[] uniques, int[] counters) {
     int combos = 1;
     for (int level = 0 ; level < elements.length ; level++) {
       int c = elements[level];
@@ -340,7 +334,7 @@ public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
    *              will be the document id.
    */
   private void addHierarchicalContent(int docs, int paths, int depth) {
-    StringBuffer sb = new StringBuffer(100);
+    StringBuilder sb = new StringBuilder(100);
     for (int doc = 0 ; doc < docs ; doc++) {
       ArrayList<String> content = new ArrayList<String>(2 + paths * 2);
       content.add("id");
