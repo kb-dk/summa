@@ -35,20 +35,17 @@ import java.util.Iterator;
  * responsibility of the caller to endure that proper caching of the order
  * is done at the source level.
  */
-public class CachedTermProvider extends CachedProvider<BytesRef>
-                                                       implements TermProvider {
+public class CachedTermProvider extends CachedProvider<BytesRef> implements TermProvider {
   private final TermProvider source;
 
   /**
    *
    * @param source       the backing term provider.
    * @param cacheSize    the maximum number of elements to hold in cache.
-   * @param readAhead    the maximum number of lookups that can be performed
-   *                     after a plain lookup.
+   * @param readAhead    the maximum number of lookups that can be performed after a plain lookup.
    * @throws java.io.IOException if the cache could access the source.
    */
-  public CachedTermProvider(
-      TermProvider source, int cacheSize, int readAhead) throws IOException {
+  public CachedTermProvider(TermProvider source, int cacheSize, int readAhead) throws IOException {
     super(cacheSize, readAhead, source.getOrdinalTermCount()-1);
     this.source = source;
   }
@@ -70,16 +67,13 @@ public class CachedTermProvider extends CachedProvider<BytesRef>
   }
 
   @Override
-  public Iterator<ExposedTuple> getIterator(boolean collectDocIDs)
-                                                            throws IOException {
-    throw new UnsupportedOperationException(
-        "The cache does not support the creation of iterators");
+  public Iterator<ExposedTuple> getIterator(boolean collectDocIDs) throws IOException {
+    throw new UnsupportedOperationException("The cache does not support the creation of iterators");
   }
 
   @Override
   public String getDesignation() {
-    return "CachedTermProvider(" + source.getClass().getSimpleName() + "("
-        + source.getDesignation() + "))";
+    return "CachedTermProvider(" + source.getClass().getSimpleName() + "(" + source.getDesignation() + "))";
   }
 
   @Override
@@ -96,8 +90,7 @@ public class CachedTermProvider extends CachedProvider<BytesRef>
   }
 
   @Override
-  public int getNearestTermIndirect(
-    BytesRef key, int startTermPos, int endTermPos) throws IOException {
+  public int getNearestTermIndirect(BytesRef key, int startTermPos, int endTermPos) throws IOException {
     return source.getNearestTermIndirect(key, startTermPos, endTermPos);
   }
 

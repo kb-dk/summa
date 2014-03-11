@@ -31,8 +31,7 @@ class FacetRequestSubtags implements SubtagsConstraints {
   final SUBTAGS_ORDER order;
   final FacetRequestSubtags subtags;
 
-  public FacetRequestSubtags(int maxTags, int minCount, int minTotalCount,
-                             SUBTAGS_ORDER order) {
+  public FacetRequestSubtags(int maxTags, int minCount, int minTotalCount, SUBTAGS_ORDER order) {
     this.maxTags = maxTags;
     this.minCount = minCount;
     this.minTotalCount = minTotalCount;
@@ -40,8 +39,7 @@ class FacetRequestSubtags implements SubtagsConstraints {
     this.subtags = null;
   }
 
-  public FacetRequestSubtags(XMLStreamReader reader, SubtagsConstraints defaults)
-                                                     throws XMLStreamException {
+  public FacetRequestSubtags(XMLStreamReader reader, SubtagsConstraints defaults) throws XMLStreamException {
     int maxTags = defaults.getMaxTags();
     int minCount = defaults.getMinCount();
     int minTotalCount = defaults.getMinTotalCount();

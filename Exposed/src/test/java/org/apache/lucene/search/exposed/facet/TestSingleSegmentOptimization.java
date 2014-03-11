@@ -92,7 +92,7 @@ public class TestSingleSegmentOptimization extends TestCase {
     ExposedSettings.priority = ExposedSettings.PRIORITY.memory;
     ExposedSettings.debug = true;
     FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
-    final int DOCCOUNT = 5000;
+    final int DOCCOUNT = 5000000;
     final int TERM_LENGTH = 20;
     final List<String> FIELDS = Arrays.asList("a");
     final File LOCATION = PREFERRED_ROOT.exists() ?  new File(PREFERRED_ROOT, "index50M") : ExposedHelper.INDEX_LOCATION;
