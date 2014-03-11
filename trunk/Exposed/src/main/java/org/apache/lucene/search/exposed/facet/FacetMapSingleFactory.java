@@ -21,7 +21,7 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
   public static FacetMapSingle createMap(int docCount, TermProvider provider) throws IOException {
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMapSingleFactory: Creating 1 pass 1 field 1 value/doc map with " + docCount + " documents)");
+          "FacetMapSingleFactory: Creating 2 pass 1 field 1 value/doc map with " + docCount + " documents)");
     }
 
     PackedInts.Mutable refs = PackedInts.getMutable(
@@ -30,6 +30,7 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
     long fillTime = -System.currentTimeMillis();
 
     Iterator<ExposedTuple> tuples = provider.getIterator(true);
+    long highest = Long.MIN_VALUE;
     while (tuples.hasNext()) {
       ExposedTuple tuple = tuples.next();
       if (tuple.indirect != tuple.ordinal) {
@@ -48,9 +49,12 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
           return null;
         }
         refs.set(docID, tuple.indirect+1);
+        if (highest < tuple.indirect+1) {
+          highest = tuple.indirect+1;
+        }
       }
     }
-
+    System.out.println("¤¤¤ Highest: " + highest);
     if (provider instanceof GroupTermProvider) {
       ((GroupTermProvider)provider).setOrderedOrdinals(new IdentityReader((int) provider.getOrdinalTermCount()));
       if (ExposedSettings.debug) {
@@ -68,6 +72,6 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
     if (ExposedSettings.debug) {
       System.out.println("FacetMapSingleFactory: Tag fill (" + docCount + " documents): " + fillTime + "ms");
     }
-    return new FacetMapSingle(provider, refs);
+    return new FacetMapSingle(provider, refs, (int) (provider.getOrdinalTermCount()+1));
   }
 }

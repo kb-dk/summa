@@ -45,17 +45,19 @@ public class FacetMapSingle implements FacetMap {
    * Important: index 0 in refs indicates no value.
    * @param provider       term provider for the map.
    * @param refs           references from index-wide indirects to term provider entry.
+   * @param tagCount       the number of tags in the refs, including the special 0-tag
    */
-  public FacetMapSingle(TermProvider provider, PackedInts.Reader refs) {
+  public FacetMapSingle(TermProvider provider, PackedInts.Reader refs, int tagCount) {
     this.provider = provider;
     this.refs = refs;
-    indirectStarts[1] = refs.size()+1;
+    indirectStarts[1] = tagCount;
   }
 
   @Override
   public int getTagCount() {
     try {
-      return (int)provider.getUniqueTermCount()+1;
+      return (int)provider.getOrdinalTermCount()+1;
+      //return (int)provider.getUniqueTermCount()+1;
     } catch (IOException e) {
       throw new RuntimeException("Unable to determine unique count", e);
     }
