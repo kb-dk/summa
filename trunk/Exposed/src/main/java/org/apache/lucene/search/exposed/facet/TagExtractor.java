@@ -266,7 +266,6 @@ public class TagExtractor {
             new ComparatorFactory.IndirectComparator(tagCounts), maxSize);
     long totalRefs = 0;
     long totalValidTags = 0;
-    System.out.println("¤¤¤ startTermPos=" + startTermPos + ", endTermPos=" + endTermPos);
     for (int termPos = startTermPos ; termPos < endTermPos ; termPos++) {
       totalRefs += tagCounts[termPos];
       if (tagCounts[termPos] >= minCount) {

@@ -24,6 +24,11 @@ public class FacetMapFactory {
    * build of the optimized is wasted.
    */
   public static boolean attemptSimple = true;
+  /**
+   * If true, 1 field, 1 segment, natural order facets are treated as single values, even if they have multiple values.
+   * The extra values will be discarded, with no order as to which of the conflicting values are kept.
+   */
+  public static final boolean forceSingle = false;
 
   public static FacetMap createMap(int docCount, List<TermProvider> providers) throws IOException {
     if (providers.size() == 1) {
@@ -34,7 +39,7 @@ public class FacetMapFactory {
           if (ExposedSettings.debug) {
             System.out.println("FacetMapFactory: Got 1 field 1 segment, natural order request. " +
                                "Using optimised FacetMapSingle");
-            FacetMap map = FacetMapSingleFactory.createMap(docCount, provider);
+            FacetMap map = FacetMapSingleFactory.createMap(docCount, provider, forceSingle);
             if (map != null) {
               return map;
             }

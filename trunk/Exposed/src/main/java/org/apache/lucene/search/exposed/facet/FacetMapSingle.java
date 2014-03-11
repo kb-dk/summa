@@ -34,7 +34,6 @@ import java.util.List;
  * The distribution of the entries in refs is defined by the index layout and is assumed to be random.
  */
 public class FacetMapSingle implements FacetMap {
-
   // To make this multi-provider and memory-efficient we need to alter the calling code logic significantly
   private final TermProvider provider;
   private final PackedInts.Reader refs;

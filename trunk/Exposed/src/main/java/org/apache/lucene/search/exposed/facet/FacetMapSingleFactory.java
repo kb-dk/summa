@@ -8,6 +8,8 @@ import org.apache.lucene.search.exposed.GroupTermProvider;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.packed.IdentityReader;
 import org.apache.lucene.util.packed.PackedInts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -16,13 +18,15 @@ import java.util.Iterator;
  * Highly specialized factory for single field, single value, popularity ordered facet.
  */
 public class FacetMapSingleFactory extends FacetMapTripleFactory {
+  protected static Logger log = LoggerFactory.getLogger(FacetMapSingleFactory.class);
 
-  // Returns null if the source is not single valued
-  public static FacetMapSingle createMap(int docCount, TermProvider provider) throws IOException {
+  public static FacetMapSingle createMap(int docCount, TermProvider provider, boolean forceSingle) throws IOException {
+    log.info("Creating 1 pass 1 field 1 value/doc map with " + docCount + " documents and forceSingle=" + forceSingle);
     if (ExposedSettings.debug) {
       System.out.println(
-          "FacetMapSingleFactory: Creating 2 pass 1 field 1 value/doc map with " + docCount + " documents)");
+          "FacetMapSingleFactory: Creating 1 pass 1 field 1 value/doc map with " + docCount + " documents)");
     }
+    boolean hasWarnedOnMulti = false;
 
     PackedInts.Mutable refs = PackedInts.getMutable(
         docCount, PackedInts.bitsRequired(provider.getOrdinalTermCount()+1), PackedInts.COMPACT);
@@ -41,6 +45,16 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
       int docID;
       while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
         if (refs.get(docID) != 0) {
+          if (forceSingle) {
+            if (!hasWarnedOnMulti) {
+              log.warn("The docID " + docID + " was already assigned when assigning term '" + tuple.term.utf8ToString()
+                       + "'. Extra values are ignored. This warning will not be repeated for this map");
+              hasWarnedOnMulti = true;
+              continue;
+            }
+          }
+          log.warn("The docID " + docID + " was already assigned when assigning term '" + tuple.term.utf8ToString()
+                   + "'. Aborting optimized map building and returning null instead of map");
           if (ExposedSettings.debug) {
             System.out.println(
                 "FacetMapSingleFactory: The docID " + docID + " was already assigned when assigning term '"
@@ -54,7 +68,6 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
         }
       }
     }
-    System.out.println("¤¤¤ Highest: " + highest);
     if (provider instanceof GroupTermProvider) {
       ((GroupTermProvider)provider).setOrderedOrdinals(new IdentityReader((int) provider.getOrdinalTermCount()));
       if (ExposedSettings.debug) {
@@ -69,6 +82,8 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
     }
     fillTime += System.currentTimeMillis();
 
+    log.info("Created FacetMapSingle with " + docCount + " documents and " + provider.getOrdinalTermCount()
+             + " unique tags in " + fillTime/1000d + " seconds");
     if (ExposedSettings.debug) {
       System.out.println("FacetMapSingleFactory: Tag fill (" + docCount + " documents): " + fillTime + "ms");
     }
