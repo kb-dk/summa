@@ -2,10 +2,10 @@ package org.apache.lucene.search.exposed.facet;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.exposed.ExposedCache;
-import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
+import org.apache.lucene.util.ELog;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -21,6 +21,8 @@ import java.util.*;
  * is notified about it.
  */
 public class CollectorPoolFactory implements ExposedCache.PurgeCallback, IndexReader.ReaderClosedListener {
+  private static final ELog log = ELog.getLog(CollectorPoolFactory.class);
+
   private Map<String, CollectorPool> poolMap;
   // Readers used by the pools
   private Set<IndexReader> readers = new HashSet<IndexReader>();
@@ -106,9 +108,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback, IndexRe
       return pool;
     }
 
-    if (ExposedSettings.debug) {
-      System.out.println("CollectorPoolFactory: Creating pool for " + key);
-    }
+    log.debug("CollectorPoolFactory: Creating pool for " + key);
     List<FacetRequestGroup> groups = request.getGroups();
     List<TermProvider> termProviders = new ArrayList<TermProvider>(groups.size());
     for (FacetRequestGroup group: groups) {
@@ -138,17 +138,13 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback, IndexRe
 
   @Override
   public synchronized void purgeAllCaches() {
-    if (ExposedSettings.debug) {
-      System.out.println("CollectorPoolFactory.purgeAllCaches() called");
-    }
+    log.info("purgeAllCaches() called");
     clear();
   }
 
   @Override
   public synchronized void purge(IndexReader r) {
-    if (ExposedSettings.debug) {
-      System.out.println("CollectorPoolFactory.purge(" + r + ") called");
-    }
+    log.debug("purge(" + r + ") called");
 /*    if (readers.remove(r) && ExposedSettings.debug) {
         System.out.println("Located and released reader " + r);
     } else if (ExposedSettings.debug) {

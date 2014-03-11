@@ -1,12 +1,12 @@
 package org.apache.lucene.search.exposed.facet;
 
 import org.apache.lucene.index.DocsEnum;
-import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.GroupTermProvider;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.DoubleIntArrayList;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.packed.MonotonicReaderFactory;
 import org.apache.lucene.util.packed.PackedIntWrapper;
 import org.apache.lucene.util.packed.PackedInts;
@@ -24,16 +24,13 @@ import java.util.Map;
  * high (1.5-3x when testing with the corpus at Statsbiblioteket).
  */
 public class FacetMapSingleLongFactory {
+  private static final ELog log = ELog.getLog(FacetMapSingleLongFactory.class);
 
   public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
       throws IOException {
     final long startTime = System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "FacetMapMulti: Creating long single pass map for "
-          + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
-          + " with " + docCount + " documents)");
-    }
+    log.info("Creating long single pass map for " + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
+             + " with " + docCount + " documents)");
     final int[] indirectStarts = new int[providers.size() +1];
     int start = 0;
     long uniqueTime = -System.currentTimeMillis();
@@ -80,19 +77,13 @@ public class FacetMapSingleLongFactory {
         // Not at all OO
         PackedInts.Reader i2o = indirectToOrdinal.getPacked();
         ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
-        if (ExposedSettings.debug) {
-          System.out.println(String.format(
-              "FacetMapMulti: Assigning indirects for %d unique terms, " +
-              "%d references, extracted in %d ms, to %s: %s",
+        log.debug(String.format(
+              "Assigning indirects for %d unique terms, %d references, extracted in %d ms, to %s: %s",
               localUniqueTerms, pairs.size()-pairsStartSize, localTime,
-              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(),
-              i2o));
-        }
-      } else if (ExposedSettings.debug) {
-        System.out.println(String.format(
-            "FacetMapMulti: Hoped for GroupTermProvider, but got %s. " +
-            "Collected ordered ordinals are discarded",
-            providers.get(i).getClass()));
+              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(), i2o));
+      } else {
+        log.debug(String.format("Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
+                                providers.get(i).getClass()));
       }
 /*      { // Sanity test
         PackedInts.Mutable i2o = indirectToOrdinal.getPacked();
@@ -122,25 +113,16 @@ public class FacetMapSingleLongFactory {
     }
     uniqueTime += System.currentTimeMillis();
     indirectStarts[indirectStarts.length-1] = start;
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "FacetMapMulti: Full index iteration in "
-          + (System.currentTimeMillis() - startTime) + "ms. "
-          + "Commencing extraction of structures. Temporary map: "
-          + pairs);
-    }
+    log.debug("Full index iteration in " + (System.currentTimeMillis() - startTime) + "ms. "
+          + "Commencing extraction of structures. Temporary map: " + pairs);
     long tagExtractTime = - System.currentTimeMillis();
     Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
         extractReferences(pairs, docCount, totalUniqueTerms);
     tagExtractTime += System.currentTimeMillis();
     final PackedInts.Reader doc2ref = pair.getKey();
     final PackedInts.Reader refs = pair.getValue();
-    if (ExposedSettings.debug) {
-      System.out.println(
-              "FacetMapMulti: Unique count, tag counts and tag fill (" + docCount
-              + " documents, " + providers.size() + " providers): "
-              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
-    }
+    log.info("Unique count, tag counts and tag fill (" + docCount + " documents, " + providers.size() + " providers): "
+             + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
   }
 
@@ -197,15 +179,10 @@ public class FacetMapSingleLongFactory {
     }
 //    System.out.println("\n");
 
-    if (ExposedSettings.debug) {
-      System.out.println(String.format(
-          "FacetMapMulti: Extracted doc2in and refs %s from %d pairs for %d docIDs "
-          + "in %d seconds (%d of these seconds used for counting docID "
-          + "frequencies and creating doc2in structure)",
-          refs, pairs.size(), docCount,
-          (System.currentTimeMillis()-startTime)/1000, countTime/1000));
-    }
-    return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(
-        doc2ref, refs);
+    log.info(String.format(
+          "Extracted doc2in and refs %s from %d pairs for %d docIDs in %d seconds (%d of these seconds used for " +
+          "counting docID frequencies and creating doc2in structure)",
+          refs, pairs.size(), docCount, (System.currentTimeMillis()-startTime)/1000, countTime/1000));
+    return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(doc2ref, refs);
   }
 }

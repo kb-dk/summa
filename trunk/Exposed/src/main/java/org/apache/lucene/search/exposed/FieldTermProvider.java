@@ -7,6 +7,7 @@ import org.apache.lucene.search.exposed.compare.ComparatorFactory;
 import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.IndexUtil;
 import org.apache.lucene.util.packed.IdentityReader;
 import org.apache.lucene.util.packed.PackedInts;
@@ -38,6 +39,8 @@ import java.util.Iterator;
  * needed.
  */
 public class FieldTermProvider extends TermProviderImpl {
+  private static final ELog log = ELog.getLog(FieldTermProvider.class);
+
   private ExposedRequest.Field request;
   private PackedInts.Reader order = null;
 
@@ -49,7 +52,7 @@ public class FieldTermProvider extends TermProviderImpl {
    * CollatorKey-based sorting is used. With an average term-length of 20
    * characters, each cache-entry takes approximately 100 bytes without
    * CollatorKey and 300 with CollatorKey.
-   * 
+   *
    * .
    * 10.000 is thus roughly equivalent to either 1 or 3 MB of RAM depending on
    * Collator presence.
@@ -275,10 +278,8 @@ public class FieldTermProvider extends TermProviderImpl {
 
 
     // TODO: Remove this
-    if (ExposedSettings.debug) {
-      System.out.println("Chunk total sort for field " + getField(0)
-          + ": " + ExposedUtil.time("terms", ordered.length, sortTime / 1000000));
-    }
+    log.debug("Chunk total sort for field " + getField(0) + ": "
+              + ExposedUtil.time("terms", ordered.length, sortTime / 1000000));
 /*    System.out.println(String.format(
             "Sorted %d Terms in %s out of which %s (%s%%) was lookups and " +
                     "%s (%s%%) was collation key creation. " +
@@ -335,9 +336,7 @@ public class FieldTermProvider extends TermProviderImpl {
     // array. When an index is popped, it is incremented and re-inserted unless
     // it is a block start index in which case it is just discarded.
 
-    if (ExposedSettings.debug) {
-      System.out.println("Beginning merge sort of " + ordinals.length + " ordinals in " + chunkCount + " chunks");
-    }
+    log.debug("Beginning merge sort of " + ordinals.length + " ordinals in " + chunkCount + " chunks");
     long mergeTime = System.currentTimeMillis();
     CachedProvider cache;
     ComparatorFactory.OrdinalComparator indirectComparator;
@@ -385,22 +384,19 @@ public class FieldTermProvider extends TermProviderImpl {
       }
     }
     mergeTime = System.currentTimeMillis() - mergeTime;
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "Merged " + ExposedUtil.time("chunks", chunkCount, mergeTime)
+    log.debug("Merged " + ExposedUtil.time("chunks", chunkCount, mergeTime)
               + " aka " + ExposedUtil.time("terms", sorted.length, mergeTime)
               + ": " + cache.getStats());
-    }
     System.arraycopy(sorted, 0, ordinals, 0, sorted.length);
-    if (ExposedSettings.debug) {
-      System.out.println("Cache stats for chunkMerge for " + getDesignation() + ": " + cache.getStats());
+
+    log.debug("Cache stats for chunkMerge for " + getDesignation() + ": " + cache.getStats());
 /*    System.out.println(String.format(
         "Heap merged %d sorted chunks of size %d (cache: %d, total terms: %s)" +
             " in %s with %d cache misses (%d combined for both sort passes)",
         chunkCount, chunkSize, sortCacheSize, ordinals.length,
         nsToString(System.nanoTime() - startTimeHeap),
         cacheMisses - oldHeapCacheMisses, cacheMisses - oldCacheMisses));*/
-    }
+
   }
 
   private void chunkSort(int[] ordinals, int chunkSize) throws IOException {
@@ -416,12 +412,9 @@ public class FieldTermProvider extends TermProviderImpl {
       chunkTime = System.currentTimeMillis() - chunkTime;
       int percent = (Math.min(i + chunkSize, ordinals.length)-1) *100
           / ordinals.length;
-      if (ExposedSettings.debug) {
-        System.out.println(
-            "Chunk sorted " + percent + "% " + i + "-" + (Math.min(i + chunkSize, ordinals.length)-1) + ": "
+      log.debug("Chunk sorted " + percent + "% " + i + "-" + (Math.min(i + chunkSize, ordinals.length)-1) + ": "
             + ExposedUtil.time("ordinals", Math.min(
                 i + chunkSize, ordinals.length) - i, chunkTime) + ": "+ cache.getStats());
-      }
       cache.clear();
     }
   }
@@ -450,10 +443,8 @@ public class FieldTermProvider extends TermProviderImpl {
 
       chunkTime = System.currentTimeMillis() - chunkTime;
       int percent = (int) ((long)end * 100 / ordinals.length);
-      if (ExposedSettings.debug) {
-        System.out.println("Chunk sorted " + percent + "% " + start + "-" + (end-1) + ": "
-            + ExposedUtil.time("ordinals", end - start, chunkTime) + ": "+ cache.getStats());
-      }
+      log.debug("Chunk sorted " + percent + "% " + start + "-" + (end-1) + ": "
+                + ExposedUtil.time("ordinals", end - start, chunkTime) + ": "+ cache.getStats());
       cache.clear();
     }
   }

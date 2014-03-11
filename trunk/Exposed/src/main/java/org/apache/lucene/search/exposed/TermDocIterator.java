@@ -1,6 +1,7 @@
 package org.apache.lucene.search.exposed;
 
 import org.apache.lucene.index.DocsEnum;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
@@ -18,6 +19,8 @@ import java.util.Iterator;
  * {@link #setReuseTuple(boolean)} is called with false.
  */
 public class TermDocIterator implements Iterator<ExposedTuple> {
+  private static final ELog log = ELog.getLog(TermDocIterator.class);
+
   private final TermProvider source;
   private final PackedInts.Reader order;
   private final boolean collectDocIDs;
@@ -48,8 +51,8 @@ public class TermDocIterator implements Iterator<ExposedTuple> {
         return true;
       }
       if (position >= order.size()) {
-        if (source instanceof CachedTermProvider && ExposedSettings.debug) {
-          System.out.println("TermDocsIterator: Depleted. " + ((CachedTermProvider)source).getStats());
+        if (source instanceof CachedTermProvider) {
+          log.debug("TermDocsIterator: Depleted. " + ((CachedTermProvider)source).getStats());
         }
         return false;
       }

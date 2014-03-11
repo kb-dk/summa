@@ -2,11 +2,11 @@ package org.apache.lucene.search.exposed.facet;
 
 
 import org.apache.lucene.index.DocsEnum;
-import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.GroupTermProvider;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.packed.IdentityReader;
 import org.apache.lucene.util.packed.PackedInts;
 
@@ -19,13 +19,12 @@ import java.util.Map;
  *
  */
 public class FacetMapDualFactory extends FacetMapTripleFactory {
+  private static final ELog log = ELog.getLog(FacetMapDualFactory.class);
 
   public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
       throws IOException {
-    if (ExposedSettings.debug) {
-      System.out.println("FacetMapDual: Creating 2 pass map for " + providers.size()
-          + " group" + (providers.size() == 1 ? "" : "s") + " with " + docCount + " documents)");
-    }
+    log.info("Creating 2 pass map for " + providers.size() + " group" + (providers.size() == 1 ? "" : "s") + " with "
+             + docCount + " documents)");
     final int[] indirectStarts = new int[providers.size() +1];
     int start = 0;
     long uniqueTime = -System.currentTimeMillis();
@@ -67,25 +66,18 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
       }
       PackedInts.Reader i2oReader = i2o;
       if (allEqual) {
-        if (ExposedSettings.debug) {
-          System.out.println(
-              "FacetMapDual.createMap: All indirects are equal to their ordinals. Using compressed representation");
-        }
+        log.info("createMap: All indirects are equal to their ordinals. Using compressed representation");
         i2oReader = new IdentityReader(i2o.size());
       }
       if (providers.get(i) instanceof GroupTermProvider) {
         // Not at all OO
 //        PackedInts.Reader i2o = indirectToOrdinal.getPacked();
         ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2oReader);
-        if (ExposedSettings.debug) {
-          System.out.println(String.format(
-              "FacetMapDual: Assigning ordered ordinals to %s: %s",
-              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(), i2oReader));
-        }
-      } else if (ExposedSettings.debug) {
-        System.out.println(String.format(
-            "FacetMapDual: Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
-            providers.get(i).getClass()));
+        log.debug(String.format("Assigning ordered ordinals to %s: %s",
+                                ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(), i2oReader));
+      } else {
+        log.debug(String.format("Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
+                                providers.get(i).getClass()));
       }
 
       indirectStarts[i] = start;
@@ -122,11 +114,8 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
     tagExtractTime += System.currentTimeMillis();
     final PackedInts.Reader doc2ref = pair.getKey();
     final PackedInts.Reader refs = pair.getValue();
-    if (ExposedSettings.debug) {
-      System.out.println(
-              "FacetMapDual: Unique count, tag counts and tag fill (" + docCount + " documents, "
+    log.info("Unique count, tag counts and tag fill (" + docCount + " documents, "
               + providers.size() + " providers): " + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
-    }
     return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
   }
 

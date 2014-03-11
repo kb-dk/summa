@@ -2,11 +2,9 @@ package org.apache.lucene.search.exposed.facet;
 
 
 import org.apache.lucene.index.AtomicReader;
-import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.lucene.util.ELog;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,7 +13,7 @@ import java.util.List;
  *
  */
 public class FacetMapFactory {
-  protected static Logger log = LoggerFactory.getLogger(FacetMapFactory.class);
+  private static final ELog log = ELog.getLog(FacetMapFactory.class);
 
   public enum IMPL {stable, pass2, pass1long, pass1packed}
 
@@ -40,17 +38,14 @@ public class FacetMapFactory {
                             provider.getComparator().getOrder() == NamedComparator.ORDER.index)) {
         try {
           if (provider.getReader() instanceof AtomicReader) {
-            if (ExposedSettings.debug) {
-              System.out.println("FacetMapFactory: Got 1 field 1 segment, natural order request. " +
-                                 "Using optimised FacetMapSingle");
-              FacetMap map = FacetMapSingleFactory.createMap(docCount, provider, forceSingle);
-              if (map != null) {
-                return map;
-              }
+            log.info("Got 1 field 1 segment, natural order request. Using optimised FacetMapSingle");
+            FacetMap map = FacetMapSingleFactory.createMap(docCount, provider, forceSingle);
+            if (map != null) {
+              return map;
             }
           }
         } catch (UnsupportedOperationException e) {
-          log.info("Unable to create optimized map as the index is not single segment. Defaulting to generic map");
+          log.warn("Unable to create optimized map as the index is not single segment. Defaulting to generic map");
         }
       }
     }
@@ -59,8 +54,9 @@ public class FacetMapFactory {
   }
 
   public static FacetMap createMap(int docCount, List<TermProvider> providers, IMPL impl) throws IOException {
-    log.info("Activating FacetMap factory " + impl + " for " + docCount + " documents with " + providers.size()
-             + " providers");
+    log.info("Activating FacetMap factory " + impl + " for " + docCount + " documents with "
+             + providers.size() + " providers");
+
     switch (impl) {
       case stable:      return FacetMapTripleFactory.createMap(docCount, providers);
       case pass2:       return FacetMapDualFactory.createMap(docCount, providers);
