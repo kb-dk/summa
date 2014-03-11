@@ -5,6 +5,7 @@ import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.ExposedUtil;
 import org.apache.lucene.search.exposed.TermProvider;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.packed.MonotonicReaderFactory;
 import org.apache.lucene.util.packed.PackedInts;
 
@@ -18,16 +19,15 @@ import java.util.Map;
  * Battle-tested construction of FacetMapMulti.
  */
 public class FacetMapTripleFactory {
+  private static final ELog log = ELog.getLog(FacetMapTripleFactory.class);
 
   // This is highly inefficient as it performs 3 iterations of terms
   // 1. Generate sorted and de-duplicated ordinals list
   // 2. Count references from documents to tags
   // 3. Update map with references from documents to tags
   public static FacetMapMulti createMap(int docCount, List<TermProvider> providers) throws IOException {
-    if (ExposedSettings.debug) {
-      System.out.println("FacetMapMulti: Creating map for " + providers.size() + " group"
-                         + (providers.size() == 1 ? "" : "s") + " with " + docCount + " documents)");
-    }
+    log.info("Creating map for " + providers.size() + " group"
+             + (providers.size() == 1 ? "" : "s") + " with " + docCount + " documents)");
 
     final int[] indirectStarts = new int[providers.size() +1];
     int start = 0;
@@ -46,11 +46,8 @@ public class FacetMapTripleFactory {
     tagExtractTime += System.currentTimeMillis();
     final PackedInts.Reader doc2ref = pair.getKey();
     final PackedInts.Reader refs = pair.getValue();
-    if (ExposedSettings.debug) {
-      System.out.println(
-              "FacetMapMulti: Unique count (" + providers.size() + " providers): "
-              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
-    }
+    log.info("Unique count (" + providers.size() + " providers): "
+             + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
     return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
   }
 
@@ -90,11 +87,11 @@ public class FacetMapTripleFactory {
           continue;
         }
         int doc;
-          // TODO: Test if bulk reading (which includes freqs) is faster
-          while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-            tagCounts[(int)(doc + tuple.docIDBase)]++;
-            referenceCount++;
-          }
+        // TODO: Test if bulk reading (which includes freqs) is faster
+        while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+          tagCounts[(int)(doc + tuple.docIDBase)]++;
+          referenceCount++;
+        }
           /*
         int read;
         DocsEnum.BulkReadResult bulk = tuple.docIDs.getBulkResult();
@@ -111,12 +108,9 @@ public class FacetMapTripleFactory {
     }
 
     tagCountTime += System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "FacetMapMulti: Counted " + referenceCount + " tag references for "
-          + ExposedUtil.time("documents", tagCounts.length, tagCountTime)
-          + ". Retrieved " + ExposedUtil.time("tuples", tupleCount, tupleTime / 1000000));
-    }
+    log.info("Counted " + referenceCount + " tag references for "
+             + ExposedUtil.time("documents", tagCounts.length, tagCountTime)
+             + ". Retrieved " + ExposedUtil.time("tuples", tupleCount, tupleTime / 1000000));
   }
 
   /*
@@ -222,7 +216,7 @@ public class FacetMapTripleFactory {
       offset += tagCounts[i];
       tagCounts[i] = oldOffset;
 
-  //    }
+      //    }
     }
     doc2ref.set(tagCounts.length, offset);
 //      doc2ref.set(doc2ref.size()-1, offset);
@@ -281,27 +275,27 @@ public class FacetMapTripleFactory {
         }
          */
 
-          nextDocTime -= System.nanoTime();
-          int doc;
-          final int base = (int)tuple.docIDBase;
-          while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-            nextDocCount++;
-  //            final int docID = ;
-    //          final int refsOrigo = (int)doc2ref.get(docID);
-  //          final int chunkOffset = (int)refs.get(refsOrigo);
-  //            final int chunkOffset = --tagCounts[docID];
-            final int refsPos = tagCounts[doc + base]++;
-            try {
-              refs.set(refsPos, indirect);
-            } catch (ArrayIndexOutOfBoundsException e) {
-              throw new RuntimeException(
-                  "Array index out of bounds. refs.size=" + refs.size()
-                  + ", refs.bitsPerValue=" + refs.getBitsPerValue()
-                  + ", refsPos=" + refsPos + ", tuple.indirect+termOffset="
-                  + tuple.indirect + "+" + termOffset + "=" + (tuple.indirect+termOffset), e);
-            }
+        nextDocTime -= System.nanoTime();
+        int doc;
+        final int base = (int)tuple.docIDBase;
+        while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+          nextDocCount++;
+          //            final int docID = ;
+          //          final int refsOrigo = (int)doc2ref.get(docID);
+          //          final int chunkOffset = (int)refs.get(refsOrigo);
+          //            final int chunkOffset = --tagCounts[docID];
+          final int refsPos = tagCounts[doc + base]++;
+          try {
+            refs.set(refsPos, indirect);
+          } catch (ArrayIndexOutOfBoundsException e) {
+            throw new RuntimeException(
+                "Array index out of bounds. refs.size=" + refs.size()
+                + ", refs.bitsPerValue=" + refs.getBitsPerValue()
+                + ", refsPos=" + refsPos + ", tuple.indirect+termOffset="
+                + tuple.indirect + "+" + termOffset + "=" + (tuple.indirect+termOffset), e);
           }
-          nextDocTime += System.nanoTime();
+        }
+        nextDocTime += System.nanoTime();
 
        /*
         int doc;
@@ -331,11 +325,8 @@ public class FacetMapTripleFactory {
       }
     }
     fillTime += System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println("FacetMapMulti: Filled map with "
-          + ExposedUtil.time("references", totalRefs, fillTime) + " out of which was " +
-          ExposedUtil.time("nextDocs", nextDocCount, nextDocTime / 1000000));
-    }
+    log.info("Filled map with " + ExposedUtil.time("references", totalRefs, fillTime) + " out of which was " +
+             ExposedUtil.time("nextDocs", nextDocCount, nextDocTime / 1000000));
   }
 
 }

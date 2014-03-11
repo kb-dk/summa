@@ -3,6 +3,7 @@ package org.apache.lucene.search.exposed;
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
@@ -36,6 +37,8 @@ import java.util.List;
  */
 // TODO: Extend to handle term ordinals > Integer.MAX_VALUE
 public class GroupTermProvider extends TermProviderImpl {
+  private static final ELog log = ELog.getLog(GroupTermProvider.class);
+
   private final List<TermProvider> providers;
   private final ExposedRequest.Group request;
   private final int readerHash;
@@ -265,10 +268,8 @@ public class GroupTermProvider extends TermProviderImpl {
 //    System.out.println("GroupTermProvider: Sorting ordinals from "
 //                       + providers.size() + " providers");
     if (COPY_ORDER_ON_SINGLE_PROVIDER && providers.size() ==  1 && decorator == null) {
-      if (ExposedSettings.debug) {
-        System.out.println("GroupTermProvider.sortOrdinals: Copying order from single provider");
-        return providers.get(0).getOrderedOrdinals();
-      }
+      log.debug("GroupTermProvider.sortOrdinals: Copying order from single provider");
+      return providers.get(0).getOrderedOrdinals();
     }
     int maxTermCount = (int)termOrdinalStarts[termOrdinalStarts.length-1];
     long iteratorConstruction = System.currentTimeMillis();
@@ -281,10 +282,8 @@ public class GroupTermProvider extends TermProviderImpl {
 //        + iteratorTime + "ms");
 
     iteratorConstruction = System.currentTimeMillis() - iteratorConstruction;
-    if (ExposedSettings.debug) {
-      System.out.println("GroupTermProvider: Group iterator construction:"
-          + ExposedUtil.time("ordinals", maxTermCount, iteratorConstruction));
-    }
+    log.debug("GroupTermProvider: Group iterator construction:"
+              + ExposedUtil.time("ordinals", maxTermCount, iteratorConstruction));
 
     int uniqueTermCount = 0;
     long extractionTime = -System.currentTimeMillis();
@@ -309,12 +308,9 @@ public class GroupTermProvider extends TermProviderImpl {
     reducetime += System.currentTimeMillis();
 
     extractionTime += System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "GroupTermProvider: Group ordinal iterator depletion from " + providers.size() + " providers: "
-          + ExposedUtil.time("ordinals", result.size(), extractionTime)
-          + " (Memory optimize time: " + reducetime + " ms)");
-    }
+    log.debug("GroupTermProvider: Group ordinal iterator depletion from " + providers.size() + " providers: "
+              + ExposedUtil.time("ordinals", result.size(), extractionTime)
+              + " (Memory optimize time: " + reducetime + " ms)");
     return result;
   }
 

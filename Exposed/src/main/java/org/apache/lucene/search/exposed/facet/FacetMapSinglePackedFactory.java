@@ -6,6 +6,7 @@ import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.GroupTermProvider;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.ExpandablePackedPair;
 import org.apache.lucene.util.packed.MonotonicReaderFactory;
 import org.apache.lucene.util.packed.PackedIntWrapper;
@@ -20,16 +21,13 @@ import java.util.concurrent.*;
  * PackedInts-structures separated by provider.
  */
 public class FacetMapSinglePackedFactory {
+  private static final ELog log = ELog.getLog(FacetMapSinglePackedFactory.class);
 
   public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
       throws IOException {
     final long startTime = System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "FacetMapMulti: Creating packed single pass map for "
-          + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
-          + " with " + docCount + " documents)");
-    }
+    log.info("Creating packed single pass map for " + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
+             + " with " + docCount + " documents)");
     final int[] indirectStarts = new int[providers.size() +1];
     int start = 0;
     long indexExtractTime = -System.currentTimeMillis();
@@ -56,57 +54,37 @@ public class FacetMapSinglePackedFactory {
     indirectStarts[indirectStarts.length-1] = start;
     indexExtractTime += System.currentTimeMillis();
 
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "FacetMapMulti: Full index iteration in "
-          + (System.currentTimeMillis() - startTime) + "ms. "
+    log.info("Full index iteration in " + (System.currentTimeMillis() - startTime) + "ms. "
           + "Commencing extraction of structures");
-    }
 
     long tagExtractTime = - System.currentTimeMillis();
-    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
-        extractTags(providerMaps, docCount, totalUniqueTerms);
+    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair = extractTags(providerMaps, docCount, totalUniqueTerms);
     tagExtractTime += System.currentTimeMillis();
     final PackedInts.Reader doc2ref = pair.getKey();
     final PackedInts.Reader refs = pair.getValue();
-    if (ExposedSettings.debug) {
-      System.out.println(String.format(
-          "FacetMapMulti: docs=%s, terms=%s, refs=%d. Term extraction time=%dms,"
-          + " Secondary structure processing time=%dms",
-          docCount, totalUniqueTerms, refCount, indexExtractTime,
-          tagExtractTime));
-    }
+    log.info(String.format(
+        "docs=%s, terms=%s, refs=%d. Term extraction time=%dms, Secondary structure processing time=%dms",
+          docCount, totalUniqueTerms, refCount, indexExtractTime, tagExtractTime));
     return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
   }
 
-  private static List<ProviderData> extractProviderDatas(
-      int docCount, List<TermProvider> providers) {
-    List<ProviderData> providerDatas =
-        new ArrayList<ProviderData>(providers.size());
+  private static List<ProviderData> extractProviderDatas(int docCount, List<TermProvider> providers) {
+    List<ProviderData> providerDatas = new ArrayList<ProviderData>(providers.size());
     if (ExposedSettings.threads == 1 || providers.size() == 1) {
-      if (ExposedSettings.debug) {
-        System.out.println(String.format(
-            "FacetMapMulti: Performing single threaded extraction of term " +
-            "data from %d providers",
-            providers.size()));
-      }
+      log.debug(String.format("FacetMapMulti: Performing single threaded extraction of term data from %d providers",
+                              providers.size()));
       for (TermProvider provider: providers) {
         try {
           providerDatas.add(extractProviderData(docCount, provider));
         } catch (IOException e) {
-          throw new RuntimeException(
-              "Unable to extract data for " + provider, e);
+          throw new RuntimeException("Unable to extract data for " + provider, e);
         }
       }
       return providerDatas;
     }
 
-    if (ExposedSettings.debug) {
-      System.out.println(String.format(
-          "FacetMapMulti: Starting a maximum of %d threads for extracting term " +
-          "data from %d providers",
-          ExposedSettings.threads, providers.size()));
-    }
+    log.debug(String.format("Starting a maximum of %d threads for extracting term data from %d providers",
+                            ExposedSettings.threads, providers.size()));
     long realTime = -System.currentTimeMillis();
     long summedTime = 0;
     final ExecutorService executor =
@@ -130,12 +108,10 @@ public class FacetMapSinglePackedFactory {
       }
     }
     realTime += System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(String.format(
+    log.info(String.format(
           "FacetMapMulti: Finished running max %d threads for %d providers. " +
           "Real time spend: %dms. Summed thread time: %dms",
           ExposedSettings.threads, providers.size(), realTime, summedTime));
-    }
     return providerDatas;
   }
 
@@ -203,19 +179,12 @@ public class FacetMapSinglePackedFactory {
     if (provider instanceof GroupTermProvider) {
       // Not at all OO
       ((GroupTermProvider)provider).setOrderedOrdinals(i2o);
-      if (ExposedSettings.debug) {
-        System.out.println(String.format(
-            "FacetMapMulti: Assigning indirects for %d unique terms, " +
-            "%d references, extracted in %d ms, to %s: %s",
-            uniqueTerms, providerMap.size(), processingTime,
-            ((GroupTermProvider)provider).getRequest().getFieldNames(),
+      log.debug(String.format("Assigning indirects for %d unique terms, %d references, extracted in %d ms, to %s: %s",
+            uniqueTerms, providerMap.size(), processingTime, ((GroupTermProvider)provider).getRequest().getFieldNames(),
             i2o));
-      }
-    } else if (ExposedSettings.debug) {
-      System.out.println(String.format(
-          "FacetMapMulti: Hoped for GroupTermProvider, but got %s. " +
-          "Collected ordered ordinals are discarded",
-          provider.getClass()));
+    } else {
+      log.debug(String.format("Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
+                              provider.getClass()));
     }
     return new ProviderData(provider, providerMap, uniqueTerms, processingTime);
   }
@@ -266,22 +235,16 @@ public class FacetMapSinglePackedFactory {
     for (ExpandablePackedPair d2i: d2is) {
       fullSize += d2i.size();
     }
-    final PackedInts.Mutable refs = PackedInts.getMutable(
-        fullSize, PackedInts.bitsRequired(uniqueTerms), 0);
+    final PackedInts.Mutable refs = PackedInts.getMutable(fullSize, PackedInts.bitsRequired(uniqueTerms), 0);
 
     // Iterate pairs and put the pairs at the proper starting positions
     for (ExpandablePackedPair d2i: d2is) {
       d2i.assignSecondaries(starts, refs);
     }
-    if (ExposedSettings.debug) {
-      System.out.println(String.format(
-          "FacetMapMulti: Extracted doc2in and refs %s from %d pairs for %d docIDs "
-          + "in %d seconds (%d of these seconds used for counting docID "
-          + "frequencies and creating doc2in structure)",
-          refs, fullSize, docCount,
-          (System.currentTimeMillis() - startTime) / 1000, countTime / 1000));
-    }
-    return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(
-        doc2ref, refs);
+    log.info(String.format(
+          "Extracted doc2in and refs %s from %d pairs for %d docIDs in %d seconds (%d of these seconds used for "
+          + "counting docID frequencies and creating doc2in structure)",
+          refs, fullSize, docCount, (System.currentTimeMillis() - startTime) / 1000, countTime / 1000));
+    return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(doc2ref, refs);
   }
 }

@@ -1,6 +1,6 @@
 package org.apache.lucene.util.packed;
 
-import org.apache.lucene.search.exposed.ExposedSettings;
+import org.apache.lucene.util.ELog;
 
 /**
  * Takes a reader with monotonic increasing values and produces
@@ -15,6 +15,7 @@ import org.apache.lucene.search.exposed.ExposedSettings;
  */
 // TODO: Implement this
 public class MonotonicReaderFactory {
+  private static final ELog log = ELog.getLog(MonotonicReaderFactory.class);
 
   public static final int DEFAULT_BLOCK_BITS = 8;
   /**
@@ -63,15 +64,11 @@ public class MonotonicReaderFactory {
     boolean proceed = mem * MIN_SAVING <= reader.ramBytesUsed();
     PackedInts.Reader result =
         proceed ? createMonotonic(reader, bases, blockBits, maxDelta) : reader;
-    if (ExposedSettings.debug) {
-      System.out.println(String.format(
-          "MonotonicReaderFactory: reader(size=%d, bpv=%d, heap=%dKB)"
-          + " -> monotonic(bpv=%d, heap=%dKB). %s%dms",
-          reader.size(), reader.getBitsPerValue(), reader.ramBytesUsed()/1024,
-          PackedInts.bitsRequired(maxDelta), mem/1024,
-          proceed ? "Conversion performed in " : "conversion skipped in ",
-          System.currentTimeMillis()-startTime));
-    }
+    log.debug(String.format("reader(size=%d, bpv=%d, heap=%dKB) -> monotonic(bpv=%d, heap=%dKB). %s%dms",
+                            reader.size(), reader.getBitsPerValue(), reader.ramBytesUsed() / 1024,
+                            PackedInts.bitsRequired(maxDelta), mem / 1024,
+                            proceed ? "Conversion performed in " : "conversion skipped in ",
+                            System.currentTimeMillis() - startTime));
     return result;
   }
 

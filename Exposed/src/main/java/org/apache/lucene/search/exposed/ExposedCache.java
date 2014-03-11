@@ -4,6 +4,7 @@ import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.IndexUtil;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.io.StringWriter;
 import java.util.*;
 
 public class ExposedCache implements IndexReader.ReaderClosedListener {
+  private static final ELog log = ELog.getLog(ExposedCache.class);
 
   private final Set<IndexReader> readers = new HashSet<IndexReader>();
   private final ArrayList<TermProvider> cache = new ArrayList<TermProvider>(5);
@@ -42,8 +44,8 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     return getProvider(reader, group.getName(), group.getFieldNames(), group.getComparator());
   }
 
-  public TermProvider getProvider(IndexReader reader, String groupName, List<String> fieldNames,
-                                  NamedComparator comparator) throws IOException {
+  public TermProvider getProvider(
+      IndexReader reader, String groupName, List<String> fieldNames, NamedComparator comparator) throws IOException {
     if (readers.add(reader)) {
       reader.addReaderClosedListener(this);
     }
@@ -58,9 +60,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
         return provider;
       }
     }
-    if (ExposedSettings.debug) {
-      System.out.println("ExposedCache: Creating provider for " + groupName);
-    }
+    log.debug("Creating provider for " + groupName);
 
      // No cached value. Modify the comparator IDs to LUCENE-order if they were
     // stated as free. Aw we create the query ourselves, this is okay.
@@ -160,9 +160,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
   }
 
   public void purgeAllCaches() {
-    if (ExposedSettings.debug) {
-      System.out.println("ExposedCache.purgeAllCaches() called");
-    }
+    log.info("purgeAllCaches() called");
     cache.clear();
     for (PurgeCallback purger: remoteCaches) {
       purger.purgeAllCaches();
@@ -178,9 +176,9 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
    */
   @SuppressWarnings({"UseOfSystemOutOrSystemErr", "ObjectToString"})
   public synchronized void purge(IndexReader r) {
-    if (ExposedSettings.debug) {
-      System.out.println("ExposedCache.purge(" + r + ") called");
-    }
+
+    log.debug("purge(" + r + ") called");
+
     Iterator<TermProvider> remover = cache.iterator();
     while (remover.hasNext()) {
       TermProvider provider = remover.next();

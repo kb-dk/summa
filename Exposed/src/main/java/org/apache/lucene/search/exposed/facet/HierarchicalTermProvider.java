@@ -2,11 +2,11 @@ package org.apache.lucene.search.exposed.facet;
 
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.ExposedTuple;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.packed.GrowingMutable;
 import org.apache.lucene.util.packed.PackedInts;
 
@@ -33,6 +33,8 @@ import java.util.regex.Pattern;
 // TODO: Consider optimizing build with split on byte(s)
 // TODO: Make splitting use the display part of the terms
 public class HierarchicalTermProvider implements TermProvider {
+  private static final ELog log = ELog.getLog(HierarchicalTermProvider.class);
+
   private final TermProvider source;
   private final PackedInts.Reader levels;
   private final PackedInts.Reader pLevels;
@@ -66,11 +68,8 @@ public class HierarchicalTermProvider implements TermProvider {
     levels = lInfo.getVal1();
     pLevels = lInfo.getVal2();
     buildTime += System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "Extracted Hierarchical information from source with " + source.getUniqueTermCount() + " unique terms in "
-          + buildTime + "ms using regexp '" + splitRegexp + "'");
-    }
+    log.info("Extracted Hierarchical information from source with " + source.getUniqueTermCount() + " unique terms in "
+             + buildTime + "ms using regexp '" + splitRegexp + "'");
   }
 
   /**
@@ -100,11 +99,8 @@ public class HierarchicalTermProvider implements TermProvider {
     levels = lInfo.getVal1();
     pLevels = lInfo.getVal2();
     buildTime += System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(
-          "Extracted Hierarchical information from source with " + source.getUniqueTermCount() + " unique terms in "
-          + buildTime + "ms using splitByte " + splitByte);
-    }
+    log.info("Extracted Hierarchical information from source with " + source.getUniqueTermCount() + " unique terms in "
+             + buildTime + "ms using splitByte " + splitByte);
   }
 
   /**
@@ -159,10 +155,8 @@ public class HierarchicalTermProvider implements TermProvider {
       pLevels.set(index, pLevel);
       previous = current;
     }
-    if (ExposedSettings.debug) {
-      System.out.println("Spend " + splitTime / 1000000 + " ms on " + ordered.size() + " splits: "
-                         + (ordered.size() * 1000000L / splitTime) + " splits/ms");
-    }
+    log.debug("Spend " + splitTime / 1000000 + " ms on " + ordered.size() + " splits: "
+              + (ordered.size() * 1000000L / splitTime) + " splits/ms");
     return new Pair<PackedInts.Reader, PackedInts.Reader>(reduce(levels), reduce(pLevels));
   }
 
@@ -202,14 +196,11 @@ public class HierarchicalTermProvider implements TermProvider {
     Pair<PackedInts.Reader, PackedInts.Reader> reduced =
       new Pair<PackedInts.Reader, PackedInts.Reader>(reduce(levels), reduce(pLevels));
     reduceTime += System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(
-        "getLevelsFast(): Init time: " + initTime + "ms. " + "Splits " + splitTime / 1000000 + " ms on "
-        + ordered.size() + " splits (" + (ordered.size() * 1000000L / splitTime)
-        + " splits/ms). levels grow: " + levels.getGrowTime() / 1000000
-        + "ms. pLevels grow: " + pLevels.getGrowTime() / 1000000
-        + "ms. Mutable size optimization: " + reduceTime + " ms");
-    }
+    log.debug("getLevelsFast(): Init time: " + initTime + "ms. " + "Splits " + splitTime / 1000000 + " ms on "
+              + ordered.size() + " splits (" + (ordered.size() * 1000000L / splitTime)
+              + " splits/ms). levels grow: " + levels.getGrowTime() / 1000000
+              + "ms. pLevels grow: " + pLevels.getGrowTime() / 1000000
+              + "ms. Mutable size optimization: " + reduceTime + " ms");
     return reduced;
   }
 
@@ -249,13 +240,11 @@ public class HierarchicalTermProvider implements TermProvider {
     Pair<PackedInts.Reader, PackedInts.Reader> reduced =
       new Pair<PackedInts.Reader, PackedInts.Reader>(reduce(levels), reduce(pLevels));
     reduceTime += System.currentTimeMillis();
-    if (ExposedSettings.debug) {
-      System.out.println(
-        "getLevelsDecorating(): Total time: " + decorateTime / 1000000 + ", splits " + timings[0] / 1000000 + " ms on "
-        + ordered.size() + " splits (" + (ordered.size() * 1000000L / timings[0]) + " splits/ms)"
-        + ", assignments " + timings[1] / 1000000 + " ms on " + ordered.size() + " level-assignments ("
-        + (ordered.size() * 1000000L / timings[1]) + " splits/ms). Mutable size optimization: " + reduceTime + " ms");
-    }
+    log.debug("getLevelsDecorating(): Total time: " + decorateTime / 1000000 + ", splits " + timings[0] / 1000000
+              + " ms on " + ordered.size() + " splits (" + (ordered.size() * 1000000L / timings[0]) + " splits/ms)"
+              + ", assignments " + timings[1] / 1000000 + " ms on " + ordered.size() + " level-assignments ("
+              + (ordered.size() * 1000000L / timings[1]) + " splits/ms). Mutable size optimization: " + reduceTime
+              + " ms");
     return reduced;
   }
 

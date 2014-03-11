@@ -4,6 +4,7 @@ import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.packed.GrowingMutable;
 import org.apache.lucene.util.packed.PackedInts;
 
@@ -15,6 +16,8 @@ import java.util.Iterator;
  * Default implementation of some methods from TermProvider.
  */
 public abstract class TermProviderImpl implements TermProvider {
+  private static final ELog log = ELog.getLog(TermProviderImpl.class);
+
   protected boolean cacheTables;
   private PackedInts.Mutable docToSingle = null;
 
@@ -91,11 +94,10 @@ public abstract class TermProviderImpl implements TermProvider {
       throw new RuntimeException("Unable to create doc to indirect map", e);
     }
     sortTime = System.currentTimeMillis() - sortTime;
-    if (ExposedSettings.debug) {
-      System.out.println(this.getClass().getSimpleName() + " merge-mapped "
-          + (getMaxDoc()-1) + " docs to single terms in " + sortTime + " ms: " +
-          (sortTime == 0 ? "N/A" : docToSingle.size() / sortTime) + " docs/ms");
-    }
+
+    log.info(this.getClass().getSimpleName() + " merge-mapped "
+             + (getMaxDoc()-1) + " docs to single terms in " + sortTime + " ms: " +
+             (sortTime == 0 ? "N/A" : docToSingle.size() / sortTime) + " docs/ms");
     if (cacheTables) {
       this.docToSingle = docToSingle;
     }
