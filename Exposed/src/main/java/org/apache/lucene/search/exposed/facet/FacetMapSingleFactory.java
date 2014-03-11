@@ -50,8 +50,8 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
               log.warn("The docID " + docID + " was already assigned when assigning term '" + tuple.term.utf8ToString()
                        + "'. Extra values are ignored. This warning will not be repeated for this map");
               hasWarnedOnMulti = true;
-              continue;
             }
+            continue;
           }
           log.warn("The docID " + docID + " was already assigned when assigning term '" + tuple.term.utf8ToString()
                    + "'. Aborting optimized map building and returning null instead of map");
