@@ -166,11 +166,7 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback, IndexRe
     sw.append("CollectorPoolFactory(");
     boolean first = true;
     for (Map.Entry<String, CollectorPool> entry: poolMap.entrySet()) {
-      if (first) {
-        first = false;
-      } else {
-        sw.append(", ");
-      }
+      sw.append("\n  ");
       sw.append(entry.getValue().toString());
     }
     sw.append(")");
