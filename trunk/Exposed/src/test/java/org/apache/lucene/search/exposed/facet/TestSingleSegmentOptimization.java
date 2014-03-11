@@ -201,7 +201,6 @@ public class TestSingleSegmentOptimization extends TestCase {
     result.append(response.toXML()).append("\n");
   }
 
-
   private String getTime(long ms) {
     if (ms < 2999) {
       return ms + " ms";

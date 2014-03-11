@@ -41,7 +41,6 @@ public class FieldTermProvider extends TermProviderImpl {
   private ExposedRequest.Field request;
   private PackedInts.Reader order = null;
 
-
   // TODO: Consider letting the cache be a factor of term count
   /**
    * The minimum number of Terms or ExtendedTerms to hold in cache during
@@ -74,10 +73,10 @@ public class FieldTermProvider extends TermProviderImpl {
   private final Terms terms;
   private final TermsEnum termsEnum;
 
-  public FieldTermProvider(IndexReader reader, int docIDBase, ExposedRequest.Field request,
-                           boolean cacheTables) throws IOException {
+  public FieldTermProvider(
+      IndexReader reader, int docIDBase, ExposedRequest.Field request, boolean cacheTables) throws IOException {
     super(checkReader(reader), docIDBase, request.getComparator(),
-        "Field " + request.getField(), cacheTables, request.getConcatCollatorID());
+          "Field " + request.getField(), cacheTables, request.getConcatCollatorID());
     if (!(reader instanceof AtomicReader)) {
       throw new IllegalArgumentException(
           "The IndexReader should be a leaf (no sub readers). It contained "
@@ -122,8 +121,7 @@ public class FieldTermProvider extends TermProviderImpl {
           + " in segment " + getReader() + ". Requested ordinal was " + ordinal);
     }
     // TODO: Upstream this simple sequential access optimization
-    if (lastOrdinalRequest != -1 && lastOrdinalRequest <= ordinal &&
-        ordinal <= lastOrdinalRequest + ITERATE_LIMIT) {
+    if (lastOrdinalRequest != -1 && lastOrdinalRequest <= ordinal && ordinal <= lastOrdinalRequest + ITERATE_LIMIT) {
       BytesRef term = termsEnum.term();
       while (lastOrdinalRequest != ordinal) {
         term = termsEnum.next();
@@ -185,8 +183,7 @@ public class FieldTermProvider extends TermProviderImpl {
 
   @Override
   public BytesRef getOrderedTerm(final long indirect) throws IOException {
-    return indirect == -1 ? null :
-        getTerm(getOrderedOrdinals().get((int)indirect));
+    return indirect == -1 ? null : getTerm(getOrderedOrdinals().get((int)indirect));
   }
 
   @Override
@@ -356,8 +353,7 @@ public class FieldTermProvider extends TermProviderImpl {
       indirectComparator = ComparatorFactory.wrapIndirect(keyCache, ordinals);
       cache = keyCache;
     } else {
-      CachedTermProvider termCache = new CachedTermProvider(
-          this, sortCacheSize, chunkSize-1);
+      CachedTermProvider termCache = new CachedTermProvider(this, sortCacheSize, chunkSize-1);
       // Configure the cache so that read ahead is lower as the access pattern
       // to the ordinals are not guaranteed linear
       termCache.setReadAhead(Math.max(100, sortCacheSize / chunkCount /
@@ -380,8 +376,7 @@ public class FieldTermProvider extends TermProviderImpl {
     for (int i = 0 ; i < sorted.length ; i++) {
       Integer next = pq.pop();
       if (next == -1) {
-        throw new IllegalStateException(
-            "Popping the heap should never return -1");
+        throw new IllegalStateException("Popping the heap should never return -1");
       }
       sorted[i] = ordinals[next];
       cache.release(sorted[i]); // Important for cache read ahead efficiency
@@ -398,8 +393,7 @@ public class FieldTermProvider extends TermProviderImpl {
     }
     System.arraycopy(sorted, 0, ordinals, 0, sorted.length);
     if (ExposedSettings.debug) {
-      System.out.println("Cache stats for chunkMerge for " + getDesignation()
-          + ": " + cache.getStats());
+      System.out.println("Cache stats for chunkMerge for " + getDesignation() + ": " + cache.getStats());
 /*    System.out.println(String.format(
         "Heap merged %d sorted chunks of size %d (cache: %d, total terms: %s)" +
             " in %s with %d cache misses (%d combined for both sort passes)",
@@ -414,33 +408,28 @@ public class FieldTermProvider extends TermProviderImpl {
         this, sortCacheSize, chunkSize-1);
     // Sort the chunks individually
     //long startTimeMerge = System.nanoTime();
-    ComparatorFactory.OrdinalComparator comparator =
-        ComparatorFactory.wrap(cache, request.getComparator());
+    ComparatorFactory.OrdinalComparator comparator = ComparatorFactory.wrap(cache, request.getComparator());
     for (int i = 0 ; i < ordinals.length ; i += chunkSize) {
       long chunkTime = System.currentTimeMillis();
       cache.getTerm(i); // Tim-sort starts at 1 so we init the read-ahead at 0
-      ExposedTimSort.sort(
-          ordinals, i, Math.min(i + chunkSize, ordinals.length), comparator);
+      ExposedTimSort.sort(ordinals, i, Math.min(i + chunkSize, ordinals.length), comparator);
       chunkTime = System.currentTimeMillis() - chunkTime;
       int percent = (Math.min(i + chunkSize, ordinals.length)-1) *100
           / ordinals.length;
       if (ExposedSettings.debug) {
-        System.out.println("Chunk sorted " + percent + "% " + i + "-"
-            + (Math.min(i + chunkSize, ordinals.length)-1) + ": "
-            + ExposedUtil.time("ordinals", Math.min(i + chunkSize,
-            ordinals.length) - i, chunkTime) + ": "+ cache.getStats());
+        System.out.println(
+            "Chunk sorted " + percent + "% " + i + "-" + (Math.min(i + chunkSize, ordinals.length)-1) + ": "
+            + ExposedUtil.time("ordinals", Math.min(
+                i + chunkSize, ordinals.length) - i, chunkTime) + ": "+ cache.getStats());
       }
       cache.clear();
     }
   }
 
   // Ordinals _must_ be monotonously increasing
-  private void optimizedChunkSort(
-      int[] ordinals, int chunkSize) throws IOException {
-    Collator collator =
-      ((NamedCollatorComparator)request.getComparator()).getCollator();
-    CachedTermProvider cache = new CachedTermProvider(
-        this, sortCacheSize, chunkSize-1);
+  private void optimizedChunkSort(int[] ordinals, int chunkSize) throws IOException {
+    Collator collator = ((NamedCollatorComparator)request.getComparator()).getCollator();
+    CachedTermProvider cache = new CachedTermProvider(this, sortCacheSize, chunkSize-1);
     CollatorPair[] keys = new CollatorPair[chunkSize];
     for (int start = 0 ; start < ordinals.length ; start += chunkSize) {
       long chunkTime = System.currentTimeMillis();
@@ -449,13 +438,11 @@ public class FieldTermProvider extends TermProviderImpl {
       // Fill
       for (int index = start ; index < end ; index++) {
         RawCollationKey key = new RawCollationKey();
-        keys[index - start] = new CollatorPair(
-            ordinals[index], collator.getRawCollationKey(
-                cache.getTerm(ordinals[index]).utf8ToString(), key));
+        keys[index - start] = new CollatorPair(ordinals[index], collator.getRawCollationKey(
+            cache.getTerm(ordinals[index]).utf8ToString(), key));
       }
       // Sort
-      ExposedTimSort.sort(
-          ordinals, start, end, new TimComparator(start, keys));
+      ExposedTimSort.sort(ordinals, start, end, new TimComparator(start, keys));
 /*      // Store
       for (int index = start ; index < end ; index++) {
         ordinals[index] = (int) keys[index - start].ordinal;
@@ -464,16 +451,13 @@ public class FieldTermProvider extends TermProviderImpl {
       chunkTime = System.currentTimeMillis() - chunkTime;
       int percent = (int) ((long)end * 100 / ordinals.length);
       if (ExposedSettings.debug) {
-        System.out.println("Chunk sorted " + percent + "% "
-            + start + "-" + (end-1) + ": "
-            + ExposedUtil.time("ordinals", end - start, chunkTime)
-            + ": "+ cache.getStats());
+        System.out.println("Chunk sorted " + percent + "% " + start + "-" + (end-1) + ": "
+            + ExposedUtil.time("ordinals", end - start, chunkTime) + ": "+ cache.getStats());
       }
       cache.clear();
     }
   }
-  private static final class TimComparator
-                               implements ComparatorFactory.OrdinalComparator {
+  private static final class TimComparator implements ComparatorFactory.OrdinalComparator {
     private int start; // Inclusive
     private CollatorPair[] keys;
 
@@ -487,7 +471,6 @@ public class FieldTermProvider extends TermProviderImpl {
       return keys[value1 - start].compareTo(keys[value2 - start]);
     }
   }
-
 
   private static final class CollatorPair implements Comparable<CollatorPair>{
     private long ordinal;
@@ -520,11 +503,9 @@ public class FieldTermProvider extends TermProviderImpl {
 
   public String toString() {
     if (order == null) {
-      return "FieldTermProvider(" + request.getField() + ", no order cached, "
-          + super.toString() + ")";
+      return "FieldTermProvider(" + request.getField() + ", no order cached, " + super.toString() + ")";
     }
-    return "FieldTermProvider(" + request.getField() 
-        + ", order.length=" + order.size()
+    return "FieldTermProvider(" + request.getField() + ", order.length=" + order.size()
         + " mem=" + packedSize(order) + ", " + super.toString() + ")";
   }
 

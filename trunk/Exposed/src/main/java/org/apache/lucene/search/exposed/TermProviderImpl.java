@@ -47,21 +47,18 @@ public abstract class TermProviderImpl implements TermProvider {
   }
 
   @Override
-  public synchronized PackedInts.Reader getDocToSingleIndirect()
-                                                            throws IOException {
+  public synchronized PackedInts.Reader getDocToSingleIndirect() throws IOException {
     if (docToSingle != null) {
       return docToSingle;
     }
     if (getMaxDoc() > Integer.MAX_VALUE) {
       throw new UnsupportedOperationException(
-          "Unable to handle more than Integer.MAX_VALUE documents. " +
-              "Got macDocs " + getMaxDoc());
+          "Unable to handle more than Integer.MAX_VALUE documents. Got macDocs " + getMaxDoc());
     }
     // TODO: getMaxDoc() is seriously wonky for GroupTermProvider. What breaks?
     long sortTime;
     // TODO: Check why it is extremely slow to start with low maxValue
-    PackedInts.Mutable docToSingle = new GrowingMutable(
-        0, (int)getMaxDoc(), -1, getOrdinalTermCount(),
+    PackedInts.Mutable docToSingle = new GrowingMutable(0, (int)getMaxDoc(), -1, getOrdinalTermCount(),
         ExposedSettings.priority == ExposedSettings.PRIORITY.speed);
     try {
       Iterator<ExposedTuple> ei = getIterator(true);
@@ -135,8 +132,7 @@ public abstract class TermProviderImpl implements TermProvider {
     return getNearestTermIndirect(key, 0, (int)getUniqueTermCount());
   }
   @Override
-  public int getNearestTermIndirect(
-      BytesRef key, int startTermPos, int endTermPos) throws IOException {
+  public int getNearestTermIndirect(BytesRef key, int startTermPos, int endTermPos) throws IOException {
     key = concat ? ExposedUtil.concat(collatorID, key, null) : key;
     if (getComparator() != null) {
       return getNearestWithComparator(key, startTermPos, endTermPos);
@@ -158,8 +154,7 @@ public abstract class TermProviderImpl implements TermProvider {
     return low;
   }
 
-  private int getNearestWithComparator(
-      final BytesRef key, int startTermPos, int endTermPos) throws IOException {
+  private int getNearestWithComparator(final BytesRef key, int startTermPos, int endTermPos) throws IOException {
     final Comparator<BytesRef> comparator = getComparator();
     int low = startTermPos;
     int high = endTermPos-1;
@@ -192,8 +187,7 @@ public abstract class TermProviderImpl implements TermProvider {
   @Override
   public String toString() {
     if (docToSingle == null) {
-      return "TermProviderImpl(" + getDesignation()
-          + ", no docToSingle cached)";
+      return "TermProviderImpl(" + getDesignation() + ", no docToSingle cached)";
     }
     return "TermProviderImpl(" + getDesignation() + ", docToSingle.length=" 
         + docToSingle.size() + " mem=" + packedSize(docToSingle) + ")";

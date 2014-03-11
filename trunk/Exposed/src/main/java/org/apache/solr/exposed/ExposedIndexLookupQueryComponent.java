@@ -86,8 +86,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
   public void process(ResponseBuilder rb) throws IOException {
     if (poolFactory == null) {
       throw new IllegalStateException(
-        "CollectorPoolFactory not initialized. Init must be called before "
-        + "process");
+        "CollectorPoolFactory not initialized. Init must be called before process");
     }
 
     SolrQueryRequest req = rb.req;
@@ -120,8 +119,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
         }
         lookupResponse = tagCollector.extractResult(eReq);
       } catch (IOException e) {
-        throw new RuntimeException(
-          "Unable to extract response from TagCollector", e);
+        throw new RuntimeException("Unable to extract response from TagCollector", e);
       }
     } finally {      //***group(name=text_, order=index, locale=null, fields(text), hierarchical=false, delimiter=null)
       collectorPool.release(eReq.getBuildKey(), tagCollector);
@@ -162,8 +160,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
     }*/
     String[] fieldNames = params.getParams(ELOOKUP_FIELD);
     if (fieldNames == null) {
-      throw new IllegalArgumentException(
-        "At least one field must be specified with " + ELOOKUP_FIELD);
+      throw new IllegalArgumentException("At least one field must be specified with " + ELOOKUP_FIELD);
     }
 
     Locale locale = null;

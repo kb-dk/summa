@@ -18,8 +18,7 @@ public class CachedCollatorKeyProvider extends CachedProvider<RawCollationKey> {
    * @throws java.io.IOException if the cache could access the source.
    */
   public CachedCollatorKeyProvider(
-      TermProvider source, Collator collator,
-      int cacheSize, int readAhead) throws IOException {
+      TermProvider source, Collator collator, int cacheSize, int readAhead) throws IOException {
     super(cacheSize, readAhead, source.getOrdinalTermCount()-1);
     this.source = source;
     this.collator = collator;
@@ -28,13 +27,11 @@ public class CachedCollatorKeyProvider extends CachedProvider<RawCollationKey> {
   @Override
   protected RawCollationKey lookup(final long index) throws IOException {
     RawCollationKey key = new RawCollationKey();
-    return collator.getRawCollationKey(
-        source.getTerm(index).utf8ToString(), key);
+    return collator.getRawCollationKey(source.getTerm(index).utf8ToString(), key);
   }
 
   @Override
   protected String getDesignation() {
-    return "CachedCollatorKeyProvider(" + source.getClass().getSimpleName()
-        + "(" + source.getDesignation() + "))";
+    return "CachedCollatorKeyProvider(" + source.getClass().getSimpleName() + "(" + source.getDesignation() + "))";
   }
 }

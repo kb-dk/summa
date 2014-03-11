@@ -204,8 +204,7 @@ public class HierarchicalTermProvider implements TermProvider {
     reduceTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-        "getLevelsFast(): Init time: " + initTime + "ms. " +
-        "Splits " + splitTime / 1000000 + " ms on "
+        "getLevelsFast(): Init time: " + initTime + "ms. " + "Splits " + splitTime / 1000000 + " ms on "
         + ordered.size() + " splits (" + (ordered.size() * 1000000L / splitTime)
         + " splits/ms). levels grow: " + levels.getGrowTime() / 1000000
         + "ms. pLevels grow: " + pLevels.getGrowTime() / 1000000
@@ -219,8 +218,7 @@ public class HierarchicalTermProvider implements TermProvider {
     final GrowingMutable levels = new GrowingMutable(0, 1, 0, 1, true);
     final GrowingMutable pLevels = new GrowingMutable(0, 1, 0, 1, true);
     final long[] timings = new long[2]; // split, assign
-    PackedInts.Reader ordered =
-      source.getOrderedOrdinals(new OrderedDecorator() {
+    PackedInts.Reader ordered = source.getOrderedOrdinals(new OrderedDecorator() {
         List<BytesRef> previous = new ArrayList<BytesRef>(10);
         int previousParts = 0;
         final List<BytesRef> current = new ArrayList<BytesRef>(10);
@@ -253,12 +251,10 @@ public class HierarchicalTermProvider implements TermProvider {
     reduceTime += System.currentTimeMillis();
     if (ExposedSettings.debug) {
       System.out.println(
-        "getLevelsDecorating(): Total time: " + decorateTime / 1000000
-        + ", splits " + timings[0] / 1000000 + " ms on " + ordered.size() + " splits ("
-        + (ordered.size() * 1000000L / timings[0]) + " splits/ms)"
-        + ", assignments " + timings[1] / 1000000 + " ms on "
-        + ordered.size() + " level-assignments (" + (ordered.size() * 1000000L / timings[1])
-        + " splits/ms). Mutable size optimization: " + reduceTime + " ms");
+        "getLevelsDecorating(): Total time: " + decorateTime / 1000000 + ", splits " + timings[0] / 1000000 + " ms on "
+        + ordered.size() + " splits (" + (ordered.size() * 1000000L / timings[0]) + " splits/ms)"
+        + ", assignments " + timings[1] / 1000000 + " ms on " + ordered.size() + " level-assignments ("
+        + (ordered.size() * 1000000L / timings[1]) + " splits/ms). Mutable size optimization: " + reduceTime + " ms");
     }
     return reduced;
   }
@@ -334,8 +330,7 @@ public class HierarchicalTermProvider implements TermProvider {
   }
 
   @Override
-  public int getNearestTermIndirect(
-      BytesRef key, int startTermPos, int endTermPos) throws IOException {
+  public int getNearestTermIndirect(BytesRef key, int startTermPos, int endTermPos) throws IOException {
     return source.getNearestTermIndirect(key, startTermPos, endTermPos);
   }
 

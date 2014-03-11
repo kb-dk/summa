@@ -69,8 +69,7 @@ public class ExposedFacets {
 
   private CollectorPool collectorPool;
 
-  public void facet(FacetRequest request, IndexSearcher searcher, Query query)
-      throws IOException {
+  public void facet(FacetRequest request, IndexSearcher searcher, Query query) throws IOException {
     TagCollector collector = collectorPool.acquire(request.getQuery());
     try {
       searcher.search(query, collector);
@@ -78,7 +77,6 @@ public class ExposedFacets {
       collectorPool.release(request.getQuery(), collector);
     }
   }
-
 
   // TODO: Support match-all without search 
 }

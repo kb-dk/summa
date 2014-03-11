@@ -26,8 +26,7 @@ public abstract class CachedProvider<T> {
     this.finalIndex = finalIndex;
     cache = new LinkedHashMap<Long, T>(size, 1.2f, false) {
       @Override
-      protected boolean removeEldestEntry(
-              Map.Entry<Long, T> eldest) {
+      protected boolean removeEldestEntry(Map.Entry<Long, T> eldest) {
         return size() > cacheSizeNum;
       }
     };
@@ -58,13 +57,11 @@ public abstract class CachedProvider<T> {
 
   }
 
-  private void readAhead(final long startIndex, final int readAhead)
-                                                            throws IOException {
+  private void readAhead(final long startIndex, final int readAhead) throws IOException {
     long index = startIndex;
     int readsLeft = readAhead;
     while (true) {
-      if (readsLeft == 0 || index > finalIndex||
-          (onlyReadAheadIfSpace && cache.size() >= cacheSizeNum)) {
+      if (readsLeft == 0 || index > finalIndex|| (onlyReadAheadIfSpace && cache.size() >= cacheSizeNum)) {
         break;
       }
       readAheadRequests++;
@@ -152,10 +149,8 @@ public abstract class CachedProvider<T> {
   }
 
   public String getStats() {
-    return getDesignation() + " cacheSize=" + cacheSizeNum
-        + ", misses=" + misses + "/" + requests
+    return getDesignation() + " cacheSize=" + cacheSizeNum + ", misses=" + misses + "/" + requests
         + ", lookups=" + lookups + " (" + lookupTime / 1000000 + " ms ~= "
-        + (lookupTime == 0 ? "N/A" : lookups * 1000000 / lookupTime)
-        + " lookups/ms), readAheads=" + readAheadRequests;
+        + (lookupTime == 0 ? "N/A" : lookups * 1000000 / lookupTime) + " lookups/ms), readAheads=" + readAheadRequests;
   }
 }

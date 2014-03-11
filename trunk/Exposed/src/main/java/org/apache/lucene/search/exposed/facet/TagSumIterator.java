@@ -99,8 +99,7 @@ L P T      C
 //      System.out.println(dumpTag(tagStartPos));
       tagEndPos = rangeEndPos;
 
-      while (tagStartPos == -1 &&
-          provider.getLevel(tagPos) < level && tagPos < rangeEndPos) {
+      while (tagStartPos == -1 && provider.getLevel(tagPos) < level && tagPos < rangeEndPos) {
         tagPos++;
       }
 
@@ -122,16 +121,14 @@ L P T      C
           provider.getPreviousMatchingLevel(tagPos) >= level) {
 //        System.out.println("Subsumming for " + tagPos);
         TagSumIterator subIterator = pool.acquire();
-        subIterator.reset(
-            constraints.getDeeperLevel(), tagPos, rangeEndPos, level+1);
+        subIterator.reset(constraints.getDeeperLevel(), tagPos, rangeEndPos, level+1);
         int subTotalCount = subIterator.countValid();
         tagPos = subIterator.tagEndPos; // Skip processed
         totalCount += subTotalCount;
       }
 
       // If totalcount is okay, stop iterating, else start over
-      if (tagCounts[tagStartPos] < minCount ||
-          totalCount < constraints.getMinTotalCount()) {
+      if (tagCounts[tagStartPos] < minCount || totalCount < constraints.getMinTotalCount()) {
         continue;
       }
       tagEndPos = tagPos;
@@ -148,8 +145,7 @@ L P T      C
           + ", tag='" + provider.getOrderedTerm(tagStartPos).utf8ToString() 
           + "'";
     } catch (IOException e) {
-      throw new IllegalArgumentException(
-          "Could not locate the tag for indirect " + tagStartPos, e);
+      throw new IllegalArgumentException("Could not locate the tag for indirect " + tagStartPos, e);
     }
   }
 
