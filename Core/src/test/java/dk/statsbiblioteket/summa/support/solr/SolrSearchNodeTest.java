@@ -339,8 +339,8 @@ public class SolrSearchNodeTest extends TestCase {
         SearchNode searcher = getSearcher();
         try {
             assertResult(searcher, new Request(
-                    DocumentKeys.SEARCH_QUERY, "first",
-                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                DocumentKeys.SEARCH_QUERY, "first",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
             ), 1, "Solr sample document");
         } finally {
             searcher.close();
@@ -409,6 +409,25 @@ public class SolrSearchNodeTest extends TestCase {
             searcher.close();
         }
     }
+
+  public void testFacetedFieldsOverrideSearch() throws Exception {
+    performBasicIngest();
+    SearchNode searcher = getSearcher();
+    ResponseCollection responses = new ResponseCollection();
+      searcher.search(new Request(
+              DocumentKeys.SEARCH_QUERY, "first",
+              //SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
+              DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+              FacetKeys.SEARCH_FACET_FACETS, "fulltext"
+      ), responses);
+
+      assertTrue("There should be a response", responses.iterator().hasNext());
+      assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                   1, ((DocumentResponse) responses.iterator().next()).getHitCount());
+      assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
+                 responses.toXML().contains("<tag name=\"solr\" addedobjects=\"1\" reliability=\"PRECISE\">"));
+//        System.out.println(responses.toXML());
+  }
 
     public void testFacetedSearchSummaDefinedSort() throws Exception {
         int DOC_COUNT= 100;
