@@ -33,8 +33,7 @@ public class TermDocIterator implements Iterator<ExposedTuple> {
   private boolean pending = false; // true == Terms or docIDs are ready in tuple
   private final ExposedTuple tuple;
 
-  public TermDocIterator(
-      TermProvider source, boolean collectDocIDs) throws IOException {
+  public TermDocIterator(TermProvider source, boolean collectDocIDs) throws IOException {
     this.source = source;
     this.collectDocIDs = collectDocIDs;
     order = source.getOrderedOrdinals();

@@ -163,16 +163,12 @@ public class ExposedHelper {
     writer.close(true);
   }
 
-  public void createIndex(
-      int docCount, List<String> fields,  int fieldFactor,
-      int fieldContentLength, int minFacets, int maxFacets, int minSegments)
-      throws IOException {
+  public void createIndex(int docCount, List<String> fields,  int fieldFactor,
+                          int fieldContentLength, int minFacets, int maxFacets, int minSegments) throws IOException {
     createIndex(INDEX_LOCATION, docCount, fields, fieldFactor, fieldContentLength, minFacets, maxFacets, minSegments);
   }
-  public void createIndex(File location,
-        int docCount, List<String> fields,  int fieldFactor,
-        int fieldContentLength, int minFacets, int maxFacets, int minSegments)
-        throws IOException {
+  public void createIndex(File location, int docCount, List<String> fields,  int fieldFactor,
+                          int fieldContentLength, int minFacets, int maxFacets, int minSegments) throws IOException {
     long startTime = System.nanoTime();
     Random random = new Random(87);
     int every = Math.max(1, docCount / 100);
@@ -200,8 +196,8 @@ public class ExposedHelper {
         doc.add(new StringField(MULTI, Character.toString((char)(random.nextInt(25) + 'A')), Field.Store.NO));
       }
       if (docID % 2 == 1) {
-        doc.add(new StringField(EVEN_NULL, getRandomString(random, CHARS, 1, fieldContentLength) + docID,
-                                Field.Store.YES));
+        doc.add(new StringField(
+            EVEN_NULL, getRandomString(random, CHARS, 1, fieldContentLength) + docID, Field.Store.YES));
       }
       doc.add(new StringField(ALL, ALL, Field.Store.YES));
       writer.addDocument(doc);

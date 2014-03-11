@@ -56,8 +56,7 @@ public class ExposedTuple {
     instances++;
   }
 
-  public ExposedTuple(String field, BytesRef term,
-                      long ordinal, long indirect) {
+  public ExposedTuple(String field, BytesRef term, long ordinal, long indirect) {
     this.field = field;
     this.term = term;
     this.ordinal = ordinal;
@@ -68,12 +67,12 @@ public class ExposedTuple {
   }
 
   public ExposedTuple(ExposedTuple other) {
-    this.field = other.field;
-    this.term = other.term;
-    this.ordinal = other.ordinal;
-    this.indirect = other.indirect;
-    this.docIDs = other.docIDs;
-    this.docIDBase = other.docIDBase;
+    field = other.field;
+    term = other.term;
+    ordinal = other.ordinal;
+    indirect = other.indirect;
+    docIDs = other.docIDs;
+    docIDBase = other.docIDBase;
     instances++;
   }
 

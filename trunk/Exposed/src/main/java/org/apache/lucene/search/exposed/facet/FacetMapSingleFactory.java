@@ -19,8 +19,7 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
   private static final ELog log = ELog.getLog(FacetMapSingleFactory.class);
 
   public static FacetMapSingle createMap(int docCount, TermProvider provider, boolean forceSingle) throws IOException {
-    log.info("Creating 1 pass 1 field 1 value/doc map with " + docCount + " documents and forceSingle="
-             + forceSingle + ")");
+    log.info("Creating 1 pass 1 field 1 value/doc map with " + docCount + " documents and forceSingle=" + forceSingle);
     boolean hasWarnedOnMulti = false;
 
     PackedInts.Mutable refs = PackedInts.getMutable(
@@ -66,7 +65,7 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
                               provider.getClass()));
     }
     fillTime += System.currentTimeMillis();
-    log.info("Tag fill (" + docCount + " documents): " + fillTime/1000d + "s");
+    log.info("Finished construction with tag fill (" + docCount + " documents) in " + fillTime/1000.0 + " seconds");
     return new FacetMapSingle(provider, refs, (int) (provider.getOrdinalTermCount()+1));
   }
 }

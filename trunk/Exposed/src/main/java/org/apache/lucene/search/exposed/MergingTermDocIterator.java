@@ -70,10 +70,8 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
    */
   public static boolean optimizeCollator = true;
 
-  public MergingTermDocIterator(
-      GroupTermProvider groupProvider, List<TermProvider> sources,
-      Comparator<BytesRef>  comparator, boolean collectDocIDs)
-      throws IOException {
+  public MergingTermDocIterator(GroupTermProvider groupProvider, List<TermProvider> sources,
+                                Comparator<BytesRef>  comparator, boolean collectDocIDs) throws IOException {
     this.groupProvider = groupProvider;
     this.collectDocIDs = collectDocIDs;
 
@@ -121,8 +119,7 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
       try {
         seekToNextTuple();
       } catch (IOException e) {
-        throw new RuntimeException(
-            "IOException while seeking to next docID", e);
+        throw new RuntimeException("IOException while seeking to next docID", e);
       }
     }
   }
@@ -185,11 +182,9 @@ class MergingTermDocIterator implements Iterator<ExposedTuple> {
         if (!collectDocIDs) {
           continue; // Skip duplicates when no docID
         }
-        tuple.set(newTuple.field, tuple.term, tuple.ordinal, tuple.indirect,
-            newTuple.docIDs, newTuple.docIDBase);
+        tuple.set(newTuple.field, tuple.term, tuple.ordinal, tuple.indirect, newTuple.docIDs, newTuple.docIDBase);
       } else {
-        tuple.set(newTuple.field, newTuple.term, newTuple.ordinal, indirect++,
-            newTuple.docIDs, newTuple.docIDBase);
+        tuple.set(newTuple.field, newTuple.term, newTuple.ordinal, indirect++, newTuple.docIDs, newTuple.docIDBase);
       }
       pending = true;
     }

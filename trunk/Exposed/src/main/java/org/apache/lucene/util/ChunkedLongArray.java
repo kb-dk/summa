@@ -116,8 +116,7 @@ public class ChunkedLongArray {
       int destChunk = destPos >>> chunkBits;
       int destOffset = destPos & offsetMask;
       if (chunkLength - destOffset >= length) {
-        System.arraycopy(
-            src, srcPos, chunks.get(destChunk), destOffset, length);
+        System.arraycopy(src, srcPos, chunks.get(destChunk), destOffset, length);
         return;
       }
       int subLength = chunkLength - destOffset;

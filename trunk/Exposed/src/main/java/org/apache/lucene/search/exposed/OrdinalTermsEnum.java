@@ -21,6 +21,7 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ELog;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,6 +44,8 @@ import java.util.List;
 // TODO: Use ByteBlockPool or similar to hold BytesRefs (see BytesRefHash)
 // TODO: Merge with Solr's NumberedTermsEnum
 public class OrdinalTermsEnum extends TermsEnum {
+  private static final ELog log = ELog.getLog(OrdinalTermsEnum.class);
+
   public final TermsEnum inner;
   public final int divider;
   public final List<TermState> marks;
@@ -59,15 +62,13 @@ public class OrdinalTermsEnum extends TermsEnum {
    * returned directly.
    * @param reader  the reader to request the TermsEnum from.
    * @param field   the field to request the TermsEnum for.
-   * @param divider keep a TermState for every X terms if an OrdinalTermsEnum
-   *                is created.
+   * @param divider keep a TermState for every X terms if an OrdinalTermsEnum is created.
    * @return a plain TermsEnum if ordinal access is provided for the given field
    *         by the given reader, else an OrdinalTermsEnum. If no TermsEnum can
    *         be requested at all, null is returned.
    * @throws java.io.IOException if the index could not be accessed.
    */
-  public static TermsEnum createEnum(
-      AtomicReader reader, String field, int divider) throws IOException {
+  public static TermsEnum createEnum(AtomicReader reader, String field, int divider) throws IOException {
     Terms terms = reader.fields().terms(field);
     if (terms == null) {
       return null;
@@ -80,20 +81,21 @@ public class OrdinalTermsEnum extends TermsEnum {
       inner.ord();
     } catch (UnsupportedOperationException e) {
       // No ordinal seeking, so we make our own
-      return new OrdinalTermsEnum(inner, divider);
+      log.info("The field " + field + " does not support ordinals. Wrapping in caching OrdinalTermsEnum. " +
+               "Consider using an ordinals-aware codec for the field instead");
+      return new OrdinalTermsEnum(inner, field, divider);
     }
     return inner;
   }
 
   /**
-   * @param inner   the TermsEnum to use for all calls except ord() and
-   *                seek(long). The TermsEnum must be positioned at the first
-   *                term, which basically means that next() must have been
-   *                called once.
+   * @param inner   the TermsEnum to use for all calls except ord() and seek(long). The TermsEnum must be positioned at
+   *                the first term, which basically means that next() must have been called once.
    * @param divider keep a TermState for every X terms.
    * @throws java.io.IOException if it was not possible to extract TermStates.
    */
-  public OrdinalTermsEnum(TermsEnum inner, int divider) throws IOException {
+  public OrdinalTermsEnum(TermsEnum inner, String field, int divider) throws IOException {
+    long startTime = System.currentTimeMillis();
     this.inner = inner;
     this.divider = divider;
     marks = new ArrayList<TermState>();
@@ -112,6 +114,8 @@ public class OrdinalTermsEnum extends TermsEnum {
     }
     inner.seekExact(terms.get(0), marks.get(0));
     termCount = count;
+    log.info("Created OrdinalTermEnum for " + field + " with " + count + " terms and " + marks.size()
+             + " marks in " + (System.currentTimeMillis()-startTime)/1000.0 + " seconds");
   }
   private BytesRef copy(BytesRef bytesRef) {
       byte[] bytes = new byte[bytesRef.length];
@@ -147,8 +151,7 @@ public class OrdinalTermsEnum extends TermsEnum {
 
     while (ordinal < ord) {
       if (inner.next() == null) {
-        throw new IOException(
-            "Ordinal " + ord + " exceeded the term iterators capacity");
+        throw new IOException("Ordinal " + ord + " exceeded the term iterators capacity");
       }
       ordinal++;
     }

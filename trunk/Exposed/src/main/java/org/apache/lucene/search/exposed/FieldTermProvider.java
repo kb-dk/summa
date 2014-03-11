@@ -90,7 +90,7 @@ public class FieldTermProvider extends TermProviderImpl {
     terms = ((AtomicReader)reader).fields().terms(request.getField());
     // TODO: Make an OrdTermsEnum to handle Variable Gap and other non-ord-codec
 //    termsEnum = terms == null ? null : terms.iterator(); // It's okay to be empty
-    termsEnum = OrdinalTermsEnum.createEnum((AtomicReader)reader, request.getField(), 128);
+    termsEnum = OrdinalTermsEnum.createEnum((AtomicReader)reader, request.getField(), ExposedSettings.enumDivider);
     sortCacheSize = getSortCacheSize(reader);
   }
 

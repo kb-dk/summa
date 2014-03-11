@@ -90,11 +90,9 @@ public class ExposedFacetQueryComponent extends QueryComponent {
 
     CollectorPool collectorPool;
     try {
-        collectorPool = poolFactory.acquire(
-            req.getSearcher().getIndexReader(), eReq);
+        collectorPool = poolFactory.acquire(req.getSearcher().getIndexReader(), eReq);
     } catch (IOException e) {
-        throw new RuntimeException(
-            "Unable to acquire a CollectorPool for " + eReq, e);
+        throw new RuntimeException("Unable to acquire a CollectorPool for " + eReq, e);
     }
     TagCollector tagCollector = collectorPool.acquire(eReq.getBuildKey());
 
@@ -116,8 +114,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
         }
         facetResponse = tagCollector.extractResult(eReq);
     } catch (IOException e) {
-        throw new RuntimeException(
-            "Unable to extract response from TagCollector", e);
+        throw new RuntimeException("Unable to extract response from TagCollector", e);
     }
     collectorPool.release(eReq.getBuildKey(), tagCollector);
     exposedToSolr(facetResponse, rsp);
@@ -143,8 +140,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     rsp.add(EFACET + "_counts", res);
   }
 
-  private void exposedHierarchicalGroupToSolr(
-      FacetResponse.Group group, NamedList<Object> fields) {
+  private void exposedHierarchicalGroupToSolr(FacetResponse.Group group, NamedList<Object> fields) {
     NamedList<Object> content = new SimpleOrderedMap<Object>();
     content.add("field", group.getFieldsStr());
     FacetResponse.TagCollection tags = group.getTags();
@@ -152,8 +148,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     fields.add(group.getFieldsStr(), content);
   }
 
-  private NamedList<Object> expandHierarchical(
-      FacetResponse.TagCollection tags, String delimiter, int level) {
+  private NamedList<Object> expandHierarchical(FacetResponse.TagCollection tags, String delimiter, int level) {
     NamedList<Object> content = new SimpleOrderedMap<Object>();
     content.add("recursivecount", tags.getTotalCount());
     content.add("potentialtags", tags.getPotentialTags());
@@ -166,8 +161,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
       cTag.add("count", tag.getCount());
 //      cTag.add("path", tag.getTerm()); // TODO: Calculate full path
       if (tag.getSubTags() != null) {
-        cTag.add("sub",
-            expandHierarchical(tag.getSubTags(), delimiter, level));
+        cTag.add("sub", expandHierarchical(tag.getSubTags(), delimiter, level));
       }
       String[] tokens = tag.getTerm().split(delimiter);
       cTags.add(tokens[tokens.length-1], cTag);
@@ -181,7 +175,6 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     if (query == null) {
       throw new IllegalArgumentException("The parameter 'q' must be specified");
     }
-
 
     String[] fieldNames = params.getParams(EFACET_FIELD);
     if (fieldNames == null) {

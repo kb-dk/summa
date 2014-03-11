@@ -3,6 +3,12 @@ package org.apache.lucene.search.exposed;
 import org.apache.lucene.util.packed.PackedInts;
 
 public class ExposedSettings {
+  /**
+   * If the field does not support ordinals, a caching structure is created. A BytesRef and a TermState will be
+   * created for every enumDivider enum.
+   */
+  public static int enumDivider = 128;
+
   public static enum PRIORITY {memory, speed;
     public static PRIORITY fromString(String p) {
       if (memory.toString().equals(p)) {

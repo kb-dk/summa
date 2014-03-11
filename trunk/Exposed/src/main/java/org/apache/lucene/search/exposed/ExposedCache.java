@@ -60,7 +60,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
         return provider;
       }
     }
-    log.debug("Creating provider for " + groupName);
+    log.debug("Creating provider for group " + groupName);
 
      // No cached value. Modify the comparator IDs to LUCENE-order if they were
     // stated as free. Aw we create the query ourselves, this is okay.
@@ -97,13 +97,12 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
     groupProviderconstruction += System.currentTimeMillis();
     cache.add(groupProvider);
 
-//    System.out.println("Field: " + fieldProviderConstruction
-//        + "ms, group: " + groupProviderconstruction + "ms");
+    log.debug("Created provider for " + groupName + " with field time " + fieldProviderConstruction + "ms, group time "
+              + groupProviderconstruction + "ms");
     return groupProvider;
   }
 
-  private String getConcatCollatorID(
-      String groupName, List<String> fieldNames) {
+  private String getConcatCollatorID(String groupName, List<String> fieldNames) {
     String concat = concatFields.get(fieldNames.get(0));
     for (String field: fieldNames) {
       String currentConcat = concatFields.get(field);

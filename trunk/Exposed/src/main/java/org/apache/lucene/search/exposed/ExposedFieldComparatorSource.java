@@ -116,7 +116,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
       this.groupName = groupName;
       this.fieldNames = fieldNames;
       // TODO: Logging would be real nice here
-      this.provider = ExposedCache.getInstance().getProvider(reader, groupName, fieldNames, comparator);
+      provider = ExposedCache.getInstance().getProvider(reader, groupName, fieldNames, comparator);
 
       this.numHits = numHits;
       this.sortPos = sortPos;
@@ -189,7 +189,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
     @Override
     public FieldComparator setNextReader(
       AtomicReaderContext context) throws IOException {
-      this.docBase = context.docBase;
+      docBase = context.docBase;
       maxDoc = context.reader().maxDoc();
       return this;
     }

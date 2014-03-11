@@ -186,8 +186,8 @@ public class ExposedPriorityQueue {
       size--;
       downHeap();				  // adjust heap
       return result;
-    } else
-      return -1;
+    }
+    return -1;
   }
 
   /**

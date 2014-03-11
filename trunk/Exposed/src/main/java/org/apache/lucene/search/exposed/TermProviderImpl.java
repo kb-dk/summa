@@ -37,9 +37,8 @@ public abstract class TermProviderImpl implements TermProvider {
    * @param cacheTables if true, tables such as orderedOrdinals, docID2indirect
    * and similar should be cached for re-requests after generation.
    */
-  protected TermProviderImpl(
-      IndexReader reader, int docIDBase, NamedComparator comparator,
-      String designation, boolean cacheTables, String concatCollatorID) {
+  protected TermProviderImpl(IndexReader reader, int docIDBase, NamedComparator comparator,
+                             String designation, boolean cacheTables, String concatCollatorID) {
     this.reader = reader;
     this.docIDBase = docIDBase;
     this.comparator = comparator;
@@ -95,9 +94,8 @@ public abstract class TermProviderImpl implements TermProvider {
     }
     sortTime = System.currentTimeMillis() - sortTime;
 
-    log.info(this.getClass().getSimpleName() + " merge-mapped "
-             + (getMaxDoc()-1) + " docs to single terms in " + sortTime + " ms: " +
-             (sortTime == 0 ? "N/A" : docToSingle.size() / sortTime) + " docs/ms");
+    log.info(getClass().getSimpleName() + " merge-mapped " + (getMaxDoc()-1) + " docs to single terms in " + sortTime
+             + " ms: " + (sortTime == 0 ? "N/A" : docToSingle.size() / sortTime) + " docs/ms");
     if (cacheTables) {
       this.docToSingle = docToSingle;
     }

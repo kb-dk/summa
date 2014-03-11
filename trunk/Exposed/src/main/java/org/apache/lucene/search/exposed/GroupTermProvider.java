@@ -102,13 +102,12 @@ public class GroupTermProvider extends TermProviderImpl {
    * @return the calculated starts. doc, term.
    */
   private long[][] calculateStarts() throws IOException {
-        long sanityCheck = 0;
+    long sanityCheck = 0;
     long[] termOrdinalStarts = new long[providers.size() + 1];
     long[] docIDStarts = new long[providers.size() + 1];
 
     for (int i = 1 ; i <= providers.size() ; i++) {
-      termOrdinalStarts[i] =
-          termOrdinalStarts[i-1] + providers.get(i-1).getOrdinalTermCount();
+      termOrdinalStarts[i] = termOrdinalStarts[i-1] + providers.get(i-1).getOrdinalTermCount();
       sanityCheck += providers.get(i-1).getOrdinalTermCount();
     }
     if (sanityCheck > Integer.MAX_VALUE-1) {
@@ -148,8 +147,7 @@ public class GroupTermProvider extends TermProviderImpl {
   @Override
   public String getField(long ordinal) throws IOException {
     int providerIndex = getProviderIndex(ordinal);
-    return providers.get(providerIndex).
-        getField(adjustOrdinal(ordinal, providerIndex));
+    return providers.get(providerIndex).getField(adjustOrdinal(ordinal, providerIndex));
   }
 
   private int getProviderIndex(long ordinal) throws IOException {
@@ -158,27 +156,24 @@ public class GroupTermProvider extends TermProviderImpl {
         return i-1;
       }
     }
-    throw new IllegalArgumentException("The term ordinal " + ordinal
-        + " is above the maximum " + (getOrdinalTermCount() - 1));
+    throw new IllegalArgumentException(
+        "The term ordinal " + ordinal + " is above the maximum " + (getOrdinalTermCount() - 1));
   }
 
   private long adjustOrdinal(long ordinal, int providerIndex) {
-    return providerIndex == 0 ? ordinal :
-        ordinal - termOrdinalStarts[providerIndex];
+    return providerIndex == 0 ? ordinal : ordinal - termOrdinalStarts[providerIndex];
   }
 
   @Override
   public synchronized BytesRef getTerm(long ordinal) throws IOException {
     int providerIndex = getProviderIndex(ordinal);
-    return providers.get(providerIndex).
-        getTerm(adjustOrdinal(ordinal, providerIndex));
+    return providers.get(providerIndex).getTerm(adjustOrdinal(ordinal, providerIndex));
   }
 
   @Override
   public DocsEnum getDocsEnum(long ordinal, DocsEnum reuse) throws IOException {
     int providerIndex = getProviderIndex(ordinal);
-    return providers.get(providerIndex).
-        getDocsEnum(adjustOrdinal(ordinal, providerIndex), reuse);
+    return providers.get(providerIndex).getDocsEnum(adjustOrdinal(ordinal, providerIndex), reuse);
   }
 
   @Override
@@ -188,8 +183,7 @@ public class GroupTermProvider extends TermProviderImpl {
 
   @Override
   public BytesRef getOrderedTerm(final long indirect) throws IOException {
-    return indirect == -1 ? null :
-        getTerm(getOrderedOrdinals().get((int)indirect));
+    return indirect == -1 ? null : getTerm(getOrderedOrdinals().get((int)indirect));
   }
 
   /**
@@ -316,25 +310,21 @@ public class GroupTermProvider extends TermProviderImpl {
 
 
   @Override
-  public Iterator<ExposedTuple> getIterator(boolean collectDocIDs)
-                                                            throws IOException {
-    return new MergingTermDocIterator(
-        this, providers, request.getComparator(), collectDocIDs);
+  public Iterator<ExposedTuple> getIterator(boolean collectDocIDs) throws IOException {
+    return new MergingTermDocIterator(this, providers, request.getComparator(), collectDocIDs);
   }
 
   public long segmentToIndexDocID(int providerIndex, long segmentDocID) {
     return docIDStarts[providerIndex] + segmentDocID;
   }
 
-  public long segmentToIndexTermOrdinal(
-      int providerIndex, long segmentTermOrdinal) {
+  public long segmentToIndexTermOrdinal(int providerIndex, long segmentTermOrdinal) {
     return termOrdinalStarts[providerIndex] + segmentTermOrdinal;
   }
 
   @Override
   public int getDocIDBase() {
-    throw new UnsupportedOperationException(
-        "No docIDBase can be inferred from GroupTermProvider");
+    throw new UnsupportedOperationException("No docIDBase can be inferred from GroupTermProvider");
   }
 
   public String toString() {
