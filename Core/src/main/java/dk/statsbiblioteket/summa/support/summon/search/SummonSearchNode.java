@@ -86,8 +86,9 @@ public class SummonSearchNode extends SolrSearchNode {
 
     /**
      * The maximum number of documents to request in one call when performing lookups on IDs.
+     * http://api.summon.serialssolutions.com/help/api/search/parameters/fetch-ids
      */
-    public static final int SUMMON_MAX_IDS = 20; // Experimentally verified at 20140305
+    public static final int SUMMON_MAX_IDS = 50; // Theoretically 100, but max page size is 50
 
     /**
      * When performing a paged ID-search, wait this number of milliseconds between request.
@@ -464,6 +465,7 @@ public class SummonSearchNode extends SolrSearchNode {
             log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
                       + summonIDs.size() + " document IDs");
             request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(summonIDs));
+            request.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
         }
         return true;
     }
@@ -486,6 +488,7 @@ public class SummonSearchNode extends SolrSearchNode {
             Request subReques = new Request();
             subReques.putAll(request);
             subReques.put(DocumentKeys.SEARCH_IDS, sub);
+            subReques.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
             barrierSearch(subReques, responses);
             rawResponses.add(subResponses);
             if (sub != notProcessed) { // More to come
