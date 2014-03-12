@@ -111,6 +111,7 @@ public class SearchTool {
                            + "summa.support.didyoumean.query=dolfinns summa.support.didyoumean.maxresults=5");
         System.err.println("Special:");
         System.err.println("\tsearch-tool.sh ping");
+        System.err.println("\tsearch-tool.sh solrparam.spellcheck=true solrparam.spellcheck.build=true");
         System.err.println("Shortcuts:");
         for (String[] s: SHORTCUTS) {
             System.err.println("\t" + s[1] + ": " + s[0]);
