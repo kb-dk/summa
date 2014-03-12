@@ -103,6 +103,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("There should be the right number of returned documents from explicit ID lookup. " +
                      "Returned IDs were\n" + Strings.join(idsFromLookup),
                      25, idsFromLookup.size());
+      log.info("Query: 'foo', IDs: [" + Strings.join(idsFromLookup).replace("summon_", "") + "]");
     }
 
     public void testDocIDRequest() throws RemoteException {
