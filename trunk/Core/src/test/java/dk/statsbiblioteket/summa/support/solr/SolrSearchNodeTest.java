@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -113,6 +114,49 @@ public class SolrSearchNodeTest extends TestCase {
 
         String PHRASE = "Solr sample document";
         assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+    }
+
+    public void testSolrMultiFilter() throws Exception {
+        performBasicIngest();
+        {
+            ResponseCollection responses = search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*"
+            ));
+            assertEquals("There should be the right number of hits for match all.\n" + responses.toXML(),
+                         2, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
+        {
+            ResponseCollection responses = search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "fulltext:first"
+            ));
+            assertEquals("There should be the right number of hits for plain query. Response was\n" + responses.toXML(),
+                         1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
+        {
+            ResponseCollection responses = search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*",
+                    DocumentKeys.SEARCH_FILTER, "recordID:doc1"
+            ));
+            assertEquals("There should be the right number of hits for single filter query 1.\n" + responses.toXML(),
+                         1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
+        {
+            ResponseCollection responses = search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*",
+                    DocumentKeys.SEARCH_FILTER, "recordID:doc2"
+            ));
+            assertEquals("There should be the right number of hits for single filter query 2.\n" + responses.toXML(),
+                         1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
+        {
+            ResponseCollection responses = search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*",
+                    DocumentKeys.SEARCH_FILTER, new ArrayList<String>(Arrays.asList(new String[]{
+                    "recordID:doc1", "recordID:doc2"}))
+            ));
+            assertEquals("There should be the right number of hits for multi filter query.\n" + responses.toXML(),
+                         0, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
     }
 
     public void testSolrParamPlainFilter() throws Exception {
