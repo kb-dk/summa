@@ -381,12 +381,28 @@ But this is avery rare situation.
     <str name="queryAnalyzerFieldType">textSpell</str>
     
     <!-- a spellchecker built from a field of the main index. Use spellcheck.dictionary=summa_spell for this-->
+      <!--<lst name="spellchecker">
+        <str name="name">summa_spell</str>
+        <str name="field">summa_spell</str>
+        <str name="buildOnOptimize">true</str>
+        <str name="spellcheckIndexDir">./spellchecker_summa_spell</str>
+      </lst>-->
 
-    <lst name="spellchecker">    
+    <!-- A spellchecker that uses the index directly. A bit slower than index based, but with no extra structures
+        or build requirements -->
+    <!-- http://solr.pl/en/2012/04/30/solr-4-0-directsolrspellchecker-2/ -->
+    <lst name="spellchecker">
       <str name="name">summa_spell</str>
+      <str name="classname">solr.DirectSolrSpellChecker</str>
       <str name="field">summa_spell</str>
-      <str name="buildOnOptimize">true</str>
-      <str name="spellcheckIndexDir">./spellchecker_summa_spell</str>                  
+
+      <float name="accuracy">0.7</float>
+      <int name="maxEdits">2</int>
+      <int name="minPrefix">1</int>
+      <int name="maxInspections">5</int>
+      <int name="minQueryLength">1</int>
+      <float name="maxQueryFrequency">0.01</float>
+      <float name="thresholdTokenFrequency">0.01</float>
     </lst>
 
   </searchComponent>

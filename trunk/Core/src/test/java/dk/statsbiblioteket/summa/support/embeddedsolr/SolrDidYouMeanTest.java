@@ -1,10 +1,6 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Map;
-
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -13,7 +9,10 @@ import org.apache.solr.client.solrj.response.SpellCheckResponse.Suggestion;
 import org.junit.Before;
 import org.junit.Test;
 
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SolrDidYouMeanTest {
 
@@ -48,33 +47,47 @@ public class SolrDidYouMeanTest {
 
 		SolrServerUnitTestUtil.indexFiles(files);
 
-		//Test of a single word. Missing prefix
-		// gense -> egense 
-		SolrQuery query = new SolrQuery("gense");
-		query.setParam("spellcheck","true");
-		query.setParam("spellcheck.dictionary","summa_spell");        
-		query.setParam("spellcheck.count","5");
+        {
+            //Test of a single word. Missing prefix
+            // gense -> egense
+            SolrQuery query = new SolrQuery("gense");
+            query.setParam("spellcheck","true");
+            //query.setParam("spellcheck.dictionary","summa_spell");
+            //query.setParam("spellcheck.count","5");
 
-		QueryResponse response = solrServer.query(query);
-		Map<String, Suggestion> suggestionMap = response.getSpellCheckResponse().getSuggestionMap();
-		assertTrue(suggestionMap.size() == 1);                
+            QueryResponse response = solrServer.query(query);
+            Map<String, Suggestion> suggestionMap = response.getSpellCheckResponse().getSuggestionMap();
+            // minPrefix is 1 so we do not want a match here
+            assertEquals("The suggestion map should have the expected size", 0, suggestionMap.size());
+        }
 
-		Suggestion suggestion = response.getSpellCheckResponse().getSuggestions().get(0);
-		assertEquals("gense", suggestion.getToken());
-		assertTrue(suggestion.getAlternatives().contains("egense"));
+        {
+            //Test of a single word. Missing infix letter
+            // gense -> egense
+            SolrQuery query = new SolrQuery("egene");
+            query.setParam("spellcheck","true");
+            //query.setParam("spellcheck.dictionary","summa_spell");
+            //query.setParam("spellcheck.count","5");
 
+            QueryResponse response = solrServer.query(query);
+            Map<String, Suggestion> suggestionMap = response.getSpellCheckResponse().getSuggestionMap();
+            assertEquals("The suggestion map should have the expected size", 1, suggestionMap.size());
+            Suggestion suggestion = response.getSpellCheckResponse().getSuggestions().get(0);
+            assertEquals("egene", suggestion.getToken());
+            assertTrue(suggestion.getAlternatives().contains("egense"));
+        }
 		//Single word, midde part wrong
 		// hwllo -> hello 
-		query = new SolrQuery("hwllo");
+		SolrQuery query = new SolrQuery("hwllo");
 		query.setParam("spellcheck","true");
 		query.setParam("spellcheck.dictionary","summa_spell");         
 		query.setParam("spellcheck.count","5");
 
-		response = solrServer.query(query);
-		suggestionMap = response.getSpellCheckResponse().getSuggestionMap();
+        QueryResponse response = solrServer.query(query);
+        Map<String, Suggestion>suggestionMap = response.getSpellCheckResponse().getSuggestionMap();
 		assertTrue(suggestionMap.size() == 1);                
 
-		suggestion = response.getSpellCheckResponse().getSuggestions().get(0);
+        Suggestion suggestion = response.getSpellCheckResponse().getSuggestions().get(0);
 		assertEquals("hwllo", suggestion.getToken());
 		assertTrue(suggestion.getAlternatives().contains("hello"));
 
