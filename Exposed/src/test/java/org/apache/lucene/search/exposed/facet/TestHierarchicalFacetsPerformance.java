@@ -271,7 +271,7 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     CollectorPool collectorPool = poolFactory.acquire(reader, request);
     facetStructureTime = System.currentTimeMillis() - facetStructureTime;
 
-    TagCollector collector;
+    TagCollectorMulti collector;
     FacetResponse response = null;
     String sQuery = null;//request.getQuery();
     for (int i = 0 ; i < runs ; i++) {

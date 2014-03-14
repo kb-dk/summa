@@ -169,7 +169,7 @@ public class TestSingleSegmentOptimization extends TestCase {
       }
 
       long countStart = System.currentTimeMillis();
-      TagCollector collector = collectorPool.acquire(null); // No caching
+      TagCollectorMulti collector = collectorPool.acquire(null); // No caching
       if (collector.getQuery() == null) { // Fresh collector
         searcher.search(q, collector);
         long countTime = System.currentTimeMillis() - countStart;

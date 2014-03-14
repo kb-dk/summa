@@ -22,7 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
-import org.apache.lucene.search.exposed.facet.TagCollector;
+import org.apache.lucene.search.exposed.facet.TagCollectorMulti;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 
 import java.io.IOException;
@@ -41,9 +41,9 @@ public class PoolFactoryGate {
 
   private static AtomicLong allocateCounter = new AtomicLong(0);
   /**
-   * Acquire a CollectorPool and TagCollector based on the given reader and request.
+   * Acquire a CollectorPool and TagCollectorMulti based on the given reader and request.
    * </p><p>
-   * Important: The TagCollector _must_ be released after usage with the code
+   * Important: The TagCollectorMulti _must_ be released after usage with the code
    * {@code collectorPool.release(query, tagCollector)}, where query can be null.
    * Failure to do so will result in a blocked CollectorPool.
    * @param factory used for generating the CollectorPool.
@@ -51,10 +51,10 @@ public class PoolFactoryGate {
    * @param key   the facet or index lookup request.
    * @param request the query to use for finding filled TagCollectors. This can be null.
    * @param caller  human readable designation of the calling code (normally "facet" or "index lookup").
-   * @return a CollectorPool and a TagCollector ready for use.
+   * @return a CollectorPool and a TagCollectorMulti ready for use.
    * @throws IOException if the CollectorPool could not be constructed.
    */
-  public static synchronized SimplePair<CollectorPool, TagCollector> acquire(
+  public static synchronized SimplePair<CollectorPool, TagCollectorMulti> acquire(
       CollectorPoolFactory factory, IndexReader reader, String key,
       FacetRequest request, String caller) throws IOException {
     CollectorPool collectorPool;
@@ -80,7 +80,7 @@ public class PoolFactoryGate {
           "Unable to acquire a CollectorPool for " + request, e);
     }
 
-    TagCollector tagCollector;
+    TagCollectorMulti tagCollector;
     try {
       CollectorPool.AVAILABILITY availability =
           collectorPool.getAvailability(key);
@@ -124,7 +124,7 @@ public class PoolFactoryGate {
                     + factory.toString());
         }
       }
-      return new SimplePair<CollectorPool, TagCollector>(
+      return new SimplePair<CollectorPool, TagCollectorMulti>(
           collectorPool, tagCollector);
     } catch (OutOfMemoryError e) {
       StringWriter writer = new StringWriter(1000);
@@ -142,12 +142,12 @@ public class PoolFactoryGate {
 
   private static AtomicLong freeCounter = new AtomicLong(0);
   /**
-   * Release a TagCollector after use.
+   * Release a TagCollectorMulti after use.
    * @param pool      the pool for the collector.
    * @param collector a used collector.
    * @param key       the key identifying the collector content. null is valid.
    */
-  public static void release(CollectorPool pool, TagCollector collector, String key) {
+  public static void release(CollectorPool pool, TagCollectorMulti collector, String key) {
     boolean freed = pool.release(key, collector);
     if (freed) {
       long r = freeCounter.incrementAndGet();

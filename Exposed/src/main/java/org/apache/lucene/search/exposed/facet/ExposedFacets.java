@@ -70,7 +70,7 @@ public class ExposedFacets {
   private CollectorPool collectorPool;
 
   public void facet(FacetRequest request, IndexSearcher searcher, Query query) throws IOException {
-    TagCollector collector = collectorPool.acquire(request.getQuery());
+    TagCollectorMulti collector = collectorPool.acquire(request.getQuery());
     try {
       searcher.search(query, collector);
     } finally {

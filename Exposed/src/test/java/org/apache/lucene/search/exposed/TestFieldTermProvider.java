@@ -8,7 +8,6 @@ import org.apache.lucene.search.exposed.compare.NamedCollatorComparator;
 import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.FacetMap;
 import org.apache.lucene.search.exposed.facet.FacetMapFactory;
-import org.apache.lucene.search.exposed.facet.FacetMapMulti;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IndexUtil;
 
@@ -44,25 +43,20 @@ public class TestFieldTermProvider extends TestCase {
 
   public void testSegmentcount() throws IOException {
     helper.createIndex(DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     int subCount = IndexUtil.flatten(reader).size();
-    assertTrue("The number of segments should be >= 2 but was " + subCount,
-        subCount >= 2);
+    assertTrue("The number of segments should be >= 2 but was " + subCount, subCount >= 2);
     reader.close();
   }
 
   public void testIndexGeneration() throws Exception {
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    IndexReader reader =
-        ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
+    IndexReader reader = ExposedIOFactory.getReader(ExposedHelper.INDEX_LOCATION);
     long termCount = 0;
-    TermsEnum terms = MultiFields.getFields(reader).
-        terms(ExposedHelper.ID).iterator(null);
+    TermsEnum terms = MultiFields.getFields(reader).terms(ExposedHelper.ID).iterator(null);
     while (terms.next() != null) {
       assertEquals("The ID-term #" + termCount + " should be correct",
-          ExposedHelper.ID_FORMAT.format(termCount),
-          terms.term().utf8ToString());
+                   ExposedHelper.ID_FORMAT.format(termCount), terms.term().utf8ToString());
       termCount++;
     }
     
@@ -73,8 +67,7 @@ public class TestFieldTermProvider extends TestCase {
 
   public void testOrdinalAccess() throws IOException {
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    AtomicReader segment =
-        ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+    AtomicReader segment = ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
 
     ArrayList<String> plainExtraction = new ArrayList<String>(DOCCOUNT);
     TermsEnum terms = segment.fields().terms("a").iterator(null);
@@ -90,17 +83,16 @@ public class TestFieldTermProvider extends TestCase {
     }
 
     assertEquals("The two lists of terms should be of equal length",
-        plainExtraction.size(), exposedOrdinals.size());
+                 plainExtraction.size(), exposedOrdinals.size());
     for (int i = 0 ; i < plainExtraction.size() ; i++) {
       assertEquals("The term at index " + i + " should be correct",
-          plainExtraction.get(i), exposedOrdinals.get(i));
+                   plainExtraction.get(i), exposedOrdinals.get(i));
     }
   }
 
   public void testSegmentTermSort() throws IOException {
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    AtomicReader segment =
-        ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+    AtomicReader segment = ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
     testSegmentTermSort(segment);
   }
 
@@ -111,15 +103,12 @@ public class TestFieldTermProvider extends TestCase {
     TermsEnum terms = segment.fields().terms("a").iterator(null);
     while (terms.next() != null) {
       plainExtraction.add(terms.term().utf8ToString());
-      System.out.println("Unsorted term #" + (plainExtraction.size() - 1) + ": "
-          + terms.term().utf8ToString());
+      System.out.println("Unsorted term #" + (plainExtraction.size() - 1) + ": " + terms.term().utf8ToString());
     }
     Collections.sort(plainExtraction, sorter);
 
-    ExposedRequest.Field request = new ExposedRequest.Field(
-        "a", new NamedCollatorComparator(sorter));
-    FieldTermProvider segmentProvider =
-        new FieldTermProvider(segment, 0, request, true);
+    ExposedRequest.Field request = new ExposedRequest.Field("a", new NamedCollatorComparator(sorter));
+    FieldTermProvider segmentProvider = new FieldTermProvider(segment, 0, request, true);
 
     ArrayList<String> exposedExtraction = new ArrayList<String>(DOCCOUNT);
     Iterator<ExposedTuple> ei = segmentProvider.getIterator(false);
@@ -131,10 +120,10 @@ public class TestFieldTermProvider extends TestCase {
     }
 
     assertEquals("The two lists of terms should be of equal length",
-        plainExtraction.size(), exposedExtraction.size());
+                 plainExtraction.size(), exposedExtraction.size());
     for (int i = 0 ; i < plainExtraction.size() ; i++) {
       assertEquals("The term at index " + i + " should be correct",
-          plainExtraction.get(i), exposedExtraction.get(i));
+                   plainExtraction.get(i), exposedExtraction.get(i));
     }
   }
 
@@ -142,16 +131,12 @@ public class TestFieldTermProvider extends TestCase {
     ExposedIOFactory.forceFixedCodec = false;
 
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-      AtomicReader segment =
-          ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+      AtomicReader segment = ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
     Collator sorter = Collator.getInstance(new Locale("da"));
 
-    ExposedRequest.Field request = new ExposedRequest.Field(
-        "a", new NamedCollatorComparator(sorter));
-    FieldTermProvider segmentProvider =
-        new FieldTermProvider(segment, 0, request, true);
-    ArrayList<ExposedHelper.Pair> exposed =
-        new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
+    ExposedRequest.Field request = new ExposedRequest.Field("a", new NamedCollatorComparator(sorter));
+    FieldTermProvider segmentProvider = new FieldTermProvider(segment, 0, request, true);
+    ArrayList<ExposedHelper.Pair> exposed = new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
     Iterator<ExposedTuple> ei = segmentProvider.getIterator(true);
     while (ei.hasNext()) {
       final ExposedTuple tuple = ei.next();
@@ -159,8 +144,7 @@ public class TestFieldTermProvider extends TestCase {
         int doc;
         // TODO: Test if bulk reading (which includes freqs) is faster
         while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-          exposed.add(new ExposedHelper.Pair(
-              doc + tuple.docIDBase, tuple.term.utf8ToString(), sorter));
+          exposed.add(new ExposedHelper.Pair(doc + tuple.docIDBase, tuple.term.utf8ToString(), sorter));
         }
       }
     }
@@ -174,14 +158,11 @@ public class TestFieldTermProvider extends TestCase {
         {"a:a", "a:b", "a:b"}, // a:b is duplicated
         {"a:b", "a:e", "a:f"}
     });
-    AtomicReader segment =
-        ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+    AtomicReader segment = ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
     Collator sorter = Collator.getInstance(new Locale("da"));
 
-    ExposedRequest.Field request = new ExposedRequest.Field(
-        "a", new NamedCollatorComparator(sorter));
-    FieldTermProvider segmentProvider =
-        new FieldTermProvider(segment, 0, request, true);
+    ExposedRequest.Field request = new ExposedRequest.Field("a", new NamedCollatorComparator(sorter));
+    FieldTermProvider segmentProvider = new FieldTermProvider(segment, 0, request, true);
     Iterator<ExposedTuple> ei = segmentProvider.getIterator(true);
     Set<String> encountered = new HashSet<String>();
     while (ei.hasNext()) {
@@ -189,11 +170,9 @@ public class TestFieldTermProvider extends TestCase {
       if (tuple.docIDs != null) {
         int doc;
         while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-          String concat =
-              tuple.field + ":" + tuple.term.utf8ToString() + "->" + doc;
+          String concat = tuple.field + ":" + tuple.term.utf8ToString() + "->" + doc;
           if (!encountered.add(concat)) {
-            fail("Already received " + concat + "'. Duplicate term->docID " +
-                 "should not happen");
+            fail("Already received " + concat + "'. Duplicate term->docID should not happen");
           }
 //          System.out.println(tuple + " docID=" + doc);
         }
@@ -203,26 +182,20 @@ public class TestFieldTermProvider extends TestCase {
 
   public void testDocIDMapping() throws IOException {
     helper.createIndex( DOCCOUNT, Arrays.asList("a", "b"), 20, 2);
-    AtomicReader segment =
-        ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+    AtomicReader segment = ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
     Collator sorter = Collator.getInstance(new Locale("da"));
 
-    ArrayList<ExposedHelper.Pair> plain =
-        new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
+    ArrayList<ExposedHelper.Pair> plain = new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
     for (int docID = 0 ; docID < segment.maxDoc() ; docID++) {
-      plain.add(new ExposedHelper.Pair(
-          docID, segment.document(docID).get("a"), sorter));
+      plain.add(new ExposedHelper.Pair(docID, segment.document(docID).get("a"), sorter));
 //      System.out.println("Plain access added " + plain.get(plain.size()-1));
     }
     Collections.sort(plain);
 
-    ExposedRequest.Field request = new ExposedRequest.Field(
-        "a", new NamedCollatorComparator(sorter));
-    FieldTermProvider segmentProvider =
-        new FieldTermProvider(segment, 0, request, true);
+    ExposedRequest.Field request = new ExposedRequest.Field("a", new NamedCollatorComparator(sorter));
+    FieldTermProvider segmentProvider = new FieldTermProvider(segment, 0, request, true);
 
-    ArrayList<ExposedHelper.Pair> exposed =
-        new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
+    ArrayList<ExposedHelper.Pair> exposed = new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
     Iterator<ExposedTuple> ei = segmentProvider.getIterator(true);
 
     while (ei.hasNext()) {
@@ -231,19 +204,17 @@ public class TestFieldTermProvider extends TestCase {
         int doc;
         // TODO: Test if bulk reading (which includes freqs) is faster
         while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-          exposed.add(new ExposedHelper.Pair(
-              doc + tuple.docIDBase, tuple.term.utf8ToString(), sorter));
+          exposed.add(new ExposedHelper.Pair(doc + tuple.docIDBase, tuple.term.utf8ToString(), sorter));
         }
       }
     }
     Collections.sort(exposed);
 
     assertEquals("The two docID->term maps should be of equal length",
-        plain.size(), exposed.size());
+                 plain.size(), exposed.size());
     for (int i = 0 ; i < plain.size() ; i++) {
-      assertEquals("Mapping #" + i + " should be equal but was "
-          + plain.get(i) + " vs. " + exposed.get(i),
-          plain.get(i), exposed.get(i));
+      assertEquals("Mapping #" + i + " should be equal but was " + plain.get(i) + " vs. " + exposed.get(i),
+                   plain.get(i), exposed.get(i));
       System.out.println("Sorted docID, term #" + i + ": " + plain.get(i));
     }
   }
@@ -251,17 +222,13 @@ public class TestFieldTermProvider extends TestCase {
   // Just tests for non-crashing
   public void testDocIDMultiMapping() throws IOException {
     helper.createIndex(100, Arrays.asList("a"), 20, 2);
-      AtomicReader segment =
-          ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+      AtomicReader segment = ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
     Collator sorter = Collator.getInstance(new Locale("da"));
 
-    ExposedRequest.Field request = new ExposedRequest.Field(
-        ExposedHelper.MULTI, new NamedCollatorComparator(sorter));
-    FieldTermProvider segmentProvider =
-        new FieldTermProvider(segment, 0, request, true);
+    ExposedRequest.Field request = new ExposedRequest.Field(ExposedHelper.MULTI, new NamedCollatorComparator(sorter));
+    FieldTermProvider segmentProvider = new FieldTermProvider(segment, 0, request, true);
 
-    ArrayList<ExposedHelper.Pair> exposed =
-        new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
+    ArrayList<ExposedHelper.Pair> exposed = new ArrayList<ExposedHelper.Pair>(DOCCOUNT);
     Iterator<ExposedTuple> ei = segmentProvider.getIterator(true);
 
     while (ei.hasNext()) {
@@ -270,8 +237,7 @@ public class TestFieldTermProvider extends TestCase {
         int doc;
         // TODO: Test if bulk reading (which includes freqs) is faster
         while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
-          exposed.add(new ExposedHelper.Pair(
-              doc + tuple.docIDBase, tuple.term.utf8ToString(), sorter));
+          exposed.add(new ExposedHelper.Pair(doc + tuple.docIDBase, tuple.term.utf8ToString(), sorter));
         }
       }
     }
@@ -281,8 +247,7 @@ public class TestFieldTermProvider extends TestCase {
     }*/
   }
 
-  public void testMiscountEmpty()
-                        throws IOException, XMLStreamException, ParseException {
+  public void testMiscountEmpty() throws IOException, XMLStreamException, ParseException {
     String[] FIELDS = new String[]{"recordBase", "lsubject"};
     {
       IndexWriter w = ExposedHelper.getWriter();
@@ -297,8 +262,7 @@ public class TestFieldTermProvider extends TestCase {
       w.close();
     }
 
-    AtomicReader segment =
-        ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
+    AtomicReader segment = ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
 
     for (String field: FIELDS) {
       TermProvider segmentProvider = ExposedFactory.createProvider(
@@ -306,14 +270,12 @@ public class TestFieldTermProvider extends TestCase {
       Iterator<ExposedTuple> it = segmentProvider.getIterator(true);
       while (it.hasNext()) {
         ExposedTuple tuple = it.next();
-        assertTrue("The ordinal should be >= 0 for " + tuple,
-            tuple.ordinal >= 0);
+        assertTrue("The ordinal should be >= 0 for " + tuple, tuple.ordinal >= 0);
       }
     }
   }
 
-  public void testSimpleGrouping()
-                        throws IOException, XMLStreamException, ParseException {
+  public void testSimpleGrouping() throws IOException, XMLStreamException, ParseException {
     {
       String[] FIELDS = new String[]{"recordBase", "lsubject"};
       int TERMS = 3;
@@ -332,8 +294,7 @@ public class TestFieldTermProvider extends TestCase {
     }
   }
 
-  public void testMiscountEmptyWithMap()
-                        throws IOException, XMLStreamException, ParseException {
+  public void testMiscountEmptyWithMap() throws IOException, XMLStreamException, ParseException {
     {
       String[] FIELDS = new String[]{"recordBase", "lsubject"};
       int TERMS = 3;
@@ -369,15 +330,12 @@ public class TestFieldTermProvider extends TestCase {
     }
   }
 
-  private void verifyElements(
-      String message, String[] fields, int termCount) throws IOException {
-    AtomicReader segment = ExposedIOFactory.getAtomicReader(
-        ExposedHelper.INDEX_LOCATION);
+  private void verifyElements(String message, String[] fields, int termCount) throws IOException {
+    AtomicReader segment = ExposedIOFactory.getAtomicReader(ExposedHelper.INDEX_LOCATION);
 
     List<TermProvider> providers = new ArrayList<TermProvider>(fields.length);
     for (String field: fields) {
-      providers.add(ExposedFactory.createProvider(
-          segment, null, Arrays.asList(field), new NamedNaturalComparator()));
+      providers.add(ExposedFactory.createProvider(segment, null, Arrays.asList(field), new NamedNaturalComparator()));
       if (providers.size() > 1) {
         assertFalse("There should be no duplicate providers",
                     providers.get(providers.size()-2) ==
@@ -390,9 +348,8 @@ public class TestFieldTermProvider extends TestCase {
         System.err.println(term.utf8ToString());
       }
     }
-    assertEquals(message + ". There should be the correct number of terms for "
-        + "the single document in the map",
-        termCount, map.getTermsForDocID(0).length);
+    assertEquals(message + ". There should be the correct number of terms for the single document in the map",
+                 termCount, map.getTermsForDocID(0).length);
     BytesRef last = null;
     for (BytesRef term: map.getTermsForDocID(0)) {
       System.out.println("Term: " + term.utf8ToString());

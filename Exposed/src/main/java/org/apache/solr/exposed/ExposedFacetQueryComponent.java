@@ -4,7 +4,7 @@ import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
-import org.apache.lucene.search.exposed.facet.TagCollector;
+import org.apache.lucene.search.exposed.facet.TagCollectorMulti;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
@@ -94,7 +94,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     } catch (IOException e) {
         throw new RuntimeException("Unable to acquire a CollectorPool for " + eReq, e);
     }
-    TagCollector tagCollector = collectorPool.acquire(eReq.getBuildKey());
+    TagCollectorMulti tagCollector = collectorPool.acquire(eReq.getBuildKey());
 
 /*    if (tagCollector.getQuery() == null) { // Not cached
       try {
