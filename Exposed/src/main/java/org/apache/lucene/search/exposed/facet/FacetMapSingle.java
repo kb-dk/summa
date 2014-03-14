@@ -78,6 +78,20 @@ public class FacetMapSingle implements FacetMap {
   }
 
   @Override
+  public void updateCounter(TagCollector collector, int docID) {
+    try {
+      final int index = (int)refs.get(docID);
+      if (index == 0) { // TODO: Skip this check by incrementing counter 0 while disregarding it later
+        return;
+      }
+      collector.inc(index);
+    } catch (Exception ex) {
+      System.err.println("Exception in updateCounter during evaluation of tagCounts[(int)refs.get(" + docID
+                         + ")]++ with refs.size()==" + refs.size() + ", docID==" + docID + " in " + toString());
+    }
+  }
+
+  @Override
   public BytesRef getOrderedTerm(int termIndirect) throws IOException {
     if (termIndirect == 0) {
       return new BytesRef(BytesRef.EMPTY_BYTES);

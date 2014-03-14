@@ -26,8 +26,8 @@ public class FacetMapTripleFactory {
   // 2. Count references from documents to tags
   // 3. Update map with references from documents to tags
   public static FacetMapMulti createMap(int docCount, List<TermProvider> providers) throws IOException {
-    log.info("Creating map for " + providers.size() + " group"
-             + (providers.size() == 1 ? "" : "s") + " with " + docCount + " documents)");
+    log.info("Creating map for " + providers.size() + " group" + (providers.size() == 1 ? "" : "s") + " with "
+             + docCount + " documents)");
 
     final int[] indirectStarts = new int[providers.size() +1];
     int start = 0;
@@ -41,8 +41,7 @@ public class FacetMapTripleFactory {
 
 //    doc2ref = PackedInts.getMutable(docCount+1, PackedInts.bitsRequired(start));
     long tagExtractTime = - System.currentTimeMillis();
-    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair =
-        extractTags(providers, indirectStarts, docCount);
+    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair = extractTags(providers, indirectStarts, docCount);
     tagExtractTime += System.currentTimeMillis();
     final PackedInts.Reader doc2ref = pair.getKey();
     final PackedInts.Reader refs = pair.getValue();
@@ -52,8 +51,7 @@ public class FacetMapTripleFactory {
   }
 
   private static Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
-      List<TermProvider> providers, int[] indirectStarts, int docCount)
-      throws IOException {
+      List<TermProvider> providers, int[] indirectStarts, int docCount) throws IOException {
     // We start by counting the references as this spares us a lot of array
     // content re-allocation
     final int[] tagCounts = new int[docCount]; // One counter for each doc
@@ -229,9 +227,8 @@ public class FacetMapTripleFactory {
   }
 
 
-  private static void fillRefs(
-      List<TermProvider> providers, int[] indirectStarts, final int[] tagCounts,
-      final long totalRefs, final PackedInts.Mutable refs) throws IOException {
+  private static void fillRefs(List<TermProvider> providers, int[] indirectStarts, final int[] tagCounts,
+                               final long totalRefs, final PackedInts.Mutable refs) throws IOException {
     long nextDocTime = 0;
     long nextDocCount = 0;
 
@@ -289,10 +286,9 @@ public class FacetMapTripleFactory {
             refs.set(refsPos, indirect);
           } catch (ArrayIndexOutOfBoundsException e) {
             throw new RuntimeException(
-                "Array index out of bounds. refs.size=" + refs.size()
-                + ", refs.bitsPerValue=" + refs.getBitsPerValue()
-                + ", refsPos=" + refsPos + ", tuple.indirect+termOffset="
-                + tuple.indirect + "+" + termOffset + "=" + (tuple.indirect+termOffset), e);
+                "Array index out of bounds. refs.size=" + refs.size() + ", refs.bitsPerValue=" + refs.getBitsPerValue()
+                + ", refsPos=" + refsPos + ", tuple.indirect+termOffset=" + tuple.indirect + "+"
+                + termOffset + "=" + (tuple.indirect+termOffset), e);
           }
         }
         nextDocTime += System.nanoTime();
@@ -328,5 +324,4 @@ public class FacetMapTripleFactory {
     log.info("Filled map with " + ExposedUtil.time("references", totalRefs, fillTime) + " out of which was " +
              ExposedUtil.time("nextDocs", nextDocCount, nextDocTime / 1000000));
   }
-
 }

@@ -33,7 +33,7 @@ public class FacetMapMulti implements FacetMap {
   private final PackedInts.Reader refs;
 
   protected FacetMapMulti(List<TermProvider> providers, int[] indirectStarts,
-                  PackedInts.Reader doc2ref, PackedInts.Reader refs) {
+                          PackedInts.Reader doc2ref, PackedInts.Reader refs) {
     this.providers = providers;
     this.indirectStarts = indirectStarts;
     this.doc2ref = doc2ref;
@@ -64,6 +64,21 @@ public class FacetMapMulti implements FacetMap {
             "tagCounts[(int)refs.get(" + refI + ")]++ with refs.size()=="
             + refs.size() + ", tagCounts.length()==" + tagCounts.length
             + ", docID==" + docID + ", start==" + start + ", end==" + end
+            + " in " + toString());
+      }
+    }
+  }
+
+  @Override
+  public void updateCounter(final TagCollector collector, final int docID) {
+    final int start = (int)doc2ref.get(docID);
+    final int end = (int)doc2ref.get(docID+1);
+    for (int refI = start ; refI < end ; refI++) {
+      try {
+        collector.inc((int)refs.get(refI));
+      } catch (Exception ex) {
+        System.err.println("Exception in updateCounter during evaluation of " + collector.getClass().getCanonicalName()
+            + ".inc((int)refs.get(" + refI + ")]++" + ", docID==" + docID + ", start==" + start + ", end==" + end
             + " in " + toString());
       }
     }

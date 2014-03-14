@@ -3,12 +3,12 @@ package org.apache.lucene.search.exposed.facet;
 import java.util.*;
 
 /**
- * Holds a number of {@link TagCollectorMulti}s tied to a single {@link FacetMapMulti}
+ * Holds a number of {@link TagCollector}s tied to a single {@link FacetMapMulti}
  * and ensures that they are cleared and ready for use. If there are no
  * collectors in the pool when a new one is acquired, a new collector will be
  * created.
  * </p><p>
- * The pool holds a mix of cleared and ready for use {@link TagCollectorMulti}s as
+ * The pool holds a mix of cleared and ready for use {@link TagCollector}s as
  * well as updated collectors from previous queries. When a collector is
  * released back into the pool it is stored in the non-cleared cache. If the
  * non-cleared cache is full, the oldest entry is cleared and moved into the
@@ -29,8 +29,8 @@ public class CollectorPool {
   private final FacetMap map;
   private final String key;
 
-  private final List<TagCollectorMulti> fresh;
-  private final Map<String, TagCollectorMulti> filled;
+  private final List<TagCollector> fresh;
+  private final Map<String, TagCollector> filled;
 
   private int maxFresh;
   private int maxFilled;
@@ -55,7 +55,7 @@ public class CollectorPool {
   private long retryDelay = 100; // ms
 
   /**
-   * When a TagCollectorMulti is released with a query, it is stored as filled. If
+   * When a TagCollector is released with a query, it is stored as filled. If
    * the cache for filled is full, the oldest entry is cleared and stored in
    * the fresh pool.
    * @param key the unique id for the pool.
@@ -68,12 +68,12 @@ public class CollectorPool {
     this.key = key;
 
     maxFresh = freshCollectors;
-    fresh = new ArrayList<TagCollectorMulti>();
+    fresh = new ArrayList<TagCollector>();
 
     maxFilled = filledCollectors;
-    filled = new LinkedHashMap<String, TagCollectorMulti>(filledCollectors) {
+    filled = new LinkedHashMap<String, TagCollector>(filledCollectors) {
       @Override
-      protected boolean removeEldestEntry(Map.Entry<String, TagCollectorMulti> eldest) {
+      protected boolean removeEldestEntry(Map.Entry<String, TagCollector> eldest) {
         if (size() > maxFilled) {
           releaseFresh(remove(eldest.getKey())); // Send it to the fresh cache
         }
@@ -96,17 +96,17 @@ public class CollectorPool {
    * collector.
    * </p><p>
    * Note: If a non-null query is provided, the caller must check the returned
-   * collector with the call {@link TagCollectorMulti#getQuery()}. If the result is
+   * collector with the call {@link TagCollector#getQuery()}. If the result is
    * not null, the collector was taken from cache and is already filled. In that
    * case, the caller should not make a new search with the collector, but
-   * instead call {@link TagCollectorMulti#extractResult(org.apache.lucene.search.exposed.facet.request.FacetRequest)} directly.
+   * instead call {@link TagCollector#extractResult(org.apache.lucene.search.exposed.facet.request.FacetRequest)} directly.
    * @return a recycled collector if one is available, else a new collector.
    */
-  public synchronized TagCollectorMulti acquire(String query) {
+  public synchronized TagCollector acquire(String query) {
     int retries = 0;
     do {
       if (query != null && maxFilled != 0 && filled.containsKey(query)) {
-        TagCollectorMulti collector = filled.remove(query);
+        TagCollector collector = filled.remove(query);
         activeCollectors++;
         activeMem += collector.getMemoryUsage();
         return collector;
@@ -114,7 +114,7 @@ public class CollectorPool {
 
       for (int i = 0 ; i < fresh.size() ; i++) {
         if (!fresh.get(i).isClearRunning()) {
-          TagCollectorMulti collector = fresh.remove(i);
+          TagCollector collector = fresh.remove(i);
           activeCollectors++;
           activeMem += collector.getMemoryUsage();
           return collector;
@@ -123,8 +123,8 @@ public class CollectorPool {
 
       if (!enforceLimits || activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh) {
         // It would be great to have standardized logging available here
-        // as creating a TagCollectorMulti is potentially a very costly process
-        TagCollectorMulti collector = new TagCollectorMulti(map);
+        // as creating a TagCollector is potentially a very costly process
+        TagCollector collector = TagCollectorFactory.getCollector(map);
         activeCollectors++;
         activeMem += collector.getMemoryUsage();
         return collector;
@@ -146,7 +146,7 @@ public class CollectorPool {
               activeCollectors),
           CollectorPool.class.getSimpleName(), query);
     }
-    return new TagCollectorMulti(map);
+    return TagCollectorFactory.getCollector(map);
   }
 
   private synchronized boolean isFurtherAllocationAllowed() {
@@ -163,7 +163,7 @@ public class CollectorPool {
     if (query != null && maxFilled != 0 && filled.containsKey(query)) {
       return AVAILABILITY.hasFilled;
     }
-    for (TagCollectorMulti aFresh : fresh) {
+    for (TagCollector aFresh : fresh) {
       if (!aFresh.isClearRunning()) {
         return AVAILABILITY.hasFresh;
       }
@@ -184,9 +184,9 @@ public class CollectorPool {
    * will affect them.
    * @param query     the query to use as storage key. null is allowed.
    * @param collector the collector to release.
-   * @return true if a release will result is a TagCollectorMulti being freed.
+   * @return true if a release will result is a TagCollector being freed.
    */
-  public synchronized boolean releaseWillFree(String query, TagCollectorMulti collector){
+  public synchronized boolean releaseWillFree(String query, TagCollector collector){
       if (query != null) {
           // If filled overflows, it will spill over in fresh
           return filled.size() >= maxFilled && fresh.size() >= maxFresh;
@@ -208,7 +208,7 @@ public class CollectorPool {
    *         for the garbage collector). Freeing should be avoided. Too many
    *         of those indicates that the pool size should be increased.
    */
-  public synchronized boolean release(String query, TagCollectorMulti collector) {
+  public synchronized boolean release(String query, TagCollector collector) {
     boolean willFree = releaseWillFree(query, collector);
     if (maxFilled > 0 && query != null) {
       activeCollectors = Math.max(0, --activeCollectors);
@@ -221,7 +221,7 @@ public class CollectorPool {
     return willFree;
   }
 
-  private synchronized void releaseFresh(TagCollectorMulti collector) {
+  private synchronized void releaseFresh(TagCollector collector) {
     activeCollectors = Math.max(0, --activeCollectors);
     activeMem -= collector.getMemoryUsage();
     if (fresh.size() >= maxFresh) {
@@ -239,10 +239,9 @@ public class CollectorPool {
   }
 
   public synchronized String toString() {
-    return "CollectorPool(" + map.toString() + ", #fresh counters = "
-        + fresh.size() + ", #filled counters = " + filled.size()
-        + ", active counters = " + activeCollectors
-        + ", total counter size = " + getMem() / 1024 + " KB)";
+    return "CollectorPool(" + map.toString() + ", #fresh counters = " + fresh.size() + ", #filled counters = " 
+           + filled.size() + ", active counters = " + activeCollectors + ", total counter size = " 
+           + getMem() / 1024 + " KB)";
   }
 
   /**
@@ -250,10 +249,10 @@ public class CollectorPool {
    */
   public long getMem() {
     long total = 0;
-    for (Map.Entry<String, TagCollectorMulti> entry: filled.entrySet()) {
+    for (Map.Entry<String, TagCollector> entry: filled.entrySet()) {
       total += entry.getValue().getMemoryUsage();
     }
-    for (TagCollectorMulti collector: fresh) {
+    for (TagCollector collector: fresh) {
       total += collector.getMemoryUsage();
     }
     total += activeMem;
@@ -265,7 +264,7 @@ public class CollectorPool {
   }
 
   /**
-   * @param enforceLimits if true, the limits for TagCollectorMulti
+   * @param enforceLimits if true, the limits for TagCollector
    *                      allocation will be obeyed.
    */
   public void setEnforceLimits(boolean enforceLimits) {
