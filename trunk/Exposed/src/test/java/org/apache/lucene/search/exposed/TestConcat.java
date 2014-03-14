@@ -22,7 +22,7 @@ import org.apache.lucene.search.exposed.compare.NamedNaturalComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
-import org.apache.lucene.search.exposed.facet.TagCollector;
+import org.apache.lucene.search.exposed.facet.TagCollectorMulti;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -86,7 +86,7 @@ public class TestConcat extends TestCase {
     FacetRequest request = FacetRequest.parseXML(facetRequest);
     CollectorPool collectorPool = poolFactory.acquire(reader, request);
 
-    TagCollector collector;
+    TagCollectorMulti collector;
     String sQuery = request.getQuery();
     collector = collectorPool.acquire(sQuery);
     long countStart = System.currentTimeMillis();

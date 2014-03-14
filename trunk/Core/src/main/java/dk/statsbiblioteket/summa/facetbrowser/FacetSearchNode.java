@@ -45,7 +45,7 @@ import org.apache.lucene.search.exposed.compare.NamedOrderDefaultComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
-import org.apache.lucene.search.exposed.facet.TagCollector;
+import org.apache.lucene.search.exposed.facet.TagCollectorMulti;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 
 import java.io.File;
@@ -286,7 +286,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         org.apache.lucene.search.exposed.facet.request.FacetRequest facetRequest =
                 constructFacetRequest(request, query);
 
-        SimplePair<CollectorPool, TagCollector> pair;
+        SimplePair<CollectorPool, TagCollectorMulti> pair;
         try {
             pair = PoolFactoryGate.acquire(poolFactory, searcher.getIndexReader(), query, facetRequest, "facet");
             pair.getKey().setMaxFilled(0);
@@ -294,7 +294,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             throw new RemoteException("Unable to acquire TagCollector for " + facetRequest, e);
         }
         CollectorPool collectorPool = pair.getKey();
-        TagCollector tagCollector = pair.getValue();
+        TagCollectorMulti tagCollector = pair.getValue();
 
         long collectTime = -System.currentTimeMillis();
         FacetResponse facetResponse;
@@ -366,7 +366,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         return oldResult;
     }
 
-    private void collect(TagCollector tagCollector, String query, DocIDCollector collectedIDs) {
+    private void collect(TagCollectorMulti tagCollector, String query, DocIDCollector collectedIDs) {
         if (tagCollector.getQuery() == null) {
             log.trace("No cached tag collector. Performing collection");
             long collectTime = -System.currentTimeMillis();

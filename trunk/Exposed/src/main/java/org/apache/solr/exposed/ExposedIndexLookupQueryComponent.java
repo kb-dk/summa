@@ -8,7 +8,7 @@ import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
-import org.apache.lucene.search.exposed.facet.TagCollector;
+import org.apache.lucene.search.exposed.facet.TagCollectorMulti;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 import org.apache.solr.common.params.SolrParams;
@@ -108,7 +108,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
       throw new RuntimeException(
         "Unable to acquire a CollectorPool for " + eReq, e);
     }
-    TagCollector tagCollector = null;
+    TagCollectorMulti tagCollector = null;
     FacetResponse lookupResponse;
     try {
       tagCollector = collectorPool.acquire(eReq.getBuildKey());

@@ -36,7 +36,7 @@ import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.facet.CollectorPool;
 import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
 import org.apache.lucene.search.exposed.facet.FacetResponse;
-import org.apache.lucene.search.exposed.facet.TagCollector;
+import org.apache.lucene.search.exposed.facet.TagCollectorMulti;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 
@@ -152,14 +152,14 @@ public class IndexLookup {
 
         String queryKey = toQueryKey(request);
 
-        SimplePair<CollectorPool, TagCollector> pair;
+        SimplePair<CollectorPool, TagCollectorMulti> pair;
         try {
             pair = PoolFactoryGate.acquire(poolFactory, searcher.getIndexReader(), queryKey, fRequest, "index lookup");
         } catch (IOException e) {
             throw new IOException("Unable to acquire TagCollector for " + fRequest, e);
         }
         CollectorPool collectorPool = pair.getKey();
-        TagCollector tagCollector = pair.getValue();
+        TagCollectorMulti tagCollector = pair.getValue();
 
         FacetResponse fResponse;
         try {
@@ -204,7 +204,7 @@ public class IndexLookup {
         return response;
     }
 
-    private void collect(TagCollector tagCollector, String query) {
+    private void collect(TagCollectorMulti tagCollector, String query) {
         query = query == null ? "*" : query;
         long collectTime = -System.currentTimeMillis();
         try {
