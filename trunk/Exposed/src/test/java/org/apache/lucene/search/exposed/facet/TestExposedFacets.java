@@ -161,7 +161,7 @@ public class TestExposedFacets extends TestCase {
     CollectorPool collectorPool = poolFactory.acquire(reader, facetRequest);
     facetStructureTime = System.currentTimeMillis() - facetStructureTime;
 
-    TagCollectorMulti collector;
+    TagCollector collector;
     FacetResponse response = null;
     String sQuery = facetRequest.getQuery();
     for (int i = 0 ; i < 5 ; i++) {
@@ -532,7 +532,7 @@ public class TestExposedFacets extends TestCase {
     FacetRequest request = FacetRequest.parseXML(facetRequest);
     CollectorPool collectorPool = poolFactory.acquire(reader, request);
 
-    TagCollectorMulti collector;
+    TagCollector collector;
     FacetResponse response = null;
     String sQuery = request.getQuery();
     collector = collectorPool.acquire(sQuery);
@@ -689,7 +689,7 @@ public class TestExposedFacets extends TestCase {
 
     CollectorPool collectorPool = poolFactory.acquire(reader, request);
 
-    TagCollectorMulti collector = collectorPool.acquire(null);
+    TagCollector collector = collectorPool.acquire(null);
     searcher.search(q, collector);
     FacetResponse response = collector.extractResult(request);
     collectorPool.release(null, collector);
@@ -751,7 +751,7 @@ public class TestExposedFacets extends TestCase {
         + (getMem() - bMem) + " MB");
 */
 
-    TagCollectorMulti collector;
+    TagCollector collector;
     FacetResponse response = null;
     request.setQuery(FIELD + ":true");
     String sQuery = null;// request.getQuery(); No caching
@@ -844,7 +844,7 @@ public class TestExposedFacets extends TestCase {
 
         long countStart = System.currentTimeMillis();
         String sQuery = request.getQuery();
-        TagCollectorMulti collector = collectorPool.acquire(sQuery);
+        TagCollector collector = collectorPool.acquire(sQuery);
         if (collector.getQuery() == null) { // Fresh collector
           searcher.search(q, collector);
           long countTime = System.currentTimeMillis() - countStart;
@@ -1277,7 +1277,7 @@ public class TestExposedFacets extends TestCase {
       }
 
       long countStart = System.currentTimeMillis();
-      TagCollectorMulti collector = collectorPool.acquire(null); // No caching
+      TagCollector collector = collectorPool.acquire(null); // No caching
       if (collector.getQuery() == null) { // Fresh collector
         searcher.search(q, collector);
         long countTime = System.currentTimeMillis() - countStart;
@@ -1339,7 +1339,7 @@ public class TestExposedFacets extends TestCase {
         }
 
         long countStart = System.currentTimeMillis();
-        TagCollectorMulti collector = collectorPool.acquire(sQuery);
+        TagCollector collector = collectorPool.acquire(sQuery);
         if (collector.getQuery() == null) { // Fresh collector
           searcher.search(q, collector);
           long countTime = System.currentTimeMillis() - countStart;
@@ -1452,7 +1452,7 @@ public class TestExposedFacets extends TestCase {
     CollectorPool collectorPool = poolFactory.acquire(reader, request);
     facetStructureTime = System.currentTimeMillis() - facetStructureTime;
 
-    TagCollectorMulti collector;
+    TagCollector collector;
     FacetResponse response;
     String sQuery = request.getQuery();
     collector = collectorPool.acquire(sQuery);

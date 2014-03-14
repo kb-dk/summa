@@ -142,20 +142,96 @@ public class TestSingleSegmentOptimization extends TestCase {
     System.out.println(ExposedCache.getInstance());
     System.out.println(CollectorPoolFactory.getLastFactory());
   }
+  public void testScaleOptimizedSparseFacet() throws Exception {
+    String avgTrue1= testScaleOptimizedSparseFacet(true);
+    String avgFalse1= testScaleOptimizedSparseFacet(false);
+    String avgTrue2= testScaleOptimizedSparseFacet(true);
+    String  avgFalse2= testScaleOptimizedSparseFacet(false);
+    System.out.println(String.format("sparse1=%s, multi2=%s, sparse2==%s, multi2==%s",
+                                     avgTrue1, avgFalse1, avgTrue2, avgFalse2));
+  }
 
+  public String testScaleOptimizedSparseFacet(boolean sparse) throws Exception {
+    long totalTime = -System.currentTimeMillis();
+
+    ExposedSettings.useSparseCollector = sparse;
+    ExposedSettings.priority = ExposedSettings.PRIORITY.memory;
+    ExposedSettings.debug = true;
+    FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
+
+    final String QUERY = ExposedHelper.EVERY50 + ":true";
+    final int DOCCOUNT = 2000000;
+    final int TERM_LENGTH = 20;
+    final List<String> FIELDS = Arrays.asList("a");
+    final File LOCATION = PREFERRED_ROOT.exists() ?
+        new File(PREFERRED_ROOT, "indexSparse") :
+        ExposedHelper.INDEX_LOCATION;
+
+    if (!LOCATION.exists()) {
+      System.err.println("No index at " + LOCATION + ". A test index with " + DOCCOUNT + " documents will be build");
+      helper.createIndex(LOCATION, DOCCOUNT, FIELDS, 1, TERM_LENGTH, 1, 1, 1);
+      helper.optimize(LOCATION);
+    }
+    assertTrue("No index at " + LOCATION.getAbsolutePath() + ". Please build a test index (you can use one from on of " +
+               "the other JUnit tests in TestExposedFacets) and correct the path", LOCATION.exists());
+
+    IndexReader reader = ExposedIOFactory.getReader(LOCATION);
+    IndexSearcher searcher = new IndexSearcher(reader);
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
+    Query q = qp.parse(QUERY);
+
+    StringWriter sw = new StringWriter(10000);
+    sw.append("Index = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc() + " documents)\n");
+
+    TopScoreDocCollector collector = TopScoreDocCollector.create(10, false);
+    searcher.search(q, collector);
+    assertEquals("There should be 1/50 maxhits for test search", DOCCOUNT/50, collector.getTotalHits());
+    sw.append("Used heap after loading index and performing a simple search: " + getMem() + " MB\n");
+    sw.append("Maximum possible memory (Runtime.getRuntime().maxMemory()): "
+              + Runtime.getRuntime().maxMemory() / 1048576 + " MB\n");
+
+    sw.append("\n");
+
+    // Tests
+    CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 0, 1);
+
+    qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
+    q = qp.parse(QUERY);
+    String sQuery = QUERY;
+
+    testFaceting(poolFactory, searcher, q, sQuery, sw, SCALE_MANY_DOCS_REQUEST);
+
+    System.out.println("**************************\n");
+
+    sw.append("\nUsed memory with sort, facet and index lookup structures intact: " + getMem() + " MB\n");
+    totalTime += System.currentTimeMillis();
+    sw.append("Total test time: " + getTime(totalTime));
+
+    System.out.println("");
+    System.out.println(sw.toString());
+    System.out.println(ExposedCache.getInstance());
+    System.out.println(CollectorPoolFactory.getLastFactory());
+
+    ExposedCache.getInstance().purgeAllCaches();
+    CollectorPoolFactory.getLastFactory().purgeAllCaches();
+    return uglyHackMS;
+  }
+
+  private String uglyHackMS = ""; // TODO: Remove this
   private void testFaceting(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q, String sQuery,
                             StringWriter result, String requestString) throws XMLStreamException, IOException {
+    final int RUNS = 5;
+
     IndexReader reader = searcher.getIndexReader();
     FacetResponse response = null;
     int DOCCOUNT = reader.maxDoc();
-    assertTrue("There must be at least 10 documents in the index at ",
-               DOCCOUNT >= 10);
+    assertTrue("There must be at least 10 documents in the index at ", DOCCOUNT >= 10);
     final int span = DOCCOUNT / 10;
     long firstTime = -1;
     long subsequents = 0;
     int subCount = 0;
     long poolTime = -1;
-    for (int i = 0 ; i < 5 ; i++) {
+    for (int i = 0 ; i < RUNS ; i++) {
       FacetRequest request = FacetRequest.parseXML(requestString);
       request.setQuery(sQuery);
       if (firstTime == -1) {
@@ -169,7 +245,7 @@ public class TestSingleSegmentOptimization extends TestCase {
       }
 
       long countStart = System.currentTimeMillis();
-      TagCollectorMulti collector = collectorPool.acquire(null); // No caching
+      TagCollector collector = collectorPool.acquire(null); // No caching
       if (collector.getQuery() == null) { // Fresh collector
         searcher.search(q, collector);
         long countTime = System.currentTimeMillis() - countStart;
@@ -198,6 +274,7 @@ public class TestSingleSegmentOptimization extends TestCase {
                   "disabled) response times: " + getTime(subsequents / subCount) + "\n");
     assertNotNull("There should be a response", response);
     result.append(response.toXML()).append("\n");
+    uglyHackMS = getTime(subsequents / subCount);
   }
 
   private String getTime(long ms) {

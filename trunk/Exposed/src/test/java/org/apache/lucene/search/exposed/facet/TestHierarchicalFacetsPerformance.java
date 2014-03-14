@@ -271,7 +271,7 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     CollectorPool collectorPool = poolFactory.acquire(reader, request);
     facetStructureTime = System.currentTimeMillis() - facetStructureTime;
 
-    TagCollectorMulti collector;
+    TagCollector collector;
     FacetResponse response = null;
     String sQuery = null;//request.getQuery();
     for (int i = 0 ; i < runs ; i++) {
@@ -281,7 +281,8 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
         if (collector.getQuery() == null) { // Fresh collector
           searcher.search(q, collector);
           if (i == 0) {
-            System.out.println(collector.toString(true));
+            // TODO: Verbose toString here
+            System.out.println(collector.toString());
           }
 //        collector.collectAllValid(reader);
           long countTime = System.currentTimeMillis() - countStart;

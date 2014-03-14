@@ -8,6 +8,10 @@ public class ExposedSettings {
    * created for every enumDivider enum.
    */
   public static int enumDivider = 128;
+  /**
+   * Whether or not sparse TagCollectors should be used. Sparse collectors are experimental.
+   */
+  public static boolean useSparseCollector = false;
 
   public static enum PRIORITY {memory, speed;
     public static PRIORITY fromString(String p) {

@@ -31,11 +31,17 @@ public interface FacetMap {
   int getTagCount();
 
   /**
-   *
    * @param tagCounts a counter of size {@link #getTagCount()};
-   * @param docID an absolute docID, relative to the full index.
+   * @param docID an docID relative to the full index (aka absolute docID).
    */
   void updateCounter(int[] tagCounts, int docID);
+
+  /**
+   * Note: If possible, use the {@link #updateCounter(int[], int)} instead as it is faster.
+   * @param collector a collector matching this map.
+   * @param docID an docID relative to the full index (aka absolute docID).
+   */
+  void updateCounter(TagCollector collector, int docID);
 
   /**
    * @param termIndirect an indirect pointer.
