@@ -30,6 +30,7 @@ public class TestSingleSegmentOptimization extends TestCase {
   private ExposedCache cache;
   private IndexWriter w = null;
 
+
   public TestSingleSegmentOptimization(String name) {
     super(name);
   }
@@ -142,16 +143,50 @@ public class TestSingleSegmentOptimization extends TestCase {
     System.out.println(ExposedCache.getInstance());
     System.out.println(CollectorPoolFactory.getLastFactory());
   }
-  public void testScaleOptimizedSparseFacet() throws Exception {
-    String avgTrue1= testScaleOptimizedSparseFacet(true);
-    String avgFalse1= testScaleOptimizedSparseFacet(false);
-    String avgTrue2= testScaleOptimizedSparseFacet(true);
-    String  avgFalse2= testScaleOptimizedSparseFacet(false);
-    System.out.println(String.format("sparse1=%s, multi2=%s, sparse2==%s, multi2==%s",
-                                     avgTrue1, avgFalse1, avgTrue2, avgFalse2));
+
+  public void testScaleOptimizedSparseCollector() throws Exception {
+    testScaleOptimizedSpecificCollector(true);
+    System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
+                       + " results comparable to testScaleOptimizedMultiCollector");
   }
 
-  public String testScaleOptimizedSparseFacet(boolean sparse) throws Exception {
+  public void testScaleOptimizedMultiCollector() throws Exception {
+    testScaleOptimizedSpecificCollector(false);
+    System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
+                       + " results comparable to testScaleOptimizedFacetCollector");
+  }
+
+  public void testScaleOptimizedSpecificCollector(boolean useSparse) throws Exception {
+    final int RUNS = 5;
+    final int[] FRACTIONS = new int[]{10, 20, 30, 40, 50, 100, 200, 500, 1000, 5000};
+    final IndexSearcher searcher = getTagCollectorTestSearcher();
+    final CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 0, 1);
+
+
+    StringBuffer sb = new StringBuffer();
+    for (int run = 1 ; run <= RUNS ; run++) {
+      for (int fraction: FRACTIONS) {
+        printTestScaleOptimizedSparseFacet(sb, poolFactory, searcher, useSparse, run, fraction);
+      }
+      System.out.println("\n********* Temporary output\n" + sb);
+    }
+    System.out.println(ExposedCache.getInstance());
+    System.out.println(CollectorPoolFactory.getLastFactory());
+    System.out.println("\n*****************************************************************************************");
+    System.out.println(sb);
+  }
+
+  private void printTestScaleOptimizedSparseFacet(
+      StringBuffer output, CollectorPoolFactory poolFactory, IndexSearcher searcher, boolean useSparse, int run,
+      int matchFraction) throws Exception {
+    long[] timing = testScaleOptimizedCollectorImpl(poolFactory, searcher, useSparse, matchFraction);
+    output.append(String.format(
+        "Run %d: sparse=%5b, fraction=1/%4d countAvg=%4dms, extractAvg=%4dms, clearAvg=%4dms, totalAvg=%4d\n",
+        run, useSparse, matchFraction, timing[0], timing[1], timing[2], timing[0] + timing[1] + timing[2]));
+  }
+
+  public long[] testScaleOptimizedCollectorImpl(
+      CollectorPoolFactory poolFactory, IndexSearcher searcher, boolean sparse, int matchFraction) throws Exception {
     long totalTime = -System.currentTimeMillis();
 
     ExposedSettings.useSparseCollector = sparse;
@@ -159,8 +194,38 @@ public class TestSingleSegmentOptimization extends TestCase {
     ExposedSettings.debug = true;
     FacetMapFactory.defaultImpl = FacetMapFactory.IMPL.pass2;
 
-    final String QUERY = ExposedHelper.EVERY50 + ":true";
-    final int DOCCOUNT = 2000000;
+    final String QUERY = ExposedHelper.EVERY + ":every_" + matchFraction;
+    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
+    Query q = qp.parse(QUERY);
+
+    StringWriter sw = new StringWriter(10000);
+    TopScoreDocCollector collector = TopScoreDocCollector.create(10, false);
+    searcher.search(q, collector);
+    assertTrue("There should be 1/" + matchFraction + " maxhits for test search",
+               Math.abs((searcher.getIndexReader().maxDoc() / matchFraction - 1) - collector.getTotalHits()) <= 1);
+    sw.append("Used heap after loading index and performing a simple search: " + getMem() + " MB\n");
+    sw.append("Maximum possible memory (Runtime.getRuntime().maxMemory()): "
+              + Runtime.getRuntime().maxMemory() / 1048576 + " MB\n");
+    sw.append("\n");
+
+    qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
+    q = qp.parse(QUERY);
+
+    long[] timing = testFaceting(poolFactory, searcher, q, QUERY, sw, SCALE_MANY_DOCS_REQUEST);
+
+    System.out.println("**************************\n");
+
+    sw.append("\nUsed memory with sort, facet and index lookup structures intact: " + getMem() + " MB\n");
+    totalTime += System.currentTimeMillis();
+    sw.append("Total test time: " + getTime(totalTime));
+
+    System.out.println("");
+    System.out.println(sw.toString());
+    return timing;
+  }
+
+  public IndexSearcher getTagCollectorTestSearcher() throws IOException {
+    final int DOCCOUNT = 20000000;
     final int TERM_LENGTH = 20;
     final List<String> FIELDS = Arrays.asList("a");
     final File LOCATION = PREFERRED_ROOT.exists() ?
@@ -175,50 +240,10 @@ public class TestSingleSegmentOptimization extends TestCase {
     assertTrue("No index at " + LOCATION.getAbsolutePath() + ". Please build a test index (you can use one from on of " +
                "the other JUnit tests in TestExposedFacets) and correct the path", LOCATION.exists());
 
-    IndexReader reader = ExposedIOFactory.getReader(LOCATION);
-    IndexSearcher searcher = new IndexSearcher(reader);
-    QueryParser qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
-    Query q = qp.parse(QUERY);
-
-    StringWriter sw = new StringWriter(10000);
-    sw.append("Index = " + LOCATION.getAbsolutePath() + " (" + reader.maxDoc() + " documents)\n");
-
-    TopScoreDocCollector collector = TopScoreDocCollector.create(10, false);
-    searcher.search(q, collector);
-    assertEquals("There should be 1/50 maxhits for test search", DOCCOUNT/50, collector.getTotalHits());
-    sw.append("Used heap after loading index and performing a simple search: " + getMem() + " MB\n");
-    sw.append("Maximum possible memory (Runtime.getRuntime().maxMemory()): "
-              + Runtime.getRuntime().maxMemory() / 1048576 + " MB\n");
-
-    sw.append("\n");
-
-    // Tests
-    CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 0, 1);
-
-    qp = new QueryParser(Version.LUCENE_46, ExposedHelper.EVEN, getAnalyzer());
-    q = qp.parse(QUERY);
-    String sQuery = QUERY;
-
-    testFaceting(poolFactory, searcher, q, sQuery, sw, SCALE_MANY_DOCS_REQUEST);
-
-    System.out.println("**************************\n");
-
-    sw.append("\nUsed memory with sort, facet and index lookup structures intact: " + getMem() + " MB\n");
-    totalTime += System.currentTimeMillis();
-    sw.append("Total test time: " + getTime(totalTime));
-
-    System.out.println("");
-    System.out.println(sw.toString());
-    System.out.println(ExposedCache.getInstance());
-    System.out.println(CollectorPoolFactory.getLastFactory());
-
-    ExposedCache.getInstance().purgeAllCaches();
-    CollectorPoolFactory.getLastFactory().purgeAllCaches();
-    return uglyHackMS;
+    return new IndexSearcher(ExposedIOFactory.getReader(LOCATION));
   }
 
-  private String uglyHackMS = ""; // TODO: Remove this
-  private void testFaceting(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q, String sQuery,
+  private long[] testFaceting(CollectorPoolFactory poolFactory, IndexSearcher searcher, Query q, String sQuery,
                             StringWriter result, String requestString) throws XMLStreamException, IOException {
     final int RUNS = 5;
 
@@ -228,7 +253,10 @@ public class TestSingleSegmentOptimization extends TestCase {
     assertTrue("There must be at least 10 documents in the index at ", DOCCOUNT >= 10);
     final int span = DOCCOUNT / 10;
     long firstTime = -1;
-    long subsequents = 0;
+    long subsCountTime = 0;
+    long subsExtractTime = 0;
+    long subsClearTime = 0;
+
     int subCount = 0;
     long poolTime = -1;
     for (int i = 0 ; i < RUNS ; i++) {
@@ -244,25 +272,35 @@ public class TestSingleSegmentOptimization extends TestCase {
                       + request.getGroupKey() + ": " + getTime(poolTime) + "\n");
       }
 
-      long countStart = System.currentTimeMillis();
+      long countTime = -System.currentTimeMillis();
       TagCollector collector = collectorPool.acquire(null); // No caching
       if (collector.getQuery() == null) { // Fresh collector
         searcher.search(q, collector);
-        long countTime = System.currentTimeMillis() - countStart;
-        collector.setCountTime(countTime);
+      } else {
+        System.out.println("Note: Using cached collector for query " + q);
       }
+      countTime += System.currentTimeMillis();
+      collector.setCountTime(countTime);
+
+      long extractTime = -System.currentTimeMillis();
       response = collector.extractResult(request);
+      extractTime += System.currentTimeMillis();
       assertNotNull("Extracting XML response should work", response.toXML());
       if (collector.getQuery() != null) { // Cached count
         response.setCountingCached(true);
       }
-      long totalTime = System.currentTimeMillis() - countStart;
+      long clearTime = -System.currentTimeMillis();
+      collector.clear();
+      clearTime += System.currentTimeMillis();
+      long totalTime = countTime + extractTime + clearTime;
       if (firstTime == -1) {
         firstTime = totalTime;
         result.append("First faceting for " + sQuery + ": " + getTime(totalTime) + "\n");
       } else {
         subCount++;
-        subsequents += totalTime;
+        subsCountTime += countTime;
+        subsExtractTime += extractTime;
+        subsClearTime += clearTime;
       }
       response.setTotalTime(totalTime);
 /*        System.out.println("Collection for prefix " + prefix + " and offset "
@@ -270,11 +308,11 @@ public class TestSingleSegmentOptimization extends TestCase {
             + (System.currentTimeMillis()-countStart) + "ms");*/
       collectorPool.release(null, collector); // No caching
     }
-    result.append("Subsequent " + subCount + " faceting calls (count caching " +
-                  "disabled) response times: " + getTime(subsequents / subCount) + "\n");
+    result.append("Subsequent " + subCount + " faceting calls (count caching disabled) response times: "
+                  + getTime((subsClearTime + subsExtractTime + subsClearTime) / subCount) + "\n");
     assertNotNull("There should be a response", response);
     result.append(response.toXML()).append("\n");
-    uglyHackMS = getTime(subsequents / subCount);
+    return new long[]{subsCountTime / subCount, subsExtractTime / subCount, subsClearTime / subCount};
   }
 
   private String getTime(long ms) {

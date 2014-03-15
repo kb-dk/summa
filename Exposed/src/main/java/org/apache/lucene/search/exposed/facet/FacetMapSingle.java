@@ -63,7 +63,7 @@ public class FacetMapSingle implements FacetMap {
   }
 
   @Override
-  public void updateCounter(int[] tagCounts, int docID) {
+  public void updateCounter(final int[] tagCounts, final int docID) {
     try {
       final int index = (int)refs.get(docID);
       if (index == 0) { // TODO: Skip this check by incrementing counter 0 while disregarding it later
@@ -78,7 +78,7 @@ public class FacetMapSingle implements FacetMap {
   }
 
   @Override
-  public void updateCounter(TagCollector collector, int docID) {
+  public void updateCounter(final TagCollector collector, final int docID) {
     try {
       final int index = (int)refs.get(docID);
       if (index == 0) { // TODO: Skip this check by incrementing counter 0 while disregarding it later

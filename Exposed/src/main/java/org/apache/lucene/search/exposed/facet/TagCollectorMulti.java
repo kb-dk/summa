@@ -21,7 +21,7 @@ public class TagCollectorMulti extends TagCollector {
   public TagCollectorMulti(FacetMap map) {
     super(map);
     try {
-      this.tagCounts = new int[map.getTagCount()];
+      tagCounts = new int[map.getTagCount()];
     } catch (OutOfMemoryError e) {
       throw (OutOfMemoryError)new OutOfMemoryError(String.format(
               "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMapMulti was %s",
@@ -34,6 +34,11 @@ public class TagCollectorMulti extends TagCollector {
   public final void collectAbsolute(final int absoluteDocID) throws IOException {
     hitCount++;
     map.updateCounter(tagCounts, absoluteDocID);
+  }
+  @Override
+  public final void collect(final int docID) throws IOException { // Optimization
+    hitCount++;
+    map.updateCounter(tagCounts, docBase + docID);
   }
 
   @Override

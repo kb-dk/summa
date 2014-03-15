@@ -27,7 +27,15 @@ public class ExposedHelper {
   public static final String ALL = "all"; // all == "all"
   public static final String EVEN_NULL = "evennull"; // odd = random content
   public static final String MULTI = "facet"; // 0-5 of values A to Z
-  public static final String EVERY50 = "fifty";
+
+  public static final String EVERY = "every"; // Field
+  // For each of the docIDs % EVERY_MOD, the content of the EVERY-field will be 'every_' + EVERY_MOD[relevant].
+  // Except for docID == 0.
+  public static final int[] EVERY_MOD = new int[]{2, 5, 10, 20, 30, 40, 50, 75,
+                                                  100, 150, 200, 300, 400, 500, 750,
+                                                  1000, 1500, 2000, 3000, 4000, 5000, 7500,
+                                                  10000, 15000, 20000, 30000, 40000, 50000, 75000,
+                                                  100000, 150000, 200000, 300000, 400000, 500000, 750000};
 
   public static final DecimalFormat ID_FORMAT = new DecimalFormat("00000000");
 
@@ -200,11 +208,12 @@ public class ExposedHelper {
         doc.add(new StringField(
             EVEN_NULL, getRandomString(random, CHARS, 1, fieldContentLength) + docID, Field.Store.YES));
       }
-      if (docID % 50 == 1) {
-        doc.add(new StringField(
-            EVERY50, "true", Field.Store.YES));
+      for (int mod: EVERY_MOD) {
+        if (docID != 0 && docID % mod == 0) {
+          doc.add(new StringField(EVERY, "every_" + mod, Field.Store.NO));
+        }
+        doc.add(new StringField(ALL, ALL, Field.Store.YES));
       }
-      doc.add(new StringField(ALL, ALL, Field.Store.YES));
       writer.addDocument(doc);
       if (docID == docCount / minSegments) {
         writer.commit(); // Ensure minSegments
@@ -219,10 +228,8 @@ public class ExposedHelper {
     writer.close();
     System.out.println("");
     System.out.println(String.format(
-        "Created %d document index with %d fields with average " +
-            "term length %d and total size %s in %sms at %s",
-        docCount, fields.size() + 2, fieldContentLength / 2,
-        readableSize(calculateSize(location)),
+        "Created %d document index with %d fields with average term length %d and total size %s in %sms at %s",
+        docCount, fields.size() + 2, fieldContentLength / 2, readableSize(calculateSize(location)),
         (System.nanoTime() - startTime) / 1000000, location.getAbsolutePath()));
   }
 
