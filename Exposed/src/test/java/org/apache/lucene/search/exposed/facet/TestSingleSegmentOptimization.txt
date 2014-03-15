@@ -10,56 +10,70 @@ ExposedCache(
 CollectorPoolFactory(
   CollectorPool(FacetMapSingle(#docs=19999999 (59 MB), provider(GroupTermProvider(count, #subProviders=1, order.length=19999989 mem=0 bytes, TermProviderImpl(Group count, no docToSingle cached)))), #fresh counters = 1, #filled counters = 0, active counters = 0, total counter size = 78124 KB))
 
-Run 1: sparse= true, fraction=1/  10 countAvg= 147ms, extractAvg=  95ms, clearAvg=  33ms, totalAvg= 275
-Run 1: sparse= true, fraction=1/  20 countAvg=  80ms, extractAvg=  49ms, clearAvg=  17ms, totalAvg= 146
-Run 1: sparse= true, fraction=1/  30 countAvg=  54ms, extractAvg=  33ms, clearAvg=  11ms, totalAvg=  98
-Run 1: sparse= true, fraction=1/  40 countAvg=  47ms, extractAvg=  25ms, clearAvg=   8ms, totalAvg=  80
-Run 1: sparse= true, fraction=1/  50 countAvg=  31ms, extractAvg=  20ms, clearAvg=   7ms, totalAvg=  58
-Run 1: sparse= true, fraction=1/ 100 countAvg=  17ms, extractAvg=  10ms, clearAvg=   3ms, totalAvg=  30
-Run 1: sparse= true, fraction=1/ 200 countAvg=  10ms, extractAvg=   5ms, clearAvg=   1ms, totalAvg=  16
-Run 1: sparse= true, fraction=1/ 500 countAvg=   5ms, extractAvg=   2ms, clearAvg=   1ms, totalAvg=   8
-Run 1: sparse= true, fraction=1/1000 countAvg=   2ms, extractAvg=   1ms, clearAvg=   0ms, totalAvg=   3
-Run 1: sparse= true, fraction=1/5000 countAvg=   0ms, extractAvg=   1ms, clearAvg=   0ms, totalAvg=   1
-Run 2: sparse= true, fraction=1/  10 countAvg= 119ms, extractAvg=  96ms, clearAvg=  33ms, totalAvg= 248
-Run 2: sparse= true, fraction=1/  20 countAvg=  67ms, extractAvg=  49ms, clearAvg=  17ms, totalAvg= 133
-Run 2: sparse= true, fraction=1/  30 countAvg=  49ms, extractAvg=  33ms, clearAvg=  12ms, totalAvg=  94
-Run 2: sparse= true, fraction=1/  40 countAvg=  40ms, extractAvg=  24ms, clearAvg=   9ms, totalAvg=  73
-Run 2: sparse= true, fraction=1/  50 countAvg=  31ms, extractAvg=  20ms, clearAvg=   7ms, totalAvg=  58
-Run 2: sparse= true, fraction=1/ 100 countAvg=  17ms, extractAvg=  10ms, clearAvg=   3ms, totalAvg=  30
-Run 2: sparse= true, fraction=1/ 200 countAvg=  10ms, extractAvg=   5ms, clearAvg=   2ms, totalAvg=  17
-Run 2: sparse= true, fraction=1/ 500 countAvg=   4ms, extractAvg=   1ms, clearAvg=   0ms, totalAvg=   5
-Run 2: sparse= true, fraction=1/1000 countAvg=   2ms, extractAvg=   1ms, clearAvg=   0ms, totalAvg=   3
-Run 2: sparse= true, fraction=1/5000 countAvg=   1ms, extractAvg=   0ms, clearAvg=   0ms, totalAvg=   1
-Run 3: sparse= true, fraction=1/  10 countAvg= 122ms, extractAvg=  95ms, clearAvg=  33ms, totalAvg= 250
-Run 3: sparse= true, fraction=1/  20 countAvg=  67ms, extractAvg=  48ms, clearAvg=  16ms, totalAvg= 131
-Run 3: sparse= true, fraction=1/  30 countAvg=  49ms, extractAvg=  32ms, clearAvg=  11ms, totalAvg=  92
-Run 3: sparse= true, fraction=1/  40 countAvg=  43ms, extractAvg=  24ms, clearAvg=   9ms, totalAvg=  76
-Run 3: sparse= true, fraction=1/  50 countAvg=  35ms, extractAvg=  19ms, clearAvg=   6ms, totalAvg=  60
-Run 3: sparse= true, fraction=1/ 100 countAvg=  17ms, extractAvg=  10ms, clearAvg=   3ms, totalAvg=  30
-Run 3: sparse= true, fraction=1/ 200 countAvg=   9ms, extractAvg=   5ms, clearAvg=   1ms, totalAvg=  15
-Run 3: sparse= true, fraction=1/ 500 countAvg=   3ms, extractAvg=   2ms, clearAvg=   1ms, totalAvg=   6
-Run 3: sparse= true, fraction=1/1000 countAvg=   2ms, extractAvg=   1ms, clearAvg=   0ms, totalAvg=   3
-Run 3: sparse= true, fraction=1/5000 countAvg=   0ms, extractAvg=   0ms, clearAvg=   0ms, totalAvg=   0
-Run 4: sparse= true, fraction=1/  10 countAvg= 123ms, extractAvg=  96ms, clearAvg=  33ms, totalAvg= 252
-Run 4: sparse= true, fraction=1/  20 countAvg=  66ms, extractAvg=  47ms, clearAvg=  16ms, totalAvg= 129
-Run 4: sparse= true, fraction=1/  30 countAvg=  51ms, extractAvg=  32ms, clearAvg=  11ms, totalAvg=  94
-Run 4: sparse= true, fraction=1/  40 countAvg=  41ms, extractAvg=  24ms, clearAvg=   8ms, totalAvg=  73
-Run 4: sparse= true, fraction=1/  50 countAvg=  32ms, extractAvg=  20ms, clearAvg=   7ms, totalAvg=  59
-Run 4: sparse= true, fraction=1/ 100 countAvg=  16ms, extractAvg=  10ms, clearAvg=   3ms, totalAvg=  29
-Run 4: sparse= true, fraction=1/ 200 countAvg=  10ms, extractAvg=   5ms, clearAvg=   1ms, totalAvg=  16
-Run 4: sparse= true, fraction=1/ 500 countAvg=   3ms, extractAvg=   2ms, clearAvg=   1ms, totalAvg=   6
-Run 4: sparse= true, fraction=1/1000 countAvg=   2ms, extractAvg=   1ms, clearAvg=   0ms, totalAvg=   3
-Run 4: sparse= true, fraction=1/5000 countAvg=   0ms, extractAvg=   0ms, clearAvg=   0ms, totalAvg=   0
-Run 5: sparse= true, fraction=1/  10 countAvg= 124ms, extractAvg=  98ms, clearAvg=  34ms, totalAvg= 256
-Run 5: sparse= true, fraction=1/  20 countAvg=  67ms, extractAvg=  49ms, clearAvg=  17ms, totalAvg= 133
-Run 5: sparse= true, fraction=1/  30 countAvg=  48ms, extractAvg=  33ms, clearAvg=  11ms, totalAvg=  92
-Run 5: sparse= true, fraction=1/  40 countAvg=  41ms, extractAvg=  24ms, clearAvg=   8ms, totalAvg=  73
-Run 5: sparse= true, fraction=1/  50 countAvg=  31ms, extractAvg=  19ms, clearAvg=   7ms, totalAvg=  57
-Run 5: sparse= true, fraction=1/ 100 countAvg=  16ms, extractAvg=  10ms, clearAvg=   3ms, totalAvg=  29
-Run 5: sparse= true, fraction=1/ 200 countAvg=   9ms, extractAvg=   4ms, clearAvg=   1ms, totalAvg=  14
-Run 5: sparse= true, fraction=1/ 500 countAvg=   3ms, extractAvg=   1ms, clearAvg=   0ms, totalAvg=   4
-Run 5: sparse= true, fraction=1/1000 countAvg=   2ms, extractAvg=   0ms, clearAvg=   0ms, totalAvg=   2
-Run 5: sparse= true, fraction=1/5000 countAvg=   0ms, extractAvg=   0ms, clearAvg=   0ms, totalAvg=   0
+Run 1: sparse= true, fraction=1/   2 count= 583ms, extract= 153ms, clear=  12ms, total= 748
+Run 1: sparse= true, fraction=1/   5 count= 255ms, extract=  91ms, clear=  12ms, total= 358
+Run 1: sparse= true, fraction=1/  10 count= 146ms, extract=  96ms, clear=  34ms, total= 276
+Run 1: sparse= true, fraction=1/  20 count=  77ms, extract=  48ms, clear=  16ms, total= 141
+Run 1: sparse= true, fraction=1/  30 count=  49ms, extract=  32ms, clear=  12ms, total=  93
+Run 1: sparse= true, fraction=1/  40 count=  41ms, extract=  24ms, clear=   8ms, total=  73
+Run 1: sparse= true, fraction=1/  50 count=  34ms, extract=  19ms, clear=   6ms, total=  59
+Run 1: sparse= true, fraction=1/ 100 count=  20ms, extract=  11ms, clear=   4ms, total=  35
+Run 1: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   1ms, total=  16
+Run 1: sparse= true, fraction=1/ 500 count=   4ms, extract=   1ms, clear=   1ms, total=   6
+Run 1: sparse= true, fraction=1/1000 count=   2ms, extract=   1ms, clear=   1ms, total=   4
+Run 1: sparse= true, fraction=1/5000 count=   1ms, extract=   0ms, clear=   0ms, total=   1
+
+Run 2: sparse= true, fraction=1/   2 count= 559ms, extract= 156ms, clear=  11ms, total= 726
+Run 2: sparse= true, fraction=1/   5 count= 236ms, extract=  89ms, clear=  11ms, total= 336
+Run 2: sparse= true, fraction=1/  10 count= 123ms, extract=  95ms, clear=  33ms, total= 251
+Run 2: sparse= true, fraction=1/  20 count=  68ms, extract=  48ms, clear=  16ms, total= 132
+Run 2: sparse= true, fraction=1/  30 count=  49ms, extract=  32ms, clear=  11ms, total=  92
+Run 2: sparse= true, fraction=1/  40 count=  41ms, extract=  24ms, clear=   8ms, total=  73
+Run 2: sparse= true, fraction=1/  50 count=  33ms, extract=  19ms, clear=   6ms, total=  58
+Run 2: sparse= true, fraction=1/ 100 count=  19ms, extract=  11ms, clear=   3ms, total=  33
+Run 2: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   1ms, total=  16
+Run 2: sparse= true, fraction=1/ 500 count=   4ms, extract=   1ms, clear=   1ms, total=   6
+Run 2: sparse= true, fraction=1/1000 count=   2ms, extract=   1ms, clear=   0ms, total=   3
+Run 2: sparse= true, fraction=1/5000 count=   1ms, extract=   0ms, clear=   0ms, total=   1
+
+Run 3: sparse= true, fraction=1/   2 count= 560ms, extract= 161ms, clear=  12ms, total= 733
+Run 3: sparse= true, fraction=1/   5 count= 237ms, extract=  90ms, clear=  12ms, total= 339
+Run 3: sparse= true, fraction=1/  10 count= 126ms, extract=  95ms, clear=  34ms, total= 255
+Run 3: sparse= true, fraction=1/  20 count=  70ms, extract=  48ms, clear=  17ms, total= 135
+Run 3: sparse= true, fraction=1/  30 count=  52ms, extract=  34ms, clear=  12ms, total=  98
+Run 3: sparse= true, fraction=1/  40 count=  41ms, extract=  25ms, clear=   8ms, total=  74
+Run 3: sparse= true, fraction=1/  50 count=  34ms, extract=  19ms, clear=   7ms, total=  60
+Run 3: sparse= true, fraction=1/ 100 count=  20ms, extract=  10ms, clear=   4ms, total=  34
+Run 3: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   1ms, total=  16
+Run 3: sparse= true, fraction=1/ 500 count=   4ms, extract=   1ms, clear=   1ms, total=   6
+Run 3: sparse= true, fraction=1/1000 count=   1ms, extract=   1ms, clear=   0ms, total=   2
+Run 3: sparse= true, fraction=1/5000 count=   1ms, extract=   0ms, clear=   0ms, total=   1
+
+Run 4: sparse= true, fraction=1/   2 count= 581ms, extract= 159ms, clear=  12ms, total= 752
+Run 4: sparse= true, fraction=1/   5 count= 233ms, extract=  90ms, clear=  12ms, total= 335
+Run 4: sparse= true, fraction=1/  10 count= 125ms, extract=  96ms, clear=  33ms, total= 254
+Run 4: sparse= true, fraction=1/  20 count=  71ms, extract=  48ms, clear=  17ms, total= 136
+Run 4: sparse= true, fraction=1/  30 count=  52ms, extract=  32ms, clear=  11ms, total=  95
+Run 4: sparse= true, fraction=1/  40 count=  40ms, extract=  24ms, clear=   8ms, total=  72
+Run 4: sparse= true, fraction=1/  50 count=  33ms, extract=  20ms, clear=   7ms, total=  60
+Run 4: sparse= true, fraction=1/ 100 count=  19ms, extract=  11ms, clear=   3ms, total=  33
+Run 4: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   2ms, total=  17
+Run 4: sparse= true, fraction=1/ 500 count=   4ms, extract=   2ms, clear=   0ms, total=   6
+Run 4: sparse= true, fraction=1/1000 count=   1ms, extract=   1ms, clear=   0ms, total=   2
+Run 4: sparse= true, fraction=1/5000 count=   1ms, extract=   0ms, clear=   0ms, total=   1
+
+Run 5: sparse= true, fraction=1/   2 count= 561ms, extract= 156ms, clear=  12ms, total= 729
+Run 5: sparse= true, fraction=1/   5 count= 237ms, extract=  89ms, clear=  12ms, total= 338
+Run 5: sparse= true, fraction=1/  10 count= 124ms, extract=  95ms, clear=  34ms, total= 253
+Run 5: sparse= true, fraction=1/  20 count=  69ms, extract=  48ms, clear=  16ms, total= 133
+Run 5: sparse= true, fraction=1/  30 count=  51ms, extract=  32ms, clear=  11ms, total=  94
+Run 5: sparse= true, fraction=1/  40 count=  41ms, extract=  25ms, clear=   8ms, total=  74
+Run 5: sparse= true, fraction=1/  50 count=  34ms, extract=  20ms, clear=   6ms, total=  60
+Run 5: sparse= true, fraction=1/ 100 count=  19ms, extract=  10ms, clear=   3ms, total=  32
+Run 5: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   2ms, total=  17
+Run 5: sparse= true, fraction=1/ 500 count=   8ms, extract=   4ms, clear=   1ms, total=  13
+Run 5: sparse= true, fraction=1/1000 count=   1ms, extract=   1ms, clear=   0ms, total=   2
+Run 5: sparse= true, fraction=1/5000 count=   0ms, extract=   0ms, clear=   0ms, total=   0
 
 
 *****************************************************************************************
@@ -70,53 +84,67 @@ ExposedCache(
 CollectorPoolFactory(
   CollectorPool(FacetMapSingle(#docs=19999999 (59 MB), provider(GroupTermProvider(count, #subProviders=1, order.length=19999989 mem=0 bytes, TermProviderImpl(Group count, no docToSingle cached)))), #fresh counters = 1, #filled counters = 0, active counters = 0, total counter size = 78124 KB))
 
-Run 1: sparse=false, fraction=1/  10 countAvg= 223ms, extractAvg=  61ms, clearAvg=  12ms, totalAvg= 296
-Run 1: sparse=false, fraction=1/  20 countAvg= 169ms, extractAvg=  41ms, clearAvg=  12ms, totalAvg= 222
-Run 1: sparse=false, fraction=1/  30 countAvg= 148ms, extractAvg=  35ms, clearAvg=  12ms, totalAvg= 195
-Run 1: sparse=false, fraction=1/  40 countAvg= 140ms, extractAvg=  34ms, clearAvg=  12ms, totalAvg= 186
-Run 1: sparse=false, fraction=1/  50 countAvg= 134ms, extractAvg=  31ms, clearAvg=  12ms, totalAvg= 177
-Run 1: sparse=false, fraction=1/ 100 countAvg= 119ms, extractAvg=  28ms, clearAvg=  11ms, totalAvg= 158
-Run 1: sparse=false, fraction=1/ 200 countAvg= 112ms, extractAvg=  28ms, clearAvg=  12ms, totalAvg= 152
-Run 1: sparse=false, fraction=1/ 500 countAvg= 107ms, extractAvg=  29ms, clearAvg=  12ms, totalAvg= 148
-Run 1: sparse=false, fraction=1/1000 countAvg= 105ms, extractAvg=  26ms, clearAvg=  12ms, totalAvg= 143
-Run 1: sparse=false, fraction=1/5000 countAvg= 101ms, extractAvg=  30ms, clearAvg=  12ms, totalAvg= 143
-Run 2: sparse=false, fraction=1/  10 countAvg= 217ms, extractAvg=  58ms, clearAvg=  12ms, totalAvg= 287
-Run 2: sparse=false, fraction=1/  20 countAvg= 167ms, extractAvg=  41ms, clearAvg=  12ms, totalAvg= 220
-Run 2: sparse=false, fraction=1/  30 countAvg= 149ms, extractAvg=  36ms, clearAvg=  11ms, totalAvg= 196
-Run 2: sparse=false, fraction=1/  40 countAvg= 142ms, extractAvg=  32ms, clearAvg=  12ms, totalAvg= 186
-Run 2: sparse=false, fraction=1/  50 countAvg= 134ms, extractAvg=  31ms, clearAvg=  12ms, totalAvg= 177
-Run 2: sparse=false, fraction=1/ 100 countAvg= 117ms, extractAvg=  29ms, clearAvg=  12ms, totalAvg= 158
-Run 2: sparse=false, fraction=1/ 200 countAvg= 109ms, extractAvg=  27ms, clearAvg=  11ms, totalAvg= 147
-Run 2: sparse=false, fraction=1/ 500 countAvg= 106ms, extractAvg=  28ms, clearAvg=  12ms, totalAvg= 146
-Run 2: sparse=false, fraction=1/1000 countAvg= 104ms, extractAvg=  28ms, clearAvg=  12ms, totalAvg= 144
-Run 2: sparse=false, fraction=1/5000 countAvg= 101ms, extractAvg=  31ms, clearAvg=  12ms, totalAvg= 144
-Run 3: sparse=false, fraction=1/  10 countAvg= 220ms, extractAvg=  58ms, clearAvg=  12ms, totalAvg= 290
-Run 3: sparse=false, fraction=1/  20 countAvg= 168ms, extractAvg=  42ms, clearAvg=  12ms, totalAvg= 222
-Run 3: sparse=false, fraction=1/  30 countAvg= 150ms, extractAvg=  35ms, clearAvg=  12ms, totalAvg= 197
-Run 3: sparse=false, fraction=1/  40 countAvg= 142ms, extractAvg=  32ms, clearAvg=  12ms, totalAvg= 186
-Run 3: sparse=false, fraction=1/  50 countAvg= 135ms, extractAvg=  31ms, clearAvg=  12ms, totalAvg= 178
-Run 3: sparse=false, fraction=1/ 100 countAvg= 119ms, extractAvg=  27ms, clearAvg=  11ms, totalAvg= 157
-Run 3: sparse=false, fraction=1/ 200 countAvg= 112ms, extractAvg=  26ms, clearAvg=  11ms, totalAvg= 149
-Run 3: sparse=false, fraction=1/ 500 countAvg= 106ms, extractAvg=  30ms, clearAvg=  12ms, totalAvg= 148
-Run 3: sparse=false, fraction=1/1000 countAvg= 104ms, extractAvg=  32ms, clearAvg=  12ms, totalAvg= 148
-Run 3: sparse=false, fraction=1/5000 countAvg= 102ms, extractAvg=  32ms, clearAvg=  12ms, totalAvg= 146
-Run 4: sparse=false, fraction=1/  10 countAvg= 217ms, extractAvg=  58ms, clearAvg=  12ms, totalAvg= 287
-Run 4: sparse=false, fraction=1/  20 countAvg= 167ms, extractAvg=  42ms, clearAvg=  12ms, totalAvg= 221
-Run 4: sparse=false, fraction=1/  30 countAvg= 151ms, extractAvg=  37ms, clearAvg=  12ms, totalAvg= 200
-Run 4: sparse=false, fraction=1/  40 countAvg= 141ms, extractAvg=  33ms, clearAvg=  11ms, totalAvg= 185
-Run 4: sparse=false, fraction=1/  50 countAvg= 135ms, extractAvg=  31ms, clearAvg=  12ms, totalAvg= 178
-Run 4: sparse=false, fraction=1/ 100 countAvg= 119ms, extractAvg=  27ms, clearAvg=  11ms, totalAvg= 157
-Run 4: sparse=false, fraction=1/ 200 countAvg= 112ms, extractAvg=  27ms, clearAvg=  12ms, totalAvg= 151
-Run 4: sparse=false, fraction=1/ 500 countAvg= 106ms, extractAvg=  27ms, clearAvg=  12ms, totalAvg= 145
-Run 4: sparse=false, fraction=1/1000 countAvg= 104ms, extractAvg=  30ms, clearAvg=  12ms, totalAvg= 146
-Run 4: sparse=false, fraction=1/5000 countAvg= 101ms, extractAvg=  28ms, clearAvg=  11ms, totalAvg= 140
-Run 5: sparse=false, fraction=1/  10 countAvg= 219ms, extractAvg=  59ms, clearAvg=  12ms, totalAvg= 290
-Run 5: sparse=false, fraction=1/  20 countAvg= 168ms, extractAvg=  41ms, clearAvg=  11ms, totalAvg= 220
-Run 5: sparse=false, fraction=1/  30 countAvg= 151ms, extractAvg=  35ms, clearAvg=  12ms, totalAvg= 198
-Run 5: sparse=false, fraction=1/  40 countAvg= 142ms, extractAvg=  33ms, clearAvg=  11ms, totalAvg= 186
-Run 5: sparse=false, fraction=1/  50 countAvg= 132ms, extractAvg=  31ms, clearAvg=  11ms, totalAvg= 174
-Run 5: sparse=false, fraction=1/ 100 countAvg= 119ms, extractAvg=  27ms, clearAvg=  11ms, totalAvg= 157
-Run 5: sparse=false, fraction=1/ 200 countAvg= 112ms, extractAvg=  26ms, clearAvg=  11ms, totalAvg= 149
-Run 5: sparse=false, fraction=1/ 500 countAvg= 106ms, extractAvg=  24ms, clearAvg=  11ms, totalAvg= 141
-Run 5: sparse=false, fraction=1/1000 countAvg= 103ms, extractAvg=  27ms, clearAvg=  12ms, totalAvg= 142
-Run 5: sparse=false, fraction=1/5000 countAvg= 101ms, extractAvg=  30ms, clearAvg=  11ms, totalAvg= 142
+Run 1: sparse=false, fraction=1/   2 count= 675ms, extract= 163ms, clear=  12ms, total= 850
+Run 1: sparse=false, fraction=1/   5 count= 349ms, extract= 103ms, clear=  12ms, total= 464
+Run 1: sparse=false, fraction=1/  10 count= 224ms, extract=  60ms, clear=  12ms, total= 296
+Run 1: sparse=false, fraction=1/  20 count= 172ms, extract=  43ms, clear=  13ms, total= 228
+Run 1: sparse=false, fraction=1/  30 count= 150ms, extract=  40ms, clear=  12ms, total= 202
+Run 1: sparse=false, fraction=1/  40 count= 140ms, extract=  36ms, clear=  12ms, total= 188
+Run 1: sparse=false, fraction=1/  50 count= 130ms, extract=  33ms, clear=  12ms, total= 175
+Run 1: sparse=false, fraction=1/ 100 count= 116ms, extract=  30ms, clear=  13ms, total= 159
+Run 1: sparse=false, fraction=1/ 200 count= 109ms, extract=  27ms, clear=  12ms, total= 148
+Run 1: sparse=false, fraction=1/ 500 count= 105ms, extract=  28ms, clear=  12ms, total= 145
+Run 1: sparse=false, fraction=1/1000 count= 104ms, extract=  28ms, clear=  12ms, total= 144
+Run 1: sparse=false, fraction=1/5000 count= 101ms, extract=  26ms, clear=  12ms, total= 139
+
+Run 2: sparse=false, fraction=1/   2 count= 663ms, extract= 167ms, clear=  12ms, total= 842
+Run 2: sparse=false, fraction=1/   5 count= 331ms, extract=  95ms, clear=  12ms, total= 438
+Run 2: sparse=false, fraction=1/  10 count= 217ms, extract=  62ms, clear=  12ms, total= 291
+Run 2: sparse=false, fraction=1/  20 count= 166ms, extract=  41ms, clear=  12ms, total= 219
+Run 2: sparse=false, fraction=1/  30 count= 145ms, extract=  35ms, clear=  12ms, total= 192
+Run 2: sparse=false, fraction=1/  40 count= 138ms, extract=  32ms, clear=  11ms, total= 181
+Run 2: sparse=false, fraction=1/  50 count= 130ms, extract=  32ms, clear=  11ms, total= 173
+Run 2: sparse=false, fraction=1/ 100 count= 116ms, extract=  27ms, clear=  12ms, total= 155
+Run 2: sparse=false, fraction=1/ 200 count= 111ms, extract=  24ms, clear=  11ms, total= 146
+Run 2: sparse=false, fraction=1/ 500 count= 105ms, extract=  26ms, clear=  12ms, total= 143
+Run 2: sparse=false, fraction=1/1000 count= 103ms, extract=  27ms, clear=  12ms, total= 142
+Run 2: sparse=false, fraction=1/5000 count= 102ms, extract=  30ms, clear=  11ms, total= 143
+
+Run 3: sparse=false, fraction=1/   2 count= 636ms, extract= 154ms, clear=  12ms, total= 802
+Run 3: sparse=false, fraction=1/   5 count= 320ms, extract=  88ms, clear=  12ms, total= 420
+Run 3: sparse=false, fraction=1/  10 count= 214ms, extract=  56ms, clear=  11ms, total= 281
+Run 3: sparse=false, fraction=1/  20 count= 165ms, extract=  40ms, clear=  12ms, total= 217
+Run 3: sparse=false, fraction=1/  30 count= 146ms, extract=  34ms, clear=  11ms, total= 191
+Run 3: sparse=false, fraction=1/  40 count= 138ms, extract=  33ms, clear=  12ms, total= 183
+Run 3: sparse=false, fraction=1/  50 count= 130ms, extract=  30ms, clear=  12ms, total= 172
+Run 3: sparse=false, fraction=1/ 100 count= 119ms, extract=  27ms, clear=  12ms, total= 158
+Run 3: sparse=false, fraction=1/ 200 count= 110ms, extract=  25ms, clear=  11ms, total= 146
+Run 3: sparse=false, fraction=1/ 500 count= 105ms, extract=  26ms, clear=  12ms, total= 143
+Run 3: sparse=false, fraction=1/1000 count= 103ms, extract=  28ms, clear=  12ms, total= 143
+Run 3: sparse=false, fraction=1/5000 count= 102ms, extract=  26ms, clear=  11ms, total= 139
+
+Run 4: sparse=false, fraction=1/   2 count= 636ms, extract= 158ms, clear=  12ms, total= 806
+Run 4: sparse=false, fraction=1/   5 count= 323ms, extract=  90ms, clear=  12ms, total= 425
+Run 4: sparse=false, fraction=1/  10 count= 216ms, extract=  57ms, clear=  11ms, total= 284
+Run 4: sparse=false, fraction=1/  20 count= 170ms, extract=  42ms, clear=  12ms, total= 224
+Run 4: sparse=false, fraction=1/  30 count= 147ms, extract=  41ms, clear=  12ms, total= 200
+Run 4: sparse=false, fraction=1/  40 count= 139ms, extract=  36ms, clear=  12ms, total= 187
+Run 4: sparse=false, fraction=1/  50 count= 131ms, extract=  34ms, clear=  13ms, total= 178
+Run 4: sparse=false, fraction=1/ 100 count= 116ms, extract=  31ms, clear=  12ms, total= 159
+Run 4: sparse=false, fraction=1/ 200 count= 109ms, extract=  28ms, clear=  12ms, total= 149
+Run 4: sparse=false, fraction=1/ 500 count= 105ms, extract=  28ms, clear=  12ms, total= 145
+Run 4: sparse=false, fraction=1/1000 count= 103ms, extract=  26ms, clear=  12ms, total= 141
+Run 4: sparse=false, fraction=1/5000 count= 101ms, extract=  26ms, clear=  12ms, total= 139
+
+Run 5: sparse=false, fraction=1/   2 count= 657ms, extract= 167ms, clear=  12ms, total= 836
+Run 5: sparse=false, fraction=1/   5 count= 326ms, extract=  91ms, clear=  12ms, total= 429
+Run 5: sparse=false, fraction=1/  10 count= 217ms, extract=  58ms, clear=  12ms, total= 287
+Run 5: sparse=false, fraction=1/  20 count= 165ms, extract=  41ms, clear=  12ms, total= 218
+Run 5: sparse=false, fraction=1/  30 count= 146ms, extract=  34ms, clear=  12ms, total= 192
+Run 5: sparse=false, fraction=1/  40 count= 137ms, extract=  32ms, clear=  11ms, total= 180
+Run 5: sparse=false, fraction=1/  50 count= 131ms, extract=  31ms, clear=  11ms, total= 173
+Run 5: sparse=false, fraction=1/ 100 count= 116ms, extract=  26ms, clear=  11ms, total= 153
+Run 5: sparse=false, fraction=1/ 200 count= 111ms, extract=  25ms, clear=  11ms, total= 147
+Run 5: sparse=false, fraction=1/ 500 count= 105ms, extract=  26ms, clear=  12ms, total= 143
+Run 5: sparse=false, fraction=1/1000 count= 102ms, extract=  29ms, clear=  12ms, total= 143
+Run 5: sparse=false, fraction=1/5000 count= 101ms, extract=  25ms, clear=  12ms, total= 138
