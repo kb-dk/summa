@@ -158,7 +158,7 @@ public class TestSingleSegmentOptimization extends TestCase {
 
   public void testScaleOptimizedSpecificCollector(boolean useSparse) throws Exception {
     final int RUNS = 5;
-    final int[] FRACTIONS = new int[]{10, 20, 30, 40, 50, 100, 200, 500, 1000, 5000};
+    final int[] FRACTIONS = new int[]{2, 5, 10, 20, 30, 40, 50, 100, 200, 500, 1000, 5000};
     final IndexSearcher searcher = getTagCollectorTestSearcher();
     final CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 0, 1);
 
@@ -168,12 +168,14 @@ public class TestSingleSegmentOptimization extends TestCase {
       for (int fraction: FRACTIONS) {
         printTestScaleOptimizedSparseFacet(sb, poolFactory, searcher, useSparse, run, fraction);
       }
+      sb.append("\n");
       System.out.println("\n********* Temporary output\n" + sb);
     }
     System.out.println(ExposedCache.getInstance());
     System.out.println(CollectorPoolFactory.getLastFactory());
     System.out.println("\n*****************************************************************************************");
     System.out.println(sb);
+    System.out.println("Note: All reported times a minimum from 4 runs to compensate for random GC.");
   }
 
   private void printTestScaleOptimizedSparseFacet(
@@ -181,7 +183,7 @@ public class TestSingleSegmentOptimization extends TestCase {
       int matchFraction) throws Exception {
     long[] timing = testScaleOptimizedCollectorImpl(poolFactory, searcher, useSparse, matchFraction);
     output.append(String.format(
-        "Run %d: sparse=%5b, fraction=1/%4d countAvg=%4dms, extractAvg=%4dms, clearAvg=%4dms, totalAvg=%4d\n",
+        "Run %d: sparse=%5b, fraction=1/%4d count=%4dms, extract=%4dms, clear=%4dms, total=%4dms\n",
         run, useSparse, matchFraction, timing[0], timing[1], timing[2], timing[0] + timing[1] + timing[2]));
   }
 
@@ -253,9 +255,9 @@ public class TestSingleSegmentOptimization extends TestCase {
     assertTrue("There must be at least 10 documents in the index at ", DOCCOUNT >= 10);
     final int span = DOCCOUNT / 10;
     long firstTime = -1;
-    long subsCountTime = 0;
-    long subsExtractTime = 0;
-    long subsClearTime = 0;
+    long subsCountTime = Long.MAX_VALUE;
+    long subsExtractTime = Long.MAX_VALUE;
+    long subsClearTime = Long.MAX_VALUE;
 
     int subCount = 0;
     long poolTime = -1;
@@ -298,9 +300,9 @@ public class TestSingleSegmentOptimization extends TestCase {
         result.append("First faceting for " + sQuery + ": " + getTime(totalTime) + "\n");
       } else {
         subCount++;
-        subsCountTime += countTime;
-        subsExtractTime += extractTime;
-        subsClearTime += clearTime;
+        subsCountTime = Math.min(subsCountTime, countTime);
+        subsExtractTime = Math.min(subsExtractTime, extractTime);
+        subsClearTime = Math.min(subsClearTime, clearTime);
       }
       response.setTotalTime(totalTime);
 /*        System.out.println("Collection for prefix " + prefix + " and offset "
@@ -309,10 +311,10 @@ public class TestSingleSegmentOptimization extends TestCase {
       collectorPool.release(null, collector); // No caching
     }
     result.append("Subsequent " + subCount + " faceting calls (count caching disabled) response times: "
-                  + getTime((subsClearTime + subsExtractTime + subsClearTime) / subCount) + "\n");
+                  + getTime(subsClearTime + subsExtractTime + subsClearTime) + "\n");
     assertNotNull("There should be a response", response);
     result.append(response.toXML()).append("\n");
-    return new long[]{subsCountTime / subCount, subsExtractTime / subCount, subsClearTime / subCount};
+    return new long[]{subsCountTime, subsExtractTime, subsClearTime};
   }
 
   private String getTime(long ms) {
