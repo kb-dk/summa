@@ -21,8 +21,6 @@ public class TagCollectorSparse extends TagCollector {
   private final double sparseFactor;
   private final int sparseSize;
 
-
-  private int docBase;
   private final int[] tagCounts;
   private final int[] updated;
   private int updatePointer = 0;
@@ -92,7 +90,7 @@ public class TagCollectorSparse extends TagCollector {
   }
 
   @Override
-  public void inc(int tagID) {
+  public void inc(final int tagID) {
     if (sparseSize == updatePointer) {
       tagCounts[tagID]++;
       return;
@@ -104,13 +102,22 @@ public class TagCollectorSparse extends TagCollector {
   }
 
   @Override
-  public void collectAbsolute(int absoluteDocID) {
+  public void collectAbsolute(final int absoluteDocID) {
     hitCount++;
     if (updatePointer == sparseSize) {
       map.updateCounter(tagCounts, absoluteDocID);
       return;
     }
     map.updateCounter(this, absoluteDocID);
+  }
+  @Override
+  public final void collect(final int docID) throws IOException { // Optimization
+    hitCount++;
+    if (updatePointer == sparseSize) {
+      map.updateCounter(tagCounts, docBase + docID);
+      return;
+    }
+    map.updateCounter(this, docBase + docID);
   }
 
   @Override
@@ -141,6 +148,7 @@ public class TagCollectorSparse extends TagCollector {
       Arrays.fill(tagCounts, 0);
     } else {
       // TODO: Measure is this is really faster than a plain fill (which might be JVM optimized)
+      // Update 20140315: Seems to be based on TestSingleSegmentOptimization.testScaleOptimizedCollectorImpl
     // Sparse magic below
       for (int i = 0 ; i < updatePointer ; i++) {
         tagCounts[updated[i]] = 0;

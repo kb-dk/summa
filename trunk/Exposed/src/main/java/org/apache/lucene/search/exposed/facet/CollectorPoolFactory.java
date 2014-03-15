@@ -138,7 +138,12 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback, IndexRe
 
   @Override
   public synchronized void purgeAllCaches() {
-    log.info("purgeAllCaches() called");
+    if (poolMap.isEmpty() && readers.isEmpty()) {
+      log.debug("purgeAllCaches() called (nothing cached so nothing cleared)");
+    } else {
+      log.info("purgeAllCaches() called with " + poolMap.size() + " poolMaps");
+    }
+
     clear();
   }
 
