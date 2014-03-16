@@ -7,9 +7,11 @@ public class TagCollectorFactory {
   private static final ELog log = ELog.getLog(TagCollectorFactory.class);
 
   public static TagCollector getCollector(FacetMap map) {
-    if (ExposedSettings.useSparseCollector && TagCollectorSparse.isRecommended(map)) {
-      log.debug("Constructing sparse collector");
-      return new TagCollectorSparse(map);
+    if (ExposedSettings.useSparseCollector) {
+      if (ExposedSettings.forceSparseCollector || TagCollectorSparse.isRecommended(map)) {
+        log.debug("Constructing sparse collector");
+        return new TagCollectorSparse(map);
+      }
     }
     log.debug("Constructing multi collector");
     return new TagCollectorMulti(map);

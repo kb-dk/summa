@@ -1,150 +1,274 @@
-20140315: Test runs on a 4 year old i7-equipped laptop:
+20140316: Test runs on a 4 year old i7-equipped laptop:
 
+*****************************************************************************************
+Index with 20000000 documents, tag collector: sparse(all)
+run sparse fraction acquire count extract clear total
+  1   true        2       0   649     455   159  1263
+  1   true        5       0   279     189    66   534
+  1   true       10       0   140      95    32   267
+  1   true       20       0    74      47    16   137
+  1   true       30       0    46      32    11    89
+  1   true       40       0    38      24     8    70
+  1   true       50       0    32      20     7    59
+  1   true      100       0    17      10     3    30
+  1   true      200       0     9       5     2    16
+  1   true      500       0     4       2     0     6
+  1   true     1000       0     2       0     0     2
+  1   true     5000       0     0       0     0     0
+
+  2   true        2       0   551     462   162  1175
+  2   true        5       0   223     182    63   468
+  2   true       10       0   117      93    32   242
+  2   true       20       0    64      47    16   127
+  2   true       30       0    46      31    11    88
+  2   true       40       0    37      23     8    68
+  2   true       50       0    30      19     6    55
+  2   true      100       0    16      10     3    29
+  2   true      200       0     8       5     1    14
+  2   true      500       0     3       1     0     4
+  2   true     1000       0     1       1     0     2
+  2   true     5000       0     0       0     0     0
+
+  3   true        2       0   558     464   163  1185
+  3   true        5       0   227     189    65   481
+  3   true       10       0   114      93    32   239
+  3   true       20       0    63      46    16   125
+  3   true       30       0    46      31    10    87
+  3   true       40       0    37      23     8    68
+  3   true       50       0    30      19     6    55
+  3   true      100       0    16      10     3    29
+  3   true      200       0     9       5     1    15
+  3   true      500       0     3       1     0     4
+  3   true     1000       0     1       0     0     1
+  3   true     5000       0     0       0     0     0
+
+  4   true        2       0   544     453   160  1157
+  4   true        5       0   221     183    63   467
+  4   true       10       0   114      92    32   238
+  4   true       20       0    63      46    16   125
+  4   true       30       0    46      31    10    87
+  4   true       40       0    38      23     8    69
+  4   true       50       0    30      19     6    55
+  4   true      100       0    15      10     3    28
+  4   true      200       0     9       5     1    15
+  4   true      500       0     3       1     0     4
+  4   true     1000       0     1       0     0     1
+  4   true     5000       0     1       0     0     1
+
+  5   true        2       0   553     464   162  1179
+  5   true        5       0   228     185    65   478
+  5   true       10       0   117      94    33   244
+  5   true       20       0    64      48    16   128
+  5   true       30       0    46      32    11    89
+  5   true       40       0    38      23     8    69
+  5   true       50       0    30      19     6    55
+  5   true      100       0    16      10     3    29
+  5   true      200       0     8       5     1    14
+  5   true      500       0     3       1     1     5
+  5   true     1000       0     2       0     0     2
+  5   true     5000       0     0       0     0     0
+
+*****************************************************************************************
+Index with 20000000 documents, tag collector: sparse(none)
+run sparse fraction acquire count extract clear total
+  1   true        2       0   589     148    12   749
+  1   true        5       0   243      86    12   341
+  1   true       10       0   125      56    12   193
+  1   true       20       0    67      40    12   119
+  1   true       30       0    44      34    12    90
+  1   true       40       0    36      31    12    79
+  1   true       50       0    29      30    12    71
+  1   true      100       0    15      26    12    53
+  1   true      200       0     9      26    13    48
+  1   true      500       0     5      24    12    41
+  1   true     1000       0     3      23    12    38
+  1   true     5000       0     1      24    12    37
+
+  2   true        2       0   540     153    12   705
+  2   true        5       0   225      85    12   322
+  2   true       10       0   113      57    12   182
+  2   true       20       0    63      40    12   115
+  2   true       30       0    44      34    12    90
+  2   true       40       0    36      31    12    79
+  2   true       50       0    29      30    12    71
+  2   true      100       0    15      27    12    54
+  2   true      200       0     8      25    12    45
+  2   true      500       0     4      24    12    40
+  2   true     1000       0     2      23    12    37
+  2   true     5000       0     1      23    12    36
+
+  3   true        2       0   530     152    12   694
+  3   true        5       0   217      85    12   314
+  3   true       10       0   112      56    12   180
+  3   true       20       0    62      40    12   114
+  3   true       30       0    45      34    12    91
+  3   true       40       0    36      32    12    80
+  3   true       50       0    29      31    12    72
+  3   true      100       0    15      26    12    53
+  3   true      200       0     8      25    12    45
+  3   true      500       0     4      24    12    40
+  3   true     1000       0     2      24    12    38
+  3   true     5000       0     1      24    12    37
+
+  4   true        2       0   548     155    12   715
+  4   true        5       0   222      84    12   318
+  4   true       10       0   113      58    12   183
+  4   true       20       0    62      39    12   113
+  4   true       30       0    45      35    12    92
+  4   true       40       0    37      32    12    81
+  4   true       50       0    29      30    12    71
+  4   true      100       0    15      26    12    53
+  4   true      200       0     9      25    12    46
+  4   true      500       0     4      23    12    39
+  4   true     1000       0     2      24    12    38
+  4   true     5000       0     1      23    12    36
+
+  5   true        2       0   534     151    12   697
+  5   true        5       0   218      84    12   314
+  5   true       10       0   113      55    12   180
+  5   true       20       0    62      39    12   113
+  5   true       30       0    45      34    12    91
+  5   true       40       0    37      31    12    80
+  5   true       50       0    29      30    12    71
+  5   true      100       0    15      26    12    53
+  5   true      200       0     8      25    12    45
+  5   true      500       0     4      24    12    40
+  5   true     1000       0     2      24    12    38
+  5   true     5000       0     1      25    12    38
 
 
 *****************************************************************************************
-ExposedCache(
-  FieldTermProvider(a, order.length=19999989 mem=0 bytes, TermProviderImpl(Field a, no docToSingle cached))
-  GroupTermProvider(count, #subProviders=1, order.length=19999989 mem=0 bytes, TermProviderImpl(Group count, no docToSingle cached))
-)
-CollectorPoolFactory(
-  CollectorPool(FacetMapSingle(#docs=19999999 (59 MB), provider(GroupTermProvider(count, #subProviders=1, order.length=19999989 mem=0 bytes, TermProviderImpl(Group count, no docToSingle cached)))), #fresh counters = 1, #filled counters = 0, active counters = 0, total counter size = 78124 KB))
+Index with 20000000 documents, tag collector: multi
+run sparse fraction acquire count extract clear total
+  1  false        2       0   535     153    12   700
+  1  false        5       0   219      85    11   315
+  1  false       10       0   113      56    12   181
+  1  false       20       0    63      40    12   115
+  1  false       30       0    44      35    12    91
+  1  false       40       0    36      31    12    79
+  1  false       50       0    29      30    12    71
+  1  false      100       0    15      26    12    53
+  1  false      200       0     9      25    12    46
+  1  false      500       0     4      26    12    42
+  1  false     1000       0     3      23    12    38
+  1  false     5000       0     1      23    12    36
 
-Run 1: sparse= true, fraction=1/   2 count= 583ms, extract= 153ms, clear=  12ms, total= 748
-Run 1: sparse= true, fraction=1/   5 count= 255ms, extract=  91ms, clear=  12ms, total= 358
-Run 1: sparse= true, fraction=1/  10 count= 146ms, extract=  96ms, clear=  34ms, total= 276
-Run 1: sparse= true, fraction=1/  20 count=  77ms, extract=  48ms, clear=  16ms, total= 141
-Run 1: sparse= true, fraction=1/  30 count=  49ms, extract=  32ms, clear=  12ms, total=  93
-Run 1: sparse= true, fraction=1/  40 count=  41ms, extract=  24ms, clear=   8ms, total=  73
-Run 1: sparse= true, fraction=1/  50 count=  34ms, extract=  19ms, clear=   6ms, total=  59
-Run 1: sparse= true, fraction=1/ 100 count=  20ms, extract=  11ms, clear=   4ms, total=  35
-Run 1: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   1ms, total=  16
-Run 1: sparse= true, fraction=1/ 500 count=   4ms, extract=   1ms, clear=   1ms, total=   6
-Run 1: sparse= true, fraction=1/1000 count=   2ms, extract=   1ms, clear=   1ms, total=   4
-Run 1: sparse= true, fraction=1/5000 count=   1ms, extract=   0ms, clear=   0ms, total=   1
+  2  false        2       0   527     151    12   690
+  2  false        5       0   215      84    12   311
+  2  false       10       0   111      55    12   178
+  2  false       20       0    61      40    12   113
+  2  false       30       0    44      34    11    89
+  2  false       40       0    36      31    12    79
+  2  false       50       0    29      30    12    71
+  2  false      100       0    14      26    12    52
+  2  false      200       0     8      24    12    44
+  2  false      500       0     4      23    12    39
+  2  false     1000       0     2      23    12    37
+  2  false     5000       0     1      23    12    36
 
-Run 2: sparse= true, fraction=1/   2 count= 559ms, extract= 156ms, clear=  11ms, total= 726
-Run 2: sparse= true, fraction=1/   5 count= 236ms, extract=  89ms, clear=  11ms, total= 336
-Run 2: sparse= true, fraction=1/  10 count= 123ms, extract=  95ms, clear=  33ms, total= 251
-Run 2: sparse= true, fraction=1/  20 count=  68ms, extract=  48ms, clear=  16ms, total= 132
-Run 2: sparse= true, fraction=1/  30 count=  49ms, extract=  32ms, clear=  11ms, total=  92
-Run 2: sparse= true, fraction=1/  40 count=  41ms, extract=  24ms, clear=   8ms, total=  73
-Run 2: sparse= true, fraction=1/  50 count=  33ms, extract=  19ms, clear=   6ms, total=  58
-Run 2: sparse= true, fraction=1/ 100 count=  19ms, extract=  11ms, clear=   3ms, total=  33
-Run 2: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   1ms, total=  16
-Run 2: sparse= true, fraction=1/ 500 count=   4ms, extract=   1ms, clear=   1ms, total=   6
-Run 2: sparse= true, fraction=1/1000 count=   2ms, extract=   1ms, clear=   0ms, total=   3
-Run 2: sparse= true, fraction=1/5000 count=   1ms, extract=   0ms, clear=   0ms, total=   1
+  3  false        2       0   527     153    12   692
+  3  false        5       0   215      84    12   311
+  3  false       10       0   112      56    12   180
+  3  false       20       0    62      40    12   114
+  3  false       30       0    44      33    12    89
+  3  false       40       0    36      31    11    78
+  3  false       50       0    29      30    12    71
+  3  false      100       0    15      27    12    54
+  3  false      200       0     8      25    12    45
+  3  false      500       0     4      24    12    40
+  3  false     1000       0     2      24    12    38
+  3  false     5000       0     1      23    12    36
 
-Run 3: sparse= true, fraction=1/   2 count= 560ms, extract= 161ms, clear=  12ms, total= 733
-Run 3: sparse= true, fraction=1/   5 count= 237ms, extract=  90ms, clear=  12ms, total= 339
-Run 3: sparse= true, fraction=1/  10 count= 126ms, extract=  95ms, clear=  34ms, total= 255
-Run 3: sparse= true, fraction=1/  20 count=  70ms, extract=  48ms, clear=  17ms, total= 135
-Run 3: sparse= true, fraction=1/  30 count=  52ms, extract=  34ms, clear=  12ms, total=  98
-Run 3: sparse= true, fraction=1/  40 count=  41ms, extract=  25ms, clear=   8ms, total=  74
-Run 3: sparse= true, fraction=1/  50 count=  34ms, extract=  19ms, clear=   7ms, total=  60
-Run 3: sparse= true, fraction=1/ 100 count=  20ms, extract=  10ms, clear=   4ms, total=  34
-Run 3: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   1ms, total=  16
-Run 3: sparse= true, fraction=1/ 500 count=   4ms, extract=   1ms, clear=   1ms, total=   6
-Run 3: sparse= true, fraction=1/1000 count=   1ms, extract=   1ms, clear=   0ms, total=   2
-Run 3: sparse= true, fraction=1/5000 count=   1ms, extract=   0ms, clear=   0ms, total=   1
+  4  false        2       0   532     152    12   696
+  4  false        5       0   215      84    12   311
+  4  false       10       0   111      58    12   181
+  4  false       20       0    62      39    12   113
+  4  false       30       0    45      34    12    91
+  4  false       40       0    36      31    12    79
+  4  false       50       0    29      30    12    71
+  4  false      100       0    15      26    11    52
+  4  false      200       0     8      24    12    44
+  4  false      500       0     4      24    12    40
+  4  false     1000       0     2      24    12    38
+  4  false     5000       0     1      23    12    36
 
-Run 4: sparse= true, fraction=1/   2 count= 581ms, extract= 159ms, clear=  12ms, total= 752
-Run 4: sparse= true, fraction=1/   5 count= 233ms, extract=  90ms, clear=  12ms, total= 335
-Run 4: sparse= true, fraction=1/  10 count= 125ms, extract=  96ms, clear=  33ms, total= 254
-Run 4: sparse= true, fraction=1/  20 count=  71ms, extract=  48ms, clear=  17ms, total= 136
-Run 4: sparse= true, fraction=1/  30 count=  52ms, extract=  32ms, clear=  11ms, total=  95
-Run 4: sparse= true, fraction=1/  40 count=  40ms, extract=  24ms, clear=   8ms, total=  72
-Run 4: sparse= true, fraction=1/  50 count=  33ms, extract=  20ms, clear=   7ms, total=  60
-Run 4: sparse= true, fraction=1/ 100 count=  19ms, extract=  11ms, clear=   3ms, total=  33
-Run 4: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   2ms, total=  17
-Run 4: sparse= true, fraction=1/ 500 count=   4ms, extract=   2ms, clear=   0ms, total=   6
-Run 4: sparse= true, fraction=1/1000 count=   1ms, extract=   1ms, clear=   0ms, total=   2
-Run 4: sparse= true, fraction=1/5000 count=   1ms, extract=   0ms, clear=   0ms, total=   1
-
-Run 5: sparse= true, fraction=1/   2 count= 561ms, extract= 156ms, clear=  12ms, total= 729
-Run 5: sparse= true, fraction=1/   5 count= 237ms, extract=  89ms, clear=  12ms, total= 338
-Run 5: sparse= true, fraction=1/  10 count= 124ms, extract=  95ms, clear=  34ms, total= 253
-Run 5: sparse= true, fraction=1/  20 count=  69ms, extract=  48ms, clear=  16ms, total= 133
-Run 5: sparse= true, fraction=1/  30 count=  51ms, extract=  32ms, clear=  11ms, total=  94
-Run 5: sparse= true, fraction=1/  40 count=  41ms, extract=  25ms, clear=   8ms, total=  74
-Run 5: sparse= true, fraction=1/  50 count=  34ms, extract=  20ms, clear=   6ms, total=  60
-Run 5: sparse= true, fraction=1/ 100 count=  19ms, extract=  10ms, clear=   3ms, total=  32
-Run 5: sparse= true, fraction=1/ 200 count=  10ms, extract=   5ms, clear=   2ms, total=  17
-Run 5: sparse= true, fraction=1/ 500 count=   8ms, extract=   4ms, clear=   1ms, total=  13
-Run 5: sparse= true, fraction=1/1000 count=   1ms, extract=   1ms, clear=   0ms, total=   2
-Run 5: sparse= true, fraction=1/5000 count=   0ms, extract=   0ms, clear=   0ms, total=   0
-
+  5  false        2       0   533     155    12   700
+  5  false        5       0   218      84    12   314
+  5  false       10       0   111      57    12   180
+  5  false       20       0    63      40    12   115
+  5  false       30       0    44      34    12    90
+  5  false       40       0    37      31    12    80
+  5  false       50       0    29      30    12    71
+  5  false      100       0    15      27    12    54
+  5  false      200       0     8      24    11    43
+  5  false      500       0     5      24    12    41
+  5  false     1000       0     2      23    12    37
+  5  false     5000       0     0      23    12    35
 
 *****************************************************************************************
-ExposedCache(
-  FieldTermProvider(a, order.length=19999989 mem=0 bytes, TermProviderImpl(Field a, no docToSingle cached))
-  GroupTermProvider(count, #subProviders=1, order.length=19999989 mem=0 bytes, TermProviderImpl(Group count, no docToSingle cached))
-)
-CollectorPoolFactory(
-  CollectorPool(FacetMapSingle(#docs=19999999 (59 MB), provider(GroupTermProvider(count, #subProviders=1, order.length=19999989 mem=0 bytes, TermProviderImpl(Group count, no docToSingle cached)))), #fresh counters = 1, #filled counters = 0, active counters = 0, total counter size = 78124 KB))
+Index with 20000000 documents, tag collector: multi
+run sparse fraction acquire count extract clear total
+  1  false        2       0   535     153    12   700
+  1  false        5       0   219      85    11   315
+  1  false       10       0   113      56    12   181
+  1  false       20       0    63      40    12   115
+  1  false       30       0    44      35    12    91
+  1  false       40       0    36      31    12    79
+  1  false       50       0    29      30    12    71
+  1  false      100       0    15      26    12    53
+  1  false      200       0     9      25    12    46
+  1  false      500       0     4      26    12    42
+  1  false     1000       0     3      23    12    38
+  1  false     5000       0     1      23    12    36
 
-Run 1: sparse=false, fraction=1/   2 count= 675ms, extract= 163ms, clear=  12ms, total= 850
-Run 1: sparse=false, fraction=1/   5 count= 349ms, extract= 103ms, clear=  12ms, total= 464
-Run 1: sparse=false, fraction=1/  10 count= 224ms, extract=  60ms, clear=  12ms, total= 296
-Run 1: sparse=false, fraction=1/  20 count= 172ms, extract=  43ms, clear=  13ms, total= 228
-Run 1: sparse=false, fraction=1/  30 count= 150ms, extract=  40ms, clear=  12ms, total= 202
-Run 1: sparse=false, fraction=1/  40 count= 140ms, extract=  36ms, clear=  12ms, total= 188
-Run 1: sparse=false, fraction=1/  50 count= 130ms, extract=  33ms, clear=  12ms, total= 175
-Run 1: sparse=false, fraction=1/ 100 count= 116ms, extract=  30ms, clear=  13ms, total= 159
-Run 1: sparse=false, fraction=1/ 200 count= 109ms, extract=  27ms, clear=  12ms, total= 148
-Run 1: sparse=false, fraction=1/ 500 count= 105ms, extract=  28ms, clear=  12ms, total= 145
-Run 1: sparse=false, fraction=1/1000 count= 104ms, extract=  28ms, clear=  12ms, total= 144
-Run 1: sparse=false, fraction=1/5000 count= 101ms, extract=  26ms, clear=  12ms, total= 139
+  2  false        2       0   527     151    12   690
+  2  false        5       0   215      84    12   311
+  2  false       10       0   111      55    12   178
+  2  false       20       0    61      40    12   113
+  2  false       30       0    44      34    11    89
+  2  false       40       0    36      31    12    79
+  2  false       50       0    29      30    12    71
+  2  false      100       0    14      26    12    52
+  2  false      200       0     8      24    12    44
+  2  false      500       0     4      23    12    39
+  2  false     1000       0     2      23    12    37
+  2  false     5000       0     1      23    12    36
 
-Run 2: sparse=false, fraction=1/   2 count= 663ms, extract= 167ms, clear=  12ms, total= 842
-Run 2: sparse=false, fraction=1/   5 count= 331ms, extract=  95ms, clear=  12ms, total= 438
-Run 2: sparse=false, fraction=1/  10 count= 217ms, extract=  62ms, clear=  12ms, total= 291
-Run 2: sparse=false, fraction=1/  20 count= 166ms, extract=  41ms, clear=  12ms, total= 219
-Run 2: sparse=false, fraction=1/  30 count= 145ms, extract=  35ms, clear=  12ms, total= 192
-Run 2: sparse=false, fraction=1/  40 count= 138ms, extract=  32ms, clear=  11ms, total= 181
-Run 2: sparse=false, fraction=1/  50 count= 130ms, extract=  32ms, clear=  11ms, total= 173
-Run 2: sparse=false, fraction=1/ 100 count= 116ms, extract=  27ms, clear=  12ms, total= 155
-Run 2: sparse=false, fraction=1/ 200 count= 111ms, extract=  24ms, clear=  11ms, total= 146
-Run 2: sparse=false, fraction=1/ 500 count= 105ms, extract=  26ms, clear=  12ms, total= 143
-Run 2: sparse=false, fraction=1/1000 count= 103ms, extract=  27ms, clear=  12ms, total= 142
-Run 2: sparse=false, fraction=1/5000 count= 102ms, extract=  30ms, clear=  11ms, total= 143
+  3  false        2       0   527     153    12   692
+  3  false        5       0   215      84    12   311
+  3  false       10       0   112      56    12   180
+  3  false       20       0    62      40    12   114
+  3  false       30       0    44      33    12    89
+  3  false       40       0    36      31    11    78
+  3  false       50       0    29      30    12    71
+  3  false      100       0    15      27    12    54
+  3  false      200       0     8      25    12    45
+  3  false      500       0     4      24    12    40
+  3  false     1000       0     2      24    12    38
+  3  false     5000       0     1      23    12    36
 
-Run 3: sparse=false, fraction=1/   2 count= 636ms, extract= 154ms, clear=  12ms, total= 802
-Run 3: sparse=false, fraction=1/   5 count= 320ms, extract=  88ms, clear=  12ms, total= 420
-Run 3: sparse=false, fraction=1/  10 count= 214ms, extract=  56ms, clear=  11ms, total= 281
-Run 3: sparse=false, fraction=1/  20 count= 165ms, extract=  40ms, clear=  12ms, total= 217
-Run 3: sparse=false, fraction=1/  30 count= 146ms, extract=  34ms, clear=  11ms, total= 191
-Run 3: sparse=false, fraction=1/  40 count= 138ms, extract=  33ms, clear=  12ms, total= 183
-Run 3: sparse=false, fraction=1/  50 count= 130ms, extract=  30ms, clear=  12ms, total= 172
-Run 3: sparse=false, fraction=1/ 100 count= 119ms, extract=  27ms, clear=  12ms, total= 158
-Run 3: sparse=false, fraction=1/ 200 count= 110ms, extract=  25ms, clear=  11ms, total= 146
-Run 3: sparse=false, fraction=1/ 500 count= 105ms, extract=  26ms, clear=  12ms, total= 143
-Run 3: sparse=false, fraction=1/1000 count= 103ms, extract=  28ms, clear=  12ms, total= 143
-Run 3: sparse=false, fraction=1/5000 count= 102ms, extract=  26ms, clear=  11ms, total= 139
+  4  false        2       0   532     152    12   696
+  4  false        5       0   215      84    12   311
+  4  false       10       0   111      58    12   181
+  4  false       20       0    62      39    12   113
+  4  false       30       0    45      34    12    91
+  4  false       40       0    36      31    12    79
+  4  false       50       0    29      30    12    71
+  4  false      100       0    15      26    11    52
+  4  false      200       0     8      24    12    44
+  4  false      500       0     4      24    12    40
+  4  false     1000       0     2      24    12    38
+  4  false     5000       0     1      23    12    36
 
-Run 4: sparse=false, fraction=1/   2 count= 636ms, extract= 158ms, clear=  12ms, total= 806
-Run 4: sparse=false, fraction=1/   5 count= 323ms, extract=  90ms, clear=  12ms, total= 425
-Run 4: sparse=false, fraction=1/  10 count= 216ms, extract=  57ms, clear=  11ms, total= 284
-Run 4: sparse=false, fraction=1/  20 count= 170ms, extract=  42ms, clear=  12ms, total= 224
-Run 4: sparse=false, fraction=1/  30 count= 147ms, extract=  41ms, clear=  12ms, total= 200
-Run 4: sparse=false, fraction=1/  40 count= 139ms, extract=  36ms, clear=  12ms, total= 187
-Run 4: sparse=false, fraction=1/  50 count= 131ms, extract=  34ms, clear=  13ms, total= 178
-Run 4: sparse=false, fraction=1/ 100 count= 116ms, extract=  31ms, clear=  12ms, total= 159
-Run 4: sparse=false, fraction=1/ 200 count= 109ms, extract=  28ms, clear=  12ms, total= 149
-Run 4: sparse=false, fraction=1/ 500 count= 105ms, extract=  28ms, clear=  12ms, total= 145
-Run 4: sparse=false, fraction=1/1000 count= 103ms, extract=  26ms, clear=  12ms, total= 141
-Run 4: sparse=false, fraction=1/5000 count= 101ms, extract=  26ms, clear=  12ms, total= 139
-
-Run 5: sparse=false, fraction=1/   2 count= 657ms, extract= 167ms, clear=  12ms, total= 836
-Run 5: sparse=false, fraction=1/   5 count= 326ms, extract=  91ms, clear=  12ms, total= 429
-Run 5: sparse=false, fraction=1/  10 count= 217ms, extract=  58ms, clear=  12ms, total= 287
-Run 5: sparse=false, fraction=1/  20 count= 165ms, extract=  41ms, clear=  12ms, total= 218
-Run 5: sparse=false, fraction=1/  30 count= 146ms, extract=  34ms, clear=  12ms, total= 192
-Run 5: sparse=false, fraction=1/  40 count= 137ms, extract=  32ms, clear=  11ms, total= 180
-Run 5: sparse=false, fraction=1/  50 count= 131ms, extract=  31ms, clear=  11ms, total= 173
-Run 5: sparse=false, fraction=1/ 100 count= 116ms, extract=  26ms, clear=  11ms, total= 153
-Run 5: sparse=false, fraction=1/ 200 count= 111ms, extract=  25ms, clear=  11ms, total= 147
-Run 5: sparse=false, fraction=1/ 500 count= 105ms, extract=  26ms, clear=  12ms, total= 143
-Run 5: sparse=false, fraction=1/1000 count= 102ms, extract=  29ms, clear=  12ms, total= 143
-Run 5: sparse=false, fraction=1/5000 count= 101ms, extract=  25ms, clear=  12ms, total= 138
+  5  false        2       0   533     155    12   700
+  5  false        5       0   218      84    12   314
+  5  false       10       0   111      57    12   180
+  5  false       20       0    63      40    12   115
+  5  false       30       0    44      34    12    90
+  5  false       40       0    37      31    12    80
+  5  false       50       0    29      30    12    71
+  5  false      100       0    15      27    12    54
+  5  false      200       0     8      24    11    43
+  5  false      500       0     5      24    12    41
+  5  false     1000       0     2      23    12    37
+  5  false     5000       0     0      23    12    35

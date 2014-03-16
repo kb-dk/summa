@@ -15,8 +15,8 @@ public class TagCollectorSparse extends TagCollector {
 
   // The numbers below are based on wild guessing and zero measurements. TODO: Measure and find better defaults
   public static final int RECOMMENDED_MIN_COUNTER_SIZE = 100000; // Counters below this should not be sparse
-  private static final double RECOMMENDED_MAX_SPARSE_FRACTION = 0.1; // Fractions above this are not recommended
-  public static final double DEFAULT_SPARSE_FACTOR = 0.1; // If nothing is stated, this fraction is used
+  public static final double RECOMMENDED_MAX_SPARSE_FRACTION = 0.1; // Fractions above this are not recommended
+  public static double DEFAULT_SPARSE_FACTOR = 0.1; // If nothing is stated, this fraction is used
 
   private final double sparseFactor;
   private final int sparseSize;

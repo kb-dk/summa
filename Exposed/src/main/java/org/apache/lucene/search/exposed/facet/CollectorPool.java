@@ -1,5 +1,7 @@
 package org.apache.lucene.search.exposed.facet;
 
+import org.apache.lucene.util.ELog;
+
 import java.util.*;
 
 /**
@@ -24,6 +26,8 @@ import java.util.*;
  */
 // TODO: Consider introducing an allowance for extra allocations above pool size
 public class CollectorPool {
+  private static final ELog log = ELog.getLog(CollectorPool.class);
+
   public enum AVAILABILITY {hasFresh, hasFilled, mightCreateNew, mustCreateNew, mustWait}
 
   private final FacetMap map;
@@ -105,7 +109,7 @@ public class CollectorPool {
   public synchronized TagCollector acquire(String query) {
     int retries = 0;
     do {
-      if (query != null && maxFilled != 0 && filled.containsKey(query)) {
+      if (query != null && filled.containsKey(query)) {
         TagCollector collector = filled.remove(query);
         activeCollectors++;
         activeMem += collector.getMemoryUsage();
@@ -120,8 +124,12 @@ public class CollectorPool {
           return collector;
         }
       }
-
-      if (!enforceLimits || activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh) {
+      // TODO: Ensure that the filled cache actually works and not just caches the first X forever
+      if (!enforceLimits || maxFresh == 0 || activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh) {
+        log.debug("acquire(" + query + "): Creating new TagCollector with enforceLimits=" + enforceLimits
+                  + ", maxFresh=" + maxFresh + ", activeCollectors(" + activeCollectors + ") + filled.size("
+                  + filled.size() + ") + fresh.size(" + fresh.size() + ") < maxFilled(" + maxFilled + " + maxFresh("
+                  + maxFresh + ") == " + (activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh));
         // It would be great to have standardized logging available here
         // as creating a TagCollector is potentially a very costly process
         TagCollector collector = TagCollectorFactory.getCollector(map);
@@ -131,6 +139,7 @@ public class CollectorPool {
       }
 
       try {
+        log.trace("acquire(");
         Thread.sleep(retryDelay);
       } catch (InterruptedException e) {
         // Ignore the error as it is just a simple wait

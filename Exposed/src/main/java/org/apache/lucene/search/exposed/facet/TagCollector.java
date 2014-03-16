@@ -1,4 +1,4 @@
-package org.apache.lucene.search.exposed.facet;
+ package org.apache.lucene.search.exposed.facet;
 
 import org.apache.lucene.index.AtomicReader;
 import org.apache.lucene.index.AtomicReaderContext;
@@ -180,6 +180,9 @@ public abstract class TagCollector extends Collector {
    * again.
    */
   public void delayedClear() {
+    if (hitCount == 0) { // Already empty
+      return;
+    }
     new Thread(new Runnable() {
       @Override
       public void run() {
@@ -196,9 +199,12 @@ public abstract class TagCollector extends Collector {
    * Consider using {@link #delayedClear()} to improve responsiveness.
    */
   public void clear() {
+    query = null;
+    if (hitCount == 0) { // Already empty
+      return;
+    }
     clearRunning = true;
     hitCount = 0;
-    query = null;
     clearInternal();
     clearRunning = false;
   }
