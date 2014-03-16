@@ -12,6 +12,11 @@ public class ExposedSettings {
    * Whether or not sparse TagCollectors should be used. Sparse collectors are experimental.
    */
   public static boolean useSparseCollector = false;
+  /**
+   * if {@link #useSparseCollector} is true and forceSparseCollector is true, a sparse collector will always
+   * be used, even when a multi collector would be better. Mainly intended for testing.
+   */
+  public static boolean forceSparseCollector = false;
 
   public static enum PRIORITY {memory, speed;
     public static PRIORITY fromString(String p) {

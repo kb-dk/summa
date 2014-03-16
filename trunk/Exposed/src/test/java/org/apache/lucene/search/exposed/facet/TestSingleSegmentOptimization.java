@@ -145,25 +145,52 @@ public class TestSingleSegmentOptimization extends TestCase {
   }
 
   public void testScaleOptimizedSparseCollector() throws Exception {
-    testScaleOptimizedSpecificCollector(true);
     System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
                        + " results comparable to testScaleOptimizedMultiCollector");
+    testScaleOptimizedSpecificCollector(true, "sparse(default)");
+  }
+
+  public void testScaleOptimizedSparseNoneCollector() throws Exception {
+    System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
+                       + " results comparable to testScaleOptimizedMultiCollector");
+    ExposedSettings.forceSparseCollector = true;
+    double oldFactor = TagCollectorSparse.DEFAULT_SPARSE_FACTOR;
+    TagCollectorSparse.DEFAULT_SPARSE_FACTOR = 0.0;
+
+    testScaleOptimizedSpecificCollector(true, "sparse(none)");
+
+    ExposedSettings.forceSparseCollector = false;
+    TagCollectorSparse.DEFAULT_SPARSE_FACTOR = oldFactor;
+  }
+
+  public void testScaleOptimizedSparseAllCollector() throws Exception {
+    System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
+                       + " results comparable to testScaleOptimizedMultiCollector");
+    ExposedSettings.forceSparseCollector = true;
+    double oldFactor = TagCollectorSparse.DEFAULT_SPARSE_FACTOR;
+    TagCollectorSparse.DEFAULT_SPARSE_FACTOR = 1.0;
+
+    testScaleOptimizedSpecificCollector(true, "sparse(all)");
+
+    ExposedSettings.forceSparseCollector = false;
+    TagCollectorSparse.DEFAULT_SPARSE_FACTOR = oldFactor;
   }
 
   public void testScaleOptimizedMultiCollector() throws Exception {
-    testScaleOptimizedSpecificCollector(false);
     System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
                        + " results comparable to testScaleOptimizedFacetCollector");
+    testScaleOptimizedSpecificCollector(false, "multi");
   }
 
-  public void testScaleOptimizedSpecificCollector(boolean useSparse) throws Exception {
+  public void testScaleOptimizedSpecificCollector(boolean useSparse, String designation) throws Exception {
     final int RUNS = 5;
     final int[] FRACTIONS = new int[]{2, 5, 10, 20, 30, 40, 50, 100, 200, 500, 1000, 5000};
     final IndexSearcher searcher = getTagCollectorTestSearcher();
     final CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 0, 1);
 
-
     StringBuffer sb = new StringBuffer();
+    sb.append("Index with " + COLLECTOR_TEST_DOCS + " documents, tag collector: " + designation + "\n");
+    sb.append("run sparse fraction acquire count extract clear total\n");
     for (int run = 1 ; run <= RUNS ; run++) {
       for (int fraction: FRACTIONS) {
         printTestScaleOptimizedSparseFacet(sb, poolFactory, searcher, useSparse, run, fraction);
@@ -175,16 +202,17 @@ public class TestSingleSegmentOptimization extends TestCase {
     System.out.println(CollectorPoolFactory.getLastFactory());
     System.out.println("\n*****************************************************************************************");
     System.out.println(sb);
-    System.out.println("Note: All reported times a minimum from 4 runs to compensate for random GC.");
+    System.out.println("Note: All reported times are in ms and the minimum from 4 runs to compensate for random GC.");
+
   }
 
   private void printTestScaleOptimizedSparseFacet(
       StringBuffer output, CollectorPoolFactory poolFactory, IndexSearcher searcher, boolean useSparse, int run,
       int matchFraction) throws Exception {
-    long[] timing = testScaleOptimizedCollectorImpl(poolFactory, searcher, useSparse, matchFraction);
+    long[] tim = testScaleOptimizedCollectorImpl(poolFactory, searcher, useSparse, matchFraction);
     output.append(String.format(
-        "Run %d: sparse=%5b, fraction=1/%4d count=%4dms, extract=%4dms, clear=%4dms, total=%4dms\n",
-        run, useSparse, matchFraction, timing[0], timing[1], timing[2], timing[0] + timing[1] + timing[2]));
+        "%3d %6b %8d %7d %5d %7d %5d %5d\n",
+        run, useSparse, matchFraction, tim[0], tim[1], tim[2], tim[3], tim[0] + tim[1] + tim[2] + tim[3]));
   }
 
   public long[] testScaleOptimizedCollectorImpl(
@@ -226,8 +254,8 @@ public class TestSingleSegmentOptimization extends TestCase {
     return timing;
   }
 
+  final int COLLECTOR_TEST_DOCS = 20000000;
   public IndexSearcher getTagCollectorTestSearcher() throws IOException {
-    final int DOCCOUNT = 20000000;
     final int TERM_LENGTH = 20;
     final List<String> FIELDS = Arrays.asList("a");
     final File LOCATION = PREFERRED_ROOT.exists() ?
@@ -235,8 +263,9 @@ public class TestSingleSegmentOptimization extends TestCase {
         ExposedHelper.INDEX_LOCATION;
 
     if (!LOCATION.exists()) {
-      System.err.println("No index at " + LOCATION + ". A test index with " + DOCCOUNT + " documents will be build");
-      helper.createIndex(LOCATION, DOCCOUNT, FIELDS, 1, TERM_LENGTH, 1, 1, 1);
+      System.err.println("No index at " + LOCATION + ". A test index with " + COLLECTOR_TEST_DOCS
+                         + " documents will be build");
+      helper.createIndex(LOCATION, COLLECTOR_TEST_DOCS, FIELDS, 1, TERM_LENGTH, 1, 1, 1);
       helper.optimize(LOCATION);
     }
     assertTrue("No index at " + LOCATION.getAbsolutePath() + ". Please build a test index (you can use one from on of " +
@@ -255,6 +284,7 @@ public class TestSingleSegmentOptimization extends TestCase {
     assertTrue("There must be at least 10 documents in the index at ", DOCCOUNT >= 10);
     final int span = DOCCOUNT / 10;
     long firstTime = -1;
+    long subsAcquireTime = Long.MAX_VALUE;
     long subsCountTime = Long.MAX_VALUE;
     long subsExtractTime = Long.MAX_VALUE;
     long subsClearTime = Long.MAX_VALUE;
@@ -274,8 +304,11 @@ public class TestSingleSegmentOptimization extends TestCase {
                       + request.getGroupKey() + ": " + getTime(poolTime) + "\n");
       }
 
-      long countTime = -System.currentTimeMillis();
+      long acquireTime = -System.currentTimeMillis();
       TagCollector collector = collectorPool.acquire(null); // No caching
+      acquireTime += System.currentTimeMillis();
+
+      long countTime = -System.currentTimeMillis();
       if (collector.getQuery() == null) { // Fresh collector
         searcher.search(q, collector);
       } else {
@@ -291,15 +324,21 @@ public class TestSingleSegmentOptimization extends TestCase {
       if (collector.getQuery() != null) { // Cached count
         response.setCountingCached(true);
       }
+
       long clearTime = -System.currentTimeMillis();
       collector.clear();
       clearTime += System.currentTimeMillis();
-      long totalTime = countTime + extractTime + clearTime;
+      if (clearTime == 0) {
+        System.out.println("Why!?");
+      }
+
+      long totalTime = acquireTime + countTime + extractTime + clearTime;
       if (firstTime == -1) {
         firstTime = totalTime;
         result.append("First faceting for " + sQuery + ": " + getTime(totalTime) + "\n");
       } else {
         subCount++;
+        subsAcquireTime = Math.min(subsAcquireTime, acquireTime);
         subsCountTime = Math.min(subsCountTime, countTime);
         subsExtractTime = Math.min(subsExtractTime, extractTime);
         subsClearTime = Math.min(subsClearTime, clearTime);
@@ -311,10 +350,10 @@ public class TestSingleSegmentOptimization extends TestCase {
       collectorPool.release(null, collector); // No caching
     }
     result.append("Subsequent " + subCount + " faceting calls (count caching disabled) response times: "
-                  + getTime(subsClearTime + subsExtractTime + subsClearTime) + "\n");
+                  + getTime(subsAcquireTime + subsClearTime + subsExtractTime + subsClearTime) + "\n");
     assertNotNull("There should be a response", response);
     result.append(response.toXML()).append("\n");
-    return new long[]{subsCountTime, subsExtractTime, subsClearTime};
+    return new long[]{subsAcquireTime, subsCountTime, subsExtractTime, subsClearTime};
   }
 
   private String getTime(long ms) {
