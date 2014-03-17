@@ -86,6 +86,10 @@ public abstract class CachedProvider<T> {
     }
   }
 
+  public int size() {
+    return cache.size();
+  }
+
   /**
    * Removes the cache entry for the given index from cache is present.
    * </p><p>

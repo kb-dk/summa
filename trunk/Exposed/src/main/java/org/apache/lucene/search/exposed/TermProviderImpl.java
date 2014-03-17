@@ -187,10 +187,10 @@ public abstract class TermProviderImpl implements TermProvider {
   @Override
   public String toString() {
     if (docToSingle == null) {
-      return "TermProviderImpl(" + getDesignation() + ", no docToSingle cached)";
+      return "TermProviderImpl(" + getMemUsage()/1048576 + "MB, " + getDesignation() + ", no docToSingle cached)";
     }
-    return "TermProviderImpl(" + getDesignation() + ", docToSingle.length=" 
-        + docToSingle.size() + " mem=" + packedSize(docToSingle) + ")";
+    return "TermProviderImpl(" + getMemUsage()/1048576 + "MB, " + getDesignation() + ", docToSingle.length="
+        + docToSingle.size() + ")";
   }
 
   @Override
@@ -221,4 +221,8 @@ public abstract class TermProviderImpl implements TermProvider {
     return getOrderedTerm(indirect);
   }
 
+  @Override
+  public long getMemUsage() {
+    return 200 + (docToSingle == null ? 0 : docToSingle.ramBytesUsed());
+  }
 }

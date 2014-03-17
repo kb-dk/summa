@@ -60,11 +60,9 @@ public class FacetMapMulti implements FacetMap {
       try {
         tagCounts[(int)refs.get(refI)]++;
       } catch (Exception ex) {
-        System.err.println("Exception in updateCounter during evaluation of " +
-            "tagCounts[(int)refs.get(" + refI + ")]++ with refs.size()=="
-            + refs.size() + ", tagCounts.length()==" + tagCounts.length
-            + ", docID==" + docID + ", start==" + start + ", end==" + end
-            + " in " + toString());
+        System.err.println("Exception in updateCounter during evaluation of tagCounts[(int)refs.get(" + refI
+                           + ")]++ with refs.size()==" + refs.size() + ", tagCounts.length()==" + tagCounts.length
+                           + ", docID==" + docID + ", start==" + start + ", end==" + end + " in " + toString());
       }
     }
   }
@@ -143,8 +141,17 @@ public class FacetMapMulti implements FacetMap {
     sw.append("))");
     return sw.toString();
   }
+  @Override
+  public String tinyDesignation() {
+    long sum = 0;
+    for (TermProvider provider: providers) {
+      sum += provider.getMemUsage();
+    }
+    return "FacetMapMulti(" + packedSize(doc2ref) + " + " + packedSize(refs) + ", " + providers.size()
+           + " providers=" + sum/1024 + "KB)";
+  }
 
-  private String packedSize(PackedInts.Reader packed) {
+  public static String packedSize(PackedInts.Reader packed) {
     long bytes = packed.ramBytesUsed();
     if (bytes > 1048576) {
       return bytes / 1048576 + " MB";

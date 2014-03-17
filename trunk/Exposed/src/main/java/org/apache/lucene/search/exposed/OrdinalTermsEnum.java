@@ -229,4 +229,11 @@ public class OrdinalTermsEnum extends TermsEnum {
   public Comparator<BytesRef> getComparator() {
     return inner.getComparator();
   }
+
+  /**
+   * @return highly approximate.
+   */
+  public long getMemUsage() {
+    return marks.size()*50 + terms.size()*50; // Guessing wildly here
+  }
 }

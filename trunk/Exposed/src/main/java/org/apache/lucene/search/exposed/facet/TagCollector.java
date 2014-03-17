@@ -257,6 +257,8 @@ public abstract class TagCollector extends Collector {
     }
     FacetResponse response = new FacetResponse(request, responseGroups, hitCount);
     response.setCountingTime(countTime);
+    response.addProcessingInfo(this.tinyDesignation());
+    response.addProcessingInfo(map.tinyDesignation());
     return response;
   }
 
@@ -377,4 +379,5 @@ public abstract class TagCollector extends Collector {
     return newborn;
   }
 
+  public abstract String tinyDesignation();
 }

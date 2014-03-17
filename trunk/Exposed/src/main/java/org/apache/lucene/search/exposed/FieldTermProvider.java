@@ -494,10 +494,11 @@ public class FieldTermProvider extends TermProviderImpl {
 
   public String toString() {
     if (order == null) {
-      return "FieldTermProvider(" + request.getField() + ", no order cached, " + super.toString() + ")";
+      return "FieldTermProvider(" + getMemUsage()/1048576 + "MB, " + request.getField() + ", no order cached, "
+             + super.toString() + ")";
     }
-    return "FieldTermProvider(" + request.getField() + ", order.length=" + order.size()
-        + " mem=" + packedSize(order) + ", " + super.toString() + ")";
+    return "FieldTermProvider(" + getMemUsage()/1048576 + "MB, " + request.getField() + ", order.length=" + order.size()
+           + ", " + super.toString() + ")";
   }
 
   @Override
@@ -506,5 +507,11 @@ public class FieldTermProvider extends TermProviderImpl {
       order = null;
     }
     super.transitiveReleaseCaches(level, keepRoot);
+  }
+
+  @Override
+  public long getMemUsage() {
+    return super.getMemUsage() + (order == null ? 0 : order.ramBytesUsed())
+           + (termsEnum instanceof OrdinalTermsEnum ? ((OrdinalTermsEnum)termsEnum).getMemUsage() : 0);
   }
 }

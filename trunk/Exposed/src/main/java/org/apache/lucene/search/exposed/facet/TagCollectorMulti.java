@@ -88,6 +88,10 @@ public class TagCollectorMulti extends TagCollector {
     return String.format("TagCollectorMulti(%d potential tags, %d non-zero counts, total sum %d from %s",
                          tagCounts.length, nonZero, sum, map.toString());
   }
+  @Override
+  public String tinyDesignation() {
+    return "TagCollectorMulti(" + getMemoryUsage()/1048576 + "MB)";
+  }
 
   @Override
   public FacetResponse.Group extractResult(FacetRequestGroup requestGroup, int groupID) throws IOException {

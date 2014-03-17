@@ -329,12 +329,11 @@ public class GroupTermProvider extends TermProviderImpl {
 
   public String toString() {
     if (order == null) {
-      return "GroupTermProvider(" + request.getName() + ", #subProviders="
+      return "GroupTermProvider(" + getMemUsage()/1048576 + "MB, name=" + request.getName() + ", #subProviders="
           + providers.size() + ", no order cached, " + super.toString() + ")";
     }
-    return "GroupTermProvider(" + request.getName() + ", #subProviders="
-        + providers.size() + ", order.length=" + order.size() + " mem="
-        + packedSize(order) + ", " + super.toString() + ")";
+    return "GroupTermProvider(" + getMemUsage()/1048576 + "MB, name=" + request.getName() + ", #subProviders="
+        + providers.size() + ", order.length=" + order.size() + ", " + super.toString() + ")";
   }
 
   @Override
@@ -349,4 +348,12 @@ public class GroupTermProvider extends TermProviderImpl {
     }
   }
 
+  @Override
+  public long getMemUsage() {
+    long sum = super.getMemUsage() + termOrdinalStarts.length*8 + (order == null ? 0 : order.ramBytesUsed());
+    for (TermProvider provider: providers) {
+      sum += provider.getMemUsage();
+    }
+    return sum;
+  }
 }

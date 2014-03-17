@@ -29,16 +29,15 @@ import java.util.Iterator;
 /**
  * Order-oriented variation on {@link org.apache.lucene.index.Terms}.
  * </p><p>
- * Access is primarily through ordinals. This can be done directly with
- * {@link #getTerm} and {@link #getField} or indirectly through
- * {@link #getOrderedTerm} and {@link #getOrderedField}. Using the ordered
- * methods is equivalent to {@code getTerm(getOrder().get(orderPosition))}.
+ * Access is primarily through ordinals. This can be done directly with {@link #getTerm} and {@link #getField} or
+ * indirectly through {@link #getOrderedTerm} and {@link #getOrderedField}. Using the ordered methods is equivalent
+ * to {@code getTerm(getOrder().get(orderPosition))}.
  */
 public interface TermProvider {
 
     /**
-     * A decorating version of {@link #getOrderedOrdinals()}. For each ordinal
-     * an {@link ExposedTuple} is passed to the decorator.
+     * A decorating version of {@link #getOrderedOrdinals()}. For each ordinal an {@link ExposedTuple} is passed to the
+     * decorator.
      * @param decorator called for each tuple.
      * @return ordinals ordered by Comparator..
      * @throws IOException if the ordinals could not be retrieved.
@@ -71,11 +70,10 @@ public interface TermProvider {
   public int getNearestTermIndirect(BytesRef key) throws IOException;
 
   /**
-   * Performs a search for the given term, returning the indirect for the
-   * term or the nearest indirect if not present.
+   * Performs a search for the given term, returning the indirect for the term or the nearest indirect if not present.
    * </p><p>
-   * Note: While a binary search is used, this is still somewhat expensive as
-   * the terms themselves needs to be retrieved.
+   * Note: While a binary search is used, this is still somewhat expensive as the terms themselves needs to be
+   * retrieved.
    * @param key          the term to search for.
    * @param startTermPos where to search from (inclusive).
    * @param endTermPos   where to search to (exclusive).
@@ -113,7 +111,12 @@ public interface TermProvider {
   long getOrdinalTermCount() throws IOException;
 
   long getMaxDoc();
-  
+
+  /**
+   * @return approximate memory usage in bytes.
+   */
+  long getMemUsage();
+
   IndexReader getReader();
 
   /**
@@ -138,17 +141,15 @@ public interface TermProvider {
   int getRecursiveHash();
 
   /**
-   * The ordinals sorted by a previously provided Comparator (typically a
-   * Collator).
+   * The ordinals sorted by a previously provided Comparator (typically a Collator).
    * @return ordinals ordered by Comparator..
    * @throws IOException if the ordinals could not be retrieved.
    */
   PackedInts.Reader getOrderedOrdinals() throws IOException;
 
   /**
-   * Mapping from docID to the ordered ordinals returned by
-   * {@link #getOrderedOrdinals()}. Usable for sorting by field value as
-   * comparisons of documents can be done with {@code
+   * Mapping from docID to the ordered ordinals returned by {@link #getOrderedOrdinals()}.
+   * Usable for sorting by field value as comparisons of documents can be done with {@code
    PackedInts.Reader doc2indirect = getDocToSingleIndirect();
    ...
    if (doc2indirect.get(docID1) < doc2indirect.get(docID2)) {
@@ -162,12 +163,11 @@ public interface TermProvider {
    * @throws IOException if the index could not be accessed,
    */
   // TODO: Handle missing value (-1? Max+1? Defined by "empty first"?)
-  PackedInts.Reader  getDocToSingleIndirect() throws IOException;
+  PackedInts.Reader getDocToSingleIndirect() throws IOException;
 
   /**
-   * @param collectDocIDs if true, the document IDs are returned as part of the
-   *        tuples. Note that this normally increases the processing time
-   *        significantly.
+   * @param collectDocIDs if true, the document IDs are returned as part of the tuples. Note that this normally
+   *                      increases the processing time significantly.
    * @return an iterator over tuples in the order defined for the TermProvider.
    * @throws IOException if the iterator could not be constructed.
    */
@@ -177,11 +177,9 @@ public interface TermProvider {
 
   /**
    * Release all cached values if the provider satisfies the given constraints.
-   * @param level    the level in a provider-tree. This starts at 0 and should
-   *                 be incremented by 1 if the provider delegates cache release
-   *                 to sub-providers.
-   * @param keepRoot if true, caches at the root level (level == 0) should not
-   *                 be released.
+   * @param level    the level in a provider-tree. This starts at 0 and should be incremented by 1 if the provider
+   *                 delegates cache release to sub-providers.
+   * @param keepRoot if true, caches at the root level (level == 0) should not be released.
    */
   void transitiveReleaseCaches(int level, boolean keepRoot);
 }

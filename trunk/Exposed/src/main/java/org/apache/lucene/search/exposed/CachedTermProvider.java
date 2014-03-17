@@ -135,6 +135,11 @@ public class CachedTermProvider extends CachedProvider<BytesRef> implements Term
   }
 
   @Override
+  public long getMemUsage() {
+    return source.getMemUsage() + size() * 50; // 50 chosen by loose but qualified guessing
+  }
+
+  @Override
   public IndexReader getReader() {
     return source.getReader();
   }
@@ -177,5 +182,10 @@ public class CachedTermProvider extends CachedProvider<BytesRef> implements Term
   @Override
   public void setDocIDBase(int base) {
     source.setDocIDBase(base);
+  }
+
+  @Override
+  public String toString() {
+    return "CachedTermProvider(" + getMemUsage()/1048576 + "MB, source=" + source + ')';
   }
 }

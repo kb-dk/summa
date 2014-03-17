@@ -11,8 +11,7 @@ import java.io.StringWriter;
 import java.util.List;
 
 public class FacetResponse {
-  public static final String NAMESPACE =
-      "http://lucene.apache.org/exposed/facet/response/1.0";
+  public static final String NAMESPACE = "http://lucene.apache.org/exposed/facet/response/1.0";
 
   private static final XMLOutputFactory xmlOutFactory;
   static {
@@ -25,6 +24,7 @@ public class FacetResponse {
   private long countingTime = -1; // ms: just counting the references
   private long totalTime = -1; // ms
   private boolean countCached = false;
+  private String processingInfo = "";
 
   public FacetResponse(FacetRequest request, List<Group> groups, long hits) {
     this.request = request;
@@ -38,6 +38,13 @@ public class FacetResponse {
 
   public void setCountingTime(long countingTime) {
     this.countingTime = countingTime;
+  }
+
+  public void addProcessingInfo(String info) {
+    if (!processingInfo.isEmpty()) {
+      processingInfo += ", ";
+    }
+    processingInfo += info;
   }
 
   public String toXML() {
@@ -95,6 +102,10 @@ public class FacetResponse {
     return countCached;
   }
 
+  public String getProcessingInfo() {
+    return processingInfo;
+  }
+
   public static class Group {
     private final FacetRequestGroup request;
     private TagCollection tags;
@@ -122,8 +133,7 @@ public class FacetResponse {
       }
       out.writeAttribute("reverse", Boolean.toString(request.isReverse()));
       out.writeAttribute("maxtags",  Integer.toString(
-          request.getMaxTags() == Integer.MAX_VALUE ? -1 :
-              request.getMaxTags()));
+          request.getMaxTags() == Integer.MAX_VALUE ? -1 : request.getMaxTags()));
       writeIfDefined(out, "mincount", request.getMinCount());
       writeIfDefined(out, "offset", request.getOffset());
       if (request.isHierarchical()) {
@@ -323,8 +333,7 @@ public class FacetResponse {
     }
   }
 
-  private static void writeIfDefined(
-      XMLStreamWriter out, String attributeName, long value) throws XMLStreamException {
+  private static void writeIfDefined(XMLStreamWriter out, String attributeName, long value) throws XMLStreamException {
     if (value == -1) {
       return;
     }
@@ -340,8 +349,7 @@ public class FacetResponse {
   }
 
   /**
-   * @param wasCached true if the counting part of the facet generation was
-   * cached.
+   * @param wasCached true if the counting part of the facet generation was cached.
    */
   public void setCountingCached(boolean wasCached) {
     this.countCached = wasCached;

@@ -65,8 +65,7 @@ public class ExposedSettings {
   public static PackedInts.Mutable getMutable(int valueCount, long maxValue) {
     int bitsRequired = PackedInts.bitsRequired(maxValue);
     switch (priority) {
-      case memory: return PackedInts.getMutable(
-          valueCount, bitsRequired, PackedInts.COMPACT);
+      case memory: return PackedInts.getMutable( valueCount, bitsRequired, PackedInts.COMPACT);
       case speed:
         return bitsRequired <= 4 || bitsRequired > 32 && bitsRequired < 40 ?
                PackedInts.getMutable(valueCount, bitsRequired, PackedInts.COMPACT) :
