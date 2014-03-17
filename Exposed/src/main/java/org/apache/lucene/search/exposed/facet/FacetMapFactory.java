@@ -24,17 +24,17 @@ public class FacetMapFactory {
    * If it turns out to be multi-valued, fallback to standard mapping will happen. The time spend on the failed
    * build of the optimized is wasted.
    */
-  public static boolean attemptSimple = true;
+  public static boolean attemptSingle = true;
   /**
    * If true, 1 field, 1 segment, natural order facets are treated as single values, even if they have multiple values.
    * The extra values will be discarded, with no order as to which of the conflicting values are kept.
    */
-  public static final boolean forceSingle = false;
+  public static boolean forceSingle = false;
 
   public static FacetMap createMap(int docCount, List<TermProvider> providers) throws IOException {
     if (providers.size() == 1) {
       TermProvider provider = providers.get(0);
-      if (attemptSimple && (provider.getComparator().getOrder() == NamedComparator.ORDER.count ||
+      if (attemptSingle && (provider.getComparator().getOrder() == NamedComparator.ORDER.count ||
                             provider.getComparator().getOrder() == NamedComparator.ORDER.index)) {
         try {
           if (provider.getReader() instanceof AtomicReader) {

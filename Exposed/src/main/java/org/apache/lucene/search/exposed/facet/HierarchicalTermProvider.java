@@ -308,7 +308,7 @@ public class HierarchicalTermProvider implements TermProvider {
   }
 
   public String toString() {
-      return "HierarchicalTermProvider(source=" + source + ")";
+      return "HierarchicalTermProvider("  + getMemUsage()/1048576 + "MB, source=" + source + ")";
   }
 
   /* Plain delegations */
@@ -432,5 +432,12 @@ public class HierarchicalTermProvider implements TermProvider {
   @Override
   public void setDocIDBase(int base) {
     source.setDocIDBase(base);
+  }
+
+  @Override
+  public long getMemUsage() {
+    return source.getMemUsage()
+           + (levels == null ? 0 : levels.ramBytesUsed())
+           + (pLevels == null ? 0 : pLevels.ramBytesUsed());
   }
 }

@@ -1,10 +1,8 @@
 package org.apache.solr.exposed;
 
+import org.apache.lucene.search.exposed.ExposedSettings;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
-import org.apache.lucene.search.exposed.facet.CollectorPool;
-import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
-import org.apache.lucene.search.exposed.facet.FacetResponse;
-import org.apache.lucene.search.exposed.facet.TagCollector;
+import org.apache.lucene.search.exposed.facet.*;
 import org.apache.lucene.search.exposed.facet.request.FacetRequest;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
@@ -30,8 +28,7 @@ import static org.apache.solr.exposed.ExposedFacetParams.*;
  *               Cannot be overridden for specific fields.
  */
 public class ExposedFacetQueryComponent extends QueryComponent {
-  public static final Logger log =
-      LoggerFactory.getLogger(SolrResourceLoader.class);
+  public static final Logger log = LoggerFactory.getLogger(SolrResourceLoader.class);
 
   public static final int DEFAULT_COLLECTOR_POOLS = 12;
   public static final int DEFAULT_COLLECTOR_FILLED = 2;
@@ -59,6 +56,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
       }
     }
     poolFactory = new CollectorPoolFactory(cPools, cFilled, cFresh);
+    setupCollectorPolicy(args);
   }
 
   @Override
@@ -82,6 +80,9 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     if (!"true".equals(params.get(EFACET))) {
       return; // Not an exposed facet request
     }
+
+    setupCollectorPolicy(params);
+    setupFacetMapPolicy(params);
 
     FacetRequest eReq = createRequest(params);
     if (eReq == null) {
@@ -138,6 +139,8 @@ public class ExposedFacetQueryComponent extends QueryComponent {
 
         NamedList<Object> meta = new SimpleOrderedMap<Object>();
         FacetResponse.TagCollection tags = group.getTags();
+
+        meta.add("info", fr.getProcessingInfo());
         meta.add("potentialtags", tags.getPotentialTags());
         meta.add("totaltags", tags.getTotalTags());
         meta.add("count", tags.getCount());
@@ -211,7 +214,6 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     eReq.setHierarchical(params.getBool(EFACET_HIERARCHICAL, false));
     eReq.setDelimiter(params.get(EFACET_HIERARCHICAL_DELIMITER, EFACET_HIERARCHICAL_DELIMITER_DEFAULT));
     eReq.setLevels(params.getInt(EFACET_HIERARCHICAL_LEVELS, Integer.MAX_VALUE));
-
     eReq.setReverse(reverse);
 
     // TODO: Add hierarchical
@@ -224,6 +226,57 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     }
 //    System.out.println(eReq.toXML());
     return eReq;
+  }
+
+  private void setupCollectorPolicy(SolrParams params) {
+    setupCollectorPolicy(params.getBool(EFACET_SPARSE, ExposedSettings.useSparseCollector),
+                         params.getBool(EFACET_SPARSE_FORCE, ExposedSettings.forceSparseCollector),
+                         params.getDouble(EFACET_SPARSE_FACTOR, TagCollectorSparse.DEFAULT_SPARSE_FACTOR));
+  }
+  private void setupCollectorPolicy(NamedList args) {
+    setupCollectorPolicy(getBoolean(args, EFACET_SPARSE, ExposedSettings.useSparseCollector),
+                         getBoolean(args, EFACET_SPARSE_FORCE, ExposedSettings.forceSparseCollector),
+                         getDouble(args, EFACET_SPARSE_FACTOR, TagCollectorSparse.DEFAULT_SPARSE_FACTOR));
+  }
+  private void setupFacetMapPolicy(SolrParams params) {
+    setupFacetMapPolicy(params.getBool(EFACET_MAP_SINGLE, FacetMapFactory.attemptSingle),
+                        params.getBool(EFACET_MAP_SINGLE_FORCE, FacetMapFactory.forceSingle));
+  }
+  private void setupFacetMapPolicy(NamedList args) {
+    setupFacetMapPolicy(getBoolean(args, EFACET_MAP_SINGLE, FacetMapFactory.attemptSingle),
+                        getBoolean(args, EFACET_MAP_SINGLE_FORCE, FacetMapFactory.forceSingle));
+
+  }
+
+  private Boolean getBoolean(NamedList args, String key, boolean defaultValue) {
+    Object value;
+    return (value = args.get(key)) == null ? defaultValue : (Boolean)value;
+  }
+  private Double getDouble(NamedList args, String key, double defaultValue) {
+    Object value;
+    return (value = args.get(key)) == null ? defaultValue : (Double)value;
+  }
+
+
+  private void setupCollectorPolicy(boolean useSparse, boolean forceSparse, double sparseFactor) {
+    if (ExposedSettings.useSparseCollector != useSparse || ExposedSettings.forceSparseCollector != forceSparse ||
+        Math.abs(TagCollectorSparse.DEFAULT_SPARSE_FACTOR - sparseFactor) > 0.0001) {
+      log.info(String.format("Changing sparse tag counter policy to use=%b, force=%b, factor=%f",
+                             useSparse, forceSparse, sparseFactor));
+      poolFactory.clear();
+      ExposedSettings.useSparseCollector = useSparse;
+      ExposedSettings.forceSparseCollector = forceSparse;
+      TagCollectorSparse.DEFAULT_SPARSE_FACTOR = sparseFactor;
+    }
+  }
+
+  private void setupFacetMapPolicy(boolean useSingle, boolean forceSingle) {
+    if (FacetMapFactory.attemptSingle != useSingle || FacetMapFactory.forceSingle != forceSingle) {
+      log.info(String.format("Changing FacetMap single policy to use=%b, force=%b", useSingle, forceSingle));
+      poolFactory.clear();
+      FacetMapFactory.attemptSingle = useSingle;
+      FacetMapFactory.forceSingle = forceSingle;
+    }
   }
 
   // key("efacet.offset", "title") -> "efacet.title.offset"

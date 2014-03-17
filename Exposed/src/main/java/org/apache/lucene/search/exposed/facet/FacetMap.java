@@ -73,4 +73,9 @@ public interface FacetMap {
    * @return the term providers for this map.
    */
   List<TermProvider> getProviders();
+
+  /**
+   * @return short and simple toString, intended for inclusion in facet result.
+   */
+  String tinyDesignation();
 }

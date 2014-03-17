@@ -143,6 +143,11 @@ public class FacetMapSingle implements FacetMap {
     return sw.toString();
   }
 
+  @Override
+  public String tinyDesignation() {
+    return "FacetMapSingle(refs=" + packedSize(refs) + ", provider=" + provider.getMemUsage()/1024 + "KB)";
+  }
+
   private String packedSize(PackedInts.Reader packed) {
     long bytes = packed.ramBytesUsed();
     if (bytes > 1048576) {

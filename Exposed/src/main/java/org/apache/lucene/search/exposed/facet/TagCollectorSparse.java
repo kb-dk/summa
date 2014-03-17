@@ -15,12 +15,13 @@ public class TagCollectorSparse extends TagCollector {
 
   // The numbers below are based on wild guessing and zero measurements. TODO: Measure and find better defaults
   public static final int RECOMMENDED_MIN_COUNTER_SIZE = 100000; // Counters below this should not be sparse
-  public static final double RECOMMENDED_MAX_SPARSE_FRACTION = 0.1; // Fractions above this are not recommended
-  public static double DEFAULT_SPARSE_FACTOR = 0.1; // If nothing is stated, this fraction is used
+  public static final double RECOMMENDED_MAX_SPARSE_FRACTION = 0.03333; // Fractions above this are not recommended
+  public static double DEFAULT_SPARSE_FACTOR = 0.0251; // If nothing is stated, this fraction is used
 
   private final double sparseFactor;
   private final int sparseSize;
 
+  // Try using PackedInts.Mutables here (extend FacetMap to provide max count for any tag)
   private final int[] tagCounts;
   private final int[] updated;
   private int updatePointer = 0;
@@ -65,6 +66,7 @@ public class TagCollectorSparse extends TagCollector {
    * @param minMapSize   the minimum number of unique tags in the map for this collector to be recommended.
    * @return true if it is recommended to use this TagCollector with the given parameters.
    */
+  // TODO: Weight the field(s) with cardinality > RECOMMENDED_MAX_SPARSE_FRACTION vs. total number of fields
   public static boolean isRecommended(FacetMap map, double sparseFraction, int minMapSize) {
     log.debug("isRecommended: tagCount=" + map.getTagCount() + ", minMapSize=" + minMapSize + ", sparseFactor="
               + sparseFraction + ", recommendedMaxSparseFraction=" + RECOMMENDED_MAX_SPARSE_FRACTION);
@@ -124,6 +126,7 @@ public class TagCollectorSparse extends TagCollector {
   public void iterate(final IteratorCallback callback, final int startPos, final int endPos, final int minCount) {
     final long startTime = System.currentTimeMillis();
     if (updatePointer == sparseSize) {
+      // TODO: Also call this for ranges < a certain size
       super.iterate(callback, startPos, endPos, minCount);
     } else {
       // Sparse magic below
@@ -158,7 +161,7 @@ public class TagCollectorSparse extends TagCollector {
   }
 
   public String toString() {
-    return "TagCollectorSparse(" + getMemoryUsage()/(4*1048576) + "MB, " + tagCounts.length + " potential tags, "
+    return "TagCollectorSparse(" + getMemoryUsage()/1048576 + "MB, " + tagCounts.length + " potential tags, "
            + sparseSize + " update counters from " + map.toString() + ")";
   }
 
@@ -176,7 +179,12 @@ public class TagCollectorSparse extends TagCollector {
       sum += count;
     }
     return String.format("TagCollectorSparse(%dMB, %d potential tags, %d non-zero counts, total sum %d from %s",
-                         getMemoryUsage()/(4*1048576), tagCounts.length, nonZero, sum, map.toString());
+                         getMemoryUsage()/1048576, tagCounts.length, nonZero, sum, map.toString());
+  }
+
+  @Override
+  public String tinyDesignation() {
+    return "TagCollectorSparse(" + getMemoryUsage()/1048576 + "MB, factor=" + sparseFactor + ")";
   }
 
   @Override
@@ -194,12 +202,11 @@ public class TagCollectorSparse extends TagCollector {
 
   @Override
   public long getMemoryUsage() {
-    return tagCounts.length * 4;
+    return (tagCounts.length + updated.length) * 4;
   }
 
   @Override
   public boolean hasTagCounts() {
     return true;
   }
-
 }

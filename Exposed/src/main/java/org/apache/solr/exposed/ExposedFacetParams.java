@@ -110,4 +110,29 @@ public interface ExposedFacetParams {
    * Only return constraints of a facet field with the given prefix.
    */
 //  public static final String EFACET_PREFIX = EFACET + ".prefix";
+
+  /**
+   * If true, support for the experimental {@link org.apache.lucene.search.exposed.facet.TagCollectorSparse} is enabled.
+   */
+  public static final String EFACET_SPARSE = EFACET + ".sparse";
+  /**
+   * If true and {@link #EFACET_SPARSE} is true, the sparse collector is always used.
+   */
+  public static final String EFACET_SPARSE_FORCE = EFACET + ".sparse.force";
+  /**
+   * The amount of update trackers as a fraction of the counters in the
+   * {@link org.apache.lucene.search.exposed.facet.TagCollectorSparse}.
+   */
+  public static final String EFACET_SPARSE_FACTOR = EFACET + ".sparse.factor";
+
+  /**
+   * If true, FacetMaps for single segment, single field, single values facets are optimized.
+   */
+  public static final String EFACET_MAP_SINGLE = EFACET + ".map.single";
+
+  /**
+   * If true, optimized FacetMaps for single segments are used even when the field is multi value..
+   * Extra values are discarded. Only enable for testing purposes!
+   */
+  public static final String EFACET_MAP_SINGLE_FORCE = EFACET + ".map.single.force";
 }

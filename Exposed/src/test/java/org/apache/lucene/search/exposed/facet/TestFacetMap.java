@@ -139,5 +139,10 @@ public class TestFacetMap extends TestCase {
     public List<TermProvider> getProviders() {
       return new ArrayList<TermProvider>();
     }
+
+    @Override
+    public String tinyDesignation() {
+      return "FakeFacetMapSingle(" + tags + " tags)";
+    }
   }
 }

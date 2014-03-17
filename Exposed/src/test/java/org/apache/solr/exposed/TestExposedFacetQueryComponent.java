@@ -70,6 +70,43 @@ public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
     System.out.println(response.replace("><", ">\n<"));
   }
 
+  public void testSparseSingle() throws Exception {
+    addContent(100);
+    String response = h.query(req(
+        "qt", "exprh",
+        "q", "modulo2_s:mod1",
+        EFACET, "true",
+        EFACET_MINCOUNT, "1",
+        EFACET_FIELD, "modulo5_s",
+        EFACET_SPARSE, "true",
+        EFACET_SPARSE_FORCE, "true")).replace("><", ">\n<");
+
+    assertTrue("The response '" + response + "' for single should contain a count of 10 for tag mod1",
+               response.contains("<int name=\"mod1\">10</int>"));
+    assertTrue("The response '" + response + "' should contain TagCollectorSparse\n" + response,
+               response.contains("TagCollectorSparse"));
+
+    System.out.println(response);
+  }
+
+  public void testSparseMulti() throws Exception {
+    addContent(100);
+    String response = h.query(req(
+        "qt", "exprh",
+        "q", "modulo2_s:mod1",
+        EFACET, "true",
+        EFACET_MINCOUNT, "1",
+        EFACET_FIELD, "modulo5_s",
+        EFACET_SPARSE, "false")).replace("><", ">\n<");
+
+    assertTrue("The response '" + response + "' for multi should contain a count of 10 for tag mod1",
+               response.contains("<int name=\"mod1\">10</int>"));
+    assertTrue("The response '" + response + "' should contain TagCollectorMulti\n" + response,
+               response.contains("TagCollectorMulti"));
+
+    System.out.println(response);
+  }
+
   public void testPathField() throws Exception {
     addHierarchicalContent(100, 3, 3);
     String response = h.query(req(
