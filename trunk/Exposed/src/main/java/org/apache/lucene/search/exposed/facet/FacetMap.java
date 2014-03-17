@@ -31,6 +31,11 @@ public interface FacetMap {
   int getTagCount();
 
   /**
+   * @return the maximum possible number of times any tag can occur when matching all documents.
+   */
+  int getMaxTagOccurrences();
+
+  /**
    * @param tagCounts a counter of size {@link #getTagCount()};
    * @param docID an docID relative to the full index (aka absolute docID).
    */

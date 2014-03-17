@@ -23,8 +23,7 @@ import java.util.concurrent.*;
 public class FacetMapSinglePackedFactory {
   private static final ELog log = ELog.getLog(FacetMapSinglePackedFactory.class);
 
-  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers)
-      throws IOException {
+  public static FacetMapMulti createMap(int docCount, List<TermProvider> providers) throws IOException {
     final long startTime = System.currentTimeMillis();
     log.info("Creating packed single pass map for " + providers.size() + " group" + (providers.size() == 1 ? "" : "s")
              + " with " + docCount + " documents)");
@@ -40,6 +39,7 @@ public class FacetMapSinglePackedFactory {
     List<ExpandablePackedPair> providerMaps =
         new ArrayList<ExpandablePackedPair>(providers.size());
     long totalUniqueTerms = 0;
+    int maxTagOccurrences = 0;
     for (int i = 0 ; i < providerDatas.size() ; i++) {
       ProviderData providerData = providerDatas.get(i);
       indirectStarts[i] = start;
@@ -49,6 +49,7 @@ public class FacetMapSinglePackedFactory {
       providerMaps.add(providerMap);
       totalUniqueTerms += providerData.uniqueTerms;
       refCount += providerMap.size();
+      maxTagOccurrences = Math.max(maxTagOccurrences, providerData.maxTagOccurrences);
       start += providerData.uniqueTerms;
     }
     indirectStarts[indirectStarts.length-1] = start;
@@ -65,7 +66,7 @@ public class FacetMapSinglePackedFactory {
     log.info(String.format(
         "docs=%s, terms=%s, refs=%d. Term extraction time=%dms, Secondary structure processing time=%dms",
           docCount, totalUniqueTerms, refCount, indexExtractTime, tagExtractTime));
-    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
+    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs, maxTagOccurrences);
   }
 
   private static List<ProviderData> extractProviderDatas(int docCount, List<TermProvider> providers) {
@@ -87,10 +88,8 @@ public class FacetMapSinglePackedFactory {
                             ExposedSettings.threads, providers.size()));
     long realTime = -System.currentTimeMillis();
     long summedTime = 0;
-    final ExecutorService executor =
-        Executors.newFixedThreadPool(ExposedSettings.threads);
-    List<Future<ProviderData>> jobs =
-        new ArrayList<Future<ProviderData>>(providers.size());
+    final ExecutorService executor = Executors.newFixedThreadPool(ExposedSettings.threads);
+    List<Future<ProviderData>> jobs = new ArrayList<Future<ProviderData>>(providers.size());
     for (TermProvider provider: providers) {
       jobs.add(executor.submit(new ProviderCallable(docCount, provider)));
     }
@@ -100,11 +99,9 @@ public class FacetMapSinglePackedFactory {
         providerDatas.add(pd);
         summedTime += pd.processingTime;
       } catch (InterruptedException e) {
-        throw new RuntimeException(
-            "Interrupted while waiting for data extraction from provider", e);
+        throw new RuntimeException("Interrupted while waiting for data extraction from provider", e);
       } catch (ExecutionException e) {
-        throw new RuntimeException(
-            "ExecutionException extracting data from provider", e);
+        throw new RuntimeException("ExecutionException extracting data from provider", e);
       }
     }
     realTime += System.currentTimeMillis();
@@ -134,20 +131,20 @@ public class FacetMapSinglePackedFactory {
     public final TermProvider provider; // For debug
     public final ExpandablePackedPair providerMap;
     public final int uniqueTerms;
+    public final int maxTagOccurrences;
     public final long processingTime;
 
-    public ProviderData(
-        TermProvider provider, ExpandablePackedPair providerMap,
-        int uniqueTerms, long processingTime) {
+    public ProviderData(TermProvider provider, ExpandablePackedPair providerMap, int uniqueTerms,
+                        int maxTagOccurrences, long processingTime) {
       this.provider = provider;
       this.providerMap = providerMap;
       this.uniqueTerms = uniqueTerms;
       this.processingTime = processingTime;
+      this.maxTagOccurrences = maxTagOccurrences;
     }
   }
 
-  private static ProviderData extractProviderData(
-      int docCount, TermProvider provider) throws IOException {
+  private static ProviderData extractProviderData(int docCount, TermProvider provider) throws IOException {
     long processingTime = -System.currentTimeMillis();
     ExpandablePackedPair providerMap = new ExpandablePackedPair(
         PackedInts.bitsRequired(docCount),
@@ -159,15 +156,19 @@ public class FacetMapSinglePackedFactory {
         PackedInts.bitsRequired(provider.getOrdinalTermCount()), 0);
     BytesRef last = null;
     int uniqueTerms = 0;
+    int maxOccurences = 0;
     while (tuples.hasNext()) {
       ExposedTuple tuple = tuples.next();
 //        indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
       i2o.set((int) tuple.indirect, tuple.ordinal);
       int docID;
+      int occurrences = 0;
       while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+        occurrences++;
 //          System.out.println("*** " + tuple + " docID " + docID);
         providerMap.add((int)(tuple.docIDBase + docID), (int)tuple.indirect);
       }
+      maxOccurences = Math.max(maxOccurences, occurrences);
 //      if (last == null || !last.equals(tuple.term)) { // TODO: Remove this check
   //      last = tuple.term;
         uniqueTerms++;
@@ -186,7 +187,7 @@ public class FacetMapSinglePackedFactory {
       log.debug(String.format("Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
                               provider.getClass()));
     }
-    return new ProviderData(provider, providerMap, uniqueTerms, processingTime);
+    return new ProviderData(provider, providerMap, uniqueTerms, maxOccurences, processingTime);
   }
 
   /**

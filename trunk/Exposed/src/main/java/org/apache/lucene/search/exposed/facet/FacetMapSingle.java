@@ -37,6 +37,7 @@ public class FacetMapSingle implements FacetMap {
   // To make this multi-provider and memory-efficient we need to alter the calling code logic significantly
   private final TermProvider provider;
   private final PackedInts.Reader refs;
+  private final int maxTagOccurrences;
 
   private final int[] indirectStarts = new int[]{1, 1};
 
@@ -46,10 +47,11 @@ public class FacetMapSingle implements FacetMap {
    * @param refs           references from index-wide indirects to term provider entry.
    * @param tagCount       the number of tags in the refs, including the special 0-tag
    */
-  public FacetMapSingle(TermProvider provider, PackedInts.Reader refs, int tagCount) {
+  public FacetMapSingle(TermProvider provider, PackedInts.Reader refs, int tagCount, int maxTagOccurrences) {
     this.provider = provider;
     this.refs = refs;
     indirectStarts[1] = tagCount;
+    this.maxTagOccurrences = maxTagOccurrences;
   }
 
   @Override
@@ -60,6 +62,11 @@ public class FacetMapSingle implements FacetMap {
     } catch (IOException e) {
       throw new RuntimeException("Unable to determine unique count", e);
     }
+  }
+
+  @Override
+  public int getMaxTagOccurrences() {
+    return maxTagOccurrences;
   }
 
   @Override
@@ -111,7 +118,7 @@ public class FacetMapSingle implements FacetMap {
       return new BytesRef(BytesRef.EMPTY_BYTES);
     }
     try {
-      return provider.getOrderedDisplayTerm(termIndirect-1);
+      return provider.getOrderedDisplayTerm(termIndirect - 1);
     } catch (Exception e) {
       throw new ArrayIndexOutOfBoundsException(
           "The indirect " + termIndirect + " was too high. The maximum indirect supported by the current map is "

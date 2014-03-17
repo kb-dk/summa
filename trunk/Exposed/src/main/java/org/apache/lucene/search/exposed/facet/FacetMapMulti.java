@@ -31,18 +31,25 @@ public class FacetMapMulti implements FacetMap {
 
   private final PackedInts.Reader doc2ref;
   private final PackedInts.Reader refs;
+  private final int maxTagOccurrences;
 
-  protected FacetMapMulti(List<TermProvider> providers, int[] indirectStarts,
-                          PackedInts.Reader doc2ref, PackedInts.Reader refs) {
+  protected FacetMapMulti(List<TermProvider> providers, int[] indirectStarts, PackedInts.Reader doc2ref,
+                          PackedInts.Reader refs, int maxTagOccurrences) {
     this.providers = providers;
     this.indirectStarts = indirectStarts;
     this.doc2ref = doc2ref;
     this.refs = refs;
+    this.maxTagOccurrences = maxTagOccurrences;
   }
 
   @Override
   public int getTagCount() {
     return indirectStarts[indirectStarts.length-1];
+  }
+
+  @Override
+  public int getMaxTagOccurrences() {
+    return maxTagOccurrences;
   }
 
   /**

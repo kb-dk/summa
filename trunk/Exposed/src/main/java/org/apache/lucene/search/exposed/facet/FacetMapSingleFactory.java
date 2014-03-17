@@ -29,6 +29,7 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
 
     Iterator<ExposedTuple> tuples = provider.getIterator(true);
     long highest = Long.MIN_VALUE;
+    int maxOccurences = 0;
     while (tuples.hasNext()) {
       ExposedTuple tuple = tuples.next();
       if (tuple.indirect != tuple.ordinal) {
@@ -37,7 +38,9 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
             + " and ordinal=" + tuple.ordinal + " for term " + tuple.term.utf8ToString());
       }
       int docID;
+      int occurrences = 0;
       while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+        occurrences++;
         if (refs.get(docID) != 0) {
           if (forceSingle) {
             if (!hasWarnedOnMulti) {
@@ -56,6 +59,7 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
           highest = tuple.indirect+1;
         }
       }
+      maxOccurences = Math.max(maxOccurences, occurrences);
     }
     if (provider instanceof GroupTermProvider) {
       ((GroupTermProvider)provider).setOrderedOrdinals(new IdentityReader((int) provider.getOrdinalTermCount()));
@@ -65,7 +69,8 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
                               provider.getClass()));
     }
     fillTime += System.currentTimeMillis();
-    log.info("Finished construction with tag fill (" + docCount + " documents) in " + fillTime/1000.0 + " seconds");
-    return new FacetMapSingle(provider, refs, (int) (provider.getOrdinalTermCount()+1));
+    log.info("Finished construction with tag fill (" + docCount + " documents) and maxOccurrences " + maxOccurences
+             + " in " + fillTime/1000.0 + " seconds");
+    return new FacetMapSingle(provider, refs, (int) (provider.getOrdinalTermCount()+1), maxOccurences);
   }
 }

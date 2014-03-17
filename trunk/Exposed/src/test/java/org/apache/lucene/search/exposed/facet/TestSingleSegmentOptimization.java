@@ -200,10 +200,9 @@ public class TestSingleSegmentOptimization extends TestCase {
     }
     System.out.println(ExposedCache.getInstance());
     System.out.println(CollectorPoolFactory.getLastFactory());
-    System.out.println("\n*****************************************************************************************");
+    System.out.println("\n******************************************************************************************");
     System.out.println(sb);
     System.out.println("Note: All reported times are in ms and the minimum from 4 runs to compensate for random GC.");
-
   }
 
   private void printTestScaleOptimizedSparseFacet(

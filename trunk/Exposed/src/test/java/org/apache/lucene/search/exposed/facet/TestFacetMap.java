@@ -98,6 +98,11 @@ public class TestFacetMap extends TestCase {
     }
 
     @Override
+    public int getMaxTagOccurrences() {
+      return tags;
+    }
+
+    @Override
     public void updateCounter(final int[] tagCounts, int docID) {
       tagCounts[docID]++;
     }
