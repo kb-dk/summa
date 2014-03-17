@@ -147,7 +147,7 @@ public class TestSingleSegmentOptimization extends TestCase {
   public void testScaleOptimizedSparseCollector() throws Exception {
     System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
                        + " results comparable to testScaleOptimizedMultiCollector");
-    testScaleOptimizedSpecificCollector(true, "sparse(default)");
+    testScaleOptimizedSpecificCollector(true, "sparse(" + TagCollectorSparse.DEFAULT_SPARSE_FACTOR + ")");
   }
 
   public void testScaleOptimizedSparseNoneCollector() throws Exception {
