@@ -57,6 +57,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     }
     poolFactory = new CollectorPoolFactory(cPools, cFilled, cFresh);
     setupCollectorPolicy(args);
+    setupFacetMapPolicy(args);
   }
 
   @Override
@@ -263,7 +264,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
         Math.abs(TagCollectorSparse.DEFAULT_SPARSE_FACTOR - sparseFactor) > 0.0001) {
       log.info(String.format("Changing sparse tag counter policy to use=%b, force=%b, factor=%f",
                              useSparse, forceSparse, sparseFactor));
-      poolFactory.clear();
+      poolFactory.purgeAllCollectors();
       ExposedSettings.useSparseCollector = useSparse;
       ExposedSettings.forceSparseCollector = forceSparse;
       TagCollectorSparse.DEFAULT_SPARSE_FACTOR = sparseFactor;

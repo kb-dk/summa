@@ -146,6 +146,16 @@ public class CollectorPoolFactory implements ExposedCache.PurgeCallback, IndexRe
 
     clear();
   }
+  public void purgeAllCollectors() {
+    if (poolMap.isEmpty() && readers.isEmpty()) {
+      log.debug("purgeAllCollectors() called (nothing cached so nothing cleared)");
+      return;
+    }
+    log.info("purgeAllCollectors() called on " + poolMap.size() + " poolMaps");
+    for (Map.Entry<String, CollectorPool> entry: poolMap.entrySet()) {
+      entry.getValue().clear();
+    }
+  }
 
   @Override
   public synchronized void purge(IndexReader r) {
