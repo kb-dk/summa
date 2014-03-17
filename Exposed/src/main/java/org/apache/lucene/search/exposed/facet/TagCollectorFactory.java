@@ -9,8 +9,13 @@ public class TagCollectorFactory {
   public static TagCollector getCollector(FacetMap map) {
     if (ExposedSettings.useSparseCollector) {
       if (ExposedSettings.forceSparseCollector || TagCollectorSparse.isRecommended(map)) {
-        log.debug("Constructing sparse collector");
-        return new TagCollectorSparse(map);
+        if (ExposedSettings.useCompactCollectors) {
+          log.debug("Constructing sparse compact collector");
+          return new TagCollectorSparsePacked(map);
+        } else {
+          log.debug("Constructing sparse collector");
+          return new TagCollectorSparse(map);
+        }
       }
     }
     log.debug("Constructing multi collector");

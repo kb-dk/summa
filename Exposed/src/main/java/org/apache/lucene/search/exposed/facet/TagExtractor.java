@@ -261,12 +261,9 @@ public class TagExtractor {
     // Sort tag references by count
     final int maxSize = Math.min(endTermPos - startTermPos, requestGroup.getMaxTags());
     final int minCount = requestGroup.getMinCount();
-    final int[] tagCounts = tagCollector.getTagCounts();
 
-    ExposedPriorityQueue pq = new ExposedPriorityQueue(
-        requestGroup.isReverse() ?
-            new ComparatorFactory.IndirectComparatorReverse(tagCounts) :
-            new ComparatorFactory.IndirectComparator(tagCounts), maxSize);
+    ExposedPriorityQueue pq = getCountQueue(tagCollector, requestGroup, maxSize);
+
     CountCollector countCollector = new CountCollector(pq);
     tagCollector.iterate(countCollector, startTermPos, endTermPos, minCount);
 /**    for (int tagID = startTermPos ; tagID < endTermPos ; tagID++) {
@@ -295,6 +292,25 @@ public class TagExtractor {
     responseGroup.setTotalReferences(countCollector.getTotalRefs());
     responseGroup.setValidTags(countCollector.getTotalValidTags());
     return responseGroup;
+  }
+
+  private ExposedPriorityQueue getCountQueue(
+      final TagCollector tagCollector, FacetRequestGroup requestGroup, int maxSize) {
+    if (tagCollector.usesTagCountArray()) {
+      final int[] tagCounts = tagCollector.getTagCounts();
+      return new ExposedPriorityQueue(
+          requestGroup.isReverse() ?
+          new ComparatorFactory.IndirectComparatorReverse(tagCounts) :
+          new ComparatorFactory.IndirectComparator(tagCounts), maxSize);
+    }
+    final int direction = requestGroup.isReverse() ? -1 : 1;
+    return new ExposedPriorityQueue(new ComparatorFactory.OrdinalComparator() {
+      @Override
+      public int compare(int tagID1, int tagID2) {
+        final int diff = tagCollector.get(tagID1)-tagCollector.get(tagID2);
+        return direction * (diff == 0 ? tagID2 - tagID1 : diff);
+      }
+    }, maxSize);
   }
 
   private final class CountCollector implements TagCollector.IteratorCallback {

@@ -126,6 +126,11 @@ public interface ExposedFacetParams {
   public static final String EFACET_SPARSE_FACTOR = EFACET + ".sparse.factor";
 
   /**
+   * If true, compact collectors (PackedInts-backed instead of int[]) are used.
+   */
+  public static final String EFACET_COLLECTORS_COMPACT = EFACET + ".collectors.compact";
+
+  /**
    * If true, FacetMaps for single segment, single field, single values facets are optimized.
    */
   public static final String EFACET_MAP_SINGLE = EFACET + ".map.single";
