@@ -124,7 +124,7 @@ public class CollectorPool {
           return collector;
         }
       }
-      // TODO: Ensure that the filled cache actually works and not just caches the first X forever
+
       if (!enforceLimits || maxFresh == 0 || activeCollectors + filled.size() + fresh.size() < maxFilled + maxFresh) {
         log.debug("acquire(" + query + "): Creating new TagCollector with enforceLimits=" + enforceLimits
                   + ", maxFresh=" + maxFresh + ", activeCollectors(" + activeCollectors + ") + filled.size("
