@@ -13,8 +13,8 @@ import java.util.Arrays;
 public class TagCollectorSparse extends TagCollector {
   private static final ELog log = ELog.getLog(TagCollectorSparse.class);
 
-  // The numbers below are based on wild guessing and zero measurements. TODO: Measure and find better defaults
   public static final int RECOMMENDED_MIN_COUNTER_SIZE = 100000; // Counters below this should not be sparse
+  public static final int DIRECT_ITERATE_LIMIT = 10000; // Counter segments below this will be iterates old style
   public static final double RECOMMENDED_MAX_SPARSE_FRACTION = 0.03333; // Fractions above this are not recommended
   public static double DEFAULT_SPARSE_FACTOR = 0.0251; // If nothing is stated, this fraction is used
 
@@ -93,12 +93,8 @@ public class TagCollectorSparse extends TagCollector {
 
   @Override
   public void inc(final int tagID) {
-    if (sparseSize == updatePointer) {
-      tagCounts[tagID]++;
-      return;
-    }
     // Sparse magic below
-    if (tagCounts[tagID]++ == 0) { // Add a pointer if this is the first time the count is increased or the tagID
+    if (tagCounts[tagID]++ == 0 && updatePointer != sparseSize) {
       updated[updatePointer++] = tagID;
     }
   }
@@ -125,8 +121,8 @@ public class TagCollectorSparse extends TagCollector {
   @Override
   public void iterate(final IteratorCallback callback, final int startPos, final int endPos, final int minCount) {
     final long startTime = System.currentTimeMillis();
-    if (updatePointer == sparseSize) {
-      // TODO: Also call this for ranges < a certain size
+    if (updatePointer == sparseSize || (endPos - startPos) < DIRECT_ITERATE_LIMIT) {
+      // Either the update tracker is blown or the range is very small
       super.iterate(callback, startPos, endPos, minCount);
     } else {
       // Sparse magic below

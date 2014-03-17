@@ -253,7 +253,7 @@ public class TestSingleSegmentOptimization extends TestCase {
     return timing;
   }
 
-  final int COLLECTOR_TEST_DOCS = 20000000;
+  final int COLLECTOR_TEST_DOCS = 50 * 1000000;
   public IndexSearcher getTagCollectorTestSearcher() throws IOException {
     final int TERM_LENGTH = 20;
     final List<String> FIELDS = Arrays.asList("a");
