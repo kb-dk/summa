@@ -79,7 +79,8 @@ public class TestExposedFacetQueryComponent extends SolrTestCaseJ4 {
         EFACET_MINCOUNT, "1",
         EFACET_FIELD, "modulo5_s",
         EFACET_SPARSE, "true",
-        EFACET_SPARSE_FORCE, "true")).replace("><", ">\n<");
+        EFACET_SPARSE_FORCE, "true",
+        EFACET_SPARSE_FACTOR, "0.3")).replace("><", ">\n<");
 
     assertTrue("The response '" + response + "' for single should contain a count of 10 for tag mod1",
                response.contains("<int name=\"mod1\">10</int>"));
