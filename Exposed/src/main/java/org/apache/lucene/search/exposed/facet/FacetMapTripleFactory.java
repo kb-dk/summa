@@ -10,10 +10,9 @@ import org.apache.lucene.util.packed.MonotonicReaderFactory;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
-import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Battle-tested construction of FacetMapMulti.
@@ -41,30 +40,30 @@ public class FacetMapTripleFactory {
 
 //    doc2ref = PackedInts.getMutable(docCount+1, PackedInts.bitsRequired(start));
     long tagExtractTime = - System.currentTimeMillis();
-    Map.Entry<PackedInts.Reader, PackedInts.Reader> pair = extractTags(providers, indirectStarts, docCount);
+    List<PackedInts.Reader> readers = new ArrayList<PackedInts.Reader>(2);
+    int maxTagOccurrences = extractTags(providers, indirectStarts, docCount, readers);
     tagExtractTime += System.currentTimeMillis();
-    final PackedInts.Reader doc2ref = pair.getKey();
-    final PackedInts.Reader refs = pair.getValue();
+    final PackedInts.Reader doc2ref = readers.get(0);
+    final PackedInts.Reader refs = readers.get(1);
     log.info("Unique count (" + providers.size() + " providers): "
              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
-    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
+    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs, maxTagOccurrences);
   }
 
-  private static Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
-      List<TermProvider> providers, int[] indirectStarts, int docCount) throws IOException {
+  // Returns maxTagOccurrences
+  private static int extractTags(List<TermProvider> providers, int[] indirectStarts, int docCount,
+                                 List<PackedInts.Reader> result) throws IOException {
     // We start by counting the references as this spares us a lot of array
     // content re-allocation
     final int[] tagCounts = new int[docCount]; // One counter for each doc
     // Fill the tagCounts with the number of tags (references really) for each
     // document.
     countTags(providers, tagCounts);
-    return extractTags(providers, indirectStarts, docCount, tagCounts);
+    return extractTags(providers, indirectStarts, docCount, tagCounts, result);
   }
 
   /**
-   * Iterates all terms and counts the number of references from each document
-   * to any tag.
-   *
+   * Iterates all terms and counts the number of references from each document to any tag.
    * @param providers the sources for terms for tags.
    * @param tagCounts #tag-references, one entry/document.
    * @throws IOException if the tags could not be iterated.
@@ -123,8 +122,8 @@ public class FacetMapTripleFactory {
   refs-array at the position given by doc2ref plus the offset from pass 2.
   If the offset was larger than 0, it it decreased.
    */
-  static Map.Entry<PackedInts.Reader, PackedInts.Reader> extractTags(
-      List<TermProvider> providers, int[] indirectStarts, int docCount, final int[] tagCounts) throws IOException {
+  static int extractTags(List<TermProvider> providers, int[] indirectStarts, int docCount, final int[] tagCounts,
+                         List<PackedInts.Reader> result) throws IOException {
     long totalRefs = 0;
 
     {
@@ -159,7 +158,7 @@ public class FacetMapTripleFactory {
     // We are now ready to fill in the actual tagIDs. There will be a lot of
     // random writes to the refs-array as we're essentially inverting index
     // and value from the TermDocs.
-    fillRefs(providers, indirectStarts, tagCounts, totalRefs, refs);
+    int maxTagOccurrences = fillRefs(providers, indirectStarts, tagCounts, totalRefs, refs);
 
     // Finally we reduce the doc2ref representation by defining the content of
     // refBase and creating a new doc2ref
@@ -199,8 +198,9 @@ public class FacetMapTripleFactory {
           + reduceTime / 1000 + " seconds");
       doc2ref = reduced;
     }*/
-    return new AbstractMap.SimpleEntry<PackedInts.Reader, PackedInts.Reader>(
-        MonotonicReaderFactory.reduce(doc2ref), refs);
+    result.add(MonotonicReaderFactory.reduce(doc2ref));
+    result.add(refs);
+    return maxTagOccurrences;
   }
 
   private static void initDoc2ref(int[] tagCounts, PackedInts.Mutable doc2ref) {
@@ -227,12 +227,13 @@ public class FacetMapTripleFactory {
   }
 
 
-  private static void fillRefs(List<TermProvider> providers, int[] indirectStarts, final int[] tagCounts,
-                               final long totalRefs, final PackedInts.Mutable refs) throws IOException {
+  private static int fillRefs(List<TermProvider> providers, int[] indirectStarts, final int[] tagCounts,
+                              final long totalRefs, final PackedInts.Mutable refs) throws IOException {
     long nextDocTime = 0;
     long nextDocCount = 0;
 
     long fillTime = -System.currentTimeMillis();
+    int maxTagOccurrences = 0;
     for (int providerNum = 0 ; providerNum < providers.size() ; providerNum++) {
       final TermProvider provider = providers.get(providerNum);
       final long termOffset = indirectStarts[providerNum];
@@ -275,7 +276,9 @@ public class FacetMapTripleFactory {
         nextDocTime -= System.nanoTime();
         int doc;
         final int base = (int)tuple.docIDBase;
+        int tagOccurrences = 0;
         while ((doc = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+          tagOccurrences++;
           nextDocCount++;
           //            final int docID = ;
           //          final int refsOrigo = (int)doc2ref.get(docID);
@@ -291,6 +294,7 @@ public class FacetMapTripleFactory {
                 + termOffset + "=" + (tuple.indirect+termOffset), e);
           }
         }
+        maxTagOccurrences = Math.max(maxTagOccurrences, tagOccurrences);
         nextDocTime += System.nanoTime();
 
        /*
@@ -321,7 +325,9 @@ public class FacetMapTripleFactory {
       }
     }
     fillTime += System.currentTimeMillis();
-    log.info("Filled map with " + ExposedUtil.time("references", totalRefs, fillTime) + " out of which was " +
+    log.info("Filled map with " + ExposedUtil.time("references", totalRefs, fillTime) + " (maxTagOccurrence="
+             + maxTagOccurrences + ") out of which was " +
              ExposedUtil.time("nextDocs", nextDocCount, nextDocTime / 1000000));
+    return maxTagOccurrences;
   }
 }

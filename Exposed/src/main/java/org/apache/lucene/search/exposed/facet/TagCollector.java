@@ -37,8 +37,6 @@ public abstract class TagCollector extends Collector {
     this.map = map;
   }
 
-
-
   /**
    * Update the facet counter structures for the given docID.
    * </p><p>

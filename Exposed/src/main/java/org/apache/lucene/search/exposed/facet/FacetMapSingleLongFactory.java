@@ -39,6 +39,7 @@ public class FacetMapSingleLongFactory {
     DoubleIntArrayList pairs = new DoubleIntArrayList(docCount); // docIDs, indirect
 //    System.out.println("******************************");
     long totalUniqueTerms = 0;
+    int maxOccurences = 0;
     for (int i = 0 ; i < providers.size() ; i++) {
       indirectStarts[i] = start;
       final long termOffset = start;
@@ -58,11 +59,14 @@ public class FacetMapSingleLongFactory {
         ExposedTuple tuple = tuples.next();
         indirectToOrdinal.add((int) tuple.indirect, (int) tuple.ordinal);
         int docID;
+        int occurrences = 0;
         while ((docID = tuple.docIDs.nextDoc()) != DocsEnum.NO_MORE_DOCS) {
+          occurrences++;
 //          System.out.println("*** " + tuple + " docID " + docID);
           pairs.add((int) (tuple.docIDBase + docID),
                     (int) (tuple.indirect+termOffset));
         }
+        maxOccurences = Math.max(maxOccurences, occurrences);
         if (last == null || !last.equals(tuple.term)) {
           last = tuple.term;
           localUniqueTerms++;
@@ -123,7 +127,7 @@ public class FacetMapSingleLongFactory {
     final PackedInts.Reader refs = pair.getValue();
     log.info("Unique count, tag counts and tag fill (" + docCount + " documents, " + providers.size() + " providers): "
              + uniqueTime + "ms, tag time: " + tagExtractTime + "ms");
-    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs);
+    return new FacetMapMulti(providers, indirectStarts, doc2ref, refs, maxOccurences);
   }
 
   /**
