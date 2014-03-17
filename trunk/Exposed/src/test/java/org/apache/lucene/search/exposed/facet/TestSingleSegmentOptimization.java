@@ -30,7 +30,6 @@ public class TestSingleSegmentOptimization extends TestCase {
   private ExposedCache cache;
   private IndexWriter w = null;
 
-
   public TestSingleSegmentOptimization(String name) {
     super(name);
   }
@@ -57,7 +56,6 @@ public class TestSingleSegmentOptimization extends TestCase {
     cache.purgeAllCaches();
     helper.close();
   }
-
 
   public static Test suite() {
     return new TestSuite(TestSingleSegmentOptimization.class);
@@ -146,13 +144,13 @@ public class TestSingleSegmentOptimization extends TestCase {
 
   public void testScaleOptimizedSparseCollector() throws Exception {
     System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
-                       + " results comparable to testScaleOptimizedMultiCollector");
+                       + " results comparable to other collector tests");
     testScaleOptimizedSpecificCollector(true, "sparse(" + TagCollectorSparse.DEFAULT_SPARSE_FACTOR + ")");
   }
 
   public void testScaleOptimizedSparseNoneCollector() throws Exception {
     System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
-                       + " results comparable to testScaleOptimizedMultiCollector");
+                       + " results comparable to other collector tests");
     ExposedSettings.forceSparseCollector = true;
     double oldFactor = TagCollectorSparse.DEFAULT_SPARSE_FACTOR;
     TagCollectorSparse.DEFAULT_SPARSE_FACTOR = 0.0;
@@ -165,12 +163,20 @@ public class TestSingleSegmentOptimization extends TestCase {
 
   public void testScaleOptimizedSparseAllCollector() throws Exception {
     System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
-                       + " results comparable to testScaleOptimizedMultiCollector");
+                       + " results comparable to other collector tests");
+    ExposedSettings.useCompactCollectors = true;
+    testScaleOptimizedSpecificCollector(true, "sparseCompact(" + TagCollectorSparsePacked.DEFAULT_SPARSE_FACTOR + ")");
+    ExposedSettings.useCompactCollectors = false;
+  }
+
+  public void testScaleOptimizedSparseCompactCollector() throws Exception {
+    System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
+                       + " results comparable to other collector tests");
     ExposedSettings.forceSparseCollector = true;
     double oldFactor = TagCollectorSparse.DEFAULT_SPARSE_FACTOR;
-    TagCollectorSparse.DEFAULT_SPARSE_FACTOR = 1.0;
+    TagCollectorSparse.DEFAULT_SPARSE_FACTOR = 0.0;
 
-    testScaleOptimizedSpecificCollector(true, "sparse(all)");
+    testScaleOptimizedSpecificCollector(true, "sparse(none)");
 
     ExposedSettings.forceSparseCollector = false;
     TagCollectorSparse.DEFAULT_SPARSE_FACTOR = oldFactor;
@@ -178,12 +184,12 @@ public class TestSingleSegmentOptimization extends TestCase {
 
   public void testScaleOptimizedMultiCollector() throws Exception {
     System.out.println("Warning: This test _must_ be executed as the only test in the current JVM invocation to produce"
-                       + " results comparable to testScaleOptimizedFacetCollector");
+                       + " results comparable to other collector tests");
     testScaleOptimizedSpecificCollector(false, "multi");
   }
 
   public void testScaleOptimizedSpecificCollector(boolean useSparse, String designation) throws Exception {
-    final int RUNS = 5;
+    final int RUNS = 3; // Initially 5, but the numbers did not get noticeable better or worse
     final int[] FRACTIONS = new int[]{2, 5, 10, 20, 30, 40, 50, 100, 200, 500, 1000, 5000};
     final IndexSearcher searcher = getTagCollectorTestSearcher();
     final CollectorPoolFactory poolFactory = new CollectorPoolFactory(6, 0, 1);

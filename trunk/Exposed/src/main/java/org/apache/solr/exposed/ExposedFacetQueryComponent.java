@@ -20,9 +20,8 @@ import java.io.IOException;
 import static org.apache.solr.exposed.ExposedFacetParams.*;
 
 /**
- * Wrapper for the Exposed-patch for Lucene, providing fast, low-memory,
- * expensive-startup hierarchical faceting. Arguments are mimicked from
- * http://wiki.apache.org/solr/SimpleFacetParameters
+ * Wrapper for the Exposed-patch for Lucene, providing fast, low-memory, expensive-startup hierarchical faceting.
+ * Arguments are mimicked from http://wiki.apache.org/solr/SimpleFacetParameters
  * </p><p>
  * efacet.query: Lucene query parser syntax query used for faceting.
  *               Cannot be overridden for specific fields.
@@ -232,12 +231,14 @@ public class ExposedFacetQueryComponent extends QueryComponent {
   private void setupCollectorPolicy(SolrParams params) {
     setupCollectorPolicy(params.getBool(EFACET_SPARSE, ExposedSettings.useSparseCollector),
                          params.getBool(EFACET_SPARSE_FORCE, ExposedSettings.forceSparseCollector),
-                         params.getDouble(EFACET_SPARSE_FACTOR, TagCollectorSparse.DEFAULT_SPARSE_FACTOR));
+                         params.getDouble(EFACET_SPARSE_FACTOR, TagCollectorSparse.DEFAULT_SPARSE_FACTOR),
+                         params.getBool(EFACET_COLLECTORS_COMPACT, ExposedSettings.useCompactCollectors));
   }
   private void setupCollectorPolicy(NamedList args) {
     setupCollectorPolicy(getBoolean(args, EFACET_SPARSE, ExposedSettings.useSparseCollector),
                          getBoolean(args, EFACET_SPARSE_FORCE, ExposedSettings.forceSparseCollector),
-                         getDouble(args, EFACET_SPARSE_FACTOR, TagCollectorSparse.DEFAULT_SPARSE_FACTOR));
+                         getDouble(args, EFACET_SPARSE_FACTOR, TagCollectorSparse.DEFAULT_SPARSE_FACTOR),
+                         getBoolean(args, EFACET_COLLECTORS_COMPACT, ExposedSettings.useCompactCollectors));
   }
   private void setupFacetMapPolicy(SolrParams params) {
     setupFacetMapPolicy(params.getBool(EFACET_MAP_SINGLE, FacetMapFactory.attemptSingle),
@@ -259,15 +260,17 @@ public class ExposedFacetQueryComponent extends QueryComponent {
   }
 
 
-  private void setupCollectorPolicy(boolean useSparse, boolean forceSparse, double sparseFactor) {
+  private void setupCollectorPolicy(boolean useSparse, boolean forceSparse, double sparseFactor, boolean useCompact) {
     if (ExposedSettings.useSparseCollector != useSparse || ExposedSettings.forceSparseCollector != forceSparse ||
-        Math.abs(TagCollectorSparse.DEFAULT_SPARSE_FACTOR - sparseFactor) > 0.0001) {
-      log.info(String.format("Changing sparse tag counter policy to use=%b, force=%b, factor=%f",
-                             useSparse, forceSparse, sparseFactor));
+        Math.abs(TagCollectorSparse.DEFAULT_SPARSE_FACTOR - sparseFactor) > 0.0001 ||
+        ExposedSettings.useCompactCollectors != useCompact) {
+      log.info(String.format("Changing sparse tag counter policy to use=%b, force=%b, factor=%f, compact=%b",
+                             useSparse, forceSparse, sparseFactor, useCompact));
       poolFactory.purgeAllCollectors();
       ExposedSettings.useSparseCollector = useSparse;
       ExposedSettings.forceSparseCollector = forceSparse;
       TagCollectorSparse.DEFAULT_SPARSE_FACTOR = sparseFactor;
+      ExposedSettings.useCompactCollectors = useCompact;
     }
   }
 

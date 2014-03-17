@@ -52,6 +52,7 @@ public abstract class TagCollector extends Collector {
   public abstract void inc(int tagID);
 
   /**
+   *
    * @param tagID a tagID relative to the full range of tagIDs for the tag counter.
    * @return the count for the given tagID.
    */
@@ -69,9 +70,9 @@ public abstract class TagCollector extends Collector {
   public abstract int[] getTagCounts();
 
   /**
-   * @return true if the implementation supports {@link }
+   * @return true if the implementation supports {@link #getTagCounts()}
    */
-  public abstract boolean hasTagCounts();
+  public abstract boolean usesTagCountArray();
 
   /**
    * Iterates the counter and performs a callback for each entry satisfying the requirements.
@@ -80,7 +81,7 @@ public abstract class TagCollector extends Collector {
    * @param minCount count must be >= this in order to call call.
    */
   public void iterate(final IteratorCallback callback, final int startPos, final int endPos, final int minCount) {
-    if (hasTagCounts()) {
+    if (usesTagCountArray()) {
       final int[] tagCounts = getTagCounts();
       for (int tagID = startPos ; tagID < endPos ; tagID++) {
         if (tagCounts[tagID] >= minCount) {

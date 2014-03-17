@@ -2,16 +2,16 @@ package org.apache.lucene.search.exposed.facet;
 
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 import org.apache.lucene.util.ELog;
+import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Sparse collector where search results with #tags below the stated threshold uses a faster extraction and clearing
  * mechanism. If the #tags exceeds this threshold, standard extraction and clearing is used.
  */
-public class TagCollectorSparse extends TagCollector {
-  private static final ELog log = ELog.getLog(TagCollectorSparse.class);
+public class TagCollectorSparsePacked extends TagCollector {
+  private static final ELog log = ELog.getLog(TagCollectorSparsePacked.class);
 
   public static final int RECOMMENDED_MIN_COUNTER_SIZE = 100000; // Counters below this should not be sparse
   public static final int DIRECT_ITERATE_LIMIT = 10000; // Counter segments below this will be iterates old style
@@ -22,14 +22,14 @@ public class TagCollectorSparse extends TagCollector {
   private final int sparseSize;
 
   // Try using PackedInts.Mutables here (extend FacetMap to provide max count for any tag)
-  private final int[] tagCounts;
-  private final int[] updated;
+  private final PackedInts.Mutable tagCounts;
+  private final PackedInts.Mutable updated;
   private int updatePointer = 0;
 
   /**
    * @param map a FacetMap.
    */
-  public TagCollectorSparse(FacetMap map) {
+  public TagCollectorSparsePacked(FacetMap map) {
     this(map, DEFAULT_SPARSE_FACTOR);
   }
 
@@ -37,10 +37,11 @@ public class TagCollectorSparse extends TagCollector {
    * @param map a plain FacetMap.
    * @param sparseFactor the amount of space used for the sparse structure, as a fraction of tagCount space.
    */
-  public TagCollectorSparse(FacetMap map, double sparseFactor) {
+  public TagCollectorSparsePacked(FacetMap map, double sparseFactor) {
     super(map);
     try {
-      tagCounts = new int[map.getTagCount()];
+      tagCounts = PackedInts.getMutable(
+          map.getTagCount(), PackedInts.bitsRequired(map.getMaxTagOccurrences()), PackedInts.COMPACT);
     } catch (OutOfMemoryError e) {
       throw (OutOfMemoryError)new OutOfMemoryError(String.format(
               "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMap was %s",
@@ -50,7 +51,7 @@ public class TagCollectorSparse extends TagCollector {
 
     sparseSize = (int) (map.getTagCount()*sparseFactor);
     try {
-      updated = new int[sparseSize];
+      updated = PackedInts.getMutable(sparseSize, PackedInts.bitsRequired(map.getTagCount()), PackedInts.COMPACT);
     } catch (OutOfMemoryError e) {
       throw (OutOfMemoryError)new OutOfMemoryError(String.format(
               "OOM while trying to allocate int[%d] for tag updates ~ %dMB. FacetMap was %s",
@@ -83,38 +84,36 @@ public class TagCollectorSparse extends TagCollector {
 
   @Override
   public int get(int tagID) {
-    return tagCounts[tagID];
+    return (int) tagCounts.get(tagID);
   }
 
   @Override
   public int[] getTagCounts() {
-    return tagCounts;
+    throw new UnsupportedOperationException("The internal counter structure is not an int[]");
+  }
+  @Override
+  public boolean usesTagCountArray() {
+    return false;
   }
 
   @Override
   public void inc(final int tagID) {
     // Sparse magic below
-    if (tagCounts[tagID]++ == 0 && updatePointer != sparseSize) {
-      updated[updatePointer++] = tagID;
+    long count = tagCounts.get(tagID);
+    tagCounts.set(tagID, count+1);
+    if (count == 0 && updatePointer != sparseSize) {
+      updated.set(updatePointer++, tagID);
     }
   }
 
   @Override
   public void collectAbsolute(final int absoluteDocID) {
     hitCount++;
-    if (updatePointer == sparseSize) {
-      map.updateCounter(tagCounts, absoluteDocID);
-      return;
-    }
     map.updateCounter(this, absoluteDocID);
   }
   @Override
   public final void collect(final int docID) throws IOException { // Optimization
     hitCount++;
-    if (updatePointer == sparseSize) {
-      map.updateCounter(tagCounts, docBase + docID);
-      return;
-    }
     map.updateCounter(this, docBase + docID);
   }
 
@@ -127,9 +126,10 @@ public class TagCollectorSparse extends TagCollector {
     } else {
       // Sparse magic below
       for (int i = 0 ; i < updatePointer ; i++) {
-        final int tagID = updated[i];
-        if (tagID >= startPos && tagID < endPos && tagCounts[tagID] >= minCount) {
-          if (!callback.call(tagID, tagCounts[tagID])) {
+        final int tagID = (int) updated.get(i);
+        final int count = (int) tagCounts.get(tagID);
+        if (tagID >= startPos && tagID < endPos && count >= minCount) {
+          if (!callback.call(tagID, count)) {
             return;
           }
         }
@@ -143,21 +143,22 @@ public class TagCollectorSparse extends TagCollector {
   @Override
   public void clearInternal() {
 //    log.trace("Clearing state (updatePointer=" + updatePointer + ", sparseSize=" + sparseSize);
-    if (sparseSize == updatePointer) { // Exceeded (or spot on)
-      Arrays.fill(tagCounts, 0);
+    // Assigning 0 to a PackedInts is usually very fast
+    if (sparseSize == updatePointer || tagCounts.ramBytesUsed()/8 < updatePointer*4) {
+      tagCounts.fill(0, tagCounts.size(), 0);
     } else {
       // TODO: Measure is this is really faster than a plain fill (which might be JVM optimized)
       // Update 20140315: Seems to be based on TestSingleSegmentOptimization.testScaleOptimizedCollectorImpl
     // Sparse magic below
       for (int i = 0 ; i < updatePointer ; i++) {
-        tagCounts[updated[i]] = 0;
+        tagCounts.set((int) updated.get(i), 0);
       }
     }
     updatePointer = 0;
   }
 
   public String toString() {
-    return "TagCollectorSparse(" + getMemoryUsage()/1048576 + "MB, " + tagCounts.length + " potential tags, "
+    return "TagCollectorSparsePacked(" + getMemoryUsage()/1048576 + "MB, " + tagCounts.size() + " potential tags, "
            + sparseSize + " update counters from " + map.toString() + ")";
   }
 
@@ -168,19 +169,20 @@ public class TagCollectorSparse extends TagCollector {
     long nonZero = 0;
     long sum = 0;
     // TODO: Optimize the speed of this by using the sparse structure
-    for (int count: tagCounts) {
+    for (int i = 0 ; i < tagCounts.size() ; i++) {
+      int count = (int) tagCounts.get(i);
       if (count > 0) {
         nonZero++;
       }
       sum += count;
     }
-    return String.format("TagCollectorSparse(%dMB, %d potential tags, %d non-zero counts, total sum %d from %s",
-                         getMemoryUsage()/1048576, tagCounts.length, nonZero, sum, map.toString());
+    return String.format("TagCollectorSparsePacked(%dMB, %d potential tags, %d non-zero counts, total sum %d from %s",
+                         getMemoryUsage()/1048576, tagCounts.size(), nonZero, sum, map.toString());
   }
 
   @Override
   public String tinyDesignation() {
-    return "TagCollectorSparse(" + getMemoryUsage()/1048576 + "MB, factor=" + sparseFactor + ", "
+    return "TagCollectorSparsePacked(" + getMemoryUsage()/1048576 + "MB, factor=" + sparseFactor + ", "
            + updatePointer + "/" + sparseSize + (updatePointer == sparseSize ? " (full)" : "") + ")";
   }
 
@@ -199,11 +201,7 @@ public class TagCollectorSparse extends TagCollector {
 
   @Override
   public long getMemoryUsage() {
-    return (tagCounts.length + updated.length) * 4;
+    return tagCounts.ramBytesUsed() + updated.ramBytesUsed();
   }
 
-  @Override
-  public boolean usesTagCountArray() {
-    return true;
-  }
 }

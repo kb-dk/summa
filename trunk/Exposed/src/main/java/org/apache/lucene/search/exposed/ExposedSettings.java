@@ -18,6 +18,11 @@ public class ExposedSettings {
    */
   public static boolean forceSparseCollector = false;
 
+  /**
+   * If true, compact (PackedInts backed) collectors are used.
+   */
+  public static boolean useCompactCollectors = false;
+
   public static enum PRIORITY {memory, speed;
     public static PRIORITY fromString(String p) {
       if (memory.toString().equals(p)) {

@@ -112,7 +112,7 @@ public class TagCollectorMulti extends TagCollector {
   }
 
   @Override
-  public boolean hasTagCounts() {
+  public boolean usesTagCountArray() {
     return true;
   }
 }
