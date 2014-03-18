@@ -25,6 +25,7 @@ public class FacetResponse {
   private long totalTime = -1; // ms
   private boolean countCached = false;
   private String processingInfo = "";
+  private long extractTime;
 
   public FacetResponse(FacetRequest request, List<Group> groups, long hits) {
     this.request = request;
@@ -98,12 +99,20 @@ public class FacetResponse {
     return totalTime;
   }
 
+  public void setExtractTime(long extractTime) {
+    this.extractTime = extractTime;
+  }
+
   public boolean isCountCached() {
     return countCached;
   }
 
   public String getProcessingInfo() {
     return processingInfo;
+  }
+
+  public long getExtractTime() {
+    return extractTime;
   }
 
   public static class Group {

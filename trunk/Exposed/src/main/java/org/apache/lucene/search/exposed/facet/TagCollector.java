@@ -249,13 +249,17 @@ public abstract class TagCollector extends Collector {
     }
     List<FacetResponse.Group> responseGroups = new ArrayList<FacetResponse.Group>(request.getGroups().size());
     // TODO: Consider threading larger facets, but beware of cache blowout
+
+    long extractTime = -System.currentTimeMillis();
     for (int i = 0 ; i < request.getGroups().size() ; i++) {
       FacetRequestGroup requestGroup = request.getGroups().get(i);
 //      System.out.println("Extracting for " + requestGroup.getGroup().getName() + ": " + startTermPos + " -> " + endTermPos);
       responseGroups.add(extractResult(requestGroup, i));
     }
+    extractTime += System.currentTimeMillis();
     FacetResponse response = new FacetResponse(request, responseGroups, hitCount);
     response.setCountingTime(countTime);
+    response.setExtractTime(extractTime);
     response.addProcessingInfo(tinyDesignation());
     response.addProcessingInfo(map.tinyDesignation());
     return response;
