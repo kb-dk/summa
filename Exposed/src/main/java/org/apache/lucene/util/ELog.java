@@ -32,7 +32,7 @@ public class ELog {
   private static final Map<String, ELog> logs = new HashMap<String, ELog>();
 
   public static ELog getLog(Class someClass) {
-    return getLog(someClass.getSimpleName());
+    return getLog(someClass.getCanonicalName());
   }
 
   public static synchronized ELog getLog(String logName) {

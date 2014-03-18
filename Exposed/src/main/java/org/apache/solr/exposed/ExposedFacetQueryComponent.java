@@ -142,6 +142,8 @@ public class ExposedFacetQueryComponent extends QueryComponent {
         FacetResponse.TagCollection tags = group.getTags();
 
         meta.add("info", fr.getProcessingInfo());
+        meta.add("counttime", fr.getCountingTime());
+        meta.add("extracttime", fr.getExtractTime());
         meta.add("potentialtags", tags.getPotentialTags());
         meta.add("totaltags", tags.getTotalTags());
         meta.add("count", tags.getCount());
