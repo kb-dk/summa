@@ -37,6 +37,8 @@ public interface ExposedFacetParams {
   /**
    * Numeric option indicating the minimum number of hits before a facet should
    * be included in the response.  Can be overridden on a per field basis.
+   * </p><p>
+   * Default: 1.
    */
   public static final String EFACET_MINCOUNT = EFACET + ".mincount";
 
