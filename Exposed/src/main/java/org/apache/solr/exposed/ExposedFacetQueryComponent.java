@@ -34,6 +34,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
   public static final int DEFAULT_COLLECTOR_FRESH = 2;
 
   private CollectorPoolFactory poolFactory;
+  private final ExposedLogBridge bridge = new ExposedLogBridge();
 
   @Override
   public void init(NamedList args) {
