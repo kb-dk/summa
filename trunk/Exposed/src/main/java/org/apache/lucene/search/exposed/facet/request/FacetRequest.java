@@ -28,7 +28,7 @@ public class FacetRequest {
     NamedComparator.ORDER.count;
   public static final boolean DEFAULT_REVERSE = false;
   public static final int    DEFAULT_MAXTAGS = 20;
-  public static final int    DEFAULT_MINCOUNT = 0;
+  public static final int    DEFAULT_MINCOUNT = 1;
   public static final int    DEFAULT_OFFSET = 0;
   public static final String DEFAULT_PREFIX = "";
   private static final boolean DEFAULT_HIERARCHICAL = false;
