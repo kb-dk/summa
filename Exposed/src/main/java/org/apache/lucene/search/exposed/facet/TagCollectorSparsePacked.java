@@ -159,7 +159,8 @@ public class TagCollectorSparsePacked extends TagCollector {
 
   public String toString() {
     return "TagCollectorSparsePacked(" + getMemoryUsage()/1048576 + "MB, " + tagCounts.size() + " potential tags, "
-           + sparseSize + " update counters from " + map.toString() + ")";
+           + sparseSize + " update counters from " + map.toString()  + ", "
+           + (getQuery() == null ? "un" : "") + "cached)";
   }
 
   public String toString(boolean verbose) {

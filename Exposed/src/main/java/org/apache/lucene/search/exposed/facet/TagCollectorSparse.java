@@ -181,7 +181,8 @@ public class TagCollectorSparse extends TagCollector {
   @Override
   public String tinyDesignation() {
     return "TagCollectorSparse(" + getMemoryUsage()/1048576 + "MB, factor=" + sparseFactor + ", "
-           + updatePointer + "/" + sparseSize + (updatePointer == sparseSize ? " (full)" : "") + ")";
+           + updatePointer + "/" + sparseSize + (updatePointer == sparseSize ? " (full)" : "") + ", "
+           + (getQuery() == null ? "un" : "") + "cached)";
   }
 
   @Override
