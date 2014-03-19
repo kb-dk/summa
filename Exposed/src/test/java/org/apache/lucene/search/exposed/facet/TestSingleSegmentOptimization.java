@@ -84,7 +84,7 @@ public class TestSingleSegmentOptimization extends TestCase {
       "    </group>\n" +
       "  </groups>\n" +
       "</facetrequest>";
-  private final File PREFERRED_ROOT = new File("/home/te/tmp/");
+  private final static File PREFERRED_ROOT = new File("/home/te/tmp/");
   public void testScaleOptimizedFacet() throws Exception {
     long totalTime = -System.currentTimeMillis();
 
@@ -258,7 +258,7 @@ public class TestSingleSegmentOptimization extends TestCase {
     return timing;
   }
 
-  final int COLLECTOR_TEST_DOCS = 50 * 1000000;
+  final static int COLLECTOR_TEST_DOCS = 50 * 1000000;
   public IndexSearcher getTagCollectorTestSearcher() throws IOException {
     final int TERM_LENGTH = 20;
     final List<String> FIELDS = Arrays.asList("a");
@@ -272,8 +272,8 @@ public class TestSingleSegmentOptimization extends TestCase {
       helper.createIndex(LOCATION, COLLECTOR_TEST_DOCS, FIELDS, 1, TERM_LENGTH, 1, 1, 1);
       helper.optimize(LOCATION);
     }
-    assertTrue("No index at " + LOCATION.getAbsolutePath() + ". Please build a test index (you can use one from on of " +
-               "the other JUnit tests in TestExposedFacets) and correct the path", LOCATION.exists());
+    assertTrue("No index at " + LOCATION.getAbsolutePath() + ". Please build a test index (you can use one from on of "
+               + "the other JUnit tests in TestExposedFacets) and correct the path", LOCATION.exists());
 
     return new IndexSearcher(ExposedIOFactory.getReader(LOCATION));
   }
@@ -323,6 +323,8 @@ public class TestSingleSegmentOptimization extends TestCase {
 
       long extractTime = -System.currentTimeMillis();
       response = collector.extractResult(request);
+      assertTrue("Faceted search must return some tags\n" + response.toXML(),
+                 response.getGroups().get(0).getTags().getTotalTags() > 0);
       extractTime += System.currentTimeMillis();
       assertNotNull("Extracting XML response should work", response.toXML());
       if (collector.getQuery() != null) { // Cached count
