@@ -115,10 +115,15 @@ public class ExposedFacetQueryComponent extends QueryComponent {
           tagCollector.collect(rb.getResults().docSet.getBits());
         }
         facetResponse = tagCollector.extractResult(eReq);
+//        facetResponse.addProcessingInfo("Bits(set=" + rb.getResults().docSet.getBits().cardinality() + "/" // ***
+//                                        + rb.getResults().docSet.getBits().length() + ")");
+        facetResponse.addProcessingInfo("Collect(" + (tagCollector.getQuery() == null ? "un" : "") + "cached)");
     } catch (IOException e) {
         throw new RuntimeException("Unable to extract response from TagCollector", e);
     }
-    collectorPool.release(eReq.getBuildKey(), tagCollector);
+    //collectorPool.release(eReq.getBuildKey(), tagCollector);
+    // TODO: Figure out how to make a real build key and test that caching returns the right result
+    collectorPool.release(null, tagCollector);
     exposedToSolr(facetResponse, rsp);
   }
 

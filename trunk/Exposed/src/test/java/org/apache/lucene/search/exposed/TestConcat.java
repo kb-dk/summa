@@ -71,8 +71,7 @@ public class TestConcat extends TestCase {
     System.out.println(getFacetResult(OFFSET_REQUEST, "*:*").toXML());
   }
 
-  private FacetResponse getFacetResult(
-      String facetRequest, String query)
+  private FacetResponse getFacetResult(String facetRequest, String query)
       throws IOException, ParseException, XMLStreamException {
     IndexReader reader = ExposedIOFactory.getReader(
         ExposedHelper.INDEX_LOCATION);
@@ -99,7 +98,9 @@ public class TestConcat extends TestCase {
     }
     long totalTime = System.currentTimeMillis() - countStart;
     response.setTotalTime(totalTime);
-    collectorPool.release(sQuery, collector);
+    // TODO: Enable caching of filled collectors based on filter + query + ? and check the result
+    collectorPool.release(null, collector);
+    //collectorPool.release(sQuery, collector);
     return response;
   }
 

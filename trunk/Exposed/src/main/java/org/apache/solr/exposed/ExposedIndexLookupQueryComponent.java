@@ -122,6 +122,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
         throw new RuntimeException("Unable to extract response from TagCollector", e);
       }
     } finally {      //***group(name=text_, order=index, locale=null, fields(text), hierarchical=false, delimiter=null)
+      // TODO: Check that index lookup works as intended with multiple requests for the same key
       collectorPool.release(eReq.getBuildKey(), tagCollector);
     }
     exposedToSolr(lookupResponse, rsp, req);
