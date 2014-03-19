@@ -90,7 +90,7 @@ public class TagCollectorMulti extends TagCollector {
   }
   @Override
   public String tinyDesignation() {
-    return "TagCollectorMulti(" + getMemoryUsage()/1048576 + "MB)";
+    return "TagCollectorMulti(" + getMemoryUsage()/1048576 + "MB, " + (getQuery() == null ? "un" : "") + "cached)";
   }
 
   @Override
