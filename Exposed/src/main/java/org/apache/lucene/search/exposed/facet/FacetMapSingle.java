@@ -152,7 +152,8 @@ public class FacetMapSingle implements FacetMap {
 
   @Override
   public String tinyDesignation() {
-    return "FacetMapSingle(refs=" + packedSize(refs) + ", provider=" + provider.getMemUsage()/1024 + "KB)";
+    return "FacetMapSingle(refs=" + packedSize(refs) + ", provider=" + provider.getMemUsage()/1024
+           + "KB, maxTagOccurrences=" + maxTagOccurrences + ")";
   }
 
   private String packedSize(PackedInts.Reader packed) {

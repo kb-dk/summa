@@ -155,7 +155,7 @@ public class FacetMapMulti implements FacetMap {
       sum += provider.getMemUsage();
     }
     return "FacetMapMulti(" + packedSize(doc2ref) + " + " + packedSize(refs) + ", " + providers.size()
-           + " providers=" + sum/1024 + "KB)";
+           + " providers=" + sum/1024 + "KB, maxTagOccurrences=" + maxTagOccurrences + ")";
   }
 
   public static String packedSize(PackedInts.Reader packed) {
