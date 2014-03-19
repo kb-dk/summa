@@ -15,13 +15,15 @@ import org.apache.lucene.util.OpenBitSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-/**
+ /**
  * Counts tag occurrences in the given documents. This collector can be used as
  * a standard Lucene collector or it can be filled by specifying the document
  * IDs with an {@link org.apache.lucene.util.OpenBitSet} or a standard {@code int[]}}.
  */
-public abstract class TagCollector extends Collector {
+public abstract class TagCollector extends Collector implements Runnable {
 
   protected final FacetMap map;
 
@@ -32,6 +34,11 @@ public abstract class TagCollector extends Collector {
   protected long hitCount = 0;
 
   protected boolean clearRunning = false;
+
+   /**
+    * The executor is shared between all TagCollectors for simple re-use of Threads used by {@link #delayedClear()}.
+    */
+  protected static ExecutorService executor = Executors.newCachedThreadPool();
 
   protected TagCollector(FacetMap map) {
     this.map = map;
@@ -174,38 +181,41 @@ public abstract class TagCollector extends Collector {
   }
 
   /**
-   * Starts a Thread that clears the collector and exits immediately. Make sure
-   * that {@link #isClearRunning()} returns false before using the collector
-   * again.
+   * Starts a Thread that clears the collector and exits immediately. Implementations are responsible for ensuring that
+   * {@link #isClearRunning()} returns false while clear is running
    */
   public void delayedClear() {
     if (hitCount == 0) { // Already empty
       return;
     }
-    new Thread(new Runnable() {
+    clearRunning = true;
+    executor.submit(this);
+/*    new Thread(new Runnable() {
       @Override
       public void run() {
         clear();
       }
-    }, "TagCollector clear").start();
+    }, "TagCollector clear").start();*/
   }
 
   /**
-   * Clears the collector making it ready for reuse. It is highly recommended to
-   * reuse collectors as it lowers Garbage Collection impact, especially for
-   * large scale faceting.
+   * Clears the collector making it ready for reuse. It is highly recommended to reuse collectors as it lowers
+   * Garbage Collection impact, especially for large scale faceting.
    * </p><p>
    * Consider using {@link #delayedClear()} to improve responsiveness.
    */
   public void clear() {
-    query = null;
-    if (hitCount == 0) { // Already empty
-      return;
-    }
     clearRunning = true;
-    hitCount = 0;
-    clearInternal();
-    clearRunning = false;
+    try {
+      query = null;
+      if (hitCount == 0) { // Already empty
+        return;
+      }
+      hitCount = 0;
+      clearInternal();
+    } finally {
+      clearRunning = false;
+    }
   }
   /**
    * @return true if the collector is currently being cleared.
@@ -214,7 +224,15 @@ public abstract class TagCollector extends Collector {
     return clearRunning;
   }
 
-  /**
+   /**
+    * The Runnable method run simply calls {@link #clear()}, in order to perform a background clear.
+    */
+  @Override
+  public void run() {
+    clear();
+  }
+
+   /**
    * Extraction of a specific requestGroup. This does not update countTime and totalTime.
    * This is primarily a helper function for {@link #extractResult(FacetRequest)}.
    * @param requestGroup a specific group.
@@ -264,7 +282,6 @@ public abstract class TagCollector extends Collector {
     response.addProcessingInfo(map.tinyDesignation());
     return response;
   }
-
 
   /**
    * Collect all docIDs except those marked as deleted.

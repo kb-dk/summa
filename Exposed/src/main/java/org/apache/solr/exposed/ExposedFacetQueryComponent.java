@@ -146,7 +146,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
         meta.add("extracttime", fr.getExtractTime());
         meta.add("potentialtags", tags.getPotentialTags());
         meta.add("totaltags", tags.getTotalTags());
-        meta.add("count", tags.getCount());
+        meta.add("references", tags.getCount());
         fieldsMeta.add(group.getFieldsStr(), meta);
       }
     }
