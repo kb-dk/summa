@@ -3,6 +3,7 @@ package org.apache.lucene.search.exposed.facet;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 import org.apache.lucene.util.ELog;
 import org.apache.lucene.util.packed.PackedInts;
+import org.apache.lucene.util.packed.PackedUtil;
 
 import java.io.IOException;
 
@@ -40,8 +41,7 @@ public class TagCollectorSparsePacked extends TagCollector {
   public TagCollectorSparsePacked(FacetMap map, double sparseFactor) {
     super(map);
     try {
-      tagCounts = PackedInts.getMutable(
-          map.getTagCount(), PackedInts.bitsRequired(map.getMaxTagOccurrences()), PackedInts.COMPACT);
+      tagCounts = PackedUtil.getFastMutable(map.getTagCount(), PackedInts.bitsRequired(map.getMaxTagOccurrences()));
     } catch (OutOfMemoryError e) {
       throw (OutOfMemoryError)new OutOfMemoryError(String.format(
               "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMap was %s",
@@ -51,7 +51,7 @@ public class TagCollectorSparsePacked extends TagCollector {
 
     sparseSize = (int) (map.getTagCount()*sparseFactor);
     try {
-      updated = PackedInts.getMutable(sparseSize, PackedInts.bitsRequired(map.getTagCount()), PackedInts.COMPACT);
+      updated = PackedUtil.getFastMutable(sparseSize, PackedInts.bitsRequired(map.getTagCount()));
     } catch (OutOfMemoryError e) {
       throw (OutOfMemoryError)new OutOfMemoryError(String.format(
               "OOM while trying to allocate int[%d] for tag updates ~ %dMB. FacetMap was %s",
