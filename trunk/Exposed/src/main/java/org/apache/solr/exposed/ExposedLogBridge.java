@@ -43,19 +43,19 @@ public class ExposedLogBridge implements ELog.LogListener {
     }
     switch (level) {
       case error:
-        log.error(message);
+        log.error(logName + ": " + message);
         break;
       case info:
-        log.info(message);
+        log.info(logName + ": " + message);
         break;
       case warn:
-        log.warn(message);
+        log.warn(logName + ": " + message);
         break;
       case debug:
-        log.debug(message);
+        log.debug(logName + ": " + message);
         break;
       case trace:
-        log.trace(message);
+        log.trace(logName + ": " + message);
         break;
       default:
         log.error("Unknown log level '" + level + "' for message '" + message + "'");
@@ -74,19 +74,19 @@ public class ExposedLogBridge implements ELog.LogListener {
     }
     switch (level) {
       case error:
-        log.error(message, t);
+        log.error(logName + ": " + message, t);
         break;
       case info:
-        log.info(message, t);
+        log.info(logName + ": " + message, t);
         break;
       case warn:
-        log.warn(message, t);
+        log.warn(logName + ": " + message, t);
         break;
       case debug:
-        log.debug(message, t);
+        log.debug(logName + ": " + message, t);
         break;
       case trace:
-        log.trace(message, t);
+        log.trace(logName + ": " + message, t);
         break;
       default:
         log.error("Unknown log level '" + level + "' for message '" + message + "'", t);
