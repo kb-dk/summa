@@ -85,6 +85,12 @@ public class SummonSearchNode extends SolrSearchNode {
     private static final String SUMMON_ID_PREFIX = "FETCH-";
 
     /**
+     * If the ID of the returned record from a first class document ID lookup does nbot match the provided ID,
+     * the provided ID is stored in this field.
+     */
+    public static final String ORIGINAL_LOOKUP_ID = "OriginalLookupID";
+
+    /**
      * The maximum number of documents to request in one call when performing lookups on IDs.
      * http://api.summon.serialssolutions.com/help/api/search/parameters/fetch-ids
      */
@@ -444,12 +450,22 @@ public class SummonSearchNode extends SolrSearchNode {
         return true;
     }
 
+    private static final String LEAF_ID_REQUEST = "SUMMON_HANDLE_DOC_ID_LEAF"; // Terminates ID-lookup
     @Override
     protected boolean handleDocIDs(Request request, ResponseCollection responses) throws RemoteException {
         if (!request.containsKey(DocumentKeys.SEARCH_IDS)) {
             return true;
         }
+        if (request.getBoolean(LEAF_ID_REQUEST, false)) { // Everything is readied: Search & return
+            List<String> lookupIDs = request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>());
+            log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
+                      + lookupIDs.size() + " document IDs");
+            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(lookupIDs));
+            request.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
+            return true;
+        }
 
+        // Fresh request for documents based on ID
         List<String> allIDs = extractSummonIDs(request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>()));
         List<String> summonIDs = normalizeIDs(allIDs);
         if (summonIDs.isEmpty()) {
@@ -460,16 +476,9 @@ public class SummonSearchNode extends SolrSearchNode {
             log.debug("handleDocIDs called with " + allIDs.size() + " IDs, pruned to summon-IDs: "
                       + Strings.join(summonIDs, 10));
         }
-        if (summonIDs.size() > SUMMON_MAX_IDS) {
-            handleDocIDsPaged(summonIDs, request, responses);
-            return false;
-        }
-        // http://api.summon.serialssolutions.com/help/api/search/parameters
-        log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
-                  + summonIDs.size() + " document IDs");
-        request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(summonIDs));
-        request.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
-        return true;
+        //if (summonIDs.size() > SUMMON_MAX_IDS) {
+        handleDocIDsPaged(summonIDs, request, responses);
+        return false;
     }
 
     private void handleDocIDsPaged(List<String> summonIDs, Request request, ResponseCollection responses)
@@ -477,6 +486,7 @@ public class SummonSearchNode extends SolrSearchNode {
         log.debug("handleDocIDsPaged(" + summonIDs.size() +", ..., ...) called");
         List<ResponseCollection> rawResponses = new ArrayList<ResponseCollection>(summonIDs.size()/SUMMON_MAX_IDS+1);
         ArrayList<String> notProcessed = new ArrayList<String>(summonIDs);
+        Set<String> nonResolved = new HashSet<String>(summonIDs.size()); // Failed first class resolve
         // We do this iteratively so we do not overwhelm summon
         while (!notProcessed.isEmpty()) {
             ArrayList<String> sub;
@@ -488,10 +498,12 @@ public class SummonSearchNode extends SolrSearchNode {
             }
             ResponseCollection subResponses = new ResponseCollection();
             Request subReques = new Request();
+            subReques.put(LEAF_ID_REQUEST, true);
             subReques.putAll(request);
             subReques.put(DocumentKeys.SEARCH_IDS, sub);
             subReques.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
             barrierSearch(subReques, responses);
+            cleanupDocIDResponse(sub, responses, nonResolved);
             rawResponses.add(subResponses);
             if (sub != notProcessed) { // More to come
                 synchronized (this) {
@@ -505,7 +517,9 @@ public class SummonSearchNode extends SolrSearchNode {
                 notProcessed.clear();
             }
         }
-        // All paged searched done. Merge time
+
+        List<String> missing = singleStepIDLookup(nonResolved, rawResponses);
+
         for (ResponseCollection rc: rawResponses) {
             for (Response r: rc) {
                 if (r instanceof DocumentResponse) {
@@ -514,9 +528,113 @@ public class SummonSearchNode extends SolrSearchNode {
                     responses.add(docs);
                 }
             }
-            log.warn("handleDocIDsPaged: Encountered ResponseCollection without a DocumentResponse. " +
-                     "Request was: " + request);
+            log.warn("handleDocIDsPaged: Encountered ResponseCollection without a DocumentResponse. Request was: "
+                     + rc.toXML());
         }
+        if (!missing.isEmpty()) {
+            log.debug("handleDocIDsPaged: Unable to resolve IDs " + Strings.join(missing, 50));
+        }
+    }
+
+    /**
+     * Performs a series of single requests for the given IDs.
+     * @param recordIDs a list of IDs to look up.
+     * @param responses one ResponseCollection/ID.
+     * @return the IDs that could not be resolved.
+     */
+    private List<String> singleStepIDLookup(
+            Set<String> recordIDs, List<ResponseCollection> responses) throws RemoteException {
+        List<String> missing = new ArrayList<String>(recordIDs.size());
+        for (String id: recordIDs) {
+            final String oID = id;
+            id = id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id;
+            if (singleIDSearch(responses, id)) {
+                continue;
+            }
+            id = id.replace(SUMMON_ID_PREFIX, "");
+            if (singleIDSearch(responses, id)) {
+                continue;
+            }
+            missing.add(oID);
+        }
+        return missing;
+    }
+
+    private boolean singleIDSearch(List<ResponseCollection> responses, String id) throws RemoteException {
+        Request singleRequest = new Request();
+        ResponseCollection singleResponses = new ResponseCollection();
+        singleRequest.put(LEAF_ID_REQUEST, true);
+        singleRequest.put(DocumentKeys.SEARCH_QUERY, fieldID + ":\"" + id + "\"");
+        barrierSearch(singleRequest, singleResponses);
+        if (countRecords(singleResponses) == 0) {
+            return false;
+        }
+        fixID(singleResponses, id);
+        responses.add(singleResponses);
+        return true;
+    }
+
+    private void fixID(ResponseCollection responses, String id) {
+        for (Response r: responses) {
+            if (r instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)r;
+                for (DocumentResponse.Record record: docs.getRecords()) {
+                    if (sans(id).equals(record.getId()) || incl(id).equals(record.getId())) {
+                        return; // Full match
+                    }
+                    log.debug("fixID: Explicit search for recordID:\"" + id + "\" resulted in ID '" + record.getId()
+                              + "'");
+                    record.addField(new DocumentResponse.Field(ORIGINAL_LOOKUP_ID, id, true));
+                }
+            }
+        }
+    }
+
+    // Remove documents with an ID not requested and update nonResolved with unmatched IDs from the request
+    private void cleanupDocIDResponse(
+            ArrayList<String> requested, ResponseCollection responses, Set<String> nonResolved) {
+        Set<String> reqs = new HashSet<String>(requested);
+        for (Response r: responses) {
+            if (r instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)r;
+                for (int rIndex = docs.getRecords().size()-1 ; rIndex >= 0 ; rIndex--) {
+                    final String cID = docs.getRecords().get(rIndex).getId();
+                    if (reqs.contains(sans(cID)) || reqs.contains(incl(cID))) { // All OK, check the ID
+                        reqs.remove(cID);
+                    } else { // Not OK, must be a changed ID
+                        log.debug("cleanupDocIDResponse: Encountered unexpected ID '" + cID + "'. Discarding");
+                        docs.getRecords().remove(rIndex);
+                        docs.setHitCount(docs.getHitCount()-1);
+                    }
+                }
+            }
+        }
+        nonResolved.addAll(reqs);
+    }
+
+    private String sans(String id) {
+        return id.replace(SUMMON_ID_PREFIX, "");
+    }
+    private String incl(String id) {
+        return id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id;
+    }
+
+    private int countRecords(List<ResponseCollection> rawResponses) {
+        int count = 0;
+        for (ResponseCollection rc: rawResponses) {
+            count += countRecords(rc);
+        }
+        return count;
+    }
+
+    private int countRecords(ResponseCollection rc) {
+        int count = 0;
+        for (Response r: rc) {
+            if (r instanceof DocumentResponse) {
+                count += ((DocumentResponse)r).getRecords().size();
+            }
+        }
+        return count;
     }
 
     private List<String> extractSummonIDs(final List<String> ids) {
@@ -574,7 +692,6 @@ public class SummonSearchNode extends SolrSearchNode {
             throw new RemoteException("Unable to build Solr query", e);
         }
 
-        String retVal = null;
         if (isPingRequest(request)) {
             log.trace("Ping requested");
             Date date = new Date();
@@ -593,8 +710,9 @@ public class SummonSearchNode extends SolrSearchNode {
             } catch (Exception e) {
                 throw new RemoteException("SummonSearchNode: Unable to ping "  + host + restCall, e);
             }
-            return new Pair<String, String>(retVal, "summon.pingtime:" + pingTime);
+            return new Pair<String, String>(null, "summon.pingtime:" + pingTime);
         }
+        String retVal = null;
         if (validRequest(queryMap)) {
             Date date = new Date();
             String sumID = computeIdString("application/xml", summonDateFormat.format(date), host, restCall, queryMap);
