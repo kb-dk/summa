@@ -81,10 +81,10 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testMoreLikeThis() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo");
+        long standard = getHitCount(summon, DocumentKeys.SEARCH_QUERY, "foo");
         assertTrue("A search for 'foo' should give hits", standard > 0);
 
-        long mlt = getHits(summon, DocumentKeys.SEARCH_QUERY, "foo", LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "bar");
+        long mlt = getHitCount(summon, DocumentKeys.SEARCH_QUERY, "foo", LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, "bar");
         assertEquals("A search with a MoreLikeThis ID should not give hits", 0, mlt);
     }
 
@@ -107,8 +107,68 @@ public class SummonSearchNodeTest extends TestCase {
         log.info("Query: 'foo', IDs: [" + Strings.join(idsFromLookup).replace("summon_", "") + "]");
     }
 
-    public void testFatalDocIDRequest() throws RemoteException {
-        List<String> IDs = Arrays.asList(
+    public void disabledtestChangedDocIDRequest() throws RemoteException {
+        // Returned as summon_FETCH-LOGICAL-c611-6aa4a4e310c8434ecaf0289c01a569c2b03cf40b9ea8913fd9bc487fb3db1caa1
+        final String ID = "summon_FETCH-eric_primary_EJ5633011";
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        List<String> returned = getHits(summon, DocumentKeys.SEARCH_IDS, ID);
+        assertEquals("There should be a hit", 1, returned.size());
+        System.out.println("Requested: " + ID);
+        System.out.println("Received:  " + returned.get(0));
+    }
+
+    public void testOtherPrefixDocIDRequest() throws RemoteException {
+        // Returned as summon_FETCH-LOGICAL-c611-6aa4a4e310c8434ecaf0289c01a569c2b03cf40b9ea8913fd9bc487fb3db1caa1
+        final String ID = "summon_chadwyckhealey_pio_511600010016";
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        List<String> returned = getHits(summon, DocumentKeys.SEARCH_IDS, ID);
+        assertEquals("There should be a hit", 1, returned.size());
+        System.out.println("Requested: " + ID);
+        System.out.println("Received:  " + returned.get(0));
+    }
+
+    public void testFallbackDocIDRequest() throws RemoteException {
+        final List<String> IDs = Arrays.asList(
+                "summon_FETCH-eric_primary_EJ5633011",    // Returned as summon_FETCH-LOGICAL-c611-6aa4a4e310c8434ecaf0289c01a569c2b03cf40b9ea8913fd9bc487fb3db1caa1
+                "FETCH-proquest_dll_15622214411",         // Works with FETCH, not without
+                "summon_chadwyckhealey_pio_608103960009", // Nothing returned, even with FETCH-
+                "summon_chadwyckhealey_pio_511600010016", // Works with FETCH, not without
+                "summon_proquest_dll_74235477"            // Works without fetch, not with. Returns FETCH-proquest_dll_742354771
+        );
+        final int EXPECTED = 3;
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        List<String> first = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
+
+        Collections.sort(IDs);
+        Collections.sort(first);
+        System.out.println("Requested: " + Strings.join(IDs));
+        System.out.println("Received:  " + Strings.join(first));
+        assertEquals("There should be the expected number of Records for first class ID lookup",                     EXPECTED, first.size());
+    }
+
+    public void disabledtestTemporaryLookupTest() throws RemoteException {
+        final List<String> IDs = Arrays.asList(
+                "eric_primary_EJ5633011"
+                //"proquest_dll_74235477"
+            //    "FETCH-chadwyckhealey_pio_511600010016",
+              //  "summon_proquest_dll_74235477"
+        );
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+
+        List<String> first = getHits(summon, DocumentKeys.SEARCH_QUERY, "recordID:" + IDs.get(0));
+        if (first.isEmpty()) {
+            System.err.println("No result for IDs ['" + Strings.join(IDs) + "]");
+        } else {
+            System.out.println("Got " + Strings.join(first));
+        }
+    }
+
+    public void disabledtestFatalDocIDRequest() throws RemoteException {
+        final List<String> IDs = Arrays.asList(
                 "summon_FETCH-eric_primary_EJ5633011", // Exists 20140224
                 "FETCH-proquest_dll_15622214411",
                 "summon_chadwyckhealey_pio_608103960009", // No direct ID lookup
@@ -116,16 +176,54 @@ public class SummonSearchNodeTest extends TestCase {
                 "summon_proquest_dll_74235477",           // No direct ID lookup
                 "InvalidID"
         );
+
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        {
-            try {
-                long idSpecific = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
-                assertEquals("A search with search.document.ids should give the expected hits", 2, idSpecific);
-            } catch (IOException e) {
-                e.printStackTrace();
-                fail("ID-lookup should not fail with IOException");
+
+        List<String> first = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
+        assertFalse("There should be at least 1 hit for first class ID lookup", first.isEmpty());
+        List<String> second = new ArrayList<String>(IDs.size());
+        { // Old-school singular ID-searches
+            for (String id: IDs) {
+                id = id.replace("summon_", "");
+                if (getHitCount(summon, DocumentKeys.SEARCH_QUERY, "recordID:\"" + id + "\"") > 0) {
+                    second.add(id);
+                }
             }
         }
+        List<String> remove = new ArrayList<String>(IDs.size());
+        { // Old-school singular ID-searches
+            for (String id: IDs) {
+                id = id.replace("summon_", "").replace("FETCH-", "");
+                if (getHitCount(summon, DocumentKeys.SEARCH_QUERY, "recordID:\"" + id + "\"") > 0) {
+                    remove.add(id);
+                }
+            }
+        }
+        List<String> add = new ArrayList<String>(IDs.size());
+        { // Old-school singular ID-searches
+            for (String id: IDs) {
+                id = id.replace("summon_", "");
+                if (!id.startsWith("FETCH-")) {
+                    id = "FETCH-" + id;
+                }
+                if (getHitCount(summon, DocumentKeys.SEARCH_QUERY, "recordID:\"" + id + "\"") > 0) {
+                    add.add(id);
+                }
+            }
+        }
+        Collections.sort(first);
+        Collections.sort(second);
+        Collections.sort(remove);
+        Collections.sort(add);
+        System.out.println(
+                "First class:  " + Strings.join(first) + "\n"
+                + "Individual:   " + Strings.join(second) + "\n"
+                + "Remove FETCH: " + Strings.join(remove) + "\n"
+                + "Add FETCH:    " + Strings.join(add) + "\n"
+        );
+        assertEquals("First class ID-lookup should match singular lookups", second, first);
+
+        summon.close();
     }
     public void testDocIDRequest() throws RemoteException {
         List<String> IDs = Arrays.asList(
@@ -136,16 +234,16 @@ public class SummonSearchNodeTest extends TestCase {
         );
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         {
-            long standard = getHits(summon, DocumentKeys.SEARCH_QUERY, "recordID:" + IDs.get(0));
+            long standard = getHitCount(summon, DocumentKeys.SEARCH_QUERY, "recordID:" + IDs.get(0));
             assertEquals("A search for '" + IDs.get(0) + "' should give 1 hit", 1, standard);
         }
         {
-            long idSpecific = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
+            long idSpecific = getHitCount(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
             assertEquals("A search with search.document.ids should give all hits", 3, idSpecific);
         }
         {
-            long idInvalid = getHits(summon, DocumentKeys.SEARCH_IDS, "nonexisting",
-                                     "summonresponsebuilder.dumpraw", "true");
+            long idInvalid = getHitCount(summon, DocumentKeys.SEARCH_IDS, "nonexisting",
+                                         "summonresponsebuilder.dumpraw", "true");
             assertEquals("A search with no valid IDs in search.document.ids should give zero hits", 0, idInvalid);
         }
         summon.close();
@@ -964,10 +1062,10 @@ public class SummonSearchNodeTest extends TestCase {
         conf.set(SummonSearchNode.CONF_SUPPORTS_PURE_NEGATIVE_FILTERS, true);
         SummonSearchNode summon = new SummonSearchNode(conf);
         assertEquals("There should be zero hits for filter with assumed pure negative faceting support", 0,
-                     getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE,
-                             "true", DocumentKeys.SEARCH_FILTER,
-                             "NOT "
-                             + FACET));
+                     getHitCount(summon, DocumentKeys.SEARCH_QUERY, QUERY, DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE,
+                                 "true", DocumentKeys.SEARCH_FILTER,
+                                 "NOT "
+                                 + FACET));
         summon.close();
     }
 
@@ -1260,12 +1358,12 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testFilterVsQuery() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        long qHitCount = getHits(summon,
-                                 DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
-                                 SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, "true");
-        long fHitCount = getHits(summon,
-                                 DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
-                                 SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, "true");
+        long qHitCount = getHitCount(summon,
+                                     DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
+                                     SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, "true");
+        long fHitCount = getHitCount(summon,
+                                     DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
+                                     SummonSearchNode.SEARCH_PASSTHROUGH_QUERY, "true");
 
         assertTrue("The filter hit count " + fHitCount + " should differ from query hit count " + qHitCount
                    + " by less than 100",
@@ -1274,11 +1372,11 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testFilterVsQuery2() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        long qHitCount = getHits(
+        long qHitCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
                 DocumentKeys.SEARCH_FILTER, "old");
-        long fHitCount = getHits(
+        long fHitCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
                 DocumentKeys.SEARCH_QUERY, "old");
@@ -1359,15 +1457,15 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testFilterVsQuery3() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        long qCombinedHitCount = getHits(
+        long qCombinedHitCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_QUERY,
                 "PublicationTitle:jama AND Language:English");
-        long qHitCount = getHits(
+        long qHitCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_QUERY, "PublicationTitle:jama",
                 DocumentKeys.SEARCH_FILTER, "(Language:English)");
-        long fHitCount = getHits(
+        long fHitCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_FILTER, "PublicationTitle:jama",
                 DocumentKeys.SEARCH_QUERY, "Language:English");
@@ -1628,9 +1726,9 @@ public class SummonSearchNodeTest extends TestCase {
         SearchNode summon  = SummonTestHelper.createSummonSearchNode();
         try {
             long plainCount =
-                    getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
+                    getHitCount(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "false");
             long sabotagedCount =
-                    getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "true");
+                    getHitCount(summon, DocumentKeys.SEARCH_QUERY, QUERY, SummonSearchNode.SEARCH_DISMAX_SABOTAGE, "true");
             assertEquals("The number of hits for a DisMax-enabled and DisMax-sabotages query should match",
                          plainCount, sabotagedCount);
 
@@ -1912,12 +2010,12 @@ public class SummonSearchNodeTest extends TestCase {
     public void testFacetTermWithDivider() throws RemoteException {
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
 
-        long filterCount = getHits(
+        long filterCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_QUERY, "foo",
                 DocumentKeys.SEARCH_FILTER, "ContentType:\"Book / eBook\"",
                 SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
-        long queryCount = getHits(
+        long queryCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_QUERY, "foo",
                 DocumentKeys.SEARCH_FILTER, "ContentType:Book OR ContentType:eBook");
@@ -1943,7 +2041,7 @@ public class SummonSearchNodeTest extends TestCase {
             String q = facetQuery[0];
             String ff = facetQuery[1] + ":\"" + facetQuery[2] + "\"";
             log.debug(String.format("Searching for query '%s' with facet filter '%s'", q, ff));
-            long queryCount = getHits(
+            long queryCount = getHitCount(
                     summon,
                     DocumentKeys.SEARCH_QUERY, q,
                     DocumentKeys.SEARCH_FILTER, ff,
@@ -1967,7 +2065,7 @@ public class SummonSearchNodeTest extends TestCase {
             String q = facetQuery[0];
             String ff = facetQuery[1] + ":\"" + facetQuery[2] + "\"";
 
-            long queryCount = getHits(
+            long queryCount = getHitCount(
                     summon,
                     DocumentKeys.SEARCH_QUERY, q,
                     SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
@@ -1975,7 +2073,7 @@ public class SummonSearchNodeTest extends TestCase {
             assertTrue(String.format("There should be at least 1 hit for query '%s' with no facet filter", q),
                        queryCount > 0);
 
-            long filteredCount = getHits(
+            long filteredCount = getHitCount(
                     summon,
                     DocumentKeys.SEARCH_QUERY, q,
                     DocumentKeys.SEARCH_FILTER, ff,
@@ -1991,7 +2089,7 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testEmptyQuerySkip() throws RemoteException {
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
-        long hits = getHits(
+        long hits = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_QUERY, "",
                 SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
@@ -2002,7 +2100,7 @@ public class SummonSearchNodeTest extends TestCase {
     public void testIsScholarly() throws RemoteException {
         SearchNode summon = SummonTestHelper.createSummonSearchNode(true);
         String q = "foo";
-        long queryCount = getHits(
+        long queryCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_QUERY, "foo",
                 SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
@@ -2010,7 +2108,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue(String.format("There should be at least 1 hit for query '%s' with no special params", q),
                    queryCount > 0);
 
-        long filteredCount = getHits(
+        long filteredCount = getHitCount(
                 summon,
                 DocumentKeys.SEARCH_QUERY, q,
                 "summonparam.s.cmd", "addFacetValueFilters(IsScholarly,true)",
@@ -2056,7 +2154,23 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
 
-    protected long getHits(SearchNode searcher, String... arguments) throws RemoteException {
+    protected List<String> getHits(SearchNode searcher, String... arguments) throws RemoteException {
+        List<String> ids = new ArrayList<String>();
+        ResponseCollection responses = new ResponseCollection();
+        searcher.search(new Request(arguments), responses);
+
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)response;
+                for (DocumentResponse.Record record: docs.getRecords()) {
+                    ids.add(record.getId());
+                }
+            }
+        }
+        return ids;
+    }
+
+    protected long getHitCount(SearchNode searcher, String... arguments) throws RemoteException {
         String HITS_PATTERN = "(?s).*hitCount=\"([0-9]*)\".*";
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(arguments), responses);
@@ -2068,13 +2182,13 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     protected void assertHits(String message, SearchNode searcher, String... queries) throws RemoteException {
-        long hits = getHits(searcher, queries);
+        long hits = getHitCount(searcher, queries);
         assertTrue(message + ". Hits == " + hits, hits > 0);
     }
 
     protected void assertHits(String message, String query, int expectedHits) throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        long hits = getHits(summon, DocumentKeys.SEARCH_QUERY, query);
+        long hits = getHitCount(summon, DocumentKeys.SEARCH_QUERY, query);
         assertEquals(message + ". Query='" + query + "'", expectedHits, hits);
     }
 }
