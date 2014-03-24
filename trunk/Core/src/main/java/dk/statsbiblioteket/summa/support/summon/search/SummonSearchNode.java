@@ -446,27 +446,29 @@ public class SummonSearchNode extends SolrSearchNode {
 
     @Override
     protected boolean handleDocIDs(Request request, ResponseCollection responses) throws RemoteException {
-        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
-            List<String> allIDs = request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>());
-            List<String> summonIDs = extractSummonIDs(allIDs);
-            if (summonIDs.isEmpty()) {
-                log.debug("handleDocIDs: No summon IDs in request. Exiting");
-                return false;
-            }
-            if (log.isDebugEnabled()) {
-                log.debug("handleDocIDs called with " + allIDs.size() + " IDs, pruned to summon-IDs: "
-                          + Strings.join(summonIDs, 10));
-            }
-            if (summonIDs.size() > SUMMON_MAX_IDS) {
-                handleDocIDsPaged(summonIDs, request, responses);
-                return false;
-            }
-            // http://api.summon.serialssolutions.com/help/api/search/parameters
-            log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
-                      + summonIDs.size() + " document IDs");
-            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(summonIDs));
-            request.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
+        if (!request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            return true;
         }
+
+        List<String> allIDs = extractSummonIDs(request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>()));
+        List<String> summonIDs = normalizeIDs(allIDs);
+        if (summonIDs.isEmpty()) {
+            log.debug("handleDocIDs: No summon IDs in request. Exiting");
+            return false;
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("handleDocIDs called with " + allIDs.size() + " IDs, pruned to summon-IDs: "
+                      + Strings.join(summonIDs, 10));
+        }
+        if (summonIDs.size() > SUMMON_MAX_IDS) {
+            handleDocIDsPaged(summonIDs, request, responses);
+            return false;
+        }
+        // http://api.summon.serialssolutions.com/help/api/search/parameters
+        log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
+                  + summonIDs.size() + " document IDs");
+        request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(summonIDs));
+        request.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
         return true;
     }
 
@@ -517,14 +519,21 @@ public class SummonSearchNode extends SolrSearchNode {
         }
     }
 
-    private List<String> extractSummonIDs(List<String> ids) {
+    private List<String> extractSummonIDs(final List<String> ids) {
+        List<String> directIDs = new ArrayList<String>(ids.size());
+        for (final String id: ids) {
+            if (id.startsWith(idPrefix) || id.startsWith(SUMMON_ID_PREFIX)) {
+                directIDs.add(id);
+            }
+        }
+        return directIDs;
+    }
+
+    private List<String> normalizeIDs(final List<String> ids) {
         List<String> summonIDs = new ArrayList<String>(ids.size());
         for (String id: ids) {
-            if (id.startsWith(idPrefix)) {
-                summonIDs.add(id.substring(idPrefix.length()));
-            } else if (id.startsWith(SUMMON_ID_PREFIX)) {
-                summonIDs.add(id);
-            }
+            id = id.startsWith(idPrefix) ? id.substring(idPrefix.length()) : id;
+            summonIDs.add(id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id);
         }
         return summonIDs;
     }

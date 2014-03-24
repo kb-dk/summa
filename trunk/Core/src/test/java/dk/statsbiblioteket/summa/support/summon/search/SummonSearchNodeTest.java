@@ -54,6 +54,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("CallToPrintStackTrace")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -103,9 +104,29 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("There should be the right number of returned documents from explicit ID lookup. " +
                      "Returned IDs were\n" + Strings.join(idsFromLookup),
                      25, idsFromLookup.size());
-      log.info("Query: 'foo', IDs: [" + Strings.join(idsFromLookup).replace("summon_", "") + "]");
+        log.info("Query: 'foo', IDs: [" + Strings.join(idsFromLookup).replace("summon_", "") + "]");
     }
 
+    public void testFatalDocIDRequest() throws RemoteException {
+        List<String> IDs = Arrays.asList(
+                "summon_FETCH-eric_primary_EJ5633011", // Exists 20140224
+                "FETCH-proquest_dll_15622214411",
+                "summon_chadwyckhealey_pio_608103960009", // No direct ID lookup
+                "FETCH-chadwyckhealey_pio_511600010016",  // No direct ID lookup
+                "summon_proquest_dll_74235477",           // No direct ID lookup
+                "InvalidID"
+        );
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        {
+            try {
+                long idSpecific = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
+                assertEquals("A search with search.document.ids should give the expected hits", 2, idSpecific);
+            } catch (IOException e) {
+                e.printStackTrace();
+                fail("ID-lookup should not fail with IOException");
+            }
+        }
+    }
     public void testDocIDRequest() throws RemoteException {
         List<String> IDs = Arrays.asList(
                 "summon_FETCH-proquest_dll_11531932811",
@@ -124,7 +145,7 @@ public class SummonSearchNodeTest extends TestCase {
         }
         {
             long idInvalid = getHits(summon, DocumentKeys.SEARCH_IDS, "nonexisting",
-                                                "summonresponsebuilder.dumpraw", "true");
+                                     "summonresponsebuilder.dumpraw", "true");
             assertEquals("A search with no valid IDs in search.document.ids should give zero hits", 0, idInvalid);
         }
         summon.close();
