@@ -532,13 +532,18 @@ public class SummonSearchNode extends SolrSearchNode {
             for (Response r: rc) {
                 if (r instanceof DocumentResponse) {
                     DocumentResponse docs = (DocumentResponse)r;
-                    docs.setMaxRecords(Integer.MAX_VALUE);
+                    //docs.setMaxRecords(Integer.MAX_VALUE);
                     responses.add(docs);
                     continue raws;
                 }
             }
             log.debug("handleDocIDsPaged: Encountered ResponseCollection without a DocumentResponse. " +
                       "Request was: " + request);
+        }
+        for (Response r: responses) {
+            if (r instanceof DocumentResponse) {
+                ((DocumentResponse)r).setMaxRecords(Integer.MAX_VALUE); // To guard against capping from later merge
+            }
         }
         if (!missing.isEmpty()) {
             log.debug("handleDocIDsPaged: Unable to resolve IDs " + Strings.join(missing, 50));
@@ -596,6 +601,7 @@ public class SummonSearchNode extends SolrSearchNode {
         ResponseCollection singleResponses = new ResponseCollection();
         singleRequest.put(LEAF_ID_REQUEST, true);
         singleRequest.put(DocumentKeys.SEARCH_QUERY, fieldID + ":\"" + id + "\"");
+        singleRequest.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
         barrierSearch(singleRequest, singleResponses);
         if (countRecords(singleResponses) == 0) {
             return false;
