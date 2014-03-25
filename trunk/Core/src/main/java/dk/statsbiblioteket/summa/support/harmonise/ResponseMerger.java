@@ -189,7 +189,7 @@ public class ResponseMerger implements Configurable {
     private int defaultForceTopX = DEFAULT_FORCE_TOPX;
     private List<Pair<String, Integer>> defaultForceRules = null;
     private boolean sequential = DEFAULT_SEQUENTIAL;
-    private final long maxRecords;
+    private final long fallBackMaxRecords;
 
     public ResponseMerger(Configuration conf) {
         defaultMode = MODE.valueOf(conf.getString(CONF_MODE, defaultMode.toString()));
@@ -200,7 +200,7 @@ public class ResponseMerger implements Configurable {
             defaultForceRules = parseForceRules(conf.getString(CONF_FORCE_RULES));
         }
         sequential = conf.getBoolean(CONF_SEQUENTIAL, sequential);
-        maxRecords = conf.getLong(DocumentSearcher.CONF_RECORDS, DocumentSearcher.DEFAULT_RECORDS);
+        fallBackMaxRecords = conf.getLong(DocumentSearcher.CONF_RECORDS, DocumentSearcher.DEFAULT_RECORDS);
         log.debug("Created response merger");
     }
 
@@ -255,6 +255,16 @@ public class ResponseMerger implements Configurable {
             this.base = base;
         }
 
+        public void adjustParams(DocumentResponse docResponse) {
+            if (base == null) {
+                return;
+            }
+            if (base.getMaxRecords() != docResponse.getMaxRecords()) {
+                log.debug("AdjustWrapper: max=" + base.getMaxRecords() + ", other max=" + docResponse.getMaxRecords());
+            }
+            base.setMaxRecords(Math.max(base.getMaxRecords(), docResponse.getMaxRecords()));
+        }
+
         private static class AdjustRecord {
             private final String searcherID;
             private final DocumentResponse.Record record;
@@ -300,7 +310,8 @@ public class ResponseMerger implements Configurable {
     }
 
     private void trim(Request request, AdjustWrapper aw) {
-        long maxRecords = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, this.maxRecords);
+        //long maxRecords = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, this.maxRecords);
+        long maxRecords = aw.getBase() == null ? this.fallBackMaxRecords : aw.getBase().getMaxRecords();
         log.trace("trim called with maxRecords " + maxRecords);
         if (aw.getRecords().size() > maxRecords) {
             aw.setRecords(aw.getRecords().subList(0, (int)maxRecords));
@@ -339,7 +350,7 @@ public class ResponseMerger implements Configurable {
         log.trace("Sorting by interleaving");
         // (searchID, records*)*
         Map<String, List<AdjustWrapper.AdjustRecord>> providers =
-            new LinkedHashMap<String, List<AdjustWrapper.AdjustRecord>>();
+                new LinkedHashMap<String, List<AdjustWrapper.AdjustRecord>>();
         for (String o: order) { // Ordered first
             providers.put(o, new ArrayList<AdjustWrapper.AdjustRecord>());
         }
@@ -426,6 +437,7 @@ public class ResponseMerger implements Configurable {
                     continue;
                 }
                 DocumentResponse dr = (DocumentResponse)r;
+                aw.adjustParams(dr);
                 for (DocumentResponse.Record record: dr.getRecords()) {
                     adjustRecords.add(new AdjustWrapper.AdjustRecord(response.getSearcherID(), record));
                 }

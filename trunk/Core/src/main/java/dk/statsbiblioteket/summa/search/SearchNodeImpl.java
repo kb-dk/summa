@@ -19,8 +19,10 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -102,6 +104,7 @@ public abstract class SearchNodeImpl implements SearchNode {
     private static final int BUFFER_SIZE = 8192;
     private static final int WARMUP_TIMEOUT = 10;
     private static final int OPEN_TIMEOUT = 60 * 1000;
+
     private int searcherAvailabilityTimeout = DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
 
     private int concurrentSearches = DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES;
@@ -341,6 +344,13 @@ public abstract class SearchNodeImpl implements SearchNode {
             managedSearch(request, responses);
         } finally {
             slots.release();
+        }
+        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            for (Response response: responses) {
+                if (response instanceof DocumentResponse) {
+                    ((DocumentResponse)response).setMaxRecords(Integer.MAX_VALUE);
+                }
+            }
         }
     }
 
