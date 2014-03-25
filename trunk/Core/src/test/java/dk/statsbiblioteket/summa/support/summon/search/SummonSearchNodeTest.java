@@ -129,6 +129,22 @@ public class SummonSearchNodeTest extends TestCase {
         System.out.println("Received:  " + returned.get(0));
     }
 
+    public void testBulkDocIDRequest() throws RemoteException {
+        final List<String> IDs = Arrays.asList(
+                "FETCH-proquest_dll_15622214411"
+        );
+        final int EXPECTED = 1;
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        List<String> first = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
+
+        Collections.sort(IDs);
+        Collections.sort(first);
+        System.out.println("Requested: " + Strings.join(IDs));
+        System.out.println("Received:  " + Strings.join(first));
+        assertEquals("There should be the expected number of Records for first class ID lookup", EXPECTED, first.size());
+    }
+
     public void testFallbackDocIDRequest() throws RemoteException {
         final List<String> IDs = Arrays.asList(
                 "summon_FETCH-eric_primary_EJ5633011",    // Returned as summon_FETCH-LOGICAL-c611-6aa4a4e310c8434ecaf0289c01a569c2b03cf40b9ea8913fd9bc487fb3db1caa1

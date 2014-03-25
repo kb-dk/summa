@@ -518,18 +518,27 @@ public class SummonSearchNode extends SolrSearchNode {
             }
         }
 
-        List<String> missing = singleStepIDLookup(nonResolved, rawResponses);
+        List<String> missing;
+        try {
+            missing = singleStepIDLookup(nonResolved, rawResponses);
+        } catch (Exception e) {
+            log.warn("handleDocIDsPaged: Exception while attempting to single step resolve IDs "
+                     + Strings.join(nonResolved, 10), e);
+            missing = new ArrayList<String>(nonResolved);
+        }
 
+        raws:
         for (ResponseCollection rc: rawResponses) {
             for (Response r: rc) {
                 if (r instanceof DocumentResponse) {
                     DocumentResponse docs = (DocumentResponse)r;
                     docs.setMaxRecords(Integer.MAX_VALUE);
                     responses.add(docs);
+                    continue raws;
                 }
             }
-            log.warn("handleDocIDsPaged: Encountered ResponseCollection without a DocumentResponse. Request was: "
-                     + rc.toXML());
+            log.debug("handleDocIDsPaged: Encountered ResponseCollection without a DocumentResponse. " +
+                      "Request was: " + request);
         }
         if (!missing.isEmpty()) {
             log.debug("handleDocIDsPaged: Unable to resolve IDs " + Strings.join(missing, 50));
@@ -544,6 +553,11 @@ public class SummonSearchNode extends SolrSearchNode {
      */
     private List<String> singleStepIDLookup(
             Set<String> recordIDs, List<ResponseCollection> responses) throws RemoteException {
+        long startTime = System.currentTimeMillis();
+        if (recordIDs.isEmpty()) {
+            log.trace("singleStepIDLookup: No IDs to resolve");
+            return Collections.EMPTY_LIST;
+        }
         List<String> missing = new ArrayList<String>(recordIDs.size());
         for (String id: recordIDs) {
             final String oID = id;
@@ -551,12 +565,29 @@ public class SummonSearchNode extends SolrSearchNode {
             if (singleIDSearch(responses, id)) {
                 continue;
             }
+            synchronized (this) {
+                try {
+                    this.wait(SUMMON_ID_SEARCH_WAIT);
+                } catch (InterruptedException e) {
+                    log.debug("singleStepIDLookup: Interrupted while waiting 1. Not a problem as it was just a delay");
+                }
+            }
             id = id.replace(SUMMON_ID_PREFIX, "");
             if (singleIDSearch(responses, id)) {
                 continue;
             }
             missing.add(oID);
+            synchronized (this) {
+                try {
+                    this.wait(SUMMON_ID_SEARCH_WAIT);
+                } catch (InterruptedException e) {
+                    log.debug("singleStepIDLookup: Interrupted while waiting 2. Not a problem as it was just a delay");
+                }
+            }
         }
+        log.debug("singleStepIDLookup(" + Strings.join(recordIDs, 10) + ", ...) got "
+                  + (recordIDs.size()-missing.size()) + " records in " + (System.currentTimeMillis() - startTime)
+                  + "ms." + (missing.isEmpty() ? "All resolved" : ("Unresolvable: " + Strings.join(missing))));
         return missing;
     }
 
@@ -570,7 +601,9 @@ public class SummonSearchNode extends SolrSearchNode {
             return false;
         }
         fixID(singleResponses, id);
-        responses.add(singleResponses);
+        if (countRecords(singleResponses) > 0) {
+            responses.add(singleResponses);
+        }
         return true;
     }
 
@@ -579,7 +612,7 @@ public class SummonSearchNode extends SolrSearchNode {
             if (r instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)r;
                 for (DocumentResponse.Record record: docs.getRecords()) {
-                    if (sans(id).equals(record.getId()) || incl(id).equals(record.getId())) {
+                    if (sans(id).equals(sans(record.getId()))) {
                         return; // Full match
                     }
                     log.debug("fixID: Explicit search for recordID:\"" + id + "\" resulted in ID '" + record.getId()
@@ -600,7 +633,8 @@ public class SummonSearchNode extends SolrSearchNode {
                 for (int rIndex = docs.getRecords().size()-1 ; rIndex >= 0 ; rIndex--) {
                     final String cID = docs.getRecords().get(rIndex).getId();
                     if (reqs.contains(sans(cID)) || reqs.contains(incl(cID))) { // All OK, check the ID
-                        reqs.remove(cID);
+                        reqs.remove(sans(cID));
+                        reqs.remove(incl(cID));
                     } else { // Not OK, must be a changed ID
                         log.debug("cleanupDocIDResponse: Encountered unexpected ID '" + cID + "'. Discarding");
                         docs.getRecords().remove(rIndex);
@@ -613,9 +647,11 @@ public class SummonSearchNode extends SolrSearchNode {
     }
 
     private String sans(String id) {
+        id = id.startsWith(idPrefix) ? id.substring(idPrefix.length()) : id;
         return id.replace(SUMMON_ID_PREFIX, "");
     }
     private String incl(String id) {
+        id = id.startsWith(idPrefix) ? id.substring(idPrefix.length()) : id;
         return id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id;
     }
 
