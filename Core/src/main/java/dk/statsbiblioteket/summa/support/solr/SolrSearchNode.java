@@ -672,7 +672,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         String result = null;
         if (validRequest(queryMap)) {
             try {
-                result = getData(restCall + "?" + queryString, responses);
+                result = getData(restCall, queryString, responses);
             } catch (Exception e) {
                 throw new RemoteException("SolrSearchNode: Unable to perform remote call to "  + host + restCall
                                           + " with argument '" + queryString + " and message " + e.getMessage());
@@ -690,14 +690,16 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
        // {start=[0], q=[gense], spellcheck.dictionary=[summa_spell], qt=[/didyoumean], rows=[15]}
     //  {spellcheck=[true], start=[0], q=[gense], spellcheck.dictionary=[summa_spell], spellcheck.count=[5], qt=[/didyoumean], rows=[15]}
 
-    private String getData(String command, ResponseCollection responses) throws IOException {
+    private String getData(String path, String params, ResponseCollection responses) throws IOException {
+        String command = path + "?" + params;
         StringBuilder retval = new StringBuilder();
 
         if (log.isDebugEnabled()) {
             log.debug("Performing Solr request for '" + command + "'");
         }
 
-        URL url = new URL("http://" + host + command);
+        //URL url = new URL("http://" + host + command);
+        URL url = new URL("http://" + host + path);
         HttpURLConnection conn;
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -709,12 +711,26 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         conn.setRequestProperty("Host", host);
         conn.setRequestProperty("Accept", "application/xml");
         conn.setRequestProperty("Accept-Charset", "utf-8");
+        // http://www.xyzws.com/Javafaq/how-to-use-httpurlconnection-post-data-to-web-server/139
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setRequestProperty("Content-Length", "" + Integer.toString(params.getBytes().length));
+        conn.setUseCaches (false);
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+
         conn.setConnectTimeout(connectionTimeout);
         conn.setReadTimeout(readTimeout);
         Long readStart = System.currentTimeMillis();
     	long summonConnect = -System.currentTimeMillis();
         try {
-            conn.connect();
+            //Send request
+            DataOutputStream wr = new DataOutputStream (conn.getOutputStream ());
+            wr.writeBytes(params);
+            wr.flush ();
+            wr.close ();
+
+            //conn.connect();
         } catch (Exception e) {
             String message = "Unable to connect to remote Solr with URL '" + url.toExternalForm()
                              + "' and connection timeout " + connectionTimeout;
@@ -863,7 +879,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         log.info("Clearing all data in the Solr index");
         long startTime = System.currentTimeMillis();
         ResponseCollection responses = new ResponseCollection();
-        getData(restCall + "?<delete><query>*:*</query></delete>?commit=true", responses);
+        getData(restCall, "<delete><query>*:*</query></delete>?commit=true", responses);
         log.info("Cleared all data in the Solr index in " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
