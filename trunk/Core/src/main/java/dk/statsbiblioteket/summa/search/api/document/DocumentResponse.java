@@ -274,6 +274,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         }
         super.merge(other);
         DocumentResponse docResponse = (DocumentResponse) other;
+        this.setMaxRecords(Math.max(getMaxRecords(), docResponse.getMaxRecords()));
         // TODO: Check for differences in basic attributes and warn if needed
         //Collator collator = null;
 /*     * @param collator determines the order of Records, based on their
