@@ -184,6 +184,20 @@ public class SummonSearchNodeTest extends TestCase {
                      EXPECTED, first.size());
     }
 
+    public void testIDConsistency() throws RemoteException {
+        final String[] QUERIES = {"foo", "horses", "radish", "gnu software", "consistency"};
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        for (String query: QUERIES) {
+            List<String> first =
+                    getHits(summon, DocumentKeys.SEARCH_QUERY, query, DocumentKeys.SEARCH_MAX_RECORDS, "50");
+            List<String> checked = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(first));
+            Collections.sort(first);
+            Collections.sort(checked);
+            assertEquals("The IDs returned from the search for " + query + " should match those returned by ID-lookup",
+                         Strings.join(first, "\n"), Strings.join(checked, "\n"));
+        }
+    }
+
     public void disabledtestTemporaryLookupTest() throws RemoteException {
         final List<String> IDs = Arrays.asList(
                 "eric_primary_EJ5633011"
