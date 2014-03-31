@@ -219,7 +219,12 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         }
         DocumentResponse documentResponse = createBasicDocumentResponse(request);
         documentResponse.setSearchTime(searchTime);
-        documentResponse.setHitCount(hitCount);
+        if (hitCount > records.size()) {
+            log.warn("Encountered hitCount=" + hitCount + " with only " + records.size() + " records for " + request);
+            documentResponse.setHitCount(records.size());
+        } else {
+            documentResponse.setHitCount(hitCount);
+        }
         documentResponse.setPrefix(searcherID + ".");
         documentResponse.addTiming("reportedtime", searchTime);
         for (DocumentResponse.Record record: records) {
