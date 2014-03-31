@@ -184,6 +184,24 @@ public class SummonSearchNodeTest extends TestCase {
                      EXPECTED, first.size());
     }
 
+    public void testHitCountVsDocs() throws RemoteException {
+        final String ID = "summon_FETCH-eric_primary_EJ5633011";
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, "recordID:" + ID), responses);
+
+        List<String> records = getHits(responses);
+
+        long hits = 0;
+        for (Response r: responses) {
+            if (r instanceof DocumentResponse) {
+                hits = ((DocumentResponse)r).getHitCount();
+            }
+        }
+        assertEquals("The reported hitCount should match the number of returned records", hits, records.size());
+    }
+
     public void testIDConsistency() throws RemoteException {
         final String[] QUERIES = {"foo", "horses", "radish", "gnu software", "consistency"};
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
@@ -2204,10 +2222,13 @@ public class SummonSearchNodeTest extends TestCase {
 
 
     protected List<String> getHits(SearchNode searcher, String... arguments) throws RemoteException {
-        List<String> ids = new ArrayList<String>();
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(arguments), responses);
+        return getHits(responses);
+    }
 
+    private List<String> getHits(ResponseCollection responses) {
+        List<String> ids = new ArrayList<String>();
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)response;
