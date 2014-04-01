@@ -1,11 +1,12 @@
 Index: module-build.xml
 ===================================================================
---- module-build.xml	(revision 1416551)
+--- module-build.xml	(revision 1583563)
 +++ module-build.xml	(working copy)
-@@ -201,6 +201,28 @@
-     <property name="facet-javadocs.uptodate" value="true"/>
+@@ -607,4 +607,27 @@
+     </ant>
+     <property name="suggest-javadocs.uptodate" value="true"/>
    </target>
-  
++
 +  <property name="exposed.jar" value="${common.dir}/build/exposed/lucene-exposed-${version}.jar"/>
 +  <target name="check-exposed-uptodate" unless="exposed.uptodate">
 +    <module-uptodate name="exposed" jarfile="${exposed.jar}" property="exposed.uptodate"/>
@@ -27,7 +28,5 @@ Index: module-build.xml
 +    </ant>
 +    <property name="exposed-javadocs.uptodate" value="true"/>
 +  </target>
-+ 
-   <property name="analyzers-icu.jar" value="${common.dir}/build/analysis/icu/lucene-analyzers-icu-${version}.jar"/>
-   <target name="check-analyzers-icu-uptodate" unless="analyzers-icu.uptodate">
-     <module-uptodate name="analysis/icu" jarfile="${analyzers-icu.jar}" property="analyzers-icu.uptodate"/>
++
+ </project>
