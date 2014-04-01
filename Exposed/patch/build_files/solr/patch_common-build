@@ -1,42 +1,39 @@
 Index: common-build.xml
 ===================================================================
---- common-build.xml	(revision 1416551)
+--- common-build.xml	(revision 1579889)
 +++ common-build.xml	(working copy)
-@@ -89,6 +89,7 @@
+@@ -94,9 +94,12 @@
+     <pathelement location="${spatial.jar}"/>
+     <pathelement location="${suggest.jar}"/>
      <pathelement location="${grouping.jar}"/>
++    <pathelement location="${exposed.jar}"/>
      <pathelement location="${queries.jar}"/>
      <pathelement location="${queryparser.jar}"/>
-+    <pathelement location="${exposed.jar}"/>
+     <pathelement location="${join.jar}"/>
++    <!-- Very hacky to get the ICU-lib in the war for use with exposed -->
++    <pathelement location="${common-solr.dir}/../lucene/analysis/icu/lib/icu4j-49.1.jar"/>
    </path>
  
    <path id="solr.base.classpath">
-@@ -136,7 +137,7 @@
+@@ -156,7 +159,7 @@
  
    <target name="prep-lucene-jars" 
-   	      depends="jar-lucene-core, jar-analyzers-phonetic, jar-analyzers-kuromoji, jar-suggest, jar-highlighter, jar-memory,
--  	               jar-misc, jar-spatial, jar-grouping, jar-queries, jar-queryparser">
-+  	               jar-misc, jar-spatial, jar-grouping, jar-queries, jar-queryparser, jar-exposed">
+   	      depends="jar-lucene-core, jar-analyzers-phonetic, jar-analyzers-kuromoji, jar-codecs, jar-suggest, jar-highlighter, jar-memory,
+-  	               jar-misc, jar-spatial, jar-grouping, jar-queries, jar-queryparser, jar-join">
++  	               jar-misc, jar-spatial, jar-grouping, jar-exposed, jar-queries, jar-queryparser, jar-join">
    	  <property name="solr.deps.compiled" value="true"/>
    </target>
  	
-@@ -151,6 +152,7 @@
-       <!-- NOTE: lucene-core is not already included in "solr.lucene.libs" 
- 	   because of it's use in classpaths.
-       -->
-+      <fileset dir="${common.dir}/analysis/icu/lib" includes="icu4j-49.1.jar"/>
-       <fileset file="${lucene-core.jar}" />
-     </copy>
-     </sequential>
-@@ -194,7 +196,7 @@
+@@ -228,7 +231,7 @@
    <property name="lucenedocs" location="${common.dir}/build/docs"/>
  
    <!-- dependency to ensure all lucene javadocs are present -->
--  <target name="lucene-javadocs" depends="javadocs-lucene-core,javadocs-analyzers-common,javadocs-analyzers-icu,javadocs-analyzers-kuromoji,javadocs-analyzers-phonetic,javadocs-analyzers-smartcn,javadocs-analyzers-morfologik,javadocs-analyzers-stempel,javadocs-analyzers-uima,javadocs-suggest,javadocs-grouping,javadocs-queries,javadocs-queryparser,javadocs-highlighter,javadocs-memory,javadocs-misc,javadocs-spatial,javadocs-test-framework"/>
-+  <target name="lucene-javadocs" depends="javadocs-lucene-core,javadocs-analyzers-common,javadocs-analyzers-icu,javadocs-analyzers-kuromoji,javadocs-analyzers-phonetic,javadocs-analyzers-smartcn,javadocs-analyzers-morfologik,javadocs-analyzers-stempel,javadocs-analyzers-uima,javadocs-suggest,javadocs-grouping,javadocs-queries,javadocs-queryparser,javadocs-highlighter,javadocs-memory,javadocs-misc,javadocs-spatial,javadocs-test-framework,javadocs-exposed"/>
+-  <target name="lucene-javadocs" depends="javadocs-lucene-core,javadocs-analyzers-common,javadocs-analyzers-icu,javadocs-analyzers-kuromoji,javadocs-analyzers-phonetic,javadocs-analyzers-smartcn,javadocs-analyzers-morfologik,javadocs-analyzers-stempel,javadocs-analyzers-uima,javadocs-codecs,javadocs-suggest,javadocs-grouping,javadocs-queries,javadocs-queryparser,javadocs-highlighter,javadocs-memory,javadocs-misc,javadocs-spatial,javadocs-test-framework"/>
++  <target name="lucene-javadocs" depends="javadocs-lucene-core,javadocs-analyzers-common,javadocs-analyzers-icu,javadocs-analyzers-kuromoji,javadocs-analyzers-phonetic,javadocs-analyzers-smartcn,javadocs-analyzers-morfologik,javadocs-analyzers-stempel,javadocs-analyzers-uima,javadocs-codecs,javadocs-suggest,javadocs-grouping,javadocs-exposed,javadocs-queries,javadocs-queryparser,javadocs-highlighter,javadocs-memory,javadocs-misc,javadocs-spatial,javadocs-test-framework"/>
  
    <!-- create javadocs for the current module -->
    <target name="javadocs" depends="compile-core,define-lucene-javadoc-url,lucene-javadocs,javadocs-solr-core">
-@@ -268,6 +270,7 @@
+@@ -303,6 +306,7 @@
            <link offline="true" href="${lucene.javadoc.url}memory" packagelistloc="${lucenedocs}/memory"/>
            <link offline="true" href="${lucene.javadoc.url}misc" packagelistloc="${lucenedocs}/misc"/>
            <link offline="true" href="${lucene.javadoc.url}spatial" packagelistloc="${lucenedocs}/spatial"/>
