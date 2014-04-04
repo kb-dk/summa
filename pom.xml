@@ -6,6 +6,9 @@
         <artifactId>sbforge-parent</artifactId>
         <version>8</version>
     </parent>
+
+<properties><solr_lucene_version>4.6.1</solr_lucene_version></properties>
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
@@ -18,6 +21,9 @@
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
     <name>Summa</name>
+
+
+
 
 
     <distributionManagement>
@@ -200,7 +206,7 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-core</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 
 <!--            <dependency>
@@ -212,7 +218,7 @@
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
                 <classifier>pom</classifier>
                 <exclusions>
                     <exclusion>
@@ -261,7 +267,7 @@
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
                 <classifier>sources</classifier>
                 <exclusions>
                     <exclusion>
@@ -275,13 +281,13 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-common</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-icu</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
        <!--
             <dependency>
@@ -319,25 +325,25 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-analyzers-uima</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 
            <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-analysis-extras</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queryparser</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-queries</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 <!--
             <dependency>
@@ -355,32 +361,32 @@
             <dependency>
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-test-framework</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
                 <type>war</type>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-core</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-test-framework</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.solr</groupId>
                 <artifactId>solr-solrj</artifactId>
-                <version>4.6.1</version>
+                <version>${solr_lucene_version}</version>
             </dependency>                    
             
             <!-- commons-httpclient is deprecated, but needed for heritrix in core -->
