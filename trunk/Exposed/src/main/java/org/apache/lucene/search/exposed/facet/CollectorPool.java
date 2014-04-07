@@ -87,7 +87,7 @@ public class CollectorPool {
   }
 
   /**
-   * @deprecated use {@link CollectorPool(String, FacetMap , int, int)}.
+   * @deprecated use CollectorPool(String, FacetMap , int, int).
    */
   public CollectorPool(FacetMap map, int filledCollectors, int freshCollectors) {
     this("N/A", map, filledCollectors, freshCollectors);

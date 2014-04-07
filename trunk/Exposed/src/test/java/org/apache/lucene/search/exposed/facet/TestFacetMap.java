@@ -9,8 +9,6 @@
 package org.apache.lucene.search.exposed.facet;
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.exposed.TermProvider;
 import org.apache.lucene.util.BytesRef;
 
@@ -19,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestFacetMap extends TestCase {
-  private static Log log = LogFactory.getLog(TestFacetMap.class);
 
   // Strange observation: Updating the counts (the collect phase) seems to be faster for TagCollectorSparse
   public void testCountDifference() throws IOException {

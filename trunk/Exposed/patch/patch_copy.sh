@@ -68,10 +68,10 @@ patch -N common-build.xml patch_common-build
 # Patch not needed anymore as the common-build takes care of exposed inclusion
 #patch -N build.xml patch_build
 
-cd webapps
+pushd webapp > /dev/null
 # To copy exposed-solr-jar into the war
 patch -N build.xml patch_build
-cd ..
+popd  > /dev/null
 
 echo "Patching Solr example solrconfig file"
 cd example/solr/collection1/conf
