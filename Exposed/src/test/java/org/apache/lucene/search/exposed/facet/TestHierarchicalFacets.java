@@ -17,6 +17,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.util.Arrays;
 
+//@LuceneTestCase.SuppressCodecs("Lucene3x")
 // TODO: Change this to LuceneTestCase but ensure Flex
 public class TestHierarchicalFacets extends TestCase {
   private ExposedHelper helper;

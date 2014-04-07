@@ -1,17 +1,17 @@
 Index: solrconfig.xml
 ===================================================================
---- solrconfig.xml	(revision 1416551)
+--- solrconfig.xml	(revision 1583611)
 +++ solrconfig.xml	(working copy)
-@@ -81,6 +81,8 @@
+@@ -84,6 +84,8 @@
    <lib dir="../../../contrib/velocity/lib" regex=".*\.jar" />
-   <lib dir="../../../dist/" regex="apache-solr-velocity-\d.*\.jar" />
+   <lib dir="../../../dist/" regex="solr-velocity-\d.*\.jar" />
  
 +  <lib dir="../../../dist/" regex="apache-solr-exposed-\d.*\.jar" />
 +
-   <!-- If a 'dir' option (with or without a regex) is used and nothing
-        is found that matches, it will be ignored
-     -->
-@@ -1765,4 +1767,18 @@
+   <!-- an exact 'path' can be used instead of a 'dir' to specify a 
+        specific jar file.  This will cause a serious error to be logged 
+        if it can't be loaded.
+@@ -1822,4 +1824,19 @@
      <defaultQuery>*:*</defaultQuery>
    </admin>
  
@@ -29,4 +29,5 @@ Index: solrconfig.xml
 +      <str>exposedComponent</str>
 +    </arr>
 +  </requestHandler> 
++
  </config>
