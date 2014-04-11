@@ -86,8 +86,7 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
    */
   @Override
   public FieldComparator newComparator(
-      String fieldname, int numHits, int sortPos, boolean reversed)
-                                                            throws IOException {
+      String fieldname, int numHits, int sortPos, boolean reversed) throws IOException {
     List<String> fieldNames = Arrays.asList(fieldname.split(":"));
     return new ExposedFieldComparator(
         reader, fieldname, fieldNames, numHits, sortPos, reversed);
@@ -110,9 +109,8 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
     private int[] order; // docOrder
     private int bottom;  // docOrder
 
-    public ExposedFieldComparator(
-        IndexReader reader, String groupName, List<String> fieldNames,
-        int numHits, int sortPos, boolean reversed) throws IOException {
+    public ExposedFieldComparator(IndexReader reader, String groupName, List<String> fieldNames,
+                                  int numHits, int sortPos, boolean reversed) throws IOException {
       this.groupName = groupName;
       this.fieldNames = fieldNames;
       // TODO: Logging would be real nice here
@@ -152,6 +150,16 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
     }
 
     @Override
+    public void setTopValue(Object value) {
+      throw new UnsupportedOperationException("Expose dsorting does not (yet) support deep paging");
+    }
+
+    @Override
+    public int compareTop(int doc) throws IOException {
+      throw new UnsupportedOperationException("Expose dsorting does not (yet) support deep paging");
+    }
+
+    @Override
     public int compareBottom(final int doc) throws IOException {
       if (!comparator.isNullFirst()) {
         try {
@@ -174,6 +182,8 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
       return (int)(factor * (bottom - docOrder.get(doc+docBase)));
 //      return (int)(bottom - docOrder.get(doc+docBase));
     }
+
+
 
     @Override
     public void copy(int slot, int doc) throws IOException {
@@ -212,9 +222,9 @@ public class ExposedFieldComparatorSource extends FieldComparatorSource {
     }
 
     // TODO: Implement compareDoctoValue
-    @Override
+/*    @Override
     public int compareDocToValue(int i, Object o) throws IOException {
       throw new UnsupportedOperationException("Not supported yet");
-    }
+    }*/
   }
 }

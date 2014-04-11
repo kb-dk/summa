@@ -11,6 +11,7 @@ import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.IndexUtil;
 import org.apache.lucene.util.OpenBitSet;
+import org.apache.solr.search.DocIterator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public abstract class TagCollector extends Collector implements Runnable {
     iterate(callback, 0, map.getTagCount(), minCount);
   }
 
-  public static interface IteratorCallback {
+     public static interface IteratorCallback {
     /**
      * @param tagID a tagID relative to the full range of tagIDs for the tag counter.
      * @param count the count for the tagID.
@@ -173,6 +174,16 @@ public abstract class TagCollector extends Collector implements Runnable {
     newborn = false;
     countTime = System.currentTimeMillis() - countTime;
   }
+
+  public void collect(DocIterator ids) throws IOException {
+    countTime = System.currentTimeMillis();
+    hitCount = 0;
+    while (ids.hasNext()) {
+      collectAbsolute(ids.nextDoc());
+    }
+    newborn = false;
+    countTime = System.currentTimeMillis() - countTime;
+   }
 
   @Override
   public void setNextReader(AtomicReaderContext context) throws IOException {

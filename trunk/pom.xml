@@ -7,12 +7,12 @@
         <version>8</version>
     </parent>
 
-<properties><solr_lucene_version>4.6.1</solr_lucene_version></properties>
+<properties><solr_lucene_version>4.7.1</solr_lucene_version></properties>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>2.1.0-20140326-SNAPSHOT</version>
+    <version>2.1.0-20140407-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
