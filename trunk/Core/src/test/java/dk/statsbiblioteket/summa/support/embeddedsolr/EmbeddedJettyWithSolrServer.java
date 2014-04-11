@@ -63,7 +63,7 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 		// Hvis solr fejler under opstart med "mockedint classcast exception" er det fordi denne jar mangler på jetty's
 		// classpath.
 		// Det er uklart hvorfor dette bliver aktiveret når man kører unittest
-		webapp.setExtraClasspath(SolrServerUnitTestUtil.resolve("Lucene Test Framework", "support/lucene-test-framework-4.0.jar"));
+		webapp.setExtraClasspath(SolrServerUnitTestUtil.resolve("Lucene Test Framework", "support/lucene-test-framework-4.7.jar"));
 		
 		server.setHandler(webapp);
 		serverUrl = "http://localhost:" + port + context;

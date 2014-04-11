@@ -101,7 +101,7 @@
                                     <artifactId>lucene-test-framework</artifactId>
                                     <type>jar</type>
                                     <outputDirectory>${project.build.outputDirectory}/support</outputDirectory>
-                                    <destFileName>lucene-test-framework-4.0.jar</destFileName>
+                                    <destFileName>lucene-test-framework-4.7.jar</destFileName>
                                 </artifactItem>
 
                             </artifactItems>
