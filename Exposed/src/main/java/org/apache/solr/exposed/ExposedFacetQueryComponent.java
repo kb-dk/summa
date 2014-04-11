@@ -112,7 +112,7 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     FacetResponse facetResponse;
     try {
         if (tagCollector.getQuery() == null) { // Not cached
-          tagCollector.collect(rb.getResults().docSet.getBits());
+          tagCollector.collect(rb.getResults().docSet.iterator());
         }
         facetResponse = tagCollector.extractResult(eReq);
 //        facetResponse.addProcessingInfo("Bits(set=" + rb.getResults().docSet.getBits().cardinality() + "/" // ***
