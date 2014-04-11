@@ -376,36 +376,28 @@ But this is avery rare situation.
   </requestHandler>
   
   
-  <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
 
-    <str name="queryAnalyzerFieldType">textSpell</str>
-    
-    <!-- a spellchecker built from a field of the main index. Use spellcheck.dictionary=summa_spell for this-->
-      <!--<lst name="spellchecker">
-        <str name="name">summa_spell</str>
-        <str name="field">summa_spell</str>
-        <str name="buildOnOptimize">true</str>
-        <str name="spellcheckIndexDir">./spellchecker_summa_spell</str>
-      </lst>-->
+   <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
+        <str name="queryAnalyzerFieldType">textSpell</str>
 
-    <!-- A spellchecker that uses the index directly. A bit slower than index based, but with no extra structures
-        or build requirements -->
-    <!-- http://solr.pl/en/2012/04/30/solr-4-0-directsolrspellchecker-2/ -->
-    <lst name="spellchecker">
-      <str name="name">summa_spell</str>
-      <str name="classname">solr.DirectSolrSpellChecker</str>
-      <str name="field">summa_spell</str>
+        <!-- http://solr.pl/en/2012/04/30/solr-4-0-directsolrspellchecker-2/ -->
+        <lst name="spellchecker">
+          <str name="name">summa_spell</str>
+          <str name="classname">solr.DirectSolrSpellChecker</str>
+          <str name="field">summa_spell</str>
 
-      <float name="accuracy">0.7</float>
-      <int name="maxEdits">2</int>
-      <int name="minPrefix">1</int>
-      <int name="maxInspections">5</int>
-      <int name="minQueryLength">1</int>
-      <float name="maxQueryFrequency">0.01</float>
-      <float name="thresholdTokenFrequency">0.01</float>
-    </lst>
-
-  </searchComponent>
+          <float name="accuracy">0.1</float>
+          <int name="maxEdits">2</int>
+          <int name="minPrefix">1</int>
+          <int name="maxInspections">5</int>
+          <int name="minQueryLength">3</int>
+            <!-- If the query terms occur in more than this fraction of all documents, they are considered
+                 correctly spelled -->
+          <float name="maxQueryFrequency">0.01</float>
+            <!-- The suggest candidate must occur in at least this fraction of all documents -->
+          <float name="thresholdTokenFrequency">0.001</float>
+        </lst>
+    </searchComponent>
  
   <searchComponent name="tvComponent" class="solr.TermVectorComponent"/>
   <searchComponent name="terms" class="solr.TermsComponent"/>
