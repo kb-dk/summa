@@ -23,7 +23,11 @@ import org.apache.commons.io.input.CharSequenceReader;
 import javax.xml.stream.*;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Helper class for stream oriented processing of XML.
@@ -81,10 +85,11 @@ public class XMLStepper {
      * @throws XMLStreamException if in was faulty.
      */
     public static String getSubXML(XMLStreamReader in, boolean failOnError) throws XMLStreamException {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        return getSubXML(in, failOnError, false);
+/*        ByteArrayOutputStream os = new ByteArrayOutputStream();
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
         pipeXML(in, out, failOnError);
-        return os.toString();
+        return os.toString();*/
     }
 
     /**
@@ -128,7 +133,7 @@ public class XMLStepper {
      * @throws XMLStreamException if in was faulty.
      */
     public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError) throws XMLStreamException {
-        pipeXML(in, out, 0, failOnError, false);
+        pipeXML(in, out, failOnError, false, null);
     }
     /**
      * Traverses all parts in the given element, including sub elements etc., and pipes the parts to out.
@@ -151,53 +156,127 @@ public class XMLStepper {
      */
     public static void pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean failOnError, boolean onlyInner)
             throws XMLStreamException {
-        pipeXML(in, out, 0, failOnError, onlyInner);
+        pipeXML(in, out, failOnError, onlyInner, null);
     }
 
-    private static void pipeXML(XMLStreamReader in, XMLStreamWriter out, final int level, boolean ignoreErrors,
-                                boolean onlyInner) throws XMLStreamException {
+    private static boolean pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean ignoreErrors, boolean onlyInner,
+                                   Callback callback) throws XMLStreamException {
         if (in.getProperty(XMLInputFactory.IS_COALESCING) == null ||
             Boolean.TRUE != in.getProperty(XMLInputFactory.IS_COALESCING)) {
             throw new IllegalArgumentException("The XMLInputStream must be coalescing but was not");
         }
-        if (XMLStreamReader.START_ELEMENT != in.getEventType()) {
-            throw new IllegalStateException(
-                    "Must be positioned at START_ELEMENT but was at " + XMLUtil.eventID2String(in.getEventType()));
+        if (!ignoreErrors) {
+            return pipeXML(in, out, false, onlyInner, new ArrayList<String>(), callback);
         }
+        try {
+            return pipeXML(in, out, true, onlyInner, new ArrayList<String>(), callback);
+        } catch (XMLStreamException e) {
+            // Ignoring exception as ignoreErrors == true
+            out.flush();
+        }
+        return true;
+    }
+    /**
+     * @param in           XML, optionally positioned inside the stream.
+     * @param out          the piped content will be send to this.
+     * @param ignoreErrors if true, unknown element types will be ignored. If false, an exception will be thrown.
+     * @param onlyInner    if true, in must be positioned at an elementStart, which will be skipped.
+     * @param elementStack nested elements encountered so far.
+     * @param callback     will be called for all elementStarts. If {@link Callback#elementStart} returns true,
+     *                     piping will assume that the element has been processed and will skip it. In that case it is
+     *                     the responsibility of the callback to leave {@code in} at the END_ELEMENT corresponding to
+     *                     the START_ELEMENT.
+     * @return true if piping has finished.
+     * @throws XMLStreamException if processing failed due to an XML problem.
+     */
+    private static boolean pipeXML(XMLStreamReader in, XMLStreamWriter out, boolean ignoreErrors, boolean onlyInner,
+                                   List<String> elementStack, Callback callback) throws XMLStreamException {
+        if (onlyInner) {
+            if (XMLStreamReader.START_ELEMENT != in.getEventType()) {
+                throw new IllegalStateException(
+                        "onlyInner == true, but the input was not positioned at START_ELEMENT. Current element is "
+                        + XMLUtil.eventID2String(in.getEventType()));
+            }
+            in.next();
+        }
+
         // TODO: Add better namespace support by matching NameSpaceContexts for in and out
 
-        if (!onlyInner) {
-            out.writeStartElement(in.getPrefix(), in.getLocalName(), in.getNamespaceURI());
-            for (int i = 0 ; i < in.getNamespaceCount() ; i++) {
-                out.writeNamespace(in.getNamespacePrefix(i), in.getNamespaceURI(i));
-            }
-            for (int i = 0 ; i < in.getAttributeCount() ; i++) {
-                if (in.getAttributeNamespace(i) == null) {
-                    out.writeAttribute(in.getAttributeLocalName(i), in.getAttributeValue(i));
-                } else {
-                    out.writeAttribute(
-                            in.getAttributeNamespace(i), in.getAttributeLocalName(i), in.getAttributeValue(i));
-                }
-            }
-        }
-        out:
-        while (in.getEventType() != XMLStreamConstants.END_DOCUMENT) {
-            in.next();
+        while (true) {
             switch (in.getEventType()) {
-                case XMLStreamReader.END_DOCUMENT: {
-                    out.writeEndDocument();
+                case XMLStreamReader.START_DOCUMENT: {
+                    if (in.getEncoding() != null || in.getVersion() != null) {
+                        // Only write a declaration if the source has one
+                        out.writeStartDocument(in.getEncoding(), in.getVersion());
+                    }
                     break;
                 }
+                case XMLStreamReader.END_DOCUMENT: {
+                    out.writeEndDocument();
+                    out.flush();
+                    return true;
+                }
+
                 case XMLStreamReader.START_ELEMENT: {
-                    pipeXML(in, out, level + 1, ignoreErrors, false);
+                    String element = in.getLocalName();
+                    elementStack.add(element);
+                    if (callback == null || !callback.elementStart(in, elementStack, element)) {
+                        out.writeStartElement(in.getPrefix(), in.getLocalName(), in.getNamespaceURI());
+                        for (int i = 0 ; i < in.getNamespaceCount() ; i++) {
+                            out.writeNamespace(in.getNamespacePrefix(i), in.getNamespaceURI(i));
+                        }
+                        for (int i = 0 ; i < in.getAttributeCount() ; i++) {
+                            if (in.getAttributeNamespace(i) == null) {
+                                out.writeAttribute(in.getAttributeLocalName(i), in.getAttributeValue(i));
+                            } else {
+                                out.writeAttribute(in.getAttributeNamespace(i), in.getAttributeLocalName(i),
+                                                   in.getAttributeValue(i));
+                            }
+                        }
+                        in.next();
+                        if (pipeXML(in, out, ignoreErrors, false, elementStack, callback)) {
+                            out.flush();
+                            return true;
+                        }
+                    } else { // callback handled the element so we do not pipe the END_ELEMENT
+                        if (XMLStreamReader.END_ELEMENT != in.getEventType()) {
+                            throw new IllegalStateException(String.format(
+                                    "Callback for %s returned true, but did not position the XML stream at "
+                                    + "END_ELEMENT. Current eventType is %s",
+                                    Strings.join(elementStack, ", "), XMLUtil.eventID2String(in.getEventType())));
+                        }
+                        elementStack.remove(elementStack.size()-1);
+                    }
                     break;
                 }
                 case XMLStreamReader.END_ELEMENT: {
-                    if (level != 0 || !onlyInner) {
+                    if (elementStack.isEmpty()) {
+                        if (callback != null) {
+                            callback.end();
+                        }
+                        out.flush();
+                        return true;
+                    }
+                    String element = in.getLocalName();
+                    if (!element.equals(elementStack.get(elementStack.size()-1))) {
+                        throw new IllegalStateException(String.format(
+                                "Encountered end tag '%s' where '%s' from the stack %s were expected",
+                                element, elementStack.get(elementStack.size()-1), Strings.join(elementStack, ", ")));
+                    }
+                    String popped = elementStack.remove(elementStack.size()-1);
+                    if (callback != null) {
+                        callback.elementEnd(popped);
+                    }
+
+                    if (!elementStack.isEmpty() || !onlyInner) {
                         out.writeEndElement();
                     }
-                    break out;
+                    if (elementStack.isEmpty()) {
+                        in.next();
+                    }
+                    return elementStack.isEmpty();
                 }
+
                 case XMLStreamReader.SPACE:
                 case XMLStreamReader.CHARACTERS: {
                     out.writeCharacters(in.getText());
@@ -216,12 +295,7 @@ public class XMLStepper {
                             "pipeXML does not support event type " + XMLUtil.eventID2String(in.getEventType()));
                 }
             }
-        }
-        if (level == 0) {
-            if (in.getEventType() == XMLStreamConstants.END_ELEMENT) {
-                in.next();
-            }
-            out.flush();
+            in.next();
         }
     }
 
@@ -328,16 +402,14 @@ public class XMLStepper {
     }
 
     /**
-     * Iterates over elements in the stream until end element is encountered
-     * or end of document is reached. For each element matching actionElement,
-     * callback is called.
+     * Iterates over elements in the stream until end element is encountered or end of document is reached.
+     * For each element matching actionElement, callback is called.
      * @param xml        the stream to iterate.
      * @param endElement the stopping element.
-     * @param actionElement callback is activated when encountering elements
-     *                   with this name.
+     * @param actionElement callback is activated when encountering elements with this name.
      * @param callback   called for each encountered element.
-     * @throws javax.xml.stream.XMLStreamException if the stream could not
-     * be iterated or an error occured during callback.
+     * @throws javax.xml.stream.XMLStreamException if the stream could not be iterated or an error occurred during
+     * callback.
      */
     public static void iterateElements(XMLStreamReader xml, String endElement, String actionElement,
                                        XMLCallback callback) throws XMLStreamException {
@@ -359,12 +431,11 @@ public class XMLStepper {
      * or end of document is reached. For each element matching actionElement,
      * callback is called.
      *
-     * @param xml        the stream to iterate.
-     * @param endElement the stopping element.
-     * @param actionElement callback is activated when encountering elements
-     *                   with this name.
-     * @param advanceOnHit if true, the iterator always calls {@code xml.next()}. If false, next is only called if
-     *                     no callback has been issued.
+     * @param xml           the stream to iterate.
+     * @param endElement    the stopping element.
+     * @param actionElement callback is activated when encountering elements with this name.
+     * @param advanceOnHit  if true, the iterator always calls {@code xml.next()}. If false, next is only called if
+     *                      no callback has been issued.
      * @param callback   called for each encountered element.
      * @throws javax.xml.stream.XMLStreamException if the stream could not
      * be iterated or an error occured during callback.
@@ -393,6 +464,97 @@ public class XMLStepper {
             public boolean elementStart(
                     XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 return false; // Ignore everything until end of sub tree
+            }
+        });
+    }
+
+    public static void skipElement(XMLStreamReader xml) throws XMLStreamException {
+        if (XMLStreamReader.START_ELEMENT != xml.getEventType()) {
+            throw new IllegalStateException("The reader must be positioned at START_ELEMENT but was positioned at "
+                                            + XMLUtil.eventID2String(xml.getEventType()));
+        }
+        xml.next();
+        iterateTags(xml, new Callback() {
+            @Override
+            public boolean elementStart(
+                    XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                return false; // Ignore everything until end of sub tree
+            }
+        });
+    }
+
+    /**
+     * Iterates the given input, counting occurrences of limit-matches and skipping matching elements when the limits
+     * are reached.
+     * </p><p>
+     * Every tag and every attribute (optional) is matched against the limits. Tags are represented as
+     * {@code /rootelement/subelement}, attributes as {@code /rootelement/subelement#attributename=value}.
+     * Namespaces are not part of the representation.
+     * </p><p>
+     * Sample: in={@code <foo><bar zoo="true"></bar><bar zoo="true"></bar><bar zoo="false"></bar><baz></baz></foo>}<br/>
+     * Limits {@code "/foo/bar", 1} -> {@code <foo><bar zoo="true"></bar><baz></baz></foo>}<br/>
+     * Limits {@code "bar", 1} -> {@code <foo><bar zoo="true"></bar><baz></baz></foo>}<br/>
+     * Limits {@code "/foo/bar", 2} -> {@code <foo><bar zoo="true"></bar><bar zoo="true"></bar><baz></baz></foo>}<br/>
+     * Limits {@code "/foo/bar#zoo=true", 1} -> {@code <foo><bar zoo="true"></bar><bar zoo="false"></bar><baz></baz></foo>}<br/>
+     * Limits {@code "/foo/bar", 0} -> {@code <foo><baz></baz></foo>}<br/>
+     * @param in     XML stream positioned at the point from which reduction should occur (normally the start).
+     * @param out    the reduced XML.
+     * @param limits patterns and max occurrences for entries.
+     * @param countPatterns if true, the limit applies to matched patterns. If false, the limit if for each regexp.
+     *                      If the limit is {code ".*", 10}, only 10 elements in total is kept.
+     * @param onlyElementMatch if true, only element names are matched, not attributes.
+     *                         Setting this to true speeds up processing.
+     */
+    public static void limitXML(final XMLStreamReader in, XMLStreamWriter out, final Map<Pattern, Integer> limits,
+                                final boolean countPatterns, final boolean onlyElementMatch) throws XMLStreamException {
+        final Map<Object, Integer> counters = new HashMap<Object, Integer>();
+        pipeXML(in, out, true, false, new Callback() {
+            @Override
+            public boolean elementStart(
+                    XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                if (exceeded(counters, xml, tags)) {
+                    skipElement(xml);
+                    return true;
+                }
+                return false;
+            }
+
+            private boolean exceeded(
+                    Map<Object, Integer> counters, XMLStreamReader xml, List<String> tags) {
+                for (Map.Entry<Pattern, Integer> limit: limits.entrySet()) {
+                    final Pattern pattern = limit.getKey();
+                    final int max = limit.getValue();
+
+                    final String element = "/" + Strings.join(tags, "/");
+                    if (exceeded(counters, pattern, max, element, countPatterns)) {
+                        return true;
+                    }
+                    if (!onlyElementMatch) {
+                        for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
+                            final String merged =
+                                    element + "#" + xml.getAttributeLocalName(i) + "=" + xml.getAttributeValue(i);
+                            if (exceeded(counters, pattern, max, merged, countPatterns)) {
+                                return true;
+                            }
+
+                        }
+                    }
+                }
+                return false;
+            }
+
+            private boolean exceeded(
+                    Map<Object, Integer> counters, Pattern pattern, int max, String path, boolean countPatterns) {
+                Matcher elementMatch = pattern.matcher(path);
+                if (elementMatch.matches()) {
+                    Integer count = counters.get(countPatterns ? elementMatch.group() : pattern);
+                    if (count == null) {
+                        count = 0;
+                    }
+                    counters.put(countPatterns ? elementMatch.group() : pattern, ++count);
+                    return count > max;
+                }
+                return false;
             }
         });
     }
