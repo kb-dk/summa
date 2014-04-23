@@ -84,8 +84,10 @@ public class XMLStepperTest extends TestCase {
     }
 
     private void assertLimit(String input, String expected, boolean onlyElementMatch, boolean discardNonMatched,
-                             Object... limits)
-            throws XMLStreamException {
+                             Object... limits) throws XMLStreamException {
+        if (!isCollapsing) {
+            expected = expected.replaceAll("<([^>]+)([^>]*)/>", "<$1$2></$1>");
+        }
         Map<Pattern, Integer> lims = new HashMap<Pattern, Integer>();
         for (int i = 0 ; i < limits.length ; i+=2) {
             lims.put(Pattern.compile((String) limits[i]), (Integer) limits[i + 1]);
@@ -115,6 +117,21 @@ public class XMLStepperTest extends TestCase {
         });
         assertEquals("Only a single content should be visited", 1, count.get());
         assertTrue("The second 'bar' should be findable", XMLStepper.findTagStart(xml, "bar"));
+    }
+
+    private final boolean isCollapsing = writerIsCollapsing();
+    @SuppressWarnings("CallToPrintStackTrace")
+    private synchronized boolean writerIsCollapsing() {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try {
+            XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
+            out.writeStartElement("foo");
+            out.writeEndElement();
+            out.flush();
+            return "<foo />".equals(os.toString());
+        } catch (XMLStreamException e) {
+            throw new RuntimeException("Unable to determine if XMLStreamWriter collapses empty elements", e);
+        }
     }
 
     public void testPipePositionOnIgnoredFail() throws XMLStreamException {
