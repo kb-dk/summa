@@ -61,22 +61,30 @@ public class XMLStepperTest extends TestCase {
             "<foo><bar zoo=\"true\"></bar><bar zoo=\"true\"></bar><bar zoo=\"false\"></bar><baz></baz></foo>";
 
     public void testLimitXMLSimple() throws XMLStreamException {
-        assertLimit(LIMIT_BARS, "<foo><baz /></foo>", true,
+        assertLimit(LIMIT_BARS, "<foo><baz /></foo>", true, false,
                     "/foo/bar", 0);
-        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"true\" /><baz /></foo>", true,
+        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"true\" /><baz /></foo>", true, false,
                     "/foo/bar", 1);
-        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"true\" /><bar zoo=\"true\" /><baz /></foo>", true,
+        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"true\" /><bar zoo=\"true\" /><baz /></foo>", true, false,
                     "/foo/bar", 2);
     }
 
+    public void testLimitPositiveList() throws XMLStreamException {
+        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"true\" /></foo>", true, true,
+                    "/foo$", -1, "/foo/bar", 1);
+        assertLimit(LIMIT_BARS, "<foo><baz /></foo>", true, true,
+                    "/foo$", -1, "/foo/baz", 1);
+    }
+
     public void testLimitXMLAttribute() throws XMLStreamException {
-        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"false\" /><baz /></foo>", false,
+        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"false\" /><baz /></foo>", false, false,
                     "/foo/bar#zoo=true", 0);
-        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"true\" /><bar zoo=\"false\" /><baz /></foo>", false,
+        assertLimit(LIMIT_BARS, "<foo><bar zoo=\"true\" /><bar zoo=\"false\" /><baz /></foo>", false, false,
                     "/foo/bar#zoo=true", 1);
     }
 
-    private void assertLimit(String input, String expected, boolean onlyElementMatch, Object... limits)
+    private void assertLimit(String input, String expected, boolean onlyElementMatch, boolean discardNonMatched,
+                             Object... limits)
             throws XMLStreamException {
         Map<Pattern, Integer> lims = new HashMap<Pattern, Integer>();
         for (int i = 0 ; i < limits.length ; i+=2) {
@@ -85,7 +93,7 @@ public class XMLStepperTest extends TestCase {
         XMLStreamReader in = xmlFactory.createXMLStreamReader(new StringReader(input));
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
-        XMLStepper.limitXML(in, out, lims, false, onlyElementMatch);
+        XMLStepper.limitXML(in, out, lims, false, onlyElementMatch, discardNonMatched);
         assertEquals("The input should be reduced properly for limits " + Strings.join(limits),
                      expected, os.toString());
     }

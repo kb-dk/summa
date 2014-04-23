@@ -22,10 +22,7 @@ import org.apache.commons.io.input.CharSequenceReader;
 
 import javax.xml.stream.*;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -491,73 +488,88 @@ public class XMLStepper {
      * {@code /rootelement/subelement}, attributes as {@code /rootelement/subelement#attributename=value}.
      * Namespaces are not part of the representation.
      * </p><p>
-     * Sample: in={@code <foo><bar zoo="true"></bar><bar zoo="true"></bar><bar zoo="false"></bar><baz></baz></foo>}<br/>
-     * Limits {@code "/foo/bar", 1} -> {@code <foo><bar zoo="true"></bar><baz></baz></foo>}<br/>
-     * Limits {@code "bar", 1} -> {@code <foo><bar zoo="true"></bar><baz></baz></foo>}<br/>
-     * Limits {@code "/foo/bar", 2} -> {@code <foo><bar zoo="true"></bar><bar zoo="true"></bar><baz></baz></foo>}<br/>
-     * Limits {@code "/foo/bar#zoo=true", 1} -> {@code <foo><bar zoo="true"></bar><bar zoo="false"></bar><baz></baz></foo>}<br/>
+     * Sample: in={@code <foo><bar zoo="true"></bar><bar zoo="true"></bar><bar zoo="false"></bar><baz /></foo>}<br/>
+     * Limits {@code "/foo/bar", 1} -> {@code <foo><bar zoo="true"></bar><baz /></foo>}<br/>
+     * Limits {@code "bar", 1} -> {@code <foo><bar zoo="true"></bar><baz /></foo>}<br/>
+     * Limits {@code "/foo/bar", 2} -> {@code <foo><bar zoo="true"></bar><bar zoo="true"></bar><baz /></foo>}<br/>
      * Limits {@code "/foo/bar", 0} -> {@code <foo><baz></baz></foo>}<br/>
+     * Limits {@code "/foo/bar#zoo=true", 1} -> {@code <foo><bar zoo="true"></bar><bar zoo="false"></bar><baz /></foo>}
+     * </p><p>
+     * Example: limits={@code ["/foo$", -1], ["/foo/bar", 1]}, countPatterns=false, onlyCheckElementPaths=true,
+                discardNonMatched=true} -> {@code "<foo><bar zoo=\"true\" /></foo>"}<br/>
+     * Example: limits={@code ["/foo$", -1], ["/foo/bar", 1]}, countPatterns=false, onlyCheckElementPaths=true,
+                discardNonMatched=false} -> {@code "<foo><bar zoo=\"true\" /><baz /></foo>"}<br/>
      * @param in     XML stream positioned at the point from which reduction should occur (normally the start).
      * @param out    the reduced XML.
-     * @param limits patterns and max occurrences for entries.
+     * @param limits patterns and max occurrences for entries. The limits are processed in entrySet order.
+     *               If max occurrence is -1 there is no limit for the given pattern.
      * @param countPatterns if true, the limit applies to matched patterns. If false, the limit if for each regexp.
      *                      If the limit is {code ".*", 10}, only 10 elements in total is kept.
-     * @param onlyElementMatch if true, only element names are matched, not attributes.
-     *                         Setting this to true speeds up processing.
+     * @param onlyCheckElementPaths if true, only element names are matched, not attributes.
+     *                              Setting this to true speeds up processing.
+     * @param discardNonMatched if true, paths that are not matched by any limit are discarded.
+     * @throws javax.xml.stream.XMLStreamException if there was a problem reading (in) or writing (out) XML.
      */
     public static void limitXML(final XMLStreamReader in, XMLStreamWriter out, final Map<Pattern, Integer> limits,
-                                final boolean countPatterns, final boolean onlyElementMatch) throws XMLStreamException {
+                                final boolean countPatterns, final boolean onlyCheckElementPaths,
+                                final boolean discardNonMatched) throws XMLStreamException {
         final Map<Object, Integer> counters = new HashMap<Object, Integer>();
         pipeXML(in, out, true, false, new Callback() {
             @Override
             public boolean elementStart(
                     XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                if (exceeded(counters, xml, tags)) {
+                Set<RESULT> result = exceeded(counters, xml, tags);
+                if (result.contains(RESULT.exceeded) || (discardNonMatched && !result.contains(RESULT.match))) {
                     skipElement(xml);
                     return true;
                 }
                 return false;
             }
 
-            private boolean exceeded(
-                    Map<Object, Integer> counters, XMLStreamReader xml, List<String> tags) {
+            private Set<RESULT> exceeded(Map<Object, Integer> counters, XMLStreamReader xml, List<String> tags) {
+                Set<RESULT> result = EnumSet.noneOf(RESULT.class);
                 for (Map.Entry<Pattern, Integer> limit: limits.entrySet()) {
                     final Pattern pattern = limit.getKey();
                     final int max = limit.getValue();
 
                     final String element = "/" + Strings.join(tags, "/");
-                    if (exceeded(counters, pattern, max, element, countPatterns)) {
-                        return true;
+                    exceeded(result, counters, pattern, max, element, countPatterns);
+                    if (result.contains(RESULT.exceeded)) {
+                        return result;
                     }
-                    if (!onlyElementMatch) {
+                    if (!onlyCheckElementPaths) {
                         for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
                             final String merged =
                                     element + "#" + xml.getAttributeLocalName(i) + "=" + xml.getAttributeValue(i);
-                            if (exceeded(counters, pattern, max, merged, countPatterns)) {
-                                return true;
+                            exceeded(result, counters, pattern, max, merged, countPatterns);
+                            if (result.contains(RESULT.exceeded)) {
+                                return result;
                             }
-
                         }
                     }
                 }
-                return false;
+                return result;
             }
 
-            private boolean exceeded(
-                    Map<Object, Integer> counters, Pattern pattern, int max, String path, boolean countPatterns) {
+            private void exceeded(Set<RESULT> result, Map<Object, Integer> counters, Pattern pattern, int max,
+                                  String path, boolean countPatterns) {
                 Matcher elementMatch = pattern.matcher(path);
                 if (elementMatch.matches()) {
+                    result.add(RESULT.match);
                     Integer count = counters.get(countPatterns ? elementMatch.group() : pattern);
                     if (count == null) {
                         count = 0;
                     }
                     counters.put(countPatterns ? elementMatch.group() : pattern, ++count);
-                    return count > max;
+                    if (max != -1 && count > max) {
+                        result.add(RESULT.exceeded);
+                    }
                 }
-                return false;
             }
+
         });
     }
+    enum RESULT {match, exceeded}
 
     public abstract static class Callback {
         /**
