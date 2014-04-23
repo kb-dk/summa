@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.support.alto;
 
-import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.xml.XMLStepper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

@@ -14,8 +14,8 @@
  */
 package dk.statsbiblioteket.summa.common.marc;
 
-import dk.statsbiblioteket.summa.common.xml.XMLStepper;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLStepper;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 
 /**
  * Helper class for stream oriented processing of XML.
+ * @deprecated this class has been moved to sbutil and is to be removed from summa.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
