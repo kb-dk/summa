@@ -79,6 +79,22 @@ public class SummonSearchNodeTest extends TestCase {
         return new TestSuite(SummonSearchNodeTest.class);
     }
 
+    public void testSpecificProblemSearch() throws RemoteException {
+        //final String QUERY = "roberto constantini";
+        final String QUERY = "foo";
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        long stated = getHitCount(summon, DocumentKeys.SEARCH_QUERY, QUERY);
+        List<String> returned = getHits(summon, DocumentKeys.SEARCH_QUERY, QUERY);
+        long min = Math.min(stated, DocumentKeys.DEFAULT_MAX_RECORDS);
+        assertTrue("The number of returned records should be minimum " + min + " but was " + returned.size()
+                   + " for " + Strings.join(returned),
+                   returned.size() >= min);
+        Collections.sort(returned);
+//        System.out.println(
+//                "Got hitCount=" + stated + " with first " + returned.size() + " IDs " + Strings.join(returned, "\n"));
+    }
+
     public void testMoreLikeThis() throws RemoteException {
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         long standard = getHitCount(summon, DocumentKeys.SEARCH_QUERY, "foo");

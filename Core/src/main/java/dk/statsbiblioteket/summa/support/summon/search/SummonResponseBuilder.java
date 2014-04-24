@@ -219,9 +219,11 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         }
         DocumentResponse documentResponse = createBasicDocumentResponse(request);
         documentResponse.setSearchTime(searchTime);
-        if (hitCount > records.size()) {
-            log.warn("Encountered hitCount=" + hitCount + " with only " + records.size() + " records for " + request);
+        if (hitCount < records.size()) {
+            log.warn("Encountered hitCount=" + hitCount + " with " + records.size() + " records for " + request);
             documentResponse.setHitCount(records.size());
+        } else if (records.isEmpty()) { // Handles summon 1-off bug for empty search results
+            documentResponse.setHitCount(0);
         } else {
             documentResponse.setHitCount(hitCount);
         }
