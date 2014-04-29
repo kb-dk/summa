@@ -156,7 +156,7 @@ public class RecordWriter extends ObjectFilterImpl {
             this.qOptions = qOptions;
 
             log.debug("Starting batch job watcher");
-            watcher = new Thread(this, "RecordBatcher");
+            watcher = new Thread(this, "RecordBatcher daemon");
             watcher.setDaemon(true); // Allow the JVM to exit
             watcher.setUncaughtExceptionHandler(new LoggingExceptionHandler());
             watcher.start();

@@ -118,7 +118,8 @@ public class IndexWatcher extends Observable<IndexListener> implements Configura
         }
         checkHasBeenPerformed = false;
         updateAndReturnCurrentState();
-        Thread thisThread = new Thread(this, "IndexWatcher");
+        Thread thisThread = new Thread(this, "IndexWatcher daemon");
+        thisThread.setDaemon(true);
         thisThread.start();
     }
 

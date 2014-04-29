@@ -61,7 +61,8 @@ public class FileWatcher extends FileReader implements Runnable {
         log.trace("FileWatcher created with pollInterval " + pollInterval);
         Thread fileWatcherThread;
         log.debug("Starting fileWatcherThread");
-        fileWatcherThread = new Thread(this, "FileWatcher(" + pollInterval + " seconds)");
+        fileWatcherThread = new Thread(this, "FileWatcher(" + pollInterval + " seconds) daemon");
+        fileWatcherThread.setDaemon(true);
         fileWatcherThread.start();
     }
 

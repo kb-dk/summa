@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.web.services;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -39,20 +40,12 @@ import org.w3c.dom.NodeList;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.io.IOException;
 import java.sql.Date;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * A class containing methods meant to be exposed as a web service.
@@ -66,6 +59,7 @@ import java.util.TreeSet;
         reviewers = "hbk")
 @WebService
 public class StatusWS {
+    public static final String DEFAULT_CONF_FILE = "configuration_status.xml";
     private Log log;
     private DateFormat dateFormat;
     private NumberFormat numberFormat;
@@ -80,6 +74,7 @@ public class StatusWS {
      */
     public StatusWS() {
         log = LogFactory.getLog(StatusWS.class);
+        Environment.checkJavaVersion();
         dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         numberFormat = NumberFormat.getIntegerInstance();
         numberFormat.setGroupingUsed(false);
@@ -150,21 +145,11 @@ public class StatusWS {
      * @return The Configuration object.
      */
     private Configuration getConfiguration() {
+        final String SEARCH_CONTEXT = "java:comp/env/confLocation";
+        final String SEARCH_ENV = "StatusWS_config";
         if (conf == null) {
-            InitialContext context;
-            try {
-                context = new InitialContext();
-                String paramValue =
-                          (String) context.lookup("java:comp/env/confLocation");
-                log.debug("Trying to load configuration from: " + paramValue);
-                conf = Configuration.load(paramValue);
-            } catch (NamingException e) {
-                log.warn("Failed to lookup env-entry. Trying to load system "
-                         + "configuration.", e);
-                conf = Configuration.getSystemConfiguration(true);
-            }
+            conf = Configuration.resolve(SEARCH_CONTEXT, SEARCH_ENV, DEFAULT_CONF_FILE, true);
         }
-
         return conf;
     }
 

@@ -118,7 +118,7 @@ public class MachineStats implements Runnable {
             return;
         }
         profiler = new Profiler(500);
-        watcher = new Thread(this, "MachineStats");
+        watcher = new Thread(this, "MachineStats daemon");
         watcher.setDaemon(true);
         watcher.start();
     }

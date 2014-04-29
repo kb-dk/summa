@@ -58,5 +58,10 @@ public class Security {
             log.debug("SecurityManager '" + System.getSecurityManager() + "' present");
         }
     }
+
+    @Override
+    public String toString() {
+        return "AllowAllSecurityManager";
+    }
 }
 

@@ -168,7 +168,7 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
 
         RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
 
-        try {
+/*        try {
             RemoteHelper.exportMBean(this);
         } catch (Exception e) {
             String msg = "Error exporting MBean of '" + this + "'. Going on without it: " + e.getMessage();
@@ -177,7 +177,7 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
             } else {
                 log.warn(msg);
             }
-        }
+        }*/
     }
 
     /**

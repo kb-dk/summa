@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa-web</artifactId>
-        <version>2.1.0-20140423-SNAPSHOT</version>
+        <version>2.1.0-20140428-SNAPSHOT</version>
         <relativePath>../../</relativePath>
     </parent>
 
@@ -41,7 +41,7 @@
               <goal>enforce</goal>
             </goals>
             <configuration>
-		      <message>Remember to run cd Web; ./mkLinks.sh; cd ..</message>
+<!--		      <message>Remember to run cd Web; ./mkLinks.sh; cd ..</message>-->
               <rules>
                 <requireFilesExist>
                   <files>

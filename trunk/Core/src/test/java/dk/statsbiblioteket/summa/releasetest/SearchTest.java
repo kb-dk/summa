@@ -52,6 +52,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -180,6 +182,13 @@ public class SearchTest extends NoExitTestCase {
         ingestFagref(STORAGE, fagref_jh_gm);
         verifyStorage(STORAGE, "jh", "fagref:jh@example.com");
         storage.close();
+    }
+
+    public void testContextConfigurationResolve() throws NamingException {
+        InitialContext context = new InitialContext();
+        String paramValue = (String) context.lookup("NonExisting");
+        System.out.println(paramValue);
+
     }
 
     @SuppressWarnings("ConstantConditions")

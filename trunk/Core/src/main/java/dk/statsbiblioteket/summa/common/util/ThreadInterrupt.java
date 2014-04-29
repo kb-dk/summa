@@ -37,8 +37,8 @@ public class ThreadInterrupt {
                 }
                 t.interrupt();
             }
-        }, "ThreadInterrupt Thread");
-
+        }, "ThreadInterrupt(delay=" + delay + ") daemon");
+        waiter.setDaemon(true);
         waiter.start();
     }
 }
