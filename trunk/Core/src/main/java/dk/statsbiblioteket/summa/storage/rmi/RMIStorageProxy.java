@@ -234,8 +234,8 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
         try {
             return configuration.getInt(Storage.CONF_SERVICE_PORT);
         } catch (NullPointerException e) {
-            log.warn(String.format("Service port not defined in %s. Falling back to anonymous "
-                                   + "port 0", Storage.CONF_SERVICE_PORT));
+            log.warn(String.format("Service port not defined in %s. Falling back to anonymous port 0",
+                                   Storage.CONF_SERVICE_PORT));
             return 0;
         }
     }
@@ -384,8 +384,8 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
         try {
             backend.flush(record, options);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("flush(%s) for %d:%s", record, registryPort,
-                                                            serviceName), t, flattenExceptions);
+            RemoteHelper.exitOnThrowable(
+                    log, String.format("flush(%s) for %d:%s", record, registryPort, serviceName), t, flattenExceptions);
         }
     }
 
@@ -471,8 +471,8 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
                     log.debug("Skipping unexport of MBean for " + this + " and binding failed");
                 }
             } catch (Throwable t) {
-                RemoteHelper.exitOnThrowable(log, String.format("close().unExportMBean() for %d:%s", registryPort,
-                                                                serviceName), t, flattenExceptions);
+                RemoteHelper.exitOnThrowable(log, String.format("close().unExportMBean() for %d:%s",
+                                                                registryPort, serviceName), t, flattenExceptions);
             }
         }
     }

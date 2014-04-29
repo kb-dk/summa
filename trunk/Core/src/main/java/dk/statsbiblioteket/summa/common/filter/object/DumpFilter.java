@@ -32,8 +32,7 @@ public class DumpFilter extends ObjectFilterImpl {
      * Optional. Default is "temp-folder/payloads", where the temp-folder is
      *           system-dependent.
      */
-    public static final String CONF_OUTPUTFOLDER =
-            "summa.dumpfilter.outputfolder";
+    public static final String CONF_OUTPUTFOLDER = "summa.dumpfilter.outputfolder";
 
     /**
      * The passing Payload's base must match this Pattern-expression to be
@@ -41,8 +40,7 @@ public class DumpFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is ".*" (all bases).
      */
-    public static final String CONF_BASEEXP =
-            "summa.dumpfilter.baseexp";
+    public static final String CONF_BASEEXP = "summa.dumpfilter.baseexp";
     public static final String DEFAULT_BASEEXP = ".*";
 
     /**
@@ -50,8 +48,7 @@ public class DumpFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is ".*" (all ids).
      */
-    public static final String CONF_IDEXP =
-            "summa.dumpfilter.idexp";
+    public static final String CONF_IDEXP = "summa.dumpfilter.idexp";
     public static final String DEFAULT_IDEXP = ".*";
 
     /**
@@ -59,8 +56,7 @@ public class DumpFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_DUMP_NONRECORDS =
-            "summa.dumpfilter.dumpnonrecord";
+    public static final String CONF_DUMP_NONRECORDS = "summa.dumpfilter.dumpnonrecord";
     public static final boolean DEFAULT_DUMP_NONRECORDS = true;
 
     /**
@@ -69,8 +65,7 @@ public class DumpFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is false.
      */
-    public static final String CONF_DUMP_XML =
-            "summa.dumpfilter.dumpxml";
+    public static final String CONF_DUMP_XML = "summa.dumpfilter.dumpxml";
     public static final boolean DEFAULT_DUMP_XML = false;
 
     /**
@@ -81,8 +76,7 @@ public class DumpFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is false;
      */
-    public static final String CONF_DUMP_STREAMS =
-            "summa.dumpfilter.dumpstreams";
+    public static final String CONF_DUMP_STREAMS = "summa.dumpfilter.dumpstreams";
     public static final boolean DEFAULT_DUMP_STREAMS = false;
 
     /**
@@ -91,8 +85,7 @@ public class DumpFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. The default is 500. Setting this to -1 means infinite dumps.
      */
-    public static final String CONF_MAXDUMPS =
-            "summa.dumpfilter.maxdumps";
+    public static final String CONF_MAXDUMPS = "summa.dumpfilter.maxdumps";
     public static final int DEFAULT_MAXDUMPS = 50;
 
     /**
@@ -104,8 +97,7 @@ public class DumpFilter extends ObjectFilterImpl {
      * Optional. The default is 60,000 (1 minute). Setting this to -1 disables
      * the reset og the max dumps counter.
      */
-    public static final String CONF_RESET_MAXDUMPS_MS =
-            "summa.dumpfilter.reset.maxdumps.ms";
+    public static final String CONF_RESET_MAXDUMPS_MS = "summa.dumpfilter.reset.maxdumps.ms";
     public static final int DEFAULT_RESET_MAXDUMPS_MS = 60 * 1000;
 
     private File output;
@@ -130,24 +122,19 @@ public class DumpFilter extends ObjectFilterImpl {
                  new File(outputStr);
         log.debug("Output folder is '" + outputStr + "'");
         if (!output.exists() && !output.mkdirs()) {
-            log.warn("Output folder '" + outputStr + "' donnot exists and was "
-                    + "not created.");
+            log.warn("Output folder '" + outputStr + "' does not exist and was not created.");
         }
-        basePattern =
-                Pattern.compile(conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP));
+        basePattern = Pattern.compile(conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP));
         idPattern = Pattern.compile(conf.getString(CONF_IDEXP, DEFAULT_IDEXP));
         dumpNonRecords = conf.getBoolean(CONF_DUMP_NONRECORDS, dumpNonRecords);
         dumpStreams = conf.getBoolean(CONF_DUMP_STREAMS, dumpStreams);
         dumpXML = conf.getBoolean(CONF_DUMP_XML, dumpXML);
         maxDumps = conf.getInt(CONF_MAXDUMPS, maxDumps);
-        resetReceivedDumpsMS =
-                conf.getInt(CONF_RESET_MAXDUMPS_MS, resetReceivedDumpsMS);
+        resetReceivedDumpsMS = conf.getInt(CONF_RESET_MAXDUMPS_MS, resetReceivedDumpsMS);
         feedback = false; // No timestats on dump
         log.info(String.format(
-                "Created DumpFilter '%s' with base='%s', id='%s', dumpNonRecords=%b,"
-                + " maxDumps=%d, resetMaxDumpsMS=%d",
-                getName(), conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP),
-                conf.getString(CONF_IDEXP, DEFAULT_IDEXP),
+                "Created DumpFilter '%s' with base='%s', id='%s', dumpNonRecords=%b, maxDumps=%d, resetMaxDumpsMS=%d",
+                getName(), conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP), conf.getString(CONF_IDEXP, DEFAULT_IDEXP),
                 dumpNonRecords, maxDumps, resetReceivedDumpsMS));
     }
 
@@ -184,19 +171,14 @@ public class DumpFilter extends ObjectFilterImpl {
         try {
             if (payload.getRecord() != null) {
                 meta.append("\n").append(payload.getRecord().toString(true));
-                Files.saveString(payload.getRecord().getContentAsUTF8(),
-                                 new File(output, fileName + ".content"));
+                Files.saveString(payload.getRecord().getContentAsUTF8(), new File(output, fileName + ".content"));
                 if (dumpXML) {
-                    Files.saveString(
-                        RecordUtil.toXML(payload.getRecord(), false),
-                        new File(output, fileName + ".xml"));
+                    Files.saveString(RecordUtil.toXML(payload.getRecord(), false), new File(output, fileName + ".xml"));
                 }
             }
-            Files.saveString(meta.toString(),
-                             new File(output, fileName + ".meta"));
+            Files.saveString(meta.toString(), new File(output, fileName + ".meta"));
         } catch (IOException e) {
-            throw new PayloadException(
-                    "Unable to dump content", e, payload);
+            throw new PayloadException("Unable to dump content", e, payload);
         } 
         if (!dumpStreams || payload.getStream() == null) {
             return;
@@ -210,7 +192,6 @@ public class DumpFilter extends ObjectFilterImpl {
         File outFile = new File(output, RecordUtil.getFileName(payload) + ".stream");
         OutputStream out;
         try {
-
             out = new FileOutputStream(outFile);
         } catch (FileNotFoundException e) {
             log.warn(String.format(
@@ -218,7 +199,6 @@ public class DumpFilter extends ObjectFilterImpl {
                     payload, outFile));
             return;
         }
-        payload.setStream(new CopyingInputStream(
-                payload.getStream(), out, true));
+        payload.setStream(new CopyingInputStream(payload.getStream(), out, true));
     }
 }

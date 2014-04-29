@@ -63,8 +63,7 @@ public class ARCParserLight extends ThreadedStreamParser {
 
         long spendTime = System.nanoTime() - startTime;
         //noinspection DuplicateStringLiteralInspection
-        log.trace("Produced " + localPayloads + " payloads in "
-                  + (spendTime / 1000000.0) + "ns");
+        log.trace("Produced " + localPayloads + " payloads in " + (spendTime / 1000000.0) + "ns");
 
         runCount++;
         producedPayloads += localPayloads;
