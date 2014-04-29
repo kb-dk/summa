@@ -38,6 +38,8 @@ import org.w3c.dom.NodeList;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -57,7 +59,7 @@ import java.util.regex.Pattern;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te, mv, hbk")
-public class SearchWS {
+public class SearchWS implements ServletContextListener {
     private Log log;
 
     static SummaSearcher searcher;
@@ -1065,4 +1067,17 @@ public class SearchWS {
         return " with timing " + (res == null ? "N/A" : res.getTiming());
     }
 
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        log.debug("contextInitialized called (no-op)");
+    }
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        log.info("Shutting down " + searcher);
+        try {
+            searcher.close();
+        } catch (IOException e) {
+            log.warn("Exception shutting down searcher in contextDestroyed for " + searcher, e);
+        }
+    }
 }

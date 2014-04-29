@@ -430,8 +430,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 //            link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvH...">
             final String key = xml.getAttributeLocalName(i);
             final String value = xml.getAttributeValue(i);
-            if (log.isDebugEnabled()) {
-                log.debug("Document attribute " + key + "=\"" + value + "\"");
+            if (log.isTraceEnabled()) {
+                log.trace("Document attribute " + key + "=\"" + value + "\"");
             }
             fields.add(new DocumentResponse.Field(key, value, true));
             if (wanted.contains(key)) {
@@ -602,11 +602,11 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         // Handle
 
         if (xmlMode == XML_MODE.skip) {
-            log.debug("Skipping _xml field " + name + " as XML_MODE == skip");
+            log.trace("Skipping _xml field " + name + " as XML_MODE == skip");
             return null;
         }
         // xmlMode == XML_MODE.full
-        log.debug("Direct pipe of _xml field " + name);
+        log.trace("Direct pipe of _xml field " + name);
         fields.add(pipe(name, subXML));
         return fields;
     }

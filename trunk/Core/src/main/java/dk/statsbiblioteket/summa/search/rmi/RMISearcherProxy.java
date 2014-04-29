@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -37,8 +38,7 @@ import java.rmi.server.UnicastRemoteObject;
  * proxying all method calls to a backend {@code SummaSearcher}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT
-        )        
+        state = QAInfo.State.IN_DEVELOPMENT)
 public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearcher {
     private static final long serialVersionUID = 488468553186L; 
     private static final Log log = LogFactory.getLog (RMISearcherProxy.class);
@@ -84,6 +84,7 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
     private String serviceName;
     private int registryPort;
     private final boolean flattenExceptions;
+    private boolean mbeanExported = false;
 
     /**
      * Create a new searcher proxy. The configuration passed in must specify
@@ -146,13 +147,14 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
 
         try {
             RemoteHelper.exportMBean (this);
+            mbeanExported = true;
         } catch (Exception e) {
-            String msg = "Error exporting MBean of '" + this + "'. Going on without it: " + e.getMessage ();
-            if (log.isTraceEnabled()) {
-                log.warn(msg, e);
-            } else {
+            String msg = "Unable to export MBean for '" + this;
+//            if (log.isTraceEnabled()) {
+                //log.warn(msg, e);
+//            } else {
                 log.warn(msg);
-            }
+  //          }
         }
         log.info("Created " + this);
     }
@@ -190,13 +192,19 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
     @Override
     public void close() throws RemoteException {
         try {
+            log.info("Unexporting " + this);
+            UnicastRemoteObject.unexportObject(this, true);
+        } catch (NoSuchObjectException e) {
+            log.warn("Attempted unexport of " + this + " but it was not registered", e);
+        }
+        try {
             RemoteHelper.unExportRemoteInterface (serviceName, registryPort);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
                     "close().unExportRemoteInterface(serviceName='%s', registryPort=%d)",
                     serviceName, registryPort), t, flattenExceptions);
         } finally {
-            // If an exception was throws above, it was also logged, so we
+            // If an exception was thrown above, it was also logged, so we
             // accept that it might be eaten by an exception from the backend
             try {
                 backend.close();
@@ -207,7 +215,12 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
             }
 
             try {
-                RemoteHelper.unExportMBean(this);
+                if (mbeanExported) {
+                    log.info("Closing down MBean for " + this);
+                    RemoteHelper.unExportMBean(this);
+                } else {
+                    log.debug("Skipping unexport of MBean for " + this + " and binding failed");
+                }
             } catch (Throwable t) {
                 RemoteHelper.exitOnThrowable(log, String.format(
                         "close().unExportMBean() for %d:%s",

@@ -27,6 +27,8 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -43,7 +45,7 @@ import java.util.concurrent.ArrayBlockingQueue;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mv, hbk")
 @WebService
-public class StorageWS {
+public class StorageWS implements ServletContextListener {
     /** Context or property key for the location of the configuration for this webservice. */
     private static final String CONFIGURATION_LOCATION = "StorageWS_config";
 
@@ -348,6 +350,23 @@ public class StorageWS {
         } catch (InterruptedException e) {
             throw new RuntimeException(
                 "Interrupted while trying to add a MarcMultiVolumeMerger to the queue", e);
+        }
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        log.debug("contextInitialized called (no-op)");
+    }
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        if (!(storage instanceof WritableStorage)) {
+            log.debug("Storage is not Writable and will not be shut down");
+        }
+        log.info("Shutting down " + storage);
+        try {
+            ((WritableStorage)storage).close();
+        } catch (IOException e) {
+            log.warn("Exception shutting down searcher in contextDestroyed for " + storage, e);
         }
     }
 }
