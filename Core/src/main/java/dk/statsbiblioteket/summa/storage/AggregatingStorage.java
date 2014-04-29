@@ -560,7 +560,7 @@ public class AggregatingStorage extends StorageBase {
                 }
             } catch (NullPointerException e) {
                 throw new Configurable.ConfigurationException(
-                        CONF_SUB_STORAGE_BASES + " must be defined for each sub storage");
+                        CONF_SUB_STORAGE_BASES + " must be defined for each sub storage", e);
             }
 
             StorageReaderClient reader = new StorageReaderClient(subConf);

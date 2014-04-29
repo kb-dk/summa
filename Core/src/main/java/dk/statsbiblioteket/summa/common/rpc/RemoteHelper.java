@@ -301,11 +301,10 @@ public class RemoteHelper {
      * @throws java.rmi.RemoteException wrapper for the Error to alert remote callers.
      */
     private static void fatality(Log log, String message, Throwable e) throws RemoteException {
-        message += ". The JVM will be shut down in 5 seconds. Likely error causes"
-                   + " include OutOfMemory, StackOverflows, or other critical "
-                   + "problems in the JVM. Please note that this is an unclean "
-                   + "shutdown and that file-based locks on databases and similar"
-                   + " might persist in the environment and need manual cleanup";
+        message += ". The JVM will be shut down in 5 seconds. Likely error causes include OutOfMemory, StackOverflows, "
+                   + "or other critical problems in the JVM. Please note that this is an unclean shutdown and that "
+                   + "file-based locks on databases and similar might persist in the environment and need manual "
+                   + "cleanup";
         Logging.fatal(log, "RemoteHelper.fatality", message, e);
         System.err.println(message);
         e.printStackTrace(System.err);

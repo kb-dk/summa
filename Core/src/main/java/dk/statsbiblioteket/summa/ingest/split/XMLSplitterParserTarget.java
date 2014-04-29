@@ -77,23 +77,22 @@ public class XMLSplitterParserTarget {
         try {
             base = configuration.getString(XMLSplitterFilter.CONF_BASE);
             if ("".equals(base)) {
-                throw new Configurable.ConfigurationException(String.format("Base, as defined by %s, must not be empty", 
-                                                                            XMLSplitterFilter.CONF_BASE));
+                throw new Configurable.ConfigurationException(
+                        String.format("Base, as defined by %s, must not be empty", XMLSplitterFilter.CONF_BASE));
             }
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new Configurable.ConfigurationException(String.format("Could not get %s from configuration", 
-                                                                        XMLSplitterFilter.CONF_BASE));
+            throw new Configurable.ConfigurationException(
+                    String.format("Could not get %s from configuration", XMLSplitterFilter.CONF_BASE));
         }
         preserveNamespaces = configuration.getBoolean(XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, preserveNamespaces);
         requireValid = configuration.getBoolean(XMLSplitterFilter.CONF_REQUIRE_VALID, requireValid);
-        log.debug(String.format("Created XMLSplitterParserTaget with idPrefix='%s', "
-                                + "idPostfix='%s', idNamespace='%s', collapsePrefix=%b, "
-                                + "collapsePostfix=%b, recordElement='%s', idElement='%s', "
+        log.debug(String.format("Created XMLSplitterParserTaget with idPrefix='%s', idPostfix='%s', idNamespace='%s', "
+                                + "collapsePrefix=%b, collapsePostfix=%b, recordElement='%s', idElement='%s', "
                                 + "idTag='%s', base='%s', preserveNamespaces=%b, "
-                                + "requireValid=%b", idPrefix, idPostfix, idNamespace, collapsePrefix, 
-                                collapsePostfix, recordElement, idElement, idTag, base, preserveNamespaces, 
-                                requireValid));
+                                + "requireValid=%b",
+                                idPrefix, idPostfix, idNamespace, collapsePrefix, collapsePostfix, recordElement,
+                                idElement, idTag, base, preserveNamespaces, requireValid));
     }
 
     /**
@@ -114,9 +113,8 @@ public class XMLSplitterParserTarget {
         }
         String origin_tail = "";
         try {
-            origin_tail =
-                    payload.getData(Payload.ORIGIN) == null ? "" : new File((String) payload.getData(Payload.ORIGIN)).
-                            getParentFile().getName();
+            origin_tail = payload.getData(Payload.ORIGIN) == null ? "" :
+                    new File((String) payload.getData(Payload.ORIGIN)).getParentFile().getName();
             log.trace("Located expand-folder '" + origin_tail + "'");
         } catch (Exception e) {
             log.debug("Exception while locating expand-folder for " + payload, e);

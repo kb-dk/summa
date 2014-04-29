@@ -63,8 +63,8 @@ public class ArchiveReader extends FileSystemReader {
 
         String rootString = conf.getString(CONF_ROOT_FOLDER);
         if ("".equals(rootString)) {
-            throw new Configurable.ConfigurationException(String.format("No root. This must be specified with %s", 
-                                                                        CONF_ROOT_FOLDER));
+            throw new Configurable.ConfigurationException(
+                    String.format("No root. This must be specified with %s", CONF_ROOT_FOLDER));
         }
         log.trace("Got root-property '" + rootString + "'");
         TFile root = new TFile(rootString).getAbsoluteFile();
