@@ -135,11 +135,11 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
             log.trace ("Backend conf:\n" + backendConf.dumpString ());
         }
 
-        log.trace ("Creating searcher backend");
+        log.debug("Creating searcher backend");
         backend = SummaSearcherFactory.createSearcher (backendConf);
-        log.trace ("Created searcher: " + backend.getClass().getName());
+        log.info("Created inner searcher " + backend.getClass().getName());
 
-        serviceName = conf.getString (CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
+        serviceName = conf.getString(CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
         registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
         
         RemoteHelper.exportRemoteInterface (this, registryPort, serviceName);
@@ -149,11 +149,12 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
         } catch (Exception e) {
             String msg = "Error exporting MBean of '" + this + "'. Going on without it: " + e.getMessage ();
             if (log.isTraceEnabled()) {
-                log.warn (msg, e);
+                log.warn(msg, e);
             } else {
                 log.warn(msg);
             }
         }
+        log.info("Created " + this);
     }
 
   /**
@@ -213,5 +214,11 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
                         registryPort, serviceName), t, flattenExceptions);
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "RMISearcherProxy(serviceName='" + serviceName + "', registryPort=" + registryPort +
+               ", flattenExceptions=" + flattenExceptions + ", backend=" + backend + ')';
     }
 }

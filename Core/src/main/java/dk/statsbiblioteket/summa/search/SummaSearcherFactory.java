@@ -51,10 +51,13 @@ public class SummaSearcherFactory {
         log.debug("Instantiating searcher class: " + seacherClass);
 
         try {
-            return Configuration.create(seacherClass, conf);
+            SummaSearcher searcher = Configuration.create(seacherClass, conf);
+            log.info("Finished instantiating " + searcher);
+            return searcher;
         } catch (Exception e) {
-            throw new Configurable.ConfigurationException(String.format(
-                    "Failed to instantiate seacher class %s", seacherClass), e);
+            String message = String.format("Failed to instantiate searcher class %s", seacherClass);
+            log.error(message, e);
+            throw new Configurable.ConfigurationException(message, e);
         }
     }
 

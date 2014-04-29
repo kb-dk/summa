@@ -15,20 +15,18 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
+import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -46,6 +44,9 @@ import java.util.concurrent.ArrayBlockingQueue;
         author = "mv, hbk")
 @WebService
 public class StorageWS {
+    /** Context or property key for the location of the configuration for this webservice. */
+    private static final String CONFIGURATION_LOCATION = "StorageWS_config";
+
     /**
      * Logger for StorageWS.
      */
@@ -79,7 +80,7 @@ public class StorageWS {
     private static final int NUMBER_OF_MERGERS = 10;
 
     /** Storage reader client. */
-    static StorageReaderClient storage;
+    static ReadableStorage storage;
     /** Used configuration. */
     static Configuration conf;
     /**
@@ -94,6 +95,7 @@ public class StorageWS {
      * Constructor for Storage WebService.
      */
     public StorageWS() {
+        Environment.checkJavaVersion();
         synchronized (this.getClass()) {
             if (mergers != null) {
                 return;
@@ -108,6 +110,7 @@ public class StorageWS {
                             "Interrupted while trying to add MarcMultiVolumeMergers to the queue", e);
                 }
             }
+            getStorage();
             log.info("StorageWS ready");
        }
     }
@@ -117,11 +120,21 @@ public class StorageWS {
      *
      * @return A StorageReaderClient.
      */
-    private synchronized StorageReaderClient getStorageClient() {
+    private synchronized ReadableStorage getStorage() {
         if (storage == null) {
             Configuration conf = getConfiguration();
             escapeContent = conf.getBoolean(RecordUtil.CONF_ESCAPE_CONTENT, escapeContent);
-            storage = new StorageReaderClient(conf);
+            if (conf.containsKey(Storage.CONF_CLASS)) {
+                log.info("Located " + Storage.CONF_CLASS + " in configuration. Creating direct Storage");
+                try {
+                    storage = StorageFactory.createStorage(conf);
+                } catch (IOException e) {
+                    throw new Configurable.ConfigurationException("Unable to create Storage", e);
+                }
+            } else {
+                log.info("No " + Storage.CONF_CLASS + " in configuration. Creating StorageReaderClient");
+                storage = new StorageReaderClient(conf);
+            }
         }
         return storage;
     }
@@ -134,26 +147,9 @@ public class StorageWS {
      *
      * @return The Configuration object.
      */
-    private Configuration getConfiguration() {
-        final String LOCATION = "java:comp/env/confLocation";
+    private synchronized Configuration getConfiguration() {
         if (conf == null) {
-            InitialContext context;
-            try {
-                context = new InitialContext();
-                String paramValue = (String) context.lookup(LOCATION);
-                log.debug("Trying to load configuration from: " + paramValue);
-                conf = Configuration.load(paramValue);
-                log.info("Configuration loaded from " + paramValue);
-            } catch (NamingException e) {
-                if (Resolver.getURL(DEFAULT_CONF_FILE) != null) {
-                    log.info("Failed to lookup env-entry but '" + DEFAULT_CONF_FILE + "' exists. Attempting load");
-                    System.setProperty("StorageWS_config", DEFAULT_CONF_FILE);
-                    conf = Configuration.getSystemConfiguration("StorageWS_config", true);
-                } else {
-                    log.warn("Failed to lookup env-entry. Attempting load of default system configuration");
-                    conf = Configuration.getSystemConfiguration(true);
-                }
-            }
+            conf = Configuration.resolve(CONFIGURATION_LOCATION, CONFIGURATION_LOCATION, DEFAULT_CONF_FILE, true);
         }
         return conf;
     }
@@ -233,7 +229,7 @@ public class StorageWS {
         try {
             QueryOptions queryOptions = null;
             totalTime = System.currentTimeMillis();
-            List<Record> records = getStorageClient().getRecords(ids, queryOptions);
+            List<Record> records = getStorage().getRecords(ids, queryOptions);
             time = System.currentTimeMillis() - totalTime;
 
             xmlTime = -System.currentTimeMillis();
@@ -297,7 +293,7 @@ public class StorageWS {
                 q = new QueryOptions(null, null, -1, -1);
             }
             long getTime = System.currentTimeMillis();
-            Record record = getStorageClient().getRecord(id, q);
+            Record record = getStorage().getRecord(id, q);
             timing = "storage.getrecord.raw:" + (System.currentTimeMillis() - getTime);
 
             if (record == null) {

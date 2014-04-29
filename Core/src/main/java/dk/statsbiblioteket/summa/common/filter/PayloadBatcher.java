@@ -75,7 +75,7 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
                                 maxCount, maxBytes, maxMS));
         if (maxMS != -1) {
             watcher = new Thread(
-                this, String.format("PayloadBatcher(count=%d, bytes=%d, MS=%d)", maxCount, maxBytes, maxMS));
+                this, String.format("PayloadBatcher(count=%d, bytes=%d, MS=%d) daemon", maxCount, maxBytes, maxMS));
             watcher.setDaemon(true); // Allow the JVM to exit
             watcher.setUncaughtExceptionHandler(new LoggingExceptionHandler());
             watcher.start();

@@ -300,7 +300,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
         }
         this.source = (ObjectFilter)source;
         log.debug("Source " + source + " specified. Starting mux-thread for " + name);
-        Thread t = new Thread(this, "MUXFilter-" + this.hashCode());
+        Thread t = new Thread(this, "MUXFilter-" + this.hashCode() + " daemon");
+        t.setDaemon(true);
 //        t.setUncaughtExceptionHandler(this);
         t.start();
     }

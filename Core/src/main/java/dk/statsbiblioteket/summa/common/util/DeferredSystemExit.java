@@ -80,7 +80,7 @@ public class DeferredSystemExit implements Runnable {
      * Starts a exit thread.
      */
     private void startExit() {
-        thread = new Thread(this, "DeferredSystemExit Thread");
+        thread = new Thread(this, "DeferredSystemExit daemon");
         // Allow the JVM to exit even though thread is active
         thread.setDaemon(true);
         thread.start();

@@ -21,6 +21,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -663,6 +666,48 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
         // Sys props are already escaped from the getStrings() call,
         // so we don't have to do that
         return result == null ? null : result.toArray(new String[result.size()]);
+    }
+
+    /**
+     * Catch-all configuration resolver.
+     * @param contextKey      primary: If the given key exists in the context, the value is used as a source
+     *                        for the configuration.
+     * @param envKey          secondary: If the given key exists as a property, the value is used as a source
+     *                        for the configuration.
+     * @param defaultConfFile tertiary: If the given file exists on the class path or current dir, it is used as a
+     *                        source for the configuration.
+     * @param lenient if true, lookup of {@link #DEFAULT_RESOURCES} are attempted if the primary, secondary and tertiary
+     *                lookups fails.
+     * @return a configuration based on the resolved resource.
+     */
+    @SuppressWarnings("ThrowInsideCatchBlockWhichIgnoresCaughtException")
+    public static Configuration resolve(String contextKey, String envKey, String defaultConfFile, boolean lenient) {
+        try {
+            log.debug("Attempting resolving of Java context '" + contextKey + "'");
+            InitialContext context = new InitialContext();
+            Context javaContext = (Context) context.lookup("java:/comp/env");
+            log.debug("Resolved Java context");
+            String paramValue = (String) javaContext.lookup(contextKey);
+            log.debug("Resolved context '" + contextKey + "' to '" + paramValue
+                      + "' from Java context. Attempting to load configuration from: " + paramValue);
+            return Configuration.load(paramValue);
+        } catch (NamingException e) {
+            if (System.getProperty(envKey) != null) {
+                log.info("Property " + envKey + " is defined with value " + System.getProperty(envKey)
+                         + ". Using that as properties for searchWS");
+                return Configuration.getSystemConfiguration(envKey, true);
+            } else if (Resolver.getURL(defaultConfFile) != null) {
+                log.info("Failed to lookup context-entry '" + contextKey + "' and property " + envKey + " but '"
+                         + defaultConfFile + "' exists. Attempting load of " + defaultConfFile);
+                return Configuration.load(defaultConfFile);
+            } else if (lenient) {
+                log.warn("Failed to lookup context-entry '" + contextKey + ", property " + envKey + " and file "
+                         + defaultConfFile + ". Fallback to default configuration resolving (not recommended)");
+                return Configuration.getSystemConfiguration(envKey, true);
+            }
+            throw new ConfigurationException("Failed to lookup context-entry '" + contextKey + ", property " + envKey
+                                             + " and file " + defaultConfFile + ". Giving up");
+        }
     }
 
     /**

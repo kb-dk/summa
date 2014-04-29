@@ -197,8 +197,8 @@ public abstract class ThreadedStreamParser implements StreamParser {
                               + sourcePayload);
                 }
             }
-        }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ")");
-
+        }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ") daemon");
+        runningThread.setDaemon(true);
         final ThreadedStreamParser dummyThis = this;
         runningThread.setUncaughtExceptionHandler(
                 new Thread.UncaughtExceptionHandler() {

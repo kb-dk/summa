@@ -15,13 +15,14 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
+import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
@@ -37,8 +38,6 @@ import org.w3c.dom.NodeList;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -56,12 +55,12 @@ import java.util.regex.Pattern;
  */
 @WebService
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mv, hbk")
+        state = QAInfo.State.QA_NEEDED,
+        author = "te, mv, hbk")
 public class SearchWS {
     private Log log;
 
-    static SearchClient searcher;
+    static SummaSearcher searcher;
     static SearchClient suggester;
     static SearchClient didyoumean;
     Configuration conf;
@@ -71,6 +70,8 @@ public class SearchWS {
      */
     private static XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
 
+    /** Context or property key for the location of the configuration for this webservice. */
+    public static final String CONFIGURATION_LOCATION = "SearchWS_config";
     /** Did-You-Mean XML namespace. */
     public static final String NAMESPACE = "http://statsbiblioteket.dk/summa/2009/SearchError";
     /** XML tag for search error response. */
@@ -93,6 +94,8 @@ public class SearchWS {
      */
     public SearchWS() {
         log = LogFactory.getLog(SearchWS.class);
+        Environment.checkJavaVersion();
+        getSearcher(); // This _should_ work as remote searchers should be ready before the web service is started
     }
 
     /**
@@ -100,10 +103,23 @@ public class SearchWS {
      *
      * @return A SearchClient.
      */
-    private synchronized SearchClient getSearchClient() {
+    private synchronized SummaSearcher getSearcher() {
         if (searcher == null) {
             try {
-                searcher = new SearchClient(getConfiguration().getSubConfiguration("summa.web.search"));
+                Configuration conf = getConfiguration();
+                if (conf.containsKey("summa.web.search")) {
+                    log.debug("Using inner configuration summa.web.search");
+                    conf = conf.getSubConfiguration("summa.web.search");
+                } else {
+                    log.debug("No inner configuration for searchWS. Using directly");
+                }
+                if (conf.containsKey(SummaSearcher.CONF_CLASS)) {
+                    log.info("Configuration key " + SummaSearcher.CONF_CLASS + " present. Creating direct searcher");
+                    searcher = SummaSearcherFactory.createSearcher(conf);
+                } else {
+                    log.info("Configuration key " + SummaSearcher.CONF_CLASS + " present. Creating SearchClient");
+                    searcher = new SearchClient(conf);
+                }
             } catch (SubConfigurationsNotSupportedException e) {
                 log.error("Storage doesn't support sub configurations");
             } catch (NullPointerException e) {
@@ -158,26 +174,10 @@ public class SearchWS {
      *
      * @return The Configuration object.
      */
-    private Configuration getConfiguration() {
-        final String LOCATION = "java:comp/env/confLocation";
+    private synchronized Configuration getConfiguration() {
+        //final String SEARCH_CONTEXT = "java:comp/env/confLocation";
         if (conf == null) {
-            InitialContext context;
-            try {
-                context = new InitialContext();
-                String paramValue = (String) context.lookup(LOCATION);
-                log.debug("Trying to load configuration from: " + paramValue);
-                conf = Configuration.load(paramValue);
-                log.info("Configuration loaded from " + paramValue);
-            } catch (NamingException e) {
-                if (Resolver.getURL(DEFAULT_CONF_FILE) != null) {
-                    log.info("Failed to lookup env-entry but '" + DEFAULT_CONF_FILE + "' exists. Attempting load");
-                    System.setProperty("SearchWS_config", DEFAULT_CONF_FILE);
-                    conf = Configuration.getSystemConfiguration("SearchWS_config", true);
-                } else {
-                    log.warn("Failed to lookup env-entry. Attempting load of default system configuration");
-                    conf = Configuration.getSystemConfiguration(true);
-                }
-            }
+            conf = Configuration.resolve(CONFIGURATION_LOCATION, CONFIGURATION_LOCATION, DEFAULT_CONF_FILE, true);
         }
         return conf;
     }
@@ -396,7 +396,7 @@ public class SearchWS {
         req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
         try {
-            res = getSearchClient().search(req);
+            res = getSearcher().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
                     "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
@@ -456,7 +456,7 @@ public class SearchWS {
         req.put(IndexKeys.SEARCH_INDEX_LENGTH, length);
 
         try {
-            res = getSearchClient().search(req);
+            res = getSearcher().search(req);
             retXML = res.toXML();
         } catch (IOException e) {
             log.warn("Error executing " + call + ": ", e);
@@ -510,7 +510,7 @@ public class SearchWS {
         req.put(IndexKeys.SEARCH_INDEX_MINCOUNT, minCount);
 
         try {
-            res = getSearchClient().search(req);
+            res = getSearcher().search(req);
             retXML = res.toXML();
         } catch (IOException e) {
             log.warn("Error executing " + call + ": ", e);
@@ -548,7 +548,7 @@ public class SearchWS {
         req.put(DocumentKeys.SEARCH_RESULT_FIELDS, IndexUtils.RECORD_FIELD + ", shortformat, score");
 
         try {
-            res = getSearchClient().search(req);
+            res = getSearcher().search(req);
             retXML = res.toXML();
         } catch (IOException e) {
             log.warn("Error executing morelikethis: '" + id + "', " + numberOfRecords + ". Error was: ", e);
@@ -605,7 +605,7 @@ public class SearchWS {
         Request req = new Request();
         req.addJSON(json);
         try {
-            res = getSearchClient().search(req);
+            res = getSearcher().search(req);
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
@@ -733,7 +733,7 @@ public class SearchWS {
         log.trace("Produced search request, calling search");
         try {
             long callStart = System.currentTimeMillis();
-            res = getSearchClient().search(req);
+            res = getSearcher().search(req);
             res.addTiming("searchws.outercall",
                           System.currentTimeMillis() - callStart);
             log.trace("Got result, converting to XML");
@@ -767,7 +767,7 @@ public class SearchWS {
     public String ping(String message) {
         long pingTime = -System.currentTimeMillis();
         try {
-            ResponseCollection res = getSearchClient().search(new Request());
+            ResponseCollection res = getSearcher().search(new Request());
             String returnMessage = "ping".equals(message) ? "pong" : message;
             returnMessage = returnMessage.replace("&", "&amp;").
                 replace("<", "&lt;").replace(">", "&gt;");
@@ -888,7 +888,7 @@ public class SearchWS {
         Request req = new Request();
         req.put(FacetKeys.SEARCH_FACET_XMLREQUEST, request);
         try {
-            res = getSearchClient().search(req);
+            res = getSearcher().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
 
             // remove any response not related to FacetResult
@@ -970,7 +970,7 @@ public class SearchWS {
         }
 
         try {
-            res = getSearchClient().search(req);
+            res = getSearcher().search(req);
 
             // parse string into dom
             Document dom = DOM.stringToDOM(res.toXML());
