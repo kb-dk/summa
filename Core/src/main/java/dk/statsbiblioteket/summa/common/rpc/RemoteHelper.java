@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -99,7 +100,7 @@ public class RemoteHelper {
         }
 
         log.info(remote.getClass().getSimpleName() + " bound in registry on //localhost:" + registryPort + "/"
-                 + serviceName);
+                 + serviceName + ". Total services in registry: " + Strings.join(reg.list()));
     }
 
     /**
@@ -117,19 +118,24 @@ public class RemoteHelper {
          * unregister a service. */
 
         reg = LocateRegistry.getRegistry("localhost", registryPort);
-        log.debug("Found registry localhost:" + registryPort);
 
-        if (reg == null) {
+        try {
+            reg.list();
+        } catch (java.rmi.ConnectException e) {
             log.warn("Can not unbind service '" + serviceName + "'. No registry running on port " + registryPort);
             return;
         }
+
+        log.debug("Found registry localhost:" + registryPort + " with services " + Strings.join(reg.list()));
 
         try {
             reg.unbind(serviceName);
             shutdownHook.unregisterService(registryPort, serviceName);
             log.info("Unexported service '" + serviceName + "' on port " + registryPort);
         } catch (NotBoundException e) {
-            log.warn(String.format("Service '%s' not bound in registry on port %d", serviceName, registryPort));
+            log.warn(String.format("Service '%s' not bound in registry on port %d", serviceName, registryPort), e);
+        } catch (Exception e) {
+            log.warn(String.format("Unable to unbind service '%s' on port %d", serviceName, registryPort), e);
         }
     }
 
@@ -239,7 +245,7 @@ public class RemoteHelper {
                 url = new URL(uri);
             } catch (MalformedURLException e) {
                 log.warn("Malformed URL in codepath", e);
-                throw new InvalidCodeBaseException(String.format("Malformed url: %s, error was: %s", uri, 
+                throw new InvalidCodeBaseException(String.format("Malformed url: %s, error was: %s", uri,
                                                                  e.getMessage()));
             }
 
@@ -425,13 +431,17 @@ public class RemoteHelper {
         public void run() {
             // We actually don't do conccurent modifications of the
             // serviceRegistry map here
+            log.info("Cleaning up all services on " + serviceRegistry.size() + " registry ports from shutdown hook");
             for (Map.Entry<Integer, List<String>> entry : serviceRegistry.entrySet()) {
                 int registryPort = entry.getKey();
-
+                if (entry.getValue().isEmpty()) {
+                    log.info("No services registered under port " + registryPort);
+                }
                 // We clone the service name list to avoid
                 // concurrent modifications
                 for (String serviceName : new LinkedList<String>(entry.getValue())) {
                     try {
+                        log.info("Shutdown hook: Unexporting " + serviceName + " from port " + registryPort);
                         unExportRemoteInterface(serviceName, registryPort);
                     } catch (IOException e) {
                         log.warn(String.format(

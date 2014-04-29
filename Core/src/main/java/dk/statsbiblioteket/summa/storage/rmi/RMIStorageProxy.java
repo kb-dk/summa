@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
@@ -121,6 +122,8 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
 
     private final boolean flattenExceptions;
 
+    private boolean mbeanExported = false;
+
     /**
      * Constructs a RMI Storage proxy with a given configuration.
      *
@@ -168,6 +171,17 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
 
         RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
 
+        try {
+            RemoteHelper.exportMBean (this);
+            mbeanExported = true;
+        } catch (Exception e) {
+            String msg = "Unable to export MBean for '" + this;
+//            if (log.isTraceEnabled()) {
+                //log.warn(msg, e);
+//            } else {
+                log.warn(msg);
+  //          }
+        }
 /*        try {
             RemoteHelper.exportMBean(this);
         } catch (Exception e) {
@@ -427,6 +441,12 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
     @Override
     public void close() throws RemoteException {
         try {
+            log.info("Unexporting " + this);
+            UnicastRemoteObject.unexportObject(this, true);
+        } catch (NoSuchObjectException e) {
+            log.warn("Attempted unexport of " + this + " but it was not registered", e);
+        }
+        try {
             RemoteHelper.unExportRemoteInterface(serviceName, registryPort);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
@@ -444,7 +464,12 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
             }
 
             try {
-                RemoteHelper.unExportMBean(this);
+                if (mbeanExported) {
+                    log.info("Closing down MBean for " + this);
+                    RemoteHelper.unExportMBean(this);
+                } else {
+                    log.debug("Skipping unexport of MBean for " + this + " and binding failed");
+                }
             } catch (Throwable t) {
                 RemoteHelper.exitOnThrowable(log, String.format("close().unExportMBean() for %d:%s", registryPort,
                                                                 serviceName), t, flattenExceptions);

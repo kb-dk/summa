@@ -14,16 +14,14 @@
 package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.common.util.StringExtraction;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
-import dk.statsbiblioteket.summa.search.PagingSearchNode;
-import dk.statsbiblioteket.summa.search.SearchNode;
-import dk.statsbiblioteket.summa.search.SearchNodeFactory;
-import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.*;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -77,6 +75,14 @@ public class SummonSearchNodeTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(SummonSearchNodeTest.class);
+    }
+
+    public void testNestedSearcher() throws Exception {
+        Configuration conf = Configuration.load(Resolver.getFile(
+                "support/summon/search/nested_summon_searcher.xml").getAbsolutePath());
+        SummaSearcher searcher = SummaSearcherFactory.createSearcher(conf);
+        System.out.println(searcher.search(new Request(DocumentKeys.SEARCH_QUERY, "foo")));
+        searcher.close();
     }
 
     public void testSpecificProblemSearch() throws RemoteException {

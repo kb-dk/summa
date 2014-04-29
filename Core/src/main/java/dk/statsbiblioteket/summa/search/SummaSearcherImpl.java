@@ -263,8 +263,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
                     queries.info(this.getClass().getSimpleName() + " finished "
                                  + (success ? "successfully" : "unsuccessfully (see logs for errors)")
                                  + " in " + (System.nanoTime() - fullStartTime) / 1000000
-                                 + "ms with " + hits + " hits. "
-                                 + "Request was " + originalRequest
+                                 + "ms with " + hits + " hits. " + "Request was " + originalRequest
                                  + " with Timing(" + responses.getTiming() + "). " + getStats());
                 }
             }
@@ -507,5 +506,15 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
      */
     public SearchNode getSearchNode() {
         return searchNode;
+    }
+
+    @Override
+    public String toString() {
+        return "SummaSearcherImpl(searcherAvailabilityTimeout=" + searcherAvailabilityTimeout +
+               ", searchQueue.size=" + searchQueue.getQueueLength() + ", freeSlots=" + freeSlots.getQueueLength() +
+               ", searchNode=" + searchNode + ", ..., indexFolder=" + indexFolder +
+               ", lastResponseTime=" + lastResponseTime + ", stats=" + getStats() +
+               ", concurrentSearches=" + concurrentSearches + ", emptySearchAllowed=" + emptySearchAllowed +
+               ", maxConcurrent=" + maxConcurrent + ")";
     }
 }
