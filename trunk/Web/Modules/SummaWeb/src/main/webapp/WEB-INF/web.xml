@@ -31,6 +31,10 @@
     </servlet>
 
     <listener>
+        <listener-class>dk.statsbiblioteket.summa.common.configuration.Log4JSetup</listener-class>
+    </listener>
+
+    <listener>
         <listener-class>dk.statsbiblioteket.summa.web.services.SearchWS</listener-class>
     </listener>
 

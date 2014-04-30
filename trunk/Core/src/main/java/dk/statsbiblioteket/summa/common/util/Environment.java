@@ -231,9 +231,13 @@ public class Environment {
      * Adds a hook to the JVM listening for shutdown and logging when it happens.
      */
     public static void addLoggingShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new CustomShutdownHook());
+        Runtime.getRuntime().addShutdownHook(new CustomShutdownHook("Shutdown logger"));
     }
     private static class CustomShutdownHook extends Thread {
+        private CustomShutdownHook(String name) {
+            super(name);
+        }
+
         @Override
         public void run(){
             log.info("JVM shutdown detected");
