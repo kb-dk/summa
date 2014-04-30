@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Log4JSetup;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.Environment;
@@ -96,8 +97,7 @@ public class SearchWS implements ServletContextListener {
      */
     public SearchWS() {
         log = LogFactory.getLog(SearchWS.class);
-        Environment.checkJavaVersion();
-        getSearcher(); // This _should_ work as remote searchers should be ready before the web service is started
+        // Do not log anything here as contextInitialized will be called _after_ the constructor
     }
 
     /**
@@ -105,30 +105,32 @@ public class SearchWS implements ServletContextListener {
      *
      * @return A SearchClient.
      */
-    private synchronized SummaSearcher getSearcher() {
-        if (searcher == null) {
-            try {
-                Configuration conf = getConfiguration();
-                if (conf.containsKey("summa.web.search")) {
-                    log.debug("Using inner configuration summa.web.search");
-                    conf = conf.getSubConfiguration("summa.web.search");
-                } else {
-                    log.debug("No inner configuration for searchWS. Using directly");
+    private SummaSearcher getSearcher() {
+        synchronized (SearchWS.class) {
+            if (searcher == null) {
+                try {
+                    Configuration conf = getConfiguration();
+                    if (conf.containsKey("summa.web.search")) {
+                        log.debug("Using inner configuration summa.web.search");
+                        conf = conf.getSubConfiguration("summa.web.search");
+                    } else {
+                        log.debug("No inner configuration for searchWS. Using directly");
+                    }
+                    if (conf.containsKey(SummaSearcher.CONF_CLASS)) {
+                        log.info("Configuration " + SummaSearcher.CONF_CLASS + " present. Creating direct searcher");
+                        searcher = SummaSearcherFactory.createSearcher(conf);
+                    } else {
+                        log.info("Configuration " + SummaSearcher.CONF_CLASS + " present. Creating SearchClient");
+                        searcher = new SearchClient(conf);
+                    }
+                } catch (SubConfigurationsNotSupportedException e) {
+                    log.error("Storage doesn't support sub configurations");
+                } catch (NullPointerException e) {
+                    log.error("Failed to load subConfiguration for search.", e);
                 }
-                if (conf.containsKey(SummaSearcher.CONF_CLASS)) {
-                    log.info("Configuration key " + SummaSearcher.CONF_CLASS + " present. Creating direct searcher");
-                    searcher = SummaSearcherFactory.createSearcher(conf);
-                } else {
-                    log.info("Configuration key " + SummaSearcher.CONF_CLASS + " present. Creating SearchClient");
-                    searcher = new SearchClient(conf);
-                }
-            } catch (SubConfigurationsNotSupportedException e) {
-                log.error("Storage doesn't support sub configurations");
-            } catch (NullPointerException e) {
-                log.error("Failed to load subConfiguration for search.", e);
             }
+            return searcher;
         }
-        return searcher;
     }
 
     /**
@@ -257,7 +259,7 @@ public class SearchWS implements ServletContextListener {
             res = getSuggestClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
+                                         "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
             log.warn("Error executing getSuggestions: '" + prefix + "', " + maxSuggestions + ". Error was: ", e);
@@ -275,7 +277,7 @@ public class SearchWS implements ServletContextListener {
         }
         return retXML;
     }
- 
+
     /**
      * Web method for deleting a suggestion from storage.
      * @param suggestion The suggestion that should be deleted from storage.
@@ -317,7 +319,7 @@ public class SearchWS implements ServletContextListener {
             res = getSuggestClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
+                                         "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
             log.warn("Error executing getRecentSuggestions: " + ageSeconds + "s, " + maxSuggestions + ". Error was: ",
@@ -400,8 +402,8 @@ public class SearchWS implements ServletContextListener {
         try {
             res = getSearcher().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
-            Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
+            Node subDom = DOM.selectNode(
+                    dom, "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
             retXML = DOM.domToString(subDom);
             if (retXML == null || "".equals(retXML) && log.isDebugEnabled()) {
                 log.debug("getField(" + id + ", " + fieldName + ") did not give any return-XML. " +
@@ -617,7 +619,7 @@ public class SearchWS implements ServletContextListener {
         }
         if (log.isDebugEnabled()) {
             log.debug(String.format("directJSON(%s) finished in %s ms%s",
-                json, System.currentTimeMillis() - startTime, getTiming(res)));
+                                    json, System.currentTimeMillis() - startTime, getTiming(res)));
         }
         return retXML;
     }
@@ -646,7 +648,7 @@ public class SearchWS implements ServletContextListener {
     public String simpleSearchSorted(
             String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
         if (log.isTraceEnabled()) {
-            log.debug(String.format(
+            log.trace(String.format(
                     "simpleSearchSorted(query='%s', numberOfRecords=%d, " +
                     "startIndex=%d, sortKey='%s', reverse=%b) entered",
                     query, numberOfRecords, startIndex, sortKey, reverse));
@@ -700,13 +702,10 @@ public class SearchWS implements ServletContextListener {
                         req.put(DocumentKeys.SEARCH_EXPLAIN, true);
                         continue;
                     }
-                    log.debug(String.format(
-                            "Got unknown processing option '%s' in query '%s'",
-                            option, query));
+                    log.debug(String.format("Got unknown processing option '%s' in query '%s'", option, query));
                 }
             } else {
-                log.trace(String.format("No processing options for query '%s'",
-                                        query));
+                log.trace(String.format("No processing options for query '%s'", query));
             }
         } catch (Exception e) {
             log.warn(String.format(
@@ -736,24 +735,22 @@ public class SearchWS implements ServletContextListener {
         try {
             long callStart = System.currentTimeMillis();
             res = getSearcher().search(req);
-            res.addTiming("searchws.outercall",
-                          System.currentTimeMillis() - callStart);
+            res.addTiming("searchws.outercall", System.currentTimeMillis() - callStart);
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
             log.warn(String.format(
                     "Error executing query '" + PARAMS + "'. Error was: %s",
                     filter, query, numberOfRecords, startIndex, sortKey, reverse, e.getMessage()), e);
-            String mes = String.format("Error performing query: %s", 
-                                                                e.getMessage());
+            String mes = String.format("Error performing query: %s", e.getMessage());
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
 
         if (log.isDebugEnabled()) {
             log.debug(String.format(
-                "simpleSearchSorted(" + PARAMS + ") finished in %s ms%s",
-                filter, query, numberOfRecords, startIndex, sortKey, reverse,
-                System.currentTimeMillis() - startTime,  getTiming(res)));
+                    "simpleSearchSorted(" + PARAMS + ") finished in %s ms%s",
+                    filter, query, numberOfRecords, startIndex, sortKey, reverse,
+                    System.currentTimeMillis() - startTime,  getTiming(res)));
         }
         return retXML;
     }
@@ -771,15 +768,14 @@ public class SearchWS implements ServletContextListener {
         try {
             ResponseCollection res = getSearcher().search(new Request());
             String returnMessage = "ping".equals(message) ? "pong" : message;
-            returnMessage = returnMessage.replace("&", "&amp;").
-                replace("<", "&lt;").replace(">", "&gt;");
+            returnMessage = returnMessage.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
             pingTime += System.currentTimeMillis();
             final String pingResponse = String.format(
-                "<pingresponse >\n"
-                + "<message>%s</message>\n"
-                + "<ms>%d</ms>\n"
-                + "</pingresponse>\n",
-                returnMessage, pingTime);
+                    "<pingresponse >\n"
+                    + "<message>%s</message>\n"
+                    + "<ms>%d</ms>\n"
+                    + "</pingresponse>\n",
+                    returnMessage, pingTime);
             res.add(new ResponseImpl() {
                 @Override
                 public String getName() {
@@ -796,12 +792,10 @@ public class SearchWS implements ServletContextListener {
                     return pingResponse;
                 }
             });
-            log.debug(
-                "Performed ping for '" + message + "' in " + pingTime + "ms");
+            log.debug("Performed ping for '" + message + "' in " + pingTime + "ms");
             return res.toXML();
         } catch (IOException e) {
-            String mes = String.format("Error pinging with message '%s': %s",
-                                       message, e.getMessage());
+            String mes = String.format("Error pinging with message '%s': %s", message, e.getMessage());
             log.warn(mes, e);
             return  getErrorXML("PingResponse", mes, e);
         }
@@ -856,8 +850,7 @@ public class SearchWS implements ServletContextListener {
 
         String retXML = advancedFacet(query, null);
 
-        log.debug("simpleFacet('" + query + "') finished in "
-                  + (System.currentTimeMillis() - startTime) + "ms");
+        log.debug("simpleFacet('" + query + "') finished in " + (System.currentTimeMillis() - startTime) + "ms");
         return retXML;
     }
 
@@ -874,13 +867,11 @@ public class SearchWS implements ServletContextListener {
      */
     public String exposedFacet(String request, String format) {
         if (log.isTraceEnabled()) {
-            log.trace("exposedFacet called with format '" + format
-                      + "' and request\n" + request);
+            log.trace("exposedFacet called with format '" + format + "' and request\n" + request);
         }
         long facetTime = -System.currentTimeMillis();
         if (!EXPOSED_FORMAT_XML.equals(format)) {
-            String message ="exposedFacet called with unknown format '"
-                     + format + "'";
+            String message ="exposedFacet called with unknown format '" + format + "'";
             log.warn(message);
             return getErrorXML("exposedFacet", message, null);
         }
@@ -895,14 +886,14 @@ public class SearchWS implements ServletContextListener {
 
             // remove any response not related to FacetResult
             NodeList nl =
-                        DOM.selectNodeList(dom, "/responsecollection/response");
+                    DOM.selectNodeList(dom, "/responsecollection/response");
             for (int i = 0; i < nl.getLength(); i++) {
                 Node n = nl.item(i);
                 NamedNodeMap attr = n.getAttributes();
                 Node attr_name = attr.getNamedItem("name");
                 if (attr_name != null) {
                     if (!"ExposedFacetResult".equals(
-                        attr_name.getNodeValue())) {
+                            attr_name.getNodeValue())) {
                         // this is not FacetResult so we remove it
                         n.getParentNode().removeChild(n);
                     }
@@ -912,19 +903,16 @@ public class SearchWS implements ServletContextListener {
             // transform dom back into a string
             retXML = DOM.domToString(dom);
         } catch (IOException e) {
-            log.warn("Error faceting exposed request: '" + request + "'" +
-                    ". Error was: ", e);
+            log.warn("Error faceting exposed request: '" + request + "'" + ". Error was: ", e);
             String mes = "Error performing request";
             retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error faceting request: '" + request + "'" +
-                    ". Error was: ", e);
+            log.warn("Error faceting request: '" + request + "'" + ". Error was: ", e);
             String mes = "Error performing request";
             retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
         }
         facetTime += System.currentTimeMillis();
-        log.debug("exposedFacet(..., " + format + ") finished in "
-                  + facetTime + "ms" + getTiming(res));
+        log.debug("exposedFacet(..., " + format + ") finished in " + facetTime + "ms" + getTiming(res));
         return retXML;
 
     }
@@ -978,8 +966,7 @@ public class SearchWS implements ServletContextListener {
             Document dom = DOM.stringToDOM(res.toXML());
 
             // remove any response not related to FacetResult
-            NodeList nl =
-                        DOM.selectNodeList(dom, "/responsecollection/response");
+            NodeList nl = DOM.selectNodeList(dom, "/responsecollection/response");
             for (int i = 0; i < nl.getLength(); i++) {
                 Node n = nl.item(i);
                 NamedNodeMap attr = n.getAttributes();
@@ -995,20 +982,17 @@ public class SearchWS implements ServletContextListener {
             // transform dom back into a string
             retXML = DOM.domToString(dom);
         } catch (IOException e) {
-            log.warn("Error faceting query: '" + query + "'" +
-                    ". Error was: ", e);
+            log.warn("Error faceting query: '" + query + "'" + ". Error was: ", e);
             String mes = "Error performing query";
             retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
         } catch (TransformerException e) {
-            log.warn("Error faceting query: '" + query + "'" +
-                    ". Error was: ", e);
+            log.warn("Error faceting query: '" + query + "'" + ". Error was: ", e);
             String mes = "Error performing query";
             retXML = getErrorXML(FacetResultExternal.NAME, mes, e);
         }
 
-        log.debug("advancedFacet('" + query + "', '" + facetKeys
-                + "') finished in " + (System.currentTimeMillis() - startTime)
-                + "ms" + getTiming(res));
+        log.debug("advancedFacet('" + query + "', '" + facetKeys + "') finished in "
+                  + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         return retXML;
     }
 
@@ -1029,8 +1013,7 @@ public class SearchWS implements ServletContextListener {
         try {
             writer = xmlOutputFactory.createXMLStreamWriter(sw);
         } catch (XMLStreamException e) {
-            throw new RuntimeException(
-                    "Unable to create XMLStreamWriter from factory", e);
+            throw new RuntimeException("Unable to create XMLStreamWriter from factory", e);
         }
         // Write XML document.
         try {
@@ -1056,9 +1039,7 @@ public class SearchWS implements ServletContextListener {
 
             writer.flush(); // Just to make sure
         } catch (XMLStreamException e) {
-            throw new RuntimeException(
-                    "Got XMLStreamException while constructing XML from "
-                    + "search response", e);
+            throw new RuntimeException("Got XMLStreamException while constructing XML from search response", e);
         }
         return sw.toString();
     }
@@ -1069,7 +1050,10 @@ public class SearchWS implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        log.debug("contextInitialized called (no-op)");
+        Log4JSetup.ensureInitialized(sce);
+        Environment.checkJavaVersion();
+        //  getSearcher(); // Do not start search here as it might rely on batch search service
+        log.info("SearchWS context initialized");
     }
     @Override
     public void contextDestroyed(ServletContextEvent sce) {

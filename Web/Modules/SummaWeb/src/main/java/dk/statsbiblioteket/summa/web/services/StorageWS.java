@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.web.services;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Log4JSetup;
 import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
 import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
@@ -97,23 +98,8 @@ public class StorageWS implements ServletContextListener {
      * Constructor for Storage WebService.
      */
     public StorageWS() {
-        Environment.checkJavaVersion();
+        // Do nothing. All initialization is done in contextInitialized or lazy
         synchronized (this.getClass()) {
-            if (mergers != null) {
-                return;
-            }
-            log.debug("Creating " + NUMBER_OF_MERGERS + " multi volume mergers");
-            mergers = new ArrayBlockingQueue<MarcMultiVolumeMerger>(NUMBER_OF_MERGERS);
-            for (int i = 0; i < NUMBER_OF_MERGERS; i++) {
-                try {
-                    mergers.put(new MarcMultiVolumeMerger(getConfiguration()));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(
-                            "Interrupted while trying to add MarcMultiVolumeMergers to the queue", e);
-                }
-            }
-            getStorage();
-            log.info("StorageWS ready");
        }
     }
 
@@ -122,7 +108,7 @@ public class StorageWS implements ServletContextListener {
      *
      * @return A StorageReaderClient.
      */
-    private synchronized ReadableStorage getStorage() {
+    private static synchronized ReadableStorage getStorage() {
         if (storage == null) {
             Configuration conf = getConfiguration();
             escapeContent = conf.getBoolean(RecordUtil.CONF_ESCAPE_CONTENT, escapeContent);
@@ -149,7 +135,7 @@ public class StorageWS implements ServletContextListener {
      *
      * @return The Configuration object.
      */
-    private synchronized Configuration getConfiguration() {
+    private static synchronized Configuration getConfiguration() {
         if (conf == null) {
             conf = Configuration.resolve(CONFIGURATION_LOCATION, CONFIGURATION_LOCATION, DEFAULT_CONF_FILE, true);
         }
@@ -331,12 +317,27 @@ public class StorageWS implements ServletContextListener {
      * Return a merger used by this web service.
      * @return A merger used by this web service.
      */
-    private MarcMultiVolumeMerger getMerger() {
+    private static synchronized MarcMultiVolumeMerger getMerger() {
+        if (mergers == null) {
+            createMergers();
+        }
         try {
             return mergers.take();
         } catch (InterruptedException e) {
             throw new RuntimeException(
-                "Interrupted while trying to retrieve a MarcMultiVolumeMerger from the queue", e);
+                    "Interrupted while trying to retrieve a MarcMultiVolumeMerger from the queue", e);
+        }
+    }
+
+    private static synchronized void createMergers() {
+        log.debug("Creating " + NUMBER_OF_MERGERS + " multi volume mergers");
+        mergers = new ArrayBlockingQueue<MarcMultiVolumeMerger>(NUMBER_OF_MERGERS);
+        for (int i = 0; i < NUMBER_OF_MERGERS; i++) {
+            try {
+                mergers.put(new MarcMultiVolumeMerger(getConfiguration()));
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Interrupted while trying to add MarcMultiVolumeMergers to the queue", e);
+            }
         }
     }
 
@@ -348,14 +349,19 @@ public class StorageWS implements ServletContextListener {
         try {
             mergers.put(m);
         } catch (InterruptedException e) {
-            throw new RuntimeException(
-                "Interrupted while trying to add a MarcMultiVolumeMerger to the queue", e);
+            throw new RuntimeException("Interrupted while trying to add a MarcMultiVolumeMerger to the queue", e);
         }
     }
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        log.debug("contextInitialized called (no-op)");
+        Log4JSetup.ensureInitialized(sce);
+        Environment.checkJavaVersion();
+        if (mergers == null) {
+            createMergers();
+        }
+        // getStorage(); // Do not start storage here as it might rely on batch storage
+        log.info("StorageWS context initialized");
     }
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
