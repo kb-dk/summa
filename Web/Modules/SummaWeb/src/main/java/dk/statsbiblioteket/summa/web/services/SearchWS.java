@@ -1052,7 +1052,7 @@ public class SearchWS implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         Log4JSetup.ensureInitialized(sce);
         Environment.checkJavaVersion();
-        //  getSearcher(); // Do not start search here as it might rely on batch search service
+        getSearcher();  // We need to start it here to get RMI activated
         log.info("SearchWS context initialized");
     }
     @Override
