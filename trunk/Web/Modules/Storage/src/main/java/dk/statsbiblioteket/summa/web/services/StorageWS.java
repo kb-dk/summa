@@ -147,7 +147,7 @@ public class StorageWS {
             } catch (NamingException e) {
                 if (Resolver.getURL(DEFAULT_CONF_FILE) != null) {
                     log.info("Failed to lookup env-entry but '" + DEFAULT_CONF_FILE + "' exists. Attempting load");
-                    System.setProperty("StorageWS_config", DEFAULT_CONF_FILE);
+                    //System.setProperty("StorageWS_config", DEFAULT_CONF_FILE);
                     conf = Configuration.getSystemConfiguration("StorageWS_config", true);
                 } else {
                     log.warn("Failed to lookup env-entry. Attempting load of default system configuration");

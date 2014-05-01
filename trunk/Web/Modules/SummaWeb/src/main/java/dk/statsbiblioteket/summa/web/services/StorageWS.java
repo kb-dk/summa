@@ -360,7 +360,7 @@ public class StorageWS implements ServletContextListener {
         if (mergers == null) {
             createMergers();
         }
-        // getStorage(); // Do not start storage here as it might rely on batch storage
+        getStorage(); // We need to start it here to get RMI activated
         log.info("StorageWS context initialized");
     }
     @Override
