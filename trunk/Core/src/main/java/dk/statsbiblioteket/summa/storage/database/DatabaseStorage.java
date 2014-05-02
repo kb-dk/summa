@@ -1620,15 +1620,14 @@ public abstract class DatabaseStorage extends StorageBase {
             for (String currentID : ids){
                 Record record = getRecord(currentID, options);
                 result.add(record);                               
-            }            
-            String message = "Finished getRecords(" + ids.size() + " ids, ...) with " + result.size() + " results in "
+            }
+        if (log.isDebugEnabled()) {
+            String message = "Finished getRecords(" + ids.size() + " ids (" + Strings.join(ids, 10) + ")) with "
+                             + result.size() + " results (" + Strings.join(result, 10) + ") in "
                              + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(message);
-            recordlog.info(message);
-        
-            
-            
-            
+        }
+//            recordlog.info(message); // Already logged in getRecord
             return result;
         
     }
