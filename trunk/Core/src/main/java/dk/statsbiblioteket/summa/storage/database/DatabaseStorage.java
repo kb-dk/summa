@@ -1672,9 +1672,14 @@ public abstract class DatabaseStorage extends StorageBase {
     public Record getRecordWithFullObjectTree(String recordId) throws IOException {
         long startTime = System.currentTimeMillis();
         log.trace("getRecordWithFullObjectTree(" + recordId + ") called");
+
+        long connectTime = -System.nanoTime();
         Connection conn = getTransactionalConnection();
+        connectTime += System.nanoTime();
+
         ResultSet resultSet = null;
         try {
+            long parentIDTime = -System.nanoTime();
             conn.setReadOnly(true);
 
             Boolean mayHaveParent = true;
@@ -1700,15 +1705,22 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
                 parentRS.close();
             }
+            parentIDTime += System.nanoTime();
+
             //Simple loading strategy. Load parent (full). Then load all children(full) in 1 SQL. Do this recurssive.
 
             // TODO: Use handle directly
+            long statementTime = -System.nanoTime();
             StatementHandle handle = statementHandler.getGetRecord(null);
             PreparedStatement stmt = conn.prepareStatement(handle.getSql());
-
             stmt.setString(1, parentId);//This is the top node in the tree
-            resultSet = stmt.executeQuery();
+            statementTime += System.nanoTime();
 
+            long executeTime = -System.nanoTime();
+            resultSet = stmt.executeQuery();
+            executeTime += System.nanoTime();
+
+            long iterateTime = -System.nanoTime();
             if (!resultSet.next()) {
                 log.warn("Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"
                          + parentId + " .Only children are loaded");
@@ -1716,8 +1728,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 resultSet = stmt.executeQuery();
                 resultSet.next();
             }
+            iterateTime += System.nanoTime();
 
-
+            long childTime = -System.nanoTime();
             Record topParentRecord = constructRecordFromRSNoRelationsSet(resultSet);
             if (!topParentRecord.isHasRelations()) {
                 //Sanity check. Can probably be removed after some time if this never happens.
@@ -1726,21 +1739,31 @@ public abstract class DatabaseStorage extends StorageBase {
                             "Database inconsistency hasRelations for id" + topParentRecord.getId() + " and "
                             + recordId);
                 }
-                log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
-                          + (System.currentTimeMillis() - startTime) + "ms");
-
+                if (log.isDebugEnabled()) {
+                    log.debug(String.format(
+                            "Finished getRecordWithFullObjectTree(%s) in %dms total (%.1f connect, %.1f parentID, " +
+                            "%.1f prepareStatement, %.1f execute, %.1f iterate)",
+                            recordId, System.currentTimeMillis() - startTime, connectTime/M, parentIDTime/M,
+                            statementTime/M, executeTime/M, iterateTime/M));
+                }
                 return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests
             }
 
             loadAndSetChildRelations(topParentRecord, conn,null);
+            childTime += System.nanoTime();
 
+            long postOrderTime = -System.nanoTime();
             //Find the recordId in the object tree and return this. Minimal performance overhead here.
             //Post-order transversal algorithm
             Record recordNode = findRecordIdPostOrderTransversal(recordId, topParentRecord);
-
-            log.debug("Finished getRecordWithFullObjectTree(" + recordId + ", ...) in "
-                      + (System.currentTimeMillis() - startTime) + "ms");
-
+            postOrderTime += System.nanoTime();
+            if (log.isDebugEnabled()) {
+                log.debug(String.format(
+                        "Finished getRecordWithFullObjectTree(%s) in %dms total (%.1f connect, %.1f parentID, " +
+                        "%.1f prepareStatement, %.1f execute, %.1f iterate, %.1f child, %.1f postOrder)",
+                        recordId, System.currentTimeMillis() - startTime, connectTime/M, parentIDTime/M,
+                        statementTime/M, executeTime/M, iterateTime/M, childTime/M, postOrderTime/M));
+            }
             return recordNode;
 
         } catch (SQLException e) {
@@ -1756,6 +1779,7 @@ public abstract class DatabaseStorage extends StorageBase {
             closeConnection(conn);
         }
     }
+    public static final double M = 1000000.0;
 
     //Post-order traversal is most obvious here as this traverses nodes in same order they appear in childrenlist.
     //Traverses the tree left to right and return the record matching recordId.
