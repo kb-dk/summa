@@ -1612,26 +1612,25 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
-        Connection conn = getTransactionalConnection();
-        try {
-            conn.setReadOnly(true);
-        } catch (SQLException e) {
-            // This is not fatal for the operation so try and proceed
-            // past the exception
-            log.warn("Failed to optimize connection for batch retrieval", e);
-        }
-
-        try {
-            List<Record> result = getRecordsWithConnection(ids, options, conn);
+      
+        List<Record> result= new  ArrayList<Record>();
+        
             profiler.beat();
+        
+            for (String currentID : ids){
+                Record record = getRecord(currentID, options);
+                result.add(record);                               
+            }            
             String message = "Finished getRecords(" + ids.size() + " ids, ...) with " + result.size() + " results in "
                              + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(message);
             recordlog.info(message);
+        
+            
+            
+            
             return result;
-        } finally {
-            closeConnection(conn);
-        }
+        
     }
 
     /**
@@ -1643,6 +1642,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return A list of records.
      * @throws IOException If error occur while fetching records.
      */
+    @Deprecated
     public List<Record> getRecordsWithConnection(
             List<String> ids, QueryOptions options, Connection conn) throws IOException {
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
