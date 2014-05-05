@@ -1887,7 +1887,9 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         try {
-
+            if (log.isDebugEnabled()) {
+                log.debug("getRecord(" + id + ", ...) with meta " + options.meta().toFormal());
+            }
             Record record = getRecordWithConnection(id, options, conn);
             profiler.beat();
             String m = "Finished getRecord(" + id + ", ...) " + (record == null ? "without" : "with")

@@ -309,8 +309,19 @@ public class SummaSearcherAggregator implements SummaSearcher {
 
     @Override
     public void close() throws IOException {
-        log.info("Close called for aggregator. Remote SummaSearchers will be disconnected but not closed");
+        log.info("Close called for aggregator. Closing each searcher and shutting down executor");
+        for (Pair<String, SearchClient> searchPair: searchers) {
+            searchPair.getValue().close();
+        }
         searchers.clear();
+        executor.shutdownNow();
+        try {
+            if (!executor.awaitTermination(1, TimeUnit.MINUTES)) {
+                log.warn("close(): Timed out (1 minute) when waiting for executor to terminate");
+            }
+        } catch (InterruptedException e) {
+            log.warn("close(): Interrupted while awaiting termination on executor", e);
+        }
     }
 
     private static class SearcherCallable implements Callable<ResponseCollection> {

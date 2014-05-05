@@ -26,10 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.*;
 
 /**
  * All interaction with this SearchNode results in the same interaction
@@ -131,6 +128,16 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
         } catch (RemoteException e) {
             log.error("Got a RemoteException during close. This should not happen", e);
         }
+        log.debug("Shutting down executor");
+        executor.shutdownNow();
+        try {
+            if (!executor.awaitTermination(1, TimeUnit.MINUTES)) {
+                log.warn("close(): Timed out (1 minute) when waiting for executor to terminate");
+            }
+        } catch (InterruptedException e) {
+            log.warn("close(): Interrupted while awaiting termination on executor", e);
+        }
+
     }
 
     /**
