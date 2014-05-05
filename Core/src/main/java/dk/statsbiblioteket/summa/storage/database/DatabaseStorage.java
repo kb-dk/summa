@@ -1710,8 +1710,10 @@ public abstract class DatabaseStorage extends StorageBase {
             //Simple loading strategy. Load parent (full). Then load all children(full) in 1 SQL. Do this recurssive.
 
             // TODO: Use handle directly
+
             long statementTime = -System.nanoTime();
-            StatementHandle handle = statementHandler.getGetRecord(null);
+            StatementHandle handle = statementHandler.getGetRecordFullObjectTree();
+
             PreparedStatement stmt = conn.prepareStatement(handle.getSql());
             stmt.setString(1, parentId);//This is the top node in the tree
             statementTime += System.nanoTime();
