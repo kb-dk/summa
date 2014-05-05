@@ -215,9 +215,8 @@ public class StorageWS implements ServletContextListener {
         log.debug("realGetRecords(ids[size: '" + ids.size() + "'])");
 
         try {
-            QueryOptions queryOptions = null;
             totalTime = System.currentTimeMillis();
-            List<Record> records = getStorage().getRecords(ids, queryOptions);
+            List<Record> records = getStorage().getRecords(ids, null);
             time = System.currentTimeMillis() - totalTime;
 
             xmlTime = -System.currentTimeMillis();
@@ -273,15 +272,15 @@ public class StorageWS implements ServletContextListener {
         long xmlTime = 0;
 
         String retXML;
-        QueryOptions q = null;
+        //QueryOptions q = null;
         String timing;
 
         try {
-            if (expand) {
-                q = new QueryOptions(null, null, -1, -1);
-            }
+/*            if (expand) {
+                q = null; //new QueryOptions(null, null, -1, -1);
+            }*/
             long getTime = System.currentTimeMillis();
-            Record record = getStorage().getRecord(id, q);
+            Record record = getStorage().getRecord(id, null);
             timing = "storage.getrecord.raw:" + (System.currentTimeMillis() - getTime);
 
             if (record == null) {

@@ -430,23 +430,38 @@ public class RemoteHelper {
         public void run() {
             // We actually don't do conccurent modifications of the
             // serviceRegistry map here
-            log.info("Cleaning up all services on " + serviceRegistry.size() + " registry ports from shutdown hook");
+            safeLogInfo("Cleaning up all services on " + serviceRegistry.size() + " registry ports from shutdown hook");
             for (Map.Entry<Integer, List<String>> entry : serviceRegistry.entrySet()) {
                 int registryPort = entry.getKey();
                 if (entry.getValue().isEmpty()) {
-                    log.info("No services registered under port " + registryPort);
+                    safeLogInfo("No services registered under port " + registryPort);
                 }
                 // We clone the service name list to avoid
                 // concurrent modifications
                 for (String serviceName : new LinkedList<String>(entry.getValue())) {
                     try {
-                        log.info("Shutdown hook: Unexporting " + serviceName + " from port " + registryPort);
+                        safeLogInfo("Shutdown hook: Unexporting " + serviceName + " from port " + registryPort);
                         unExportRemoteInterface(serviceName, registryPort);
                     } catch (IOException e) {
-                        log.warn(String.format(
+                        safeLogWarn(String.format(
                                 "Failed to unexport remote interface '%s' on port %d", serviceName, registryPort));
                     }
                 }
+            }
+        }
+        private void safeLogInfo(String message) {
+            try {
+                log.info(message);
+            } catch (NullPointerException e) {
+                // The logger backend seems to have shut down. We ignore this as the whole JVM is shutting down
+            }
+        }
+        @SuppressWarnings("UseOfSystemOutOrSystemErr")
+        private void safeLogWarn(String message) {
+            try {
+                log.warn(message);
+            } catch (NullPointerException e) {
+                System.err.println("Unable to log: " + message);
             }
         }
     }

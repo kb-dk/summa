@@ -190,17 +190,17 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil-common</artifactId>
-                <version>0.5.19</version>
+                <version>0.5.20</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil-qa</artifactId>
-                <version>0.5.19</version>
+                <version>0.5.20</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil-xproperties</artifactId>
-                <version>0.5.19</version>
+                <version>0.5.20</version>
             </dependency>
             <dependency>
                 <groupId>fastutil</groupId>
