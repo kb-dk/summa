@@ -64,9 +64,9 @@ public class SearchWS implements ServletContextListener {
     private Log log;
 
     static SummaSearcher searcher;
-    static SearchClient suggester;
-    static SearchClient didyoumean;
-    Configuration conf;
+    static SummaSearcher suggester;
+    static SummaSearcher didyoumean;
+    private Configuration conf;
 
     /**
      * Local XML output factory.
@@ -108,47 +108,45 @@ public class SearchWS implements ServletContextListener {
     private SummaSearcher getSearcher() {
         synchronized (SearchWS.class) {
             if (searcher == null) {
-                try {
-                    Configuration conf = getConfiguration();
-                    if (conf.containsKey("summa.web.search")) {
-                        log.debug("Using inner configuration summa.web.search");
-                        conf = conf.getSubConfiguration("summa.web.search");
-                    } else {
-                        log.debug("No inner configuration for searchWS. Using directly");
-                    }
-                    if (conf.containsKey(SummaSearcher.CONF_CLASS)) {
-                        log.info("Configuration " + SummaSearcher.CONF_CLASS + " present. Creating direct searcher");
-                        searcher = SummaSearcherFactory.createSearcher(conf);
-                    } else {
-                        log.info("Configuration " + SummaSearcher.CONF_CLASS + " present. Creating SearchClient");
-                        searcher = new SearchClient(conf);
-                    }
-                } catch (SubConfigurationsNotSupportedException e) {
-                    log.error("Storage doesn't support sub configurations");
-                } catch (NullPointerException e) {
-                    log.error("Failed to load subConfiguration for search.", e);
-                }
+                searcher = createSearcher("search", "summa.web.search");
             }
             return searcher;
         }
     }
 
-    /**
-     * Get a single SearchClient for Suggest based on the system configuration.
-     *
-     * @return A SearchClient to be used for Suggest.
-     */
-    private synchronized SearchClient getSuggestClient() {
-        if (suggester == null) {
-            try {
-                suggester = new SearchClient(getConfiguration().getSubConfiguration("summa.web.suggest"));
-            } catch (SubConfigurationsNotSupportedException e) {
-                log.error("Storage doesn't support sub configurations");
-            } catch (NullPointerException e) {
-                log.error("Failed to load subConfiguration for suggest.", e);
+    private SummaSearcher createSearcher(String designation, String subKey) {
+        try {
+            Configuration conf = getConfiguration();
+            if (conf.containsKey(subKey)) {
+                log.debug("Using inner configuration " + subKey);
+                conf = conf.getSubConfiguration(subKey);
+            } else {
+                log.debug("No inner configuration for " + designation + ". Using directly");
             }
+            if (conf.containsKey(SummaSearcher.CONF_CLASS)) {
+                log.info("Configuration " + SummaSearcher.CONF_CLASS + " present. " +
+                         "Creating direct searcher for " + designation);
+                return SummaSearcherFactory.createSearcher(conf);
+            } else {
+                log.info("Configuration " + SummaSearcher.CONF_CLASS + " not present. " +
+                         "Creating SearchClient for " + designation);
+                return new SearchClient(conf);
+            }
+        } catch (SubConfigurationsNotSupportedException e) {
+            log.error("Storage doesn't support sub configurations");
+        } catch (NullPointerException e) {
+            log.error("Failed to load subConfiguration for " + designation, e);
         }
-        return suggester;
+        return null;
+    }
+
+    private SummaSearcher getSuggester() {
+        synchronized (SearchWS.class) {
+            if (suggester == null) {
+                suggester = createSearcher("suggest", "summa.web.suggest");
+            }
+            return suggester;
+        }
     }
 
     /**
@@ -157,17 +155,13 @@ public class SearchWS implements ServletContextListener {
      *
      * @return A DidYouMeanClient which can be used for Did-You-Mean services.
      */
-    private synchronized SearchClient getDidYouMeanClient() {
-        if (didyoumean == null) {
-            try {
-                didyoumean = new SearchClient(getConfiguration().getSubConfiguration("summa.web.didyoumean"));
-            } catch (SubConfigurationsNotSupportedException e) {
-                log.error("Storage doesn't support sub configurations");
-            } catch (NullPointerException e) {
-                log.error("Failed to load subConfiguration for didYouMean.", e);
+    private synchronized SummaSearcher getDidYouMeanClient() {
+        synchronized (SearchWS.class) {
+            if (didyoumean == null) {
+                didyoumean = createSearcher("didyoumean", "summa.web.didyoumean");
             }
+            return didyoumean;
         }
-        return didyoumean;
     }
 
     /**
@@ -215,8 +209,8 @@ public class SearchWS implements ServletContextListener {
                 return getErrorXML(DidYouMeanResponse.DIDYOUMEAN_RESPONSE, "No response from DidYouMean Client", null);
             }
             Document dom = DOM.stringToDOM(res.toXML());
-            Node subDom = DOM.selectNode(dom,
-                                         "/responsecollection/response[@name='DidYouMeanResponse']/DidYouMeanResponse");
+            Node subDom = DOM.selectNode(
+                    dom, "/responsecollection/response[@name='DidYouMeanResponse']/DidYouMeanResponse");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
             log.warn("Error executing didYouMean: '" + query + "', " + maxSuggestions + ". Error was: ", e);
@@ -256,7 +250,7 @@ public class SearchWS implements ServletContextListener {
         req.put(SuggestKeys.SEARCH_MAX_RESULTS, maxSuggestions);
 
         try {
-            res = getSuggestClient().search(req);
+            res = getSuggester().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
                                          "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
@@ -289,7 +283,7 @@ public class SearchWS implements ServletContextListener {
         Request req = new Request();
         req.put(SuggestKeys.DELETE_SUGGEST, suggestion);
         try {
-            getSuggestClient().search(req);
+            getSuggester().search(req);
         } catch (IOException e) {
             log.warn("Error deleting suggetion '" + suggestion + "'");
         }
@@ -316,7 +310,7 @@ public class SearchWS implements ServletContextListener {
         req.put(SuggestKeys.SEARCH_MAX_RESULTS, maxSuggestions);
 
         try {
-            res = getSuggestClient().search(req);
+            res = getSuggester().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
                                          "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
@@ -358,7 +352,7 @@ public class SearchWS implements ServletContextListener {
         req.put(SuggestKeys.SEARCH_UPDATE_HITCOUNT, hitCount);
 
         try {
-            getSuggestClient().search(req);
+            getSuggester().search(req);
         } catch (IOException e) {
             log.warn("Error committing query '" + cleanQuery(query) + "' with hitCount '" + hitCount + "'");
         }
@@ -1053,6 +1047,7 @@ public class SearchWS implements ServletContextListener {
         Log4JSetup.ensureInitialized(sce);
         Environment.checkJavaVersion();
         getSearcher();  // We need to start it here to get RMI activated
+        getSuggester();
         log.info("SearchWS context initialized");
     }
     @Override
