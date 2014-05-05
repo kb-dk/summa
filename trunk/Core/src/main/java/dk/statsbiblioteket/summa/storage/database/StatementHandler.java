@@ -107,6 +107,14 @@ public abstract class StatementHandler {
             + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
         );
     }
+    
+    public MiniConnectionPoolManager.StatementHandle getGetRecordFullObjectTree() {
+        return generateStatementHandle(
+            "SELECT *"
+            + " FROM " + DatabaseStorage.RECORDS
+            + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
+        );
+    }    
 
     // TODO: Extend this to use attributes and change DatabaseStorage.createNewRecord/updateRecord to use partial update
     public MiniConnectionPoolManager.StatementHandle getCreateRecord() {
