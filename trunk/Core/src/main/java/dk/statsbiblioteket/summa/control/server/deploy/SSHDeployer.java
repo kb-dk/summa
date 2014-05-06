@@ -30,6 +30,8 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.console.ProcessRunner;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -38,9 +40,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * <p>{@link ClientDeployer} that uses ssh to copy and start Clients.</p>
@@ -343,7 +342,7 @@ public class SSHDeployer implements ClientDeployer {
                   + confLocation);
 
         /* Build the command line with and ssh prefix */
-        List<String> commandLine = new ArrayList<String>();
+        List<String> commandLine = new ArrayList<>();
         commandLine.addAll(Arrays.asList("ssh", "-p" + port, login));
 
         /* We need to escape all elements of the remote command line

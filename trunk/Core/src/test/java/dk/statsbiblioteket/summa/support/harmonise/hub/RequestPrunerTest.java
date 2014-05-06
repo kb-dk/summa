@@ -49,7 +49,7 @@ public class RequestPrunerTest extends TestCase {
     }
 
     public void testSingle() throws Exception {
-        ArrayList<String> whitelist = new ArrayList<String>(Arrays.asList("foo=.+"));
+        ArrayList<String> whitelist = new ArrayList<>(Arrays.asList("foo=.+"));
         List<String> pruned = getPrunedPairs(Configuration.newMemoryBased(
                 RequestPruner.CONF_WHITELIST, whitelist
         ));
@@ -57,7 +57,7 @@ public class RequestPrunerTest extends TestCase {
     }
 
     public void testValueMatchInList() throws Exception {
-        ArrayList<String> whitelist = new ArrayList<String>(Arrays.asList("zoo=.+o"));
+        ArrayList<String> whitelist = new ArrayList<>(Arrays.asList("zoo=.+o"));
         List<String> pruned = getPrunedPairs(Configuration.newMemoryBased(
                 RequestPruner.CONF_WHITELIST, whitelist
         ));
@@ -65,7 +65,7 @@ public class RequestPrunerTest extends TestCase {
     }
 
     public void testTwoMatchers() throws Exception {
-        ArrayList<String> whitelist = new ArrayList<String>(Arrays.asList("foo=.+", "zoo=.+"));
+        ArrayList<String> whitelist = new ArrayList<>(Arrays.asList("foo=.+", "zoo=.+"));
         List<String> pruned = getPrunedPairs(Configuration.newMemoryBased(
                 RequestPruner.CONF_WHITELIST, whitelist
         ));
@@ -73,8 +73,8 @@ public class RequestPrunerTest extends TestCase {
     }
 
     public void testTwoMatchersOneBlacklist() throws Exception {
-        ArrayList<String> whitelist = new ArrayList<String>(Arrays.asList("foo=.+", "zoo=.+"));
-        ArrayList<String> blacklist = new ArrayList<String>(Arrays.asList("zoo=b.+"));
+        ArrayList<String> whitelist = new ArrayList<>(Arrays.asList("foo=.+", "zoo=.+"));
+        ArrayList<String> blacklist = new ArrayList<>(Arrays.asList("zoo=b.+"));
         List<String> pruned = getPrunedPairs(Configuration.newMemoryBased(
                 RequestPruner.CONF_WHITELIST, whitelist,
                 RequestPruner.CONF_BLACKLIST, blacklist
@@ -92,7 +92,7 @@ public class RequestPrunerTest extends TestCase {
     }
 
     private List<String> getPrunedPairs(Configuration conf) {
-        List<String> pairs = new ArrayList<String>();
+        List<String> pairs = new ArrayList<>();
         SolrParams pruned = getPruned(conf);
         Iterator<String> keys = pruned.getParameterNamesIterator();
         while (keys.hasNext()) {

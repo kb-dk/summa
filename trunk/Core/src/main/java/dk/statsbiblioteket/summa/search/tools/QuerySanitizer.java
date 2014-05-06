@@ -105,9 +105,9 @@ public class QuerySanitizer implements Configurable {
          * error:       Syntax error (e.g. unbalanced parentheses or quotes)
          */
         public enum CHANGE {none, summasyntax, error}
-        private List<String> queries = new ArrayList<String>(5);
-        private List<String> feedback = new ArrayList<String>(5);
-        private List<CHANGE> changes = new ArrayList<CHANGE>(5);
+        private List<String> queries = new ArrayList<>(5);
+        private List<String> feedback = new ArrayList<>(5);
+        private List<CHANGE> changes = new ArrayList<>(5);
 
         public SanitizedQuery(String originalQuery) {
             queries.add(originalQuery);

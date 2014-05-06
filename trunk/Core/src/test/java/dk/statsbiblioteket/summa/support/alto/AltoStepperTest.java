@@ -14,16 +14,12 @@
  */
 package dk.statsbiblioteket.summa.support.alto;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.Pair;
-import dk.statsbiblioteket.summa.support.alto.hp.HPAltoAnalyzer;
 import dk.statsbiblioteket.summa.support.alto.hp.HPAltoAnalyzerTest;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.lucene.queryparser.classic.ParseException;
 
 import java.io.File;
 import java.util.*;
@@ -59,7 +55,7 @@ public class AltoStepperTest extends TestCase {
         Alto alto = new Alto(new File(SOURCE));
 
         // Collect stats
-        final Map<String, Integer> words = new HashMap<String, Integer>();
+        final Map<String, Integer> words = new HashMap<>();
         AltoStepper stepper = new AltoStepper() {
             @Override
             public Alto.TextString process(Alto.TextString textString) {
@@ -76,7 +72,7 @@ public class AltoStepperTest extends TestCase {
 
         // Get top X
         final Set<Pair<String, Integer>> counters =
-                new TreeSet<Pair<String, Integer>>(new Comparator<Pair<String, Integer>>() {
+                new TreeSet<>(new Comparator<Pair<String, Integer>>() {
                     @Override
                     public int compare(Pair<String, Integer> o1, Pair<String, Integer> o2) {
                         int c = -o1.getValue().compareTo(o2.getValue());
@@ -84,7 +80,7 @@ public class AltoStepperTest extends TestCase {
                     }
                 });
         for (Map.Entry<String, Integer> entry: words.entrySet()) {
-            counters.add(new Pair<String, Integer>(entry.getKey(), entry.getValue()));
+            counters.add(new Pair<>(entry.getKey(), entry.getValue()));
         }
 
         System.out.println("Unique words in '" + SOURCE + "': " + counters.size());

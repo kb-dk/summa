@@ -129,13 +129,13 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
     private void fixMeta(Payload payload) {
         if (payload.getRecord() != null) {
             StringMap map = payload.getRecord().getMeta();
-            Set<String> keys = new HashSet<String>(map.keySet());
+            Set<String> keys = new HashSet<>(map.keySet());
             for (String key : keys) {
                 map.put(key, fixText(map.get(key)));
             }
         }
         ConvenientMap map = payload.getData();
-        Set<String> keys = new HashSet<String>(map.keySet());
+        Set<String> keys = new HashSet<>(map.keySet());
         for (String key : keys) {
             Object value = map.get(key);
             if (value instanceof String) {

@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
+import junit.framework.TestCase;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public class RegexFilterTest extends TestCase {
                 new Record("foo", "bar", MULTI_SAMPLE.getBytes("utf-8")))));
         RegexFilter regex = new RegexFilter(Configuration.newMemoryBased(
                 AbstractDiscardFilter.CONF_MARK, true,
-                PayloadMatcher.CONF_CONTENT_REGEX, new ArrayList<String>(Arrays.asList(
+                PayloadMatcher.CONF_CONTENT_REGEX, new ArrayList<>(Arrays.asList(
                 "(?s).{1,1000}?<status>deleted</status>.*"))
         ));
         regex.setSource(feeder);

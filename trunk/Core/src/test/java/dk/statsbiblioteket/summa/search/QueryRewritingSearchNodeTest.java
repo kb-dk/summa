@@ -157,7 +157,7 @@ public class QueryRewritingSearchNodeTest extends TestCase {
                 QueryRewritingSearchNode.CONF_KEEP_EMPTY_FILTERS, keepEmpty
         );
         Configuration reducerConf = conf.createSubConfigurations(QueryReducer.CONF_TARGETS, 1).get(0);
-        reducerConf.set(QueryReducer.ReducerTarget.CONF_MATCH_NONES, new ArrayList<String>(Arrays.asList(
+        reducerConf.set(QueryReducer.ReducerTarget.CONF_MATCH_NONES, new ArrayList<>(Arrays.asList(
                 "Language:abcde32542f",
                 "recordBase:")));
         return conf;

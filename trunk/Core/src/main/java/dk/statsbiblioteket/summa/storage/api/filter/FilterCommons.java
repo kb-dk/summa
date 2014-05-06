@@ -17,7 +17,6 @@ package dk.statsbiblioteket.summa.storage.api.filter;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
@@ -37,8 +36,8 @@ public class FilterCommons {
 
     /* FIXME: Remove this hard coded hack to RMI */
     private static ConnectionFactory<? extends Storage> storageConnectionFactory = new
-            RMIConnectionFactory<RemoteStorage>();
-    private static ConnectionManager<Storage> accessConnectionManager = new ConnectionManager<Storage>
+            RMIConnectionFactory<>();
+    private static ConnectionManager<Storage> accessConnectionManager = new ConnectionManager<>
             (storageConnectionFactory);
 
     /**

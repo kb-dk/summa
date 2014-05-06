@@ -33,7 +33,7 @@ import java.util.List;
 public abstract class FactoryPool<T> {
     private static Log log = LogFactory.getLog(FactoryPool.class);
 
-    private List<T> elements = new ArrayList<T>(10);
+    private List<T> elements = new ArrayList<>(10);
 
     /**
      * Implementations of the FactoryPool must override this method to provide new elements.

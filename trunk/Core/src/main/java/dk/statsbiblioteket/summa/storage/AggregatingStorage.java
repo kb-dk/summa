@@ -243,7 +243,7 @@ public class AggregatingStorage extends StorageBase {
          */
         @Override
         public List<Record> next(int maxRecords) throws IOException {
-            List<Record> result = new ArrayList<Record>(maxRecords);
+            List<Record> result = new ArrayList<>(maxRecords);
 
             try {
                 for (int i = 0; i < maxRecords; i++) {
@@ -469,7 +469,7 @@ public class AggregatingStorage extends StorageBase {
 
                 log.debug("Checking for timed out iterator keys");
 
-                List<Long> timedOutKeys = new ArrayList<Long>();
+                List<Long> timedOutKeys = new ArrayList<>();
 
                 // Detect timed out iterators
                 long now = System.currentTimeMillis();
@@ -539,11 +539,11 @@ public class AggregatingStorage extends StorageBase {
             log.warn("No sub storages configured");
         }
 
-        readers = new HashMap<String, StorageReaderClient>();
-        recordGetters = new ArrayList<SimplePair<Pattern, StorageReaderClient>>();
-        writers = new HashMap<String, StorageWriterClient>();
-        iterators = new HashMap<Long, IteratorContext>();
-        toClose = new ArrayList<StorageWriterClient>();
+        readers = new HashMap<>();
+        recordGetters = new ArrayList<>();
+        writers = new HashMap<>();
+        iterators = new HashMap<>();
+        toClose = new ArrayList<>();
 
         reaper = new IteratorContextReaper(iterators);
         reaper.runInThread();
@@ -570,7 +570,7 @@ public class AggregatingStorage extends StorageBase {
                               Pattern.compile(subConf.getString(CONF_SUB_STORAGE_ID_PATTERN)) :
                               null;
             log.debug("Adding recordGetter for pattern '" + pattern + "'");
-            recordGetters.add(new SimplePair<Pattern, StorageReaderClient>(pattern, reader));
+            recordGetters.add(new SimplePair<>(pattern, reader));
             for (String base : bases) {
                 log.info("Sub storage base map: " + writer.getVendorId() + " -> " + base);
                 readers.put(base, reader);
@@ -696,12 +696,11 @@ public class AggregatingStorage extends StorageBase {
             log.trace("getRecords(" + Logs.expand(ids, logExpands) + ", " + options + ")");
         }
 
-        List<Record> result = new ArrayList<Record>(ids.size());
-        List<SimplePair<StorageReaderClient, List<String>>> batches = new ArrayList<SimplePair<StorageReaderClient,
-                List<String>>>(recordGetters.size());
-        List<String> unassigned = new ArrayList<String>(ids);
+        List<Record> result = new ArrayList<>(ids.size());
+        List<SimplePair<StorageReaderClient, List<String>>> batches = new ArrayList<>(recordGetters.size());
+        List<String> unassigned = new ArrayList<>(ids);
         for (SimplePair<Pattern, StorageReaderClient> getter : recordGetters) {
-            List<String> assigned = new ArrayList<String>();
+            List<String> assigned = new ArrayList<>();
             if (getter.getKey() != null) {
                 for (int i = unassigned.size() - 1; i >= 0; i--) {
                     String id = unassigned.get(i);
@@ -712,7 +711,7 @@ public class AggregatingStorage extends StorageBase {
                     }
                 }
             }
-            batches.add(new SimplePair<StorageReaderClient, List<String>>(getter.getValue(), assigned));
+            batches.add(new SimplePair<>(getter.getValue(), assigned));
         }
         // Records in unassigned never found a fitting StorageReaderClient, so we assign to all SRCs without a pattern
         boolean nullFound = false;
@@ -949,7 +948,7 @@ public class AggregatingStorage extends StorageBase {
 
             return writer.batchJob(jobName, base, minMtime, maxMtime, options);
         } else {
-            List<String> results = new LinkedList<String>();
+            List<String> results = new LinkedList<>();
             for (StorageWriterClient sub : writers.values()) {
                 String result;
                 try {

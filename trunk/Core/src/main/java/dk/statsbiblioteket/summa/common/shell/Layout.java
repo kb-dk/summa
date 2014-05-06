@@ -33,8 +33,8 @@ public class Layout {
         private Map<String,Integer> columnWidths;
 
         public Model () {
-            rows = new ArrayList<Map<String,String>>();
-            columnWidths = new HashMap<String,Integer>();
+            rows = new ArrayList<>();
+            columnWidths = new HashMap<>();
         }
 
         public Map<String,String> appendRow(String... data) {
@@ -43,7 +43,7 @@ public class Layout {
                                                    + data.length);
             }
 
-            Map<String,String> row = new HashMap<String,String>();
+            Map<String,String> row = new HashMap<>();
 
             for (int i = 0; i < data.length; i += 2) {
                 row.put(data[i], data[i+1]);
@@ -92,7 +92,7 @@ public class Layout {
     }
 
     public Layout(List<String> columns) {
-        this.columns = new ArrayList<String>(columns);
+        this.columns = new ArrayList<>(columns);
         printHeaders = true;
         model = new Model();
         delimiter = " ";
@@ -115,7 +115,7 @@ public class Layout {
     }
 
     public void setColumns(List<String> columns) {
-        this.columns = new ArrayList<String>(columns);
+        this.columns = new ArrayList<>(columns);
     }
 
     public void appendColumns(String... cols) {

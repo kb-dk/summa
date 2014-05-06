@@ -64,7 +64,7 @@ public class ControlShell {
      * {@link ConnectionManager}.
      */
     public ControlShell(Configuration conf, Core core) throws Exception {
-        connManager = new ConnectionManager<ControlConnection>(
+        connManager = new ConnectionManager<>(
                          new GenericConnectionFactory<ControlConnection>(conf));
         rmiAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
                                     DEFAULT_RPC_TARGET);

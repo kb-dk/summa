@@ -93,7 +93,7 @@ public class FakeClient implements ClientConnection {
     @Override
     public List<String> getServices() throws RemoteException {
         log.info("Faking getServices");
-        ArrayList<String> list = new ArrayList<String>(1);
+        ArrayList<String> list = new ArrayList<>(1);
         list.add("Fake ID");
         return list;
     }

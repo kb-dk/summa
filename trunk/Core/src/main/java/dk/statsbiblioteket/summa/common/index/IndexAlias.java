@@ -60,7 +60,7 @@ public final class IndexAlias implements Comparable {
     public static Set<IndexAlias> getAliases(Node node) throws ParseException {
         log.trace("getAliases called");
         NodeList children =  node.getChildNodes();
-        Set<IndexAlias> aliases = new HashSet<IndexAlias>(10);
+        Set<IndexAlias> aliases = new HashSet<>(10);
         for (int i = 0 ; i < children.getLength(); i++) {
             Node child = children.item(i);
             //noinspection DuplicateStringLiteralInspection

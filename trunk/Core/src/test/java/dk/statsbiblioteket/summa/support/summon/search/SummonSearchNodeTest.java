@@ -270,7 +270,7 @@ public class SummonSearchNodeTest extends TestCase {
 
         List<String> first = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
         assertFalse("There should be at least 1 hit for first class ID lookup", first.isEmpty());
-        List<String> second = new ArrayList<String>(IDs.size());
+        List<String> second = new ArrayList<>(IDs.size());
         { // Old-school singular ID-searches
             for (String id: IDs) {
                 id = id.replace("summon_", "");
@@ -279,7 +279,7 @@ public class SummonSearchNodeTest extends TestCase {
                 }
             }
         }
-        List<String> remove = new ArrayList<String>(IDs.size());
+        List<String> remove = new ArrayList<>(IDs.size());
         { // Old-school singular ID-searches
             for (String id: IDs) {
                 id = id.replace("summon_", "").replace("FETCH-", "");
@@ -288,7 +288,7 @@ public class SummonSearchNodeTest extends TestCase {
                 }
             }
         }
-        List<String> add = new ArrayList<String>(IDs.size());
+        List<String> add = new ArrayList<>(IDs.size());
         { // Old-school singular ID-searches
             for (String id: IDs) {
                 id = id.replace("summon_", "");
@@ -998,7 +998,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
         List<String> facets = getFacetNames(responses);
-        List<String> expected = new ArrayList<String>(Arrays.asList(SummonSearchNode.DEFAULT_SUMMON_FACETS.split(" ?, ?")));
+        List<String> expected = new ArrayList<>(Arrays.asList(SummonSearchNode.DEFAULT_SUMMON_FACETS.split(" ?, ?")));
         expected.add("recordBase"); // We always add this when we're doing faceting
         for (int i = expected.size()-1 ; i >= 0 ; i--) {
             if (!facets.contains(expected.get(i))) {
@@ -1058,7 +1058,7 @@ public class SummonSearchNodeTest extends TestCase {
         summon.search(request, responses);
         log.debug("Finished searching");
         List<String> tags = getTags(responses, "SubjectTerms");
-        List<String> tagsAlpha = new ArrayList<String>(tags);
+        List<String> tagsAlpha = new ArrayList<>(tags);
         Collections.sort(tagsAlpha);
         if (alpha) {
             ExtraAsserts.assertEquals(
@@ -1081,7 +1081,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     private List<String> getTags(ResponseCollection responses, String facet) {
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (Response response: responses) {
             if (response instanceof FacetResultExternal) {
                 FacetResultExternal facetResult = (FacetResultExternal)response;
@@ -1370,7 +1370,7 @@ public class SummonSearchNodeTest extends TestCase {
 
     private List<String> getFacetNames(ResponseCollection responses) {
         Pattern FACET = Pattern.compile(".*<facet name=\"(.+?)\">");
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         String[] lines = responses.toXML().split("\n");
         for (String line : lines) {
             Matcher matcher = FACET.matcher(line);
@@ -1390,7 +1390,7 @@ public class SummonSearchNodeTest extends TestCase {
         }
         String xml = responses.toXML();
         Matcher matcher = pattern.matcher(xml);
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         while (matcher.find()) {
             result.add(Strings.join(matcher.group(1).split("\n"), ", "));
         }
@@ -1572,7 +1572,7 @@ public class SummonSearchNodeTest extends TestCase {
         Configuration confInside = SummonTestHelper.getDefaultSummonConfiguration();
         Configuration confOutside = SummonTestHelper.getDefaultSummonConfiguration();
         confOutside.set(SummonSearchNode.CONF_SOLR_PARAM_PREFIX + "s.ho",
-                        new ArrayList<String>(Arrays.asList("false"))
+                        new ArrayList<>(Arrays.asList("false"))
         );
 
         Request request = new Request();
@@ -1588,7 +1588,7 @@ public class SummonSearchNodeTest extends TestCase {
         summonOutside.search(request, responsesOutside);
 
         request.put(SummonSearchNode.CONF_SOLR_PARAM_PREFIX + "s.ho",
-                    new ArrayList<String>(Arrays.asList("false")));
+                    new ArrayList<>(Arrays.asList("false")));
         ResponseCollection responsesSearchTweak = new ResponseCollection();
         summonInside.search(request, responsesSearchTweak);
 
@@ -1609,7 +1609,7 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testConvertRangeQueries() throws RemoteException {
         final String QUERY = "foo bar:[10 TO 20] OR baz:[87 TO goa]";
-        Map<String, List<String>> params = new HashMap<String, List<String>>();
+        Map<String, List<String>> params = new HashMap<>();
         String stripped = new SummonSearchNode(getSummonConfiguration()).convertQuery(QUERY, params);
         assertNotNull("RangeFilter should be defined", params.get("s.rf"));
         List<String> ranges = params.get("s.rf");
@@ -1621,7 +1621,7 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testConvertRangeQueriesEmpty() throws RemoteException {
         final String QUERY = "bar:[10 TO 20]";
-        Map<String, List<String>> params = new HashMap<String, List<String>>();
+        Map<String, List<String>> params = new HashMap<>();
         String stripped = new SummonSearchNode(getSummonConfiguration()).convertQuery(QUERY, params);
         assertNotNull("RangeFilter should be defined", params.get("s.rf"));
         List<String> ranges = params.get("s.rf");
@@ -1638,7 +1638,7 @@ public class SummonSearchNodeTest extends TestCase {
 
     public void testFaultyQuoteRemoval() throws RemoteException {
         final String QUERY = "bar:\"foo:zoo\"";
-        Map<String, List<String>> params = new HashMap<String, List<String>>();
+        Map<String, List<String>> params = new HashMap<>();
         String stripped = new SummonSearchNode(getSummonConfiguration()).convertQuery(QUERY, params);
         assertNull("RangeFilter should not be defined", params.get("s.rf"));
         assertEquals("The resulting query should unchanged", QUERY, stripped);
@@ -1875,7 +1875,7 @@ public class SummonSearchNodeTest extends TestCase {
 
     private List<Double> getScores(ResponseCollection responses) {
         DocumentResponse docs = (DocumentResponse)responses.iterator().next();
-        List<Double> result = new ArrayList<Double>(docs.size());
+        List<Double> result = new ArrayList<>(docs.size());
         for (DocumentResponse.Record record: docs.getRecords()) {
             result.add((double)record.getScore());
         }
@@ -2250,7 +2250,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     private List<String> getHits(ResponseCollection responses) {
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)response;

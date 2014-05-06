@@ -94,7 +94,7 @@ public class AltoStatFilter extends ObjectFilterImpl {
     public AltoStatFilter(Configuration conf) {
         super(conf);
         String[] regStrs = conf.getStrings(CONF_REGEXPS, (String[])null);
-        regexps = new ArrayList<Pattern>(regStrs == null ? 0 : regStrs.length);
+        regexps = new ArrayList<>(regStrs == null ? 0 : regStrs.length);
         if (regStrs != null) {
             String[] repStrs = conf.getStrings(CONF_REPLACEMENTS, (String[])null);
             replacements = repStrs == null ? null : Arrays.asList(repStrs);
@@ -109,7 +109,7 @@ public class AltoStatFilter extends ObjectFilterImpl {
         } else {
             replacements = null;
         }
-        matches = new HashMap<Pattern, HashMap<String, Integer>>(regexps.size());
+        matches = new HashMap<>(regexps.size());
         for (Pattern pattern: regexps) {
             matches.put(pattern, new HashMap<String, Integer>());
         }
@@ -237,9 +237,9 @@ public class AltoStatFilter extends ObjectFilterImpl {
                                     entry.getKey().pattern(), entry.getValue().size()));
             // We want this sorted by occurrence
             List<FlexiblePair<String, Integer>> matches =
-                    new ArrayList<FlexiblePair<String, Integer>>(entry.getValue().size());
+                    new ArrayList<>(entry.getValue().size());
             for (Map.Entry<String, Integer> match: entry.getValue().entrySet()) {
-                matches.add(new FlexiblePair<String, Integer>(
+                matches.add(new FlexiblePair<>(
                         match.getKey(), match.getValue(), FlexiblePair.SortType.SECONDARY_DESCENDING));
             }
             Collections.sort(matches);

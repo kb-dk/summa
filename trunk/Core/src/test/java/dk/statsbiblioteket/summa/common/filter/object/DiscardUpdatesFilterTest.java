@@ -62,7 +62,7 @@ public class DiscardUpdatesFilterTest extends TestCase implements ObjectFilter {
     private boolean gotThrough(List<String> testIDs) {
         this.ids.clear();
         this.ids.addAll(testIDs);
-        List<String> processed = new ArrayList<String>(testIDs.size());
+        List<String> processed = new ArrayList<>(testIDs.size());
         ObjectFilter discarder =
                 new DiscardUpdatesFilter(Configuration.newMemoryBased());
         discarder.setSource(this);
@@ -73,7 +73,7 @@ public class DiscardUpdatesFilterTest extends TestCase implements ObjectFilter {
     }
 
     /* Feeder for the Filter */
-    private List<String> ids = new ArrayList<String>(10);
+    private List<String> ids = new ArrayList<>(10);
 
     @Override
     public boolean hasNext() {

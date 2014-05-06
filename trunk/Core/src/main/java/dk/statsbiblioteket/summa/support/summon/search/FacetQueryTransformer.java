@@ -74,7 +74,7 @@ public class FacetQueryTransformer {
      */
     public synchronized Map<String, List<String>> convertQueryToFacet(String query) throws ParseException {
         log.debug("Converting query '" + query + "' to facet queries");
-        Map<String, List<String>> solrRequest = new HashMap<String, List<String>>(20);
+        Map<String, List<String>> solrRequest = new HashMap<>(20);
         if ("".equals(query) || query == null) {
             return solrRequest;
         }
@@ -186,7 +186,7 @@ public class FacetQueryTransformer {
             return;
         }
         if (!(existing instanceof ArrayList)) {
-            existing = new ArrayList<String>(existing);
+            existing = new ArrayList<>(existing);
             queryMap.put(key, existing);
         }
         existing.add(value);

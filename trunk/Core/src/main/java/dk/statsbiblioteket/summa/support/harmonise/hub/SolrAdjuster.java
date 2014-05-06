@@ -68,7 +68,7 @@ public class SolrAdjuster extends HubAdjusterBase {
 
     public SolrAdjuster(Configuration conf) {
         super(conf);
-        List<HubTagAdjuster> tagAdjusters = new ArrayList<HubTagAdjuster>();
+        List<HubTagAdjuster> tagAdjusters = new ArrayList<>();
         if (conf.containsKey(CONF_ADJUST_FACET_TAGS)) {
             List<Configuration> tagAdjusterConfs = conf.getSubConfigurations(CONF_ADJUST_FACET_TAGS);
             log.debug("Got " + tagAdjusterConfs + " tag adjuster configurations");

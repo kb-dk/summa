@@ -293,9 +293,9 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private FacetResult<String> extractFacetResult(XMLStreamReader xml, SolrFacetRequest facets)
             throws XMLStreamException {
         long startTime = System.currentTimeMillis();
-        HashMap<String, Integer> facetIDs = new HashMap<String, Integer>(facets.getFacets().size());
+        HashMap<String, Integer> facetIDs = new HashMap<>(facets.getFacets().size());
         // 1 facet = 1 field in Summon-world
-        HashMap<String, String[]> fields = new HashMap<String, String[]>(facets.getFacets().size());
+        HashMap<String, String[]> fields = new HashMap<>(facets.getFacets().size());
         for (int i = 0 ; i < facets.getFacets().size() ; i++) {
             SolrFacetRequest.Facet facet = facets.getFacets().get(i);
             facetIDs.put(facet.getField(), i);
@@ -362,7 +362,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml, final String sortKey,
                                                          final XML_MODE xmlMode) throws XMLStreamException {
         // Positioned at documents
-        final List<DocumentResponse.Record> records = new ArrayList<DocumentResponse.Record>(50);
+        final List<DocumentResponse.Record> records = new ArrayList<>(50);
         XMLStepper.iterateElements(xml, "documents", "document", new XMLStepper.XMLCallback() {
             float lastScore = 0f;
 
@@ -417,12 +417,12 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             return null;
         }
 
-        final Set<String> wanted = new HashSet<String>(Arrays.asList(
+        final Set<String> wanted = new HashSet<>(Arrays.asList(
                 "ID", "Score", "Title", "Subtitle", "Author", "ContentType", "PublicationDate_xml", "Author_xml",
                 "openUrl"));
         final ConvenientMap extracted = new ConvenientMap();
 
-        final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>(50);
+        final List<DocumentResponse.Field> fields = new ArrayList<>(50);
         // We transfer all document-start-tag attributes to fields
         for (int i = 0 ; i < xml.getAttributeCount() ; i++) {
 //            <document hasFullText="true" isFullTextHit="false" inHoldings="true"
@@ -550,7 +550,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
             xml.next();
             return null;
         }
-        final List<DocumentResponse.Field> fields = new ArrayList<DocumentResponse.Field>();
+        final List<DocumentResponse.Field> fields = new ArrayList<>();
 
         if (!name.endsWith("_xml")) { // Not an XML field, so we just copy, extract & return
             final StringBuffer value = new StringBuffer(50);

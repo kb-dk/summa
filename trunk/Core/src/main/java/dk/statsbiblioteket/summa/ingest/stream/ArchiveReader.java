@@ -123,7 +123,7 @@ public class ArchiveReader extends FileSystemReader {
         return provider.next();
     }
 
-    private static final List<FileProvider> EMPTY = new ArrayList<FileProvider>(0);
+    private static final List<FileProvider> EMPTY = new ArrayList<>(0);
 
     private static abstract class FileProvider implements Iterator<Payload> {
         /**
@@ -384,7 +384,7 @@ public class ArchiveReader extends FileSystemReader {
          * here when they have no more unopened files and removed when the files
          * are closed.
          */
-        private List<FileProvider> open = new ArrayList<FileProvider>(1);
+        private List<FileProvider> open = new ArrayList<>(1);
 
         /**
          * Constructs a lazily expanded provider.
@@ -419,7 +419,7 @@ public class ArchiveReader extends FileSystemReader {
             }
 //            System.out.println("Listing files for " + source);
             TFile[] files = source.listFiles();
-            List<FileProvider> providers = new ArrayList<FileProvider>(files.length);
+            List<FileProvider> providers = new ArrayList<>(files.length);
             for (TFile file : files) {
                 try {
                     if (postfix != null && file.getName().endsWith(postfix)) {

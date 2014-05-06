@@ -395,7 +395,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         mlt_maxNumTokensParsed = getIntOrNull(mltConf, CONF_MORELIKETHIS_MAXNUMTOKENSPARSED);
         List<String> stopWords = mltConf.getStrings(CONF_MORELIKETHIS_STOPWORDS, (List<String>)null);
         if (stopWords != null) {
-            mlt_stopWords = new HashSet<String>(stopWords);
+            mlt_stopWords = new HashSet<>(stopWords);
         }
         Logging.log(log, Logging.LogLevel.DEBUG,
                     "Finished setting up MoreLikeThis with enabled=%s, minTermFreq=%s, minDocFreq=%s, minWordLength=%s,"
@@ -776,7 +776,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                     "Got " + topDocs.totalHits + " hits for query " + SummaQueryParser.queryToString(luceneQuery));
             }
 
-            Set<String> selector = new HashSet<String>(Arrays.asList(fields));
+            Set<String> selector = new HashSet<>(Arrays.asList(fields));
 
             if (request.getBoolean(DocumentKeys.SEARCH_EXPLAIN, explain)
                     && (Arrays.binarySearch(fields, DocumentKeys.EXPLAIN_RESPONSE_FIELD) < 0)) {

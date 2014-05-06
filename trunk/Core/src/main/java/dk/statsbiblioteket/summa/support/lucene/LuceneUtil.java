@@ -38,7 +38,7 @@ public class LuceneUtil {
      * @return a list of AtomicReaders
      */
     public static List<AtomicReader> gatherSubReaders(IndexReader reader) {
-        List<AtomicReader> readers = new ArrayList<AtomicReader>();
+        List<AtomicReader> readers = new ArrayList<>();
         for (AtomicReaderContext context: reader.leaves()) {
             readers.add(context.reader());
         }

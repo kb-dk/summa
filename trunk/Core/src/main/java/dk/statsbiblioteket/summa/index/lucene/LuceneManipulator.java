@@ -158,7 +158,7 @@ public class LuceneManipulator implements IndexManipulator {
         }
         expungeDeleted = conf.getBoolean(CONF_EXPUNGE_DELETES_ON_COMMIT, expungeDeleted);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
-        available = new ArrayBlockingQueue<WriterCallable>(writerThreads);
+        available = new ArrayBlockingQueue<>(writerThreads);
         for (int i = 0 ; i < writerThreads ; i++) {
             available.add(new WriterCallable(available));
         }

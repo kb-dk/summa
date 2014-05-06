@@ -179,7 +179,7 @@ public class XStorage implements ConfigurationStorage {
     public Iterator<Map.Entry<String, Serializable>> iterator() throws IOException {
         // TODO: Fully support iterators
         log.debug("Iterators are not fully supported by XStorage. This won't work well with nesting");
-        Map<String, Serializable> tempMap = new HashMap<String, Serializable>(size());
+        Map<String, Serializable> tempMap = new HashMap<>(size());
         for (Map.Entry<Object, Object> entry : xprops.entrySet()) {
             try {
                 tempMap.put((String) entry.getKey(), (Serializable) entry.getValue());
@@ -279,8 +279,8 @@ public class XStorage implements ConfigurationStorage {
      */
     @Override
     public List<ConfigurationStorage> createSubStorages(String key, int count) throws IOException {
-        ArrayList<XProperties> subProperties = new ArrayList<XProperties>(count);
-        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(count);
+        ArrayList<XProperties> subProperties = new ArrayList<>(count);
+        List<ConfigurationStorage> storages = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             subProperties.add(new XProperties());
             storages.add(new XStorage(subProperties.get(i)));
@@ -301,7 +301,7 @@ public class XStorage implements ConfigurationStorage {
         Object sub = get(key);
         if (!(sub instanceof List)) {
             if (sub instanceof XProperties) { // Not wrapped as list
-                List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(1);
+                List<ConfigurationStorage> storages = new ArrayList<>(1);
                 storages.add(new XStorage((XProperties)sub));
                 return storages;
             }
@@ -309,7 +309,7 @@ public class XStorage implements ConfigurationStorage {
                                                 key, sub.getClass()));
         }
         List list = (List) sub;
-        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(list.size());
+        List<ConfigurationStorage> storages = new ArrayList<>(list.size());
         for (Object o : list) {
             if (!(o instanceof XProperties)) {
                 throw new IOException(String.format(

@@ -79,7 +79,7 @@ public class Structure implements Configurable, Serializable {
      *                   used in the new Structure.
      */
     protected Structure(int facetCount) {
-        facets = new LinkedHashMap<String, FacetStructure>(facetCount);
+        facets = new LinkedHashMap<>(facetCount);
     }
 
     public Structure(Configuration conf) {
@@ -126,7 +126,7 @@ public class Structure implements Configurable, Serializable {
         log.debug("Parsing '" + wantedFacets + "'");
         // foo(23), bar, zoo(12 ALPHA)
         String[] tokens = wantedFacets.split(" *, *");
-        facets = new LinkedHashMap<String, FacetStructure>(tokens.length);
+        facets = new LinkedHashMap<>(tokens.length);
         int counter = 0;
         for (String facetToken : tokens) {
             FacetStructure fc = new FacetStructure(facetToken, defaultWantedTags, counter++);
@@ -144,7 +144,7 @@ public class Structure implements Configurable, Serializable {
         log.debug("Parsing '" + wantedFacets + "'");
         // foo(23), bar, zoo(12 ALPHA)
         String[] tokens = wantedFacets.split(" *, *");
-        facets = new LinkedHashMap<String, FacetStructure>(tokens.length);
+        facets = new LinkedHashMap<>(tokens.length);
         int counter = 0;
         for (String facetToken : tokens) {
             FacetStructure fc = new FacetStructure(facetToken, counter++);
@@ -196,7 +196,7 @@ public class Structure implements Configurable, Serializable {
             throw new ConfigurationException(String.format("Could not access Configuration for key '%s'", 
                                                            CONF_FACETS), e);
         }
-        facets = new LinkedHashMap<String, FacetStructure>(facetConfs.size());
+        facets = new LinkedHashMap<>(facetConfs.size());
         int facetID = 0;
         for (Configuration facetConf : facetConfs) {
             try {
@@ -240,7 +240,7 @@ public class Structure implements Configurable, Serializable {
      * @return The facets that makes up the Structure.
      */
     public List<FacetStructure> getFacetList() {
-        List<FacetStructure> result = new ArrayList<FacetStructure>(facets.size());
+        List<FacetStructure> result = new ArrayList<>(facets.size());
         for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             result.add(entry.getValue());
         }
@@ -289,7 +289,7 @@ public class Structure implements Configurable, Serializable {
                 //noinspection unchecked
                 throw new IllegalArgumentException(String.format(
                         "The facet '%s' did not exist in the facet-list %s",
-                        facetName, Logs.expand(new ArrayList<String>(facets.keySet()), 20)), e);
+                        facetName, Logs.expand(new ArrayList<>(facets.keySet()), 20)), e);
             }
         }
     }
@@ -298,7 +298,7 @@ public class Structure implements Configurable, Serializable {
      * @return A list with the names of all the facets, in facet sort order.
      */
     public List<String> getFacetNames() {
-        List<String> facetNames = new ArrayList<String>(facets.size());
+        List<String> facetNames = new ArrayList<>(facets.size());
         for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             facetNames.add(entry.getValue().getName());
         }
@@ -309,7 +309,7 @@ public class Structure implements Configurable, Serializable {
      * @return A map from Facet-names to maximum tags. The order is significant.
      */
     public HashMap<String, Integer> getMaxTags() {
-        HashMap<String, Integer> map = new LinkedHashMap<String, Integer>(facets.size());
+        HashMap<String, Integer> map = new LinkedHashMap<>(facets.size());
         for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getMaxTags());
         }
@@ -320,7 +320,7 @@ public class Structure implements Configurable, Serializable {
      * @return a map from Facet-names to Facet-ids. The order is significant.
      */
     public HashMap<String, Integer> getFacetIDs() {
-        HashMap<String, Integer> map = new LinkedHashMap<String, Integer>(facets.size());
+        HashMap<String, Integer> map = new LinkedHashMap<>(facets.size());
         for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getFacetID());
         }
@@ -328,7 +328,7 @@ public class Structure implements Configurable, Serializable {
     }
 
     public HashMap<String, String[]> getFacetFields() {
-        HashMap<String, String[]> map = new LinkedHashMap<String, String[]>(facets.size());
+        HashMap<String, String[]> map = new LinkedHashMap<>(facets.size());
         for (Map.Entry<String, FacetStructure> entry : facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getFields());
         }

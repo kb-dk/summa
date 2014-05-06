@@ -102,13 +102,13 @@ public class SummaSearcherAggregator implements SummaSearcher {
             throw new ConfigurationException("Unable to extract sub-configurations for " + CONF_SEARCHERS, e);
         }
         log.debug("Constructing SummaSearcherAggregator with " + searcherConfs.size() + " remote SummaSearchers");
-        searchers = new ArrayList<Pair<String, SearchClient>>(searcherConfs.size());
-        List<String> created = new ArrayList<String>(searcherConfs.size());
+        searchers = new ArrayList<>(searcherConfs.size());
+        List<String> created = new ArrayList<>(searcherConfs.size());
         for (Configuration searcherConf: searcherConfs) {
             SearchClient searcher = createClient(searcherConf);
             String searcherName = searcherConf.getString(CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
             created.add(searcherName);
-            searchers.add(new Pair<String, SearchClient>(searcherName, searcher));
+            searchers.add(new Pair<>(searcherName, searcher));
             log.debug("Connected to " + searcherName + " at " + searcher.getVendorId());
         }
         this.defaultSearchers = conf.getStrings(CONF_ACTIVE, created);
@@ -193,10 +193,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
             if (notActives != null) {
                 selected.removeAll(notActives);
             }
-            List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<Pair<String, Future<ResponseCollection>>>(selected.size());
+            List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<>(selected.size());
             for (Pair<String, SearchClient> searcher: searchers) {
                 if (selected.contains(searcher.getKey())) {
-                    searchFutures.add(new Pair<String, Future<ResponseCollection>>(
+                    searchFutures.add(new Pair<>(
                             searcher.getKey(),
                             executor.submit(new SearcherCallable(searcher.getKey(), searcher.getValue(), request))));
                 } else {
@@ -206,7 +206,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             log.trace("All searchers started, collecting and waiting");
 
 
-            List<ResponseHolder> responses = new ArrayList<ResponseHolder>(searchFutures.size());
+            List<ResponseHolder> responses = new ArrayList<>(searchFutures.size());
             for (Pair<String, Future<ResponseCollection>> searchFuture: searchFutures) {
                 try {
                     responses.add(new ResponseHolder(searchFuture.getKey(), request, searchFuture.getValue().get()));
@@ -300,7 +300,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             if (records.size() < startIndex) {
                 records.clear();
             } else {
-                records = new ArrayList<DocumentResponse.Record>(
+                records = new ArrayList<>(
                         records.subList((int)startIndex, (int)Math.min(records.size(), startIndex+maxRecords)));
             }
             docResponse.setRecords(records);

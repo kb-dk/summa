@@ -75,7 +75,7 @@ public class RecordGeneratorTest extends TestCase {
                 + "Random words only letters: $RANDOM_WORDS[1, 3, 5, 7, true]\n"
                 + "Word list: $WORD_LIST[2, 3, mylist]";
         conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE, contentTemplate);
-        ArrayList<String> myList = new ArrayList<String>(
+        ArrayList<String> myList = new ArrayList<>(
                 Arrays.asList("foo", "bar", "baz", "fighters"));
         conf.set("mylist", myList);
         RecordGenerator generator = new RecordGenerator(conf);

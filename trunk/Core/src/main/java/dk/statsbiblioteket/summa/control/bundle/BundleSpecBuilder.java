@@ -54,9 +54,9 @@ public class BundleSpecBuilder {
     public BundleSpecBuilder () {
         bundleType = Bundle.Type.SERVICE;
         properties = Configuration.newMemoryBased();
-        jvmArgs = new ArrayList<String>();
-        fileSet = new HashSet<String>();
-        apiSet = new HashSet<String>();
+        jvmArgs = new ArrayList<>();
+        fileSet = new HashSet<>();
+        apiSet = new HashSet<>();
         autoStart = false;
 
     }
@@ -113,30 +113,29 @@ public class BundleSpecBuilder {
             throw new NullPointerException("writer argument is null");
         }
 
-        PrintWriter out = new PrintWriter(writer);
-        try {
+        try (PrintWriter out = new PrintWriter(writer)) {
             out.println("<bundle>");
 
             if (instanceId != null) {
-                out.println ("  <instanceId>" + instanceId + "</instanceId>");
+                out.println("  <instanceId>" + instanceId + "</instanceId>");
             }
 
             if (bundleId != null) {
-                out.println ("  <bundleId>" + bundleId + "</bundleId>");
+                out.println("  <bundleId>" + bundleId + "</bundleId>");
             }
 
             if (mainJar != null) {
-                out.println ("  <mainJar>" + mainJar + "</mainJar>");
+                out.println("  <mainJar>" + mainJar + "</mainJar>");
             }
 
             if (mainClass != null) {
-                out.println ("  <mainClass>" + mainClass + "</mainClass>");
+                out.println("  <mainClass>" + mainClass + "</mainClass>");
             }
 
             out.println("  <autoStart>" + autoStart + "</autoStart>");
 
             if (description != null) {
-                out.println ("  <description>" + description + "</description>");
+                out.println("  <description>" + description + "</description>");
             }
 
             if (!jvmArgs.isEmpty()) {
@@ -147,30 +146,28 @@ public class BundleSpecBuilder {
 
             if (properties.getStorage().size() != 0) {
                 for (Map.Entry<String, Serializable> entry : properties) {
-                    out.println ("  <property name=\"" + entry.getKey() + "\""
-                                      + " value=\"" + entry.getValue() +"\"/>");
+                    out.println("  <property name=\"" + entry.getKey() + "\""
+                                + " value=\"" + entry.getValue() + "\"/>");
                 }
             }
 
             if (!apiSet.isEmpty()) {
-                out.println ("  <publicApi>");
+                out.println("  <publicApi>");
                 for (String file : apiSet) {
-                    out.println ("    <file>" + file + "</file>");
+                    out.println("    <file>" + file + "</file>");
                 }
-                out.println ("  </publicApi>");
+                out.println("  </publicApi>");
             }
 
             if (!fileSet.isEmpty()) {
-                out.println ("  <fileList>");
+                out.println("  <fileList>");
                 for (String file : fileSet) {
-                    out.println ("    <file>" + file + "</file>");
+                    out.println("    <file>" + file + "</file>");
                 }
-                out.println ("  </fileList>");
+                out.println("  </fileList>");
             }
 
             out.println("</bundle>");
-        } finally {
-            out.close();
         }
         log.trace("Finished write");
     }
@@ -770,8 +767,8 @@ public class BundleSpecBuilder {
      */
     public BundleStub getStub () {
         log.trace("getStub called");
-        List<String> libs = new ArrayList<String>(20);
-        List<String> jvmArgs = new ArrayList<String>(20);
+        List<String> libs = new ArrayList<>(20);
+        List<String> jvmArgs = new ArrayList<>(20);
         /* Find all .jar files in lib/ */
         for (String lib : getFiles()) {
             if (lib.endsWith(".jar") && lib.startsWith("lib/")) {
@@ -851,7 +848,7 @@ public class BundleSpecBuilder {
 
         // Push the API through a TreeSet to get alphabetic sorting
         msg+= "Public API:\n";
-        for (String api : new TreeSet<String>(getApi())) {
+        for (String api : new TreeSet<>(getApi())) {
             msg += "\t" + api + "\n";
         }
         msg += "\n";
@@ -859,7 +856,7 @@ public class BundleSpecBuilder {
         if (printFiles) {
             // Push the fileList through a TreeSet to get alphabetic sorting
             msg += "Files:\n";
-            for (String file : new TreeSet<String>(getFiles())) {
+            for (String file : new TreeSet<>(getFiles())) {
                 msg += "\t" + file + "\n";
             }
             msg += "\n";

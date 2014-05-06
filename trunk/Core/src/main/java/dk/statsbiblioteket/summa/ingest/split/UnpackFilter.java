@@ -79,7 +79,7 @@ public class UnpackFilter implements ObjectFilter {
     private static final Map<String, Class<? extends StreamParser>> unpackers;
 
     static {
-        unpackers = new HashMap<String, Class<? extends StreamParser>>(5);
+        unpackers = new HashMap<>(5);
         unpackers.put("zip", ZIPParser.class);
     }
 
@@ -90,13 +90,13 @@ public class UnpackFilter implements ObjectFilter {
      * {@link #passive}. When the active list is empty, the next Payload from
      * source is processed.
      */
-    private final Deque<Pair<String, StreamParser>> active = new ArrayDeque<Pair<String, StreamParser>>();
+    private final Deque<Pair<String, StreamParser>> active = new ArrayDeque<>();
 
     /**
      * Instantiated unpackers that are not in use. The key is the supported
      * file ending.
      */
-    private final List<Pair<String, StreamParser>> passive = new ArrayList<Pair<String, StreamParser>>();
+    private final List<Pair<String, StreamParser>> passive = new ArrayList<>();
 
     /**
      * The source for the Payloads.
@@ -253,7 +253,7 @@ public class UnpackFilter implements ObjectFilter {
                 unpacker = Configuration.create(unpackers.get(postfix), conf);
             }
             log.debug("Created unpacker '" + parserClass.getName() + "' for ending '" + postfix + "'");
-            Pair<String, StreamParser> pair = new Pair<String, StreamParser>(postfix, unpacker);
+            Pair<String, StreamParser> pair = new Pair<>(postfix, unpacker);
             active.push(pair);
             unpacker.open(payload);
             payload = null;

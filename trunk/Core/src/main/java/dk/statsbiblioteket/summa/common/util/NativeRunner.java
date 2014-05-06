@@ -251,14 +251,13 @@ public class NativeRunner  {
             // No complaints here - null just means no input
             return;
         }
-        final OutputStream pIn = process.getOutputStream();
         final InputStream given = processInput;
         new Thread() {
             @Override
             public void run() {
                 try {
                     OutputStream writer = null;
-                    try {
+                    try (OutputStream pIn = process.getOutputStream()) {
                         writer = new BufferedOutputStream(pIn);
                         int c;
                         while ((c = given.read()) != -1) {
@@ -268,7 +267,7 @@ public class NativeRunner  {
                         if (writer != null) {
                             writer.close();
                         }
-                        pIn.close();
+
                     }
                 } catch (IOException e) {
                     // This seems ugly

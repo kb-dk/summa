@@ -116,9 +116,9 @@ public class StorageServiceTest extends NoExitTestCase {
 
         // Start the Service remotely. This should bring up the Storage
         ConnectionFactory<Service> serviceCF =
-                new RMIConnectionFactory<Service>();
+                new RMIConnectionFactory<>();
         ConnectionManager<Service> serviceCM =
-                new ConnectionManager<Service>(serviceCF);
+                new ConnectionManager<>(serviceCF);
         ConnectionContext<Service> serviceContext =
                 serviceCM.get("//localhost:27000/TestStorage");
         assertNotNull("The ConnectionManager should return a Service"
@@ -128,7 +128,7 @@ public class StorageServiceTest extends NoExitTestCase {
 
         // Connect to the Storage interface remotely
         ConnectionFactory<Storage> cf = new StorageConnectionFactory(conf);
-        ConnectionManager<Storage> cm = new ConnectionManager<Storage>(cf);
+        ConnectionManager<Storage> cm = new ConnectionManager<>(cf);
 
         // Do this for each connection
         ConnectionContext<Storage> ctx =

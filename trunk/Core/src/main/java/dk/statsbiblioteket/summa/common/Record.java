@@ -523,7 +523,7 @@ public class Record implements Serializable, Comparable {
      * @return List of parent id's.
      */
     public List<String> getParentIds() {
-        return parentIds == null ? null : new ArrayList<String>(parentIds);
+        return parentIds == null ? null : new ArrayList<>(parentIds);
     }
 
     /**
@@ -548,7 +548,7 @@ public class Record implements Serializable, Comparable {
             //noinspection AssignmentToNull
             this.parentIds = null;
         } else {
-            this.parentIds = new LinkedHashSet<String>(parentIds);
+            this.parentIds = new LinkedHashSet<>(parentIds);
         }
 
         parents = null;
@@ -560,7 +560,7 @@ public class Record implements Serializable, Comparable {
      * @return a list of children id's
      */
     public List<String> getChildIds() {
-        return childIds == null ? null : new ArrayList<String>(childIds);
+        return childIds == null ? null : new ArrayList<>(childIds);
     }
 
     /**
@@ -584,7 +584,7 @@ public class Record implements Serializable, Comparable {
             //noinspection AssignmentToNull
             this.childIds = null;
         } else {
-            this.childIds = new LinkedHashSet<String>(childIds);
+            this.childIds = new LinkedHashSet<>(childIds);
         }
 
         children = null;
@@ -602,13 +602,13 @@ public class Record implements Serializable, Comparable {
             return;
         }
 
-        List<String> newChildIds = new ArrayList<String>(children.size());
+        List<String> newChildIds = new ArrayList<>(children.size());
         for (Record child : children) {
             newChildIds.add(child.getId());
         }
 
         setChildIds(newChildIds);
-        this.children = new LinkedHashSet<Record>(children);
+        this.children = new LinkedHashSet<>(children);
     }
 
     /**
@@ -621,7 +621,7 @@ public class Record implements Serializable, Comparable {
      *         resolved.
      */
     public List<Record> getChildren() {
-        return children == null ? null : new ArrayList<Record>(children);
+        return children == null ? null : new ArrayList<>(children);
     }
 
     /**
@@ -636,13 +636,13 @@ public class Record implements Serializable, Comparable {
             return;
         }
 
-        List<String> newParentIds = new ArrayList<String>(parents.size());
+        List<String> newParentIds = new ArrayList<>(parents.size());
         for (Record parent : parents) {
             newParentIds.add(parent.getId());
         }
 
         setParentIds(newParentIds);
-        this.parents = new LinkedHashSet<Record>(parents);
+        this.parents = new LinkedHashSet<>(parents);
     }
 
     /**
@@ -655,7 +655,7 @@ public class Record implements Serializable, Comparable {
      *         resolved.
      */
     public List<Record> getParents() {
-        return parents == null ? null : new ArrayList<Record>(parents);
+        return parents == null ? null : new ArrayList<>(parents);
     }
 
     /**
@@ -873,8 +873,8 @@ public class Record implements Serializable, Comparable {
                + (parents == null ? 0 : parents.size()) + ")" 
                + (verbose ? ", creationTime(" + timeToString(getCreationTime()) + "), modificationTime("
                             + timeToString(getModificationTime()) + "), parentIds(" 
-                            + (parentIds == null ? "" : Logs.expand(new ArrayList<String>(parentIds), 5)) 
-                            + "), childIds(" + (childIds == null ? "" : Logs.expand(new ArrayList<String>(childIds), 5))
+                            + (parentIds == null ? "" : Logs.expand(new ArrayList<>(parentIds), 5))
+                            + "), childIds(" + (childIds == null ? "" : Logs.expand(new ArrayList<>(childIds), 5))
                             + "), meta(" 
                             + (meta == null ? "" : Logs.expand(Arrays.asList(meta.keySet().toArray()), 5)) : "")
                + ")]";

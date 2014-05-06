@@ -58,7 +58,7 @@ public class IndexResponse extends ResponseImpl {
             log.debug("Creating index response for request " + request);
         }
         this.request = request;
-        index = new ArrayList<Pair<String, Integer>>(request.getLength());
+        index = new ArrayList<>(request.getLength());
     }
 
     /**
@@ -182,12 +182,12 @@ public class IndexResponse extends ResponseImpl {
         }
         Collections.sort(index, sorter);
         int start = Math.max(0, getOrigo() + request.getDelta());
-        index = new ArrayList<Pair<String, Integer>>(
+        index = new ArrayList<>(
                 index.subList(start, Math.min(index.size(), start + request.getLength())));
     }
 
     private int getOrigo() {
-        int origo = Collections.binarySearch(index, new Pair<String, Integer>(request.getTerm(), 0), sorter);
+        int origo = Collections.binarySearch(index, new Pair<>(request.getTerm(), 0), sorter);
         return origo < 0 ? (origo + 1) * -1 : origo;
     }
 

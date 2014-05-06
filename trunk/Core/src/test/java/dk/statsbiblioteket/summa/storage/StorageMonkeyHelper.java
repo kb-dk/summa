@@ -159,7 +159,7 @@ public class StorageMonkeyHelper  {
         }
 
         // create jobs
-        List<Job> jobs = new ArrayList<Job>(100);
+        List<Job> jobs = new ArrayList<>(100);
         while (news + updates + deletes > 0) {
             int records = Math.min(news + updates + deletes, jobSize);
             int flushSize = Math.max(1, nextInt(minFlushSize, maxFlushSize));
@@ -170,7 +170,7 @@ public class StorageMonkeyHelper  {
                     news--;
                     continue;
                 }*/
-                List<TYPE> types = new ArrayList<TYPE>(3);
+                List<TYPE> types = new ArrayList<>(3);
                 if (deletes > 0) {
                     types.add(TYPE.d);
                 }
@@ -292,7 +292,7 @@ public class StorageMonkeyHelper  {
     }
 
     public class Job implements Runnable {
-        private List<FutureRecord> records = new ArrayList<FutureRecord>(100);
+        private List<FutureRecord> records = new ArrayList<>(100);
         private int flushSize;
         private int recordCount = 0;
 
@@ -322,10 +322,10 @@ public class StorageMonkeyHelper  {
                 ReadableStorage storageR = getStorageR();
                 while (!records.isEmpty()) {
                     int currentJobSize = Math.min(flushSize, records.size());
-                    ArrayList<Record> summaRecords = new ArrayList<Record>(
+                    ArrayList<Record> summaRecords = new ArrayList<>(
                             currentJobSize);
                     List<FutureRecord> currentRecords =
-                            new ArrayList<FutureRecord>(
+                            new ArrayList<>(
                                     records.subList(0, currentJobSize));
                     if (records.size() - currentJobSize == 0) {
                         records.clear();

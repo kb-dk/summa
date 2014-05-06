@@ -60,7 +60,7 @@ public class MachineStatsFilterTest extends TestCase {
     }
 
     private PayloadFeederHelper getFeeder(int payloadCount, int delay) {
-        List<Payload> payloads = new ArrayList<Payload>(payloadCount);
+        List<Payload> payloads = new ArrayList<>(payloadCount);
         for (int i = 0 ; i < payloadCount ; i++) {
             payloads.add(new Payload(new Record(
                     Integer.toString(i), "dummy", new byte[10])));

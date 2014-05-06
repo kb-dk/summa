@@ -164,9 +164,9 @@ public class InteractionAdjusterTest extends TestCase {
             FacetKeys.SEARCH_FACET_FACETS, "lma_long"
         );
 
-        HashMap<String, Integer> facetIDs = new HashMap<String, Integer>();
+        HashMap<String, Integer> facetIDs = new HashMap<>();
         facetIDs.put("ContentType", 0);
-        HashMap<String, String[]> fields = new HashMap<String, String[]>();
+        HashMap<String, String[]> fields = new HashMap<>();
         fields.put("ContentType", new String[]{"ContentType"});
         Structure structure = new Structure("ContentType", 10);
         FacetResultExternal summaFacetResult = new FacetResultExternal(
@@ -174,7 +174,7 @@ public class InteractionAdjusterTest extends TestCase {
         summaFacetResult.setPrefix("interactionadjustertest");
         //noinspection unchecked
         summaFacetResult.getMap().put("ContentType", Arrays.asList(
-            new FacetResultImpl.Tag<String>("Audio Sound", 87,Reliability.PRECISE)));
+            new FacetResultImpl.Tag<>("Audio Sound", 87,Reliability.PRECISE)));
                 
         ResponseCollection responses = new ResponseCollection();
         responses.add(summaFacetResult);
@@ -191,9 +191,9 @@ public class InteractionAdjusterTest extends TestCase {
             FacetKeys.SEARCH_FACET_FACETS, "lma_long"
         );
 
-        HashMap<String, Integer> facetIDs = new HashMap<String, Integer>();
+        HashMap<String, Integer> facetIDs = new HashMap<>();
         facetIDs.put("ContentType", 0);
-        HashMap<String, String[]> fields = new HashMap<String, String[]>();
+        HashMap<String, String[]> fields = new HashMap<>();
         fields.put("ContentType", new String[]{"ContentType"});
         Structure structure = new Structure("ContentType", 10);
         FacetResultExternal summaFacetResult = new FacetResultExternal(
@@ -202,8 +202,8 @@ public class InteractionAdjusterTest extends TestCase {
         //noinspection unchecked
       
         summaFacetResult.getMap().put("ContentType", Arrays.asList(
-                new FacetResultImpl.Tag<String>("Newspaper Article", 2,Reliability.PRECISE),
-                new FacetResultImpl.Tag<String>("Journal Article", 5,Reliability.PRECISE)        		
+                new FacetResultImpl.Tag<>("Newspaper Article", 2,Reliability.PRECISE),
+                new FacetResultImpl.Tag<>("Journal Article", 5,Reliability.PRECISE)
         		));
 
         

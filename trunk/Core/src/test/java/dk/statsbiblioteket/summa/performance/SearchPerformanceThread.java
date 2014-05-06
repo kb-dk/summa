@@ -90,7 +90,7 @@ public class SearchPerformanceThread extends Thread {
             }
             TopDocs topDocs = searcher.search(parsedQuery, mediator.maxHits);
             //noinspection DuplicateStringLiteralInspection
-            Set<String> selector = new HashSet<String>(Arrays.asList("shortformat"));
+            Set<String> selector = new HashSet<>(Arrays.asList("shortformat"));
             for (int i = 0 ; i < Math.min(topDocs.scoreDocs.length, mediator.maxHits) ; i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 Document doc = searcher.getIndexReader().document(scoreDoc.doc, selector);

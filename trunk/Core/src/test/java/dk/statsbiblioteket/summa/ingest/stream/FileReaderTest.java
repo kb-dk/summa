@@ -25,12 +25,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -220,7 +215,7 @@ public class FileReaderTest extends TestCase {
         conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".finito");
         FileReader reader = new FileReader(conf);
 
-        ArrayList<String> actual = new ArrayList<String>(expectedOrder.size());
+        ArrayList<String> actual = new ArrayList<>(expectedOrder.size());
         while (reader.hasNext()) {
             Payload payload = reader.next();
             actual.add(new File((String)

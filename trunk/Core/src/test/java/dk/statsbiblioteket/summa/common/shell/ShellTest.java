@@ -21,9 +21,9 @@ import jline.ConsoleReader;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Stack;
-import java.util.Arrays;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -35,7 +35,7 @@ public class ShellTest extends TestCase {
     @Override
     public void setUp () throws Exception {        
         ctx = new ShellContext () {
-            private Stack<String> lineBuffer = new Stack<String>();
+            private Stack<String> lineBuffer = new Stack<>();
             private ConsoleReader lineIn = null; ///createConsoleReader();
             private String lastError = null;
 

@@ -19,7 +19,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.storage.FakeStorage;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
@@ -77,7 +76,7 @@ public class RecordReaderTest extends TestCase {
         int RECORDS = 10;
         int BATCH = 4;
 
-        List<Record> records = new ArrayList<Record>(RECORDS);
+        List<Record> records = new ArrayList<>(RECORDS);
         for (int i = 0 ; i < RECORDS ; i++) {
             records.add(new Record("record_" + i, "dummy", new byte[0]));
         }
@@ -305,7 +304,7 @@ public class RecordReaderTest extends TestCase {
 
     private List<Record> empty(Configuration readerConf) throws IOException {
         RecordReader reader = new RecordReader(readerConf);
-        List<Record> records = new ArrayList<Record>();
+        List<Record> records = new ArrayList<>();
         while (reader.hasNext()) {
             records.add(reader.next().getRecord());
         }
@@ -422,7 +421,7 @@ public class RecordReaderTest extends TestCase {
 
         public RecordProbe(RecordReader rr, int recordCount) {
             r = rr;
-            records = new LinkedList<Record>();
+            records = new LinkedList<>();
             this.recordCount = recordCount;
         }
 

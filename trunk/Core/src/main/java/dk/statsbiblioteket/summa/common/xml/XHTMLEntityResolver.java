@@ -51,7 +51,7 @@ public class XHTMLEntityResolver extends SummaEntityResolver {
     }
 
     private static Map<String, String> getXHTMLResources() {
-        Map<String, String> result = new HashMap<String, String>(XHTML_RESOURCES.length);
+        Map<String, String> result = new HashMap<>(XHTML_RESOURCES.length);
         for (String[] resource: XHTML_RESOURCES) {
             result.put(resource[0], resource[1]);
         }

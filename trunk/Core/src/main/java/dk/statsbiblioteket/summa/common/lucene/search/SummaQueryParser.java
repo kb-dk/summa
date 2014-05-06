@@ -64,7 +64,7 @@ public class SummaQueryParser {
         private Stack<Integer> balance;
 
         QueryBalancer() {
-            balance = new Stack<Integer>();
+            balance = new Stack<>();
         }
 
         void addToken(Token t) throws ParseException {

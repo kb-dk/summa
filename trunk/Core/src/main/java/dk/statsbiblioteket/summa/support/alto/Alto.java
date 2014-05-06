@@ -57,8 +57,8 @@ public class Alto {
     private String filename = null;
     private String origin = null;
     private MEASUREMENT_UNIT measurementUnit = DEFAULT_MEASUREMENT_UNIT;
-    private Map<String, TextStyle> styles = new HashMap<String, TextStyle>();
-    private List<Page> layout = new ArrayList<Alto.Page>();
+    private Map<String, TextStyle> styles = new HashMap<>();
+    private List<Page> layout = new ArrayList<>();
 
     public Alto(String xml, String origin) throws XMLStreamException, FileNotFoundException {
         this(new StringReader(xml), origin);
@@ -166,7 +166,7 @@ public class Alto {
         }
         int counter = 1;
         int blockCount = 0;
-        Map<String, List<TextBlock>> groups = new LinkedHashMap<String, List<TextBlock>>();
+        Map<String, List<TextBlock>> groups = new LinkedHashMap<>();
 
         // This is O(n^2), but normally there are few TextBlocks (10-30) so optimization has low priority
         for (Page page: getLayout()) {
@@ -188,7 +188,7 @@ public class Alto {
                 // No links, create a new group
                 String groupID = "segment_" + counter++;
                 log.trace("Creating group " + groupID + " for block " + currentBlock.getID());
-                groups.put(groupID, new ArrayList<TextBlock>(Arrays.asList(currentBlock)));
+                groups.put(groupID, new ArrayList<>(Arrays.asList(currentBlock)));
             }
         }
         log.debug("Created " + groups.size() + " groups with a total of " + blockCount + " TextBlocks");
@@ -196,7 +196,7 @@ public class Alto {
         return groups;
     }
 
-    private Map<Integer, Map<String, List<TextBlock>>> minGroups = new HashMap<Integer, Map<String, List<TextBlock>>>();
+    private Map<Integer, Map<String, List<TextBlock>>> minGroups = new HashMap<>();
     /**
      * Works like {@link #getTextBlockGroups()} with the differences that groups containing less than minWords are
      * collapsed into the single group NOGROUP.
@@ -208,8 +208,8 @@ public class Alto {
             return minGroups.get(minWords);
         }
         Map<String, List<TextBlock>> all = getTextBlockGroups();
-        List<TextBlock> no = new ArrayList<TextBlock>();
-        Map<String, List<TextBlock>> pruned = new HashMap<String, List<TextBlock>>(all.size());
+        List<TextBlock> no = new ArrayList<>();
+        Map<String, List<TextBlock>> pruned = new HashMap<>(all.size());
 
         for (Map.Entry<String, List<TextBlock>> entry: all.entrySet()) {
             if (countWords(entry.getValue()) < minWords) {
@@ -269,7 +269,7 @@ public class Alto {
     //   <PrintSpace ID="BS1" HPOS="192" VPOS="153" WIDTH="2244" HEIGHT="3413">
     //     <TextBlock ID="TB_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="128">
     public static final class Page extends PositionedElement {
-        private List<TextBlock> printSpace = new ArrayList<TextBlock>();
+        private List<TextBlock> printSpace = new ArrayList<>();
 
         public Page(XMLStreamReader xml) throws XMLStreamException {
             super(xml);
@@ -290,7 +290,7 @@ public class Alto {
 
         @Override
         public List<String> getAllTexts() {
-            List<String> result = new ArrayList<String>();
+            List<String> result = new ArrayList<>();
             for (PositionedElement pe: printSpace) {
                 result.addAll(pe.getAllTexts());
             }
@@ -302,7 +302,7 @@ public class Alto {
     // <TextBlock ID="TB_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="128">
     //   <TextLine ID="Tl_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87">
     public static final class TextBlock extends PositionedElement {
-        private List<TextLine> lines = new ArrayList<TextLine>();
+        private List<TextLine> lines = new ArrayList<>();
 
         public TextBlock(XMLStreamReader xml) throws XMLStreamException {
             super(xml);
@@ -334,7 +334,7 @@ public class Alto {
 
         @Override
         public List<String> getAllTexts() {
-            List<String> result = new ArrayList<String>();
+            List<String> result = new ArrayList<>();
             for (PositionedElement pe: lines) {
                 result.addAll(pe.getAllTexts());
             }
@@ -349,7 +349,7 @@ public class Alto {
     // <TextLine ID="Tl_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87">
     //   <String ID="TS_0001" STYLEREFS="TXT_1" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87" CONTENT="SONDAG" />
     public static final class TextLine extends PositionedElement {
-        private List<TextString> strings = new ArrayList<TextString>();
+        private List<TextString> strings = new ArrayList<>();
 
         public TextLine(XMLStreamReader xml) throws XMLStreamException {
             super(xml);
@@ -382,7 +382,7 @@ public class Alto {
 
         @Override
         public List<String> getAllTexts() {
-            List<String> result = new ArrayList<String>();
+            List<String> result = new ArrayList<>();
             for (PositionedElement ts: strings) {
                 result.addAll(ts.getAllTexts());
             }

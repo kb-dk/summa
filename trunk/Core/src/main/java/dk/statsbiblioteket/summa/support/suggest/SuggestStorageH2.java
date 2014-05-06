@@ -372,10 +372,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             psExists.setFetchDirection(ResultSet.FETCH_FORWARD);
             psExists.setFetchSize(maxResults);
 
-            ResultSet rs = psExists.executeQuery();
             int count = 0;
             SuggestResponse response = new SuggestResponse(prefix, maxResults);
-            try {
+            try (ResultSet rs = psExists.executeQuery()) {
                 while (rs.next() && count < maxResults) {
                     count++;
                     response.addSuggestion(rs.getString(1), rs.getInt(3), rs.getInt(2));
@@ -386,7 +385,6 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
                 return response;
             } finally {
-                rs.close();
                 connection.setReadOnly(false);
                 connection.setAutoCommit(true);
             }
@@ -600,7 +598,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             psAll.setInt(2, start);
             rs = psAll.executeQuery();
 
-            ArrayList<String> suggestions = new ArrayList<String>(max);
+            ArrayList<String> suggestions = new ArrayList<>(max);
 
             while (rs.next()) {
                 suggestions.add(rs.getString(1) + "\t" + rs.getInt(3) + "\t" + rs.getInt(2));
@@ -612,7 +610,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         } catch (SQLException e) {
             log.error(String.format("SQLException while dumping a maximum of %d suggestions, starting at %d", max,
                                     start), e);
-            return new ArrayList<String>();
+            return new ArrayList<>();
         } finally {
             if (rs != null) {
                 try {

@@ -80,7 +80,7 @@ public class RepositoryCommand extends RemoteCommand<ClientConnection> {
             }
 
             /* Sort the bundles before displaying them  */
-            SortedSet<String> sortedBundles = new TreeSet<String>(bundles);
+            SortedSet<String> sortedBundles = new TreeSet<>(bundles);
             for(String bdlId : sortedBundles) {
                 ctx.info("\t" + bdlId);
             }

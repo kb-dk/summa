@@ -214,7 +214,7 @@ public class HubResponseMerger implements Configurable {
             log.debug("Only a single response received (" + responses.get(0).getId() + "). No merging performed");
             return responses.get(0).getResponse();
         }
-        Set<String> keys = new HashSet<String>();
+        Set<String> keys = new HashSet<>();
         for (ComponentCallable.NamedResponse responsePair: responses) {
             //String id = responsePair.getId();
             QueryResponse response = responsePair.getResponse();
@@ -225,9 +225,9 @@ public class HubResponseMerger implements Configurable {
         }
         log.debug("Located " + keys.size() + " unique keys in " + responses.size() + " responses. Commencing merging");
 
-        final NamedList<Object> merged = new NamedList<Object>();
+        final NamedList<Object> merged = new NamedList<>();
         final List<ComponentCallable.NamedResponse> defined =
-                new ArrayList<ComponentCallable.NamedResponse>(responses.size());
+                new ArrayList<>(responses.size());
         for (String key: keys) {
             // Isolate the responses that contains the given key
             defined.clear();
@@ -362,7 +362,7 @@ public class HubResponseMerger implements Configurable {
         }
 
         // Extract the needed records from the non-showing entries
-        List<AdjustWrapper.NamedDocument> promotees = new ArrayList<AdjustWrapper.NamedDocument>(required);
+        List<AdjustWrapper.NamedDocument> promotees = new ArrayList<>(required);
         int position = firstInsertPos;
         while (position < records.size() && promotees.size() < needed) {
             if (searchID.equals(records.get(position).getSearcherID())) {
@@ -377,7 +377,7 @@ public class HubResponseMerger implements Configurable {
         // by hashing query
         // TODO: Verify that q contains the query
         Random random = new Random(request.get("q", "N/A").hashCode() << 12);
-        List<Boolean> insertionPoints = new ArrayList<Boolean>(topX);
+        List<Boolean> insertionPoints = new ArrayList<>(topX);
         for (int i = firstInsertPos ; i < topX ; i++) {
             insertionPoints.add(i-firstInsertPos < needed);
         }
@@ -385,7 +385,7 @@ public class HubResponseMerger implements Configurable {
 
         // Insert!
         List<AdjustWrapper.NamedDocument> result =
-                new ArrayList<AdjustWrapper.NamedDocument>(records.size() + promotees.size());
+                new ArrayList<>(records.size() + promotees.size());
         for (int i = 0 ; i < topX ; i++) {
             if (i >= firstInsertPos && insertionPoints.get(i-firstInsertPos) && !promotees.isEmpty()) {
                 result.add(promotees.remove(0));
@@ -474,7 +474,7 @@ public class HubResponseMerger implements Configurable {
         log.trace("Sorting by interleaving");
         // (searchID, records*)*
         Map<String, List<AdjustWrapper.NamedDocument>> providers =
-            new LinkedHashMap<String, List<AdjustWrapper.NamedDocument>>();
+            new LinkedHashMap<>();
         for (String o: order) { // Ordered first
             providers.put(o, new ArrayList<AdjustWrapper.NamedDocument>());
         }
@@ -485,7 +485,7 @@ public class HubResponseMerger implements Configurable {
             providers.get(ar.getSearcherID()).add(ar);
         }
         // providers now contains ordered lists of records split by search ID
-        List<AdjustWrapper.NamedDocument> interleaved = new ArrayList<AdjustWrapper.NamedDocument>();
+        List<AdjustWrapper.NamedDocument> interleaved = new ArrayList<>();
         boolean any = true;
         while (any) {
             any = false;
@@ -556,7 +556,7 @@ public class HubResponseMerger implements Configurable {
     }
 
     private List<SolrDocumentList> getSolrDocumentList(List<ComponentCallable.NamedResponse> responses) {
-        List<SolrDocumentList> sdls = new ArrayList<SolrDocumentList>(responses.size());
+        List<SolrDocumentList> sdls = new ArrayList<>(responses.size());
         for (ComponentCallable.NamedResponse response: responses) {
             SolrDocumentList sdl = (SolrDocumentList) response.getResponse().getResponse().get("response");
             if (sdl != null) {
@@ -568,12 +568,12 @@ public class HubResponseMerger implements Configurable {
 
     private SimpleOrderedMap mergeResponseHeaders(List<SimpleOrderedMap> headers) {
         final Set<String> keys = getKeys(headers);
-        final SimpleOrderedMap<Object> merged = new SimpleOrderedMap<Object>();
+        final SimpleOrderedMap<Object> merged = new SimpleOrderedMap<>();
 
         for (String key: keys) {
             // status: Anything else than 0 is considered an anomaly and has preference
             if (STATUS.equals(key)) {
-                Set<Integer> statuses = new HashSet<Integer>(headers.size());
+                Set<Integer> statuses = new HashSet<>(headers.size());
                 for (SimpleOrderedMap som: headers) {
                     Integer status = (Integer) som.get(STATUS);
                     if (status != null) {
@@ -620,7 +620,7 @@ public class HubResponseMerger implements Configurable {
     }
 
     private Set<String> getKeys(List<SimpleOrderedMap> maps) {
-        Set<String> keys = new HashSet<String>();
+        Set<String> keys = new HashSet<>();
         for (SimpleOrderedMap map: maps) {
             for (int i = 0 ; i < map.size() ; i++) {
                 keys.add(map.getName(i));
@@ -630,7 +630,7 @@ public class HubResponseMerger implements Configurable {
     }
 
     private List<SimpleOrderedMap> getSimpleOrderedMaps(String key, List<ComponentCallable.NamedResponse> responses) {
-        List<SimpleOrderedMap> soms = new ArrayList<SimpleOrderedMap>(responses.size());
+        List<SimpleOrderedMap> soms = new ArrayList<>(responses.size());
         for (ComponentCallable.NamedResponse response: responses) {
             SimpleOrderedMap som = (SimpleOrderedMap) response.getResponse().getResponse().get(key);
             if (som != null) {
@@ -646,7 +646,7 @@ public class HubResponseMerger implements Configurable {
             log.trace("parseForceRules found no rules in '" + s + "'");
             return null;
         }
-        List<Pair<String, Integer>> rules = new ArrayList<Pair<String, Integer>>(ruleTokens.length);
+        List<Pair<String, Integer>> rules = new ArrayList<>(ruleTokens.length);
         for (String ruleToken: ruleTokens) {
             // zoo(12)
             String[] subTokens = ruleToken.split(" *\\(", 2);
@@ -659,7 +659,7 @@ public class HubResponseMerger implements Configurable {
             String noParen = subTokens[1].split("\\)", 2)[0].trim();
             Integer count = Integer.parseInt(noParen);
             log.debug("parseForceRules adding rule " + subTokens[0] + ", " + count);
-            rules.add(new Pair<String, Integer>(subTokens[0], count));
+            rules.add(new Pair<>(subTokens[0], count));
         }
         return rules;
     }
@@ -669,7 +669,7 @@ public class HubResponseMerger implements Configurable {
     private static class AdjustWrapper {
 
         /* All records from the DocumentResponses, held until externalise */
-        private List<NamedDocument> docs = new ArrayList<NamedDocument>();
+        private List<NamedDocument> docs = new ArrayList<>();
         private long hitCount = 0;
         /* Merge everything into the ResponseCollection. This class should not
          be used further after this call.
@@ -732,7 +732,7 @@ public class HubResponseMerger implements Configurable {
     }
 
     private Object mergeFacets(SolrParams params, List<ComponentCallable.NamedResponse> responses) {
-        SimpleOrderedMap<NamedList<Integer>> facetsFields = new SimpleOrderedMap<NamedList<Integer>>();
+        SimpleOrderedMap<NamedList<Integer>> facetsFields = new SimpleOrderedMap<>();
         for (ComponentCallable.NamedResponse response: responses) {
             List<FacetField> ffs = response.getResponse().getFacetFields();
             if (ffs == null) {
@@ -741,7 +741,7 @@ public class HubResponseMerger implements Configurable {
             for (FacetField ff: ffs) {
                 NamedList<Integer> mergedTags = facetsFields.get(ff.getName());
                 if (mergedTags == null) {
-                    mergedTags = new NamedList<Integer>();
+                    mergedTags = new NamedList<>();
                     facetsFields.add(ff.getName(), mergedTags);
                 }
                 mergeFacets(mergedTags, ff);
@@ -750,7 +750,7 @@ public class HubResponseMerger implements Configurable {
         sortFacets(params, facetsFields);
         trimFacets(params, facetsFields);
 
-        SimpleOrderedMap<Object> merged = new SimpleOrderedMap<Object>();
+        SimpleOrderedMap<Object> merged = new SimpleOrderedMap<>();
         merged.add("facet_fields", facetsFields);
         return merged;
     }
@@ -784,9 +784,9 @@ public class HubResponseMerger implements Configurable {
 
     // Due to the "interesting" heap-saving implementation of NamedList, we need to sort externally
     private <T> void sort(NamedList<T> list, Comparator<Map.Entry<String, T>> comparator) {
-        List<Map.Entry<String, T>> nwPairs = new ArrayList<Map.Entry<String, T>>(list.size());
+        List<Map.Entry<String, T>> nwPairs = new ArrayList<>(list.size());
         for (Map.Entry<String, T> entry: list) {
-            nwPairs.add(new AbstractMap.SimpleEntry<String, T>(entry.getKey(), entry.getValue()));
+            nwPairs.add(new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue()));
         }
         Collections.sort(nwPairs, comparator);
         list.clear();

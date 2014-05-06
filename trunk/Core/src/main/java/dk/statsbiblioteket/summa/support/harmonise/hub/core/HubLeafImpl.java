@@ -46,7 +46,7 @@ public abstract class HubLeafImpl extends  HubComponentImpl {
     public static final String CONF_MODE = "node.mode";
     public static final String DEFAULT_MODE = MODE.onlyMatch.toString();
 
-    private final List<String> bases = new ArrayList<String>();
+    private final List<String> bases = new ArrayList<>();
     protected MODE mode;
 
     public HubLeafImpl(Configuration conf) {

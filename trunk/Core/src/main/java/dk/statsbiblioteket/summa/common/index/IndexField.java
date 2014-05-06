@@ -206,7 +206,7 @@ public class IndexField<A, T, F> {
      * </p><p>
      * This is used at query-time.
      */
-    private List<IndexAlias> aliases = new ArrayList<IndexAlias>(10);
+    private List<IndexAlias> aliases = new ArrayList<>(10);
 
     /**
      * The analyzer to use for indexing. The type of the analyzer is defined by
@@ -232,7 +232,7 @@ public class IndexField<A, T, F> {
      * </p><p>
      * This is used at index-time.
      */
-    private List<F> indexFilters = new ArrayList<F>(10);
+    private List<F> indexFilters = new ArrayList<>(10);
 
     /**
      * The filters to use for query expansion. The type of filter is defined by
@@ -240,7 +240,7 @@ public class IndexField<A, T, F> {
      * </p><p>
      * This is used at query-time.
      */
-    private List<F> queryFilters = new ArrayList<F>(10);
+    private List<F> queryFilters = new ArrayList<>(10);
 
     /**
      * The tokenizer used for text indexing. The type of analyzer is defined
@@ -330,11 +330,11 @@ public class IndexField<A, T, F> {
         sortCache = parent.sortCache;
         inFreetext = parent.isInFreetext();
         required = parent.isRequired();
-        aliases = new ArrayList<IndexAlias>(parent.getAliases());
+        aliases = new ArrayList<>(parent.getAliases());
         indexAnalyzer = parent.getIndexAnalyzer();
         queryAnalyzer = parent.getQueryAnalyzer();
-        indexFilters = new ArrayList<F>(parent.getIndexFilters());
-        queryFilters = new ArrayList<F>(parent.getQueryFilters());
+        indexFilters = new ArrayList<>(parent.getIndexFilters());
+        queryFilters = new ArrayList<>(parent.getQueryFilters());
     }
 
     public String toString() {
@@ -434,7 +434,7 @@ public class IndexField<A, T, F> {
             }
         }
         name = nameVal;
-        aliases = new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
+        aliases = new ArrayList<>(IndexAlias.getAliases(node));
         //doIndex =     ParseUtil.getValue(xPath, node, "@indexed",
         //                                 doIndex);
 //        doIndex = DOM.selectBoolean(node, "@indexed", doIndex);
@@ -541,7 +541,7 @@ public class IndexField<A, T, F> {
             String FILTER = "filter";
             if ((Boolean) xPath.evaluate(FILTER, node, XPathConstants.BOOLEAN)) {
                 NodeList filterNodes = (NodeList) xPath.evaluate(FILTER, node, XPathConstants.NODESET);
-                filters = new ArrayList<F>(filterNodes.getLength());
+                filters = new ArrayList<>(filterNodes.getLength());
                 for (int i = 0; i < filterNodes.getLength(); i++) {
                     F filter = createFilter(filterNodes.item(i));
                     if (filter != null) {

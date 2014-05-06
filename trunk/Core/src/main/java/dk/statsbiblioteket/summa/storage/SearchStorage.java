@@ -148,7 +148,7 @@ public class SearchStorage implements Storage {
             throws IOException {
         final long startTime = System.currentTimeMillis();
         DocumentResponse documents = getDocumentResponse(new Request(
-                DocumentKeys.SEARCH_IDS, new ArrayList<String>(ids)));
+                DocumentKeys.SEARCH_IDS, new ArrayList<>(ids)));
         List<Record> result = documents != null ? convertDocuments(documents) : new ArrayList<Record>(0);
         profiler.beat();
         String message = "Finished getRecords(" + (ids.size() == 1 ? ids.get(0) : ids.size() + " record ids") + ") "
@@ -165,9 +165,9 @@ public class SearchStorage implements Storage {
     protected List<Record> getRecordsNoExplicitIDSearch(List<String> ids, QueryOptions options, boolean doLog)
             throws IOException {
         final long startTime = System.currentTimeMillis();
-        List<Record> result = new ArrayList<Record>(ids.size());
+        List<Record> result = new ArrayList<>(ids.size());
         if (ids.size() > batchSize) {
-            List<String> subIDs = new ArrayList<String>(batchSize);
+            List<String> subIDs = new ArrayList<>(batchSize);
             for (String id: ids) {
                 subIDs.add(id);
                 if (subIDs.size() == batchSize) {
@@ -203,7 +203,7 @@ public class SearchStorage implements Storage {
     }
 
     private List<Record> convertDocuments(DocumentResponse documents) {
-        List<Record> records = new ArrayList<Record>(batchSize);
+        List<Record> records = new ArrayList<>(batchSize);
         for (DocumentResponse.Record doc: documents.getRecords()) {
             StringWriter sw = new StringWriter();
             doc.toXML(sw);

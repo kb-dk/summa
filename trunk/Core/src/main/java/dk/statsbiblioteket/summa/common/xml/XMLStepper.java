@@ -41,7 +41,7 @@ public class XMLStepper {
      * @param callback called for each start element.
      */
     public static void iterateTags(XMLStreamReader xml, Callback callback) throws XMLStreamException {
-        List<String> tagStack = new ArrayList<String>(10);
+        List<String> tagStack = new ArrayList<>(10);
         while (true) {
             if (xml.getEventType() == XMLStreamReader.START_ELEMENT) {
                 String currentTag = xml.getLocalName();
@@ -306,7 +306,7 @@ public class XMLStepper {
      *         the empty String will be returned.
      */
     public static String getFirstElementText(CharSequence xml, String tag) throws XMLStreamException {
-        final Pair<Boolean, String> result = new Pair<Boolean, String>(false, null);
+        final Pair<Boolean, String> result = new Pair<>(false, null);
         XMLStepper.iterateElements(xmlFactory.createXMLStreamReader(new CharSequenceReader(xml)),
                                    "", tag, new XMLStepper.XMLCallback() {
             @Override
@@ -514,7 +514,7 @@ public class XMLStepper {
     public static void limitXML(final XMLStreamReader in, XMLStreamWriter out, final Map<Pattern, Integer> limits,
                                 final boolean countPatterns, final boolean onlyCheckElementPaths,
                                 final boolean discardNonMatched) throws XMLStreamException {
-        final Map<Object, Integer> counters = new HashMap<Object, Integer>();
+        final Map<Object, Integer> counters = new HashMap<>();
         pipeXML(in, out, true, false, new Callback() {
             @Override
             public boolean elementStart(

@@ -24,6 +24,8 @@ import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A helper class for the {@link Client} to manage a collection of
@@ -198,7 +197,7 @@ public class ServiceManager extends ConnectionManager<Service>
      */
     public List<String> getServices() {
         String[] serviceFiles = new File(servicePath).list();
-        return new ArrayList<String>(Arrays.asList(serviceFiles));
+        return new ArrayList<>(Arrays.asList(serviceFiles));
     }
 }
 

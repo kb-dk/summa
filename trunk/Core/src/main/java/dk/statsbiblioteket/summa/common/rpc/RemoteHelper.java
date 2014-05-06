@@ -402,14 +402,14 @@ public class RemoteHelper {
         private Map<Integer, List<String>> serviceRegistry;
 
         public RemoteHelperShutdownHook() {
-            serviceRegistry = new HashMap<Integer, List<String>>();
+            serviceRegistry = new HashMap<>();
         }
 
         public void registerService(int port, String name) {
             List<String> services = serviceRegistry.get(port);
 
             if (services == null) {
-                services = new LinkedList<String>();
+                services = new LinkedList<>();
                 serviceRegistry.put(port, services);
             }
 
@@ -438,7 +438,7 @@ public class RemoteHelper {
                 }
                 // We clone the service name list to avoid
                 // concurrent modifications
-                for (String serviceName : new LinkedList<String>(entry.getValue())) {
+                for (String serviceName : new LinkedList<>(entry.getValue())) {
                     try {
                         safeLogInfo("Shutdown hook: Unexporting " + serviceName + " from port " + registryPort);
                         unExportRemoteInterface(serviceName, registryPort);

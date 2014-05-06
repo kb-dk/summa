@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
-import com.ibm.icu.impl.duration.impl.Utils;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -73,7 +72,7 @@ public class SolrRequestAdjusterTest extends TestCase {
     }
 
     private List<String> getSortedKeys(SolrParams params) {
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         Iterator<String> paramKeys = params.getParameterNamesIterator();
         while (paramKeys.hasNext()) {
             result.add(paramKeys.next());

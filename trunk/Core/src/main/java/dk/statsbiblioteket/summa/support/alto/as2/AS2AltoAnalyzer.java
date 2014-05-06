@@ -18,8 +18,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.alto.Alto;
 import dk.statsbiblioteket.summa.support.alto.AltoAnalyzerBase;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -116,7 +116,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
         }
         String paperName = paperNameMatcher.replaceAll(paperIDReplacement);
 
-        List<AS2Segment> segments = new ArrayList<AS2Segment>(alto.getTextBlockGroups().size());
+        List<AS2Segment> segments = new ArrayList<>(alto.getTextBlockGroups().size());
         for (Map.Entry<String, List<Alto.TextBlock>> entry: alto.getTextBlockGroups().entrySet()) {
             AS2Segment segment = new AS2Segment(alto);
             // TODO: Use alto filename as prefix for ID to make it unique

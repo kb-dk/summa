@@ -130,8 +130,7 @@ public class TagAdjuster implements Configurable {
                 continue;
             }
             log.trace("Transforming " + oldTags.size() + " tags for facet " + facetName);
-            LinkedHashMap<String, FacetResultImpl.Tag<String>> newTags = new LinkedHashMap<String,
-                    FacetResultImpl.Tag<String>>((int) (
+            LinkedHashMap<String, FacetResultImpl.Tag<String>> newTags = new LinkedHashMap<>((int) (
                     oldTags.size() * 1.5));
             for (FacetResultImpl.Tag<String> oldTag : oldTags) {
                 if (map.getForward().containsKey(oldTag.getKey())) {
@@ -142,7 +141,7 @@ public class TagAdjuster implements Configurable {
                     mergePut(newTags, oldTag.getKey(), oldTag);
                 }
             }
-            List<FacetResultImpl.Tag<String>> newListTags = new ArrayList<FacetResultImpl.Tag<String>>(newTags.size());
+            List<FacetResultImpl.Tag<String>> newListTags = new ArrayList<>(newTags.size());
             for (Map.Entry<String, FacetResultImpl.Tag<String>> tag : newTags.entrySet()) {
                 newListTags.add(tag.getValue());
 
@@ -175,7 +174,7 @@ public class TagAdjuster implements Configurable {
         if (map.getReverse().containsKey(tagName)) {
             return map.getReverse().get(tagName);
         }
-        return new HashSet<String>(Arrays.asList(tagName));
+        return new HashSet<>(Arrays.asList(tagName));
     }
 
 
@@ -184,7 +183,7 @@ public class TagAdjuster implements Configurable {
     private void mergePut(Map<String, FacetResultImpl.Tag<String>> tags, String newName,
                           FacetResultImpl.Tag<String> oldTag) {
         if (!tags.containsKey(newName)) {
-            FacetResultImpl.Tag<String> newTag = new FacetResultImpl.Tag<String>(
+            FacetResultImpl.Tag<String> newTag = new FacetResultImpl.Tag<>(
                     newName, oldTag.getCount(), oldTag.getReliability());
             tags.put(newName, newTag);
             return;

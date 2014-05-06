@@ -53,7 +53,7 @@ public class DiscardRelativesFilterTest extends TestCase {
     }
 
     private List<Payload> getSampleData() {
-        List<Payload> payloads = new ArrayList<Payload>(10);
+        List<Payload> payloads = new ArrayList<>(10);
 
         Record parentRecord = new Record("Parent", "dummy", new byte[0]);
         Record middleRecord = new Record("Middle", "dummy", new byte[0]);
@@ -76,7 +76,7 @@ public class DiscardRelativesFilterTest extends TestCase {
     private List<Payload> suck(ObjectFilter filter) {
         PayloadFeederHelper feeder = new PayloadFeederHelper(getSampleData());
         filter.setSource(feeder);
-        List<Payload> result = new ArrayList<Payload>(10);
+        List<Payload> result = new ArrayList<>(10);
         while (filter.hasNext()) {
             result.add(filter.next());
         }

@@ -1,11 +1,9 @@
 <%@ page import="dk.statsbiblioteket.gwsc.WebServices" %>
-<%@ page import="java.io.File" %>
 <%@ page import="dk.statsbiblioteket.util.xml.XMLUtil" %>
-<%@ page import="dk.statsbiblioteket.util.xml.DOM" %>
 <%@ page import="dk.statsbiblioteket.util.xml.XSLT" %>
-<%@ page import="org.w3c.dom.Document" %>
-<%@ page import="java.net.URL" %>
 <%@ page import="javax.xml.transform.TransformerException" %>
+<%@ page import="java.io.File" %>
+<%@ page import="java.net.URL" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
     String basepath = request.getSession().getServletContext().getRealPath("/");
@@ -22,9 +20,9 @@
         record_html = "Unable to resolve '" + record_id + "'";
     } else if (record_id == null
         || record_id.equals("")
-        || record_id.indexOf(":") == -1) {
+        || !record_id.contains(":")) {
 
-        if (xml_record.indexOf("<content>") == -1) {
+        if (!xml_record.contains("<content>")) {
             record_html = XMLUtil.encode(xml_record).replace("\n", "<br />\n");
         } else {
             // Stupid double-work, but hey... This is just a quick web site

@@ -151,7 +151,7 @@ public class MUXFilterFeeder implements Runnable {
         List<String> baseList = conf.getStrings(CONF_FILTER_BASES, (List<String>)null);
         if (baseList != null
             && !(baseList.size() == 1 && "*".equals(baseList.get(0)))) {
-            bases = new HashSet<String>(baseList);
+            bases = new HashSet<>(baseList);
         }
         Thread t = new Thread(this, filterName + "-" + this.hashCode() + " daemon");
         t.setDaemon(true);

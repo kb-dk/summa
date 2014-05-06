@@ -12,7 +12,11 @@
  *  limitations under the License.
  *
  */
-import java.io.*;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.zip.ZipEntry;
@@ -138,8 +142,6 @@ public class UnzipThread extends Thread {
                 }
                 unzip.close();
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -150,7 +152,7 @@ public class UnzipThread extends Thread {
     public static class AsyncZipEntryCloser extends Thread {
 
         BlockingQueue<ZipInputStream> queue =
-                new ArrayBlockingQueue<ZipInputStream>(10);
+                new ArrayBlockingQueue<>(10);
 
         public AsyncZipEntryCloser() {
             setName(getClass().getSimpleName());
@@ -180,9 +182,7 @@ public class UnzipThread extends Thread {
                         unzip.notifyAll();
                     }
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
 

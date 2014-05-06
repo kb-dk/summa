@@ -113,7 +113,7 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
 
     // TODO: Test close(true/false), EOF et al.
 
-    private List<Payload> payloads = new ArrayList<Payload>(10);
+    private List<Payload> payloads = new ArrayList<>(10);
     /**
      * Initialize the content.
      * @param xmlFiles XML content files.

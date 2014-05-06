@@ -30,7 +30,7 @@ public class SortFactory {
     private static final Logger log = Logger.getLogger(SortFactory.class);
 
     private Map<String, ReusableSortComparator> comparators =
-            new HashMap<String, ReusableSortComparator>(10);
+            new HashMap<>(10);
     protected static final Object comparatorSync = new Object();
 
     /**

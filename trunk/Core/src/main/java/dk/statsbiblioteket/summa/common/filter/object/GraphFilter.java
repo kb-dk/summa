@@ -174,7 +174,7 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
 
         public void addVisited(Record record, boolean success) {
             if (visited == null) {
-                visited = new HashSet<String>();
+                visited = new HashSet<>();
                 originSuccess = success;
             }
             visited.add(record.getId());

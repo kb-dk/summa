@@ -335,7 +335,7 @@ public class FacetTest extends NoExitTestCase {
 
     private List<String> extractSortValues(SummaSearcherImpl searcher, Request request) throws RemoteException {
         final Pattern SORT_VALUE = Pattern.compile("sortValue=\"(.+?)\"", Pattern.DOTALL);
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
         String xml = searcher.search(request).toXML();
         Matcher matcher = SORT_VALUE.matcher(xml);
         while (matcher.find()) {
@@ -699,7 +699,7 @@ public class FacetTest extends NoExitTestCase {
         searcher.checkIndex(); // Make double sure
 
         ExecutorService executor = Executors.newFixedThreadPool(THREADS);
-        List<Future> tasks = new ArrayList<Future>(THREADS);
+        List<Future> tasks = new ArrayList<>(THREADS);
         log.info("Starting " + THREADS + " search threads");
         for (int t = 0; t < THREADS; t++) {
             FutureTask task = new FutureTask(new Callable() {
@@ -987,7 +987,7 @@ public class FacetTest extends NoExitTestCase {
         ResponseCollection responses = searcher.search(request);
         String xml = responses.toXML();
         Matcher matcher = pattern.matcher(xml);
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         while (matcher.find()) {
             result.add(Strings.join(matcher.group(1).split("\n"), ", "));
         }
@@ -999,7 +999,7 @@ public class FacetTest extends NoExitTestCase {
 
     private List<String> getIDs(String xml) {
         Matcher matcher = idPattern.matcher(xml);
-        List<String> matches = new ArrayList<String>(10);
+        List<String> matches = new ArrayList<>(10);
         while (matcher.find()) {
             matches.add(matcher.group(0));
         }

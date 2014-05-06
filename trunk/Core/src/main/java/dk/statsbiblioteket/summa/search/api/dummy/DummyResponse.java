@@ -38,7 +38,7 @@ public class DummyResponse extends ResponseImpl {
         this.opens = "" + opens;
         this.closes = "" + closes;
         this.searches = "" + searches;
-        ids = new ArrayList<String>(10);
+        ids = new ArrayList<>(10);
         ids.add(id);
     }
 

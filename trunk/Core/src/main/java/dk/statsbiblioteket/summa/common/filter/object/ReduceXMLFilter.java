@@ -84,7 +84,7 @@ public class ReduceXMLFilter extends ObjectFilterImpl {
     public static final String CONF_DISCARD_NONMATCHED = "common.reducexml.discardnonmatched";
     public static final boolean DEFAULT_DISCARD_NONMATCHED = false;
 
-    private final Map<Pattern, Integer> limits = new HashMap<Pattern, Integer>();
+    private final Map<Pattern, Integer> limits = new HashMap<>();
     private final boolean countPatterns;
     private final boolean onlyCheckElementPaths;
     private final boolean discardNonMatched;

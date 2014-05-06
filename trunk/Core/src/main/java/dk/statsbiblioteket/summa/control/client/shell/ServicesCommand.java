@@ -79,7 +79,7 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
             }
 
             /* List services sorted alphabetically */
-            SortedSet<String> sortedServices = new TreeSet<String>(services);
+            SortedSet<String> sortedServices = new TreeSet<>(services);
             for (String service : sortedServices) {
                 String bundleId = "", statusCode = "", statusString = "";
                 if (listBundle) {

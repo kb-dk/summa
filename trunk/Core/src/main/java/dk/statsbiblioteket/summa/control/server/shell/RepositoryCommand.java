@@ -92,7 +92,7 @@ public class RepositoryCommand extends Command {
             }
 
             /* List the matching bundles sorted alphabetically */
-            SortedSet<String> sortedBundles = new TreeSet<String>(bundles);
+            SortedSet<String> sortedBundles = new TreeSet<>(bundles);
             for (String bundleId : sortedBundles) {
                 if (regex != null) {
                     if (regex.matcher(bundleId).matches()) {

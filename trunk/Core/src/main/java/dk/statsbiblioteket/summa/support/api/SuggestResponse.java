@@ -65,7 +65,7 @@ public class SuggestResponse extends ResponseImpl {
     public SuggestResponse(String query, int maxResults) {
         this.query = query;
         this.maxResults = maxResults;
-        suggestions = new ArrayList<SuggestTripel>(maxResults);
+        suggestions = new ArrayList<>(maxResults);
     }
 
     public void addSuggestion(String query, int hits, int queryCount) {
@@ -115,7 +115,7 @@ public class SuggestResponse extends ResponseImpl {
             }
         });
         if (suggestions.size() > maxResults) {
-            ArrayList<SuggestTripel> newSuggestions = new ArrayList<SuggestTripel>(maxResults);
+            ArrayList<SuggestTripel> newSuggestions = new ArrayList<>(maxResults);
             newSuggestions.addAll(suggestions.subList(0, maxResults));
             suggestions = newSuggestions;
         }

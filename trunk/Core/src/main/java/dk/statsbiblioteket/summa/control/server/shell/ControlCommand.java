@@ -77,7 +77,7 @@ public class ControlCommand extends Command {
 
             /* Generate report, with properties sorted by name */
 	    Map<String,Serializable> sortedProps = 
-	                             new TreeMap<String,Serializable>();
+	                             new TreeMap<>();
 	    for (Map.Entry<String,Serializable> prop : conf) {
 	        sortedProps.put(prop.getKey(), prop.getValue());
             }

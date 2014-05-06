@@ -98,7 +98,7 @@ public class RelativesFilterTest extends TestCase implements ObjectFilter {
     }
 
     private boolean gotThrough(Configuration conf, List<String> testIDs) {
-        List<String> processed = new ArrayList<String>(testIDs.size());
+        List<String> processed = new ArrayList<>(testIDs.size());
         ObjectFilter discarder = new DiscardRelativesFilter(conf);
         discarder.setSource(this);
         while (discarder.hasNext()) {
@@ -108,7 +108,7 @@ public class RelativesFilterTest extends TestCase implements ObjectFilter {
     }
 
     /* Feeder for the Filter */
-    private List<Record> records = new ArrayList<Record>(10);
+    private List<Record> records = new ArrayList<>(10);
 
     @Override
     public boolean hasNext() {

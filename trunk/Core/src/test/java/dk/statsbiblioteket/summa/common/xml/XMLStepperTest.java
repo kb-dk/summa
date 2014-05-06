@@ -88,7 +88,7 @@ public class XMLStepperTest extends TestCase {
         if (!isCollapsing) {
             expected = expected.replaceAll("<([^>]+)([^>]*)/>", "<$1$2></$1>");
         }
-        Map<Pattern, Integer> lims = new HashMap<Pattern, Integer>();
+        Map<Pattern, Integer> lims = new HashMap<>();
         for (int i = 0 ; i < limits.length ; i+=2) {
             lims.put(Pattern.compile((String) limits[i]), (Integer) limits[i + 1]);
         }

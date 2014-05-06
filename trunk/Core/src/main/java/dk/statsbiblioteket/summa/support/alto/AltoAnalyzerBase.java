@@ -107,7 +107,7 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
 
         protected String title = null;
         protected String origin = null;
-        protected List<String> paragraphs = new ArrayList<String>();
+        protected List<String> paragraphs = new ArrayList<>();
 
         public String getYear() {
             return getDate() == null || getDate().length() < 4 ? null : getDate().substring(0, 4);
@@ -256,7 +256,7 @@ public abstract class AltoAnalyzerBase<S extends AltoAnalyzerBase.Segment> imple
         }
 
         public void setParagraphs(List<String> paragraphs) {
-            this.paragraphs = new ArrayList<String>(paragraphs);
+            this.paragraphs = new ArrayList<>(paragraphs);
         }
 
         @Override

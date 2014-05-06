@@ -317,7 +317,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
         assertNotNull("A document should be created", doc);
 
-        Set<String> expected = new HashSet<String>(Arrays.asList(EXPECTED));
+        Set<String> expected = new HashSet<>(Arrays.asList(EXPECTED));
         for (IndexableField field: doc.getFields("mystored")) {
             assertTrue("The value " + field.stringValue() + " should exist in the expected list "
                        + Strings.join(Arrays.asList(EXPECTED), ", "),

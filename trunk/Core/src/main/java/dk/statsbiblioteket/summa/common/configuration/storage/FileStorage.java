@@ -76,7 +76,7 @@ public class FileStorage implements ConfigurationStorage {
      *                     an IOException.
      */
     public FileStorage(File configuration) throws IOException {
-        map = new HashMap<String, Serializable>();
+        map = new HashMap<>();
         this.filename = configuration.getAbsolutePath();
 
         if (!new File(filename).exists()) {

@@ -41,7 +41,7 @@ public class PriorityQueueTest extends TestCase {
     }
 
     private PriorityQueue<Long> setUpPriorityQueue(long[] input) {
-        PriorityQueue<Long> queue = new PriorityQueue<Long>(input.length);
+        PriorityQueue<Long> queue = new PriorityQueue<>(input.length);
         for (long element: input) {
             queue.insert(element);
         }
@@ -74,7 +74,7 @@ public class PriorityQueueTest extends TestCase {
             Long[] expected = input.clone();
             Arrays.sort(expected);
             expected = PriorityQueueLongTest.reverseArray(expected);
-            PriorityQueue<Long> queue = new PriorityQueue<Long>(input.length);
+            PriorityQueue<Long> queue = new PriorityQueue<>(input.length);
             for (long element: input) {
                 queue.insert(element);
             }
@@ -84,7 +84,7 @@ public class PriorityQueueTest extends TestCase {
                              element, (long)queue.removeMin());
             }
 
-            queue = new PriorityQueue<Long>();
+            queue = new PriorityQueue<>();
             queue.setValues(input, input.length, false, input.length);
             assertEquals(expected.length, queue.getSize());
             for (long element: expected) {

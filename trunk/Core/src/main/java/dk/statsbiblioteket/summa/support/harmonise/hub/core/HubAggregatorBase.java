@@ -76,7 +76,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
         List<HubComponent> subs = getComponents(limit);
 
         String [] acceptableIDs = params.getParams(PARAM_ENABLED_COMPONENTS);
-        List<ComponentCallable> pruned = new ArrayList<ComponentCallable>(subs.size());
+        List<ComponentCallable> pruned = new ArrayList<>(subs.size());
         for (int i = subs.size()-1 ; i >= 0 ; i--) {
             String currentID = subs.get(i).getID();
             if (acceptableIDs != null) {
@@ -111,7 +111,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
         long startTime = System.currentTimeMillis();
         log.debug("search: Issuing " + (threaded ? "parallel" : "sequential")
                   + " search to " + subs.size() + " searchers");
-        List<NamedFuture> futures = new ArrayList<NamedFuture>(subs.size());
+        List<NamedFuture> futures = new ArrayList<>(subs.size());
         for (ComponentCallable sub: subs) {
             NamedFuture future = new NamedFuture(sub);
             futures.add(future);
@@ -129,7 +129,7 @@ public abstract class HubAggregatorBase extends HubCompositeImpl {
             }
         }
 
-        List<ComponentCallable.NamedResponse> responses = new ArrayList<ComponentCallable.NamedResponse>(futures.size());
+        List<ComponentCallable.NamedResponse> responses = new ArrayList<>(futures.size());
         for (NamedFuture future: futures) {
             try {
                 responses.add(future.get(timeout, TimeUnit.MILLISECONDS));

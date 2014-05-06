@@ -57,7 +57,7 @@ public class StructureTest extends TestCase {
         XProperties xp = new XProperties();
 
         ArrayList<XProperties> facets =
-                new ArrayList<XProperties>(5);
+                new ArrayList<>(5);
         XProperties facet = new XProperties();
         facet.put(FacetStructure.CONF_FACET_NAME, "foo");
         facet.put(FacetStructure.CONF_FACET_TAGS_MAX, "100");

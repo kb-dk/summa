@@ -438,7 +438,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * Iterator keys.
      */
-    private Map<Long, Cursor> iterators = new HashMap<Long, Cursor>(10);
+    private Map<Long, Cursor> iterators = new HashMap<>(10);
 
     private CursorReaper iteratorReaper;
     /**
@@ -644,7 +644,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Using direct relation resolution");
         }
 
-        disabledRelationsTracking = new TreeSet<String>();
+        disabledRelationsTracking = new TreeSet<>();
         disabledRelationsTracking.addAll(conf.getStrings(CONF_DISABLE_REALTIONS_TRACKING, new ArrayList<String>()));
         if (disabledRelationsTracking.isEmpty()) {
             log.debug("Tracking relations on all bases");
@@ -1613,7 +1613,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
       
-        List<Record> result= new  ArrayList<Record>();
+        List<Record> result= new  ArrayList<>();
         
             profiler.beat();
         
@@ -1644,7 +1644,7 @@ public abstract class DatabaseStorage extends StorageBase {
     @Deprecated
     public List<Record> getRecordsWithConnection(
             List<String> ids, QueryOptions options, Connection conn) throws IOException {
-        ArrayList<Record> result = new ArrayList<Record>(ids.size());
+        ArrayList<Record> result = new ArrayList<>(ids.size());
 
         for (String id : ids) {
             try {
@@ -1685,7 +1685,7 @@ public abstract class DatabaseStorage extends StorageBase {
             Boolean mayHaveParent = true;
             String parentId = recordId; // For each parent found, this value will be overwritten
 
-            HashSet<String> parents = new HashSet<String>();//cycle detection
+            HashSet<String> parents = new HashSet<>();//cycle detection
             while (mayHaveParent) {
                 StatementHandle handle = statementHandler.getParentIds();
                 // TODO: Use handle directly
@@ -1806,7 +1806,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private void loadAndSetChildRelations(Record parentRecord, Connection conn, HashSet<String> previousIdsForCycleDetection) throws SQLException {
 
         if (previousIdsForCycleDetection== null){            
-            previousIdsForCycleDetection = new HashSet<String>();            
+            previousIdsForCycleDetection = new HashSet<>();
         }
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getGetChildren(null);
@@ -1814,7 +1814,7 @@ public abstract class DatabaseStorage extends StorageBase {
         pstmtSelectChildren.setString(1, parentRecord.getId());
         ResultSet childrenRS = pstmtSelectChildren.executeQuery();
 
-        List<Record> children = new ArrayList<Record>();
+        List<Record> children = new ArrayList<>();
         while (childrenRS.next()) {
             Record child = constructRecordFromRSNoRelationsSet(childrenRS);
             child.setParents(Arrays.asList(parentRecord));
@@ -2217,7 +2217,7 @@ public abstract class DatabaseStorage extends StorageBase {
         Record lastRecord = null;
         long start = System.nanoTime();
         boolean isDebug = log.isDebugEnabled();
-        Map<String, Boolean> bases = new HashMap<String, Boolean>();
+        Map<String, Boolean> bases = new HashMap<>();
         try {
             for (Record r : recs) {
                 lastRecord = r;
@@ -2406,7 +2406,7 @@ public abstract class DatabaseStorage extends StorageBase {
         StatementHandle handle = statementHandler.getGetParents(options);
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
-        List<Record> parents = new ArrayList<Record>(1);
+        List<Record> parents = new ArrayList<>(1);
         Cursor iter = null;
 
         try {
@@ -2457,12 +2457,11 @@ public abstract class DatabaseStorage extends StorageBase {
             String id, QueryOptions options, Connection conn) throws IOException, SQLException {
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getGetChildren(options);
-        PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
-        List<Record> children = new ArrayList<Record>(3);
+        List<Record> children = new ArrayList<>(3);
         ResultSetCursor iter = null;
 
-        try {
+        try (PreparedStatement stmt = conn.prepareStatement(handle.getSql())) {
             stmt.setString(1, id);
             stmt.executeQuery();
 
@@ -2486,7 +2485,6 @@ public abstract class DatabaseStorage extends StorageBase {
         } catch (SQLException e) {
             throw new IOException(String.format("Failed to get children for record '%s': %s", id, e.getMessage()), e);
         } finally {
-            stmt.close();
             if (iter != null) {
                 iter.close();
             }
@@ -2510,8 +2508,8 @@ public abstract class DatabaseStorage extends StorageBase {
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getRelatedIds();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
-        List<String> parentIds = new LinkedList<String>();
-        List<String> childIds = new LinkedList<String>();
+        List<String> parentIds = new LinkedList<>();
+        List<String> childIds = new LinkedList<>();
 
         if (log.isTraceEnabled()) {
             log.trace("Querying relations for " + rec.getId());
@@ -3996,7 +3994,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private List<BaseStats> getStatsWithConnection(Connection conn) throws SQLException, IOException {
         long startTime = System.currentTimeMillis();
-        List<BaseStats> stats = new LinkedList<BaseStats>();
+        List<BaseStats> stats = new LinkedList<>();
 
         String query = "SELECT * FROM " + BASE_STATISTICS;
         Statement stmt = conn.createStatement();
@@ -4088,7 +4086,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private List<BaseStats> getHeavyStatsWithConnection(Connection conn) throws SQLException, IOException {
         long startTime = System.currentTimeMillis();
-        List<BaseStats> stats = new LinkedList<BaseStats>();
+        List<BaseStats> stats = new LinkedList<>();
         final String query = "SELECT base, deleted, indexable, count(base) FROM summa_records "
                              + "GROUP BY base,deleted,indexable";
         final int baseKey = 1;
@@ -4099,10 +4097,9 @@ public abstract class DatabaseStorage extends StorageBase {
         Statement stmt = conn.createStatement();
         log.debug("Getting resultset for '" + query + "'");
         long st = System.currentTimeMillis();
-        ResultSet result = stmt.executeQuery(query);
         log.debug("Got ResultSet in " + (System.currentTimeMillis() - st) + "ms. Iterating...");
 
-        try {
+        try (ResultSet result = stmt.executeQuery(query)) {
             if (result.next()) {
                 while (!result.isAfterLast()) {
                     String base = result.getString(baseKey);
@@ -4146,8 +4143,6 @@ public abstract class DatabaseStorage extends StorageBase {
                             deletedNonIndexables, nonDeletedNonIndexables, conn));
                 }
             }
-        } finally {
-            result.close();
         }
         log.debug(String.format("Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
         return stats;

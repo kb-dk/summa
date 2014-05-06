@@ -65,7 +65,7 @@ public class ZIPParserTest extends TestCase {
 
     public void testArrayBlockingQueue() throws Exception {
         final ArrayBlockingQueue<String> queue =
-                new ArrayBlockingQueue<String>(2048);
+                new ArrayBlockingQueue<>(2048);
         Thread feeder = new Thread() {
             @Override
             public void run() {
@@ -149,7 +149,7 @@ public class ZIPParserTest extends TestCase {
         assertTrue("The unzipper should have at least one element",
                    unzipper.hasNext());
 
-        List<String> expected = new ArrayList<String>(200);
+        List<String> expected = new ArrayList<>(200);
         for (int i = 0 ; i < 200 ; i++) {
             expected.add("sample" + i);
         }

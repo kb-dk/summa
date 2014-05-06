@@ -67,7 +67,7 @@ public class TermStatClient implements Configurable {
             usage();
             return;
         }
-        List<String> arguments = new ArrayList<String>(Arrays.asList(args));
+        List<String> arguments = new ArrayList<>(Arrays.asList(args));
         String first = arguments.remove(0);
         if ("-e".equals(first)) {
             extract(arguments);
@@ -88,7 +88,7 @@ public class TermStatClient implements Configurable {
         File index = null;
         String columnname = null;
         String destination = null;
-        List<String> fields = new ArrayList<String>(10);
+        List<String> fields = new ArrayList<>(10);
         boolean fieldsActive = false;
         while (!arguments.isEmpty()) {
             String argument = arguments.remove(0);
@@ -135,8 +135,8 @@ public class TermStatClient implements Configurable {
 
     private enum MODE {none, input, column}
     private static void merge(List<String> arguments) {
-        List<File> inputs = new ArrayList<File>(10);
-        List<String> columns = new ArrayList<String>(10);
+        List<File> inputs = new ArrayList<>(10);
+        List<String> columns = new ArrayList<>(10);
         int mdf = 1;
         String destination = null;
         MODE mode = MODE.none;
@@ -180,7 +180,7 @@ public class TermStatClient implements Configurable {
 
     public static void unique(List<String> arguments) throws IOException {
         File index = null;
-        List<String> fields = new ArrayList<String>(10);
+        List<String> fields = new ArrayList<>(10);
         boolean fieldsActive = false;
         boolean countOnly = false;
         while (!arguments.isEmpty()) {
@@ -324,7 +324,7 @@ public class TermStatClient implements Configurable {
         Set<String> fields = getFields(ir, fieldRegexps, index);
 
         TermProvider termProvider = ExposedFactory.createProvider(
-                ir, "all", new ArrayList<String>(fields), new NamedNaturalComparator());
+                ir, "all", new ArrayList<>(fields), new NamedNaturalComparator());
         if (countOnly) {
             System.out.println(termProvider.getUniqueTermCount());
             return;
@@ -342,7 +342,7 @@ public class TermStatClient implements Configurable {
     }
 
     private Set<String> getFields(IndexReader ir, List<String> fieldRegexps, File index) throws IOException {
-        Set<String> fields = new HashSet<String>(20);
+        Set<String> fields = new HashSet<>(20);
 
         List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
         for (AtomicReader ar: readers) {

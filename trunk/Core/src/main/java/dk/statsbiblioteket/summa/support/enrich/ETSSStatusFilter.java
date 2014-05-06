@@ -180,8 +180,8 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 Logging.LogLevel.WARN, payload);
             return marc;
         }
-        List<String> needs = new ArrayList<String>(providers.size());
-        List<String> noneeds = new ArrayList<String>(providers.size());
+        List<String> needs = new ArrayList<>(providers.size());
+        List<String> noneeds = new ArrayList<>(providers.size());
         for (int i = 0 ; i < urls.size() ; i++) {
             try {
                 enrich(recordID, urls.get(i), providers.get(i), needs, noneeds);

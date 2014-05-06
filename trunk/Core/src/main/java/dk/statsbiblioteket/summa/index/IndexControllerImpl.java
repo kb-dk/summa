@@ -268,7 +268,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
 
         //noinspection DuplicateStringLiteralInspection
         log.trace("Creating " + manipulatorConfs.size() + " manipulators");
-        manipulators = new ArrayList<IndexManipulator>(manipulatorConfs.size());
+        manipulators = new ArrayList<>(manipulatorConfs.size());
         for (Configuration manipulatorConf: manipulatorConfs) {
             log.trace("Creating manipulator");
             IndexManipulator manipulator = ManipulatorFactory.createManipulator(manipulatorConf);

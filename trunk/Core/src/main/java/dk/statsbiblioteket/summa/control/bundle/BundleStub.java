@@ -191,7 +191,7 @@ public class BundleStub {
     @SuppressWarnings("ChainedEqualityComparisons")
     public List<String> buildCommandLine () {
         String javaExecutable;
-        List<String> cl = new ArrayList<String>(20);
+        List<String> cl = new ArrayList<>(20);
         boolean hasJmxPassword = false, hasJmxAccess = false, hasPolicy = false;
 
         javaExecutable = System.getProperty("java.home")
@@ -249,7 +249,7 @@ public class BundleStub {
     }
 
     public List<String> getClassPath() {
-        List<String> cp = new ArrayList<String>(4+libs.size());
+        List<String> cp = new ArrayList<>(4+libs.size());
         cp.add (".");
         cp.add ("config");
         cp.add ("data");

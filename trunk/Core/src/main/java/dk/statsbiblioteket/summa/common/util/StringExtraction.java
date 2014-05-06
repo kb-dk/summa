@@ -51,7 +51,7 @@ public class StringExtraction {
      */
     public static List<String> getStrings(CharSequence input, Pattern pattern) {
         Matcher matcher = pattern.matcher(input);
-        List<String> matches = new ArrayList<String>();
+        List<String> matches = new ArrayList<>();
         while (matcher.find()) {
             matches.add(matcher.group());
         }
@@ -79,7 +79,7 @@ public class StringExtraction {
      * @return all sub Strings that matches the given regexp. No matches means empty list.
      */
     public static List<String> getStrings(CharSequence input, Pattern outerPattern, Pattern innerPattern) {
-        List<String> merged = new ArrayList<String>();
+        List<String> merged = new ArrayList<>();
         final Matcher outer = outerPattern.matcher(input);
         while(outer.find()) {
             merged.addAll(getStrings(outer.group(), innerPattern));

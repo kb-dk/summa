@@ -51,7 +51,7 @@ public class SolrFacetRequest {
         originalRequest = facetsDef;
         this.minCount = minCount;
         originalStructure = new Structure(facetsDef, defaultFacetPageSize);
-        facets = new ArrayList<Facet>(originalStructure.getFacetList().size());
+        facets = new ArrayList<>(originalStructure.getFacetList().size());
         for (FacetStructure fc: originalStructure.getFacetList()) {
 /*            if (FacetStructure.SORT_ALPHA.equals(fc.getSortType()) && fc.getLocale() != null) {
                 log.warn("The facet request '" + facetsDef + "' defines sort order ALPHA with locale " + fc.getLocale()
@@ -88,7 +88,7 @@ public class SolrFacetRequest {
      * @return max tags aka pageSize for each facet.
      */
     public HashMap<String, Integer> getMaxTags() {
-        HashMap<String, Integer> max = new HashMap<String, Integer>(facets.size());
+        HashMap<String, Integer> max = new HashMap<>(facets.size());
         for (Facet facet: facets) {
             max.put(facet.getField(), facet.getPageSize());
         }
@@ -139,7 +139,7 @@ public class SolrFacetRequest {
             return;
         }
         if (!(existing instanceof ArrayList)) {
-            existing = new ArrayList<String>(existing);
+            existing = new ArrayList<>(existing);
             queryMap.put(key, existing);
         }
         existing.add(value);

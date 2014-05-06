@@ -78,7 +78,7 @@ public class CursorReaper implements Runnable {
         log.debug("Scanning iterators for timeouts");
 
         long now = System.currentTimeMillis();
-        List<Long> deadIters = new ArrayList<Long>();
+        List<Long> deadIters = new ArrayList<>();
 
         for (Cursor iter : iterators.values()) {
             if (iter.getLastAccess() + graceTimeMinutes*60*1000 <= now) {

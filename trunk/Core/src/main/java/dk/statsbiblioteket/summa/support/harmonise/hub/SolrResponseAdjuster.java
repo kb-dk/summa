@@ -37,7 +37,7 @@ public class SolrResponseAdjuster {
     private static Log log = LogFactory.getLog(SolrResponseAdjuster.class);
 
     private final Map<String, ManyToManyMapper> tagAdjusters;
-    private List<HubTagAdjuster> hubTagAdjusters = new ArrayList<HubTagAdjuster>();
+    private List<HubTagAdjuster> hubTagAdjusters = new ArrayList<>();
     private final ManyToManyMapper fieldMap;
 
     @SuppressWarnings("UnusedParameters")
@@ -77,7 +77,7 @@ public class SolrResponseAdjuster {
         if (facetFields == null) {
             return;
         }
-        List<FacetField> adjustedFacetFields = new ArrayList<FacetField>(facetFields.size());
+        List<FacetField> adjustedFacetFields = new ArrayList<>(facetFields.size());
         for (FacetField facetField: facetFields) {
             expandFacet(adjustedFacetFields, facetField);
         }
@@ -176,11 +176,11 @@ public class SolrResponseAdjuster {
         }
 
         for (SolrDocument doc: docs) {
-            final Map<String, Collection<Object>> adjustedMap = new HashMap<String, Collection<Object>>();
+            final Map<String, Collection<Object>> adjustedMap = new HashMap<>();
             for (String field: doc.getFieldNames()) {
                 final Collection<Object> adjustedValues = adjustValues(field, doc.getFieldValues(field));
                 Set<String> adjustedFields =
-                        fieldMap == null ? new HashSet<String>(Arrays.asList(field)) : fieldMap.getReverse().get(field);
+                        fieldMap == null ? new HashSet<>(Arrays.asList(field)) : fieldMap.getReverse().get(field);
                 for (String adjustedField: adjustedFields) {
                     if (adjustedMap.containsKey(adjustedField)) {
                         adjustedMap.get(adjustedField).addAll(adjustedValues);
@@ -205,7 +205,7 @@ public class SolrResponseAdjuster {
         if (tagAdjusters == null || !tagAdjusters.containsKey(field)) {
             return values;
         }
-        Collection<Object> adjustedValues = new ArrayList<Object>(values.size());
+        Collection<Object> adjustedValues = new ArrayList<>(values.size());
         for (Object o: values) {
             if (!(o instanceof String)) {
                 // TODO: Grouped here?

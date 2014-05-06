@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.common.marc;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class MARCObjectFactory {
      * @throws ParseException if there was a format error in the XML.
      */
     public static List<MARCObject> generate(InputStream xml) throws XMLStreamException, IOException, ParseException {
-        final List<MARCObject> result = new ArrayList<MARCObject>();
+        final List<MARCObject> result = new ArrayList<>();
         generate(xml, new Callback() {
             @Override
             public void handle(MARCObject marc) {

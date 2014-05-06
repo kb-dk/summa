@@ -82,7 +82,7 @@ public class MARCXMLCopyFilter extends MARCObjectFilter {
         }
         List<Record> children = payload.getRecord().getChildren() == null ?
                                 new ArrayList<Record>() :
-                                new ArrayList<Record>(payload.getRecord().getChildren());
+                                new ArrayList<>(payload.getRecord().getChildren());
         children.add(new Record("marcdump_" + created++, "marc", getContent(payload, marcObject)));
         payload.getRecord().setChildren(children);
         return marcObject;
@@ -151,7 +151,7 @@ public class MARCXMLCopyFilter extends MARCObjectFilter {
     }
 
     private static final Pattern VALID_FIELD = Pattern.compile("[-a-zA-Z0-9_.]+");
-    private final Set<String> discarded = new HashSet<String>();
+    private final Set<String> discarded = new HashSet<>();
     private void writeField(XMLStreamWriter xml, String field, String content) throws XMLStreamException {
         if (content == null || content.isEmpty()) {
             return;

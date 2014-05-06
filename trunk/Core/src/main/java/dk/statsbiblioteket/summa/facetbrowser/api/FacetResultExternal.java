@@ -149,7 +149,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
      */
     @Override
     public void renameFacetsAndFields(Map<String, String> map) {
-        HashMap<String, String[]> newFields = new HashMap<String, String[]>(fields.size());
+        HashMap<String, String[]> newFields = new HashMap<>(fields.size());
         for (Map.Entry<String, String[]> entry : fields.entrySet()) {
             newFields.put(adjust(map, entry.getKey()), adjust(map, entry.getValue()));
         }

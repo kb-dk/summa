@@ -72,7 +72,7 @@ public class SummaEntityResolver implements EntityResolver2 {
      *                  If null, this argument is ignored.
      */
     public SummaEntityResolver(Configuration conf, Map<String, String> resources) {
-        this.resources = new HashMap<String, String>(20);
+        this.resources = new HashMap<>(20);
         if (resources != null) {
             this.resources.putAll(resources);
         }

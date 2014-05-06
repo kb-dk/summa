@@ -50,7 +50,7 @@ public class Script implements Iterable<String>{
         statements_a = script.split("(?<=[^\\\\])[\\n;]");
 
         // Trim the statements and un-escape \\n and 
-        statements = new ArrayList<String>(statements_a.length);
+        statements = new ArrayList<>(statements_a.length);
         for (String stmt : statements_a) {
             stmt = stmt.trim().replace("\\;", ";").replace("\\n", "\n");
             if (!"".equals(stmt) && !";".equals(stmt) && !"\n".equals(stmt)) {

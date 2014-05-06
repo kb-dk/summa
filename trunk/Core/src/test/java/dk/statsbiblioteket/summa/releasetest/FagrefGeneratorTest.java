@@ -87,12 +87,12 @@ public class FagrefGeneratorTest extends NoExitTestCase {
 
     private RecordGenerator createGenerator() {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set("firstname", new ArrayList<String>(Arrays.asList("Hans", "Jens", "Ole", "Jesper", "Kaj", "Søren",
+        conf.set("firstname", new ArrayList<>(Arrays.asList("Hans", "Jens", "Ole", "Jesper", "Kaj", "Søren",
                                                                   "Benny", "Børge", "M'Bala", "Mikkel", "Thomas")));
-        conf.set("surname", new ArrayList<String>(Arrays.asList(
+        conf.set("surname", new ArrayList<>(Arrays.asList(
                 "Jensen", "Hansen", "Sørensen", "Karlsson", "Primbulus", "Sølvtromme", "Kobberhammer",
                 "Guldskovl", "de Trix", "And")));
-        conf.set("areaOfExpertise", new ArrayList<String>(Arrays.asList(
+        conf.set("areaOfExpertise", new ArrayList<>(Arrays.asList(
                 "Guld", "Biologi", "Omnilogi", "Østindien", "Vestpakistan", "USA", "Æbler", "Blommer", "Pærer",
                 "Datalogi", "Astrofysik", "Astrologi", "Astronomi", "Tryllebær", "Tegneserier", "Palæontologi",
                 "Drømme", "Kaslafniansk")));

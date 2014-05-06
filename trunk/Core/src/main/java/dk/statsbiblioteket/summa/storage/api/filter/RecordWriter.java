@@ -146,7 +146,7 @@ public class RecordWriter extends ObjectFilterImpl {
         public Batcher (
             int batchSize, int batchMaxMemory, int batchTimeout, WritableStorage storage, QueryOptions qOptions) {
             mayRun = true;
-            records = new ArrayList<Record>(batchSize);
+            records = new ArrayList<>(batchSize);
             this.batchSize = batchSize;
             this.batchMaxMemory = batchMaxMemory;
             this.batchTimeout = batchTimeout;

@@ -78,7 +78,7 @@ public class SolrSearchTestBase extends TestCase {
     }
 
     protected ObjectFilter getDataProvider(String field, List<String> terms) throws UnsupportedEncodingException {
-        List<Payload> samples = new ArrayList<Payload>(terms.size());
+        List<Payload> samples = new ArrayList<>(terms.size());
         for (int i = 0 ; i < terms.size() ; i++) {
             samples.add(new Payload(new Record(
                 "doc" + i, "dummy",

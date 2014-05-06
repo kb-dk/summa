@@ -40,7 +40,7 @@ public class MemoryStorage implements ConfigurationStorage {
      * {@link HashMap}.
      */
     public MemoryStorage() {
-        map = new HashMap<String, Serializable>(100);
+        map = new HashMap<>(100);
     }
 
     /**
@@ -210,8 +210,8 @@ public class MemoryStorage implements ConfigurationStorage {
      */
     @Override
     public List<ConfigurationStorage> createSubStorages(String key, int count) throws IOException {
-        ArrayList<MemoryStorage> subProperties = new ArrayList<MemoryStorage>(count);
-        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(count);
+        ArrayList<MemoryStorage> subProperties = new ArrayList<>(count);
+        List<ConfigurationStorage> storages = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             subProperties.add(new MemoryStorage());
             storages.add(subProperties.get(i));
@@ -232,7 +232,7 @@ public class MemoryStorage implements ConfigurationStorage {
         Object sub = get(key);
         if (!(sub instanceof List)) {
             if (sub instanceof MemoryStorage) { // Not wrapped as list
-                List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(1);
+                List<ConfigurationStorage> storages = new ArrayList<>(1);
                 storages.add((MemoryStorage)sub);
                 return storages;
             }
@@ -241,7 +241,7 @@ public class MemoryStorage implements ConfigurationStorage {
                                                 key, sub.getClass()));
         }
         List list = (List) sub;
-        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>(list.size());
+        List<ConfigurationStorage> storages = new ArrayList<>(list.size());
         for (Object o : list) {
             if (!(o instanceof MemoryStorage)) {
                 //noinspection DuplicateStringLiteralInspection

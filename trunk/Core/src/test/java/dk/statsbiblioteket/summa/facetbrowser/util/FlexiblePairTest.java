@@ -55,9 +55,9 @@ public class FlexiblePairTest extends TestCase {
         Random random = new Random();
         Profiler pf = new Profiler();
         LinkedList<FlexiblePair<String, Integer>> alphaResult =
-                new LinkedList<FlexiblePair<String, Integer>>();
+                new LinkedList<>();
         for (int i = 0 ; i < size ; i++) {
-            alphaResult.add(new FlexiblePair<String, Integer>(
+            alphaResult.add(new FlexiblePair<>(
                     Integer.toString(random.nextInt(10000000)),
                     random.nextInt(10000000),
                     FlexiblePair.SortType.PRIMARY_ASCENDING));

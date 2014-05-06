@@ -144,7 +144,7 @@ public class SearchNodeFactory {
                     CONF_NODES), e);
         }
         IndexDescriptor.copySetupToSubConfigurations(conf, nodeConfs);
-        List<SearchNode> nodes = new ArrayList<SearchNode>(nodeConfs.size());
+        List<SearchNode> nodes = new ArrayList<>(nodeConfs.size());
         for (Configuration nodeConf: nodeConfs) {
             nodes.add(createSearchNode(nodeConf));
         }

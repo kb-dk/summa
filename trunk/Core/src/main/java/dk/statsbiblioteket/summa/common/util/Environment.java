@@ -162,7 +162,7 @@ public class Environment {
             return null;
         }
 
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
 
         for (String s : iterable) {
             result.add(escapeSystemProperties(s));

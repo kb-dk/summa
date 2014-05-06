@@ -166,11 +166,11 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
             }
         } else {
             log.trace("Creating and starting " + size() + " future tasks");
-            List<FutureTask<Object>> futures = new ArrayList<FutureTask<Object>>(size());
+            List<FutureTask<Object>> futures = new ArrayList<>(size());
             for (SearchNode node: this) {
                 SearchNodeAsync aNode = new SearchNodeAsync(node);
                 closure.action(aNode);
-                FutureTask<Object> future = new FutureTask<Object>(aNode);
+                FutureTask<Object> future = new FutureTask<>(aNode);
                 executor.submit(future);
                 futures.add(future);
             }

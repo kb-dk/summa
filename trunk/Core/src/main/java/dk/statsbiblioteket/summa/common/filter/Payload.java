@@ -147,7 +147,7 @@ public class Payload {
      */
     public Map<String, Object> getObjectData() {
         if (objects == null) {
-            objects = new HashMap<String, Object>();
+            objects = new HashMap<>();
         }
         return objects;
     }

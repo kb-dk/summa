@@ -148,7 +148,7 @@ public class MiniConnectionPoolManager {
         }
 
         semaphore = new Semaphore(maxConnections, true);
-        recycledConnections = new Stack<PooledConnection>();
+        recycledConnections = new Stack<>();
 
         poolConnectionEventListener = new PoolConnectionEventListener();
 

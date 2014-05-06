@@ -64,7 +64,7 @@ public class LuceneBooster {
     }
 
     private void extractDescriptorBoosts(LuceneIndexDescriptor descriptor) {
-        descriptorBoosts = new HashMap<String, Float>(
+        descriptorBoosts = new HashMap<>(
                 descriptor.getFields().size());
         for (Map.Entry<String, LuceneIndexField> entry:
                 descriptor.getFields().entrySet()) {
@@ -143,7 +143,7 @@ public class LuceneBooster {
             return false;
         }
         Map<String, Float> boosts =
-                new HashMap<String, Float>(boostTokens.length);
+                new HashMap<>(boostTokens.length);
         for (String boost: boostTokens) {
             Matcher matcher = singleBoost.matcher(boost);
             if (!matcher.matches()) {
@@ -296,7 +296,7 @@ public class LuceneBooster {
      * @param boosts     a map with boosts for fields.
      */
     private void expandBoosts(Map<String, Float> boosts) {
-        Map<String, Float> extras = new HashMap<String, Float>(boosts.size()*2);
+        Map<String, Float> extras = new HashMap<>(boosts.size()*2);
         for (Map.Entry<String, Float> entry: boosts.entrySet()) {
             expandBoosts(entry.getKey(), entry.getValue(), extras);
         }

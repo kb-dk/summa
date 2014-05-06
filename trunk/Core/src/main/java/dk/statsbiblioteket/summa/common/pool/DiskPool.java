@@ -83,7 +83,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
      * The cache facilitates faster look ups. It caches the mapping from
      * {@link #indexes} to external values.
      */
-    private final WeakHashMap<Long, E> cache = new WeakHashMap<Long, E>();
+    private final WeakHashMap<Long, E> cache = new WeakHashMap<>();
     private long cacheHits = 0;
     private long cacheMisses = 0;
 

@@ -251,7 +251,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         /**
          * The main buffer for the reader. Anything is this is to be passed on.
          */
-        private ArrayList<Byte> buffer = new ArrayList<Byte>(10000);
+        private ArrayList<Byte> buffer = new ArrayList<>(10000);
         private int bufferPos = -1;
         /**
          * An ID or description of this stream to be used when outputting

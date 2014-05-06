@@ -69,7 +69,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException("Unable to get sub configurations for key '" + CONF_TARGETS + "'", e);
             }
-            reducerTargets = new HashMap<String, ReducerTarget>(targetConfs.size());
+            reducerTargets = new HashMap<>(targetConfs.size());
             for (Configuration targetConf : targetConfs) {
                 ReducerTarget target = new ReducerTarget(targetConf);
                 if (target.getComponentID().isEmpty()) {
@@ -80,7 +80,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
             }
         } else {
             log.warn("No targets specified. Reduction will have zero effect");
-            reducerTargets = new HashMap<String, ReducerTarget>(0);
+            reducerTargets = new HashMap<>(0);
         }
         queryRewriter = new QueryRewriter(conf, null, null);
         log.info("Created " + this);
@@ -229,7 +229,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
                 params.remove(CommonParams.FQ);
                 return;
             }
-            List<String> reducedFilters = new ArrayList<String>(filters.length);
+            List<String> reducedFilters = new ArrayList<>(filters.length);
             for (String filter : filters) {
                 if (!filter.isEmpty()) { // Ignore empty incoming
                     String reduced = reduce(filter);

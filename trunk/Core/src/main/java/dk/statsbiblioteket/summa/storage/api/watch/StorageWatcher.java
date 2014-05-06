@@ -111,10 +111,10 @@ public class StorageWatcher implements Configurable, Runnable {
         this.pollInterval = pollInterval;
         this.reader = reader;
 
-        pollTimes = new HashMap<String, Long>(10);
-        notifyTimes = new HashMap<String, Long>(10);
-        bases = new HashSet<String>(10);
-        listeners = new HashMap<StorageChangeListener, ListenerContext>();
+        pollTimes = new HashMap<>(10);
+        notifyTimes = new HashMap<>(10);
+        bases = new HashSet<>(10);
+        listeners = new HashMap<>();
 
         thread = new Thread(this, this.getClass().getSimpleName() + " daemon");
         thread.setDaemon(true); // Allow JVM to exit when watcher is running

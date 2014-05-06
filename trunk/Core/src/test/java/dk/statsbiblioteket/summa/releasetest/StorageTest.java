@@ -139,17 +139,17 @@ public class StorageTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
         
         
-        List<Record> records = new ArrayList<Record>(10);
+        List<Record> records = new ArrayList<>(10);
 
         Record lademands = new Record(LADEMANNS_LEKSIKON, "foo", new byte[0]);
         records.add(lademands);
-        ArrayList<Record> childrenList = new ArrayList<Record>();
+        ArrayList<Record> childrenList = new ArrayList<>();
         for (int i=1;i<=20;i++){
         	Record bind =  new Record("Lademanns leksikon Bind "+i,  "foo", new byte[0]);	
             bind.setParents(Arrays.asList(lademands));
         	childrenList.add(bind);
         
-         ArrayList<Record> childrenListNest1 = new ArrayList<Record>();
+         ArrayList<Record> childrenListNest1 = new ArrayList<>();
           for (int j=1;j<=3;j++){
         	 Record bindNest1 =  new Record("Lademanns leksikon Bind "+i+" Del "+j,  "foo", new byte[0]);	
              bindNest1.setParents(Arrays.asList(bind));
@@ -313,7 +313,7 @@ public class StorageTest extends NoExitTestCase {
     }
     */
     public List<Record> suck(ObjectFilter filter) throws Exception {
-        List<Record> result = new ArrayList<Record>(10);
+        List<Record> result = new ArrayList<>(10);
         while (filter.hasNext()) {
             result.add(filter.next().getRecord());
         }
@@ -322,7 +322,7 @@ public class StorageTest extends NoExitTestCase {
 
     // 5 records of which 3 are related to each other as Parent->Middle->Child
     private List<Record> getSampleData() {
-        List<Record> records = new ArrayList<Record>(10);
+        List<Record> records = new ArrayList<>(10);
 
         Record parentRecord = new Record("Parent", "foo", new byte[0]);
         Record middleRecord = new Record("Middle", "foo", new byte[0]);
@@ -389,7 +389,7 @@ public class StorageTest extends NoExitTestCase {
         Random random = new Random(87);
         Storage storage = IndexTest.createSampleStorage(STORAGE_ID);
         Profiler profiler = new Profiler(records);
-        List<Record> recordList = new ArrayList<Record>(records);
+        List<Record> recordList = new ArrayList<>(records);
         for (int batch = 0 ; batch < batches ; batch++) {
             log.debug(String.format(
                     "Running batch %d/%d with a total of %d MB",

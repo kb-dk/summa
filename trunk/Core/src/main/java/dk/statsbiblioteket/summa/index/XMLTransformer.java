@@ -149,7 +149,7 @@ public class XMLTransformer extends GraphFilter<Object> {
      */
     public static final String CONF_ENTITY_RESOLVER = "summa.xmltransformer.entityresolver";
 
-    private List<Changeling> changelings = new ArrayList<Changeling>();
+    private List<Changeling> changelings = new ArrayList<>();
 
     /**
      * Sets up the transformer stated in the configuration.

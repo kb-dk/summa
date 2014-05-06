@@ -99,7 +99,7 @@ public class SuggestStorageTest extends TestCase {
     }
 
     private List<Long> measureAddPerformance(SuggestStorage storage, String[] additions) throws IOException {
-        List<Long> mss = new ArrayList<Long>(additions.length);
+        List<Long> mss = new ArrayList<>(additions.length);
         for (String addition: additions) {
             long spend = -System.currentTimeMillis();
             storage.addSuggestion(addition, addition.length() + 10);
@@ -113,7 +113,7 @@ public class SuggestStorageTest extends TestCase {
     }
 
     public List<Long> measureSuggestPerformance(SuggestStorage storage, String[] queries) throws IOException {
-        List<Long> mss = new ArrayList<Long>(queries.length);
+        List<Long> mss = new ArrayList<>(queries.length);
         for (String query: queries) {
             long spend = -System.currentTimeMillis();
             storage.getSuggestion(query, 5);

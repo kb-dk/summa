@@ -82,13 +82,13 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException("Unable to get sub configurations for key '" + CONF_TARGETS + "'", e);
             }
-            targets = new ArrayList<TermStatTarget>(targetConfs.size());
+            targets = new ArrayList<>(targetConfs.size());
             for (Configuration targetConf : targetConfs) {
                 targets.add(new TermStatTarget(targetConf));
             }
         } else {
             log.warn("No targets specified. Rewriting will have zero effect");
-            targets = new ArrayList<TermStatTarget>(0);
+            targets = new ArrayList<>(0);
         }
         lowercase = conf.getBoolean(CONF_LOWERCASE_QUERY, DEFAULT_LOWERCASE_QUERY);
         log.info("Created " + this);
@@ -126,7 +126,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
         }
 
         // Cache query time weights for the components
-        Map<String, Double> weights = new HashMap<String, Double>(components.size());
+        Map<String, Double> weights = new HashMap<>(components.size());
         double defaultWeight = params.getDouble(TermStatTarget.SEARCH_WEIGHT, -1.0);
         for (ComponentCallable comp: components) {
             double weight = comp.getParams().getDouble(HubComponentImpl.SPECIFIC_PARAM_PREFIX
@@ -221,7 +221,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
      */
     private List<TermStatTarget> getTargets(
             List<ComponentCallable> components, String query) {
-        List<TermStatTarget> pruned = new ArrayList<TermStatTarget>(targets.size());
+        List<TermStatTarget> pruned = new ArrayList<>(targets.size());
         for (ComponentCallable component: components) {
             for (TermStatTarget target: targets) {
                 if (component.getComponent().getID().equals(target.getComponentID())) {

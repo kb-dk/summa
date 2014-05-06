@@ -49,7 +49,7 @@ public class ClientConnectionFactory
                                     ShellContext ctx) {
         this.ctx = ctx != null ? ctx : new VoidShellContext();
         controlConnFact =
-                new GenericConnectionFactory<ControlConnection>(conf);
+                new GenericConnectionFactory<>(conf);
         controlAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
                                         "//localhost:27000/summa-control");
     }
@@ -58,7 +58,7 @@ public class ClientConnectionFactory
                                     ShellContext ctx) {
         this.ctx = ctx != null ? ctx : new VoidShellContext();
         controlConnFact =
-                new GenericConnectionFactory<ControlConnection>(
+                new GenericConnectionFactory<>(
                                                 Configuration.newMemoryBased());
         this.controlAddress = controlAddress;
     }

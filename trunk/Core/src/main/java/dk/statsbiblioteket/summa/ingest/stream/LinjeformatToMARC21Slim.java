@@ -312,7 +312,7 @@ public class LinjeformatToMARC21Slim extends ThreadedStreamParser {
     // Split on divider and replace all @-occurences
     // »tm»a1991»bch»da»dy»leng»v4»&2 -> tm a19991 bch da dy leng v4 &2
     private List<String> splitAndReplace(String line, int lineNumber, String content) {
-        List<String> result = new ArrayList<String>(10);
+        List<String> result = new ArrayList<>(10);
         int index = 0;
         rbuffer.setLength(0);
         while (index < content.length()) {

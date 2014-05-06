@@ -146,7 +146,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
         }
 
         final int requestCount = (int) Math.ceil(1.0 * requestedRecords / requestPagesize);
-        List<Request> requests = new ArrayList<Request>(requestCount);
+        List<Request> requests = new ArrayList<>(requestCount);
 
         for (int r = 0 ; r < requestCount ; r++) {
             Request subRequest = copy(request);
@@ -230,7 +230,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
 
         boolean warned = false;
         // Copy first of everything that is not DocumentResponse
-        Set<Class> encountered = new HashSet<Class>();
+        Set<Class> encountered = new HashSet<>();
         for (ResponseCollection collection: responses) {
             for (Response res: collection) {
                 if (encountered.add(res.getClass())) {
@@ -264,7 +264,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
     }
 
     private List<ResponseCollection> searchSequential(List<Request> requests) throws RemoteException {
-        List<ResponseCollection> responses = new ArrayList<ResponseCollection>(requests.size());
+        List<ResponseCollection> responses = new ArrayList<>(requests.size());
         int count = 0;
         for (Request request: requests) {
             count++;
@@ -284,11 +284,11 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
     }
 
     private List<ResponseCollection> searchParallel(List<Request> requests) throws RemoteException {
-        List<ResponseCollection> responses = new ArrayList<ResponseCollection>(requests.size());
+        List<ResponseCollection> responses = new ArrayList<>(requests.size());
         log.trace("Creating and starting " + requests.size() + " future tasks");
-        List<FutureTask<ResponseCollection>> futures = new ArrayList<FutureTask<ResponseCollection>>(requests.size());
+        List<FutureTask<ResponseCollection>> futures = new ArrayList<>(requests.size());
         for (final Request request : requests) {
-            FutureTask<ResponseCollection> future = new FutureTask<ResponseCollection>(
+            FutureTask<ResponseCollection> future = new FutureTask<>(
                     new Callable<ResponseCollection>() {
                         @Override
                         public ResponseCollection call() throws Exception {

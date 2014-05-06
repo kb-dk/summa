@@ -639,7 +639,7 @@ public class RecordUtil {
     }
 
     private static List<Record> getRelatives(XMLStreamReader reader, String relative) throws XMLStreamException {
-        List<Record> relatives = new ArrayList<Record>(5);
+        List<Record> relatives = new ArrayList<>(5);
         while (reader.hasNext()) {
             reader.next();
             if (reader.getEventType() == XMLStreamReader.END_ELEMENT && relative.equals(reader.getLocalName())
@@ -742,7 +742,7 @@ public class RecordUtil {
             return size;
         }
         if (visited == null) {
-            visited = new HashSet<Record>(10);
+            visited = new HashSet<>(10);
             visited.add(record);
         }
         if (record.getParents() != null) {

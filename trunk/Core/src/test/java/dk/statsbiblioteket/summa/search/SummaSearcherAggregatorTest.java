@@ -14,25 +14,24 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
-import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.dummy.SummaSearcherDummy;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-
+import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -83,7 +82,7 @@ public class SummaSearcherAggregatorTest extends TestCase {
 
     private List<SummaSearcher> getSearchers() throws IOException {
         List<SummaSearcher> searchers =
-                new ArrayList<SummaSearcher>(SHARDS.length);
+                new ArrayList<>(SHARDS.length);
         for (String shard: SHARDS) {
             searchers.add(createSearcher(shard));
         }

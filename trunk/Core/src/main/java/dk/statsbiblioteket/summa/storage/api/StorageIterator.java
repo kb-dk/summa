@@ -96,7 +96,7 @@ public class StorageIterator implements Iterator<Record>, Serializable {
         this.iteratorHolder = iteratorHolder;
         this.key = key;
         this.next = true;
-        records = new LinkedBlockingQueue<Record>(maxBufferSize);
+        records = new LinkedBlockingQueue<>(maxBufferSize);
         maxQueueSize = maxBufferSize;
         this.allowPartialDeliveries = allowPartialDeliveries;
         if(log.isTraceEnabled()) {

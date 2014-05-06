@@ -241,7 +241,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final Map<String, List<String>> solrDefaultParams;
     protected final boolean supportsPureNegative;
     protected final FacetQueryTransformer facetQueryTransformer;
-    protected final Set<String> nonescapedFields = new HashSet<String>(10);
+    protected final Set<String> nonescapedFields = new HashSet<>(10);
     protected final String fieldID;
     protected final boolean explicitFacetFilter;
     protected final boolean emptyQueryNoSearch;
@@ -259,7 +259,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         nonescapedFields.addAll(nonEscaped);
         responseBuilder = createResponseBuilder(conf);
         responseBuilder.setNonescapedFields(nonescapedFields);
-        solrDefaultParams = new HashMap<String, List<String>>();
+        solrDefaultParams = new HashMap<>();
 
         host = conf.getString(CONF_SOLR_HOST, DEFAULT_SOLR_HOST);
         restCall = conf.getString(CONF_SOLR_RESTCALL, DEFAULT_SOLR_RESTCALL);
@@ -318,7 +318,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         if (queryParameters == null) {
             return "";
         }
-        List<String> parameterStrings = new ArrayList<String>();
+        List<String> parameterStrings = new ArrayList<>();
 
         // for each parameter, get its key and values
         for (Map.Entry<String, List<String>> entry : queryParameters.entrySet()) {
@@ -397,7 +397,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         SolrFacetRequest facets = null == facetsDef || facetsDef.isEmpty() ? null :
                                   createFacetRequest(facetsDef, minCount, defaultFacetPageSize, combineMode);
 
-        Map<String, List<String>> solrSearchParams = new HashMap<String, List<String>>(solrDefaultParams);
+        Map<String, List<String>> solrSearchParams = new HashMap<>(solrDefaultParams);
         for (Map.Entry<String, Serializable> entry : request.entrySet()) {
             convertSolrParam(solrSearchParams, entry);
         }
@@ -557,7 +557,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             return false;
         }
         if (entry.getValue() instanceof List) {
-            ArrayList<String> values = new ArrayList<String>();
+            ArrayList<String> values = new ArrayList<>();
             for (Object v: (List)entry.getValue()) {
                 if (v instanceof String) {
                     values.add((String)v);
@@ -679,7 +679,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             }
         }
         log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
-        return new Pair<String, String>(result, "solr.buildquery:" + buildQuery);
+        return new Pair<>(result, "solr.buildquery:" + buildQuery);
 
     }
 
@@ -794,7 +794,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
         int startPage = Math.max(0, startIndex); // Solr pages exactly as Lucene
         //int startPage = Math.max(0, maxRecords == 0 ? 0 : (startIndex-1) / maxRecords);
-        Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
+        Map<String, List<String>> queryMap = new HashMap<>();
         if (request.containsKey(DocumentKeys.SEARCH_RESULT_FIELDS)) {
             queryMap.put("fl", Arrays.asList(Strings.join(request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS), ",")));
         }
@@ -863,7 +863,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                     dest.put(entry.getKey(), entry.getValue());
                     continue;
                 }
-                List<String> combined = new ArrayList<String>(entry.getValue());
+                List<String> combined = new ArrayList<>(entry.getValue());
                 combined.addAll(dest.get(entry.getKey()));
                 dest.put(entry.getKey(), combined);
             } else {

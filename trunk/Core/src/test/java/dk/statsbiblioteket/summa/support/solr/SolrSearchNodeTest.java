@@ -151,7 +151,7 @@ public class SolrSearchNodeTest extends TestCase {
         {
             ResponseCollection responses = search(new Request(
                     DocumentKeys.SEARCH_QUERY, "*:*",
-                    DocumentKeys.SEARCH_FILTER, new ArrayList<String>(Arrays.asList(new String[]{
+                    DocumentKeys.SEARCH_FILTER, new ArrayList<>(Arrays.asList(new String[]{
                     "recordID:doc1", "recordID:doc2"}))
             ));
             assertEquals("There should be the right number of hits for multi filter query.\n" + responses.toXML(),
@@ -295,7 +295,7 @@ public class SolrSearchNodeTest extends TestCase {
     }
 
     private void assertPaging(String message, DocumentResponse docs, int start, int pageSize) {
-        List<String> expected = new ArrayList<String>(pageSize);
+        List<String> expected = new ArrayList<>(pageSize);
         for (int page = start ; page < start + pageSize ; page++) {
             expected.add("doc" + String.format("%07d", page));
         }
@@ -303,7 +303,7 @@ public class SolrSearchNodeTest extends TestCase {
     }
 
     private List<String> getContent(DocumentResponse docs, String fieldName) {
-        List<String> terms = new ArrayList<String>();
+        List<String> terms = new ArrayList<>();
         for (DocumentResponse.Record records: docs.getRecords()) {
             for (DocumentResponse.Field field: records.getFields()) {
                 if (fieldName.equals(field.getName())) {
@@ -921,7 +921,7 @@ public class SolrSearchNodeTest extends TestCase {
 
     final static int SAMPLES = 2;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
-        List<Payload> samples = new ArrayList<Payload>(SAMPLES);
+        List<Payload> samples = new ArrayList<>(SAMPLES);
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
                     "doc" + i, "dummy", Resolver.getUTF8Content(
@@ -933,7 +933,7 @@ public class SolrSearchNodeTest extends TestCase {
     }
 
     private ObjectFilter getFacetSamples(int docCount) throws IOException {
-        List<Payload> samples = new ArrayList<Payload>(docCount);
+        List<Payload> samples = new ArrayList<>(docCount);
         StringBuilder sb = new StringBuilder(1000);
         for (int i = 0 ; i < docCount ; i++) {
             sb.setLength(0);

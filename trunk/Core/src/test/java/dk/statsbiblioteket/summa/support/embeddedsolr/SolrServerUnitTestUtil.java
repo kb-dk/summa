@@ -1,17 +1,5 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.io.FileUtils;
-
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -22,6 +10,13 @@ import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.support.solr.SolrManipulator;
+import org.apache.commons.io.FileUtils;
+
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SolrServerUnitTestUtil {
 
@@ -117,7 +112,7 @@ public class SolrServerUnitTestUtil {
 
 
     private static ObjectFilter getDataProvider(String[] files) throws IOException {
-        List<Payload> samples = new ArrayList<Payload>(files.length);
+        List<Payload> samples = new ArrayList<>(files.length);
         for (int i = 0 ; i < files.length ; i++) {
             Record record = new Record(
                 //Doc1, doc 2. etc.. Actually in test this will be the real recordId in the index
@@ -130,7 +125,7 @@ public class SolrServerUnitTestUtil {
     }
 
     private static ObjectFilter getDataProviderFromDocs(String[] docs) throws IOException {
-        List<Payload> samples = new ArrayList<Payload>(docs.length);
+        List<Payload> samples = new ArrayList<>(docs.length);
         for (int i = 0 ; i < docs.length ; i++) {
             Record record = new Record("doc" + i, "test_base", docs[i].getBytes("utf-8"));
             Payload payload = new Payload(record);

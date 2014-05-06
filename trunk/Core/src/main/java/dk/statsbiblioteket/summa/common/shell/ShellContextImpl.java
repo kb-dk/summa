@@ -15,12 +15,11 @@
 package dk.statsbiblioteket.summa.common.shell;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import jline.ConsoleReader;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Stack;
-
-import jline.ConsoleReader;
 
 /**
  * Silent shell context, used for running one or more command(s) in a silent
@@ -49,7 +48,7 @@ public class ShellContextImpl implements ShellContext {
     private ConsoleReader lineIn;
 
     /** Line buffer, that means a stack for multiple commands. */
-    private Stack<String> lineBuffer = new Stack<String>();
+    private Stack<String> lineBuffer = new Stack<>();
 
     /** Last error message. */
     String lastError = null;

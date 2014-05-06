@@ -40,13 +40,13 @@ public class TermEntry implements Comparable<TermEntry> {
     private static final ReplaceReader escaper;
     private static final ReplaceReader unEscaper;
     static {
-        Map<String, String> escape = new LinkedHashMap<String, String>(10);
+        Map<String, String> escape = new LinkedHashMap<>(10);
         escape.put("\\", "\\\\");
         escape.put("\n", "\\n");
         escape.put("\t", "\\t");
         escaper = ReplaceFactory.getReplacer(escape);
 
-        Map<String, String> unEscape = new LinkedHashMap<String, String>(10);
+        Map<String, String> unEscape = new LinkedHashMap<>(10);
         escape.put("\\t", "\\t");
         escape.put("\\n", "\\n");
         escape.put("\\\\", "\\");

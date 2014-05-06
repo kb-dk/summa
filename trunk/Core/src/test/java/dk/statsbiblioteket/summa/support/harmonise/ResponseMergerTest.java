@@ -9,8 +9,8 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -220,7 +220,7 @@ public class ResponseMergerTest extends TestCase {
             if (merged instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)merged;
                 List<String> actual =
-                    new ArrayList<String>(docs.getRecords().size());
+                    new ArrayList<>(docs.getRecords().size());
                 for (DocumentResponse.Record record: docs.getRecords()) {
                     actual.add(record.getId());
                 }
@@ -241,7 +241,7 @@ public class ResponseMergerTest extends TestCase {
     @SuppressWarnings({"RedundantArrayCreation"})
     private List<SummaSearcherAggregator.ResponseHolder> generateResponses() {
         List<SummaSearcherAggregator.ResponseHolder> holders =
-            new ArrayList<SummaSearcherAggregator.ResponseHolder>(3);
+            new ArrayList<>(3);
         Request request = new Request(
             DocumentKeys.SEARCH_FILTER, null,
             DocumentKeys.SEARCH_QUERY, "foozoo",
@@ -271,7 +271,7 @@ public class ResponseMergerTest extends TestCase {
     private List<SummaSearcherAggregator.ResponseHolder>
     generateEmptyResponses() {
         List<SummaSearcherAggregator.ResponseHolder> holders =
-            new ArrayList<SummaSearcherAggregator.ResponseHolder>(3);
+            new ArrayList<>(3);
         Request request = new Request(
             DocumentKeys.SEARCH_FILTER, null,
             DocumentKeys.SEARCH_QUERY, "foozoo",

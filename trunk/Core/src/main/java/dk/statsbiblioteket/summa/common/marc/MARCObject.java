@@ -42,8 +42,8 @@ public class MARCObject implements Cloneable {
     private String id = null;
     private String type = null;
     private Leader leader = null;
-    private List<ControlField> controlFields = new ArrayList<ControlField>();
-    private List<DataField> dataFields= new ArrayList<DataField>();
+    private List<ControlField> controlFields = new ArrayList<>();
+    private List<DataField> dataFields= new ArrayList<>();
 
     public MARCObject(String id, String type) {
         log.debug("Creating with id='" + id + "', type='" + type + "'");
@@ -135,7 +135,7 @@ public class MARCObject implements Cloneable {
      * @return the DataFields with the given tag.
      */
     public List<DataField> getDataFields(String tag) {
-        List<DataField> fields = new ArrayList<DataField>();
+        List<DataField> fields = new ArrayList<>();
         for (DataField field: dataFields) {
             if (tag.equals(field.getTag())) {
                 fields.add(field);
@@ -257,7 +257,7 @@ public class MARCObject implements Cloneable {
         private String tag;
         private String ind1;
         private String ind2;
-        private List<SubField> subFields = new ArrayList<SubField>();
+        private List<SubField> subFields = new ArrayList<>();
 
         public DataField(String tag, String id, String ind1, String ind2) {
             this.id = id;
@@ -322,7 +322,7 @@ public class MARCObject implements Cloneable {
             other.tag = tag;
             other.ind1 = ind1;
             other.ind2 = ind2;
-            other.subFields = new ArrayList<SubField>(subFields.size());
+            other.subFields = new ArrayList<>(subFields.size());
             for (SubField sf: subFields) {
                 other.subFields.add((SubField) sf.clone());
             }
@@ -400,11 +400,11 @@ public class MARCObject implements Cloneable {
         other.id = id;
         other.type = type;
         other.leader = (Leader) leader.clone();
-        other.controlFields = new ArrayList<ControlField>(controlFields.size());
+        other.controlFields = new ArrayList<>(controlFields.size());
         for (ControlField cf: controlFields) {
             other.controlFields.add((ControlField) cf.clone());
         }
-        other.dataFields = new ArrayList<DataField>(dataFields.size());
+        other.dataFields = new ArrayList<>(dataFields.size());
         for (DataField df: dataFields) {
             other.dataFields.add((DataField) df.clone());
         }

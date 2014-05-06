@@ -80,7 +80,7 @@ public class AltoHighlighter implements Configurable {
     }
 
     private List<Box> intersectAndAssign(List<Box> boxes, List<String> tokens) {
-        List<Box> intersection = new ArrayList<Box>(boxes.size());
+        List<Box> intersection = new ArrayList<>(boxes.size());
         boxLoop:
         for (Box box: boxes) {
             for (String token: tokens) {
@@ -114,7 +114,7 @@ public class AltoHighlighter implements Configurable {
 
     protected List<Box> getBoxes(String altoXML, String altoOrigin) throws FileNotFoundException, XMLStreamException {
         Alto alto = new Alto(altoXML, altoOrigin);
-        List<Box> boxes = new ArrayList<Box>();
+        List<Box> boxes = new ArrayList<>();
         if (alto.getLayout().size() > 1) {
             log.warn("The highlighter got " + alto.getLayout().size() + " pages but will only process the first one");
         }
@@ -178,7 +178,7 @@ public class AltoHighlighter implements Configurable {
     }
 
     private class CollectTokenEvent extends QueryRewriter.Event {
-        private List<String> tokens = new ArrayList<String>();
+        private List<String> tokens = new ArrayList<>();
 
         @Override
         public Query onQuery(TermQuery query) {

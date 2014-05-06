@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.support.alto;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ public abstract class AltoStepper {
             return null;
         }
 
-        List<Alto.Page> newLayout = new ArrayList<Alto.Page>(processedAlto.getLayout().size());
+        List<Alto.Page> newLayout = new ArrayList<>(processedAlto.getLayout().size());
         for (Alto.Page page: processedAlto.getLayout()) {
             Alto.Page processedPage = step(page);
             if (processedPage == null) {
@@ -59,7 +59,7 @@ public abstract class AltoStepper {
             return null;
         }
 
-        List<Alto.TextBlock> newBlocks = new ArrayList<Alto.TextBlock>(processedPage.getPrintSpace().size());
+        List<Alto.TextBlock> newBlocks = new ArrayList<>(processedPage.getPrintSpace().size());
         for (Alto.TextBlock block: processedPage.getPrintSpace()) {
             Alto.TextBlock processedBlock = step(block);
             if (processedBlock == null) {
@@ -78,7 +78,7 @@ public abstract class AltoStepper {
             return null;
         }
 
-        List<Alto.TextLine> newLines = new ArrayList<Alto.TextLine>(processedBlock.getLines().size());
+        List<Alto.TextLine> newLines = new ArrayList<>(processedBlock.getLines().size());
         for (Alto.TextLine line: processedBlock.getLines()) {
             Alto.TextLine processedLine = step(line);
             if (processedLine == null) {
@@ -98,7 +98,7 @@ public abstract class AltoStepper {
             return null;
         }
 
-        List<Alto.TextString> newStrings = new ArrayList<Alto.TextString>(processedLine.getTextStrings().size());
+        List<Alto.TextString> newStrings = new ArrayList<>(processedLine.getTextStrings().size());
         for (Alto.TextString textString: processedLine.getTextStrings()) {
             Alto.TextString processedString = step(textString);
             if (processedString == null) {

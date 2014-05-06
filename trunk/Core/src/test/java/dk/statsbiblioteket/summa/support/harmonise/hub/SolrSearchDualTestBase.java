@@ -104,7 +104,7 @@ public class SolrSearchDualTestBase extends TestCase {
 
     // content: "myfield1:term", "myfield2:some other terms"...
     private ObjectFilter getDataProviderMulti(List<String>[] content) throws UnsupportedEncodingException {
-        List<Payload> samples = new ArrayList<Payload>(content.length);
+        List<Payload> samples = new ArrayList<>(content.length);
         for (int i = 0 ; i < content.length ; i++) {
             String c =
                     "<doc><field name=\"recordID\">doc" + i + "</field>\n"
@@ -124,7 +124,7 @@ public class SolrSearchDualTestBase extends TestCase {
     }
 
     protected ObjectFilter getDataProvider(String field, List<String> terms) throws UnsupportedEncodingException {
-        List<Payload> samples = new ArrayList<Payload>(terms.size());
+        List<Payload> samples = new ArrayList<>(terms.size());
         for (int i = 0 ; i < terms.size() ; i++) {
             samples.add(new Payload(new Record(
                 "doc" + i, "dummy",

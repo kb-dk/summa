@@ -176,7 +176,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     private File extractStats(List<File> indexLocations) throws IOException {
         Configuration conf = Configuration.newMemoryBased();
         TermStatClient extractor = new TermStatClient(conf);
-        List<File> statLocations = new ArrayList<File>(indexLocations.size());
+        List<File> statLocations = new ArrayList<>(indexLocations.size());
         for (File indexLocation : indexLocations) {
             File dumpLocation = new File(indexLocation.getParent(), TermStat.TERMSTAT_PERSISTENT_NAME);
             // TODO: Enable this
@@ -223,31 +223,26 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     }
 
     private List<File> createThreeIndexes() throws Exception {
-        List<Pair<String, List<Pair<String, String>>>> corpus = new ArrayList<Pair<String, List<Pair<String,
-                String>>>>(10);
-        ArrayList<File> locations = new ArrayList<File>(corpus.size());
+        List<Pair<String, List<Pair<String, String>>>> corpus = new ArrayList<>(10);
+        ArrayList<File> locations = new ArrayList<>(corpus.size());
 
-        corpus.add(new Pair<String, List<Pair<String, String>>>("foo1", Arrays.asList(new Pair<String,
-                String>("multi_token", "bar1 bar1 bar1"), new Pair<String, String>(
-                "multi_token", "bar2"), new Pair<String, String>("multi_token", "bar3"))));
+        corpus.add(new Pair<>("foo1", Arrays.asList(new Pair<>("multi_token", "bar1 bar1 bar1"), new Pair<>(
+                "multi_token", "bar2"), new Pair<>("multi_token", "bar3"))));
         locations.add(createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_1"), corpus));
 
         corpus.clear();
-        corpus.add(new Pair<String, List<Pair<String, String>>>("foo2", Arrays.asList(new Pair<String,
-                String>("multi_token", "bar1"), new Pair<String, String>(
-                "multi_token", "bar2 bar2"), new Pair<String, String>("multi_token", "bar3"))));
+        corpus.add(new Pair<>("foo2", Arrays.asList(new Pair<>("multi_token", "bar1"), new Pair<>(
+                "multi_token", "bar2 bar2"), new Pair<>("multi_token", "bar3"))));
         locations.add(createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_2"), corpus));
 
         corpus.clear();
-        corpus.add(new Pair<String, List<Pair<String, String>>>("foo3", Arrays.asList(new Pair<String,
-                String>("multi_token", "bar1"), new Pair<String, String>("multi_token", "bar2"), new Pair<String,
-                String>("multi_token", "bar3 bar3 bar3"))));
-        corpus.add(new Pair<String, List<Pair<String, String>>>(
+        corpus.add(new Pair<>("foo3", Arrays.asList(new Pair<>("multi_token", "bar1"), new Pair<>("multi_token", "bar2"), new Pair<>("multi_token", "bar3 bar3 bar3"))));
+        corpus.add(new Pair<>(
                 "skewer_bar2", Arrays.asList( // Makes bar2 more common
-                                              new Pair<String, String>("multi_token", "bar2"))));
+                                              new Pair<>("multi_token", "bar2"))));
         for (int i = 0; i < 100; i++) { // Let's create some documents
-            corpus.add(new Pair<String, List<Pair<String, String>>>(
-                    "filler" + i, Arrays.asList(new Pair<String, String>("multi_token", "pingo"))));
+            corpus.add(new Pair<>(
+                    "filler" + i, Arrays.asList(new Pair<>("multi_token", "pingo"))));
         }
         locations.add(createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_3"), corpus));
         return locations;
@@ -272,10 +267,10 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     }
 
     public void testCreateIndex() throws Exception {
-        List<Pair<String, List<Pair<String, String>>>> corpus = new ArrayList<Pair<String, List<Pair<String, String>>>>(1);
+        List<Pair<String, List<Pair<String, String>>>> corpus = new ArrayList<>(1);
 
-        corpus.add(new Pair<String, List<Pair<String, String>>>(
-                "foo1", Arrays.asList(new Pair<String, String>("single_token", "bar"))));
+        corpus.add(new Pair<>(
+                "foo1", Arrays.asList(new Pair<>("single_token", "bar"))));
 
         File indexLocation = createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_1"), corpus);
         log.info("Created index at " + indexLocation);
@@ -372,7 +367,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
      * @throws IOException if a searcher could not be created.
      */
     public static List<SummaSearcher> createSearchers(File termStatLocation, List<File> locations) throws Exception {
-        List<SummaSearcher> searchers = new ArrayList<SummaSearcher>(locations.size());
+        List<SummaSearcher> searchers = new ArrayList<>(locations.size());
         Configuration conf = Configuration.load("integration/distribution/search_configuration.xml");
         // TODO: Check if this unit test makes sense after upgrade to Lucene trunk in 2012
 /*
@@ -426,7 +421,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     private static List<Payload> createPayloads(
             File indexDescriptor, List<Pair<String, List<Pair<String, String>>>> corpus) throws IOException {
         LuceneIndexDescriptor descriptor = new LuceneIndexDescriptor(indexDescriptor.toURI().toURL());
-        List<Payload> payloads = new ArrayList<Payload>(corpus.size());
+        List<Payload> payloads = new ArrayList<>(corpus.size());
         for (Pair<String, List<Pair<String, String>>> recordDef : corpus) {
             Document document = new Document();
             for (Pair<String, String> content : recordDef.getValue()) {

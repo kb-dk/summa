@@ -205,7 +205,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
                 throw new ConfigurationException(String.format("IOException while extracting sub properties for %s",
                                                                CONF_RULES), e);
             }
-            Map<String, String> rules = new LinkedHashMap<String, String>(ruleConfs.size());
+            Map<String, String> rules = new LinkedHashMap<>(ruleConfs.size());
             int count = 0;
             log.debug(String.format("Located %d rules. Extracting...", ruleConfs.size()));
             for (Configuration ruleConf : ruleConfs) {

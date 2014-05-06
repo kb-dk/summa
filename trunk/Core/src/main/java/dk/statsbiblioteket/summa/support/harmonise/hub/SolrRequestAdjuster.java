@@ -26,7 +26,10 @@ import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -95,7 +98,7 @@ public class SolrRequestAdjuster {
 
         // Facet parameters (prefixed by 'f.')
         // We copy the names to avoid errors when iterating and modifying
-        for (String key: new HashSet<String>(request.getParameterNames())) {
+        for (String key: new HashSet<>(request.getParameterNames())) {
             if (!key.startsWith("f.")) {
                 continue;
             }
@@ -163,7 +166,7 @@ public class SolrRequestAdjuster {
             return;
         }
 
-        Set<String> newFields = new HashSet<String>();
+        Set<String> newFields = new HashSet<>();
         for (String field : fields) {
             if (splitValues) {
                 for (String subField : SPLIT.split(field)) {

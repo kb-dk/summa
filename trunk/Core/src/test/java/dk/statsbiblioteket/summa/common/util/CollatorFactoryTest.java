@@ -14,13 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import com.ibm.icu.text.Collator;
 import com.ibm.icu.text.RuleBasedCollator;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import com.ibm.icu.text.Collator;
 
 import java.util.*;
 
@@ -109,7 +108,7 @@ public class CollatorFactoryTest extends TestCase {
     private void testCompare(String message, Comparator comparator,
                             List<String> expected, List<String> actual)
                                                               throws Exception {
-        List<String> sorted = new ArrayList<String>(actual);
+        List<String> sorted = new ArrayList<>(actual);
         //noinspection unchecked
         Collections.sort(sorted, comparator);
         assertEquals(message,

@@ -22,29 +22,17 @@ import dk.statsbiblioteket.summa.ingest.split.MARCParser;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.marc4j.MarcPermissiveStreamReader;
-import org.marc4j.MarcReader;
-import org.marc4j.MarcStreamReader;
-import org.marc4j.MarcStreamWriter;
-import org.marc4j.MarcWriter;
-import org.marc4j.MarcXmlWriter;
+import org.marc4j.*;
 import org.marc4j.marc.Record;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Tests for {@link ISO2709ToMARCXMLFilter}.
@@ -162,7 +150,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
                 Configuration.newMemoryBased(
                         ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "cp850"));
         isoFilter.setSource(feeder);
-        ArrayList<Payload> processed = new ArrayList<Payload>(3);
+        ArrayList<Payload> processed = new ArrayList<>(3);
 
         while (isoFilter.hasNext()) {
             processed.add(isoFilter.next());
@@ -193,7 +181,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
                       //ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "ISO-8859-1",
                         ISO2709ToMARCXMLFilter.CONF_FIX_CONTROLFIELDS, true));
         isoFilter.setSource(feeder);
-        ArrayList<Payload> processed = new ArrayList<Payload>(3);
+        ArrayList<Payload> processed = new ArrayList<>(3);
 
         while (isoFilter.hasNext()) {
             processed.add(isoFilter.next());
@@ -255,7 +243,7 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
 
         streamer.setSource(isoFilter);
 
-        ArrayList<Payload> processed = new ArrayList<Payload>(payloadsNumber);
+        ArrayList<Payload> processed = new ArrayList<>(payloadsNumber);
 
         while (streamer.hasNext()) {
             processed.add(streamer.next());

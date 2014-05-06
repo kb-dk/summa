@@ -147,7 +147,7 @@ public class SolrManipulator implements IndexManipulator {
         batcher = new PayloadBatcher(conf) {
             @Override
             protected void flush(PayloadQueue queue) {
-                List<Payload> payloads = new ArrayList<Payload>(queue.size());
+                List<Payload> payloads = new ArrayList<>(queue.size());
                 queue.drainTo(payloads);
                 send(payloads);
             }

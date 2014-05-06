@@ -130,7 +130,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
     private final RandomList<Template> templates;
     private final RandomList<String> structures;
     // TODO: Consider using a weighted approach: http://stackoverflow.com/questions/6737283/weighted-randomness-in-java
-    private final List<String> terms = new ArrayList<String>();
+    private final List<String> terms = new ArrayList<>();
 
     private final boolean hackedMode;
     private String stats = null;
@@ -145,8 +145,8 @@ public class AltoGeneratorFilter implements ObjectFilter {
         randomTermChance = conf.getDouble(CONF_RANDOM_TERM_CHANCE, DEFAULT_RANDOM_TERM_CHANCE);
         createStream = conf.getBoolean(CONF_STREAM, DEFAULT_STREAM);
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
-        structures = new RandomList<String>(maxStructures, structureReplaceChance, random);
-        templates = new RandomList<Template>(maxStructures, structureReplaceChance, random);
+        structures = new RandomList<>(maxStructures, structureReplaceChance, random);
+        templates = new RandomList<>(maxStructures, structureReplaceChance, random);
         hackedMode = true;
         log.info("Created " + this);
     }
@@ -157,7 +157,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
     private void initialize() {
         log.trace("initialize() called");
         Profiler profiler = new Profiler();
-        Set<String> terms = new HashSet<String>(10000);
+        Set<String> terms = new HashSet<>(10000);
         StringWriter stats = new StringWriter();
         stats.write("Payload# terms totalTerms delta Payload");
         int payloadCount = 0;
@@ -384,8 +384,8 @@ public class AltoGeneratorFilter implements ObjectFilter {
         private final Random random;
         private final List<String> terms;
 
-        private final List<String> texts = new ArrayList<String>();
-        private final List<Integer> termCounts = new ArrayList<Integer>();
+        private final List<String> texts = new ArrayList<>();
+        private final List<Integer> termCounts = new ArrayList<>();
         private String filename = null;
 
         private boolean lastAddWasTerm = false;

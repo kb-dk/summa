@@ -125,7 +125,7 @@ public class PayloadMatcher {
         if (regexps == null) {
             return null;
         }
-        List<Matcher> matchers = new ArrayList<Matcher>(regexps.size());
+        List<Matcher> matchers = new ArrayList<>(regexps.size());
         for (String regex : regexps) {
             log.debug("Compiling " + type + " filter regex: " + regex);
             matchers.add(Pattern.compile(regex).matcher(""));

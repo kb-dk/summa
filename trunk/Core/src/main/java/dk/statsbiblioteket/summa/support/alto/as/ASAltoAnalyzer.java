@@ -53,7 +53,7 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
     public static final String CONF_ORIGIN2URL_REPLACEMENT = "asaltoanalyzer.origin2url.replacement";
     public static final String DEFAULT_ORIGIN2URL_REPLACEMENT = "http://pc254.sb.statsbiblioteket.dk/alto/$1_files/";
 
-    private final List<ASAltoAnalyzerSetup> setups = new ArrayList<ASAltoAnalyzerSetup>();
+    private final List<ASAltoAnalyzerSetup> setups = new ArrayList<>();
     private final Pattern origin2url;
     private final String origin2urlReplacement;
 
@@ -82,8 +82,8 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
     public List<ASSegment> getSegments(Alto alto) {
         ASAltoAnalyzerSetup setup = getSetup(alto);
         // We'll do a lot of random access extraction so linked lists seems the obvious choice (ignoring caching)
-        final List<Alto.TextBlock> blocks = new LinkedList<Alto.TextBlock>(alto.getLayout().get(0).getPrintSpace());
-        final List<ASSegment> segments = new ArrayList<ASSegment>();
+        final List<Alto.TextBlock> blocks = new LinkedList<>(alto.getLayout().get(0).getPrintSpace());
+        final List<ASSegment> segments = new ArrayList<>();
         int hPos = 0;
         int vPos = -1;
         int maxHPos = Integer.MAX_VALUE;
@@ -137,7 +137,7 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
             // TODO: Implement this
             segments.add(segment);
         }
-        enrichWithNearBlocks(setup, segments, new LinkedList<Alto.TextBlock>(alto.getLayout().get(0).getPrintSpace()));
+        enrichWithNearBlocks(setup, segments, new LinkedList<>(alto.getLayout().get(0).getPrintSpace()));
         return segments;
     }
 
@@ -162,7 +162,7 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
         int origoX = segment.getHpos() + segment.getWidth()/2;
         int origoY = segment.getVpos() + segment.getHeight()/2;
         double maxDist = segment.getWidth() * setup.getNearbyFactor();
-        List<Alto.PositionedElement> lines = new ArrayList<Alto.PositionedElement>();
+        List<Alto.PositionedElement> lines = new ArrayList<>();
         for (Alto.TextBlock block: blocks) {
             for (Alto.TextLine line: block.getLines()) {
                 for (Alto.TextString ts: line.getTextStrings()) {
@@ -201,7 +201,7 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
     protected ASSegment blockToSegment(Alto alto, Alto.TextBlock textBlock) {
         ASSegment segment = super.blockToSegment(alto, textBlock);
 
-        List<Alto.TextLine> lines = new LinkedList<Alto.TextLine>(textBlock.getLines());
+        List<Alto.TextLine> lines = new LinkedList<>(textBlock.getLines());
         extractTitle(segment, lines);
 
         // Just add the rest of the lines

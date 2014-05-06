@@ -167,7 +167,7 @@ public class ETSSStatusFilterTest extends TestCase {
     }
 
     private List<Payload> pump(ObjectFilter filter) {
-        List<Payload> pumped = new ArrayList<Payload>();
+        List<Payload> pumped = new ArrayList<>();
         while (filter.hasNext()) {
             pumped.add(filter.next());
         }

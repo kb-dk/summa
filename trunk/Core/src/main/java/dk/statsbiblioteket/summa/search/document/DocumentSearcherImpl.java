@@ -49,7 +49,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
      * The result-fields that should not be entity-escaped (normally used for
      * inline XML).
      */
-    protected Set<String> nonescapedFields = new HashSet<String>(10);
+    protected Set<String> nonescapedFields = new HashSet<>(10);
     private String sortKey = DEFAULT_DEFAULT_SORTKEY;
     private long maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
     private long startIndex = DEFAULT_START_INDEX;
@@ -94,7 +94,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
         if (getMaxConcurrentSearches() == 0) {
             throw new RemoteException("The number of maxConcurrentSearches is 0. No searches can be performed");
         }
-        collectors = new ArrayBlockingQueue<DocIDCollector>(getMaxConcurrentSearches());
+        collectors = new ArrayBlockingQueue<>(getMaxConcurrentSearches());
         for (int i = 0; i < getMaxConcurrentSearches(); i++) {
             new DocIDCollector(collectors);
         }

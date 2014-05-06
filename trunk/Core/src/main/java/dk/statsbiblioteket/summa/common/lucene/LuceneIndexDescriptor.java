@@ -212,7 +212,7 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
         log.trace("Extracting nodes with expression '" + MLT_EXPR + "'");
         NodeList mltNodes = DOM.selectNodeList(document, MLT_EXPR);
 
-        moreLikethisFields = new ArrayList<String>(mltNodes.getLength());
+        moreLikethisFields = new ArrayList<>(mltNodes.getLength());
         if (mltNodes.getLength() == 0) {
             log.debug("No MoreLikeThis nodes in index descriptor");
             return document;
@@ -331,10 +331,10 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
     @SuppressWarnings("ObjectToString")
     private void createAnalyzers() {
         log.debug("createAnalyzers called");
-        Map<String, Analyzer> indexAnalyzers = new HashMap<String, Analyzer>();
-        Map<String, Analyzer> indexPrefixAnalyzers = new HashMap<String, Analyzer>();
-        Map<String, Analyzer> queryAnalyzers = new HashMap<String, Analyzer>();
-        Map<String, Analyzer> queryPrefixAnalyzers = new HashMap<String, Analyzer>();
+        Map<String, Analyzer> indexAnalyzers = new HashMap<>();
+        Map<String, Analyzer> indexPrefixAnalyzers = new HashMap<>();
+        Map<String, Analyzer> queryAnalyzers = new HashMap<>();
+        Map<String, Analyzer> queryPrefixAnalyzers = new HashMap<>();
 
         for (Map.Entry<String, LuceneIndexField> entry: getFields().entrySet()) {
             log.debug("Adding field " + entry.getKey() + " index-analyzer " + entry.getValue().getIndexAnalyzer()

@@ -167,7 +167,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
 
     private void testSearch(List<String> sources) throws IOException {
         log.debug("Testing searching");
-        Map<String, String> queries = new HashMap<String, String>(20);
+        Map<String, String> queries = new HashMap<>(20);
         queries.put("fagref", "omnilogi");
         queries.put("horizon", "Kaoskyllingen");
         queries.put("nat", "Byggesektorgruppen");
@@ -289,7 +289,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
      * @throws IOException if the enumeration could not be performed.
      */
     public static ArrayList<String> getSources() throws IOException {
-        final ArrayList<String> sources = new ArrayList<String>(20);
+        final ArrayList<String> sources = new ArrayList<>(20);
         final Pattern INGEST_CONFIGURATION =
                 Pattern.compile("(.+)_ingest_configuration\\.xml");
         log.trace("Locating sources in " + INGEST_CONFIGURATIONS_ROOT);

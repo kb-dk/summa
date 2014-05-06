@@ -36,7 +36,7 @@ public class QueryAdjusterTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         ManyToManyMapper fieldMap = new ManyToManyMapper(Arrays.asList("a - b", "c;d - e", "f - g;h", "i;j - k;l"));
-        Map<String, ManyToManyMapper> termMaps = new HashMap<String, ManyToManyMapper>();
+        Map<String, ManyToManyMapper> termMaps = new HashMap<>();
         ManyToManyMapper bghMap = new ManyToManyMapper(Arrays.asList(
                 "ta - tb", "tc;td - te", "tf - tg;th", "ti;tj - tk;tl",
                 "hard ware - HW"));

@@ -239,7 +239,7 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
         }
     }
     private static final List<SAXParseException> saxProblems =
-            new ArrayList<SAXParseException>(100);
+            new ArrayList<>(100);
     private static String getSAXExceptions() {
         StringWriter sw = new StringWriter(1000);
         for (SAXParseException exception: saxProblems) {

@@ -14,12 +14,12 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Keeps track of the ids of processed Records. Records with new ids are passed
@@ -38,7 +38,7 @@ import java.util.HashSet;
 public class DiscardUpdatesFilter extends AbstractDiscardFilter {
 //    private static Log log = LogFactory.getLog(DiscardUpdatesFilter.class);
 
-    private Set<String> encountered = new HashSet<String>(10000);
+    private Set<String> encountered = new HashSet<>(10000);
 
     @SuppressWarnings({"UnusedDeclaration"})
     public DiscardUpdatesFilter(Configuration conf) {
