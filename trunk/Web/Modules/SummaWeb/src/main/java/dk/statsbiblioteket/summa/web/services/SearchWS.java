@@ -137,6 +137,7 @@ public class SearchWS implements ServletContextListener {
         } catch (NullPointerException e) {
             log.error("Failed to load subConfiguration for " + designation, e);
         }
+        log.warn("Unable to create searcher '" + designation + "'");
         return null;
     }
 
@@ -1052,11 +1053,17 @@ public class SearchWS implements ServletContextListener {
     }
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        log.info("Shutting down " + searcher);
-        try {
-            searcher.close();
-        } catch (IOException e) {
-            log.warn("Exception shutting down searcher in contextDestroyed for " + searcher, e);
+        shutdown(searcher);
+        shutdown(suggester);
+    }
+    private void shutdown(SummaSearcher searcher) {
+        if (searcher != null) {
+            log.info("Shutting down " + searcher);
+            try {
+                searcher.close();
+            } catch (Exception e) {
+                log.warn("Exception shutting down searcher from contextDestroyed for " + searcher, e);
+            }
         }
     }
 }

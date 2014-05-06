@@ -533,10 +533,10 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.1</version>
                 <configuration>
-                    <compilerVersion>1.6.0_20</compilerVersion>
+                    <compilerVersion>1.7.0_55</compilerVersion>
                     <optimize>true</optimize>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                     <compilerArgument>-Xlint</compilerArgument>
                 </configuration>
             </plugin>
