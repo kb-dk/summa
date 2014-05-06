@@ -37,7 +37,7 @@ import java.util.ArrayList;
 public class RecommendationResponse extends ResponseImpl {
     private static Log log = LogFactory.getLog(RecommendationResponse.class);
 
-    private ArrayList<RecommendationList> recommendationLists = new ArrayList<RecommendationList>();
+    private ArrayList<RecommendationList> recommendationLists = new ArrayList<>();
 
     public RecommendationResponse() {
     }

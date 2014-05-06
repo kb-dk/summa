@@ -64,9 +64,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     }
 
     /* DefaultHandler overrides */
-    private List<String> insideRecordElementStack = new ArrayList<String>(20);
-    private Set<String> outsideRecordPrefixStack = new HashSet<String>(20);
-    private List<String> insideRecordPrefixStack = new ArrayList<String>(20);
+    private List<String> insideRecordElementStack = new ArrayList<>(20);
+    private Set<String> outsideRecordPrefixStack = new HashSet<>(20);
+    private List<String> insideRecordPrefixStack = new ArrayList<>(20);
 
     /* Inside a record-block */
     private boolean inRecord;
@@ -157,7 +157,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             // This is the Record root element
             inRecord = true;
             rootRecordElement = true;
-            prefixes = new ArrayList<String>(outsideRecordPrefixStack);
+            prefixes = new ArrayList<>(outsideRecordPrefixStack);
             log.trace("Record start");
         } else {
             rootRecordElement = false;

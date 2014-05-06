@@ -30,7 +30,7 @@ import java.util.Set;
 public abstract class HubCompositeImpl extends HubComponentImpl implements HubComposite {
     private static Log log = LogFactory.getLog(HubCompositeImpl.class);
 
-    private List<HubComponent> components = new ArrayList<HubComponent>();
+    private List<HubComponent> components = new ArrayList<>();
 
     public HubCompositeImpl(Configuration conf) {
         super(conf);
@@ -81,11 +81,11 @@ public abstract class HubCompositeImpl extends HubComponentImpl implements HubCo
 
     @Override
     public List<String> getBases() {
-        Set<String> bases = new HashSet<String>();
+        Set<String> bases = new HashSet<>();
         for (HubComponent node: components) {
             bases.addAll(node.getBases());
         }
-        return new ArrayList<String>(bases);
+        return new ArrayList<>(bases);
     }
 
     /**
@@ -113,7 +113,7 @@ public abstract class HubCompositeImpl extends HubComponentImpl implements HubCo
      * @return all sub components that satisfies limit, with respect to the mode for the components.
      */
     public List<HubComponent> getComponents(Limit limit) {
-        List<HubComponent> ns = new ArrayList<HubComponent>(components.size());
+        List<HubComponent> ns = new ArrayList<>(components.size());
         // First pass is without fallbacks
         for (HubComponent node: components) {
             if (node.getMode() != MODE.fallback && node.limitOK(limit)) {

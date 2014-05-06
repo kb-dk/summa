@@ -329,7 +329,7 @@ public class SummonSearchNode extends SolrSearchNode {
                     // Rule: At least 1 clause must match
                     boolean noMatches = true;
                     boolean match = false;
-                    List<BooleanClause> reduced = new ArrayList<BooleanClause>(query.clauses().size());
+                    List<BooleanClause> reduced = new ArrayList<>(query.clauses().size());
                     for (BooleanClause clause: query.clauses()) {
                         if (clause.getQuery() instanceof TermQuery
                             && BASE.equals(((TermQuery)clause.getQuery()).getTerm().field())) {
@@ -383,7 +383,7 @@ public class SummonSearchNode extends SolrSearchNode {
                     }
                     List<String> sq = summonSearchParams.get(RF);
                     if (sq == null) {
-                        sq = new ArrayList<String>();
+                        sq = new ArrayList<>();
                         summonSearchParams.put(RF, sq);
                     }
                     if ("PublicationYear".equals(query.getField())
@@ -484,15 +484,15 @@ public class SummonSearchNode extends SolrSearchNode {
     private void handleDocIDsPaged(List<String> summonIDs, Request request, ResponseCollection responses)
             throws RemoteException {
         log.debug("handleDocIDsPaged(" + summonIDs.size() +", ..., ...) called");
-        List<ResponseCollection> rawResponses = new ArrayList<ResponseCollection>(summonIDs.size()/SUMMON_MAX_IDS+1);
-        ArrayList<String> notProcessed = new ArrayList<String>(summonIDs);
-        Set<String> nonResolved = new HashSet<String>(summonIDs.size()); // Failed first class resolve
+        List<ResponseCollection> rawResponses = new ArrayList<>(summonIDs.size()/SUMMON_MAX_IDS+1);
+        ArrayList<String> notProcessed = new ArrayList<>(summonIDs);
+        Set<String> nonResolved = new HashSet<>(summonIDs.size()); // Failed first class resolve
         // We do this iteratively so we do not overwhelm summon
         while (!notProcessed.isEmpty()) {
             ArrayList<String> sub;
             if (notProcessed.size() > SUMMON_MAX_IDS) {
-                sub = new ArrayList<String>(notProcessed.subList(0, SUMMON_MAX_IDS));
-                notProcessed = new ArrayList<String>(notProcessed.subList(SUMMON_MAX_IDS, notProcessed.size()));
+                sub = new ArrayList<>(notProcessed.subList(0, SUMMON_MAX_IDS));
+                notProcessed = new ArrayList<>(notProcessed.subList(SUMMON_MAX_IDS, notProcessed.size()));
             } else {
                 sub = notProcessed;
             }
@@ -524,7 +524,7 @@ public class SummonSearchNode extends SolrSearchNode {
         } catch (Exception e) {
             log.warn("handleDocIDsPaged: Exception while attempting to single step resolve IDs "
                      + Strings.join(nonResolved, 10), e);
-            missing = new ArrayList<String>(nonResolved);
+            missing = new ArrayList<>(nonResolved);
         }
 
         raws:
@@ -563,7 +563,7 @@ public class SummonSearchNode extends SolrSearchNode {
             log.trace("singleStepIDLookup: No IDs to resolve");
             return Collections.EMPTY_LIST;
         }
-        List<String> missing = new ArrayList<String>(recordIDs.size());
+        List<String> missing = new ArrayList<>(recordIDs.size());
         for (String id: recordIDs) {
             final String oID = id;
             id = id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id;
@@ -632,7 +632,7 @@ public class SummonSearchNode extends SolrSearchNode {
     // Remove documents with an ID not requested and update nonResolved with unmatched IDs from the request
     private void cleanupDocIDResponse(
             ArrayList<String> requested, ResponseCollection responses, Set<String> nonResolved) {
-        Set<String> reqs = new HashSet<String>(requested);
+        Set<String> reqs = new HashSet<>(requested);
         for (Response r: responses) {
             if (r instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)r;
@@ -680,7 +680,7 @@ public class SummonSearchNode extends SolrSearchNode {
     }
 
     private List<String> extractSummonIDs(final List<String> ids) {
-        List<String> directIDs = new ArrayList<String>(ids.size());
+        List<String> directIDs = new ArrayList<>(ids.size());
         for (final String id: ids) {
             if (id.startsWith(idPrefix) || id.startsWith(SUMMON_ID_PREFIX)) {
                 directIDs.add(id);
@@ -690,7 +690,7 @@ public class SummonSearchNode extends SolrSearchNode {
     }
 
     private List<String> normalizeIDs(final List<String> ids) {
-        List<String> summonIDs = new ArrayList<String>(ids.size());
+        List<String> summonIDs = new ArrayList<>(ids.size());
         for (String id: ids) {
             id = id.startsWith(idPrefix) ? id.substring(idPrefix.length()) : id;
             summonIDs.add(id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id);
@@ -752,7 +752,7 @@ public class SummonSearchNode extends SolrSearchNode {
             } catch (Exception e) {
                 throw new RemoteException("SummonSearchNode: Unable to ping "  + host + restCall, e);
             }
-            return new Pair<String, String>(null, "summon.pingtime:" + pingTime);
+            return new Pair<>(null, "summon.pingtime:" + pingTime);
         }
         String retVal = null;
         if (validRequest(queryMap)) {
@@ -773,7 +773,7 @@ public class SummonSearchNode extends SolrSearchNode {
         }
         long prefixIDs = -System.currentTimeMillis();
         prefixIDs += System.currentTimeMillis();
-        return new Pair<String, String>(retVal, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
+        return new Pair<>(retVal, "summon.buildquery:" + buildQuery +  "|summon.prefixIDs:" + prefixIDs);
     }
 
     private boolean isPingRequest(Request request) {
@@ -833,7 +833,7 @@ public class SummonSearchNode extends SolrSearchNode {
 
         // Solr starts at page 1
         int startPage = startIndex == 0 ? 1 : startIndex / perPage + 1;
-        Map<String, List<String>> queryMap = new HashMap<String, List<String>>();
+        Map<String, List<String>> queryMap = new HashMap<>();
 
         queryMap.put("s.dym", Arrays.asList("true"));
         queryMap.put("s.ho", Arrays.asList("true"));
@@ -891,7 +891,7 @@ public class SummonSearchNode extends SolrSearchNode {
             log.debug("No facets specified, skipping faceting");
         }
 
-        List<String> rangefacet = new ArrayList<String>();
+        List<String> rangefacet = new ArrayList<>();
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         StringBuilder ranges = new StringBuilder();
         // generate 15 entries in the publication date facet starting from current year and working our way back

@@ -53,7 +53,7 @@ public class NotificationTest extends TestCase {
         public List<Event> events;
 
         public Listener () {
-            events = new ArrayList<Event>();
+            events = new ArrayList<>();
         }
 
         @Override

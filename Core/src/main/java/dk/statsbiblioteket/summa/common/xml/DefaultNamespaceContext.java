@@ -42,8 +42,8 @@ public class DefaultNamespaceContext implements NamespaceContext {
      * Be aware: Default namespace can only be set during construction.
      */
     public DefaultNamespaceContext(){
-       namespace = new HashMap<String, Collection<String>>();
-       prefix = new HashMap<String, String>();
+       namespace = new HashMap<>();
+       prefix = new HashMap<>();
        defaultNameSpaceURI = null;
 
        namespace.put(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, Arrays.asList(XMLConstants.XMLNS_ATTRIBUTE));
@@ -59,8 +59,8 @@ public class DefaultNamespaceContext implements NamespaceContext {
      * @param defaultNamespaceURI , the default namespace fopr this context.
      */
     public DefaultNamespaceContext(String defaultNamespaceURI){
-       namespace = new HashMap<String, Collection<String>>();
-       prefix = new HashMap<String, String>();
+       namespace = new HashMap<>();
+       prefix = new HashMap<>();
        this.defaultNameSpaceURI = defaultNamespaceURI;
 
        namespace.put(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, Arrays.asList(XMLConstants.XMLNS_ATTRIBUTE));
@@ -92,7 +92,7 @@ public class DefaultNamespaceContext implements NamespaceContext {
         Collection<String> s = namespace.get(namespaceURL);
 
         if (s == null){
-             s = new HashSet<String>();
+             s = new HashSet<>();
         }
 
         s.add(prefix);

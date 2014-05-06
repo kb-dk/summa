@@ -42,7 +42,7 @@ public class SortHelper {
 
     public static final String SORT_FIELD = "sortfield";
 
-    private static List<File> indexes = new ArrayList<File>(10);
+    private static List<File> indexes = new ArrayList<>(10);
 
     /**
      * Deletes created indexes.
@@ -55,7 +55,7 @@ public class SortHelper {
                 System.err.println("Could not delete '" + index + "'\n");
                 e.printStackTrace();
             }
-         indexes=new ArrayList<File>(10);
+         indexes=new ArrayList<>(10);
         }
     }
 
@@ -117,7 +117,7 @@ public class SortHelper {
         IndexSearcher searcher = new IndexSearcher(reader);
         QueryParser qp = new QueryParser(Version.LUCENE_46, "all", new StandardAnalyzer(Version.LUCENE_46));
         TopDocs result = searcher.search(qp.parse(query), null, 10000, sortFactory.getSort(searcher.getIndexReader()));
-        List<String> sortfields = new ArrayList<String>(result.scoreDocs.length);
+        List<String> sortfields = new ArrayList<>(result.scoreDocs.length);
         for (ScoreDoc sd: result.scoreDocs) {
             IndexableField sortField = searcher.doc(sd.doc).getField(SORT_FIELD);
             sortfields.add(sortField == null ? null : sortField.stringValue());

@@ -120,7 +120,7 @@ public abstract class AltoParser extends ThreadedStreamParser {
         xml.writeCharacters("\n");
 
 
-        List<AltoAnalyzerBase.Segment.Term> terms = new ArrayList<AltoAnalyzerBase.Segment.Term>();
+        List<AltoAnalyzerBase.Segment.Term> terms = new ArrayList<>();
 
         terms.add(new AltoAnalyzerBase.Segment.Term("title", segment.getTitle()));
         terms.add(new AltoAnalyzerBase.Segment.Term("date", segment.getDate()));

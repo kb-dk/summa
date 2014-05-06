@@ -46,7 +46,7 @@ public class DummyLeaf extends HubComponentImpl {
     public QueryResponse barrierSearch(Limit limit, ModifiableSolrParams params) throws Exception {
         List<SolrParams> existing = receivedParams.get(getID());
         if (existing == null) {
-            existing = new ArrayList<SolrParams>();
+            existing = new ArrayList<>();
             receivedParams.put(getID(), existing);
         }
         existing.add(params);

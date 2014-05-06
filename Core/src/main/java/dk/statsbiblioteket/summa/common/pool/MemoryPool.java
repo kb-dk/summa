@@ -62,13 +62,13 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         if (forceNew) {
             log.debug(String.format("Force creating new pool '%s' at '%s'",
                                     poolName, location));
-            values = new ArrayList<E>(DEFAULT_SIZE);
+            values = new ArrayList<>(DEFAULT_SIZE);
             return false;
         }
         if (!(getIndexFile().exists() && getValueFile().exists())) {
             log.debug(String.format("No existing data for '%s' at '%s'. "
                                     + "Creating new pool", poolName, location));
-            values = new ArrayList<E>(DEFAULT_SIZE);
+            values = new ArrayList<>(DEFAULT_SIZE);
             return false;
         }
         log.trace(String.format("Attempting load of index for '%s' from '%s'",
@@ -81,7 +81,7 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                                 poolName, getIndexFile()));
 
         LineReader lr = new LineReader(getValueFile(), "r");
-        values =  new ArrayList<E>(readOnly ? index.length :
+        values =  new ArrayList<>(readOnly ? index.length :
                                    (int)(index.length * EXPAND_FACTOR));
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(index.length);

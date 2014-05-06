@@ -52,7 +52,7 @@ public class PayloadFeederHelper implements ObjectFilter {
     public PayloadFeederHelper(List<Payload> payloads) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating feeder with " + payloads.size() + " Payloads");
-        this.payloads = new ArrayList<Payload>(payloads.size());
+        this.payloads = new ArrayList<>(payloads.size());
         this.payloads.addAll(payloads);
     }
 
@@ -63,7 +63,7 @@ public class PayloadFeederHelper implements ObjectFilter {
     public PayloadFeederHelper(String... inputFiles) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating feeder from " + inputFiles.length + " input files");
-        payloads = new ArrayList<Payload>(inputFiles.length);
+        payloads = new ArrayList<>(inputFiles.length);
         for (String inputFile: inputFiles) {
             payloads.add(new Payload(Resolver.getURL(inputFile).openStream(), inputFile));
         }
@@ -77,7 +77,7 @@ public class PayloadFeederHelper implements ObjectFilter {
     public PayloadFeederHelper(int startID, String... inputFiles) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating feeder from " + inputFiles.length + " input files");
-        payloads = new ArrayList<Payload>(inputFiles.length);
+        payloads = new ArrayList<>(inputFiles.length);
         int counter = startID;
         for (String inputFile: inputFiles) {
             payloads.add(new Payload(new Record(
@@ -93,7 +93,7 @@ public class PayloadFeederHelper implements ObjectFilter {
     public PayloadFeederHelper(List<Payload> payloads, int delayBetweenPayloads) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating feeder with " + payloads.size() + " Payloads");
-        this.payloads = new ArrayList<Payload>(payloads.size());
+        this.payloads = new ArrayList<>(payloads.size());
         this.payloads.addAll(payloads);
         delay = delayBetweenPayloads;
     }

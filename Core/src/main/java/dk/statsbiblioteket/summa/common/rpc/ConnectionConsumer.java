@@ -152,8 +152,8 @@ public class ConnectionConsumer<E> implements Configurable {
      * @param defaultVendor the RPC vendor to use as fallback
      */
     public ConnectionConsumer (Configuration conf, String defaultVendor) {
-        ConnectionFactory<E> connFact = new GenericConnectionFactory<E> (conf);
-        connMan = new ConnectionManager<E>(connFact);
+        ConnectionFactory<E> connFact = new GenericConnectionFactory<>(conf);
+        connMan = new ConnectionManager<>(connFact);
         connId = conf.getString(CONF_RPC_TARGET, defaultVendor);
         if (connId == null) {
             throw new ConfigurationException(String.format("%s not set. No RPC vendor", CONF_RPC_TARGET));

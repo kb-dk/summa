@@ -116,7 +116,7 @@ public class PoolFactoryGate {
                     + factory.toString());
         }
       }
-      return new SimplePair<CollectorPool, TagCollector>(collectorPool, tagCollector);
+      return new SimplePair<>(collectorPool, tagCollector);
     } catch (OutOfMemoryError e) {
       StringWriter writer = new StringWriter(1000);
       PrintWriter pw = new PrintWriter(writer);

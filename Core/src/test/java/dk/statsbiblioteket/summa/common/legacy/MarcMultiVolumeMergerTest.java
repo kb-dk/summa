@@ -52,7 +52,7 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
 
     private void makeSampleHorizon() throws IOException {
         Record parent = createRecord("parent_book1.xml");
-        List<Record> children = new ArrayList<Record>(4);
+        List<Record> children = new ArrayList<>(4);
         Record child1 = createRecord("child_book1.xml");
         child1.getMeta().put(MarcAnnotations.META_MULTI_VOLUME_TYPE,
                              MarcAnnotations.MultiVolumeType.BIND.toString());
@@ -71,7 +71,7 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
         children.add(child4);
         parent.setChildren(children);
 
-        records = new ArrayList<Record>(1);
+        records = new ArrayList<>(1);
         records.add(parent);
     }
 
@@ -89,7 +89,7 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
         middle.setChildren(Arrays.asList(child));
         parent.setChildren(Arrays.asList(middle));
 
-        records = new ArrayList<Record>(1);
+        records = new ArrayList<>(1);
         records.add(parent);
     }
 

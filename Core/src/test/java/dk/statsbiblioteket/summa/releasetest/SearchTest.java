@@ -206,7 +206,7 @@ public class SearchTest extends NoExitTestCase {
             DocumentKeys.SEARCH_SORTKEY, "sort_title"
             ));
         List<String> sortValues = extractSortValue(docs);
-        List<String> resorted = new ArrayList<String>(sortValues);
+        List<String> resorted = new ArrayList<>(sortValues);
         Collections.sort(resorted, Collator.getInstance(new Locale("da")));
         ExtraAsserts.assertEquals(
             "The explicit sorted values should match order of the directly returned\n" + Strings.join(sortValues, "\n"),
@@ -271,7 +271,7 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private static void assertPaging(String message, DocumentResponse docs, int start, int pageSize) {
-        List<String> expected = new ArrayList<String>(pageSize);
+        List<String> expected = new ArrayList<>(pageSize);
         for (int page = start ; page < start + pageSize ; page++) {
             expected.add("Jensen Hans " + String.format("%07d", page));
         }
@@ -279,7 +279,7 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private static List<String> getContent(DocumentResponse docs, String fieldName) {
-        List<String> terms = new ArrayList<String>();
+        List<String> terms = new ArrayList<>();
         for (DocumentResponse.Record records: docs.getRecords()) {
             for (DocumentResponse.Field field: records.getFields()) {
                 if (fieldName.equals(field.getName())) {
@@ -304,7 +304,7 @@ public class SearchTest extends NoExitTestCase {
         final SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
 
         ExecutorService executor = Executors.newFixedThreadPool(THREADS);
-        List<Future> tasks = new ArrayList<Future>(THREADS);
+        List<Future> tasks = new ArrayList<>(THREADS);
         log.info("Starting " + THREADS + " search threads");
         for (int t = 0 ; t < THREADS ; t++) {
             FutureTask task = new FutureTask(new Callable() {
@@ -412,7 +412,7 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private List<String> extractSortValue(DocumentResponse docs) {
-        List<String> sortValues = new ArrayList<String>(docs.size());
+        List<String> sortValues = new ArrayList<>(docs.size());
         for (DocumentResponse.Record record: docs.getRecords()) {
             assertNotNull("There should be a sortValue for record " + record.getId(), record.getSortValue());
             sortValues.add(record.getSortValue());

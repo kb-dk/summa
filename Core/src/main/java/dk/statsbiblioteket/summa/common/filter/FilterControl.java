@@ -94,7 +94,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
             throw new ConfigurationException(String.format("Could not locate a list of chain-Configurations at key %s",
                                                            CONF_CHAINS), e);
         }
-        pumps = new ArrayList<FilterPump>(chainConfs.size());
+        pumps = new ArrayList<>(chainConfs.size());
         for (Configuration chainConf : chainConfs) {
             try {
                 FilterPump pump = new FilterPump(chainConf);

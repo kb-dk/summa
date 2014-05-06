@@ -39,8 +39,8 @@ public class ManyToManyMapper {
      */
     public ManyToManyMapper(List<String> rules) {
         super();
-        forward = new HashMap<String, Set<String>>(rules.size() * 2);
-        reverse = new HashMap<String, Set<String>>(rules.size() * 2);
+        forward = new HashMap<>(rules.size() * 2);
+        reverse = new HashMap<>(rules.size() * 2);
         addRules(rules);
     }
 
@@ -81,7 +81,7 @@ public class ManyToManyMapper {
             if (map.containsKey(source)) {
                 values = map.get(source);
             } else {
-                values = new HashSet<String>(10);
+                values = new HashSet<>(10);
                 map.put(source, values);
             }
             Collections.addAll(values, destinations);

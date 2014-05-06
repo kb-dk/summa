@@ -27,8 +27,8 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -213,7 +213,7 @@ public class ReleaseHelper {
         try {
             long iterKey = remote.getRecordsModifiedAfter(0, null, null);
             Iterator<Record> iterator = new StorageIterator(remote, iterKey);
-            List<Record> extracted = new ArrayList<Record>();
+            List<Record> extracted = new ArrayList<>();
             while (iterator.hasNext()) {
                 extracted.add(iterator.next());
             }

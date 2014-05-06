@@ -40,8 +40,8 @@ public class ResponseCollection extends TimerImpl
     private static final long serialVersionUID = 13841868527L;
     private static Log log = LogFactory.getLog(ResponseCollection.class);
 
-    private Map<String, Response> responses = new HashMap<String, Response>(5);
-    private transient Map<String, Object> tran = new HashMap<String, Object>(5);
+    private Map<String, Response> responses = new HashMap<>(5);
+    private transient Map<String, Object> tran = new HashMap<>(5);
 
 /*    public ResponseCollection() {
         StringWriter sw = new StringWriter();
@@ -174,7 +174,7 @@ public class ResponseCollection extends TimerImpl
      * @return a shallow copy of the underlying Responses.
      */
     private synchronized List<Response> toList() {
-        List<Response> responses = new ArrayList<Response>(size());
+        List<Response> responses = new ArrayList<>(size());
         for (Map.Entry<String, Response> entry: this.responses.entrySet()) {
             responses.add(entry.getValue());
         }

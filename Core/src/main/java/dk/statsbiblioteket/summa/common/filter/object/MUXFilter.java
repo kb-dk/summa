@@ -142,7 +142,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                     "Unable to extract Filter configurations from key %s",
                     CONF_FILTERS), e);
         }
-        feeders = new ArrayList<MUXFilterFeeder>(filterConfs.size());
+        feeders = new ArrayList<>(filterConfs.size());
         for (Configuration filterConf: filterConfs) {
             for (int i = 0 ; i < filterConf.getInt(CONF_INSTANCES, DEFAULT_INSTANCES) ; i++) {
                 feeders.add(new MUXFilterFeeder(filterConf, outqueue));

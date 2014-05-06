@@ -32,7 +32,7 @@ public class VoidShellContext implements ShellContext {
     private String lastError;
 
     public VoidShellContext () {
-        lineBuffer = new Stack<String>();
+        lineBuffer = new Stack<>();
         defaultLine = "";
         lastError = null;
     }

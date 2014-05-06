@@ -67,8 +67,8 @@ public class BundleLoader implements Configurable {
      */
     public BundleStub load (File bundleDir) throws IOException {
         log.trace("load(" + bundleDir + ") called");
-        List<String> libs = new ArrayList<String>(20);
-        List<String> jvmArgs = new ArrayList<String>(10);
+        List<String> libs = new ArrayList<>(20);
+        List<String> jvmArgs = new ArrayList<>(10);
         BundleSpecBuilder builder = checkBundle(bundleDir);
 
         /* Find all .jar files in lib/ */

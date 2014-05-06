@@ -42,7 +42,10 @@ import org.apache.lucene.search.exposed.ExposedRequest;
 import org.apache.lucene.search.exposed.compare.ComparatorFactory;
 import org.apache.lucene.search.exposed.compare.NamedComparator;
 import org.apache.lucene.search.exposed.compare.NamedOrderDefaultComparator;
-import org.apache.lucene.search.exposed.facet.*;
+import org.apache.lucene.search.exposed.facet.CollectorPool;
+import org.apache.lucene.search.exposed.facet.CollectorPoolFactory;
+import org.apache.lucene.search.exposed.facet.FacetResponse;
+import org.apache.lucene.search.exposed.facet.TagCollector;
 import org.apache.lucene.search.exposed.facet.request.FacetRequestGroup;
 
 import java.io.File;
@@ -405,7 +408,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 null, facets, structure);
         //ExposedRequest.
 
-        List<FacetRequestGroup> groups = new ArrayList<FacetRequestGroup>();
+        List<FacetRequestGroup> groups = new ArrayList<>();
 
         for (Map.Entry<String, FacetStructure> facet:
             oldFacetRequest.getFacets().entrySet()) {
@@ -416,7 +419,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                          new NamedOrderDefaultComparator();
             comparator.setReverse(structure.isReverse());
 
-            List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>();
+            List<ExposedRequest.Field> fields = new ArrayList<>();
             for (String fieldName: structure.getFields()) {
                 fields.add(new ExposedRequest.Field(fieldName, comparator));
             }

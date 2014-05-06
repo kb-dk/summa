@@ -157,19 +157,19 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
     /**
      * All Fields mapped from field name => Field object.
      */
-    private Map<String, F> allFields = new LinkedHashMap<String, F>();
+    private Map<String, F> allFields = new LinkedHashMap<>();
 
     /**
      * Fields that performs prefix matching (specified with [@code fieldprefix*} in field name in the index descriptor).
      * Note that these fields cannot be part of a group.
      */
-    private List<F> prefixFields = new ArrayList<F>();
+    private List<F> prefixFields = new ArrayList<>();
 
     /**
      * All Groups mapped from group name => Group object. All the Fields
      * contained in the groups MUST be present in {@link #allFields}.
      */
-    private Map<String, IndexGroup<F>> groups = new LinkedHashMap<String, IndexGroup<F>>(20);
+    private Map<String, IndexGroup<F>> groups = new LinkedHashMap<>(20);
 
     // TODO: Assign this based on XML
     protected F defaultField = createNewField();
@@ -431,7 +431,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         final String DEFAULT_EXPR = "/IndexDescriptor/defaultSearchFields/field";
         defaultNodes = DOM.selectNodeList(document, DEFAULT_EXPR);
 
-        defaultFields = new ArrayList<String>(defaultNodes.getLength());
+        defaultFields = new ArrayList<>(defaultNodes.getLength());
         //noinspection DuplicateStringLiteralInspection
         log.trace("Located " + defaultNodes.getLength() + " default search field nodes");
         for (int i = 0; i < defaultNodes.getLength(); i++) {
@@ -464,7 +464,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
 
         for (int i = 0; i < groupNodes.getLength(); i++) {
             log.debug(groupNodes.item(i).getNodeName());
-            addGroup(new IndexGroup<F>(groupNodes.item(i), this));
+            addGroup(new IndexGroup<>(groupNodes.item(i), this));
         }
     }
 
@@ -705,7 +705,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
     public synchronized void addFieldToGroup(String groupName, F field) {
         IndexGroup<F> group = groups.get(groupName);
         if (group == null) {
-            group = new IndexGroup<F>(groupName);
+            group = new IndexGroup<>(groupName);
         }
         addFieldToGroup(group, field);
     }
@@ -863,7 +863,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
     }
 
     public Map<String, F> getPrefixFieldsAsMap() {
-        Map<String, F> fields = new HashMap<String, F>(prefixFields.size());
+        Map<String, F> fields = new HashMap<>(prefixFields.size());
         for (F prefixField: prefixFields) {
             fields.put(prefixField.getName(), prefixField);
         }

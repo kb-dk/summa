@@ -121,7 +121,7 @@ public class RecordWriterTest extends TestCase {
         List<Record> records;
 
         public ObjectProvider(int objectCount) {
-            records = new ArrayList<Record>(objectCount);
+            records = new ArrayList<>(objectCount);
             for (int i = 0 ; i < objectCount ; i++) {
                 records.add(new Record("Dummy-" + i, "fooBase", new byte[10]));
             }

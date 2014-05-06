@@ -84,7 +84,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         this.resultFields = resultFields;
         this.searchTime = searchTime;
         this.hitCount = hitCount;
-        records = new ArrayList<Record>(50);
+        records = new ArrayList<>(50);
         // TODO: Port proper collator creation from stable
 //        collator = Collator.getInstance(new Locale("da"));
     }
@@ -110,7 +110,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         private String sortValue;
         private String id;
         private String source;
-        private List<Field> fields = new ArrayList<Field>(50);
+        private List<Field> fields = new ArrayList<>(50);
 
         /**
          * @param id        A source-specific id for the Record.

@@ -14,23 +14,25 @@
  */
 package dk.statsbiblioteket.summa.storage.http;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
-
-import dk.statsbiblioteket.summa.storage.api.*;
-
-import java.io.*;
-import java.util.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
-import junit.framework.*;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class acts as a bridge between a {@link Storage}
@@ -88,8 +90,8 @@ public class HttpStorageBridge extends TestCase implements Configurable {
     public HttpStorageBridge(Configuration conf) throws IOException {
         storage = StorageFactory.createStorage(conf, CONF_STORAGE);
 
-        getMethods = new HashSet<Method>();
-        postMethods = new HashSet<Method>();
+        getMethods = new HashSet<>();
+        postMethods = new HashSet<>();
         for (String method : conf.getStrings(
                 CONF_GET_METHODS, new String[0])) {
             getMethods.add(Method.valueOf(method.toUpperCase()));

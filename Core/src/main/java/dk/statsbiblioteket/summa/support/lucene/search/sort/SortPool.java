@@ -37,13 +37,13 @@ public class SortPool {
     /**
      * Maintains cached structures and makes is cheap to construct new sorters.
      */
-    private Map<String, SortFactory> sortFactories = new HashMap<String, SortFactory>(100);
+    private Map<String, SortFactory> sortFactories = new HashMap<>(100);
 
     /**
      * Comparators does the heavy lifting when sorting. They are shared between
      * sortFactories.
      */
-    private Map<String, ReusableSortComparator> comparators = new HashMap<String, ReusableSortComparator>(10);
+    private Map<String, ReusableSortComparator> comparators = new HashMap<>(10);
 
     private boolean naturalOrder = false;
     private SortFactory.COMPARATOR comparatorImplementation;

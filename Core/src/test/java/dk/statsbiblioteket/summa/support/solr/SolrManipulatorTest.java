@@ -42,7 +42,10 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -316,7 +319,7 @@ public class SolrManipulatorTest extends TestCase {
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)response;
-                List<String> actualIDs = new ArrayList<String>(docs.getRecords().size());
+                List<String> actualIDs = new ArrayList<>(docs.getRecords().size());
                 for (DocumentResponse.Record record: docs.getRecords()) {
                     actualIDs.add(record.getId());
                 }
@@ -332,7 +335,7 @@ public class SolrManipulatorTest extends TestCase {
 
     final int SAMPLES = 2;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
-        List<Payload> samples = new ArrayList<Payload>(SAMPLES);
+        List<Payload> samples = new ArrayList<>(SAMPLES);
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
                     "doc" + i, "dummy",

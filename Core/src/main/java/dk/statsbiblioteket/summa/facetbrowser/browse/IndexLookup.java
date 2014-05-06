@@ -199,7 +199,7 @@ public class IndexLookup {
     private IndexResponse newResponseToOldResult(FacetResponse fResponse, IndexRequest request) {
         IndexResponse response = new IndexResponse(request);
         for (FacetResponse.Tag tag : fResponse.getGroups().get(0).getTags().getTags()) {
-            response.addTerm(new Pair<String, Integer>(tag.getTerm(), tag.getCount()));
+            response.addTerm(new Pair<>(tag.getTerm(), tag.getCount()));
         }
         return response;
     }
@@ -229,10 +229,10 @@ public class IndexLookup {
         }
         NamedComparator comparator = ComparatorFactory.create(locale);
 
-        List<ExposedRequest.Field> fields = new ArrayList<ExposedRequest.Field>();
+        List<ExposedRequest.Field> fields = new ArrayList<>();
         // TODO: Add reverse to request and here
         fields.add(new ExposedRequest.Field(request.getField(), comparator));
-        List<FacetRequestGroup> groups = new ArrayList<FacetRequestGroup>(1);
+        List<FacetRequestGroup> groups = new ArrayList<>(1);
         // TODO: Add reverse to request and here
         ExposedRequest.Group eGroup = new ExposedRequest.Group(request.getField(), fields, comparator);
         NamedComparator.ORDER facetOrder = locale == null ? NamedComparator.ORDER.index : NamedComparator.ORDER.locale;

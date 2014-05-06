@@ -72,16 +72,16 @@ public class FileReader extends FileSystemReader {
      * The list of files and folders to process: Files are send onwards directly
      * while folders are expanded when encountered.
      */
-    private List<File> todo = new LinkedList<File>();
+    private List<File> todo = new LinkedList<>();
     /**
      * Keeps track of already encountered files. This guards against endless
      * recursions due to linking.
      */
-    protected final List<File> encountered = new ArrayList<File>(100);
+    protected final List<File> encountered = new ArrayList<>(100);
     /**
      * Keeps track of all delivered files.
      */
-    private final List<Payload> delivered = new ArrayList<Payload>(100);
+    private final List<Payload> delivered = new ArrayList<>(100);
 
     /**
      * Sets up the properties for the FileReader. Scanning for files are

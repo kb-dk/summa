@@ -61,7 +61,7 @@ public class CachingSearchNode extends ArrayList<SearchNode> implements SearchNo
         subNode = SearchNodeFactory.createSearchNode(conf);
         timeout = conf.getInt(CONF_TIMEOUT, DEFAULT_TIMEOUT);
         maxCache = conf.getInt(CONF_MAXCACHE, DEFAULT_MAXCACHE);
-        cache = new TimeSensitiveCache<String, ResponseCollection>(timeout, false, maxCache);
+        cache = new TimeSensitiveCache<>(timeout, false, maxCache);
         log.info("Constructed " + this);
     }
 

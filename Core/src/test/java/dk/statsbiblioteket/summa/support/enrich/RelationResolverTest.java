@@ -90,7 +90,7 @@ public class RelationResolverTest extends TestCase {
                 RelationResolver.CONF_ASSIGN_PARENTS, true,
                 RelationResolver.CONF_SEARCH_FIELD, "id",
                 RelationResolver.CONF_SEARCH_MAXHITS, 1,
-                RelationResolver.CONF_SEARCH_METAKEYS, new ArrayList<String>(Arrays.asList("SearchTerm")),
+                RelationResolver.CONF_SEARCH_METAKEYS, new ArrayList<>(Arrays.asList("SearchTerm")),
                 RelationResolver.CONF_NONMATCHED_FOLDER, NONMATCHED.getAbsolutePath(),
                 ConnectionConsumer.CONF_RPC_TARGET, "NotUsed");
 
@@ -262,7 +262,7 @@ public class RelationResolverTest extends TestCase {
                 RelationResolver.CONF_NONMATCHED_FOLDER,
                 NONMATCHED.getAbsolutePath(),
                 RelationResolver.CONF_SEARCH_METAKEYS,
-                new ArrayList<String>(Arrays.asList("isbn10", "isbn13", "isbn10origin", "isbn13")),
+                new ArrayList<>(Arrays.asList("isbn10", "isbn13", "isbn10origin", "isbn13")),
                 ConnectionConsumer.CONF_RPC_TARGET, "NotUsed");
 
         Configuration storageConf = Configuration.newMemoryBased(
@@ -356,7 +356,7 @@ public class RelationResolverTest extends TestCase {
                 RelationResolver.CONF_ASSIGN_PARENTS, true, RelationResolver.CONF_SEARCH_FIELD, "isbn",
                 RelationResolver.CONF_SEARCH_MAXHITS, 1,
                 RelationResolver.CONF_NONMATCHED_FOLDER, NONMATCHED.getAbsolutePath(),
-                RelationResolver.CONF_SEARCH_METAKEYS, new ArrayList<String>(Arrays.asList("isbn10")),
+                RelationResolver.CONF_SEARCH_METAKEYS, new ArrayList<>(Arrays.asList("isbn10")),
                 ConnectionConsumer.CONF_RPC_TARGET, //"//prod-search01:55000/sb-searcher"
                 "//localhost:55000/sb-searcher");
 

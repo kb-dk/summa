@@ -84,7 +84,7 @@ public class RequestPruner extends HubAdjusterBase {
             log.debug("No regexps for " + confKey);
             return null;
         }
-        List<Pattern> patterns = new ArrayList<Pattern>(regexps.size());
+        List<Pattern> patterns = new ArrayList<>(regexps.size());
         for (String regexp: regexps) {
             try {
                 patterns.add(Pattern.compile(regexp));

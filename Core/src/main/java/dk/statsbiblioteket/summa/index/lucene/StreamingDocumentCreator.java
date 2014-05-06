@@ -323,7 +323,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
                     boost = null;
                 } else { // We have a boost and the field is not previously boosted
                     if (boostedFields == null) {
-                        boostedFields = new HashSet<String>();
+                        boostedFields = new HashSet<>();
                     }
                     boostedFields.add(fieldName);
                 }

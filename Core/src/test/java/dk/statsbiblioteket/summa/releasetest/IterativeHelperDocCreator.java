@@ -14,18 +14,18 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import java.util.List;
-import java.util.ArrayList;
-
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A filter used by {@link IterativeTest} that takes a rudimentary Record
@@ -38,7 +38,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 public class IterativeHelperDocCreator extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(IterativeHelperDocCreator.class);
 
-    public static List<String> processedIDs = new ArrayList<String>(100);
+    public static List<String> processedIDs = new ArrayList<>(100);
 
     @SuppressWarnings({"UnusedDeclaration"})
     public IterativeHelperDocCreator(Configuration conf) {

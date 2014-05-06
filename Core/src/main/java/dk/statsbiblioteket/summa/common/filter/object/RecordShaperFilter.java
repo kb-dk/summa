@@ -258,7 +258,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     private boolean copyMeta = DEFAULT_COPY_META;
     private final REQUIREMENT metaRequirement;
 
-    private List<Shaper> metas = new ArrayList<Shaper>();
+    private List<Shaper> metas = new ArrayList<>();
 
     public RecordShaperFilter(Configuration conf) {
         super(conf);
@@ -266,17 +266,17 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 CONF_DISCARD_ON_ERRORS, discardOnErrors);
         copyMeta = conf.getBoolean(CONF_COPY_META, copyMeta);
         if (conf.valueExists(CONF_CONTENT_REGEXP)) {
-            assignContent = new Pair<Pattern, String>(
+            assignContent = new Pair<>(
                     Pattern.compile(conf.getString(CONF_CONTENT_REGEXP)),
                     conf.getString(CONF_CONTENT_TEMPLATE, DEFAULT_CONTENT_TEMPLATE));
         }
         if (conf.valueExists(CONF_ID_REGEXP)) {
-            assignId = new Pair<Pattern, String>(
+            assignId = new Pair<>(
                     Pattern.compile(conf.getString(CONF_ID_REGEXP)),
                     conf.getString(CONF_ID_TEMPLATE, DEFAULT_ID_TEMPLATE));
         }
         if (conf.valueExists(CONF_BASE_REGEXP)) {
-            assignBase = new Pair<Pattern, String>(
+            assignBase = new Pair<>(
                     Pattern.compile(conf.getString(CONF_BASE_REGEXP)),
                     conf.getString(CONF_BASE_TEMPLATE, DEFAULT_BASE_TEMPLATE));
         }
@@ -501,9 +501,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             md.reset();
             md.update(text.getBytes("UTF-8"));
             return new BigInteger(1, md.digest()).toString(16);
-        } catch (NoSuchAlgorithmException e) {
-            log.error(e.getMessage(),e);
-        } catch (UnsupportedEncodingException e) {
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
             log.error(e.getMessage(),e);
         }
         return text;

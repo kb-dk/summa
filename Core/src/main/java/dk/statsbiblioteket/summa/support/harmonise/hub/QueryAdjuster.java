@@ -20,8 +20,8 @@ import dk.statsbiblioteket.summa.common.util.ManyToManyMapper;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
@@ -189,24 +189,24 @@ public class QueryAdjuster {
             if (fieldMap != null && fieldMap.getForward().containsKey(field)) {
                 newFields = fieldMap.getForward().get(field);
             } else {
-                newFields = new HashSet<String>(1);
+                newFields = new HashSet<>(1);
                 newFields.add(field);
             }
 
             // Generate <field, term>*
-            List<Pair<String, String>> adjusted = new ArrayList<Pair<String, String>>();
+            List<Pair<String, String>> adjusted = new ArrayList<>();
             for (String newField: newFields) {
                 if (termMaps != null && termMaps.containsKey(newField)) {
                     Set<String> replacements = termMaps.get(newField).getForwardSet(text);
                     if (replacements != null) {
                         for (String replacement: replacements) {
-                            adjusted.add(new Pair<String, String>(newField, replacement));
+                            adjusted.add(new Pair<>(newField, replacement));
                         }
                     } else {
-                        adjusted.add(new Pair<String, String>(newField, text));
+                        adjusted.add(new Pair<>(newField, text));
                     }
                 } else { // No term conversion
-                    adjusted.add(new Pair<String, String>(newField, text));
+                    adjusted.add(new Pair<>(newField, text));
                 }
             }
 

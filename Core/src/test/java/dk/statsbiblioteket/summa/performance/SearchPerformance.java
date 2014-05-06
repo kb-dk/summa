@@ -120,7 +120,7 @@ public class SearchPerformance {
         SearchPerformanceMediator mediator = 
                 new SearchPerformanceMediator(conf, threadCount, shared);
         List<SearchPerformanceThread> threads =
-                new ArrayList<SearchPerformanceThread>(threadCount);
+                new ArrayList<>(threadCount);
         for (int i = 0 ; i < threadCount; i++) {
             threads.add(new SearchPerformanceThread(mediator, getSearcher()));
         }

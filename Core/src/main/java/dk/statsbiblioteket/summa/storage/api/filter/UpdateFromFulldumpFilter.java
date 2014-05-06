@@ -20,19 +20,17 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
-import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
-import dk.statsbiblioteket.summa.storage.api.WritableStorage;
+import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * Take a fulldump and treat it as a update, where non-existing records should
@@ -156,7 +154,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
         numberOfRecordsFromStorage = config.getInt(CONF_NUMBER_OF_RECORDS_FROM_STORAGE,
                                                    DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE);
 
-        ids = new HashSet<String>();
+        ids = new HashSet<>();
         log.debug(String.format("Initialized with base '%s', maxNumberDeletes %d, numberOfRecordsFromStorage %d",
                                 base, maxNumberDeletes, numberOfRecordsFromStorage));
     }

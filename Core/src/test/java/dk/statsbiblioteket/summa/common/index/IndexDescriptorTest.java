@@ -99,7 +99,7 @@ public class IndexDescriptorTest extends TestCase {
 
                     @Override
                     public IndexField<Object, Object, Object> createNewField() {
-                        return new IndexField<Object, Object, Object>();
+                        return new IndexField<>();
                     }
 
                     @Override
@@ -111,7 +111,7 @@ public class IndexDescriptorTest extends TestCase {
                     @Override
                     public IndexField<Object, Object, Object> createNewField(Node node)
                             throws ParseException {
-                        return new IndexField<Object, Object, Object>(node, this);
+                        return new IndexField<>(node, this);
                     }
                 };
         assertEquals("The default language should be as specified",
@@ -123,7 +123,7 @@ public class IndexDescriptorTest extends TestCase {
                      IndexDescriptor.OPERATOR.and, id.getDefaultOperator());
 
         List<String> expectedGroups = Arrays.asList("ti", "au");
-        List<String> gotGroups = new ArrayList<String>(expectedGroups.size());
+        List<String> gotGroups = new ArrayList<>(expectedGroups.size());
         for (Map.Entry<String, IndexGroup<IndexField<Object, Object, Object>>>
                 entry: id.getGroups().entrySet()) {
             gotGroups.add(entry.getValue().getName());
@@ -149,7 +149,7 @@ public class IndexDescriptorTest extends TestCase {
         // TODO: Extend with default groups
         List<String> expectedFields = Arrays.asList("text", "author", "title",
                                                     "titel", "nostore");
-        List<String> gotFields = new ArrayList<String>(expectedFields.size());
+        List<String> gotFields = new ArrayList<>(expectedFields.size());
         for (Map.Entry<String, IndexField<Object, Object, Object>>
                 entry: id.getFields().entrySet()) {
             gotFields.add(entry.getValue().getName());
@@ -208,7 +208,7 @@ public class IndexDescriptorTest extends TestCase {
 
             @Override
             public IndexField<Object, Object, Object> createNewField() {
-                return new IndexField<Object, Object, Object>();
+                return new IndexField<>();
             }
 
             @Override
@@ -219,7 +219,7 @@ public class IndexDescriptorTest extends TestCase {
 
             @Override
             public IndexField<Object, Object, Object> createNewField(Node node) throws ParseException {
-                return new IndexField<Object, Object, Object>(node, this);
+                return new IndexField<>(node, this);
             }
         };
         assertEquals("The default language should be en",

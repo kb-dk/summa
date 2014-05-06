@@ -14,15 +14,14 @@
  */
 package dk.statsbiblioteket.summa.plugins;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.MessageDigest;
-import java.math.BigInteger;
 import java.io.UnsupportedEncodingException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Plugin for generating MD5 digests of Strings
@@ -50,9 +49,7 @@ public class MD5 {
             MessageDigest md = MessageDigest.getInstance("MD5");
             md.update(text.getBytes("UTF-8"));
             return new BigInteger(1, md.digest()).toString(16);
-        } catch (NoSuchAlgorithmException e) {
-            log.error(e.getMessage(),e);
-        } catch (UnsupportedEncodingException e) {
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
             log.error(e.getMessage(),e);
         }
         return "";

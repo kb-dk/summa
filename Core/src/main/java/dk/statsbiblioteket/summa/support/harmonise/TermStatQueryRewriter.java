@@ -120,13 +120,13 @@ public class TermStatQueryRewriter implements Configurable {
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException("Unable to get sub configurations for key '" + CONF_TARGETS + "'", e);
             }
-            targets = new ArrayList<Target>(targetConfs.size());
+            targets = new ArrayList<>(targetConfs.size());
             for (Configuration targetConf : targetConfs) {
                 targets.add(new Target(targetConf));
             }
         } else {
             log.warn("No targets specified. Rewriting will have zero effect");
-            targets = new ArrayList<Target>(0);
+            targets = new ArrayList<>(0);
         }
         lowercase = conf.getBoolean(CONF_LOWERCASE_QUERY, DEFAULT_LOWERCASE_QUERY);
         log.info("Constructed query rewriter with " + targets.size() + " targets. Enabled: " + enabled);
@@ -167,7 +167,7 @@ public class TermStatQueryRewriter implements Configurable {
             return null;
         }
 
-        Map<String, String> result = new HashMap<String, String>(targets.size());
+        Map<String, String> result = new HashMap<>(targets.size());
         for (Target target : targets) {
             boolean doLowercase = request.getBoolean(SEARCH_LOWERCASE_QUERY, lowercase);
             doLowercase = request.getBoolean(target.getID() + "." + SEARCH_LOWERCASE_QUERY, doLowercase);

@@ -38,7 +38,7 @@ public class FakeStorage implements Storage {
 
     private Map<String, Record> records;
     private int maxBatchSize;
-    private Map<Long, List<Record>> iterators = new HashMap<Long, List<Record>>();
+    private Map<Long, List<Record>> iterators = new HashMap<>();
     private AtomicLong iteratorCount = new AtomicLong(0);
 
     /**
@@ -53,7 +53,7 @@ public class FakeStorage implements Storage {
      * @param maxBatchSize the maximim number of records to deliver from {@link #next(long)}.
      */
     public FakeStorage(List<Record> records, int maxBatchSize) {
-        this.records = new HashMap<String, Record>(records.size());
+        this.records = new HashMap<>(records.size());
         for (Record record: records) {
             this.records.put(record.getId(), record);
         }
@@ -65,7 +65,7 @@ public class FakeStorage implements Storage {
     public synchronized long getRecordsModifiedAfter(long time, String base, QueryOptions options) throws IOException {
         log.debug("getRecordsModifiedAfter(" + time + ", " + base + ", " + options + ") called");
         long iteratorID = iteratorCount.getAndIncrement();
-        List<Record> result = new ArrayList<Record>();
+        List<Record> result = new ArrayList<>();
         for (Map.Entry<String, Record> pair: records.entrySet()) {
             Record record = pair.getValue();
             if ((base == null || record.getBase().equals(base)) && record.getModificationTime() > time) {
@@ -91,7 +91,7 @@ public class FakeStorage implements Storage {
 
     @Override
     public synchronized List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
-        List<Record> records = new ArrayList<Record>();
+        List<Record> records = new ArrayList<>();
         for (String id: ids) {
             Record record = getRecord(id, options);
             if (record != null) {
@@ -118,7 +118,7 @@ public class FakeStorage implements Storage {
     @Override
     public List<Record> next(long iteratorKey, int maxRecords) throws IOException {
         int realMax = Math.min(maxRecords, maxBatchSize);
-        List<Record> results = new ArrayList<Record>(realMax);
+        List<Record> results = new ArrayList<>(realMax);
 
         for (int i = 0 ; i < realMax ; i++) {
             try {

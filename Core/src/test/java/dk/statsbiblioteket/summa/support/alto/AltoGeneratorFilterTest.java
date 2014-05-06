@@ -19,7 +19,6 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.summa.support.alto.as2.AS2AltoAnalyzer;
@@ -28,14 +27,10 @@ import dk.statsbiblioteket.summa.support.alto.as2.AS2AltoParser;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -82,7 +77,7 @@ public class AltoGeneratorFilterTest extends TestCase {
         ObjectFilter analyzer = getAnalyzer(RECORDS);
         assertTrue("There should be a Payload", analyzer.hasNext());
         int received = 0;
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new HashSet<>();
         while (analyzer.hasNext()) {
             String id = analyzer.next().getId();
             assertTrue("Payload #" + received + " should have the correct ID-infix '" + infix + "' but was " + id,
@@ -116,7 +111,7 @@ public class AltoGeneratorFilterTest extends TestCase {
         ObjectFilter analyzer = getDocumentCreator(RECORDS);
         assertTrue("There should be a Payload", analyzer.hasNext());
         int received = 0;
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new HashSet<>();
         while (analyzer.hasNext()) {
             Payload altoPayload = analyzer.next();
             String id = altoPayload.getId();

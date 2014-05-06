@@ -14,17 +14,13 @@
  */
 package dk.statsbiblioteket.summa.control.server.shell;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.ClientDeployer;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.summa.control.api.InvalidClientStateException;
-import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.util.List;
 import java.util.SortedSet;
@@ -92,7 +88,7 @@ public class ClientsCommand extends Command {
             ctx.info(header);
 
             // Generate report, sorting alphabetically by client id
-            SortedSet<String> sortedClients = new TreeSet<String>(clients);
+            SortedSet<String> sortedClients = new TreeSet<>(clients);
             for (String client : sortedClients) {
                 String msg = "\t" + client;
                 if (doStatus) {

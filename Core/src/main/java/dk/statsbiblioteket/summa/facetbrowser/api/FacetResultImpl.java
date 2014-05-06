@@ -109,7 +109,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
      * @param facetIDs a map from Facet-name to facetID.
      */
     public FacetResultImpl(HashMap<String, Integer> maxTags, HashMap<String, Integer> facetIDs) {
-        map = new LinkedHashMap<String, List<Tag<T>>>(DEFAULTFACETCAPACITY);
+        map = new LinkedHashMap<>(DEFAULTFACETCAPACITY);
         this.maxTags = maxTags;
         this.facetIDs = facetIDs;
     }
@@ -192,7 +192,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
      * @param request a request structure describing the facet setup.
      */
     public synchronized void reduce(Structure request) {
-        LinkedHashMap<String, List<Tag<T>>> newMap = new LinkedHashMap<String, List<Tag<T>>>(map.size());
+        LinkedHashMap<String, List<Tag<T>>> newMap = new LinkedHashMap<>(map.size());
         sortFacets();
         for (Map.Entry<String, List<Tag<T>>> facet : map.entrySet()) {
             String facetName = facet.getKey();
@@ -219,7 +219,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
             if (facet.getValue().size() <= maxTags) {
                 newMap.put(facet.getKey(), facet.getValue());
             } else {
-                newMap.put(facet.getKey(), new ArrayList<Tag<T>>(facet.getValue().subList(0, maxTags)));
+                newMap.put(facet.getKey(), new ArrayList<>(facet.getValue().subList(0, maxTags)));
             }
         }
         map = newMap;
@@ -356,7 +356,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
         }
 
         // Sort on facet level
-        LinkedHashMap<String, List<Tag<T>>> newMap = new LinkedHashMap<String, List<Tag<T>>>();
+        LinkedHashMap<String, List<Tag<T>>> newMap = new LinkedHashMap<>();
         for (String facetName : getFacetNames()) {
             List<Tag<T>> tags = map.remove(facetName);
             if (tags != null) {
@@ -430,7 +430,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
 
 
     public void addTag(String facet, T tagKey, int count) {
-        addTag(facet, new Tag<T>(tagKey, count, Reliability.PRECISE));
+        addTag(facet, new Tag<>(tagKey, count, Reliability.PRECISE));
     }
 
 
@@ -447,13 +447,13 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
      * @param reliability how authoritative the count is.
      */
     public void addTag(String facet, T tagKey, int count, Reliability reliability) {
-        addTag(facet, new Tag<T>(tagKey, count, reliability));
+        addTag(facet, new Tag<>(tagKey, count, reliability));
     }
 
     public void addTag(String facet, Tag<T> tag) {
         List<Tag<T>> tags = map.get(facet);
         if (tags == null) {
-            tags = new ArrayList<Tag<T>>(DEFAULTFACETCAPACITY);
+            tags = new ArrayList<>(DEFAULTFACETCAPACITY);
             map.put(facet, tags);
         }
         for (Tag<T> tPair : tags) {
@@ -501,7 +501,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
             log.debug("getTags(" + facet + "): Could not locate facet");
             return null;
         }
-        List<String> result = new ArrayList<String>(map.get(facet).size());
+        List<String> result = new ArrayList<>(map.get(facet).size());
         for (Tag<T> pair : map.get(facet)) {
             result.add(getTagString(facet, pair.getKey()));
         }
@@ -536,7 +536,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
      * @param replacements oldName -> newName for facets and fields.
      */
     public synchronized void renameFacetsAndFields(Map<String, String> replacements) {
-        LinkedHashMap<String, List<Tag<T>>> newTags = new LinkedHashMap<String, List<Tag<T>>>(map.size());
+        LinkedHashMap<String, List<Tag<T>>> newTags = new LinkedHashMap<>(map.size());
         for (Map.Entry<String, List<Tag<T>>> entry : map.entrySet()) {
             newTags.put(adjust(replacements, entry.getKey()), entry.getValue());
         }
@@ -547,7 +547,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
     }
 
     private HashMap<String, Integer> adjust(Map<String, String> replacements, HashMap<String, Integer> map) {
-        HashMap<String, Integer> adjusted = new HashMap<String, Integer>(map.size());
+        HashMap<String, Integer> adjusted = new HashMap<>(map.size());
         for (Map.Entry<String, Integer> entry : map.entrySet()) {
             adjusted.put(adjust(replacements, entry.getKey()), entry.getValue());
         }

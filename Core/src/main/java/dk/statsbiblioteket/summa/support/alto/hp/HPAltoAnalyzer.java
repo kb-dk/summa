@@ -46,7 +46,7 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase<HPAltoAnalyzer.HPSegment> {
     public static final String DEFAULT_URL_PREFIX =
             "http://bja-linux2.sb.statsbiblioteket.dk/index.php?vScale=0.4&hScale=0.4&image=";
 
-    private final List<HPAltoAnalyzerSetup> setups = new ArrayList<HPAltoAnalyzerSetup>();
+    private final List<HPAltoAnalyzerSetup> setups = new ArrayList<>();
     private final String URLPrefix;
 
     public HPAltoAnalyzer(Configuration conf) {
@@ -74,8 +74,8 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase<HPAltoAnalyzer.HPSegment> {
     public List<HPSegment> getSegments(Alto alto) {
         HPAltoAnalyzerSetup setup = getSetup(alto);
         // We'll do a lot of random access extraction so linked lists seems the obvious choice (ignoring caching)
-        final List<Alto.TextBlock> blocks = new LinkedList<Alto.TextBlock>(alto.getLayout().get(0).getPrintSpace());
-        final List<HPSegment> segments = new ArrayList<HPSegment>();
+        final List<Alto.TextBlock> blocks = new LinkedList<>(alto.getLayout().get(0).getPrintSpace());
+        final List<HPSegment> segments = new ArrayList<>();
         String lastProgram = null; // Last encountered program
         int hPos = 0;
         int vPos = -1;
@@ -179,7 +179,7 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase<HPAltoAnalyzer.HPSegment> {
     // TODO: Mark that such merges has been performed
     private List<HPSegment> mergeSubsequent(List<HPSegment> segments) {
         HPSegment last = null;
-        List<HPSegment> merged = new LinkedList<HPSegment>();
+        List<HPSegment> merged = new LinkedList<>();
         while (!segments.isEmpty()) {
             HPSegment current = segments.remove(0);
 
@@ -277,7 +277,7 @@ public class HPAltoAnalyzer extends AltoAnalyzerBase<HPAltoAnalyzer.HPSegment> {
     protected HPSegment blockToSegment(Alto alto, Alto.TextBlock textBlock, String program) {
         HPSegment segment = super.blockToSegment(alto, textBlock);
         segment.program = program;
-        List<Alto.TextLine> lines = new LinkedList<Alto.TextLine>(textBlock.getLines());
+        List<Alto.TextLine> lines = new LinkedList<>(textBlock.getLines());
 
         extractTimeAndtitle(segment, lines);
 

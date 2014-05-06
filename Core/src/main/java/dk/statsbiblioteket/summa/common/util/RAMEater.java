@@ -85,7 +85,7 @@ public class RAMEater {
             System.out.println("Allocating a maximum of " + maxMB + " MB");
         }
         int BLOCK_SIZE = 1024*1024;
-        List<byte[]> bytes = new ArrayList<byte[]>(1000);
+        List<byte[]> bytes = new ArrayList<>(1000);
         try {
             //noinspection InfiniteLoopStatement
             for (int mb = 0 ; mb < maxMB ; mb++) {

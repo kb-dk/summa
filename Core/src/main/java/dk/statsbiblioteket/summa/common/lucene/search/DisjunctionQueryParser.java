@@ -91,7 +91,7 @@ public class DisjunctionQueryParser extends QueryParser {
             log.trace("getExpanded(" + field + ", " + inner + ") called");
         }
         if (field == null) {
-            Collection<Query> subQueries = new ArrayList<Query>(10);
+            Collection<Query> subQueries = new ArrayList<>(10);
             for (String defaultField : descriptor.getDefaultFields()) {
                 Query q = inner.getRecursiveQuery(defaultField);
                 if (q != null) {
@@ -108,7 +108,7 @@ public class DisjunctionQueryParser extends QueryParser {
             if (log.isTraceEnabled()) {
                 log.trace("Expanding group '" + group.getName() + "'");
             }
-            List<Query> queries = new ArrayList<Query>(group.getFields().size());
+            List<Query> queries = new ArrayList<>(group.getFields().size());
             for (LuceneIndexField groupField: group.getFields()) {
                 Query q = inner.getFinalQuery(groupField.getName());
                 if (q != null) {
@@ -193,7 +193,7 @@ public class DisjunctionQueryParser extends QueryParser {
             return new DisjunctionMaxQuery(queries, tieBreakerMultiplier);
         }
         //noinspection UseOfObsoleteCollectionType
-        Vector<BooleanClause> clauses = new Vector<BooleanClause>(queries.size());
+        Vector<BooleanClause> clauses = new Vector<>(queries.size());
         for (Query query: queries) {
             //noinspection unchecked
             clauses.add(new BooleanClause(query, BooleanClause.Occur.SHOULD));

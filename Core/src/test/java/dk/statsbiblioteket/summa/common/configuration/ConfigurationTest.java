@@ -107,7 +107,7 @@ public class ConfigurationTest extends TestCase {
     public void testGetStringsList() throws Exception {
         Configuration conf = new Configuration(new MemoryStorage());
         conf.set ("foobar",
-                  new ArrayList<String>(Arrays.asList("foo", "bar", "baz")));
+                  new ArrayList<>(Arrays.asList("foo", "bar", "baz")));
         List<String> l = conf.getStrings ("foobar");
         assertEquals("getStrings should return the list", 3, l.size());
         assertEquals("getStrings should give expected values", "foo", l.get(0));
@@ -305,7 +305,7 @@ public class ConfigurationTest extends TestCase {
 
     public void testNewMemoryBased() {
         int count = 0;
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         list.add("foo");
         list.add("bar");
 
@@ -406,7 +406,7 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testExpandedSysPropList() throws Exception {
-        ArrayList<String> val = new ArrayList<String>(
+        ArrayList<String> val = new ArrayList<>(
                                            Arrays.asList("${user.dir}", "bar"));
         Configuration conf = Configuration.newMemoryBased("foo.bar",
                                                           val);
@@ -440,13 +440,13 @@ public class ConfigurationTest extends TestCase {
 
         assertEquals(3, result.size());
 
-        assertEquals(new Configuration.Pair<String, Integer>("a", 1),
+        assertEquals(new Configuration.Pair<>("a", 1),
                      result.get(0));
 
-        assertEquals(new Configuration.Pair<String, Integer>("b", 27),
+        assertEquals(new Configuration.Pair<>("b", 27),
                      result.get(1));
 
-        assertEquals(new Configuration.Pair<String, Integer>(
+        assertEquals(new Configuration.Pair<>(
                                               System.getProperty("os.name"), 3),
                      result.get(2));
     }

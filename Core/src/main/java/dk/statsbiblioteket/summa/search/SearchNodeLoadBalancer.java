@@ -68,7 +68,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
         for (int i = 0; i < instances; i++) {
             List<SearchNode> baseNodes = SearchNodeFactory.createSearchNodes(conf);
             if (nodes == null) {
-                nodes = new ArrayList<SearchNode>(instances * baseNodes.size());
+                nodes = new ArrayList<>(instances * baseNodes.size());
             }
             log.trace(String.format("Adding %d nodes", baseNodes.size()));
             nodes.addAll(baseNodes);
@@ -76,7 +76,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
         if (nodes == null) {
             log.warn("No SearchNodes defined in configuration. This is probably an error. "
                      + "Specify SearchNodes under '" + SearchNodeFactory.CONF_NODES + "'");
-            nodes = new ArrayList<SearchNode>(0);
+            nodes = new ArrayList<>(0);
         }
         log.debug(String.format("Balancer created with a total of %d SearchNodes", nodes.size()));
     }

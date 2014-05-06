@@ -100,11 +100,11 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
         System.out.println("Created " + NUM_WORDS + " words. Warming up");
         for (int i = 0 ; i < WARMUP ; i++) {
             System.gc();
-            List<String> copy = new ArrayList<String>(randomWords.size());
+            List<String> copy = new ArrayList<>(randomWords.size());
             copy.addAll(randomWords);
             Collections.sort(copy, collator);
             System.gc();
-            copy = new ArrayList<String>(randomWords.size());
+            copy = new ArrayList<>(randomWords.size());
             copy.addAll(randomWords);
             ls.sort(copy, collator);
         }
@@ -114,14 +114,14 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
         long newTime = 0;
         for (int i = 0 ; i < RUNS ; i++) {
             System.gc();
-            List<String> copy = new ArrayList<String>(randomWords.size());
+            List<String> copy = new ArrayList<>(randomWords.size());
             copy.addAll(randomWords);
             long startTime = System.nanoTime();
             Collections.sort(copy, collator);
             classicTime += System.nanoTime() - startTime;
 
             System.gc();
-            copy = new ArrayList<String>(randomWords.size());
+            copy = new ArrayList<>(randomWords.size());
             copy.addAll(randomWords);
             startTime = System.nanoTime();
             ls.sort(copy, collator);
@@ -134,7 +134,7 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
 
     public void testRandom() {
         List<String> random = getRandomWords(20000, 20);
-        List<String> copy = new ArrayList<String>(random.size());
+        List<String> copy = new ArrayList<>(random.size());
         copy.addAll(random);
 
         Collator collator =
@@ -150,7 +150,7 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
                          + "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ1234567890 ").
                 toCharArray();
         Random random = new Random();
-        List<String> randomWords = new ArrayList<String>(wordCount);
+        List<String> randomWords = new ArrayList<>(wordCount);
         for (int i = 0; i < wordCount ; i++) {
             StringWriter sw = new StringWriter();
             int length = random.nextInt(maxLength);

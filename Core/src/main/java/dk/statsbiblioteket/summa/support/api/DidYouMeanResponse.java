@@ -102,7 +102,7 @@ public class DidYouMeanResponse extends ResponseImpl {
      */
     public DidYouMeanResponse(String query) {
         this.query = query;
-        resultTuples = new LinkedList<ResultTuple>();
+        resultTuples = new LinkedList<>();
     }
 
     /**

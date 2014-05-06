@@ -65,7 +65,7 @@ public class RecordTest extends TestCase {
         assertNull (r.getChildren());
         assertNull (r.getChildIds());
 
-        List<Record> children = new ArrayList<Record>(2);
+        List<Record> children = new ArrayList<>(2);
         children.add(new Record("foo", "base", emptyContent));
         children.add(new Record("bar", "base", emptyContent));
 
@@ -81,7 +81,7 @@ public class RecordTest extends TestCase {
         assertNull (r.getParents());
         assertNull (r.getParentIds());
 
-        List<Record> parents = new ArrayList<Record>(2);
+        List<Record> parents = new ArrayList<>(2);
         parents.add(new Record("foo", "base", emptyContent));
         parents.add(new Record("bar", "base", emptyContent));
 

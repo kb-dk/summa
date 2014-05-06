@@ -39,8 +39,8 @@ public class IndexGroup<F extends IndexField> {
     private static Log log = LogFactory.getLog(IndexGroup.class);
 
     private final String name; // Immutable to allow for caching of lookups
-    private Set<IndexAlias> aliases = new HashSet<IndexAlias>(5);
-    private Set<F> fields = new HashSet<F>();
+    private Set<IndexAlias> aliases = new HashSet<>(5);
+    private Set<F> fields = new HashSet<>();
 
     /**
      * Create a new empty group.
@@ -133,7 +133,7 @@ public class IndexGroup<F extends IndexField> {
     public Set<F> getFields() {
         log.trace("getFields called on group '" + name + "'");
         //noinspection unchecked
-        return new HashSet<F>(fields);
+        return new HashSet<>(fields);
     }
 
     /**

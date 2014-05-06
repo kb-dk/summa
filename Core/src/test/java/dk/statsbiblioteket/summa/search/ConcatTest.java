@@ -140,7 +140,7 @@ public class ConcatTest extends TestCase {
     }
 
     private List<String> getIDs(ResponseCollection responses) {
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)response;
@@ -249,7 +249,7 @@ public class ConcatTest extends TestCase {
         List<String> tags = getTags(responses, field);
         assertNotNull("There should be tags for facet '" + field + "'", tags);
 
-        List<String> expected = new ArrayList<String>(tags);
+        List<String> expected = new ArrayList<>(tags);
         Collections.sort(expected, Collator.getInstance(new Locale("da")));
 
         for (int i = 0 ; i < tags.size() ; i++) {
@@ -270,7 +270,7 @@ public class ConcatTest extends TestCase {
     }
 
     private List<String> getTerms(ResponseCollection responses, String field) {
-        List<String> terms = new ArrayList<String>();
+        List<String> terms = new ArrayList<>();
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)response;

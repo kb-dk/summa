@@ -141,7 +141,7 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                 { initCause(e); }};
         }
         log.trace(String.format("Located %d facet nodes", facetNodes.getLength()));
-        Map<String, FacetStructure> facets = new LinkedHashMap<String, FacetStructure>(facetNodes.getLength());
+        Map<String, FacetStructure> facets = new LinkedHashMap<>(facetNodes.getLength());
         for (int id = 0 ; id < facetNodes.getLength(); id++) {
             FacetStructure facet = parseFacet(facetNodes.item(id), id);
             facets.put(facet.getName(), facet);
@@ -205,8 +205,8 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                                                            ref, name));
         }
         List<IndexField> fieldRefs = group == null ? Arrays.asList(field) :
-                                     new ArrayList<IndexField>(group.getFields());
-        List<String> fieldNames = new ArrayList<String>(fieldRefs.size());
+                                     new ArrayList<>(group.getFields());
+        List<String> fieldNames = new ArrayList<>(fieldRefs.size());
         for (IndexField fieldRef : fieldRefs) {
             fieldNames.add(fieldRef.getName());
         }

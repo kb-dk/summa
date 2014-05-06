@@ -60,7 +60,7 @@ public class IndexDumper {
 
     public static void listFields(File location) throws IOException {
         DirectoryReader ir = DirectoryReader.open(new NIOFSDirectory(location));
-        Set<String> fieldNames = new HashSet<String>(100);
+        Set<String> fieldNames = new HashSet<>(100);
         List<AtomicReader> readers = LuceneUtil.gatherSubReaders(ir);
         for (AtomicReader ar: readers) {
             for (String field : ar.fields()) {
@@ -80,7 +80,7 @@ public class IndexDumper {
      */
     public static void dump(File location, String delimiter, List<String> fields) throws IOException {
         DirectoryReader ir = DirectoryReader.open(new NIOFSDirectory(location));
-        Set<String> selector = new HashSet<String>(fields);
+        Set<String> selector = new HashSet<>(fields);
         for (int i = 0 ; i < ir.maxDoc() ; i++) {
             // TODO: Re-add support for skipping deleted docs
 //            if (ir.getLiveDocs() != null || ir.getLiveDocs().get(i)) {

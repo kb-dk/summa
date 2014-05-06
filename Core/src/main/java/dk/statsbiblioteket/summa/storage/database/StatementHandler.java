@@ -34,7 +34,7 @@ public abstract class StatementHandler {
     private static Log log = LogFactory.getLog(StatementHandler.class);
 
     private Map<String, MiniConnectionPoolManager.StatementHandle> statements =
-        new HashMap<String, MiniConnectionPoolManager.StatementHandle>(30);
+        new HashMap<>(30);
     final private boolean lazy;
 
     public StatementHandler(boolean lazy) {

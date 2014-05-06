@@ -66,7 +66,7 @@ public class ReduceXMLFilterTest extends TestCase {
         if (!isCollapsing) {
             expected = expected.replaceAll("<([^>]+)([^>]*)/>", "<$1$2></$1>");
         }
-        ArrayList<String> lims = new ArrayList<String>(limits.length / 2);
+        ArrayList<String> lims = new ArrayList<>(limits.length / 2);
         for (int i = 0 ; i < limits.length ; i+=2) {
             lims.add(limits[i + 1] + " " + limits[i]);
         }

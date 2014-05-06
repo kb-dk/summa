@@ -39,7 +39,7 @@ import java.util.Map;
 public class RuleParser {
 
     // Cache used to store parsed ruleMaps.
-    private static Map<String, Map<String, String>> ruleCache = new HashMap<String, Map<String, String>>();
+    private static Map<String, Map<String, String>> ruleCache = new HashMap<>();
 
     /**
      * Parses a String containing rules, a rule is a mapping pair of Strings.
@@ -76,7 +76,7 @@ public class RuleParser {
         }
 
         // Ok, we didn't have the ruleMap parsed yet. Go for it
-        ruleMap = new HashMap<String, String>();
+        ruleMap = new HashMap<>();
         char[] keyByf = new char[maxLen];
         char[] valBuf = new char[maxLen];
 

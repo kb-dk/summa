@@ -52,7 +52,7 @@ public class XMLSplitterHandlerTest extends TestCase implements
         return new TestSuite(XMLSplitterHandlerTest.class);
     }
 
-    private List<Record> received = new ArrayList<Record>(10);
+    private List<Record> received = new ArrayList<>(10);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void testPlainSplit() throws Exception {

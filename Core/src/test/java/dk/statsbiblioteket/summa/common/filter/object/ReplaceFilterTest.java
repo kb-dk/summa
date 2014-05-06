@@ -27,11 +27,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -117,7 +113,7 @@ public class ReplaceFilterTest extends TestCase {
 
     public void testStringReplacer() throws Exception {
         String target = "abcdefghijk";
-        Map<String, String> rules = new HashMap<String, String>(1);
+        Map<String, String> rules = new HashMap<>(1);
         rules.put(target, "");
         ReplaceFactory factory = new ReplaceFactory(rules);
         InputStream source =
@@ -171,7 +167,7 @@ public class ReplaceFilterTest extends TestCase {
     /* Checks both content and stream replacement */
     private void assertReplace(String message, String expected, String input,
                                Configuration conf) throws Exception {
-        List<Payload> payloads = new ArrayList<Payload>(3);
+        List<Payload> payloads = new ArrayList<>(3);
         payloads.add(new Payload(new Record(
                 "Dummy1", "Dummy", input.getBytes("utf-8"))));
         payloads.add(new Payload(
@@ -183,7 +179,7 @@ public class ReplaceFilterTest extends TestCase {
         ReplaceFilter replaceFilter = new ReplaceFilter(conf);
         replaceFilter.setSource(feeder);
 
-        List<Payload> processed = new ArrayList<Payload>(payloads.size());
+        List<Payload> processed = new ArrayList<>(payloads.size());
         for (int i = 0 ; i < 3 ; i++) {
             log.debug("Extracting Payload #" + i);
             assertTrue("The ReplaceFilter should have a next for Payload #" + i,

@@ -82,7 +82,7 @@ public abstract class StorageBase implements Storage {
     public StorageBase(Configuration conf) {
         final int hashMapSize = 10;
         storageStartTime = System.currentTimeMillis();
-        lastFlushTimes = new HashMap<String, Long>(hashMapSize);
+        lastFlushTimes = new HashMap<>(hashMapSize);
         privateIdMatcher = Pattern.compile("__.+__").matcher("");
     }
 
@@ -162,7 +162,7 @@ public abstract class StorageBase implements Storage {
      */
     @Override
     public List<Record> next(long iteratorKey, int maxRecords) throws IOException {
-        List<Record> records = new ArrayList<Record>(maxRecords);
+        List<Record> records = new ArrayList<>(maxRecords);
         int added = 0;
         while (added++ < maxRecords) {
             try {
@@ -195,7 +195,7 @@ public abstract class StorageBase implements Storage {
         }
 
         // We collect a list of changes and submit them in one transaction
-        List<Record> flushQueue = new ArrayList<Record>(arrayListSize);
+        List<Record> flushQueue = new ArrayList<>(arrayListSize);
 
         // Make sure parent records are correct
         if (record.getParentIds() != null) {
@@ -343,7 +343,7 @@ public abstract class StorageBase implements Storage {
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
-        ArrayList<Record> result = new ArrayList<Record>(ids.size());
+        ArrayList<Record> result = new ArrayList<>(ids.size());
         for (String id : ids) {
             Record r = getRecord(id, options);
             if (r != null) {

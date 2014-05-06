@@ -146,7 +146,7 @@ public class SBMARCParser extends MARCParser {
     /**
      * The children for the MARC record. This is often empty.
      */
-    private List<Child> children = new ArrayList<Child>(20);
+    private List<Child> children = new ArrayList<>(20);
     private String lastChildID;
     private String lastChildSort;
 
@@ -374,7 +374,7 @@ public class SBMARCParser extends MARCParser {
 
         if (!children.isEmpty()) {
             Collections.sort(children);
-            ArrayList<String> childrenIDs = new ArrayList<String>(children.size());
+            ArrayList<String> childrenIDs = new ArrayList<>(children.size());
             for (Child child : children) {
                 childrenIDs.add(child.id);
             }

@@ -20,7 +20,10 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 public class WindowQueueTest extends TestCase {
     public WindowQueueTest(String name) {
@@ -42,7 +45,7 @@ public class WindowQueueTest extends TestCase {
     }
 
     public void testBounds() throws Exception {
-        WindowQueue<String> queue = new WindowQueue<String>(
+        WindowQueue<String> queue = new WindowQueue<>(
                 null, "b", "k", new StringTracker(200, 500));
 
         queue.insert("a");
@@ -64,10 +67,10 @@ public class WindowQueueTest extends TestCase {
                 + "1234567890 !#¤%&/()=@£$";
         int MAX_TERM_LENGTH = 40;
 
-        WindowQueue<String> queue = new WindowQueue<String>(
+        WindowQueue<String> queue = new WindowQueue<>(
                 null, null, null, new StringTracker(100, 500));
         Random random = new Random(87);
-        List<String> raw = new ArrayList<String>(TERMS);
+        List<String> raw = new ArrayList<>(TERMS);
         for (int i = 0 ; i < TERMS ; i++) {
             String term = getString(ALPHABET, MAX_TERM_LENGTH, random);
             queue.insert(term);
@@ -77,7 +80,7 @@ public class WindowQueueTest extends TestCase {
                    queue.getSize() > 2);
 
         Collections.sort(raw, queue.getComparator());
-        ArrayList<String> ql = new ArrayList<String>(queue.getSize());
+        ArrayList<String> ql = new ArrayList<>(queue.getSize());
         while (queue.getSize() > 0) {
             ql.add(queue.removeMin());
         }
@@ -98,7 +101,7 @@ public class WindowQueueTest extends TestCase {
     }
 
     public void testLimits() throws Exception {
-        WindowQueue<String> queue = new WindowQueue<String>(
+        WindowQueue<String> queue = new WindowQueue<>(
                 null, "b", "k", new StringTracker(2, 500));
         String[] ENTRIES = new String[]{
                 "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"};
@@ -117,7 +120,7 @@ public class WindowQueueTest extends TestCase {
     }
 
     public void testBasicOrder() throws Exception {
-        WindowQueue<String> queue = new WindowQueue<String>(
+        WindowQueue<String> queue = new WindowQueue<>(
                 null, null, null, new StringTracker(200, 5000));
         String[] ENTRIES = new String[]{
                 "b", "a", "c", "d"};
@@ -131,7 +134,7 @@ public class WindowQueueTest extends TestCase {
     }
 
     public void testBoundsOrder() throws Exception {
-        WindowQueue<String> queue = new WindowQueue<String>(
+        WindowQueue<String> queue = new WindowQueue<>(
                 null, "b", "k", new StringTracker(2, 500));
         String[] ENTRIES = new String[]{
                 "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"};
@@ -145,7 +148,7 @@ public class WindowQueueTest extends TestCase {
     }
 
     private List<String> getElements(WindowQueue<String> queue) {
-        List<String> elements = new ArrayList<String>(queue.getSize());
+        List<String> elements = new ArrayList<>(queue.getSize());
         while (queue.getSize() > 0) {
             elements.add(queue.removeMin());
         }

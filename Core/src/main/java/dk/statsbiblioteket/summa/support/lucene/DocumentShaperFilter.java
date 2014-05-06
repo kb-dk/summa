@@ -116,7 +116,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
             log.debug(String.format(
                     "Creating default templates as the length of the patterns-list was %d and the length of the "
                     + "templates-list was %d", patterns.size(), templates.size()));
-            templates = new ArrayList<String>(patterns.size());
+            templates = new ArrayList<>(patterns.size());
             //noinspection UnusedDeclaration
             for (String pattern : patterns) {
                 templates.add(DEFAULT_FIELD_TEMPLATE);
@@ -126,15 +126,15 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
             log.debug(String.format(
                     "Creating default contents as the length of the patterns-list was %d and the length of the "
                     + "contents-list was %d", patterns.size(), contents.size()));
-            contents = new ArrayList<String>(patterns.size());
+            contents = new ArrayList<>(patterns.size());
             //noinspection UnusedDeclaration
             for (String pattern : patterns) {
                 contents.add(DEFAULT_FIELD_CONTENT);
             }
         }
-        keys = new ArrayList<SimpleTriple<Pattern, String, String>>(patterns.size());
+        keys = new ArrayList<>(patterns.size());
         for (int i = 0; i < patterns.size(); i++) {
-            keys.add(new SimpleTriple<Pattern, String, String>(
+            keys.add(new SimpleTriple<>(
                     Pattern.compile(patterns.get(i)), templates.get(i),
                     DEFAULT_FIELD_CONTENT.equals(contents.get(i)) ? null : contents.get(i)));
         }

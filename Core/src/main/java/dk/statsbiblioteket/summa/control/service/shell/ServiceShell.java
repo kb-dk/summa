@@ -14,9 +14,9 @@
  */
 package dk.statsbiblioteket.summa.control.service.shell;
 
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
+import dk.statsbiblioteket.summa.common.shell.Core;
+import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
@@ -31,7 +31,7 @@ public class ServiceShell {
         shell = new Core ();
         shell.setPrompt ("service-shell> ");
 
-        connManager = new ConnectionManager<Service> (
+        connManager = new ConnectionManager<>(
                 new SummaRMIConnectionFactory<Service>(null));
 
         shell.installCommand(new PingCommand(connManager, rmiAddress));

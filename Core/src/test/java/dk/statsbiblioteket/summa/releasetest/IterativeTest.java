@@ -424,10 +424,10 @@ public class IterativeTest extends NoExitTestCase {
     private void assertIndexEquals(String message, List<String> recordIDs,
                                    int expectedDeleted) throws Exception {
         if (recordIDs == null) {
-            recordIDs = new ArrayList<String>(0);
+            recordIDs = new ArrayList<>(0);
         }
         IndexReader ir = getIndexReader();
-        List<String> foundIDs = new ArrayList<String>(ir.maxDoc());
+        List<String> foundIDs = new ArrayList<>(ir.maxDoc());
         Bits liveDocs = MultiFields.getLiveDocs(ir);
         int deletedCount = 0;
         for (int i = 0 ; i < ir.maxDoc() ; i++) {

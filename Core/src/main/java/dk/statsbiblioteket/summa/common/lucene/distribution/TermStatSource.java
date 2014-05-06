@@ -68,7 +68,7 @@ public class TermStatSource implements Closeable {
     public Iterator<Triple<BytesRef, Long, Long>> getTerms(String field) throws IOException {
         List<AtomicReader> irs = LuceneUtil.gatherSubReaders(ir);
         log.debug("getTerms(" + field + ") creating single field iterator  with " + irs.size()+ " readers");
-        List<Iterator<Triple<BytesRef, Long, Long>>> providers = new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(irs.size());
+        List<Iterator<Triple<BytesRef, Long, Long>>> providers = new ArrayList<>(irs.size());
         for (AtomicReader reader: irs) {
             LeafIterator li = new LeafIterator(reader, field);
             if (!li.hasNext()) {
@@ -83,7 +83,7 @@ public class TermStatSource implements Closeable {
     public Iterator<Triple<BytesRef, Long, Long>> getTerms(Collection<String> fields) throws IOException {
         String designation = Strings.join(fields, ", ");
         log.debug("Creating multi field iterator for " + designation);
-        List<Iterator<Triple<BytesRef, Long, Long>>> sources = new ArrayList<Iterator<Triple<BytesRef, Long, Long>>>(fields.size());
+        List<Iterator<Triple<BytesRef, Long, Long>>> sources = new ArrayList<>(fields.size());
         for (String field: fields) {
             sources.add(getTerms(field));
         }
@@ -100,7 +100,7 @@ public class TermStatSource implements Closeable {
             log.debug("Creating Merger(" + designation + ")");
             this.providers = providers;
             this.designation = designation;
-            values = new ArrayList<Triple<BytesRef, Long, Long>>(providers.size());
+            values = new ArrayList<>(providers.size());
             Iterator<Iterator<Triple<BytesRef, Long, Long>>> pi = providers.iterator();
 
             while (pi.hasNext()) {
@@ -159,7 +159,7 @@ public class TermStatSource implements Closeable {
                 }
             }
 
-            Triple<BytesRef, Long, Long> result = new Triple<BytesRef, Long, Long>(term, tf, df);
+            Triple<BytesRef, Long, Long> result = new Triple<>(term, tf, df);
             termCount++;
             if (termCount == 0) {
                 log.debug("Merger for " + designation + " depleted with " + termCount + " delivered terms");
@@ -223,7 +223,7 @@ public class TermStatSource implements Closeable {
                 }
                 BytesRef text = new BytesRef();
                 text.copyBytes(current);
-                final Triple<BytesRef, Long, Long> result = new Triple<BytesRef, Long, Long>(text, tf, df);
+                final Triple<BytesRef, Long, Long> result = new Triple<>(text, tf, df);
                 termCount++;
                 depleted = termsEnum.next() == null;
                 if (depleted) {

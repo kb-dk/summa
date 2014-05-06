@@ -283,7 +283,7 @@ public class RelationResolver extends ObjectFilterImpl {
     }
 
     private void assignRelatives(Payload payload, DocumentResponse docResponse) {
-        List<String> hitIDs = new ArrayList<String>(docResponse.getRecords().size());
+        List<String> hitIDs = new ArrayList<>(docResponse.getRecords().size());
         for (DocumentResponse.Record hitRecord : docResponse.getRecords()) {
             for (DocumentResponse.Field field : hitRecord.getFields()) {
                 if (DocumentResponse.RECORD_ID.equals(field.getName())) {
@@ -297,24 +297,24 @@ public class RelationResolver extends ObjectFilterImpl {
         Record record = payload.getRecord();
         Set<String> parents = record.getParentIds() == null ?
                               new HashSet<String>(docResponse.getRecords().size()) :
-                              new HashSet<String>(record.getParentIds());
+                              new HashSet<>(record.getParentIds());
         if (assignAsParents) {
             parentAdd = -parents.size();
             parents.addAll(hitIDs);
             parentAdd += parents.size();
-            record.setParentIds(parents.isEmpty() ? null : new ArrayList<String>(parents));
+            record.setParentIds(parents.isEmpty() ? null : new ArrayList<>(parents));
             Logging.logProcess("RelationResolver",
                                "Assigned " + docResponse.getRecords().size() + " parents. Parents are now "
                                + Strings.join(parents, ", "), Logging.LogLevel.DEBUG, payload);
         }
         Set<String> children = record.getChildIds() == null ?
                                new HashSet<String>(docResponse.getRecords().size()) :
-                               new HashSet<String>(record.getChildIds());
+                               new HashSet<>(record.getChildIds());
         if (assignAsChildren) {
             childAdd = -children.size();
             children.addAll(hitIDs);
             childAdd += children.size();
-            record.setChildIds(children.isEmpty() ? null : new ArrayList<String>(children));
+            record.setChildIds(children.isEmpty() ? null : new ArrayList<>(children));
         }
         Logging.logProcess("RelationResolver",
                            "Assigned '" + parentAdd + " new parents (total parents: " + Strings.join(parents, ", ")

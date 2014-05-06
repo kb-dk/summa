@@ -181,7 +181,7 @@ public class Datetime {
         if (!matcher.matches()) {
             return "";
         }
-        List<String> tokens = new ArrayList<String>(6);
+        List<String> tokens = new ArrayList<>(6);
         for (int i = 1 ; i < matcher.groupCount()+1 ; i ++) {
             tokens.add(matcher.group(i));
         }

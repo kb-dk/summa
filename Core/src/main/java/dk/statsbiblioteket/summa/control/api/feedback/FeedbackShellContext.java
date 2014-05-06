@@ -15,12 +15,11 @@
 package dk.statsbiblioteket.summa.control.api.feedback;
 
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.Stack;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Created by IntelliJ IDEA. User: mikkel Date: Aug 11, 2008 Time: 1:45:06 PM To
@@ -35,7 +34,7 @@ public class FeedbackShellContext implements ShellContext {
 
     public FeedbackShellContext (Feedback feedback) {
         this.feedback = feedback;
-        lineBuffer = new Stack<String>();
+        lineBuffer = new Stack<>();
         lastError = null;
         log = LogFactory.getLog(FeedbackShellContext.class);
 

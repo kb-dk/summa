@@ -31,7 +31,7 @@ public class FakeSearcher implements SummaSearcher {
     private static final List<String> DEFAULT_FIELDS = Arrays.asList("recordID", "recordBase", "shortformat", "text");
     private Log log = LogFactory.getLog(FakeSearcher.class);
 
-    private List<Request> requests = new ArrayList<Request>();
+    private List<Request> requests = new ArrayList<>();
 
     @Override
     public ResponseCollection search(Request request) throws IOException {

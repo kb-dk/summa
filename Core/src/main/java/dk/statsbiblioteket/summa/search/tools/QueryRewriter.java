@@ -458,7 +458,7 @@ public class QueryRewriter {
         //String PROBLEMS = "!*\\'\"";
         //String PROBLEMS = "!*'\":";
         String PROBLEMS = " "; // '/' signals regexps, which Summa does not currently support
-        Map<String, String> rules = new HashMap<String, String>(PROBLEMS.length());
+        Map<String, String> rules = new HashMap<>(PROBLEMS.length());
         for (int i = 0 ; i < PROBLEMS.length() ; i++) {
             char problem = PROBLEMS.charAt(i);
             rules.put("" + problem, "\\" + problem);
@@ -470,7 +470,7 @@ public class QueryRewriter {
         //String PROBLEMS = "!*\\'\"";
         //String PROBLEMS = "!*'\":";
         String PROBLEMS = "\"";
-        Map<String, String> rules = new HashMap<String, String>(PROBLEMS.length());
+        Map<String, String> rules = new HashMap<>(PROBLEMS.length());
         for (int i = 0 ; i < PROBLEMS.length() ; i++) {
             char problem = PROBLEMS.charAt(i);
             rules.put("" + problem, "\\" + problem);

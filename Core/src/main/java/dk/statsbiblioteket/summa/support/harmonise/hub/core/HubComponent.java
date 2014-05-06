@@ -116,7 +116,7 @@ public interface HubComponent {
             if (values == null || values.isEmpty()) {
                 return Collections.emptyList();
             }
-            List<String> results = new ArrayList<String>();
+            List<String> results = new ArrayList<>();
             for (Object o: values) {
                 if (!(o instanceof String)) {
                     throw new IllegalArgumentException(

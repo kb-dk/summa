@@ -60,7 +60,7 @@ public class ClearBaseFilter extends ObjectFilterImpl {
 
     public ClearBaseFilter(WritableStorage storage, List<String> bases) {
         this(storage, new PayloadMatcher(Configuration.newMemoryBased()), Configuration.newMemoryBased(
-                CONF_CLEAR_BASES, new ArrayList<String>(bases)
+                CONF_CLEAR_BASES, new ArrayList<>(bases)
         ));
         log.info("Created ClearBaseFilter directly on Storage for bases: " + Strings.join(bases, ", "));
     }

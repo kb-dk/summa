@@ -115,7 +115,7 @@ public class RecordGenerator implements ObjectFilter {
     public static final String CONTENT_INCREMENTAL_NUMBER = "$INCREMENTAL_NUMBER";
     private static final Pattern PATTERN_INCREMENTAL_NUMBER =
             Pattern.compile("(\\$INCREMENTAL_NUMBER\\[(\\w+)\\])", Pattern.DOTALL);
-    private Map<String, Integer> incrementalNumbers = new HashMap<String, Integer>(10);
+    private Map<String, Integer> incrementalNumbers = new HashMap<>(10);
 
     /**
      * All occurences of "$TIMESTAMP[unit]" will be replaced by the current time
@@ -222,8 +222,8 @@ public class RecordGenerator implements ObjectFilter {
 
     private List<RecordToken> parseTemplate(String template) {
         int lastEnd = 0;
-        List<RecordToken> tokens = new ArrayList<RecordToken>(100);
-        List<RecordToken> factories = new ArrayList<RecordToken>(10);
+        List<RecordToken> tokens = new ArrayList<>(100);
+        List<RecordToken> factories = new ArrayList<>(10);
         factories.add(new IncrementalNumberToken());
         factories.add(new TimestampToken());
         factories.add(new RandomIntToken());
@@ -635,7 +635,7 @@ public class RecordGenerator implements ObjectFilter {
         }
     }
 
-    private Map<String, List<String>> words = new HashMap<String, List<String>>(10);
+    private Map<String, List<String>> words = new HashMap<>(10);
 
     private List<String> getWords(String listName) {
         List<String> result = words.get(listName);

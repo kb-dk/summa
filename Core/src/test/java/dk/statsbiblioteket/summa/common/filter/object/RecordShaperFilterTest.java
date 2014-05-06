@@ -18,6 +18,10 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -26,11 +30,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import dk.statsbiblioteket.summa.common.util.RecordUtil;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 /**
  * RecordShaperFilter Tester.
@@ -85,7 +84,7 @@ public class RecordShaperFilterTest extends TestCase {
         subMeta.set(RecordShaperFilter.CONF_META_REGEXP, "meta_(.+)_etam");
         subMeta.set(RecordShaperFilter.CONF_META_TEMPLATE, "$1_party");
 
-        List<Payload> payloads = new ArrayList<Payload>(1);
+        List<Payload> payloads = new ArrayList<>(1);
 
         String contentInner =
                 "<real><identity>id_foo_di</identity>"
@@ -118,7 +117,7 @@ public class RecordShaperFilterTest extends TestCase {
         conf.set(RecordShaperFilter.CONF_ID_REGEXP, "id_(.+)/(.+)_di");
         conf.set(RecordShaperFilter.CONF_ID_TEMPLATE, "$2/$1");
 
-        List<Payload> payloads = new ArrayList<Payload>(1);
+        List<Payload> payloads = new ArrayList<>(1);
 
         String contentInner =
                 "<real><identity>id_foo/bar_di</identity>"
@@ -154,7 +153,7 @@ public class RecordShaperFilterTest extends TestCase {
             RecordShaperFilter.CONF_ID_REGEXP, ID_REGEXP,
             RecordShaperFilter.CONF_ID_TEMPLATE, "$1");
 
-        List<Payload> payloads = new ArrayList<Payload>(1);
+        List<Payload> payloads = new ArrayList<>(1);
         payloads.add(new Payload(new Record(
             "id1", "base1", CONTENT.getBytes("utf-8"))));
         RecordShaperFilter assigner = new RecordShaperFilter(conf);

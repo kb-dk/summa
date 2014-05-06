@@ -232,10 +232,7 @@ public class ResultSetCursor implements Cursor {
 
         try {
             nextRecord = nextValidRecord();
-        } catch (SQLException e) {
-            log.warn("Error reading next record: " + e.getMessage(), e);
-            nextRecord = null;
-        } catch (IOException e) {
+        } catch (SQLException | IOException e) {
             log.warn("Error reading next record: " + e.getMessage(), e);
             nextRecord = null;
         }

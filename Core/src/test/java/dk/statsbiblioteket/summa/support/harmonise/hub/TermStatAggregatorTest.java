@@ -15,7 +15,6 @@
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.shell.commands.Exec;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponent;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubComponentImpl;
 import dk.statsbiblioteket.summa.support.harmonise.hub.core.HubFactory;
@@ -238,7 +237,7 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
 
 
     private void assertDocFieldOrder(String message, QueryResponse response, String field, String... expected) {
-        List<String> extracted = new ArrayList<String>(response.getResults().size());
+        List<String> extracted = new ArrayList<>(response.getResults().size());
         for (SolrDocument doc: response.getResults()) {
             String value = (String) doc.getFieldValue(field);
             if (value != null) {
@@ -261,7 +260,7 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
     }
 
     private HubComponent getHub(String... hubParams) throws IOException {
-        List<String> hp = new ArrayList<String>(Arrays.asList(hubParams));
+        List<String> hp = new ArrayList<>(Arrays.asList(hubParams));
         hp.add(HubFactory.CONF_COMPONENT);
         hp.add(TermStatAggregator.class.getCanonicalName());
         String[] hpa = new String[hp.size()];
@@ -282,7 +281,7 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
     }
 
     private HubComponent getHubMissing(String... hubParams) throws IOException {
-        List<String> hp = new ArrayList<String>(Arrays.asList(hubParams));
+        List<String> hp = new ArrayList<>(Arrays.asList(hubParams));
         hp.add(HubFactory.CONF_COMPONENT);
         hp.add(TermStatAggregator.class.getCanonicalName());
         String[] hpa = new String[hp.size()];

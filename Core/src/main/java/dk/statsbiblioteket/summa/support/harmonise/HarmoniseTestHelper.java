@@ -52,7 +52,7 @@ public class HarmoniseTestHelper {
         for (Response response : responses) {
             if (response instanceof DocumentResponse) {
                 DocumentResponse dr = (DocumentResponse) response;
-                ArrayList<String> results = new ArrayList<String>((int) dr.getHitCount());
+                ArrayList<String> results = new ArrayList<>((int) dr.getHitCount());
                 for (DocumentResponse.Record record : dr.getRecords()) {
                     results.add(record.getId());
                 }

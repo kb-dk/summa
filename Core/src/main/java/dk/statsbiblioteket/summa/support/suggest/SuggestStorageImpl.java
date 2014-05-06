@@ -48,7 +48,7 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
         InputStreamReader reader = new InputStreamReader(inStream);
         BufferedReader lines = new BufferedReader(reader);
         String line;
-        ArrayList<String> buffer = new ArrayList<String>(BATCH_SIZE);
+        ArrayList<String> buffer = new ArrayList<>(BATCH_SIZE);
         int counter = 0;
         while ((line = lines.readLine()) != null) {
             counter++;

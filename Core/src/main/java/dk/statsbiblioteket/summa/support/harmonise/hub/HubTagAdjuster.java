@@ -86,7 +86,7 @@ public class HubTagAdjuster implements Configurable {
      * @throws IllegalStateException if two tagAdjusters containg the same field name.
      */
     public static Map<String, ManyToManyMapper> merge(List<HubTagAdjuster> tagAdjusters) {
-        Map<String, ManyToManyMapper>  merged = new HashMap<String, ManyToManyMapper>(tagAdjusters.size() * 2);
+        Map<String, ManyToManyMapper>  merged = new HashMap<>(tagAdjusters.size() * 2);
         for (HubTagAdjuster tagAdjuster: tagAdjusters) {
             for (String field: tagAdjuster.getFacetNames()) {
                 if (merged.containsKey(field)) {
@@ -121,7 +121,7 @@ public class HubTagAdjuster implements Configurable {
 
 
     public HubTagAdjuster(Configuration conf) {
-        facetNames = new HashSet<String>(conf.getStrings(CONF_FACET_NAME));
+        facetNames = new HashSet<>(conf.getStrings(CONF_FACET_NAME));
         mergeMode = MERGE_MODE.valueOf(conf.getString(CONF_MERGE_MODE, DEFAULT_MERGE_MODE.toString()));
         map = new ManyToManyMapper(conf.getStrings(CONF_TAG_MAP));
         log.info("Created " + this);
@@ -169,7 +169,7 @@ public class HubTagAdjuster implements Configurable {
      * @return a temporary structure with the expanded tags.
      */
     private Map<String, Long> expandTags(List<FacetField.Count> tags) {
-        Map<String, Long> expandedTags = new LinkedHashMap<String, Long>((int) (tags.size() * 1.5));
+        Map<String, Long> expandedTags = new LinkedHashMap<>((int) (tags.size() * 1.5));
         for (FacetField.Count tag: tags) {
             Set<String> ets = map.getReverseSet(tag.getName());
             if (ets == null) {

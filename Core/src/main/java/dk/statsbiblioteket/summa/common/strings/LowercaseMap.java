@@ -36,7 +36,7 @@ public class LowercaseMap {
 
     private static Map<String, String> LOWER;
     static { // Create lower
-        LOWER = new HashMap<String, String>(65535);
+        LOWER = new HashMap<>(65535);
         for (int cInt = 0 ; cInt < Character.MAX_VALUE ; cInt++) {
             String s = String.valueOf((char)cInt);
             if (!toLower(s).equals(s)) {
@@ -63,7 +63,7 @@ public class LowercaseMap {
      */
     public static Map<String, String> getLowercaseMap(
             Map<String, String> replaceMap) {
-        Map<String, String> result = new HashMap<String, String>(replaceMap.size() * 2 + LOWER.size());
+        Map<String, String> result = new HashMap<>(replaceMap.size() * 2 + LOWER.size());
         // Handle existing
         for (Map.Entry<String, String> entry: replaceMap.entrySet()) {
             String key = entry.getKey();

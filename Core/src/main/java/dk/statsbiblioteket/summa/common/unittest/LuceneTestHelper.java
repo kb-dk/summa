@@ -73,7 +73,7 @@ public class LuceneTestHelper extends TestCase {
     }
 
     public static List<String> getIDs(File location) throws IOException {
-        List<String> ids = new ArrayList<String>(100);
+        List<String> ids = new ArrayList<>(100);
         DirectoryReader reader = DirectoryReader.open(new NIOFSDirectory(location));
         List<AtomicReader> readers = LuceneUtil.gatherSubReaders(reader);
         try {

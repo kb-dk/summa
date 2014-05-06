@@ -26,9 +26,9 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.rmi.RemoteException;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class SuggestSearchNodeTest extends TestCase {
@@ -102,7 +102,7 @@ public class SuggestSearchNodeTest extends TestCase {
         SuggestSearchNode node = new SuggestSearchNode(
                 Configuration.newMemoryBased());
         node.open(storageRoot.toString());
-        ArrayList<String> suggestions = new ArrayList<String>(Arrays.asList(
+        ArrayList<String> suggestions = new ArrayList<>(Arrays.asList(
                 "foo\t10\t2", "bar\t7", "zoo"
         ));
         node.addSuggestions(suggestions);

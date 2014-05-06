@@ -296,10 +296,10 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         if (baseContents == null) {
             log.warn ("Error reading " + baseDir + ". It has probably been" +
                     "deleted");
-            return new ArrayList<String>(0);
+            return new ArrayList<>(0);
         }
 
-        List<String> clients = new ArrayList<String>(baseContents.length);
+        List<String> clients = new ArrayList<>(baseContents.length);
 
         for (String client : baseContents) {
  	    if (new File(baseDir, 

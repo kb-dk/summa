@@ -271,7 +271,7 @@ public class JStorage implements ConfigurationStorage {
     public Iterator<Map.Entry<String, Serializable>> iterator() {
         // The only way to do this is to extract the configuration level level
         // from the JS engine into a hash map...
-        Map<String, Serializable> map = new HashMap<String, Serializable>();
+        Map<String, Serializable> map = new HashMap<>();
 
         // Install context
         engine.put("__ext_map", map);
@@ -372,7 +372,7 @@ public class JStorage implements ConfigurationStorage {
      */
     @Override
     public List<ConfigurationStorage> createSubStorages(String key, int count) {
-        List<ConfigurationStorage> storage = new ArrayList<ConfigurationStorage>(count);
+        List<ConfigurationStorage> storage = new ArrayList<>(count);
         String list = config + "['" + key + "']";
 
         eval(list + " = new Array()");
@@ -394,7 +394,7 @@ public class JStorage implements ConfigurationStorage {
     public List<ConfigurationStorage> getSubStorages(String key) {
         String subConf = config + "['" + key + "']";
         int count = evalInt(subConf + ".__ext_size()");
-        List<ConfigurationStorage> storages = new ArrayList<ConfigurationStorage>();
+        List<ConfigurationStorage> storages = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
             storages.add(new JStorage(engine, engineManager, subConf + "[" + i + "]", false));

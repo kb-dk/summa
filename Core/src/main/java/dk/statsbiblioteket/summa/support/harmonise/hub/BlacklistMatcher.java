@@ -1,12 +1,7 @@
 package dk.statsbiblioteket.summa.support.harmonise.hub;
 
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.FuzzyQuery;
-import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.PrefixQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.search.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,7 +11,7 @@ import java.util.List;
  * Handles looking up terms in a list of strings describing black listed terms
  */
 public class BlacklistMatcher {
-    private final List<String> blacklistPatterns = new ArrayList<String>();
+    private final List<String> blacklistPatterns = new ArrayList<>();
 
     public BlacklistMatcher(List<String> blacklistPatterns) {
         this.blacklistPatterns.addAll(blacklistPatterns);

@@ -143,7 +143,7 @@ public class AnalyzerTest extends TestCase {
 
     private List<Payload> getPayloads() throws IOException {
         String[] DOCS = new String[]{"document1.xml"};
-        List<Payload> payloads = new ArrayList<Payload>(DOCS.length);
+        List<Payload> payloads = new ArrayList<>(DOCS.length);
         for (String doc: DOCS) {
             String content = Resolver.getUTF8Content("integration/analyzer/" + doc);
             Record record = new Record(doc, "dummyBase", content.getBytes("utf-8"));
@@ -154,7 +154,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     private List<Payload> extractPayloads(ObjectFilter source) {
-        List<Payload> processed = new ArrayList<Payload>();
+        List<Payload> processed = new ArrayList<>();
         while(source.hasNext()) {
             processed.add(source.next());
         }

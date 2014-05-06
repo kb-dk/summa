@@ -104,7 +104,7 @@ public class StorageTool {
         QueryOptions options = new QueryOptions();
         options.meta("ALLOW_PRIVATE", "true");
 
-        List<String> ids = new ArrayList<String>(argv.length - 1);
+        List<String> ids = new ArrayList<>(argv.length - 1);
         ids.addAll(Arrays.asList(argv).subList(1, argv.length));
 
         System.err.println("Getting record(s): " + Strings.join(ids, ", "));
@@ -138,7 +138,7 @@ public class StorageTool {
             return 1;
         }
 
-        List<String> ids = new ArrayList<String>(argv.length - 1);
+        List<String> ids = new ArrayList<>(argv.length - 1);
         ids.addAll(Arrays.asList(argv).subList(1, argv.length));
 
         System.err.println("Getting records " + Logs.expand(ids, 10) + "");

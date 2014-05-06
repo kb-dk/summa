@@ -203,7 +203,7 @@ public class InteractionAdjuster implements Configurable {
     private ManyToManyMapper defaultDocumentFields = null;
     private ManyToManyMapper defaultFacetFields = null;
     private List<TagAdjuster> tagAdjusters = null;
-    private Set<String> unsupportedFields = new HashSet<String>();
+    private Set<String> unsupportedFields = new HashSet<>();
     private Query unsupportedQuery = null;
     private final boolean enabled;
     private boolean adjustResponseFieldsEnabled;
@@ -247,7 +247,7 @@ public class InteractionAdjuster implements Configurable {
                         "Expected a list of sub configurations for key " + CONF_ADJUST_FACET_TAGS + " but the current "
                         + "Configuration does not support them", e);
             }
-            tagAdjusters = new ArrayList<TagAdjuster>(taConfs.size());
+            tagAdjusters = new ArrayList<>(taConfs.size());
             for (Configuration tagConf: taConfs) {
                 TagAdjuster tagAdjuster = new TagAdjuster(tagConf);
                 tagAdjuster.setID(id);
@@ -257,7 +257,7 @@ public class InteractionAdjuster implements Configurable {
         }
 
         if (conf.valueExists(CONF_ADJUST_UNSUPPORTED_FIELDS)){
-            unsupportedFields = new HashSet<String>(conf.getStrings(CONF_ADJUST_UNSUPPORTED_FIELDS));
+            unsupportedFields = new HashSet<>(conf.getStrings(CONF_ADJUST_UNSUPPORTED_FIELDS));
             String unsupportedQueryString = conf.getString(CONF_ADJUST_UNSUPPORTED_QUERY);
 
             String[] split = unsupportedQueryString.split(":");
@@ -522,7 +522,7 @@ public class InteractionAdjuster implements Configurable {
             }
             if (map.getForward().containsKey(field)) {
                 if (newFields == null) {
-                    newFields = new HashSet<String>();
+                    newFields = new HashSet<>();
                 }
                 Set<String> s = map.getForward().get(field);
                 newFields.addAll(s);
@@ -588,7 +588,7 @@ public class InteractionAdjuster implements Configurable {
             }
         }
         if (newFields == null) {
-            newFields = new HashSet<String>(1);
+            newFields = new HashSet<>(1);
             newFields.add(field);
         }
 
@@ -603,14 +603,14 @@ public class InteractionAdjuster implements Configurable {
         }
         if (newTexts == null) {
             // No transformation
-            newTexts = new HashSet<String>(Arrays.asList(text));
+            newTexts = new HashSet<>(Arrays.asList(text));
         }
 
         List<Pair<String, String>> result =
-                new ArrayList<Pair<String, String>>();
+                new ArrayList<>();
         for (String newField: newFields) {
             for (String newText: newTexts) {
-                result.add(new Pair<String, String>(newField, newText));
+                result.add(new Pair<>(newField, newText));
             }
         }
 
@@ -638,7 +638,7 @@ public class InteractionAdjuster implements Configurable {
         log.trace("Adjusting fields in facet request");
         if (request.containsKey(FacetKeys.SEARCH_FACET_FACETS)) {
             List<String> facets = request.getStrings(FacetKeys.SEARCH_FACET_FACETS);
-            List<String> adjusted = new ArrayList<String>(facets.size() * 2);
+            List<String> adjusted = new ArrayList<>(facets.size() * 2);
             for (String facetString: facets) {
                 FacetStructure facet = new FacetStructure(facetString, -1, -1);
                 if (facet.getFields().length == 1 && facetFieldMap.getForward().containsKey(facet.getFields()[0])) {
@@ -779,7 +779,7 @@ public class InteractionAdjuster implements Configurable {
             }
         }
 
-        Map<String, String> reversedSimplified = new HashMap<String, String>(facetMap.getForward().size());
+        Map<String, String> reversedSimplified = new HashMap<>(facetMap.getForward().size());
         for (Map.Entry<String, Set<String>> entry:
                 facetMap.getReverse().entrySet()) {
             if (!entry.getValue().isEmpty()) {
@@ -807,7 +807,7 @@ public class InteractionAdjuster implements Configurable {
         }
         log.trace("Replacing document fields (" + docFieldMap.getForward().size() + " replacements)");
         for (DocumentResponse.Record record: documentResponse.getRecords()) {
-            List<DocumentResponse.Field> newFields = new ArrayList<DocumentResponse.Field>(record.getFields().size()*2);
+            List<DocumentResponse.Field> newFields = new ArrayList<>(record.getFields().size()*2);
             for (DocumentResponse.Field field: record.getFields()) {
                 if (docFieldMap.getReverse().containsKey(field.getName())) {
                     if (log.isTraceEnabled()) {

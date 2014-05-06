@@ -86,8 +86,8 @@ public class Core {
      */
     public Core(ShellContext shellCtx, final boolean withDefaultCommands, final boolean debug) {
         cliParser = new PosixParser();
-        commands = new HashMap<String, Command>();
-        aliases = new HashMap<String, String>();
+        commands = new HashMap<>();
+        aliases = new HashMap<>();
         lastTrace = null;
         header = "Summa Generic Shell v@summa.api.version@";
         prompt = "summa-shell> ";
@@ -256,7 +256,7 @@ public class Core {
      */
     public String[] tokenize(String in) {
         StringTokenizer tok = new StringTokenizer(in, "\"", true);
-        List<String> result = new ArrayList<String>(tok.countTokens());
+        List<String> result = new ArrayList<>(tok.countTokens());
 
         while (tok.hasMoreElements()) {
             String s = tok.nextToken();
@@ -376,7 +376,7 @@ public class Core {
      * Helper function, for printing the commands.
      */
     private void printCommands() {
-        SortedSet<String> sortedCommands = new TreeSet<String>(commands.keySet());
+        SortedSet<String> sortedCommands = new TreeSet<>(commands.keySet());
         for (String cmdName : sortedCommands) {
             Command cmd = commands.get(cmdName);
             shellCtx.info("\t" + cmd.getName() + "\t" + cmd.getDescription());

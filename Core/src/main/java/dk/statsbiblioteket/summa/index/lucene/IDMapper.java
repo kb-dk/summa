@@ -51,7 +51,7 @@ public class IDMapper implements Map<String, Integer> {
      */
     public IDMapper() {
         log.debug("Creating empty IDMapper");
-        recordIDs = new HashMap<String, Integer>(1000);
+        recordIDs = new HashMap<>(1000);
     }
 
     /**

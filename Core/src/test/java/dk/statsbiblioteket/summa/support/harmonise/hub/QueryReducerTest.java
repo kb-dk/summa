@@ -192,7 +192,7 @@ public class QueryReducerTest extends TestCase {
         Configuration defaultConf = reducerConf.createSubConfiguration(QueryReducer.CONF_TARGETS);
         defaultConf.set(QueryReducer.ReducerTarget.CONF_COMPONENT_ID, componentID);
         defaultConf.set(QueryReducer.ReducerTarget.CONF_MATCH_NONES,
-                        new ArrayList<String>(Arrays.asList("foo:bar", ":myterm", "myfield:")));
+                        new ArrayList<>(Arrays.asList("foo:bar", ":myterm", "myfield:")));
         return new QueryReducer(reducerConf);
     }
 

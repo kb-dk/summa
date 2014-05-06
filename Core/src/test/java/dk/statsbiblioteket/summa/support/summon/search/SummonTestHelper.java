@@ -74,6 +74,6 @@ public class SummonTestHelper {
             throw new RuntimeException("Unable to resolve summon credentials from " + SECRET);
         }
         log.debug("Loaded credentials from " + SECRET);
-        return new SimplePair<String, String>(id, key);
+        return new SimplePair<>(id, key);
     }
 }

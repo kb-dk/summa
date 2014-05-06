@@ -80,7 +80,7 @@ public abstract class StringPoolSuper extends TestCase {
         CollatorFactory.createCollator(new Locale("da"), true);
     protected static File poolDir = new File("target/test_result", "pooltest");
     private List<SortedPool<String>> pools =
-            new ArrayList<SortedPool<String>>(10);
+            new ArrayList<>(10);
     protected SortedPool<String> getPool() throws Exception {
         return getPool(pools.size());
     }

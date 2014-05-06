@@ -20,13 +20,12 @@ import dk.statsbiblioteket.util.Files;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * FileWatcher Tester.
@@ -170,7 +169,7 @@ public class FileWatcherTest extends TestCase {
                 getStream()).getFile();
     }
 
-    private List<Payload> received = new ArrayList<Payload>(10);
+    private List<Payload> received = new ArrayList<>(10);
     private boolean doRun = true;
     public class Poller extends Thread {
         private FileWatcher reader;

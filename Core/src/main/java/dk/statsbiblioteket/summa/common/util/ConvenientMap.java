@@ -256,7 +256,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
     public List<String> getStrings(String key) {
         Object val = get(key);
         if (val instanceof List) {
-            ArrayList<String> result = new ArrayList<String>(((List)val).size());
+            ArrayList<String> result = new ArrayList<>(((List)val).size());
             for (Object o: (List)val) {
                 result.add(o.toString());
             }
@@ -267,7 +267,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         }
         // Comma-separated
         String[] unescaped = getString(key).split(" *, *");
-        ArrayList<String> result = new ArrayList<String>(unescaped.length);
+        ArrayList<String> result = new ArrayList<>(unescaped.length);
         for (String s: unescaped) {
             //noinspection DuplicateStringLiteralInspection
             result.add(s.replaceAll("&comma;", ",").replaceAll("&amp;", "&"));
@@ -347,13 +347,13 @@ public class ConvenientMap extends HashMap<String, Serializable> {
             log.trace("intValues not stored directly for key '" + key + "'");
         }
         List<String> elements = getStrings(key);
-        List<Pair<String, Integer>> result = new ArrayList<Pair<String, Integer>>(elements.size());
+        List<Pair<String, Integer>> result = new ArrayList<>(elements.size());
         for (String element: elements) {
             Matcher numberMatcher = numberPattern.matcher(element);
             if (numberMatcher.matches()) {
-                result.add(new Pair<String, Integer>(numberMatcher.group(1), Integer.parseInt(numberMatcher.group(2))));
+                result.add(new Pair<>(numberMatcher.group(1), Integer.parseInt(numberMatcher.group(2))));
             } else {
-                result.add(new Pair<String, Integer>(element.trim(), defaultValue));
+                result.add(new Pair<>(element.trim(), defaultValue));
             }
         }
         return result;

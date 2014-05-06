@@ -118,7 +118,7 @@ public class SolrResponseBuilder implements Configurable {
     protected final String recordBase;
     protected final String searcherID;
     protected Map<String, String> sortRedirect;
-    protected Set<String> nonescapedFields = new HashSet<String>(10);
+    protected Set<String> nonescapedFields = new HashSet<>(10);
     protected IndexRequest defaultIndexRequest;
     protected final String idField;
     protected final String baseField;
@@ -130,7 +130,7 @@ public class SolrResponseBuilder implements Configurable {
         baseField = conf.getString(CONF_BASE_FIELD, DEFAULT_BASE_FIELD);
         searcherID = conf.getString(SearchNodeImpl.CONF_ID, recordBase);
         List<String> rules = conf.getStrings(CONF_SORT_FIELD_REDIRECT, new ArrayList<String>());
-        sortRedirect = new HashMap<String, String>(rules.size());
+        sortRedirect = new HashMap<>(rules.size());
         for (String rule: rules) {
             String[] tokens = rule.split(" *- *");
             if (tokens.length != 2) {
@@ -319,7 +319,7 @@ public class SolrResponseBuilder implements Configurable {
                 String content = xml.getElementText();
                 try {
                     int count = Integer.parseInt(content);
-                    lookups.addTerm(new Pair<String, Integer>(term, count));
+                    lookups.addTerm(new Pair<>(term, count));
                     log.trace("Added lookup " + term + "(" + count + ")");
                 } catch (NumberFormatException e) {
                     log.warn("Ignoring lookup '" + term + "' with un-parsable count '" + content);
@@ -473,9 +473,9 @@ public class SolrResponseBuilder implements Configurable {
     private void parseFacets(
         XMLStreamReader xml, SolrFacetRequest facets, ResponseCollection responses) throws XMLStreamException {
         long startTime = System.currentTimeMillis();
-        HashMap<String, Integer> facetIDs = new HashMap<String, Integer>(facets.getFacets().size());
+        HashMap<String, Integer> facetIDs = new HashMap<>(facets.getFacets().size());
         // 1 facet = 1 field in Solr-world
-        HashMap<String, String[]> fields = new HashMap<String, String[]>(facets.getFacets().size());
+        HashMap<String, String[]> fields = new HashMap<>(facets.getFacets().size());
         for (int i = 0 ; i < facets.getFacets().size() ; i++) {
             SolrFacetRequest.Facet facet = facets.getFacets().get(i);
             facetIDs.put(facet.getField(), i);
@@ -648,7 +648,7 @@ public class SolrResponseBuilder implements Configurable {
             float score = 0.0f;
             String id = null;
             String base = null;
-            List<SimplePair<String, String>> fields = new ArrayList<SimplePair<String, String>>(100);
+            List<SimplePair<String, String>> fields = new ArrayList<>(100);
             String lastArrName = null; // For <arr name="foo"><str>term1</str><str>term1</str></arr> structures
 
             @Override
@@ -692,7 +692,7 @@ public class SolrResponseBuilder implements Configurable {
                 } else if (baseField.equals(name)) {
                     base = content;
                 }
-                fields.add(new SimplePair<String, String>(name, content));
+                fields.add(new SimplePair<>(name, content));
                 return true;
             }
 
@@ -703,11 +703,11 @@ public class SolrResponseBuilder implements Configurable {
                     id = "not_defined_in_" + idField;
                 }
                 if (!IndexUtils.RECORD_FIELD.equals(idField)) {
-                    fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_ID, id));
+                    fields.add(new SimplePair<>(DocumentKeys.RECORD_ID, id));
                 }
                 // Add base if it does not exist or was collected using another name
                 if (base == null && recordBase != null || base != null && !IndexUtils.RECORD_BASE.equals(baseField)) {
-                    fields.add(new SimplePair<String, String>(DocumentKeys.RECORD_BASE, base));
+                    fields.add(new SimplePair<>(DocumentKeys.RECORD_BASE, base));
                 }
                 // TODO: Cons
                 String sortValue = null;
@@ -807,7 +807,7 @@ public class SolrResponseBuilder implements Configurable {
     }
 
     public void setNonescapedFields(Set<String> nonescapedFields) {
-        this.nonescapedFields = new HashSet<String>(nonescapedFields);
+        this.nonescapedFields = new HashSet<>(nonescapedFields);
         log.debug("setNonescapedFields(" + Strings.join(nonescapedFields, ", ") + ")");
     }
 

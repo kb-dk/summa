@@ -313,7 +313,7 @@ public class RepositoryManager implements Configurable,
             return repo.list(".*");
         } catch (IOException e) {
             log.warn("Error getting bundle list", e);
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 

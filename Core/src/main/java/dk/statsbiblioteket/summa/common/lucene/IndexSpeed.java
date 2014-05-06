@@ -89,7 +89,7 @@ public class IndexSpeed {
             System.exit(-1);
         }
 
-        List<String> arguments = new LinkedList<String>(Arrays.asList(args));
+        List<String> arguments = new LinkedList<>(Arrays.asList(args));
         while (!arguments.isEmpty()) {
             String next = arguments.remove(0);
             if ("-m".equals(next)) {
@@ -299,7 +299,7 @@ public class IndexSpeed {
             writer.setMaxBufferedDocs(1);
         }*/
 
-        List<SpeedThread> threadList = new ArrayList<SpeedThread>(threads);
+        List<SpeedThread> threadList = new ArrayList<>(threads);
         profiler = new Profiler();
         profiler.setExpectedTotal(maxdocs);
         profiler.setBpsSpan(feedbackInterval);

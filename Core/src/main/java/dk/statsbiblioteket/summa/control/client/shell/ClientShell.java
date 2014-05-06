@@ -86,12 +86,12 @@ public class ClientShell {
          * a client connection via the control server 
          */
         if (target.startsWith("//")) {
-            connFact = new GenericConnectionFactory<ClientConnection>(conf);
+            connFact = new GenericConnectionFactory<>(conf);
         } else {
             connFact = new ClientConnectionFactory(conf, null);
         }
 
-        connManager = new ConnectionManager<ClientConnection>(connFact);
+        connManager = new ConnectionManager<>(connFact);
 
         shell.getShellContext().info("Looking up client '" + target + "'");
         ConnectionContext<ClientConnection> ctx = connManager.get(target);
@@ -154,7 +154,7 @@ public class ClientShell {
                                                  ShellContext ctx)
                                                             throws IOException {
         ConnectionFactory<ControlConnection> connFact =
-                         new GenericConnectionFactory<ControlConnection>(conf);
+                         new GenericConnectionFactory<>(conf);
         String controlAddress =
                            conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
                                           "//localhost:27000/summa-control");

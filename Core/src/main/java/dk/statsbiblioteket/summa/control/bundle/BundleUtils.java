@@ -14,24 +14,23 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Streams;
-
-import java.io.IOException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Arrays;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipEntry;
-
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Helpful functions when dealing with {@link BundleRepository}s.
@@ -70,7 +69,7 @@ public class BundleUtils {
             codeBase = "";
         }
 
-        Set<String> codeSet = new TreeSet<String>(
+        Set<String> codeSet = new TreeSet<>(
                                             Arrays.asList(codeBase.split(" ")));
 
         for (String jar : jarNames) {

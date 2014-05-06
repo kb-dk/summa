@@ -72,7 +72,7 @@ public class FilterSequence implements ObjectFilter {
     public static final String CONF_FILTER_ENABLED = "filter.enabled";
     public static final boolean DEFAULT_FILTER_ENABLED = true;
 
-    private ArrayList<ObjectFilter> filters = new ArrayList<ObjectFilter>(10);
+    private ArrayList<ObjectFilter> filters = new ArrayList<>(10);
     private ObjectFilter lastFilter = null;
 
     public FilterSequence(Configuration conf) throws IOException {

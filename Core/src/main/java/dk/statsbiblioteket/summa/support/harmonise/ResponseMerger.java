@@ -185,7 +185,7 @@ public class ResponseMerger implements Configurable {
 
     private MODE defaultMode = DEFAULT_MODE;
     private POST defaultPost = DEFAULT_POST;
-    private List<String> defaultOrder = new ArrayList<String>();
+    private List<String> defaultOrder = new ArrayList<>();
     private int defaultForceTopX = DEFAULT_FORCE_TOPX;
     private List<Pair<String, Integer>> defaultForceRules = null;
     private boolean sequential = DEFAULT_SEQUENTIAL;
@@ -211,7 +211,7 @@ public class ResponseMerger implements Configurable {
         /* Merged hitcount and time. The only DocumentResponse in the wrapper */
         private DocumentResponse base = null;
         /* All records from the DocumentResponses, held until externalise */
-        private List<AdjustRecord> records = new ArrayList<AdjustRecord>();
+        private List<AdjustRecord> records = new ArrayList<>();
 
         /* Merge everything into the ResponseCollection. This class should not
          be used further after this call.
@@ -226,7 +226,7 @@ public class ResponseMerger implements Configurable {
                 }
                 return merged;
             }
-            ArrayList<DocumentResponse.Record> docR = new ArrayList<DocumentResponse.Record>(records.size());
+            ArrayList<DocumentResponse.Record> docR = new ArrayList<>(records.size());
             for (AdjustRecord adjR: records) {
                 docR.add(adjR.getRecord());
             }
@@ -350,7 +350,7 @@ public class ResponseMerger implements Configurable {
         log.trace("Sorting by interleaving");
         // (searchID, records*)*
         Map<String, List<AdjustWrapper.AdjustRecord>> providers =
-                new LinkedHashMap<String, List<AdjustWrapper.AdjustRecord>>();
+                new LinkedHashMap<>();
         for (String o: order) { // Ordered first
             providers.put(o, new ArrayList<AdjustWrapper.AdjustRecord>());
         }
@@ -361,7 +361,7 @@ public class ResponseMerger implements Configurable {
             providers.get(ar.getSearcherID()).add(ar);
         }
         // providers now contains ordered lists of records split by search ID
-        List<AdjustWrapper.AdjustRecord> interleaved = new ArrayList<AdjustWrapper.AdjustRecord>();
+        List<AdjustWrapper.AdjustRecord> interleaved = new ArrayList<>();
         boolean any = true;
         while (any) {
             any = false;
@@ -426,7 +426,7 @@ public class ResponseMerger implements Configurable {
 
     private AdjustWrapper deconstruct(List<SummaSearcherAggregator.ResponseHolder> responses) {
         AdjustWrapper aw = new AdjustWrapper();
-        List<AdjustWrapper.AdjustRecord> adjustRecords = new ArrayList<AdjustWrapper.AdjustRecord>();
+        List<AdjustWrapper.AdjustRecord> adjustRecords = new ArrayList<>();
         for (SummaSearcherAggregator.ResponseHolder response: responses) {
             if (!"".equals(response.getResponses().getTopLevelTiming())) {
                 aw.getMerged().addTiming(response.getResponses(). getTopLevelTiming());
@@ -536,7 +536,7 @@ public class ResponseMerger implements Configurable {
         }
 
         // Extract the needed records from the non-showing entries
-        List<AdjustWrapper.AdjustRecord> promotees = new ArrayList<AdjustWrapper.AdjustRecord>(required);
+        List<AdjustWrapper.AdjustRecord> promotees = new ArrayList<>(required);
         int position = firstInsertPos;
         while (position >= 0 && position < records.size() && promotees.size() < needed) {
             if (searchID.equals(records.get(position).getSearcherID())) {
@@ -550,14 +550,14 @@ public class ResponseMerger implements Configurable {
         // We want the order to be the same between searches so we seed
         // by hashing query
         Random random = new Random(request.getString(DocumentKeys.SEARCH_QUERY, "N/A").hashCode() << 12);
-        List<Boolean> insertionPoints = new ArrayList<Boolean>(topX);
+        List<Boolean> insertionPoints = new ArrayList<>(topX);
         for (int i = firstInsertPos ; i < topX ; i++) {
             insertionPoints.add(i-firstInsertPos < needed);
         }
         Collections.shuffle(insertionPoints, random);
 
         // Insert!
-        List<AdjustWrapper.AdjustRecord> result = new ArrayList<AdjustWrapper.AdjustRecord>(records.size() + promotees.size());
+        List<AdjustWrapper.AdjustRecord> result = new ArrayList<>(records.size() + promotees.size());
         for (int i = 0 ; i < topX ; i++) {
             if (i >= firstInsertPos && insertionPoints.get(i-firstInsertPos) && !promotees.isEmpty()) {
                 result.add(promotees.remove(0));
@@ -576,7 +576,7 @@ public class ResponseMerger implements Configurable {
             log.trace("parseForceRules found no rules in '" + s + "'");
             return null;
         }
-        List<Pair<String, Integer>> rules = new ArrayList<Pair<String, Integer>>(ruleTokens.length);
+        List<Pair<String, Integer>> rules = new ArrayList<>(ruleTokens.length);
         for (String ruleToken: ruleTokens) {
             // zoo(12)
             String[] subTokens = ruleToken.split(" *\\(", 2);

@@ -201,7 +201,7 @@ public class URLRepository implements BundleRepository {
     public List<String> listDir(String regex) throws IOException {
         File baseDir = Resolver.urlToFile(new URL(baseUrl));
         Pattern pat = Pattern.compile(regex);
-        List<String> result = new ArrayList<String>(10);
+        List<String> result = new ArrayList<>(10);
 
         for (String bdl : baseDir.list()) {
             if (!bdl.endsWith(".bundle")) {
@@ -236,7 +236,7 @@ public class URLRepository implements BundleRepository {
         String[] bundles = bundleList.split("\\s");
 
         Pattern pat = Pattern.compile(regex);
-        List<String> result = new ArrayList<String>(10);
+        List<String> result = new ArrayList<>(10);
 
         for (String bdl : bundles) {
             if (!bdl.endsWith(".bundle")) {

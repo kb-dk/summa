@@ -544,7 +544,7 @@ public class ArchiveReaderTest extends TestCase {
         conf.set(ArchiveReader.CONF_COMPLETED_POSTFIX, ".finito");
         ArchiveReader reader = new ArchiveReader(conf);
 
-        ArrayList<String> actual = new ArrayList<String>();
+        ArrayList<String> actual = new ArrayList<>();
         while (reader.hasNext()) {
             Payload payload = reader.next();
             actual.add(new File((String) payload.getData(Payload.ORIGIN)).getName());

@@ -49,8 +49,8 @@ public class DescriptorConverter {
     private boolean dumpHasSuggest = true;
     private boolean resetBoosts = false;
 
-    private Set<String> elements = new HashSet<String>(100);
-    private Set<String> aliasClash = new HashSet<String>(100);
+    private Set<String> elements = new HashSet<>(100);
+    private Set<String> aliasClash = new HashSet<>(100);
 
     public String convert(File oldDescriptor)
             throws IOException, SAXException, ParserConfigurationException {
@@ -97,7 +97,7 @@ public class DescriptorConverter {
 
     private List<Node> getNamedChildren(Node node, String childNames) {
         NodeList childNodes = node.getChildNodes();
-        List<Node> children = new ArrayList<Node>(childNodes.getLength());
+        List<Node> children = new ArrayList<>(childNodes.getLength());
         for (int i = 0 ; i < childNodes.getLength() ; i++) {
             Node childNode = childNodes.item(i);
             if (childNames.equals(childNode.getLocalName())) {
