@@ -1120,7 +1120,7 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
     public static <T> T create(Class<T> configurable, Configuration conf) {
         Security.checkSecurityManager();
 
-        Constructor<T> con;
+        Constructor<T> con = null;
         try {
             con = configurable.getConstructor(Configuration.class);
             return con.newInstance(conf);
@@ -1129,12 +1129,10 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
                     "No constructor taking Configuration in %s. Creating object with empty constructor instead",
                     configurable.getSimpleName()));
             return createNonConfigurable(configurable);
-        } catch (IllegalAccessException e) {
-            throw new Configurable.ConfigurationException("Error creating new instance, illegal access", e);
-        } catch (InvocationTargetException e) {
-            throw new Configurable.ConfigurationException("Error creating new instance, invocation error", e);
-        } catch (InstantiationException e) {
-            throw new Configurable.ConfigurationException("Error creating new instance, instantiation error", e);
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            throw new Configurable.ConfigurationException(String.format(
+                    "Error creating new instance of class'%s' with constructor %s",
+                    configurable.getCanonicalName(), con), e);
         }
     }
 

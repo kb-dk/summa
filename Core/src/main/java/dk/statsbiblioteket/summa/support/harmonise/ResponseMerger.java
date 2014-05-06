@@ -589,7 +589,7 @@ public class ResponseMerger implements Configurable {
             String noParen = subTokens[1].split("\\)", 2)[0].trim();
             Integer count = Integer.parseInt(noParen);
             log.debug("parseForceRules adding rule " + subTokens[0] + ", " + count);
-            rules.add(new Pair<String, Integer>(subTokens[0], count));
+            rules.add(new Pair<>(subTokens[0], count));
         }
         return rules;
     }
