@@ -235,7 +235,11 @@ public class SummonSearchNodeTest extends TestCase {
                 "summon_chadwyckhealey_pio_511600010016", // Works with FETCH, not without
                 "summon_proquest_dll_74235477"            // Works without fetch, not with. Returns FETCH-proquest_dll_742354771
         );
-        final int EXPECTED = 2;
+        final List<String> EXPECTED_IDs = Arrays.asList(
+                "summon_DETCH-chadwyckhealey_pio_511600010016",
+                "summon_FETCH-proquest_dll_742354771"
+        );
+
 
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
@@ -244,15 +248,18 @@ public class SummonSearchNodeTest extends TestCase {
 
         Collections.sort(IDs);
         Collections.sort(idPairs);
-        assertEquals("The right number of ID pairs should be returned", EXPECTED, idPairs.size());
+        assertEquals("The right number of ID pairs should be returned", EXPECTED_IDs.size(), idPairs.size());
 
         for (int i = 0 ; i < IDs.size() ; i++) {
-            String expected = IDs.get(i);
+            String requested = IDs.get(i);
+            String expected = EXPECTED_IDs.get(i);
             String returned = idPairs.get(i).getKey();
             String originating = idPairs.get(i).getValue();
             String concat = String.format(
-                    "expected='%s', returned='%s', originating='%s'", expected, returned, originating);
-            assertEquals("The originating ID should be as expected. " + concat, expected, originating);
+                    "requested='%s', expected='%s', returned='%s', originating='%s'",
+                    requested, expected, returned, originating);
+            assertEquals("The originating ID should be as requested. " + concat, requested, originating);
+            assertEquals("The returned ID should be as expected. " + concat, requested, originating);
             log.info("IDs: " + concat);
         }
     }
