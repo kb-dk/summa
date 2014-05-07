@@ -198,6 +198,15 @@ public class SummonSearchNode extends SolrSearchNode {
 
 //    public static final String PING_URL = "http://api.summon.serialssolutions.com/2.0.0/search/ping";
 
+    /**
+     * summon seems to be migrating a lot of documents where the new ID is {@code <oldID>1}.
+     * When performing a lookup and this is true, it is assumed that {@code <id>1} refers to the same
+     * document as {@code <id>}.
+     */
+    public static final String CONF_ACCEPT_ONEPREFIX_IDS = "summon.idlookup.acceptoneprefix";
+    public static final boolean DEFAULT_ACCEPT_ONEPREFIX_IDS = true;
+
+
 
     private final String accessID;
     private final String accessKey;
@@ -206,6 +215,7 @@ public class SummonSearchNode extends SolrSearchNode {
     private final String nonMatchingFacet;
     private final TermQuery nonMatchingQuery;
     private final String pingRest;
+    private final boolean lookupAcceptOnePrefix;
 
     public SummonSearchNode(Configuration conf) throws RemoteException {
         super(legacyConvert(conf));
@@ -223,6 +233,7 @@ public class SummonSearchNode extends SolrSearchNode {
         pingRest = conf.getString(CONF_SUMMON_PING_REST, DEFAULT_SUMMON_PING_REST);
 //        boolean fixPublication = conf.getBoolean(CONF_FIX_RANGE_PUBLICATION, DEFAULT_FIX_RANGE_PUBLICATION);
         //readyWithoutOpen();  // Already handled in parent class
+        lookupAcceptOnePrefix = conf.getBoolean(CONF_ACCEPT_ONEPREFIX_IDS, DEFAULT_ACCEPT_ONEPREFIX_IDS);
         log.info(String.format("Created Summon wrapper (host=%s, sabotageDismax=%b)", host, sabotageDismax));
     }
 
@@ -456,24 +467,23 @@ public class SummonSearchNode extends SolrSearchNode {
         if (!request.containsKey(DocumentKeys.SEARCH_IDS)) {
             return true;
         }
+        final List<String> lookupIDs = request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>());
         if (request.getBoolean(LEAF_ID_REQUEST, false)) { // Everything is readied: Search & return
-            List<String> lookupIDs = request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>());
             log.debug("handleDocIDs: Adding " + CONF_SOLR_PARAM_PREFIX + "s.fids to the Summon request with "
                       + lookupIDs.size() + " document IDs");
-            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(lookupIDs));
+            request.put(CONF_SOLR_PARAM_PREFIX + "s.fids", Strings.join(normalizeIDs(lookupIDs)));
             request.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
             return true;
         }
 
         // Fresh request for documents based on ID
-        List<String> allIDs = extractSummonIDs(request.getStrings(DocumentKeys.SEARCH_IDS, new ArrayList<String>()));
-        List<String> summonIDs = normalizeIDs(allIDs);
+        List<String> summonIDs = extractSummonIDs(lookupIDs);
         if (summonIDs.isEmpty()) {
             log.debug("handleDocIDs: No summon IDs in request. Exiting");
             return false;
         }
         if (log.isDebugEnabled()) {
-            log.debug("handleDocIDs called with " + allIDs.size() + " IDs, pruned to summon-IDs: "
+            log.debug("handleDocIDs called with " + lookupIDs.size() + " IDs, pruned to summon-IDs: "
                       + Strings.join(summonIDs, 10));
         }
         //if (summonIDs.size() > SUMMON_MAX_IDS) {
@@ -497,12 +507,12 @@ public class SummonSearchNode extends SolrSearchNode {
                 sub = notProcessed;
             }
             ResponseCollection subResponses = new ResponseCollection();
-            Request subReques = new Request();
-            subReques.put(LEAF_ID_REQUEST, true);
-            subReques.putAll(request);
-            subReques.put(DocumentKeys.SEARCH_IDS, sub);
-            subReques.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
-            barrierSearch(subReques, subResponses);
+            Request subRequess = new Request();
+            subRequess.put(LEAF_ID_REQUEST, true);
+            subRequess.putAll(request);
+            subRequess.put(DocumentKeys.SEARCH_IDS, sub);
+            subRequess.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
+            barrierSearch(subRequess, subResponses);
             cleanupDocIDResponse(sub, subResponses, nonResolved);
             rawResponses.add(subResponses);
             if (sub != notProcessed) { // More to come
@@ -561,27 +571,25 @@ public class SummonSearchNode extends SolrSearchNode {
         long startTime = System.currentTimeMillis();
         if (recordIDs.isEmpty()) {
             log.trace("singleStepIDLookup: No IDs to resolve");
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         List<String> missing = new ArrayList<>(recordIDs.size());
-        for (String id: recordIDs) {
-            final String oID = id;
-            id = id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id;
-            if (singleIDSearch(responses, id)) {
+        for (final String id: recordIDs) { // FETCH_<id>
+            if (singleIDSearch(responses, id, incl(id))) {
                 continue;
             }
             synchronized (this) {
                 try {
                     this.wait(SUMMON_ID_SEARCH_WAIT);
                 } catch (InterruptedException e) {
-                    log.debug("singleStepIDLookup: Interrupted while waiting 1. Not a problem as it was just a delay");
+                    log.debug("singleStepIDLookup: Interrupted while waiting. Not a problem as it was just a delay to "
+                              + "guard against the summon request throughput limiter");
                 }
             }
-            id = id.replace(SUMMON_ID_PREFIX, "");
-            if (singleIDSearch(responses, id)) {
+            if (singleIDSearch(responses, id, sans(id))) { // <id>
                 continue;
             }
-            missing.add(oID);
+            missing.add(id);
             synchronized (this) {
                 try {
                     this.wait(SUMMON_ID_SEARCH_WAIT);
@@ -596,7 +604,8 @@ public class SummonSearchNode extends SolrSearchNode {
         return missing;
     }
 
-    private boolean singleIDSearch(List<ResponseCollection> responses, String id) throws RemoteException {
+    private boolean singleIDSearch(List<ResponseCollection> responses, String originalID, String id)
+            throws RemoteException {
         Request singleRequest = new Request();
         ResponseCollection singleResponses = new ResponseCollection();
         singleRequest.put(LEAF_ID_REQUEST, true);
@@ -606,14 +615,14 @@ public class SummonSearchNode extends SolrSearchNode {
         if (countRecords(singleResponses) == 0) {
             return false;
         }
-        fixID(singleResponses, id);
+        fixID(singleResponses, originalID, id);
         if (countRecords(singleResponses) > 0) {
             responses.add(singleResponses);
         }
         return true;
     }
 
-    private void fixID(ResponseCollection responses, String id) {
+    private void fixID(ResponseCollection responses, String originalID, String id) {
         for (Response r: responses) {
             if (r instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)r;
@@ -623,41 +632,122 @@ public class SummonSearchNode extends SolrSearchNode {
                     }
                     log.debug("fixID: Explicit search for recordID:\"" + id + "\" resulted in ID '" + record.getId()
                               + "'");
-                    record.addField(new DocumentResponse.Field(ORIGINAL_LOOKUP_ID, id, true));
+                    record.addField(new DocumentResponse.Field(ORIGINAL_LOOKUP_ID, originalID, true));
                 }
             }
         }
     }
 
     // Remove documents with an ID not requested and update nonResolved with unmatched IDs from the request
+
+    /**
+     * Iterates the requestedIDs and locates the documents matching. The {@link #ORIGINAL_LOOKUP_ID} is set for those
+     * documents and all non-matching documents are removed. All non-resolved IDs are copied to nonResolved.
+     * @param requestedIDs the IDs to match to documents.
+     * @param responses    summon response with documents.
+     * @param nonResolved  all IDs that could not be matched to documents are added to this.
+     */
     private void cleanupDocIDResponse(
-            ArrayList<String> requested, ResponseCollection responses, Set<String> nonResolved) {
-        Set<String> reqs = new HashSet<>(requested);
+            ArrayList<String> requestedIDs, ResponseCollection responses, Set<String> nonResolved) {
+        DocumentResponse docs = null;
+        List<DocumentResponse.Record> nonMatchedRecords = null;
         for (Response r: responses) {
             if (r instanceof DocumentResponse) {
-                DocumentResponse docs = (DocumentResponse)r;
-                for (int rIndex = docs.getRecords().size()-1 ; rIndex >= 0 ; rIndex--) {
-                    final String cID = docs.getRecords().get(rIndex).getId();
-                    if (reqs.contains(sans(cID)) || reqs.contains(incl(cID))) { // All OK, check the ID
-                        reqs.remove(sans(cID));
-                        reqs.remove(incl(cID));
-                    } else { // Not OK, must be a changed ID
-                        log.debug("cleanupDocIDResponse: Encountered unexpected ID '" + cID + "'. Discarding");
-                        docs.getRecords().remove(rIndex);
-                        docs.setHitCount(docs.getHitCount()-1);
-                    }
-                }
+                docs = (DocumentResponse)r;
+                nonMatchedRecords = new ArrayList<>(docs.getRecords());
+                break;
             }
         }
-        nonResolved.addAll(reqs);
+        if (docs == null) {
+            log.debug("cleanupDocIDResponse: No document response with records so no ID-cleaning");
+            return;
+        }
+        int nonResolvedCount = 0;
+
+        // Prepare quick check for existence of ID
+        final List<String> returnedVariants = new ArrayList<>();
+        for (DocumentResponse.Record record: nonMatchedRecords) {
+            addVariants(returnedVariants, record.getId());
+        }
+        final Set<String> quickCheck = new HashSet<>(returnedVariants);
+        final List<String> requestIDVariants = new ArrayList<>();
+
+        // Iterate requested IDs
+        requestedLoop:
+        for (String requestID: requestedIDs) {
+            String sansPrefix = removePrefix(requestID);
+            if (!quickCheck.contains(sansPrefix)) { // No matching record
+                nonResolved.add(requestID);
+                nonResolvedCount++;
+                continue;
+            }
+            // Matching record present. Find it and process it
+            requestIDVariants.clear();
+            addVariants(requestIDVariants, requestID);
+            for (int foundIndex = nonMatchedRecords.size()-1 ; foundIndex >= 0 ; foundIndex--) {
+                final String returnedID = removePrefix(nonMatchedRecords.get(foundIndex).getId());
+                if (requestIDVariants.contains(returnedID)) { // Found the record
+                    nonMatchedRecords.get(foundIndex).addField(
+                            new DocumentResponse.Field(ORIGINAL_LOOKUP_ID, requestID, true));
+                    nonMatchedRecords.remove(foundIndex);
+                    continue requestedLoop;
+                }
+            }
+            log.warn(String.format(
+                    "cleanupDocIDResponse: Logic error: Matched requestID '%s' with sans-representation '%s' with "
+                    + "quick lookups (%s) but was unable to locate the ID in %d records",
+                    requestID, sansPrefix, Strings.join(quickCheck), nonMatchedRecords.size()));
+        }
+
+        // Remove non-matched Records from the search result
+        for (DocumentResponse.Record nonMatchedRecord: nonMatchedRecords) {
+            if (docs.getRecords().remove(nonMatchedRecord)) {
+                log.debug("cleanupDocIDResponse: Removed non-matching record " + nonMatchedRecord + " from result");
+                docs.setHitCount(docs.getHitCount()-1);
+            } else {
+                log.warn("cleanupDocIDResponse: Logic error: Attempted to remove non-matching record "
+                         + nonMatchedRecord + " from result but is was not present among the "
+                         + docs.getRecords().size() + " records");
+            }
+        }
+        if (nonResolvedCount == 0) {
+            log.debug("cleanupDocIDResponse: Resolved all " + requestedIDs.size() + " IDs with "
+                      + nonMatchedRecords.size() + " extra records left in the search result");
+        }
+    }
+
+    private String removePrefix(String requestID) {
+        return requestID.startsWith(idPrefix) ? requestID.substring(idPrefix.length()) : requestID;
+    }
+
+    // Adds all permutations of the docID that is seen as designating the same summon document, in order of priority
+    private void addVariants(List<String> variants, String docID) {
+        final String reduced = removePrefix(docID);
+        variants.add(reduced);
+        {
+            final String adjusted = sans(docID);
+            if (!reduced.equals(adjusted)) {
+                variants.add(adjusted);
+            }
+        }
+        {
+            final String adjusted = incl(docID);
+            if (!reduced.equals(adjusted)) {
+                variants.add(adjusted);
+            }
+        }
+        if (lookupAcceptOnePrefix) {
+            variants.add(sans(docID) + "1");
+            variants.add(incl(docID) + "1");
+        }
     }
 
     private String sans(String id) {
-        id = id.startsWith(idPrefix) ? id.substring(idPrefix.length()) : id;
+        id = removePrefix(id);
         return id.replace(SUMMON_ID_PREFIX, "");
     }
     private String incl(String id) {
-        id = id.startsWith(idPrefix) ? id.substring(idPrefix.length()) : id;
+        id = removePrefix(id);
         return id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id;
     }
 
@@ -692,7 +782,7 @@ public class SummonSearchNode extends SolrSearchNode {
     private List<String> normalizeIDs(final List<String> ids) {
         List<String> summonIDs = new ArrayList<>(ids.size());
         for (String id: ids) {
-            id = id.startsWith(idPrefix) ? id.substring(idPrefix.length()) : id;
+            id = removePrefix(id);
             summonIDs.add(id.startsWith(SUMMON_ID_PREFIX) ? id : SUMMON_ID_PREFIX + id);
         }
         return summonIDs;
