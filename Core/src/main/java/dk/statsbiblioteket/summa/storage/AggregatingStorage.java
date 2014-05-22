@@ -696,7 +696,6 @@ public class AggregatingStorage extends StorageBase {
             log.trace("getRecords(" + Logs.expand(ids, logExpands) + ", " + options + ")");
         }
 
-        List<Record> result = new ArrayList<>(ids.size());
         List<SimplePair<StorageReaderClient, List<String>>> batches = new ArrayList<>(recordGetters.size());
         List<String> unassigned = new ArrayList<>(ids);
         for (SimplePair<Pattern, StorageReaderClient> getter : recordGetters) {
@@ -713,25 +712,43 @@ public class AggregatingStorage extends StorageBase {
             }
             batches.add(new SimplePair<>(getter.getValue(), assigned));
         }
-        // Records in unassigned never found a fitting StorageReaderClient, so we assign to all SRCs without a pattern
-        boolean nullFound = false;
-        for (int i = 0; i < recordGetters.size(); i++) {
-            if (recordGetters.get(i).getKey() == null) {
-                batches.get(i).getValue().addAll(unassigned);
-                nullFound = true;
+
+        if (!unassigned.isEmpty()) {
+            // Records in unassigned never found a fitting StorageReader, so we assign to all SRCs without a pattern
+            boolean nullFound = false;
+            for (int i = 0; i < recordGetters.size(); i++) {
+                if (recordGetters.get(i).getKey() == null) {
+                    batches.get(i).getValue().addAll(unassigned);
+                    nullFound = true;
+                }
+            }
+            if (!nullFound) {
+                log.warn("Unable to find any Storages to query for " + unassigned.size() + " Records with IDs "
+                         + Strings.join(unassigned, ", "));
             }
         }
-        if (!nullFound) {
-            log.warn("Unable to find any Storages to query for " + unassigned.size() + " Records with IDs "
-                     + Strings.join(unassigned, ", "));
-        }
+
         // FIXME: This should be parallized
+        List<Record> result = new ArrayList<>(ids.size());
         log.trace("getRecords: Resolved all StorageReaderClients (" + unassigned.size() + " IDs did not have explicit "
                   + "pattern match). Executing sequential requests for records");
-        for (SimplePair<StorageReaderClient, List<String>> batch : batches) {
+        for (int i = 0; i < batches.size(); i++) {
+            SimplePair<StorageReaderClient, List<String>> batch = batches.get(i);
             if (!batch.getValue().isEmpty()) {
                 List<Record> recs = batch.getKey().getRecords(batch.getValue(), options);
+                pruneNull(recs); // It is worrying that we need to do this
                 result.addAll(recs);
+
+                // Remove resolved IDs from storages ahead in the queue
+                for (Record rec: recs) {
+                    for (int j = i+1 ; j < batches.size() ; j++) {
+                        try {
+                        batches.get(j).getValue().remove(rec.getId());
+                        } catch (NullPointerException e) {
+                            System.out.println("Breakpoint!");
+                        }
+                    }
+                }
             }
         }
         profiler.beat();
@@ -742,6 +759,14 @@ public class AggregatingStorage extends StorageBase {
         log.debug(message);
         recordlog.info(message);
         return result;
+    }
+
+    private void pruneNull(List<Record> recs) {
+        for (int i = recs.size()-1 ; i >= 0 ; i--) {
+            if (recs.get(i) == null) {
+                recs.remove(i);
+            }
+        }
     }
 
     /**

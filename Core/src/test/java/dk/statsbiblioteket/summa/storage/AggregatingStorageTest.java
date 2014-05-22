@@ -24,6 +24,9 @@ import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.Serializable;
@@ -31,17 +34,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-/**
- * Test {@link AggregatingStorage}.
- */
 public class AggregatingStorageTest extends TestCase {
-    /** Local log class. */
     private Log log = LogFactory.getLog(AggregatingStorageTest.class);
+
     /** Storage communication port. */
     private static final int PORT = 29000;
     static int test_db_counter = 0;
@@ -66,8 +61,7 @@ public class AggregatingStorageTest extends TestCase {
         conf = new Configuration(new XStorage(false));
         conf.set(Storage.CONF_CLASS, AggregatingStorage.class);
 
-        storageConfs =
-          conf.createSubConfigurations(AggregatingStorage.CONF_SUB_STORAGES, 2);
+        storageConfs = conf.createSubConfigurations(AggregatingStorage.CONF_SUB_STORAGES, 2);
 
         /* Clean up old databases */
         String db1 = test_db_1 + test_db_counter;
@@ -87,33 +81,25 @@ public class AggregatingStorageTest extends TestCase {
 
         /* SUB 1 */
         subConf1 = storageConfs.get(0);
-        subConf1.set(
-                AggregatingStorage.CONF_SUB_STORAGE_BASES,
-                (Serializable) Arrays.asList(base1, base2));
-        subConf1.set(ConnectionConsumer.CONF_RPC_TARGET,
-                     "//localhost:29000/summa-storage-sub1");
-        storageConf1 = subConf1.createSubConfiguration(
-                                    AggregatingStorage.CONF_SUB_STORAGE_CONFIG);
+        subConf1.set(AggregatingStorage.CONF_SUB_STORAGE_BASES, (Serializable) Arrays.asList(base1, base2));
+        subConf1.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:29000/summa-storage-sub1");
+        storageConf1 = subConf1.createSubConfiguration(AggregatingStorage.CONF_SUB_STORAGE_CONFIG);
         storageConf1.set(Storage.CONF_CLASS, RMIStorageProxy.class);
         storageConf1.set(DatabaseStorage.CONF_LOCATION, db1);
         storageConf1.set(RMIStorageProxy.CONF_REGISTRY_PORT, PORT);
-        storageConf1.set(RMIStorageProxy.CONF_SERVICE_NAME,
-                         "summa-storage-sub1");
+        storageConf1.set(RMIStorageProxy.CONF_SERVICE_NAME, "summa-storage-sub1");
         storageConf1.set(DatabaseStorage.CONF_FORCENEW, true);
 
         /* SUB 2 */
         subConf2 = storageConfs.get(1);
         subConf2.set(AggregatingStorage.CONF_SUB_STORAGE_BASES,
                      (Serializable) Arrays.asList(base3));
-        subConf2.set(ConnectionConsumer.CONF_RPC_TARGET,
-                     "//localhost:29000/summa-storage-sub2");
-        storageConf2 = subConf2.createSubConfiguration(
-                                    AggregatingStorage.CONF_SUB_STORAGE_CONFIG);
+        subConf2.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:29000/summa-storage-sub2");
+        storageConf2 = subConf2.createSubConfiguration(AggregatingStorage.CONF_SUB_STORAGE_CONFIG);
         storageConf2.set(Storage.CONF_CLASS, RMIStorageProxy.class);
         storageConf2.set(DatabaseStorage.CONF_LOCATION, db2);
         storageConf2.set(RMIStorageProxy.CONF_REGISTRY_PORT, PORT);
-        storageConf2.set(RMIStorageProxy.CONF_SERVICE_NAME,
-                         "summa-storage-sub2");
+        storageConf2.set(RMIStorageProxy.CONF_SERVICE_NAME, "summa-storage-sub2");
         storageConf2.set(DatabaseStorage.CONF_FORCENEW, true);
 
         /* Create the aggregating storage and child storages */
@@ -204,8 +190,7 @@ public class AggregatingStorageTest extends TestCase {
         }
 
         if (actual != expected) {
-            fail("Base '" + base + "' should contain " + expected
-                 + " records, but found " + actual);
+            fail("Base '" + base + "' should contain " + expected + " records, but found " + actual);
         }
     }
 }
