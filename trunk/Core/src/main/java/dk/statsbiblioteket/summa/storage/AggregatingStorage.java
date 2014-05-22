@@ -742,11 +742,7 @@ public class AggregatingStorage extends StorageBase {
                 // Remove resolved IDs from storages ahead in the queue
                 for (Record rec: recs) {
                     for (int j = i+1 ; j < batches.size() ; j++) {
-                        try {
                         batches.get(j).getValue().remove(rec.getId());
-                        } catch (NullPointerException e) {
-                            System.out.println("Breakpoint!");
-                        }
                     }
                 }
             }

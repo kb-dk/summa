@@ -18,6 +18,9 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+import org.apache.hadoop.hdfs.DFSClient;
+
+import java.io.File;
 
 /* Not really a test, more of a debug tool */
 
@@ -49,5 +52,27 @@ public class StorageWSTest extends TestCase {
         );
         StorageWS storage = new StorageWS();
         System.out.println(storage.getRecord(ID).replace(">", ">\n"));
+    }
+
+    public void testSpecificLocal() {
+        final String CONF = "/home/te/tmp/records/storagews_aulhub_conf.xml";
+        final String[] IDS = new String[]{
+                "etss_ssj0000401761",
+                "doms_radioTVCollection:uuid:4fc889eb-8b5d-4832-95d1-4fe5825c424d"
+        };
+
+        if (!new File(CONF).exists()) {
+            return;
+        }
+
+        System.setProperty(StorageWS.CONFIGURATION_LOCATION, CONF);
+        StorageWS storage = new StorageWS();
+
+        for (String id: IDS) {
+            String response = storage.getRecords(new String[]{id});
+            assertNotNull("There should be a response for Record ID '" + id + "'", response);
+            assertTrue("The response should contain a Record with ID '" + id + "'\n" + response,
+                       response.contains(id));
+        }
     }
 }

@@ -48,7 +48,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 @WebService
 public class StorageWS implements ServletContextListener {
     /** Context or property key for the location of the configuration for this webservice. */
-    private static final String CONFIGURATION_LOCATION = "StorageWS_config";
+    public static final String CONFIGURATION_LOCATION = "StorageWS_config";
 
     /**
      * Logger for StorageWS.
