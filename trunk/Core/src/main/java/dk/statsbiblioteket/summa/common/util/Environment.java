@@ -240,7 +240,12 @@ public class Environment {
 
         @Override
         public void run(){
-            log.info("JVM shutdown detected");
+            try {
+                log.info("JVM shutdown detected");
+            } catch (NullPointerException ne) {
+                // Ignore as this means we're shutting down
+            }
+
         }
     }
 }

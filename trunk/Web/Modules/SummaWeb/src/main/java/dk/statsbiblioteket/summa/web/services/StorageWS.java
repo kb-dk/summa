@@ -365,9 +365,9 @@ public class StorageWS implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         if (!(storage instanceof WritableStorage)) {
-            log.debug("Storage is not Writable and will not be shut down");
+            log.debug("contextDestroyed: Storage is not Writable and will not be shut down");
         }
-        log.info("Shutting down " + storage);
+        log.info("contextDestroyed: Shutting down " + storage);
         try {
             ((WritableStorage)storage).close();
         } catch (IOException e) {

@@ -1053,6 +1053,7 @@ public class SearchWS implements ServletContextListener {
     }
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        log.info("contextDestroyed called: Shutting down");
         shutdown(searcher);
         shutdown(suggester);
     }
