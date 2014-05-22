@@ -235,6 +235,7 @@ public class Alto {
         return count;
     }
 
+
     /**
      * Calculate the minimum box containing all elements.
      * @param elements the elements that must be inside the box.
@@ -296,7 +297,6 @@ public class Alto {
             }
             return result;
         }
-
     }
 
     // <TextBlock ID="TB_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="128">
@@ -455,7 +455,7 @@ public class Alto {
             super(Integer.parseInt(XMLStepper.getAttribute(xml, "HPOS", "-1")),
                   Integer.parseInt(XMLStepper.getAttribute(xml, "VPOS", "-1")),
                   Integer.parseInt(XMLStepper.getAttribute(xml, "WIDTH", "-1")),
-                  Integer.parseInt(XMLStepper.getAttribute(xml, "HEIGHT", "-1")));
+                  Integer.parseInt(XMLStepper.getAttribute(xml, "HEIGHT", "-1")), 1, 1); // TODO: Implement this (1, 1) is wrong
             id = XMLStepper.getAttribute(xml, "ID", null);
             idNext = XMLStepper.getAttribute(xml, "IDNEXT", null);
         }
@@ -478,12 +478,24 @@ public class Alto {
         protected final int vpos;
         protected final int width;
         protected final int height;
-
+        protected final double scaleH;
+        protected final double scaleV;
+        
+        public Box(int hpos, int vpos, int width, int height, double scaleH, double scaleV) {
+            this.hpos = hpos;
+            this.vpos = vpos;
+            this.width = width;
+            this.height = height;
+            this.scaleH = scaleH;
+            this.scaleV = scaleV;
+        }
         public Box(int hpos, int vpos, int width, int height) {
             this.hpos = hpos;
             this.vpos = vpos;
             this.width = width;
             this.height = height;
+            this.scaleH = 1.0;
+            this.scaleV = 1.0;
         }
         public int getHpos() {
             return hpos;
@@ -498,6 +510,34 @@ public class Alto {
             return height;
         }
 
+        /**
+         * @return horizontal position (x) as a fraction of the page width.
+         */
+        public double getHposFraction() {
+            return hpos*scaleH;
+        }
+
+        /**
+         * @return vertical position (y) as a fraction of the page height.
+         */
+        public double getVposFraction() {
+            return vpos*scaleV;
+        }
+        /**
+         * @return width as a fraction of the page width.
+         */
+        public double getWidthFraction() {
+            return width*scaleH;
+        }
+
+        /**
+         * @return height as a fraction of the page height.
+         */
+        public double getHeightFraction() {
+            return height*scaleV;
+        }
+
+        
         @Override
         public String toString() {
             return "Box(" + hpos + "," + vpos + " " + width + "x" + height + ")";
