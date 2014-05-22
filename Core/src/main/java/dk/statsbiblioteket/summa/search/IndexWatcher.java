@@ -143,10 +143,18 @@ public class IndexWatcher extends Observable<IndexListener> implements Configura
             try {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
-                log.warn("Received InterruptedException while sleeping between index-checks. Ignoring");
+                try  {
+                    log.warn("Received InterruptedException while sleeping between index-checks. Ignoring");
+                } catch (NullPointerException ne) {
+                    // Ignore as this means we're shutting down
+                }
             }
         }
-        log.debug("Stopping watch for index changes");
+        try {
+            log.debug("Stopping watch for index changes");
+        } catch (NullPointerException ne) {
+            // Ignore as this means we're shutting down
+        }
     }
 
     /**

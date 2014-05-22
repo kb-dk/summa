@@ -291,12 +291,12 @@ public class ResultSetCursor implements Cursor {
             r = db.scanRecord(resultSet, this);
 
         }
-        log.debug("Found allowed record (" + r.getId() + ", " + r.getBase() + ", " + r.isDeleted() + ", "
-                  + r.isIndexable());
+        log.trace("Found allowed record (" + r.getId() + ", " + r.getBase() + ", " + r.isDeleted() + ", "
+                  + r.isIndexable() + ")");
 
         // We don't need all information from a record.
         if (options.newRecordNeeded()) {
-            log.debug("Creating new record (" + r.getId() + ", " + r.getBase() + ", " + r.isDeleted() + ", "
+            log.trace("Creating new record (" + r.getId() + ", " + r.getBase() + ", " + r.isDeleted() + ", "
                       + r.isIndexable());
             return options.getNewRecord(r);
         }
