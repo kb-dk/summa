@@ -51,8 +51,7 @@ public class AltoHighlighter implements Configurable {
      * How measurementUnit are represented in the result.
      * </p><p>
      * Optional. Default is percent of width for {@code x} and {@code width} and percent of height for {@code y} and
-     * {@code height}. Valid values are {@link Alto.MEASUREMENT_UNIT}.
-     * </p>
+     * {@code height} for the full page. Valid values are {@link Alto.MEASUREMENT_UNIT}.
      */
     public static final String CONF_MEASUREMENT_UNIT = "altohighlighter.measurementunit";
     public static final String DEFAULT_MEASUREMENT_UNIT = Alto.MEASUREMENT_UNIT.percent.toString();
@@ -75,7 +74,14 @@ public class AltoHighlighter implements Configurable {
     public List<Box> getBoxes(String altoXML, String altoOrigin, String query)
             throws FileNotFoundException, XMLStreamException, ParseException {
         List<String> qTokens = getTokens(query);
-        List<Box> boxes = getBoxes(altoXML, altoOrigin);
+        List<Box> boxes = getBoxes(new Alto(altoXML, altoOrigin));
+        return intersectAndAssign(boxes, qTokens);
+    }
+
+    public List<Box> getBoxes(Alto alto, String query)
+            throws FileNotFoundException, XMLStreamException, ParseException {
+        List<String> qTokens = getTokens(query);
+        List<Box> boxes = getBoxes(alto);
         return intersectAndAssign(boxes, qTokens);
     }
 
@@ -112,8 +118,7 @@ public class AltoHighlighter implements Configurable {
         return intersection;
     }
 
-    protected List<Box> getBoxes(String altoXML, String altoOrigin) throws FileNotFoundException, XMLStreamException {
-        Alto alto = new Alto(altoXML, altoOrigin);
+    private List<Box> getBoxes(Alto alto) {
         List<Box> boxes = new ArrayList<>();
         if (alto.getLayout().size() > 1) {
             log.warn("The highlighter got " + alto.getLayout().size() + " pages but will only process the first one");
