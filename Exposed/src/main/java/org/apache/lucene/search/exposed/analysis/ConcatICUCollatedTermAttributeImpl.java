@@ -46,7 +46,7 @@ public class ConcatICUCollatedTermAttributeImpl extends CharTermAttributeImpl {
   private byte[] buffer = new byte[100];
 
   @Override
-  public int fillBytesRef() {
+  public void fillBytesRef() {
     // TODO: Use ExposedUtil instead
     final String str = toString();
     collator.getRawCollationKey(str, key);
@@ -67,7 +67,7 @@ public class ConcatICUCollatedTermAttributeImpl extends CharTermAttributeImpl {
     result.bytes = buffer;
     result.offset = 0;
     result.length = bufferSize;
-    return result.hashCode();
+//    return result.hashCode();
   }
 
   public static BytesRef getOriginalString(final BytesRef concat, BytesRef reuse) {

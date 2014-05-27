@@ -163,8 +163,7 @@ public class ChunkedLongArray {
   // left is the index of the leftmost element of the array
   // right is the index of the rightmost element of the array (inclusive)
   // number of elements in subarray = right-left+1
-  private int partition(
-      ChunkedLongArray src, int left, int right, int pivotIndex) {
+  private int partition(ChunkedLongArray src, int left, int right, int pivotIndex) {
     long pivotValue = src.get(pivotIndex);
     src.swap(pivotIndex, right);  // Move pivot to end
     int storeIndex = left;
