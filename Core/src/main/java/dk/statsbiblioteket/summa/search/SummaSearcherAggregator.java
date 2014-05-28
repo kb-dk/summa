@@ -352,7 +352,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
 
     private String getStats() {
         return "Stats(#queries=" + profiler.getBeats()
-               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
+               + ", q/s(last " + profiler.getBpsSpan() + ")=" + profiler.getBps(true);
     }
 
     @Override

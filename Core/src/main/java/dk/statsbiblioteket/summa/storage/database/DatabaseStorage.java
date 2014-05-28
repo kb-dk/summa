@@ -1911,7 +1911,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private String getRequestStats() {
         return "Stats(#getRecords=" + profiler.getBeats()
-               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
+               + ", q/s(last " + profiler.getBpsSpan() + ")=" + profiler.getBps(true);
     }
 
     private Record getRecordWithConnection(

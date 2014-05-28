@@ -138,7 +138,7 @@ public class AdjustingSearchClient extends SearchClient {
 
     private String getStats() {
         return "Stats(#queries=" + profiler.getBeats()
-               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
+               + ", q/s(last " + profiler.getBpsSpan() + ")=" + profiler.getBps(true);
     }
 
 }
