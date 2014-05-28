@@ -435,10 +435,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
 
     private String getRequestStats() {
         return "Stats(#getSuggests=" + profiler.getBeats()
-               + ", q/s(last " + profiler.getBpsSpan() + "=" + profiler.getBps(true) + ")";
+               + ", q/s(last " + profiler.getBpsSpan() + ")=" + profiler.getBps(true);
     }
     private String getUpdateStats() {
         return "Stats(#updates=" + uProfiler.getBeats()
-               + ", u/s(last " + uProfiler.getBpsSpan() + "=" + uProfiler.getBps(true) + ")";
+               + ", u/s(last " + uProfiler.getBpsSpan() + ")=" + uProfiler.getBps(true);
     }
 }
