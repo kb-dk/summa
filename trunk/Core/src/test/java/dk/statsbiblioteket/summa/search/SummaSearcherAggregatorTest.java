@@ -27,11 +27,12 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.search.*;
+import org.apache.lucene.util.InPlaceMergeSorter;
+import org.apache.lucene.util.PriorityQueue;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -80,9 +81,150 @@ public class SummaSearcherAggregatorTest extends TestCase {
         closeSearchers(searchers);
     }
 
+    public void testTopFieldCollectorPerformance() throws IOException {
+        final int[] TOPS = new int[]{
+                1_000_000, 10_000_000, 20_000_000, 40_000_000, 60_000_000};
+        final SortField[] FIELDS =
+                new SortField[]{SortField.FIELD_SCORE};
+
+        for (int top: TOPS) {
+            long collectAndSortTime = -System.nanoTime();
+            PriorityQueue<ScoreDoc> queue = new PriorityQueue<ScoreDoc>(top) {
+                @Override
+                protected ScoreDoc getSentinelObject() {
+                  // Always set the doc Id to MAX_VALUE so that it won't be favored by
+                  // lessThan. This generally should not happen since if score is not NEG_INF,
+                  // TopScoreDocCollector will always add the object to the queue.
+                  return new ScoreDoc(Integer.MAX_VALUE, Float.NEGATIVE_INFINITY);
+                }
+
+                @Override
+                protected final boolean lessThan(ScoreDoc hitA, ScoreDoc hitB) {
+                  if (hitA.score == hitB.score)
+                    return hitA.doc > hitB.doc;
+                  else
+                    return hitA.score < hitB.score;
+                }
+            };
+
+            Random r = new Random(87);
+            for (int i = 0 ; i < top ; i++) {
+                queue.insertWithOverflow(new ScoreDoc(i, r.nextFloat()));
+            }
+            while (queue.size() > 0) {
+                queue.pop();
+            }
+            collectAndSortTime += System.nanoTime();
+
+            long randomTime = -System.nanoTime();
+            r = new Random(87);
+            for (int i = 0 ; i < top ; i++) {
+                if (r.nextFloat() == 0.1f && i == 0) {
+                    throw new RuntimeException("Never thrown");
+                }
+            }
+            randomTime += System.nanoTime();
+
+            System.out.println(String.format(
+                    "Queue size %,10d entries in %,7d ms",
+                    top, (collectAndSortTime - randomTime) / 1000000));
+        }
+    }
+
+    public void testMergeSortPerformance() throws IOException {
+        final int[] TOPS = new int[]{
+                1_000_000, 10_000_000, 20_000_000, 40_000_000, 60_000_000};
+        for (int top: TOPS) {
+            long collectAndSortTime = -System.nanoTime();
+            final int[] docs = new int[top];
+            final float[] scores = new float[top];
+            Random r = new Random(87);
+            for (int i = 0 ; i < top ; i++) {
+                docs[i] = i;
+                scores[i] = r.nextFloat();
+            }
+            new InPlaceMergeSorter() {
+                @Override
+                protected int compare(int i, int j) {
+                    return scores[i] == scores[j] ? 0 :
+                            scores[i] < scores[j] ? -1 : 1;
+                }
+
+                @Override
+                protected void swap(int i, int j) {
+                    float ts = scores[j];
+                    scores[j] = scores[i];
+                    scores[i] = ts;
+                    int td = docs[j];
+                    docs[j] = docs[i];
+                    docs[i] = td;
+                }
+            }.sort(0, top);
+            for (int i = 0 ; i < top ; i++) {
+                if (docs[i] == 1 && scores[i] == 0.1f) {
+                    throw new RuntimeException("Never thrown");
+                }
+            }
+            collectAndSortTime += System.nanoTime();
+
+            long randomTime = -System.nanoTime();
+            r = new Random(87);
+            for (int i = 0 ; i < top ; i++) {
+                if (r.nextFloat() == 0.1f && i == 0) {
+                    throw new RuntimeException("Never thrown");
+                }
+            }
+            randomTime += System.nanoTime();
+
+            System.out.println(String.format(
+                    "Direct arrays size %,10d entries in %,7d ms",
+                    top, (collectAndSortTime-randomTime)/1000000));
+        }
+    }
+
+    public void testMergeSortPerformance2() throws IOException {
+        final int[] TOPS = new int[]{
+                1_000_000, 10_000_000, 20_000_000, 40_000_000, 60_000_000};
+        for (int top: TOPS) {
+            long collectAndSortTime = -System.nanoTime();
+            final ScoreDoc[] docs = new ScoreDoc[top];
+            Random r = new Random(87);
+            for (int i = 0 ; i < top ; i++) {
+                docs[i] = new ScoreDoc(i, r.nextFloat());
+            }
+            Arrays.sort(docs, new Comparator<ScoreDoc>() {
+                @Override
+                public int compare(ScoreDoc hitA, ScoreDoc hitB) {
+                    if (hitA.score == hitB.score) {
+                      return hitB.doc - hitA.doc;
+                    }
+                    return hitA.score < hitB.score ? -1 : 1;
+                  }
+            });
+            for (int i = 0 ; i < top ; i++) {
+                if (docs[i].doc == 1 && docs[i].score == 0.1f) {
+                    throw new RuntimeException("Never thrown");
+                }
+            }
+            collectAndSortTime += System.nanoTime();
+
+            long randomTime = -System.nanoTime();
+            r = new Random(87);
+            for (int i = 0 ; i < top ; i++) {
+                if (r.nextFloat() == 0.1f && i == 0) {
+                    throw new RuntimeException("Never thrown");
+                }
+            }
+            randomTime += System.nanoTime();
+
+            System.out.println(String.format(
+                    "ScoreDoc arrays size %,10d entries in %,7d ms",
+                    top, (collectAndSortTime-randomTime)/1000000));
+        }
+    }
+
     private List<SummaSearcher> getSearchers() throws IOException {
-        List<SummaSearcher> searchers =
-                new ArrayList<>(SHARDS.length);
+        List<SummaSearcher> searchers = new ArrayList<>(SHARDS.length);
         for (String shard: SHARDS) {
             searchers.add(createSearcher(shard));
         }
@@ -97,7 +239,7 @@ public class SummaSearcherAggregatorTest extends TestCase {
         String result = aggregator.search(request).toXML();
         log.info("The result from the combined search was:\n" + result);
         String[] actual = result.substring(result.lastIndexOf("<ids>") + 5,
-                                               result.lastIndexOf("</ids>")).
+                                           result.lastIndexOf("</ids>")).
                 split(", ");
         Arrays.sort(actual);
         String[] expected = Arrays.copyOf(SHARDS, SHARDS.length);
@@ -110,7 +252,7 @@ public class SummaSearcherAggregatorTest extends TestCase {
     }
 
     private void closeSearchers(List<SummaSearcher> searchers) throws
-                                                               IOException {
+            IOException {
         for (SummaSearcher searcher : searchers) {
             searcher.close();
         }
