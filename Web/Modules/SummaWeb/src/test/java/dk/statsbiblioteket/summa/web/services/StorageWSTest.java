@@ -18,7 +18,6 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.hadoop.hdfs.DFSClient;
 
 import java.io.File;
 
@@ -44,14 +43,33 @@ public class StorageWSTest extends TestCase {
     }
 
     public void testGetRecord() {
-        final String ID = "doms:dda_paper_vol2_paper14-8";
+//        final String ID = "oai:open-archive.highwire.org:vetrec:174/18/456";
 //        final String ID = "oai:doaj-articles:3a087332fac5eed3a0e5a4c1bba3c8ac";
+        final String ID = "sb_pure_ddfmxd:5357";
         StorageWS.conf =  Configuration.newMemoryBased(
+            //ConnectionConsumer.CONF_RPC_TARGET, "//mars:56600/aulhub",
             ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57000/sb-storage",
             RecordUtil.CONF_ESCAPE_CONTENT, false
         );
         StorageWS storage = new StorageWS();
-        System.out.println(storage.getRecord(ID).replace(">", ">\n"));
+        String recXML = storage.getRecord(ID);
+        assertTrue("A record should be returned", recXML.contains("<record"));
+        System.out.println(recXML.replace(">", ">\n"));
+    }
+
+    public void testGetRecords() {
+//        final String ID = "oai:open-archive.highwire.org:vetrec:174/18/456";
+//        final String ID = "oai:doaj-articles:3a087332fac5eed3a0e5a4c1bba3c8ac";
+        final String ID = "sb_pure_ddfmxd:5357";
+        StorageWS.conf =  Configuration.newMemoryBased(
+            //ConnectionConsumer.CONF_RPC_TARGET, "//mars:56600/aulhub",
+            ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57000/sb-storage",
+            RecordUtil.CONF_ESCAPE_CONTENT, false
+        );
+        StorageWS storage = new StorageWS();
+        String recXML = storage.getRecords(new String[]{ID});
+        assertTrue("A record should be returned", recXML.contains("<record"));
+        System.out.println(recXML.replace(">", ">\n"));
     }
 
     public void testSpecificLocal() {
