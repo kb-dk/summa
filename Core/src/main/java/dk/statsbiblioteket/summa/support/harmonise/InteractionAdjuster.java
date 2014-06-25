@@ -265,7 +265,7 @@ public class InteractionAdjuster implements Configurable {
         }
 
         log.debug(String.format(
-                "Constructed search adjuster with id='%s', enabled=%b, baseFactor=%f, baseAddition=%f, "
+                "Constructed adjuster with id='%s', enabled=%b, baseFactor=%f, baseAddition=%f, "
                 + "adjustingDocumentFields='%s', adjustingFacetFields='%s', tagAdjusters=%d, "
                 + "adjustResponseFieldsEnabled=%b, adjustResponseFacetsEnabled=%b",
                 id, enabled, baseFactor, baseAddition,
@@ -298,6 +298,7 @@ public class InteractionAdjuster implements Configurable {
             log.trace("The adjuster is disabled. Exiting rewrite");
             return adjusted;
         }
+        log.debug("Calling rewriteFacetFields");
         rewriteFacetFields(adjusted);
         try {
             rewriteQuery(adjusted);
@@ -630,18 +631,22 @@ public class InteractionAdjuster implements Configurable {
     }
 
     private void rewriteFacetFields(Request request) {
-        log.trace("rewriteFacetFields called");
+        log.debug("rewriteFacetFields called");
         ManyToManyMapper facetFieldMap = resolveMap(request, defaultFacetFields, SEARCH_ADJUST_FACET_FIELDS);
         if (facetFieldMap == null) {
             return;
         }
-        log.trace("Adjusting fields in facet request");
+        log.debug("Adjusting fields in facet request");
         if (request.containsKey(FacetKeys.SEARCH_FACET_FACETS)) {
             List<String> facets = request.getStrings(FacetKeys.SEARCH_FACET_FACETS);
             List<String> adjusted = new ArrayList<>(facets.size() * 2);
             for (String facetString: facets) {
                 FacetStructure facet = new FacetStructure(facetString, -1, -1);
-                if (facet.getFields().length == 1 && facetFieldMap.getForward().containsKey(facet.getFields()[0])) {
+                log.debug("rewriteFacetField: Processing " + Strings.join(facet.getFields()));
+                if (facet.getFields().length ==1 && unsupportedFields.contains(facet.getFields()[0])) {
+                    log.debug("Skipping facet '" + facet.getFields()[0] + "' as it is on the field black list");
+                } else if (facet.getFields().length == 1 &&
+                           facetFieldMap.getForward().containsKey(facet.getFields()[0])) {
                     Set<String> alts = facetFieldMap.getForward().get(facet.getFields()[0]);
                     for (String alt: alts) {
                         if (FacetStructure.DEFAULT_FACET_SORT_TYPE.equals(facet.getSortType())) {
@@ -662,7 +667,9 @@ public class InteractionAdjuster implements Configurable {
                     adjusted.add(facetString);
                 }
             }
-            request.put(FacetKeys.SEARCH_FACET_FACETS, Strings.join(adjusted, ", "));
+            if (!adjusted.isEmpty()) {
+                request.put(FacetKeys.SEARCH_FACET_FACETS, Strings.join(adjusted, ", "));
+            }
         }
     }
 
