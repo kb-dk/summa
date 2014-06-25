@@ -227,7 +227,7 @@ public class StorageWS implements ServletContextListener {
             writer.writeDefaultNamespace(RECORDS_NAMESPACE);
             writer.writeAttribute(QUERYTIME, String.valueOf(time));
             for (Record r : records) {
-                RecordUtil.toXML(writer, 1, r, true);
+                RecordUtil.toXML(writer, 1, r, escapeContent);
             }
             writer.writeEndElement();
             writer.writeEndDocument();
@@ -245,8 +245,8 @@ public class StorageWS implements ServletContextListener {
 
         totalTime = System.currentTimeMillis() -totalTime;
         log.debug(String.format(
-            "Finished realGetRecords() in %dms (query: %d, xmlify: %dms)",
-            totalTime, time, xmlTime));
+            "Finished realGetRecords(%d ids) in %dms (query: %d, xmlify: %dms, escapeContent=%b)",
+            ids.size(), totalTime, time, xmlTime, escapeContent));
 
         return retXML;
     }
@@ -307,8 +307,9 @@ public class StorageWS implements ServletContextListener {
         }
 
         log.debug(String.format(
-                "realGetRecord('%s', expand=%b, legacyMerge=%b) finished in %d ms (%dms spend on XML creation)",
-                id, expand, legacyMerge, System.currentTimeMillis() - startTime, xmlTime));
+                "realGetRecord('%s', expand=%b, legacyMerge=%b, escapeContent=%b) finished in %d ms " +
+                "(%dms spend on XML creation)",
+                id, expand, legacyMerge, escapeContent, System.currentTimeMillis() - startTime, xmlTime));
         return retXML;
     }
 
