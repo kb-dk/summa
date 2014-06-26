@@ -85,11 +85,7 @@ public class AltoDuplicateFinder {
             altoSuffix = cli.getOptionValue("a", altoSuffix);
             root = cli.getOptionValue("x", root);
 
-            String[] leftOvers = cli.getArgs();
-            if (leftOvers.length == 0) { // Paths
-                throw new ParseException("Not enough arguments, you must specify at least 1 path");
-            }
-            for (String p: leftOvers) {
+            for (String p: cli.getOptionValues("p")) {
                 paths.add(new File(p));
                 if (!paths.get(paths.size()-1).exists()) {
                     throw new ParseException("The path '" + p + "' does not exists");
