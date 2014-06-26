@@ -128,6 +128,14 @@ public class AltoDuplicateTest extends TestCase {
         return new TestSuite(AltoDuplicateTest.class);
     }
 
+    public void testStandAlone() throws FileNotFoundException, XMLStreamException {
+        AltoDuplicateFinder.main(new String[]{
+                "-r", "3@200",
+                "-x", "/home/te/smb/U/",
+                "-p", "/home/te/smb/U/B400026952040-RT1"
+        });
+    }
+
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public void testDuplicates() throws FileNotFoundException, XMLStreamException {
         if (!sources[0].exists()) {
