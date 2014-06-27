@@ -573,6 +573,23 @@ public class SummonSearchNodeTest extends TestCase {
         summon.close();
     }
 
+    public void testExplicitFacet() throws RemoteException {
+        final String JSON =
+                "{\"search.document.query\":\"peter\","
+                + "\"search.document.collectdocids\":\"true\","
+                + "\"search.facet.facets\":\"SubjectTerms\"}";
+                //+ "\"search.facet.facets\":\"SubjectTerms,lsubject\"}";
+
+        SearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        Request request = new Request();
+        request.addJSON(JSON);
+        summon.search(request, responses);
+        assertTrue("The response should contain some facets\n" + responses.toXML(),
+                   responses.toXML().contains("facet name"));
+        summon.close();
+    }
+
     public void testPagedFacet() throws RemoteException {
         final String JSON =
                 "{\"search.document.query\":\"peter\"," +
