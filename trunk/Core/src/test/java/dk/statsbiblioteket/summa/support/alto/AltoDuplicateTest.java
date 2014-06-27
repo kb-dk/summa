@@ -130,9 +130,10 @@ public class AltoDuplicateTest extends TestCase {
 
     public void testStandAlone() throws FileNotFoundException, XMLStreamException {
         AltoDuplicateFinder.main(new String[]{
-                "-r", "3@200",
+                "-r", "3@200", "50%%@10",
                 "-x", "/home/te/smb/U/",
                 "-p", "/home/te/smb/U/B400026952040-RT1"
+                //"-p", "/home/te/smb/U/B400026952040-RT1/400026952040-06/1959-07-26-01"
         });
     }
 
@@ -288,7 +289,7 @@ public class AltoDuplicateTest extends TestCase {
         return overallMatchCount;
     }
 
-    // Count matching blocks between two Altos
+    // Count matching minBlocks between two Altos
     private boolean connectedMatches(Alto primary, Alto secondary) {
         int largeMatches = 0;
         int allMatches = 0;
