@@ -154,8 +154,13 @@ public class AltoDuplicateFinder {
         List<Set<File>> groups = new ArrayList<>();
         groups.add(new HashSet<>(getAltoFiles(new File[]{source}, altoSuffix)));
         for (int r = 0 ; r < requirements.size() ; r++) {
-            System.out.println(String.format("#   Duplicate isolation %d/%d with rule %s",
-                                             r+1, requirements.size(), requirements.get(r)));
+            int memberCount = 0;
+            for (Set<File> group: groups) {
+                memberCount += group.size();
+            }
+            System.out.println(String.format(
+                    "#   Duplicate isolation %d/%d for %d ALTOs in %d groups with rule %s",
+                    r+1, requirements.size(), memberCount, groups.size(), requirements.get(r)));
             List<Set<File>> reduced = new ArrayList<>();
             for (Set<File> group: groups) {
                 reduced.addAll(findDuplicates(group, requirements.get(r)));
@@ -220,8 +225,9 @@ public class AltoDuplicateFinder {
         }
         System.out.print("|\n#   ");
         int altoCount = 0;
+        int dot = altoFiles.size() > 100 ? altoFiles.size() / 100 : altoFiles.isEmpty() ? 1 : altoFiles.size();
         for (File altoFile: altoFiles) {
-            if (++altoCount % (Math.max(1, altoFiles.size()) / 100) == 0) {
+            if (++altoCount % dot == 0) {
                 System.out.print(".");
             }
             Alto alto = new Alto(altoFile);
@@ -266,9 +272,9 @@ public class AltoDuplicateFinder {
             for (int g2 = g1+1 ; g2 < files.size() ; g2++) {
                 Set<Integer> s1 = new HashSet<>(reverse.get(files.get(g1)));
                 s1.retainAll(reverse.get(files.get(g2)));
-                int minBlocks = requirement.percent ?
+                int minBlocks = Math.max(1, requirement.percent ?
                         (int)(Math.max(reverse.get(files.get(g1)).size(), reverse.get(files.get(g2)).size()) *
-                              requirement.minBlocks / 100) : (int)requirement.minBlocks;
+                              requirement.minBlocks / 100) : (int)requirement.minBlocks);
                 if (s1.size() >= minBlocks) {
                     keep.add(files.get(g1));
                     keep.add(files.get(g2));
