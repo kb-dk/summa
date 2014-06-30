@@ -197,12 +197,12 @@ public class AltoDuplicateFinder {
             System.out.println("mkdir -p " + finalDest);
             int entryCount = 1;
             for (File entry: entries) {
-                if (dup > maxGroups || entryCount >= maxGroupSize) {
-                    System.out.print("#   ");
-                }
                 String prefix = entry.getName().replace(altoSuffix, "");
                 for (File f: entry.getParentFile().listFiles()) {
                     if (f.isFile() && f.getName().startsWith(prefix)) {
+                        if (dup > maxGroups || entryCount >= maxGroupSize) {
+                            System.out.print("#   ");
+                        }
                         System.out.println(
                                 "ln -s "+ f.getAbsolutePath() + " " + new File(finalDest, f.getName()));
                     }
