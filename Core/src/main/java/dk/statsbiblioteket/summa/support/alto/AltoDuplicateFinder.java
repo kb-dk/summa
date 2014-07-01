@@ -29,6 +29,7 @@ import java.util.*;
  * Searches folders for ALTO duplicate files. The hash value of Strings are used for comparison to lower memory
  * requirements, so false positives are possible.
  */
+@SuppressWarnings("UseOfSystemOutOrSystemErr")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -48,6 +49,7 @@ public class AltoDuplicateFinder {
         String altoSuffix = ".alto.xml";
         String root = "/avis-upload";
         String output = "/itweb-data/ninestars/duplicates";
+        boolean verbose = false;
 
         // Build command line options
         CommandLineParser cliParser = new GnuParser();
@@ -73,6 +75,8 @@ public class AltoDuplicateFinder {
         options.addOption(OptionBuilder.withArgName("paths").isRequired().hasArgs().withDescription(
                 "Paths to search for duplicates. Each path is processed independent of the other paths.").
                 create("p"));
+        options.addOption(OptionBuilder.withArgName("verbose").withDescription(
+                "Verbose output (mainly intended for debug).").create("v"));
 
         // Parse and validate command line
         try {
@@ -85,6 +89,7 @@ public class AltoDuplicateFinder {
             altoSuffix = cli.getOptionValue("a", altoSuffix);
             root = cli.getOptionValue("x", root);
             output = cli.getOptionValue("o", output);
+            verbose = cli.hasOption("v");
 
             for (String p: cli.getOptionValues("p")) {
                 paths.add(new File(p));
@@ -92,7 +97,7 @@ public class AltoDuplicateFinder {
                     throw new ParseException("The path '" + p + "' does not exists");
                 }
             }
-            findDuplicates(requirements, maxGroups, maxGroupSize, altoSuffix, paths, root, output);
+            findDuplicates(requirements, maxGroups, maxGroupSize, altoSuffix, paths, root, output, verbose);
         } catch (ParseException e) {
             System.err.println("Error parsing command line: " + e.getMessage());
             String usage = "AltoDuplicateFinder [options] <paths>";
@@ -140,16 +145,16 @@ public class AltoDuplicateFinder {
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public static void findDuplicates(
             List<Requirement> requirements, int maxGroups, int maxGroupSize, String altoSuffix, List<File> paths,
-            String root, String output) throws FileNotFoundException, XMLStreamException {
+            String root, String output, boolean verbose) throws FileNotFoundException, XMLStreamException {
         for (File path: paths) {
-            findDuplicates(requirements, maxGroups, maxGroupSize, altoSuffix, path, root, output);
+            findDuplicates(requirements, maxGroups, maxGroupSize, altoSuffix, path, root, output, verbose);
         }
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private static void findDuplicates(
             List<Requirement> requirements, int maxGroups, int maxGroupSize, String altoSuffix, File source,
-            String root, String output) throws FileNotFoundException, XMLStreamException {
+            String root, String output, boolean verbose) throws FileNotFoundException, XMLStreamException {
         long startTime = System.nanoTime();
         System.out.println("# Locating ALTO files in " + source);
         List<Set<File>> groups = new ArrayList<>();
@@ -164,13 +169,16 @@ public class AltoDuplicateFinder {
                     r+1, requirements.size(), memberCount, groups.size(), requirements.get(r)));
             List<Set<File>> reduced = new ArrayList<>();
             for (Set<File> group: groups) {
-                reduced.addAll(findDuplicates(group, requirements.get(r)));
+                reduced.addAll(findDuplicates(group, requirements.get(r), verbose));
             }
             groups = reduced;
         }
 
         if (groups.isEmpty()) {
-            System.out.println("#   No groups satisfying all given requirements");
+            System.out.println(String.format(
+                    "#   No groups satisfying all given requirements. Analysis time %d seconds",
+                    (System.nanoTime()-startTime)/1000000000L));
+            return;
         }
 
         final int outGroups = Math.min(maxGroups, groups.size());
@@ -220,8 +228,8 @@ public class AltoDuplicateFinder {
     }
 
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    private static List<Set<File>> findDuplicates(
-            Set<File> altoFiles, Requirement requirement) throws FileNotFoundException, XMLStreamException {
+    private static List<Set<File>> findDuplicates(Set<File> altoFiles, Requirement requirement, boolean verbose)
+            throws FileNotFoundException, XMLStreamException {
         Map<Integer, Set<File>> duplicates = new HashMap<>(); // Text-hash to alto
         System.out.print("#   Calculating text block hashes from " + altoFiles.size() + " alto files\n#   ");
         for(int i = 0 ; i < Math.min(altoFiles.size(), 99) ; i++) {
@@ -235,7 +243,8 @@ public class AltoDuplicateFinder {
                 System.out.print(".");
             }
             Alto alto = new Alto(altoFile);
-            for (String text: getTextBlocks(alto, requirement.minTextSize)) {
+            List<String> texts = getTextBlocks(alto, requirement.minTextSize);
+            for (String text: texts) {
                 Integer hashValue = text.hashCode();
                 Set<File> files;
                 files = duplicates.get(hashValue);
@@ -249,24 +258,19 @@ public class AltoDuplicateFinder {
 //        System.out.println("\n# Removing 1-member groups from " + duplicates.size() + " potential duplicates");
         System.out.println("\n#   Pruning potential group of " + altoFiles.size() + " ALTOs with " + duplicates.size()
                            + " blocks with " + requirement);
-        duplicates = removeOnes(duplicates);
-        return groupOnMinBlocks(duplicates, requirement);
+        Map<Integer, Set<File>> moreThanOnes = extractMoreThanOne(duplicates);
+        if (verbose) {
+            System.out.println("#   Reduced to " + altoFiles.size() + " ALTOs with " + moreThanOnes.size() + " blocks");
+        }
+        return groupOnMinBlocks(moreThanOnes, duplicates, requirement, verbose);
     }
 
-    private static List<Set<File>> groupOnMinBlocks(Map<Integer, Set<File>> duplicates, Requirement requirement) {
+    private static List<Set<File>> groupOnMinBlocks(
+            Map<Integer, Set<File>> moreThanOnes, Map<Integer, Set<File>> all,
+            Requirement requirement, boolean verbose) {
         // Reverse the map to go from files to text-hashes
-        Map<File, Set<Integer>> reverse = new HashMap<>();
-        for (Map.Entry<Integer, Set<File>> entry: duplicates.entrySet()) {
-            Set<Integer> hashes;
-            for (File f: entry.getValue()) {
-                hashes = reverse.get(f);
-                if (hashes == null) {
-                    hashes = new HashSet<>();
-                    reverse.put(f, hashes);
-                }
-                hashes.add(entry.getKey());
-            }
-        }
+        Map<File, Set<Integer>> reverse = reverseMap(moreThanOnes);
+        Map<File, Set<Integer>> reverseAll = reverseMap(all);
 
         // n^2 search for groups of minBlock matches. This also leaves all sub-groups
         List<Set<File>> groups = new ArrayList<>();
@@ -276,13 +280,42 @@ public class AltoDuplicateFinder {
             for (int g2 = g1+1 ; g2 < files.size() ; g2++) {
                 Set<Integer> s1 = new HashSet<>(reverse.get(files.get(g1)));
                 s1.retainAll(reverse.get(files.get(g2)));
+                int maxBlockCount = Math.max(reverseAll.get(files.get(g1)).size(),
+                                             reverseAll.get(files.get(g2)).size());
                 int minBlocks = Math.max(1, requirement.percent ?
-                        (int)(Math.max(reverse.get(files.get(g1)).size(), reverse.get(files.get(g2)).size()) *
-                              requirement.minBlocks / 100) : (int)requirement.minBlocks);
+                        (int)(maxBlockCount * requirement.minBlocks / 100) : (int)requirement.minBlocks);
                 if (s1.size() >= minBlocks) {
                     keep.add(files.get(g1));
                     keep.add(files.get(g2));
+                    if (verbose) {
+                        System.out.println(String.format(
+                                "#   Matched %d blocks (min %d, max %d) of min %d chars for %s and %s",
+                                s1.size(), minBlocks, maxBlockCount, requirement.minTextSize,
+                                files.get(g1).getName(), files.get(g2).getName()));
+                        Set<String> matchingBlocks = new HashSet<>(s1.size());
+                        try {
+                            for (Alto alto: new Alto[]{new Alto(files.get(g1)), new Alto(files.get(g1))}) {
+                                for (String text: getTextBlocks(alto, requirement.minTextSize)) {
+                                    if (s1.contains(text.hashCode())) {
+                                        matchingBlocks.add(text);
+                                    }
+                                }
+                            }
+                            for (String text: matchingBlocks) {
+                                System.out.println("#     " + text.replace("\n", " "));
+                            }
+                        } catch (Exception e) {
+                            System.out.println("#     Exception dumping matching text blocks");
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (verbose) {
+                    System.out.println(String.format(
+                            "#   Non-match with %d blocks (min %d, max %d) of min %d chars for %s and %s",
+                            s1.size(), minBlocks, maxBlockCount, requirement.minTextSize,
+                            files.get(g1).getName(), files.get(g2).getName()));
                 }
+
             }
             if (!keep.isEmpty()) {
                 groups.add(keep);
@@ -300,7 +333,24 @@ public class AltoDuplicateFinder {
         return groups;
     }
 
-    private static Map<Integer, Set<File>> removeOnes(Map<Integer, Set<File>> duplicates) {
+    private static Map<File, Set<Integer>> reverseMap(Map<Integer, Set<File>> fileToHash) {
+        Map<File, Set<Integer>> reverse;
+        reverse = new HashMap<>();
+        for (Map.Entry<Integer, Set<File>> entry: fileToHash.entrySet()) {
+            Set<Integer> hashes;
+            for (File f: entry.getValue()) {
+                hashes = reverse.get(f);
+                if (hashes == null) {
+                    hashes = new HashSet<>();
+                    reverse.put(f, hashes);
+                }
+                hashes.add(entry.getKey());
+            }
+        }
+        return reverse;
+    }
+
+    private static Map<Integer, Set<File>> extractMoreThanOne(Map<Integer, Set<File>> duplicates) {
         Map<Integer, Set<File>> pruned = new HashMap<>();
         for (Map.Entry<Integer, Set<File>> entry: duplicates.entrySet()) {
             if (entry.getValue().size() > 1) {
