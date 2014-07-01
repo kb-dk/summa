@@ -195,6 +195,9 @@ public class AltoDuplicateFinder {
             System.out.println(String.format(
                     "#   Group %d/%d with %d/%d ALTOs",
                     dup, groups.size(), Math.min(entries.size(), maxGroupSize), entries.size()));
+            if (dup > maxGroups) {
+                System.out.print("#   ");
+            }
             System.out.println("mkdir -p " + finalDest);
             int entryCount = 1;
             for (File entry: entries) {
