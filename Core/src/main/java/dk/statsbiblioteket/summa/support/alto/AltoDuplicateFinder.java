@@ -84,6 +84,7 @@ public class AltoDuplicateFinder {
             maxGroupSize = Integer.parseInt(cli.getOptionValue("s", Integer.toString(maxGroupSize)));
             altoSuffix = cli.getOptionValue("a", altoSuffix);
             root = cli.getOptionValue("x", root);
+            output = cli.getOptionValue("o", output);
 
             for (String p: cli.getOptionValues("p")) {
                 paths.add(new File(p));
