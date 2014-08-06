@@ -50,12 +50,10 @@ public class StorageTool {
     public static final String DEFAULT_RPC_TARGET = "//localhost:28000/summa-storage";
 
     /**
-     * Helper method for printing a record on {@link System#out} with or without
-     * content.
+     * Helper method for printing a record on {@link System#out} with or without content.
      *
      * @param rec          The record to print.
-     * @param withContents True if this record should be printed with its
-     *                     content false otherwise.
+     * @param withContents True if this record should be printed with its content false otherwise.
      */
     public static void printRecord(Record rec, boolean withContents) {
         printRecord(rec, System.out, withContents);
@@ -66,8 +64,7 @@ public class StorageTool {
      *
      * @param rec          The record which should be printed.
      * @param out          The output stream.
-     * @param withContents True if this record should be printed with its
-     *                     content false otherwise.
+     * @param withContents True if this record should be printed with its content false otherwise.
      */
     public static void printRecord(Record rec, OutputStream out, boolean withContents) {
         PrintWriter output = new PrintWriter(out, true);
@@ -90,8 +87,7 @@ public class StorageTool {
      *
      * @param argv    Arguments from commandline. Should be a list of ids.
      * @param storage The storage to connect to, to retrieve the records.
-     * @return 0 if everything happened without errors, non-zero value if error
-     *         occur.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating to storage.
      */
     private static int actionGet(String[] argv, StorageReaderClient storage) throws IOException {
@@ -120,19 +116,54 @@ public class StorageTool {
     }
 
     /**
+     * Method for the 'delete' command. This method retrieves the record(s) from storage, sets the deleted flag and
+     * stores it back into Storage.
+     *
+     * @param argv    Arguments from commandline. Should be a list of ids.
+     * @param storage The storage to connect to, to retrieve the records.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
+     * @throws IOException If error occur while communicating to storage.
+     */
+    private static int actionDelete(
+            String[] argv, StorageReaderClient storage, StorageWriterClient writer) throws IOException {
+        if (argv.length == 1) {
+            System.err.println("You must specify at least one record id to the 'delete' action");
+            return 1;
+        }
+
+        // Allow this call to access private storage records, like __holdings__
+        QueryOptions options = new QueryOptions();
+        options.meta("ALLOW_PRIVATE", "true");
+
+        List<String> ids = new ArrayList<>(argv.length - 1);
+        ids.addAll(Arrays.asList(argv).subList(1, argv.length));
+
+        System.err.println("Retrieving record(s): " + Strings.join(ids, ", "));
+        long startTime = System.currentTimeMillis();
+        List<Record> recs = storage.getRecords(ids, options);
+        System.err.println("Got " + recs.size() + " records in " + (System.currentTimeMillis() - startTime) + " ms");
+
+        for (Record r : recs) {
+            System.err.println("Marking record '" + r.getId() + "' as deleted and flushing");
+            r.setDeleted(true);
+            r.touch();
+            writer.flush(r);
+        }
+        return 0;
+    }
+
+    /**
      * This action, touches a record, thereby update the last modified
      * timestamp for this record.
      *
-     * @param argv   Command line arguments, needs to specify at least one
-     *               record.
+     * @param argv   Command line arguments, needs to specify at least one record.
      * @param reader Storage reader client.
      * @param writer Storage writer client.
-     * @return 0 if everything happened without errors, non-zero value if error
-     *         occur.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating with storage.
      */
-    private static int actionTouch(String[] argv, StorageReaderClient reader, StorageWriterClient writer) throws
-                                                                                                          IOException {
+    private static int actionTouch(
+            String[] argv, StorageReaderClient reader, StorageWriterClient writer) throws IOException {
         if (argv.length == 1) {
             System.err.println("You must specify at least one record id to the 'touch' action");
             return 1;
@@ -157,11 +188,9 @@ public class StorageTool {
      * This action peeks into the storage, which mean printing all records from
      * either the specified base or all records.
      *
-     * @param argv    Command line arguments, specifying the base or nothing,
-     *                which results in all record being printed.
+     * @param argv    Command line arguments, specifying the base or nothing, which results in all record being printed.
      * @param storage The storage reader client.
-     * @return 0 if everything happened without errors, non-zero value if error
-     *         occur.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating to storage.
      */
     private static int actionPeek(String[] argv, StorageReaderClient storage) throws IOException {
@@ -216,8 +245,7 @@ public class StorageTool {
      *
      * @param argv    Command line argument specifying the base.
      * @param storage The storage reader client.
-     * @return 0 if everything happened without errors, non-zero value if error
-     *         occur.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating to storage.
      */
     private static int actionDump(String[] argv, StorageReaderClient storage) throws IOException {
@@ -296,8 +324,7 @@ public class StorageTool {
      *
      * @param argv   Specifying the batch job to run.
      * @param writer The storage writer client.
-     * @return 0 if everything happened without errors, non-zero value if error
-     *         occur.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating to storage.
      */
     private static int actionBatchJob(String[] argv, StorageWriterClient writer) throws IOException {
@@ -367,8 +394,7 @@ public class StorageTool {
      * @param argv    Command line arguments, should specify both a record id and
      *                a URL to an XSLT.
      * @param storage The storage reader client.
-     * @return 0 if everything happened without errors, non-zero value if error
-     *         occur.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException if error occur while communicating to storage.
      */
     @SuppressWarnings("CallToPrintStackTrace")
@@ -447,6 +473,7 @@ public class StorageTool {
         System.err.println(
                 "Actions:\n"
                 + "\tget  <record_id>\n"
+                + "\tdelete  <record_id>\n"
                 + "\tpeek [base] [max_count=5]\n"
                 + "\ttouch <record_id> [record_id...]\n\txslt <record_id> <xslt_url>\n"
                 + "\tdump [base]     (dump storage on stdout)\n"
@@ -500,28 +527,42 @@ public class StorageTool {
         StorageWriterClient writer = new StorageWriterClient(conf);
 
         int exitCode;
-        if ("get".equals(action)) {
-            exitCode = actionGet(args, reader);
-        } else if ("peek".equals(action)) {
-            exitCode = actionPeek(args, reader);
-        } else if ("touch".equals(action)) {
-            exitCode = actionTouch(args, reader, writer);
-        } else if ("xslt".equals(action)) {
-            exitCode = actionXslt(args, reader);
-        } else if ("dump".equals(action)) {
-            exitCode = actionDump(args, reader);
-        } else if ("clear".equals(action)) {
-            exitCode = actionClear(args, writer);
-        } else if ("holdings".equals(action)) {
-            exitCode = actionHoldings(reader);
-        } else if ("batchjob".equals(action)) {
-            exitCode = actionBatchJob(args, writer);
-        } else if ("backup".equals(action)) {
-            exitCode = actionBackup(args, writer);
-        } else {
-            System.err.println("Unknown action '" + action + "'");
-            printUsage();
-            exitCode = 2;
+        switch (action) {
+            case "get":
+                exitCode = actionGet(args, reader);
+                break;
+            case "peek":
+                exitCode = actionPeek(args, reader);
+                break;
+            case "touch":
+                exitCode = actionTouch(args, reader, writer);
+                break;
+            case "delete":
+                exitCode = actionDelete(args, reader, writer);
+                break;
+            case "xslt":
+                exitCode = actionXslt(args, reader);
+                break;
+            case "dump":
+                exitCode = actionDump(args, reader);
+                break;
+            case "clear":
+                exitCode = actionClear(args, writer);
+                break;
+            case "holdings":
+                exitCode = actionHoldings(reader);
+                break;
+            case "batchjob":
+                exitCode = actionBatchJob(args, writer);
+                break;
+            case "backup":
+                exitCode = actionBackup(args, writer);
+                break;
+            default:
+                System.err.println("Unknown action '" + action + "'");
+                printUsage();
+                exitCode = 2;
+                break;
         }
         System.exit(exitCode);
     }
