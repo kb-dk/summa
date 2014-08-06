@@ -7,7 +7,10 @@
         <version>8</version>
     </parent>
 
-<properties><solr_lucene_version>4.8.1</solr_lucene_version></properties>
+    <properties>
+        <solr_lucene_version>4.8.1</solr_lucene_version>
+        <sbutil_version>0.5.24</sbutil_version>
+    </properties>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
@@ -21,9 +24,6 @@
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
     <name>Summa</name>
-
-
-
 
 
     <distributionManagement>
@@ -190,17 +190,17 @@
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil-common</artifactId>
-                <version>0.5.22</version>
+                <version>${sbutil_version}</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil-qa</artifactId>
-                <version>0.5.21</version>
+                <version>${sbutil_version}</version>
             </dependency>
             <dependency>
                 <groupId>dk.statsbiblioteket.sbutil</groupId>
                 <artifactId>sbutil-xproperties</artifactId>
-                <version>0.5.21</version>
+                <version>${sbutil_version}</version>
             </dependency>
             <dependency>
                 <groupId>fastutil</groupId>
