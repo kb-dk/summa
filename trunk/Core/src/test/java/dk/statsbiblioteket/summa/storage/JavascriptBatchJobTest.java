@@ -44,20 +44,16 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         assertBaseCount(testBase1, 2);
         assertBaseCount(testBase2, 1);
 
-        String count = storage.batchJob(
-                "count.job.js", null, 0, Long.MAX_VALUE, null);
+        String count = storage.batchJob("count.job.js", null, 0, Long.MAX_VALUE, null);
         assertEquals("3.0", count);
 
-        count = storage.batchJob(
-                "count.job.js", testBase1, 0, Long.MAX_VALUE, null);
+        count = storage.batchJob("count.job.js", testBase1, 0, Long.MAX_VALUE, null);
         assertEquals("2.0", count);
 
-        count = storage.batchJob(
-                "count.job.js", testBase2, 0, Long.MAX_VALUE, null);
+        count = storage.batchJob("count.job.js", testBase2, 0, Long.MAX_VALUE, null);
         assertEquals("1.0", count);
 
-        count = storage.batchJob(
-                "count.job.js", "nosuchbase", 0, Long.MAX_VALUE, null);
+        count = storage.batchJob("count.job.js", "nosuchbase", 0, Long.MAX_VALUE, null);
         assertEquals("", count);
 
         // Now add DatabaseStorage.getPageSize() to the storage, so we can
@@ -67,8 +63,7 @@ public class JavascriptBatchJobTest extends StorageTestBase {
             storage.flush(new Record("paged_" + i, testBase1, testContent1));
         }
         assertBaseCount(testBase1, 2 + pageSize);
-        count = storage.batchJob(
-                "count.job.js", testBase1, 0, Long.MAX_VALUE, null);
+        count = storage.batchJob("count.job.js", testBase1, 0, Long.MAX_VALUE, null);
         assertEquals((2 + pageSize) + ".0", count);
     }
 
@@ -83,18 +78,14 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         assertBaseCount(testBase1, 2);
         assertBaseCount(testBase2, 1);
 
-        String ids = storage.batchJob(
-                "collect_ids.job.js", null, 0, Long.MAX_VALUE, null);
-        String idsExpected = Strings.join(
-                Arrays.asList(testId1, testId2, testId3), "\n");
+        String ids = storage.batchJob("collect_ids.job.js", null, 0, Long.MAX_VALUE, null);
+        String idsExpected = Strings.join(Arrays.asList(testId1, testId2, testId3), "\n");
         assertEquals(idsExpected, ids);
 
-        ids = storage.batchJob(
-                "collect_ids.job.js", null, stamp3, Long.MAX_VALUE, null);
+        ids = storage.batchJob("collect_ids.job.js", null, stamp3, Long.MAX_VALUE, null);
         assertEquals(testId3, ids);
 
-        ids = storage.batchJob(
-              "collect_ids.job.js", null, Long.MAX_VALUE, Long.MAX_VALUE, null);
+        ids = storage.batchJob("collect_ids.job.js", null, Long.MAX_VALUE, Long.MAX_VALUE, null);
         assertEquals("", ids);
     }
 
@@ -109,25 +100,20 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         assertBaseCount(testBase2, 1);
 
         // Delete all record in testBase1
-        String ids = storage.batchJob(
-                "delete.job.js", testBase1, 0, Long.MAX_VALUE, null);
-        assertEquals(Strings.join(
-                Arrays.asList(testId1, testId3), "\n") + "\n", ids);
+        String ids = storage.batchJob("delete.job.js", testBase1, 0, Long.MAX_VALUE, null);
+        assertEquals(Strings.join(Arrays.asList(testId1, testId3), "\n") + "\n", ids);
 
         // Assert that testId2 is the only non-deleted record
         // in the entire storage
         QueryOptions nonDeleted = new QueryOptions(false, null, 0, 0);
-        ids = storage.batchJob(
-                "collect_ids.job.js", null, 0, Long.MAX_VALUE, nonDeleted);
+        ids = storage.batchJob("collect_ids.job.js", null, 0, Long.MAX_VALUE, nonDeleted);
         assertEquals(testId2 + "\n", ids);
 
         // Assert that testId1 and testId3 constitues all deleted records
         // in the entire storage
         QueryOptions deleted = new QueryOptions(true, null, 0, 0);
-        ids = storage.batchJob(
-                "collect_ids.job.js", null, 0, Long.MAX_VALUE, deleted);
-        assertEquals(Strings.join(
-                Arrays.asList(testId1, testId3), "\n"), ids);
+        ids = storage.batchJob("collect_ids.job.js", null, 0, Long.MAX_VALUE, deleted);
+        assertEquals(Strings.join(Arrays.asList(testId1, testId3), "\n"), ids);
     }
 
     public void testRenameByBaseAndMtime() throws Exception {
@@ -143,9 +129,8 @@ public class JavascriptBatchJobTest extends StorageTestBase {
         assertBaseCount(testBase2, 1);
 
         // Prepend "foo" to records updated after stamp3 in base testBase1
-        // This should be the signle record with testId3
-        String ids = storage.batchJob(
-                "prepend_foo_id.job.js", testBase1, stamp3, Long.MAX_VALUE, null);
+        // This should be the single record with testId3
+        String ids = storage.batchJob("prepend_foo_id.job.js", testBase1, stamp3, Long.MAX_VALUE, null);
         assertEquals("foo" + testId3 + "\n", ids);
 
         // Assert that testId1 is no longer in the storage
@@ -160,8 +145,7 @@ public class JavascriptBatchJobTest extends StorageTestBase {
 
     public void testInvalidJobName() throws Exception {
         try {
-            storage.batchJob("../../im_in_your_root_eating_your_files.job.js",
-                             null, 0, Long.MAX_VALUE, null);
+            storage.batchJob("../../im_in_your_root_eating_your_files.job.js", null, 0, Long.MAX_VALUE, null);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             // Success
@@ -170,13 +154,10 @@ public class JavascriptBatchJobTest extends StorageTestBase {
 
     public void testUnknownJobName() throws Exception {
         try {
-            storage.batchJob("nosuch.job.js",
-                             null, 0, Long.MAX_VALUE, null);
+            storage.batchJob("nosuch.job.js", null, 0, Long.MAX_VALUE, null);
             fail("Expected FileNotFoundException");
         } catch (FileNotFoundException e) {
             // Success
         }
     }
-
 }
-
