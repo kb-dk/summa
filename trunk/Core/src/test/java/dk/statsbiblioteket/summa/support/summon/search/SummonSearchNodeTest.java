@@ -38,6 +38,7 @@ import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
+import dk.statsbiblioteket.util.xml.XMLStepper;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -46,10 +47,15 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.io.StringReader;
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,6 +82,13 @@ public class SummonSearchNodeTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(SummonSearchNodeTest.class);
+    }
+
+    protected XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
+    {
+        xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
+        // No resolving of external DTDs
+        xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
     }
 
     public void testNestedSearcher() throws Exception {
@@ -523,7 +536,7 @@ public class SummonSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         ResponseCollection result = search(req);
         DocumentResponse docs = (DocumentResponse)result.iterator().next();
-        assertEquals("There should only be a single result", 1, docs.size());
+        assertEquals("There should be a single result", 1, docs.size());
         boolean pubFound = false;
         for (DocumentResponse.Field field: docs.getRecords().get(0).getFields()) {
             if ("PublicationTitle".equals(field.getName())) {
@@ -1975,6 +1988,40 @@ public class SummonSearchNodeTest extends TestCase {
             result.add((double)record.getScore());
         }
         return result;
+    }
+
+
+    public void testAuthorsAsXML() throws RemoteException, XMLStreamException {
+        final String query = "PQID:821707502";
+
+        Configuration conf = SummonTestHelper.getDefaultSummonConfiguration();
+        conf.set(SummonResponseBuilder.CONF_XML_FIELD_HANDLING, SummonResponseBuilder.XML_MODE.full);
+        SummonSearchNode summon = new SummonSearchNode(conf);
+
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, query);
+        request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+
+        final Pattern AUTHOR_XML_FIELDS = Pattern.compile("(<field name=\"Author_xml\">.+?</field>)", Pattern.DOTALL);
+        List<String> authorXMLFields = getPattern(summon, request, AUTHOR_XML_FIELDS, false);
+        String content = Strings.join(authorXMLFields, "\n");
+        assertEquals("There should be the right number of 'Author_xml'-fields\n" + content,
+                     1, authorXMLFields.size());
+        final AtomicInteger count = new AtomicInteger(0);
+        XMLStepper.iterateTags(
+                xmlFactory.createXMLStreamReader(new StringReader(authorXMLFields.get(0))),
+                new XMLStepper.Callback() {
+                    @Override
+                    public boolean elementStart(
+                            XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                        count.incrementAndGet();
+                        return false;
+                    }
+                });
+        // field is the first start-element
+        assertEquals("There should be the right number of author contributor elements", 1+5, count.get());
+
+        log.info("Got XML-fields\n" + content);
     }
 
 

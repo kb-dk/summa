@@ -359,8 +359,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
      * @throws javax.xml.stream.XMLStreamException if there was an error
      * during stream access.
      */
-    private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml, final String sortKey,
-                                                         final XML_MODE xmlMode) throws XMLStreamException {
+    private List<DocumentResponse.Record> extractRecords(
+            XMLStreamReader xml, final String sortKey, final XML_MODE xmlMode) throws XMLStreamException {
         // Positioned at documents
         final List<DocumentResponse.Record> records = new ArrayList<>(50);
         XMLStepper.iterateElements(xml, "documents", "document", new XMLStepper.XMLCallback() {
@@ -612,8 +612,8 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     }
 
     private void extractSpecific(
-            XMLStreamReader xml, final XML_MODE xmlMode, final String fieldName, final List<DocumentResponse.Field> fields,
-            final ConvenientMap extracted) throws XMLStreamException {
+            XMLStreamReader xml, final XML_MODE xmlMode, final String fieldName,
+            final List<DocumentResponse.Field> fields, final ConvenientMap extracted) throws XMLStreamException {
         if ("PublicationDate_xml".equals(fieldName)) {
             /*
                   <field name="PublicationDate_xml">
