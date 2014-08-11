@@ -35,7 +35,7 @@ public class Alto {
     private static Log log = LogFactory.getLog(Alto.class);
 
     /**
-     * When requesting groups with {@link #getTextBlockGroups(int)}, blocks not satisfying the minWord constraint
+     * When requesting groups with {@link #getTextBlockGroups(int, int)}, blocks not satisfying the minWord constraint
      * will be put in a group with this name.
      */
     public static final String NOGROUP = "_nogroup_";
@@ -196,23 +196,25 @@ public class Alto {
         return groups;
     }
 
-    private Map<Integer, Map<String, List<TextBlock>>> minGroups = new HashMap<>();
+    private Map<String, Map<String, List<TextBlock>>> minGroups = new HashMap<>();
     /**
      * Works like {@link #getTextBlockGroups()} with the differences that groups containing less than minWords are
      * collapsed into the single group NOGROUP.
-     * @param minWords the minimum amount of words needed to constitute a group.
+     * @param minBlocks the minimum amount of blocks needed to constitute a group.
+     * @param minWords  the minimum amount of words needed to constitute a group.
      * @return the groups as described above.
      */
-    public Map<String, List<TextBlock>> getTextBlockGroups(int minWords) {
-        if (minGroups.containsKey(minWords)) {
-            return minGroups.get(minWords);
+    public Map<String, List<TextBlock>> getTextBlockGroups(int minBlocks, int minWords) {
+        final String key = "minBlocks=" + minBlocks + ", minWords=" + minWords;
+        if (minGroups.containsKey(key)) {
+            return minGroups.get(key);
         }
         Map<String, List<TextBlock>> all = getTextBlockGroups();
         List<TextBlock> no = new ArrayList<>();
         Map<String, List<TextBlock>> pruned = new HashMap<>(all.size());
 
         for (Map.Entry<String, List<TextBlock>> entry: all.entrySet()) {
-            if (countWords(entry.getValue()) < minWords) {
+            if (entry.getValue().size() < minBlocks || countWords(entry.getValue()) < minWords) {
                 no.addAll(entry.getValue());
             } else {
                 pruned.put(entry.getKey(), entry.getValue());
@@ -221,7 +223,7 @@ public class Alto {
         if (!no.isEmpty()) {
             pruned.put(NOGROUP, no);
         }
-        minGroups.put(minWords, pruned);
+        minGroups.put(key, pruned);
         return pruned;
     }
 

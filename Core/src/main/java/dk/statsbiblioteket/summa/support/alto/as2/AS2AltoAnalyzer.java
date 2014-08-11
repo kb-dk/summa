@@ -135,7 +135,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
                 if (first) {
                     // TODO: Use font size to guess headings instead
                     segment.setTitle(textBlock.getAllText(), maxTitleLength);
-                    first = !first;
+                    first = false;
                 }
                 segment.addParagraph(textBlock.getAllText());
             }
