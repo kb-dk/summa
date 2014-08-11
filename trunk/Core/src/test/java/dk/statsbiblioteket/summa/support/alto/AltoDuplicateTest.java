@@ -132,7 +132,8 @@ public class AltoDuplicateTest extends TestCase {
         AltoDuplicateFinder.main(new String[]{
                 "-r", "3@200", "50%@10",
                 "-x", "/home/te/smb/U/",
-                "-p", "/home/te/smb/U/B400026952040-RT1"
+                //"-p", "/home/te/smb/U/B400026952040-RT1" // 20 groups
+                "-p", "/home/te/smb/U/B400026952121-RT1" // 20 groups
                 //"-p", "/home/te/smb/U/B400026952040-RT1/400026952040-06/1959-07-26-01"
         });
     }
@@ -142,7 +143,8 @@ public class AltoDuplicateTest extends TestCase {
                 "-r", "3@200", "50%@1",
                 "-x", "/home/te/smb/U/",
                 "-v",
-                "-p", "/home/te/smb/U/B400026951826-RT1/400026951826-07/1990-06-12-01/"
+//                "-p", "/home/te/smb/U/B400026951826-RT1/400026951826-07/1990-06-12-01/"
+                "-p", "/home/te/smb/U/B400026952121-RT1/400026952121-07/"
                 //"-p", "/home/te/smb/U/B400026952040-RT1/400026952040-06/1959-07-26-01"
         });
     }

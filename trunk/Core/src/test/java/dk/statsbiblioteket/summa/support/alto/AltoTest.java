@@ -30,7 +30,7 @@ public class AltoTest extends TestCase {
 //    private static Log log = LogFactory.getLog(AltoTest.class);
 
     // TODO: We do not have license to publish these files. Generate obfuscated test files from them
-    public static final String alto1977 = "/home/te/projects/hvideprogrammer/B-1977-10-02-P-0003.xml";
+    public static final String alto1977 = "/mnt/bulk/projects/hvideprogrammer/B-1977-10-02-P-0003.xml";
 
     public AltoTest(String name) {
         super(name);
@@ -57,8 +57,15 @@ public class AltoTest extends TestCase {
 
     public void testGroupMinWordCount() throws XMLStreamException, FileNotFoundException {
         Alto alto = new Alto(new File(alto1977));
-        int m50 = alto.getTextBlockGroups(50).size();
-        int m10 = alto.getTextBlockGroups(10).size();
+        int m50 = alto.getTextBlockGroups(0, 50).size();
+        int m10 = alto.getTextBlockGroups(0, 10).size();
         assertNotSame("The group count for minWords=50 and minWords=10 should differ", m50, m10);
+    }
+
+    public void testGroupMinBlockCount() throws XMLStreamException, FileNotFoundException {
+        Alto alto = new Alto(new File(alto1977));
+        int m50 = alto.getTextBlockGroups(1, 0).size();
+        int m10 = alto.getTextBlockGroups(5, 0).size();
+        assertNotSame("The group count for minBlocks=1 and minBlocks=5 should differ", m50, m10);
     }
 }
