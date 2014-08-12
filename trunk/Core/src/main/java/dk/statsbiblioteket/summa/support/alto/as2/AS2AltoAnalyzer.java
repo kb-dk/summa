@@ -77,12 +77,30 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
     private static final String CONF_TITLE_MAXLENGTH = "asaltoanalyzer.title.maxlength";
     private static final int DEFAULT_TITLE_MAXLENGTH = 40;
 
+    /**
+     * The minimum amount of blocks that must be present to constitute a segment.
+     * </p><p>
+     * Optional. Default is 1.
+     */
+    public static final String CONF_SEGMENT_MIN_BLOCKS = "asaltoanalyzer.segment.minblocks";
+    public static final int DEFAULT_SEGMENT_MIN_BLOCKS = 1;
+
+    /**
+     * The minimum number of characters be present for a group og blocks to be considered a segment.
+     * </p><p>
+     * Optional. Default is 100.
+     */
+    public static final String CONF_SEGMENT_MIN_TEXT_LENGTH = "asaltoanalyzer.segment.mintextlength";
+    public static final int DEFAULT_SEGMENT_MIN_TEXT_LENGTH = 100;
+
     private final Pattern paperIDPattern;
     private final String paperIDReplacement;
     private final Pattern urlPattern;
     private final String urlReplacement;
     private final int maxTitleLength;
     private final DESIGNATION_SOURCE designationSource;
+    final private int minBlocks;
+    final private int minTextLength;
 
     public AS2AltoAnalyzer(Configuration conf) {
         super(addDefaultDatePattern(conf));
@@ -91,6 +109,8 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
         urlPattern = Pattern.compile(conf.getString(CONF_URL_REGEXP, DEFAULT_URL_REGEXP));
         urlReplacement = conf.getString(CONF_URL_REPLACEMENT, DEFAULT_URL_REPLACEMENT);
         maxTitleLength = conf.getInt(CONF_TITLE_MAXLENGTH, DEFAULT_TITLE_MAXLENGTH);
+        minBlocks = conf.getInt(CONF_SEGMENT_MIN_BLOCKS, DEFAULT_SEGMENT_MIN_BLOCKS);
+        minTextLength = conf.getInt(CONF_SEGMENT_MIN_TEXT_LENGTH, DEFAULT_SEGMENT_MIN_TEXT_LENGTH);
         designationSource = DESIGNATION_SOURCE.valueOf(
                 conf.getString(CONF_DESIGNATION_SOURCE, DEFAULT_DESIGNATION_SOURCE));
         log.info("Created " + this);
@@ -104,7 +124,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
     }
 
     // TODO: Make this configurable
-    private final String ID_PREFIX = "sb_avis_";
+    private final static String ID_PREFIX = "sb_avis_";
     @Override
     public List<AS2Segment> getSegments(Alto alto) {
         String rawDesignation = getRawDesignation(alto);
@@ -117,7 +137,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
         String paperName = paperNameMatcher.replaceAll(paperIDReplacement);
 
         List<AS2Segment> segments = new ArrayList<>(alto.getTextBlockGroups().size());
-        for (Map.Entry<String, List<Alto.TextBlock>> entry: alto.getTextBlockGroups().entrySet()) {
+        for (Map.Entry<String, List<Alto.TextBlock>> entry: alto.getTextBlockGroups(minBlocks, minTextLength).entrySet()) {
             AS2Segment segment = new AS2Segment(alto);
             // TODO: Use alto filename as prefix for ID to make it unique
             // ***
@@ -200,7 +220,9 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
     @Override
     public String toString() {
         return String.format(
-                "AS2AltoAnalyzer(paperIDPattern='%s', paperIDReplacement='%s', urlPattern='%s', urlReplacement='%s')",
-                paperIDPattern.pattern(), paperIDReplacement, urlPattern.pattern(), urlReplacement);
+                "AS2AltoAnalyzer(paperIDPattern='%s', paperIDReplacement='%s', urlPattern='%s', urlReplacement='%s', "
+                + "minBlocks=%d, minTextLength=%d)",
+                paperIDPattern.pattern(), paperIDReplacement, urlPattern.pattern(), urlReplacement,
+                minBlocks, minTextLength);
     }
 }
