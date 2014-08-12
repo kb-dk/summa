@@ -170,7 +170,7 @@
                 <charFilter class="dk.statsbiblioteket.summa.common.solr.analysis.LowerCaseCharFilterFactory"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="number_transliterations.txt"/>
                 <filter class="solr.TrimFilterFactory"/>
-                <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
+                <filter class="solr.LengthFilterFactory" min="1" max="1000" />
             </analyzer>
         </fieldType>
 
