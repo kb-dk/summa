@@ -286,8 +286,8 @@ But this is avery rare situation.
      <str name="f.fo.qf">author_main author_person au_other author_corporation</str>
      <str name="f.lma.qf">lma_long</str>
      <str name="f.ma.qf">ma_short</str>
-     <str name="f.numbers.qf">isbn issn number standard_number id ww fmlb fubl</str>
-     <str name="f.nr.qf">isbn issn number standard_number id ww fmlb fubl</str>
+     <str name="f.numbers.qf">isbn issn number standard_number id ww fmbl fubl</str>
+     <str name="f.nr.qf">isbn issn number standard_number id ww fmbl fubl</str>
      <str name="f.lsubj.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
      <str name="f.lem.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
      <str name="f.su.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled^1.2 subject_other</str>
