@@ -30,8 +30,12 @@ export NAME=summa-storage
 
 # Custom code
 export CONFIGURATION=$1
-if [ ! -f "$1" ]; then
+if [ "." == ".$1" ]; then
     echo "You must specify a configuration as first parameter" 1>&2
+    exit 1
+fi
+if [ ! -f "$1" ]; then
+    echo "Unable to locate Storage configuration $1" 1>&2
     exit 1
 fi
 
