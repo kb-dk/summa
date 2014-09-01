@@ -178,11 +178,14 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
             } else if ("sort".equals(attribute.getNodeName())) {
                 sort = attribute.getNodeValue();
                 if (!sort.equals(FacetStructure.SORT_ALPHA)
-                    && !sort.equals(FacetStructure.SORT_POPULARITY)) {
+                    && !sort.equals(FacetStructure.SORT_ALPHA_DESC)
+                    && !sort.equals(FacetStructure.SORT_POPULARITY)
+                    && !sort.equals(FacetStructure.SORT_POPULARITY_ASC)) {
                     log.warn(String.format(
                             "Encountered unknown SORT value '%s' while parsing the node for Facet '%s' for field/group "
-                            + "'%s'. Expected %s or %s",
-                            sort, name, ref, FacetStructure.SORT_ALPHA, FacetStructure.SORT_POPULARITY));
+                            + "'%s'. Expected %s, %s, %s or %s",
+                            sort, name, ref, FacetStructure.SORT_ALPHA, FacetStructure.SORT_ALPHA_DESC,
+                            FacetStructure.SORT_POPULARITY, FacetStructure.SORT_POPULARITY_ASC));
                 }
             } else //noinspection DuplicateStringLiteralInspection
                 if ("sortLocale".equals(attribute.getNodeName())) {
