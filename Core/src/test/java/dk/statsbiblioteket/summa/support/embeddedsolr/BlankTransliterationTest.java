@@ -34,6 +34,7 @@ public class BlankTransliterationTest {
 				"support/solr_test_documents/blank_transliteration_doc.txt",
 		
 		};
+		//Thread.sleep(1000000000L);
 		SolrServerUnitTestUtil.indexFiles(files);
 		SolrQuery query = new SolrQuery("Thomas Egense");
 		QueryResponse response = solrServer.query(query);

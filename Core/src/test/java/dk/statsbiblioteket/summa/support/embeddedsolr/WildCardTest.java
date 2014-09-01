@@ -27,7 +27,7 @@ public class WildCardTest {
 	}
 
 	@Test
-	public void testKeywordField() throws Exception {
+	public void testWildCard() throws Exception {
 
 		//recordbase:
 		//title: ABCDEFG 12345678

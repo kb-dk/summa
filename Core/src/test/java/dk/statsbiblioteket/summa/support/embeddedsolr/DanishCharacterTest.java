@@ -45,23 +45,17 @@ public class DanishCharacterTest {
 	    response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 		
-		SolrServerUnitTestUtil.indexFiles(files);
+
 	    query = new SolrQuery("\"børn æder aal\"");
 	    response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
-		
-		SolrServerUnitTestUtil.indexFiles(files);
-	    query = new SolrQuery("title:ål");
-	    response = solrServer.query(query);
-		assertEquals(1L, response.getResults().getNumFound());
-		
-		SolrServerUnitTestUtil.indexFiles(files);
-	    query = new SolrQuery("freetext:aal");
+			
+
+	    query = new SolrQuery("title_norm:aal");
 	    response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 	
-		SolrServerUnitTestUtil.indexFiles(files);
-	    query = new SolrQuery("freetext:ǣder");
+	    query = new SolrQuery("title_norm:ǣder");
 	    response = solrServer.query(query);
 		assertEquals(1L, response.getResults().getNumFound());
 		
