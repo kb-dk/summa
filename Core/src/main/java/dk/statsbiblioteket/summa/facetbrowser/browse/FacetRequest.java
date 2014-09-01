@@ -114,11 +114,18 @@ public class FacetRequest extends Structure {
                 // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
                 Integer maxTags = null;
                 String sortType = null;
+                Boolean reverse = null;
                 for (String facetArg : facetArgs) {
                     if (FacetStructure.SORT_POPULARITY.equals(facetArg)) {
                         sortType = FacetStructure.SORT_POPULARITY;
+                    } else if (FacetStructure.SORT_POPULARITY_ASC.equals(facetArg)) {
+                        sortType = FacetStructure.SORT_ALPHA;
+                        reverse = true;
                     } else if (FacetStructure.SORT_ALPHA.equals(facetArg)) {
                         sortType = FacetStructure.SORT_ALPHA;
+                    } else if (FacetStructure.SORT_ALPHA_DESC.equals(facetArg)) {
+                        sortType = FacetStructure.SORT_ALPHA;
+                        reverse = true;
                     } else {
                         try {
                             maxTags = Integer.parseInt(facetArg);
@@ -128,7 +135,7 @@ public class FacetRequest extends Structure {
                         }
                     }
                 }
-                getFacets().put(fc.getName(), fc.getRequestFacet(maxTags, sortType));
+                getFacets().put(fc.getName(), fc.getRequestFacet(maxTags, sortType, reverse));
             }
         } catch (Exception e) {
             log.warn(String.format(

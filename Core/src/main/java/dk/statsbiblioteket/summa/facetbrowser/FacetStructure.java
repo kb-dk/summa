@@ -40,12 +40,14 @@ public class FacetStructure implements Serializable {
      * first. Popularity translates directly to the number of occurences.
      */
     public static final String SORT_POPULARITY = "POPULARITY";
+    public static final String SORT_POPULARITY_ASC = "POPULARITY_ASC";
     /**
      * The returned tags should be sorted in the order they are stored in the
      * underlying Tag-structure. This will normally be in (localized) alpha-
      * numeric order. Tags with 0 hits will be skipped.
      */
     public static final String SORT_ALPHA = "ALPHA";
+    public static final String SORT_ALPHA_DESC = "ALPHA_DESC";
     /**
      * The name of the Facet.
      * </p><p>
@@ -146,17 +148,28 @@ public class FacetStructure implements Serializable {
         // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
         // TODO: Add reverse
         for (String facetArg: facetArgs) {
-            if (FacetStructure.SORT_POPULARITY.equals(facetArg)) {
-                sortType = FacetStructure.SORT_POPULARITY;
-            } else if (FacetStructure.SORT_ALPHA.equals(facetArg)) {
-                sortType = FacetStructure.SORT_ALPHA;
-            } else {
-                try {
-                    wantedTags = Integer.parseInt(facetArg);
-                } catch (NumberFormatException e) {
-                    log.warn(String.format("Argument '%s' in FacetDef '%s'",
-                                           facetArg, facetDef));
-                }
+            switch (facetArg) {
+                case FacetStructure.SORT_POPULARITY:
+                    sortType = FacetStructure.SORT_POPULARITY;
+                    break;
+                case FacetStructure.SORT_POPULARITY_ASC:
+                    sortType = FacetStructure.SORT_POPULARITY;
+                    reverse = true;
+                    break;
+                case FacetStructure.SORT_ALPHA:
+                    sortType = FacetStructure.SORT_ALPHA;
+                    break;
+                case FacetStructure.SORT_ALPHA_DESC:
+                    sortType = FacetStructure.SORT_ALPHA;
+                    reverse = true;
+                    break;
+                default:
+                    try {
+                        wantedTags = Integer.parseInt(facetArg);
+                    } catch (NumberFormatException e) {
+                        log.warn(String.format("Argument '%s' in FacetDef '%s'", facetArg, facetDef));
+                    }
+                    break;
             }
         }
         if (log.isTraceEnabled()) {
@@ -209,12 +222,15 @@ public class FacetStructure implements Serializable {
      * @param sortType   The wanted sort-type. If sort-type is null, the value is ignored.
      * @return A clone of this updated with the specified values.
      */
-    public FacetStructure getRequestFacet(Integer wantedTags, String sortType) {
+    public FacetStructure getRequestFacet(Integer wantedTags, String sortType, Boolean reverse) {
         if (wantedTags == null) {
             wantedTags = this.wantedTags;
         }
         if (sortType == null) {
             sortType = this.sortType;
+        }
+        if (reverse == null) {
+            reverse = this.reverse;
         }
         return new FacetStructure(name, id, fields, wantedTags, maxTags, locale, sortType, reverse);
     }
@@ -281,11 +297,23 @@ public class FacetStructure implements Serializable {
         return sortType;
     }
     private void setSortType(String sortType) {
-        if (SORT_ALPHA.equals(sortType) || SORT_POPULARITY.equals(sortType)) {
-            this.sortType = sortType;
-        } else {
-            log.warn(String.format("Invalid sortType '%s' specified for Facet '%s'. Using '%s' instead",
-                                   sortType, name, this.sortType));
+        switch (sortType) {
+            case SORT_ALPHA:
+            case SORT_POPULARITY:
+                this.sortType = sortType;
+                break;
+            case SORT_ALPHA_DESC:
+                this.sortType = SORT_ALPHA_DESC;
+                this.reverse = true;
+                break;
+            case SORT_POPULARITY_ASC:
+                this.sortType = SORT_POPULARITY_ASC;
+                this.reverse = true;
+                break;
+            default:
+                log.warn(String.format("Invalid sortType '%s' specified for Facet '%s'. Using '%s' instead",
+                                       sortType, name, this.sortType));
+                break;
         }
         // TODO: Implement this
     }

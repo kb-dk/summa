@@ -481,6 +481,12 @@ public class SolrSearchNodeTest extends TestCase {
                 {"03 all", Integer.toString(DOC_COUNT)},
                 {"solr", Integer.toString(DOC_COUNT)}
         };
+        String[][] EXPECTED_ALPHA_DESC = new String[][] {
+                {"solr", Integer.toString(DOC_COUNT)},
+                {"03 all", Integer.toString(DOC_COUNT)},
+                {"02 half", Integer.toString(DOC_COUNT/2)},
+                {"01 quart", Integer.toString(DOC_COUNT/4)}
+        };
         String[][] EXPECTED_COUNT = new String[][] {
                 {"03 all", Integer.toString(DOC_COUNT)},
                 {"02 half", Integer.toString(DOC_COUNT/2)},
@@ -495,6 +501,17 @@ public class SolrSearchNodeTest extends TestCase {
             ));
             try {
                 assertFacetOrder("ALPHA", searcher, EXPECTED_ALPHA);
+            } finally {
+                searcher.close();
+            }
+        }
+        ingestFacets(DOC_COUNT);
+        {
+            SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
+                    SolrSearchNode.CONF_SOLR_FACETS, "lma_long(ALPHA_DESC)"
+            ));
+            try {
+                assertFacetOrder("ALPHA_DESC", searcher, EXPECTED_ALPHA_DESC);
             } finally {
                 searcher.close();
             }
