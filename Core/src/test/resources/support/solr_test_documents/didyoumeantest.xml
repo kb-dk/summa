@@ -1,9 +1,8 @@
 <doc>
     <field name="recordID">didyoumeantest</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Hello world</field>
-    <field name="author_main">Thomas Egense</field>
-    <field name="author_normalised">Thomas Egense, Toke Eskildsen</field>
+    <field name="title_org">Hello world</field>
+    <field name="author_main_org">Thomas Egense</field>    
     <field name="year">2012</field>
     <field name="location_normalised">Statsbiblioteket</field>
 </doc>

@@ -1,9 +1,8 @@
 <doc>
     <field name="recordID">chinese_test</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Her er noget kinesisk一般論述研究／The som skal fremsøges</field>
-    <field name="author_main">Thomas Egense</field>
-    <field name="author_normalised">Egense, Thomas</field>
+    <field name="title_org">Her er noget kinesisk一般論述研究／The som skal fremsøges</field>
+    <field name="author_main_org">Thomas Egense</field>   
     <field name="year">2012</field>
     <field name="location_normalised">Statsbiblioteket</field>
     <field name="lma_long">03</field>

@@ -1,9 +1,8 @@
 <doc>
     <field name="recordID">character_transliteration_test</field>
     <field name="recordBase">aleph</field>
-    <field name="title">ëßζϕ</field>
-    <field name="author_main">Bjørn</field>
-    <field name="author_normalised">Bjørn</field>
+    <field name="title_org">ëßζϕ</field>
+    <field name="author_main_org">Bjørn</field>    
     <field name="year">2012</field>
     <field name="location_normalised">Statsbiblioteket</field>
 </doc>

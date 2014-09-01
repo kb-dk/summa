@@ -1,9 +1,8 @@
 <doc>
     <field name="recordID">special_character_test_doc1</field>
     <field name="recordBase">aleph</field>
-    <field name="title">ABCD-EFGH</field>
-    <field name="author_main">Thomas Egense</field>
-    <field name="author_normalised">Egense, Thomas</field>
+    <field name="title_org">ABCD-EFGH</field>
+    <field name="author_main_org">Thomas Egense</field>
     <field name="year">2012</field>
     <field name="location_normalised">Statsbiblioteket</field>
     <field name="lma_long">03</field>

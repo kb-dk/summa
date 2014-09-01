@@ -1,14 +1,13 @@
 <doc>
     <field name="recordID">void_transliteration_test</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Thomas-Egense ¼</field>
-    <field name="author_main">Bjørn</field>
-    <field name="author_normalised">Bjørn</field>
+    <field name="title_org">Thomas-Egense ¼</field>
+    <field name="author_main_org">Bjørn</field>
     <field name="year">2012</field>
     <field name="location_normalised">Bjørn</field>
 </doc>
 <doc>
     <field name="recordID">void_transliteration_test2</field>
     <field name="recordBase">aleph</field>
-    <field name="title">abc'def</field>    
+    <field name="title_org">abc'def</field>    
 </doc>
