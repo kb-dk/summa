@@ -1,10 +1,9 @@
 <doc>
     <field name="recordID">doc2_sort</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Ål smager godt</field>
+    <field name="title_org">Ål smager godt</field>
     <field name="sort_title">Ål smager godt</field>
     <field name="shortformat">Ål smager godt</field>
-    <field name="author_main">Thomas Egense</field>
-    <field name="author_normalised">Thomas Egense</field>
+    <field name="author_main_org">Thomas Egense</field>
     <field name="year">2011</field>    
 </doc>

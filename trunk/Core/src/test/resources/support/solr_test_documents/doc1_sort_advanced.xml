@@ -1,7 +1,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc1</field>
     <field name="recordBase">aleph</field>
-    <field name="title">$4 er prisen</field>
+    <field name="title_org">$4 er prisen</field>
     <field name="sort_title">$4 er prisen</field>
     <field name="shortformat">$4 er prisen</field>
 </doc>
@@ -9,7 +9,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc2</field>
     <field name="recordBase">aleph</field>
-    <field name="title">§14 af ophavsretsloven</field>
+    <field name="title_org">§14 af ophavsretsloven</field>
     <field name="sort_title">§14 af ophavsretsloven</field>
     <field name="shortformat">§14 af ophavsretsloven</field>
 </doc>
@@ -17,7 +17,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc3</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Analyse og teori</field>
+    <field name="title_org">Analyse og teori</field>
     <field name="sort_title">Analyse og teori</field>
     <field name="shortformat">Analyse og teori</field>
 </doc>
@@ -25,7 +25,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc4</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Analysen af teksten</field>
+    <field name="title_org">Analysen af teksten</field>
     <field name="sort_title">Analysen af teksten</field>
     <field name="shortformat">Analysen af teksten</field>
 </doc>
@@ -34,7 +34,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc5</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Dagen derpå</field>
+    <field name="title_org">Dagen derpå</field>
     <field name="sort_title">Dagen derpå</field>
     <field name="shortformat">Dagen derpå</field>
 </doc>
@@ -42,7 +42,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc6</field>
     <field name="recordBase">aleph</field>
-    <field name="title">(dagen oprandt)</field>
+    <field name="title_org">(dagen oprandt)</field>
     <field name="sort_title">(dagen oprandt)</field>
     <field name="shortformat">(dagen oprandt)</field>
 </doc>
@@ -51,7 +51,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc7</field>
     <field name="recordBase">aleph</field>
-    <field name="title">làm đĩ</field>
+    <field name="title_org">làm đĩ</field>
     <field name="sort_title">làm đĩ</field>
     <field name="shortformat">làm đĩ</field>
 </doc>
@@ -59,7 +59,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc8</field>
     <field name="recordBase">aleph</field>
-    <field name="title">lam di dam di duehhh</field>
+    <field name="title_org">lam di dam di duehhh</field>
     <field name="sort_title">lam di dam di duehhh</field>
     <field name="shortformat">lam di dam di duehhh</field>
 </doc>
@@ -67,7 +67,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc9</field>
     <field name="recordBase">aleph</field>
-    <field name="title">lam fra brugsen</field>
+    <field name="title_org">lam fra brugsen</field>
     <field name="sort_title">lam fra brugsen</field>
     <field name="shortformat">lam fra brugsen</field>
 </doc>
@@ -75,7 +75,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc10</field>
     <field name="recordBase">aleph</field>
-    <field name="title">&quot;Lam i roen&quot;</field>
+    <field name="title_org">&quot;Lam i roen&quot;</field>
     <field name="sort_title">&quot;Lam i roen&quot;</field>
     <field name="shortformat">&quot;Lam i roen&quot;</field>
 </doc>
@@ -84,7 +84,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc11</field>
     <field name="recordBase">aleph</field>
-    <field name="title">... og så blev det aften</field>
+    <field name="title_org">... og så blev det aften</field>
     <field name="sort_title">... og så blev det aften</field>
     <field name="shortformat">... og så blev det aften</field>
 </doc>
@@ -93,7 +93,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc12</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Også andre blev udpeget</field>
+    <field name="title_org">Også andre blev udpeget</field>
     <field name="sort_title">Også andre blev udpeget</field>
     <field name="shortformat">Også andre blev udpeget</field>
 </doc>
@@ -101,7 +101,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc13</field>
     <field name="recordBase">aleph</field>
-    <field name="title">är allt förbi?</field>
+    <field name="title_org">är allt förbi?</field>
     <field name="sort_title">är allt förbi?</field>
     <field name="shortformat">är allt förbi?</field>
 </doc>
@@ -109,7 +109,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc14</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Ære &amp; skam</field>
+    <field name="title_org">Ære &amp; skam</field>
     <field name="sort_title">Ære &amp; skam</field>
     <field name="shortformat">Ære &amp; skam</field>
 </doc>
@@ -118,7 +118,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc15</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Ärenden som beröra samerna</field>
+    <field name="title_org">Ärenden som beröra samerna</field>
     <field name="sort_title">Ärenden som beröra samerna</field>
     <field name="shortformat">Ärenden som beröra samerna</field>
 </doc>
@@ -126,7 +126,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc16</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Øg din digitale træfprocent</field>
+    <field name="title_org">Øg din digitale træfprocent</field>
     <field name="sort_title">Øg din digitale træfprocent</field>
     <field name="shortformat">Øg din digitale træfprocent</field>
 </doc>
@@ -134,7 +134,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc17</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Öga för öga</field>
+    <field name="title_org">Öga för öga</field>
     <field name="sort_title">Öga för öga</field>
     <field name="shortformat">Öga för öga</field>
 </doc>
@@ -142,7 +142,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc18</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Åen, der hadede løgn</field>
+    <field name="title_org">Åen, der hadede løgn</field>
     <field name="sort_title">Åen, der hadede løgn</field>
     <field name="shortformat">Åen, der hadede løgn</field>
 </doc>
@@ -150,7 +150,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc19</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Åen der vendte tilbage</field>
+    <field name="title_org">Åen der vendte tilbage</field>
     <field name="sort_title">Åen der vendte tilbage</field>
     <field name="shortformat">Åen der vendte tilbage</field>
 </doc>
@@ -159,7 +159,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc20</field>
     <field name="recordBase">aleph</field>
-    <field name="title">10</field>
+    <field name="title_org">10</field>
     <field name="sort_title">10</field>
     <field name="shortformat">10</field>
 </doc>
@@ -167,7 +167,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc21</field>
     <field name="recordBase">aleph</field>
-    <field name="title">1.000.000 (single)</field>
+    <field name="title_org">1.000.000 (single)</field>
     <field name="sort_title">1.000.000 (single)</field>
     <field name="shortformat">1.000.000 (single)</field>
 </doc>
@@ -175,7 +175,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc22</field>
     <field name="recordBase">aleph</field>
-    <field name="title">100000 volts (single)e</field>
+    <field name="title_org">100000 volts (single)e</field>
     <field name="sort_title">100000 volts (single)</field>
     <field name="shortformat">100000 volts (single)</field>
 </doc>
@@ -183,7 +183,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc23</field>
     <field name="recordBase">aleph</field>
-    <field name="title">100 70'er Hits</field>
+    <field name="title_org">100 70'er Hits</field>
     <field name="sort_title">100 70'er Hits</field>
     <field name="shortformat">100 70'er Hits</field>
 </doc>
@@ -191,7 +191,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc24</field>
     <field name="recordBase">aleph</field>
-    <field name="title">100 80's Hits</field>
+    <field name="title_org">100 80's Hits</field>
     <field name="sort_title">100 80's Hits</field>
     <field name="shortformat">100 80's Hits</field>
 </doc>
@@ -199,7 +199,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc25</field>
     <field name="recordBase">aleph</field>
-    <field name="title">100 Country</field>
+    <field name="title_org">100 Country</field>
     <field name="sort_title">100 Country</field>
     <field name="shortformat">100 Country</field>
 </doc>
@@ -207,7 +207,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc26</field>
     <field name="recordBase">aleph</field>
-    <field name="title">100 Hits Of The '70s</field>
+    <field name="title_org">100 Hits Of The '70s</field>
     <field name="sort_title">100 Hits Of The '70s</field>
     <field name="shortformat">100 Hits Of The '70s</field>
 </doc>
@@ -215,7 +215,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc27</field>
     <field name="recordBase">aleph</field>
-    <field name="title">100 Hits Of The '90s</field>
+    <field name="title_org">100 Hits Of The '90s</field>
     <field name="sort_title">100 Hits Of The '90s</field>
     <field name="shortformat">100 Hits Of The '90s</field>
 </doc>
@@ -223,7 +223,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc28</field>
     <field name="recordBase">aleph</field>
-    <field name="title">100 Hits of the 80's - Volume 2</field>
+    <field name="title_org">100 Hits of the 80's - Volume 2</field>
     <field name="sort_title">100 Hits of the 80's - Volume 2</field>
     <field name="shortformat">100 Hits of the 80's - Volume 2</field>
 </doc>
@@ -231,7 +231,7 @@
 <doc>
     <field name="recordID">sort_advanced_doc29</field>
     <field name="recordBase">aleph</field>
-    <field name="title">100 Movie Hits</field>
+    <field name="title_org">100 Movie Hits</field>
     <field name="sort_title">100 Movie Hits</field>
     <field name="shortformat">100 Movie Hits</field>
 </doc>

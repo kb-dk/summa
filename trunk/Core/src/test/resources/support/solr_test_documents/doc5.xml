@@ -1,8 +1,7 @@
 <doc>
     <field name="recordID">doc5</field>
     <field name="recordBase">aleph</field>
-    <field name="title">Lucene</field>
-    <field name="author_main">Toke Eskildsen</field>
+    <field name="title_org">Lucene</field>
     <field name="author_normalised">Toke Eskildsen</field>
     <field name="year">2012</field>
     <field name="location_normalised">Statsbiblioteket</field>

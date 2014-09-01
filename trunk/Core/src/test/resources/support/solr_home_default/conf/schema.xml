@@ -18,11 +18,13 @@
 
         <!-- Summa field: KeyWordAnalyzer, Field.Index.NOT_ANALYZED,,Field.Store.YES,Field.TermVector.NO -->
         <!-- Used by recordID and recordBase -->
-        <fieldType name="key" class="solr.StrField" indexed="true" stored="true" multiValued="false" required="true" termVectors="false"/>
+        <fieldType name="key" class="solr.StrField" indexed="true" stored="true" multiValued="false" required="true" termVectors="false" omitTermFreqAndPositions="true"/>
 
 
         <!-- Summa field: KeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
         <fieldType name="verbatim" class="solr.StrField" indexed="true" stored="false" multiValued="true" termVectors="false"/>
+
+         <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.YES,Field.TermVector.NO -->
 
         <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.YES,Field.TermVector.NO -->
         <fieldType name="keyword_sorted" class="solr.TextField" indexed="true" stored="true" termVectors="false">
@@ -170,6 +172,7 @@
                 <charFilter class="dk.statsbiblioteket.summa.common.solr.analysis.LowerCaseCharFilterFactory"/>
                 <charFilter class="solr.MappingCharFilterFactory" mapping="number_transliterations.txt"/>
                 <filter class="solr.TrimFilterFactory"/>
+                <!-- Must be below 32K in length -->
                 <filter class="solr.LengthFilterFactory" min="1" max="1000" />
             </analyzer>
         </fieldType>
@@ -203,6 +206,9 @@
                 <filter class="solr.LengthFilterFactory" min="1" max="9999999" />
             </analyzer>
         </fieldType>
+        
+        <!-- Use dfor date boosting. Precision is hour -->
+        <fieldType name="bdate" class="solr.TrieDateField" omitNorms="true" precisionStep="6" positionIncrementGap="0"/>
     </types>
 
     <fields>
@@ -240,9 +246,8 @@
         <!-- Fix of SOLR3422 -->
         <field name="_version_" type="long" indexed="true" stored="true"/>
 
-        <!-- Both recordID and recordBase are supposed to be unique in the index, but this is not enforced by Solr -->
         <field name="recordID" type="key"/>
-        <field name="recordBase" type="key"/>
+        <field name="recordBase" type="key" /> <!-- DocValues possible -->
 
         <!-- Gruppe enrich -->
         <field name="enrich_editor" type="text"  multiValued="true"/>
@@ -262,9 +267,14 @@
         <field name="html_h6" type="text"  multiValued="true"/>
         <field name="html_content" type="text"  multiValued="true"/>
         <field name="freetext" type="freetext"  multiValued="true"/>
-        <field name="title" type="text"  multiValued="true"/>
+        <!--title field for indexing with diacritics -->
+        <field name="title_org" type="text"  multiValued="true"/>
+        <!--Copy of field for alternative indexing -->
+        <field name="title_norm" type="freetext" multiValued="true"/>
 
-        <field name="se" type="text"  multiValued="true"/>
+        <field name="se_org" type="text"  multiValued="true"/>
+        <!--Copy of field for alternative indexing -->
+        <field name="se_norm" type="freetext" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
         <field name="aj" type="text"  multiValued="true"/>
         <!--artikelbasen - praksisregler -->
@@ -292,11 +302,17 @@
         <!--artikelbasen - praksisregler -->
         <field name="lvx" type="keyword" multiValued="true"/>
         <!--artikelbasen - praksisregler -->
-        <field name="vp" type="text"  multiValued="true"/>
+        <field name="vp_org" type="text"  multiValued="true"/>
+        <!--Copy of field for alternative indexing -->
+        <field name="vp_norm" type="freetext"  multiValued="true"/>
         <!--Hvorfor har vi defineret dette felt "text"= SOlr fejler hvis det ikke er her-->
         <field name="text" type="text" multiValued="true"/>
-        <field name="main_title" type="text"  multiValued="true"/>
-        <field name="peri" type="text"  multiValued="true"/>
+        <field name="main_title_org" type="text"  multiValued="true"/>
+           <!--Copy of field for alternative indexing -->
+        <field name="main_title_norm" type="freetext" multiValued="true"/>
+        <field name="peri_org" type="text"  multiValued="true"/>
+        <!--Copy of field for alternative indexing -->
+        <field name="peri_norm" type="freetext"  multiValued="true"/>
         <field name="lti" type="keyword"  multiValued="true"/>
         <field name="lperi" type="keyword"  multiValued="true"/>
         <field name="class_other" type="text"  multiValued="true"/>
@@ -306,11 +322,15 @@
         <field name="kl" type="text"  multiValued="true"/>
         <field name="lcc_kw" type="text"  multiValued="true"/>
         <field name="nlm_kw" type="text"  multiValued="true"/>
-        <field name="author_main" type="text"  multiValued="true"/>
-        <field name="author_person" type="text"  multiValued="true"/>
-        <field name="au_other" type="text"  multiValued="true"/>
-        <field name="author_corporation" type="text"  multiValued="true"/>
-        <field name="lma_long" type="keyword"  multiValued="true"/>
+        <field name="author_main_org" type="text"  multiValued="true"/>
+        <field name="author_main_norm" type="freetext"  multiValued="true"/>
+        <field name="author_person_org" type="text"  multiValued="true"/>
+        <field name="author_person_norm" type="freetext"  multiValued="true"/>
+        <field name="au_other_org" type="text"  multiValued="true"/>
+        <field name="au_other_norm" type="freetext"  multiValued="true"/>
+        <field name="author_corporation_org" type="text"  multiValued="true"/>
+        <field name="author_corporation_norm" type="freetext"  multiValued="true"/>
+        <field name="lma_long" type="keyword"  multiValued="true" /><!-- DocValues possible -->
 
         <!-- TODO: This field was introduced by cms but not defined -->
         <field name="ht" type="text"  multiValued="true"/>
@@ -342,12 +362,15 @@
         <field name="su_dk" type="keyword"  multiValued="true"/>
         <field name="led" type="keyword" multiValued="true"/>
         <field name="lsu_oai" type="keyword"  multiValued="true"/>
-        <field name="lsubject" type="keyword"  multiValued="true"/>
-        <field name="subject_dk5" type="text"  multiValued="true"/>
+        <field name="lsubject" type="keyword"  multiValued="true" /><!-- Would like DocValues but need analyze -->
+        <field name="subject_dk5_org" type="text"  multiValued="true"/>
+        <field name="subject_dk5_norm" type="freetext"  multiValued="true"/>
         <field name="subject_serial_solutions" type="text"  multiValued="true"/>
         <field name="subject_ulrichs" type="text"  multiValued="true"/>
-        <field name="subject_controlled" type="text"  multiValued="true"/>
-        <field name="subject_other" type="text"  multiValued="true"/>
+        <field name="subject_controlled_org" type="text"  multiValued="true"/>
+        <field name="subject_controlled_norm" type="freetext"  multiValued="true"/>
+        <field name="subject_other_org" type="text"  multiValued="true"/>
+        <field name="subject_other_norm" type="freetext"  multiValued="true"/>
         <field name="lcl_csa" type="keyword"  multiValued="true"/>
         <field name="lddc" type="keyword" multiValued="true" />
         <field name="lcl_all" type="keyword"  multiValued="true"/>
@@ -374,7 +397,7 @@
         <field name="item_mat" type="text"  multiValued="true"/>
         <field name="l_call" type="keyword" multiValued="true"/>
         <field name="location" type="text"  multiValued="true"/>
-        <field name="location_normalised" type="keyword"  multiValued="true"/>
+        <field name="location_normalised" type="keyword"  multiValued="true" /> <!-- DocValues possible -->
         <field name="ma_long" type="text"  multiValued="true"/>
         <field name="op" type="text" />
         <field name="original_language" type="text"  multiValued="true"/>
@@ -385,22 +408,24 @@
         <field name="ip" type="text"  multiValued="true"/>
         <field name="lip" type="keyword"  multiValued="true"/>
         <field name="commercials_subject" type="keyword"  multiValued="true"/>
-        <field name="author_normalised" type="keyword"  multiValued="true"/>
+        <field name="author_normalised" type="keyword"  multiValued="true"/><!-- Would like DocValues but need analyze -->
         <field name="llfo" type="keyword"  multiValued="true"/>
         <field name="format" type="text"  multiValued="true"/>
         <field name="lang" type="text"  multiValued="true"/>
-        <field name="llang" type="keyword"  multiValued="true"/>
+        <field name="llang" type="keyword"  multiValued="true" /> <!-- Would like DV -->
         <field name="no" type="text"  multiValued="true"/>
         <field name="openUrl" type="stored" multiValued="true"/>
         <field name="publ" type="text"  multiValued="true"/>
         <field name="py" type="text"  multiValued="true"/>
-        <field name="rt" type="text"  multiValued="true"/>
+        <field name="rt_org" type="text"  multiValued="true"/>
+        <!--Copy of field for alternative indexing -->
+        <field name="rt_norm" type="freetext"  multiValued="true"/>
         <field name="shortformat" type="stored"/>
-        <field name="sort_title" type="keyword_sorted" />
-        <field name="sort_year_asc" type="keyword" />
-        <field name="sort_year_desc" type="keyword" />
+        <field name="sort_title" type="keyword_sorted" /><!-- Would like DocValues but need analyze -->
+        <field name="sort_year_asc" type="keyword" multiValued="false" /> <!-- DocValues possible -->
+        <field name="sort_year_desc" type="keyword" multiValued="false" />  <!-- DocValues possible -->
         <field name="year" type="number" multiValued="true"/>
-        <field name="ava" type="keyword"  multiValued="true"/>
+        <field name="ava" type="keyword"  multiValued="true" /> <!-- DocValues possible -->
         <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->
         <field name="tag" type="keyword"  multiValued="true"/>
         <!--felt til tidsskriftstatus som den fremgår af delfelt s i 980 i hol-posten -->
@@ -424,6 +449,9 @@
 
         <!-- end converted from sb_index_descriptor -->
 
+       <!-- Boosting most recent -->
+       <field name="boostdate" type="bdate" indexed="true" stored="true" required="false" />
+
     </fields>
 
     <!-- Field to use to determine and enforce document uniqueness.
@@ -443,12 +471,14 @@
     <copyField source="html_h5" dest="freetext"/>
     <copyField source="html_h6" dest="freetext"/>
     <copyField source="html_content" dest="freetext"/>
-    <copyField source="title" dest="freetext"/>
-    <copyField source="se" dest="freetext"/>
-    <copyField source="lmo" dest="freetext"/>
+    <!--<copyField source="title" dest="freetext"/>-->
+    <copyField source="title_org" dest="title_norm"/>
+    <copyField source="se_org" dest="se_norm"/>
+    <copyField source="peri_org" dest="peri_norm"/>
+      <copyField source="lmo" dest="freetext"/>
     <copyField source="lvx" dest="freetext"/>
-    <copyField source="vp" dest="freetext"/>
-    <copyField source="main_title" dest="freetext"/>
+    <copyField source="vp_org" dest="vp_norm"/>
+    <copyField source="main_title_org" dest="main_title_norm"/>
     <copyField source="lti" dest="freetext"/>
     <copyField source="lperi" dest="freetext"/>
     <copyField source="class_other" dest="freetext"/>
@@ -458,10 +488,10 @@
     <copyField source="kl" dest="freetext"/>
     <copyField source="lcc_kw" dest="freetext"/>
     <copyField source="nlm_kw" dest="freetext"/>
-    <copyField source="author_main" dest="freetext"/>
-    <copyField source="author_person" dest="freetext"/>
-    <copyField source="au_other" dest="freetext"/>
-    <copyField source="author_corporation" dest="freetext"/>
+    <copyField source="author_main_org" dest="author_main_norm"/>
+    <copyField source="author_person_org" dest="author_person_norm"/>
+    <copyField source="au_other_org" dest="au_other_norm"/>
+    <copyField source="author_corporation_org" dest="author_corporation_norm"/>
     <copyField source="lma_long" dest="freetext"/>
     <copyField source="ma_short" dest="freetext"/>
     <copyField source="isbn" dest="freetext"/>
@@ -483,11 +513,11 @@
     <copyField source="led" dest="freetext"/>
     <copyField source="lsu_oai" dest="freetext"/>
     <copyField source="lsubject" dest="freetext"/>
-    <copyField source="subject_dk5" dest="freetext"/>
+    <copyField source="subject_dk5_org" dest="subject_dk5_norm"/>
     <copyField source="subject_serial_solutions" dest="freetext"/>
     <copyField source="subject_ulrichs" dest="freetext"/>
-    <copyField source="subject_controlled" dest="freetext"/>
-    <copyField source="subject_other" dest="freetext"/>
+    <copyField source="subject_controlled_org" dest="subject_controlled_norm"/>
+    <copyField source="subject_other_org" dest="subject_other_norm"/>
     <copyField source="lcl_csa" dest="freetext"/>
     <copyField source="lddc" dest="freetext"/>
     <copyField source="lcl_all" dest="freetext"/>
@@ -511,7 +541,7 @@
     <copyField source="itype" dest="freetext"/>
     <copyField source="item_mat" dest="freetext"/>
     <copyField source="l_call" dest="freetext"/>
-    <copyField source="location_normalised" dest="freetext"/>
+    <copyField source="location_normalised" dest="freetext" />
     <copyField source="ma_long" dest="freetext"/>
     <copyField source="original_language" dest="freetext"/>
     <copyField source="other" dest="freetext"/>
@@ -529,7 +559,7 @@
     <copyField source="no" dest="freetext"/>
     <copyField source="publ" dest="freetext"/>
     <copyField source="py" dest="freetext"/>
-    <copyField source="rt" dest="freetext"/>
+    <copyField source="rt_org" dest="rt_norm"/>
     <copyField source="sort_title" dest="freetext"/>
     <copyField source="sort_year_asc" dest="freetext"/>
     <copyField source="sort_year_desc" dest="freetext"/>

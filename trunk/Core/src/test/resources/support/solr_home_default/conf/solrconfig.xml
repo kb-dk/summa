@@ -125,192 +125,267 @@ Field boost not working exactly as intended. summa identity alias'es with boost 
 Also boost are not applied to fields when specifing several fields in query and the default dismax is not used.
 But this is avery rare situation.
 -->  
-    
-<requestHandler name="/edismax" default="true" class="solr.SearchHandler">
-   <lst name="defaults">
-     <str name="echoParams">explicit</str>
-     <!-- Query settings -->
-     <str name="defType">edismax</str>
-     <str name="rows">10</str>
-     <str name="q.op">AND</str>    
-     <!-- This we probably have to tune a lot -->         
-     <str name="mm">100%</str>
-       <!-- fulltext is for testing only (for now) -->
-     <str name="qf">
-       fulltext
-       sort_title
-       freetext^0.5
-       author_main^2.0
-       author_person
-       au_other
-       author_corporation
-       title^1.8 
-       se
-       main_title^4.0
-       html_h1
-       html_h2
-       html_h3
-       html_h4
-       html_h5
-       html_h6
-       subject_dk5
-       subject_serial_solutions
-       subject_ulrichs
-       subject_controlled^1.2
-       subject_other
-       lma_long
-       id     
-       enrich_editor^0.2
-       enrich_isbn^0.2
-       enrich_publisher^0.2
-       enrich_publishdate^0.2
-       enrich_title^0.2
-       enrich_head^0.2
-       enrich_freetext^0.05
-       lti                                                 
-     </str>
-     <!--Phrase fields, read SOLR book page 154. Performance can be improved by shingling common-grams -->
-     <str name="pf">
-       fulltext^0.5
-       sort_title^0.5
-       freetext^0.25
-       author_main^1.0
-       author_person^0.5
-       au_other^0.5
-       author_corporation^0.5
-       title^0.9
-       se^0.5
-       main_title^2.0
-       html_h1^0.5
-       html_h2^0.5
-       html_h3^0.5
-       html_h4^0.5
-       html_h5^0.5
-       html_h6^0.5
-       subject_dk5^0.5
-       subject_serial_solutions^0.5
-       subject_ulrichs^0.5
-       subject_controlled^0.6
-       subject_other^0.5
-       lma_long^0.5
-       <!--  id  Single term field,  no need to include in phrase -->
-       enrich_editor^0.1
-       enrich_isbn^0.1
-       enrich_publisher^0.1
-       enrich_publishdate^0.1
-       enrich_title^0.1
-       enrich_head^0.1
-       enrich_freetext^0.025
-       lti
-     </str>     
-     <str name="fl">*,score</str>
-     <str name="lowercaseOperators">false</str>
-     <str name="facet">on</str>
-     <str name="facet.mincount">1</str>
-     <str name="facet.limit">75</str>
-     
-     <str name="facet.field">recordBase</str>     
-     <str name="facet.field">lma_long</str>
-     <str name="facet.field">lsubject</str>
-     <str name="facet.field">location_normalised</str>
-     <str name="facet.field">author_normalised</str>
-     <str name="facet.field">llfo</str>
-     <str name="facet.field">year</str>
-     <str name="facet.field">llang</str>
-     <str name="facet.field">lcl_all</str>
-     <str name="facet.field">su_dk</str>
-     <str name="facet.field">su_lc</str>
-     <str name="facet.field">mesh</str>
-     <str name="facet.field">ldk5</str>
-     <str name="facet.field">lddc</str>
-     <str name="facet.field">lnlm</str>
-     <str name="facet.field">lkl</str>
-     <str name="facet.field">lti</str>
-     <str name="facet.field">lperi</str>
-     <str name="facet.field">ava</str>
-     
-     <!--Facet sort (lex or count). Only lma_long uses lex -->
-     <str name="f.lma_long.facet.sort">lex</str>
-     
-     <!--Virtual fields(summa alias/alias-groups) for query -->
-     <str name="f.titel.qf">title^1.8</str>   
-     <str name="f.ht.qf">main_title^4.0</str>
-     <str name="f.klassif.qf">class_other</str>   
-     <str name="f.po.qf">author_main^2.0</str>
-     <str name="f.pe.qf">author_person</str>
-     <str name="f.fo_andet.qf">au_other</str>
-     <str name="f.ko.qf">author_corporation</str>
-     <str name="f.ib.qf">issb</str>
-     <str name="f.in.qf">issn</str>
-     <str name="f.nummer.qf">number</str>
-     <str name="f.is.qf">standard_number</str>
-     <str name="f.lms.qf">mesh</str>
-     <str name="f.lek.qf">su_corp</str>     
-     <str name="f.llcm.qf">su_lc</str>
-     <str name="f.lep.qf">su_pe</str>
-     <str name="f.ldb.qf">su_dk</str>
-     <str name="f.uk_ser_sol.qf">subject_serial_solutions</str>
-     <str name="f.uk_ulrichs.qf">subject_ulrichs</str>
-     <str name="f.ke.qf">subject_controlled</str>     
-     <str name="f.uk.qf">subject_other</str>
-     <str name="f.klynge.qf">cluster</str>
-     <str name="f.lvp.qf">lso</str>
-     <str name="f.fb.qf">author_descr</str>
-     <str name="f.l_stregkode.qf">barcode_normalised</str>
-     <str name="f.opst.qf">call</str>
-     <str name="f.samling.qf">collection</str>
-     <str name="f.l_samling.qf">collection_normalised</str>
-     <str name="f.ul.qf">country</str>
-     <str name="f.matkat.qf">itype</str>
-     <str name="f.lop.qf">l_call</str>
-     <str name="f.lokation.qf">location</str>
-     <str name="f.l_lokation.qf">location_normalised</str>
-     <str name="f.ma_lang.qf">ma_long</str>
-     <str name="f.ou.qf">original_language</str>
-     <str name="f.andet.qf">other</str>
-     <str name="f.pu.qf">place</str>
-     <str name="f.lse.qf">series_normalised</str>
-     <str name="f.reklamefilm_subj.qf">commercials_subject</str>     
-     <str name="f.lfo.qf">author_normalised</str>
-     <str name="f.lsp.qf">llang</str>
-     <str name="f.fl.qf">publ</str>
-     <str name="f.år.qf">py</str>
-     <str name="f.sort_titel.qf">sort_title</str>
-     <str name="f.sort_år_asc.qf">sort_year_asc</str>
-     <str name="f.sort_år_desc.qf">sort_year_desc</str>
-     <str name="f.hjemme.qf">ava</str>
-     <str name="f.ny.qf">new</str>   
-     <str name="f.ti.qf">title^1.8 se main_title^4.0</str>
-     <str name="f.cl.qf">class_other ddc_kw dk inst kl lcc_kw nlm_kw</str>
-     <str name="f.au.qf">author_main author_person au_other author_corporation</str>
-     <str name="f.fo.qf">author_main author_person au_other author_corporation</str>
-     <str name="f.lma.qf">lma_long</str>
-     <str name="f.ma.qf">ma_short</str>
-     <str name="f.numbers.qf">isbn issn number standard_number id ww fmbl fubl</str>
-     <str name="f.nr.qf">isbn issn number standard_number id ww fmbl fubl</str>
-     <str name="f.lsubj.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
-     <str name="f.lem.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
-     <str name="f.su.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled^1.2 subject_other</str>
-     <str name="f.em.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled^1.2 subject_other</str>
-     <str name="f.lcl.qf">lcl_csa lcl_all ldbk lddc ldk5 lfn linst lkl llcc lnlm ludk</str>
-     <str name="f.html_header.qf">html_h1 html_h2 html_h3 html_h4 html_h5 html_h6</str>
-     <str name="f.enrich_header.qf">enrich_editor^0.2 enrich_isbn^0.2 enrich_publisher^0.2 enrich_publishdate^0.2 enrich_title^0.2 enrich_head^0.2 enrich_freetext^0.05</str>         
 
-       <!-- Spellcheck (DidyouMean) setup -->
-       <str  name="spellcheck.dictionary">summa_spell</str>
-       <bool name="spellcheck.extendedResults">true</bool>
-       <bool name="spellcheck.collate">true</bool>
-       <bool name="spellcheck.collateExtendedResults">true</bool>
-       <int  name="spellcheck.maxCollationTries">5</int>
-       <int  name="spellcheck.count">5</int>
+    <requestHandler name="/new" default="true" class="solr.SearchHandler">
+        <lst name="defaults">
+            <str name="echoParams">explicit</str>
+            <!-- Query settings -->
+            <str name="defType">edismax</str>
+            <str name="rows">10</str>
+            <str name="q.op">AND</str>
+            <!-- This we probably have to tune a lot -->
+            <str name="mm">100%</str>
+            <str name="boost">if(query({!v='recordBase:sb_aleph'}),1.4,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_ebog'}),1.5,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_oai'}),0.5,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_dbc_artikelbase'}),1,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_etss'}),2,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_reklamefilm'}),1,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_nordicom'}),0.4,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_pure'}),0.3,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_doms'}),0.8,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_dkb'}),0.4,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_mis'}),0.4,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_cms'}),1.12,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_dub'}),0.4,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_tusculanum'}),1.15,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_dpp'}),0.4,1)</str>
+            <str name="boost">if(query({!v='recordBase:sbdatabase'}),6.5,1)</str>
+            <str name="boost">if(query({!v='recordBase:sb_fagref'}),4,1)</str>
+            <str name="boost">if(exists(boostdate),recip(ms(NOW/HOUR,boostdate),3.16e-11,4,0.4),1) </str>
 
-   </lst>
-   <arr name="last-components">
-      <str>spellcheck</str>
-   </arr>
-   
-</requestHandler>
+            <str name="qf">
+                sort_title^2.0
+                freetext^0.5
+                author_main_org^2.0
+                author_main_norm^0.75
+                author_person_org
+                author_person_norm^0.5
+                au_other_org
+                au_other_norm^0.5
+                author_corporation_org
+                author_corporation_norm^0.5
+                title_org^1.8
+                title_norm^0.5
+                se_org
+                se_norm^0.5
+                main_title_org^4.0
+                main_title_norm^0.5
+                html_h1
+                html_h2
+                html_h3
+                html_h4
+                html_h5
+                html_h6
+                subject_dk5_org
+                subject_dk5_norm^0.5
+                subject_serial_solutions
+                subject_ulrichs
+                subject_controlled_org^1.3
+                subject_controlled_norm^0.8
+                subject_other_org^1.2
+                subject_other_norm^0.6
+                lma_long
+                id
+                enrich_editor^0.2
+                enrich_isbn^0.2
+                enrich_publisher^0.2
+                enrich_publishdate^0.2
+                enrich_title^0.2
+                enrich_head^0.2
+                enrich_freetext^0.05
+                lti
+            </str>
+            <!--Phrase fields, read SOLR book page 154. Performance can be improved by shingling common-grams -->
+            <str name="pf">
+                fulltext^0.5
+                sort_title^0.5
+                freetext^0.25
+                author_main_org^1.0
+                author_main_norm^0.5
+                author_person_org^0.5
+                author_person_norm^0.25
+                au_other_org^0.5
+                au_other_norm^0.25
+                author_corporation_org^0.5
+                author_corporation_norm^0.25
+                title_org^0.9
+                title_norm^0.25
+                se_org^0.5
+                main_title_org^2.0
+                main_title_norm^0.25
+                html_h1^0.5
+                html_h2^0.5
+                html_h3^0.5
+                html_h4^0.5
+                html_h5^0.5
+                html_h6^0.5
+                subject_dk5_org^0.5
+                subject_dk5_norm^0.25
+                subject_serial_solutions^0.5
+                subject_ulrichs^0.5
+                subject_controlled_org^0.6
+                subject_controlled_norm^0.3
+                subject_other_org^0.5
+                subject_other_norm^0.25
+                lma_long^0.5
+                <!--  id  Single term field,  no need to include in phrase -->
+                enrich_editor^0.1
+                enrich_isbn^0.1
+                enrich_publisher^0.1
+                enrich_publishdate^0.1
+                enrich_title^0.1
+                enrich_head^0.1
+                enrich_freetext^0.025
+                lti
+            </str>
+            <str name="fl">*,score</str>
+            <str name="lowercaseOperators">false</str>
 
+            <!-- Directly from Lucene seyup -->
+            <str name="mlt.fl">title,main_title_norm,class_other,ddc_kw,dk,inst,kl,lcc_kw,nlm_kw,isbn_other,issn_other,isbn,issn,fubl,number,standard_number,id,mesh,su_corp,su_lc,su_pe,lsu_ser_sol,lsu_ulrichs,lsu_ulrichs_hier,su_dk,lsu_oai,lsubject,subject_dk5,subject_serial_solutions,subject_ulrichs,subject_controlled,subject_other</str>
+            <!--
+                     author_main
+                     author_person
+                     author_other
+                     title
+                     lti
+                     se
+                     subject_dk
+                     subject_other
+                     fulltext
+                     freetext-->
+
+            <str name="mlt.count">8</str>
+            <str name="mlt.mintf">1</str>
+
+            <str name="facet">on</str>
+            <str name="facet.mincount">1</str>
+            <str name="facet.limit">75</str>
+
+            <str name="facet.field">recordBase</str>
+            <str name="facet.field">lma_long</str>
+            <str name="facet.field">llang</str>
+            <str name="facet.field">location_normalised</str>
+            <str name="facet.field">lsubject</str>
+            <str name="facet.field">author_normalised</str>
+            <str name="facet.field">ava</str>
+            <str name="facet.field">year</str>
+
+            <str name="facet.sparse">true</str>
+            <str name="facet.sparse.packed">true</str> <!-- default is true -->
+            <str name="facet.sparse.packed.pool.size">5</str>
+
+            <!-- Relevant for test, not production -->
+            <!--
+            <str name="facet.field">llfo</str>
+            <str name="facet.field">lti</str>
+            <str name="facet.field">lperi</str>
+            -->
+
+            <!--Facet sort (lex or count). Only lma_long uses index-->
+            <str name="f.lma_long.facet.sort">index</str>
+
+
+            <!--Virtual fields(summa alias/alias-groups) for query -->
+            <str name="f.title.qf">title_org^1.8 title_norm</str>
+            <str name="f.titel.qf">title_org^1.8 title_norm</str>
+            <str name="f.se.qf">se_org^1.8 se_norm</str>
+            <str name="f.rt.qf">rt_org^1.8 rt_norm</str>
+            <str name="f.peri.qf">peri_org^1.8 peri_norm</str>
+            <str name="f.vp.qf">vp_org^1.8 vp_norm</str>
+            <str name="f.ht.qf">main_title_org^4.0 main_title_norm</str>
+            <str name="f.main_title.qf">main_title_org^4.0 main_title_norm</str>
+            <str name="f.klassif.qf">class_other</str>
+            <str name="f.author_main.qf">author_main_org^2.0 author_main_norm</str>
+            <str name="f.po.qf">author_main_org^2.0 author_main_norm</str>
+            <str name="f.author_person.qf">author_person_org author_person_norm^0.5</str>
+            <str name="f.pe.qf">author_person_org author_person_norm^0.5</str>
+            <str name="f.au_other.qf">au_other_org au_other_norm^0.5</str>
+            <str name="f.fo_andet.qf">au_other_org au_other_norm^0.5</str>
+            <str name="f.author_corporation.qf">author_corporation_org author_corporation_norm^0.5</str>
+            <str name="f.ko.qf">author_corporation_org author_corporation_norm^0.5</str>
+            <str name="f.ib.qf">isbn</str>
+            <str name="f.in.qf">issn</str>
+            <str name="f.nummer.qf">number</str>
+            <str name="f.is.qf">standard_number</str>
+            <str name="f.lms.qf">mesh</str>
+            <str name="f.lek.qf">su_corp</str>
+            <str name="f.llcm.qf">su_lc</str>
+            <str name="f.lep.qf">su_pe</str>
+            <str name="f.ldb.qf">su_dk</str>
+            <str name="f.uk_ser_sol.qf">subject_serial_solutions</str>
+            <str name="f.uk_ulrichs.qf">subject_ulrichs</str>
+            <str name="f.subject_controlled.qf">subject_controlled_org subject_controlled_norm^0.5</str>
+            <str name="f.ke.qf">subject_controlled_org subject_controlled_norm^0.5</str>
+            <str name="f.subject_other.qf">subject_other_org subject_other_norm^0.5</str>
+            <str name="f.uk.qf">subject_other_org subject_other_norm^0.5</str>
+            <str name="f.klynge.qf">cluster</str>
+            <str name="f.lvp.qf">lso</str>
+            <str name="f.fb.qf">author_descr</str>
+            <str name="f.l_stregkode.qf">barcode_normalised</str>
+            <str name="f.opst.qf">call</str>
+            <str name="f.samling.qf">collection</str>
+            <str name="f.l_samling.qf">collection_normalised</str>
+            <str name="f.ul.qf">country</str>
+            <str name="f.matkat.qf">itype</str>
+            <str name="f.lop.qf">l_call</str>
+            <str name="f.lokation.qf">location</str>
+            <str name="f.l_lokation.qf">location_normalised</str>
+            <str name="f.ma_lang.qf">ma_long</str>
+            <str name="f.ou.qf">original_language</str>
+            <str name="f.andet.qf">other</str>
+            <str name="f.pu.qf">place</str>
+            <str name="f.lse.qf">series_normalised</str>
+            <str name="f.reklamefilm_subj.qf">commercials_subject</str>
+            <str name="f.lfo.qf">author_normalised</str>
+            <str name="f.lsp.qf">llang</str>
+            <str name="f.fl.qf">publ</str>
+            <str name="f.år.qf">py</str>
+            <str name="f.sort_titel.qf">sort_title</str>
+            <str name="f.sort_år_asc.qf">sort_year_asc</str>
+            <str name="f.sort_år_desc.qf">sort_year_desc</str>
+            <str name="f.hjemme.qf">ava</str>
+            <str name="f.ny.qf">new</str>
+            <str name="f.ti.qf">title_org^1.8 title_norm^0.5 se_org se_norm^0.5 main_title_org^4.0 main_title_norm^0.5</str>
+            <str name="f.cl.qf">class_other ddc_kw dk inst kl lcc_kw nlm_kw</str>
+            <str name="f.au.qf">author_main_org^2.0 author_main_norm^0.75 author_person_org author_person_norm^0.5 au_other_org au_other_norm^0.5 author_corporation_org author_corporation_norm^0.5</str>
+            <str name="f.fo.qf">author_main_org^2.0 author_main_norm^0.75 author_person_org author_person_norm^0.5 au_other_org au_other_norm^0.5 author_corporation_org author_corporation_norm^0.5</str>
+            <str name="f.lma.qf">lma_long</str>
+            <str name="f.ma.qf">ma_short</str>
+            <str name="f.numbers.qf">isbn issn number standard_number id ww fmbl fubl</str>
+            <str name="f.nr.qf">isbn issn number standard_number id ww fmbl fubl</str>
+            <str name="f.lsubj.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
+            <str name="f.lem.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
+            <str name="f.su.qf">subject_dk5_org subject_dk5_norm^0.5 subject_serial_solutions subject_ulrichs subject_controlled_org^1.2 subject_controlled_norm^0.6 subject_other_org subject_other_norm^0.5</str>
+            <str name="f.em.qf">subject_dk5_org subject_dk5_norm^0.5 subject_serial_solutions subject_ulrichs subject_controlled_org^1.2 subject_controlled_norm^0.6 subject_other_org subject_other_norm^0.5</str>
+            <str name="f.subject_dk5">subject_dk5_org subject_dk5_norm^0.5</str>
+            <str name="f.lcl.qf">lcl_csa lcl_all ldbk lddc ldk5 lfn linst lkl llcc lnlm ludk</str>
+            <str name="f.html_header.qf">html_h1 html_h2 html_h3 html_h4 html_h5 html_h6</str>
+            <str name="f.enrich_header.qf">enrich_editor^0.2 enrich_isbn^0.2 enrich_publisher^0.2 enrich_publishdate^0.2 enrich_title^0.2 enrich_head^0.2 enrich_freetext^0.05</str>
+            <str name="f.pu.qf">place</str>
+            <str name="f.fl.qf">publ</str>
+            <str name="f.sp.qf">lang</str>
+            <!-- Spellcheck (DidyouMean) setup -->
+            <str name="spellcheck">false</str> <!-- false as default for performance -->
+
+            <str  name="spellcheck.dictionary">summa_spell</str>
+            <bool name="spellcheck.extendedResults">true</bool>
+            <bool name="spellcheck.collate">true</bool>
+            <bool name="spellcheck.collateExtendedResults">true</bool>
+            <int  name="spellcheck.maxCollationTries">5</int>
+            <int  name="spellcheck.count">5</int>
+            <!-- Report candidates iff they are more popular than the query terms.
+                 Even when query terms occur in the index -->
+            <bool name="spellcheck.onlyMorePopular">false</bool>
+
+        </lst>
+        <arr name="last-components">
+            <str>spellcheck</str>
+            <str>exposed</str>
+        </arr>
+
+    </requestHandler>
 
   <requestHandler name="/update" class="solr.UpdateRequestHandler">
     <!-- See below for information on defining 

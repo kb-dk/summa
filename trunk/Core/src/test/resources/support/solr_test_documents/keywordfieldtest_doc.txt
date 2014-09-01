@@ -1,9 +1,8 @@
 <doc>
     <field name="recordID">keyword_test</field>
     <field name="recordBase">aleph</field>
-    <field name="title">keyword_test</field>
-    <field name="author_main">Thomas Egense</field>
-    <field name="author_normalised">Thomas Egense</field>
+    <field name="title_org">keyword_test</field>
+    <field name="author_main_org">Thomas Egense</field>
     <field name="year">2012</field>
     <field name="location_normalised">Statsbiblioteket</field>
     <field name="lma_long">ABC   DEF_GI J</field>

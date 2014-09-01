@@ -1,9 +1,8 @@
 <doc>
     <field name="recordID">wildcard_test</field>
     <field name="recordBase">aleph</field>
-    <field name="title">ABCDEFG 12345678</field>
-    <field name="author_main">Thomas Egense</field>
-    <field name="author_normalised">Thomas Egense</field>
+    <field name="title_org">ABCDEFG 12345678</field>
+    <field name="author_main_org">Thomas Egense</field>
     <field name="year">2012</field>
     <field name="location_normalised">Matematik</field>    
 </doc>
