@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
@@ -90,6 +91,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
     private ExecutorService executor;
     private final List<String> defaultSearchers;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
+    private final MachineStats machineStats;
 
     public SummaSearcherAggregator(Configuration conf) {
         preConstruction(conf);
@@ -119,6 +121,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating Executor with " + threadCount + " threads");
         executor = Executors.newFixedThreadPool(threadCount);
+        machineStats = conf.getBoolean(MachineStats.CONF_ACTIVE, true) ? new MachineStats(conf) : null;
 
         log.info("Constructed " + this);
     }
@@ -167,6 +170,9 @@ public class SummaSearcherAggregator implements SummaSearcher {
             log.trace("Starting search for " + request);
         }
         final long startTime = System.currentTimeMillis();
+        if (machineStats != null) {
+            machineStats.ping();
+        }
         final String originalRequest = request.toString(true);
         preProcess(request);
         ResponseCollection merged = null;

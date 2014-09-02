@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
+import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -114,6 +115,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     private AtomicLong totalResponseTime = new AtomicLong(0);
     private AtomicInteger concurrentSearches = new AtomicInteger(0);
     private final boolean emptySearchAllowed;
+    private final MachineStats machineStats;
 
     private int maxConcurrent = 0; // Non-authoritative, used for loose inspection only
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
@@ -155,6 +157,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
         } else {
             log.debug("Not using local index. No index watcher, no open");
         }
+        machineStats = conf.getBoolean(MachineStats.CONF_ACTIVE, true) ? new MachineStats(conf) : null;
         log.debug("Finished constructing SummaSearcherImpl");
     }
 
@@ -168,6 +171,9 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     @Override
     public ResponseCollection search(Request request) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
+        if (machineStats != null) {
+            machineStats.ping();
+        }
         if (!emptySearchAllowed && request.isEmpty()) {
             log.debug("search: No content in request and empty search not allowed. No search is performed");
             responses.addTiming("summasearcher.emptysearch", 0);

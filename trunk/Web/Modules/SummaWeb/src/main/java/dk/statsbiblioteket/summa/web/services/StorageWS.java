@@ -179,7 +179,7 @@ public class StorageWS implements ServletContextListener {
     @WebMethod
     public String getRecords(String[] ids) {
         List<String> list = Arrays.asList(ids);
-        log.info("getRecords, fetching " + list.size() + " records from storage.");
+        log.debug("getRecords, fetching " + list.size() + " records from storage.");
         return realGetRecords(list);
     }
 
@@ -245,7 +245,7 @@ public class StorageWS implements ServletContextListener {
 
         totalTime = System.currentTimeMillis() -totalTime;
         log.debug(String.format(
-            "Finished realGetRecords(%d ids) in %dms (query: %d, xmlify: %dms, escapeContent=%b)",
+            "Finished realGetRecords(%d ids) in %dms (query: %dms, xmlify: %dms, escapeContent=%b)",
             ids.size(), totalTime, time, xmlTime, escapeContent));
 
         return retXML;
