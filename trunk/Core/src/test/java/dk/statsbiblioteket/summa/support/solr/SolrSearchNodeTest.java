@@ -482,10 +482,10 @@ public class SolrSearchNodeTest extends TestCase {
                 {"solr", Integer.toString(DOC_COUNT)}
         };
         String[][] EXPECTED_ALPHA_DESC = new String[][] {
-                {"solr", Integer.toString(DOC_COUNT)},
                 {"03 all", Integer.toString(DOC_COUNT)},
                 {"02 half", Integer.toString(DOC_COUNT/2)},
-                {"01 quart", Integer.toString(DOC_COUNT/4)}
+                {"01 quart", Integer.toString(DOC_COUNT/4)},
+                {"solr", Integer.toString(DOC_COUNT)} // From the recordBase-facet so it will always be last
         };
         String[][] EXPECTED_COUNT = new String[][] {
                 {"03 all", Integer.toString(DOC_COUNT)},
@@ -618,6 +618,13 @@ public class SolrSearchNodeTest extends TestCase {
             assertEquals(designation + ": The tag count should match at position " + count,
                          expected[count][1], matcher.group(2));
             count++;
+        }
+        if (count < expected.length) {
+            String missing = "";
+            for (int i = count ; i < expected.length ; i++) {
+                missing += " " + expected[i][0] + "(" + expected[i][1] + ")";
+            }
+            fail("Missed " + (expected.length - count) + " expected values:" + missing);
         }
     }
 

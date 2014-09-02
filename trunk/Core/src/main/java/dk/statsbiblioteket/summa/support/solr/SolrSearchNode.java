@@ -673,6 +673,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         if (validRequest(queryMap)) {
             try {
                 result = getData(restCall, queryString, responses);
+//                System.out.println("*** " + result.replace("<", "\n<"));
             } catch (Exception e) {
                 throw new RemoteException("SolrSearchNode: Unable to perform remote call to "  + host + restCall
                                           + " with argument '" + queryString + " and message " + e.getMessage());
