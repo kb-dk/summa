@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.support.alto.Alto;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLStepper;
 import org.apache.commons.logging.Log;
@@ -43,6 +44,8 @@ public class DOMSNewspaperSimpleDocCreator extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(DOMSNewspaperSimpleDocCreator.class);
     private XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
     private XMLOutputFactory xmlOutFactory = XMLOutputFactory.newFactory();
+
+    private final static boolean CDATA_SHORTFORMAT = true;
 
     public DOMSNewspaperSimpleDocCreator(Configuration conf) {
         super(conf);
@@ -70,7 +73,9 @@ public class DOMSNewspaperSimpleDocCreator extends ObjectFilterImpl {
 
     int dummyIDCounter = 0;
     private Record produceRecord(Payload payload, Alto alto) throws XMLStreamException {
-        final String ID = "DummyID_" + dummyIDCounter++;
+        //final String ID = "DummyID_" + dummyIDCounter++;
+        final String ID = payload.getId() == null ? "DummyID_" + dummyIDCounter++ : payload.getId();
+
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         XMLStreamWriter xmlOut = xmlOutFactory.createXMLStreamWriter(out);
@@ -79,33 +84,44 @@ public class DOMSNewspaperSimpleDocCreator extends ObjectFilterImpl {
         writeField(xmlOut, "recordID", ID);
         writeField(xmlOut, "recordBase", "aviser");
         addShortFormat(xmlOut, ID, "aviser");
+        writeField(xmlOut, "content", Strings.join(alto.getAllTexts(), " "));
 
         xmlOut.writeEndElement();
         xmlOut.flush();
         return new Record(ID, "aviser", out.toByteArray());
     }
 
+    private static String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    private static String DC = "http://purl.org/dc/elements/1.1/";
     private void addShortFormat(XMLStreamWriter xmlOut, String id, String base) throws XMLStreamException {
-        xmlOut.setNamespaceContext(createShortformatContext());
-        xmlOut.writeStartElement("field");
-        xmlOut.writeAttribute("name", "shortformat");
+//        xmlOut.setNamespaceContext(createShortformatContext());
+
+        XMLStreamWriter originalOut = xmlOut;
+        ByteArrayOutputStream localOut = null;
+        if (CDATA_SHORTFORMAT) {
+            localOut = new ByteArrayOutputStream();
+            xmlOut = xmlOutFactory.createXMLStreamWriter(localOut);
+        } else {
+            xmlOut.writeStartElement("field");
+            xmlOut.writeAttribute("name", "shortformat");
+        }
 
         xmlOut.writeStartElement("shortrecord");
 //        xmlOut.writeNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 //        xmlOut.writeNamespace("dc", "http://purl.org/dc/elements/1.1/");
 
-        xmlOut.writeStartElement("rdf", "RDF");
-        xmlOut.writeStartElement("rdf", "description");
+        xmlOut.writeStartElement("rdf", "RDF", RDF);
+        xmlOut.writeStartElement("rdf", "Description", RDF);
 
-        xmlOut.writeStartElement("dc", "title");
+        xmlOut.writeStartElement("dc", "title", DC);
         xmlOut.writeCharacters("Alto " + id);
         xmlOut.writeEndElement();
 
-        xmlOut.writeStartElement("dc", "date");
+        xmlOut.writeStartElement("dc", "date", DC);
         xmlOut.writeCharacters("????");
         xmlOut.writeEndElement();
 
-        xmlOut.writeStartElement("dc", "identifier");
+        xmlOut.writeStartElement("dc", "identifier", DC);
         xmlOut.writeCharacters("URL-to-imageserver");
         xmlOut.writeEndElement();
 
@@ -113,7 +129,12 @@ public class DOMSNewspaperSimpleDocCreator extends ObjectFilterImpl {
         xmlOut.writeEndElement();
         xmlOut.writeEndElement();
 
-        xmlOut.writeEndElement();
+        if (!CDATA_SHORTFORMAT) {
+            xmlOut.writeEndElement(); // field name=shortformat
+        } else {
+            xmlOut.flush();
+            writeField(originalOut, "shortformat", localOut.toString());
+        }
     }
 
     private NamespaceContext createShortformatContext() {
