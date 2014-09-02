@@ -24,8 +24,6 @@
         <!-- Summa field: KeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.NO,Field.TermVector.NO -->
         <fieldType name="verbatim" class="solr.StrField" indexed="true" stored="false" multiValued="true" termVectors="false"/>
 
-         <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.YES,Field.TermVector.NO -->
-
         <!-- Summa field: SummaKeyWordAnalyzer, Field.Index.ANALYZED,Field.Store.YES,Field.TermVector.NO -->
         <fieldType name="keyword_sorted" class="solr.TextField" indexed="true" stored="true" termVectors="false">
              <analyzer type="index">
@@ -422,8 +420,8 @@
         <field name="rt_norm" type="freetext"  multiValued="true"/>
         <field name="shortformat" type="stored"/>
         <field name="sort_title" type="keyword_sorted" /><!-- Would like DocValues but need analyze -->
-        <field name="sort_year_asc" type="keyword" multiValued="false" /> <!-- DocValues possible -->
-        <field name="sort_year_desc" type="keyword" multiValued="false" />  <!-- DocValues possible -->
+        <field name="sort_year_asc" type="keyword" multiValued="false" stored="true"/> <!-- DocValues possible -->
+        <field name="sort_year_desc" type="keyword" multiValued="false" stored="true"/> <!-- DocValues possible -->
         <field name="year" type="number" multiValued="true"/>
         <field name="ava" type="keyword"  multiValued="true" /> <!-- DocValues possible -->
         <!--felt til feltkode, indikatorer og delfeltkode for hvert delfelt i posten-->

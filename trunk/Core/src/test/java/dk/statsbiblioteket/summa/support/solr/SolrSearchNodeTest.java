@@ -215,6 +215,31 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
+    public void testSorting() throws Exception {
+        final int RECORDS = 100;
+        ingestFacets(RECORDS);
+        SearchNode searcher = getSearcher();
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy",
+//                    DocumentKeys.SEARCH_SORTKEY, "sort_title",
+                    DocumentKeys.SEARCH_SORTKEY, "sort_year_asc",
+                    //DocumentKeys.SEARCH_REVERSE, "true",
+                    DocumentKeys.SEARCH_MAX_RECORDS, 20,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, sort_title"
+            ), responses);
+            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            for (DocumentResponse.Record record: docs.getRecords()) {
+                System.out.print("Record: " + record + ":");
+                for (DocumentResponse.Field field: record.getFields()) {
+                    System.out.print(" " + field.getName() + "=\"" + field.getContent() + "\"");
+                }
+                System.out.println();
+            }
+        }
+    }
+
     public void testPaging() throws Exception {
         final int RECORDS = 100;
         final int PAGE_SIZE = 20;
@@ -957,6 +982,7 @@ public class SolrSearchNodeTest extends TestCase {
     }
 
     private ObjectFilter getFacetSamples(int docCount) throws IOException {
+        Random random = new Random(87);
         List<Payload> samples = new ArrayList<>(docCount);
         StringBuilder sb = new StringBuilder(1000);
         for (int i = 0 ; i < docCount ; i++) {
@@ -964,7 +990,10 @@ public class SolrSearchNodeTest extends TestCase {
             sb.append("<doc>\n");
             sb.append("<field name=\"recordID\">doc").append(String.format("%07d", i)).append("</field>\n");
             sb.append("<field name=\"recordBase\">dummy</field>\n");
+            sb.append("<field name=\"sort_year_asc\">").
+                    append(Integer.toString(random.nextInt(2014))).append("</field>\n");
             sb.append("<field name=\"title\">Document_").append(String.format("%07d", i)).append("</field>\n");
+            sb.append("<field name=\"sort_title\">Document_").append(String.format("%07d", i)).append("</field>\n");
 //            sb.append("<field name=\"lma\">sort_").append(String.format("%07d", i)).append("</field>\n");
             sb.append("<field name=\"fulltext\">Some very simple Solr sample document.</field>\n");
             sb.append("<field name=\"lma_long\">03_all</field>\n");

@@ -797,7 +797,11 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         //int startPage = Math.max(0, maxRecords == 0 ? 0 : (startIndex-1) / maxRecords);
         Map<String, List<String>> queryMap = new HashMap<>();
         if (request.containsKey(DocumentKeys.SEARCH_RESULT_FIELDS)) {
-            queryMap.put("fl", Arrays.asList(Strings.join(request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS), ",")));
+            Set<String> fl = new HashSet<>(request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS));
+            if (sortKey != null) {
+                fl.add(sortKey); // In order to return the value of the sortKey as part of the response
+            }
+            queryMap.put("fl", Arrays.asList(Strings.join(fl, ",")));
         }
         if (filter != null) { // We allow missing filter
             boolean facetsHandled = false;
