@@ -196,6 +196,14 @@ public class Alto {
         return groups;
     }
 
+    public List<String> getAllTexts() {
+        List<String> texts = new ArrayList<>();
+        for (Page page: getLayout()) {
+            texts.addAll(page.getAllTexts());
+        }
+        return texts;
+    }
+
     private Map<String, Map<String, List<TextBlock>>> minGroups = new HashMap<>();
     /**
      * Works like {@link #getTextBlockGroups()} with the differences that groups containing less than minWords are

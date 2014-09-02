@@ -47,6 +47,6 @@ public class DOMSNewspaperSimpleDocCreatorTest extends TestCase {
         simpleCreator.setSource(source);
         assertTrue("There should be a Record available", simpleCreator.hasNext());
         Payload payload = simpleCreator.next();
-        System.out.println(payload.getRecord().getContentAsUTF8());
+        System.out.println(payload.getRecord().getContentAsUTF8().replace("<", "\n<"));
     }
 }

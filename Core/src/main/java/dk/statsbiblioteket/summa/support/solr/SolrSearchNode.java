@@ -802,6 +802,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                 fl.add(sortKey); // In order to return the value of the sortKey as part of the response
             }
             queryMap.put("fl", Arrays.asList(Strings.join(fl, ",")));
+        } else if (sortKey != null) {
+            queryMap.put("fl", Arrays.asList("*," + sortKey));
         }
         if (filter != null) { // We allow missing filter
             boolean facetsHandled = false;

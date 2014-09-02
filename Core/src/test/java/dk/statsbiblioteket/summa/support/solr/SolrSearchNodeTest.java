@@ -226,10 +226,11 @@ public class SolrSearchNodeTest extends TestCase {
 //                    DocumentKeys.SEARCH_SORTKEY, "sort_title",
                     DocumentKeys.SEARCH_SORTKEY, "sort_year_asc",
                     //DocumentKeys.SEARCH_REVERSE, "true",
-                    DocumentKeys.SEARCH_MAX_RECORDS, 20,
-                    DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, sort_title"
+                    DocumentKeys.SEARCH_MAX_RECORDS, 20
+//                    DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, sort_title"
             ), responses);
             DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            // TODO: Grep for sortKey != null
             for (DocumentResponse.Record record: docs.getRecords()) {
                 System.out.print("Record: " + record + ":");
                 for (DocumentResponse.Field field: record.getFields()) {
@@ -992,8 +993,8 @@ public class SolrSearchNodeTest extends TestCase {
             sb.append("<field name=\"recordBase\">dummy</field>\n");
             sb.append("<field name=\"sort_year_asc\">").
                     append(Integer.toString(random.nextInt(2014))).append("</field>\n");
-            sb.append("<field name=\"title\">Document_").append(String.format("%07d", i)).append("</field>\n");
-            sb.append("<field name=\"sort_title\">Document_").append(String.format("%07d", i)).append("</field>\n");
+            sb.append("<field name=\"title_org\">Document_").append(String.format("%07d", i)).append("</field>\n");
+            //            sb.append("<field name=\"sort_title\">Document_").append(String.format("%07d", i)).append("</field>\n");
 //            sb.append("<field name=\"lma\">sort_").append(String.format("%07d", i)).append("</field>\n");
             sb.append("<field name=\"fulltext\">Some very simple Solr sample document.</field>\n");
             sb.append("<field name=\"lma_long\">03_all</field>\n");
