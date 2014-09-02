@@ -120,7 +120,8 @@ public class SolrFacetRequest {
                                  int startPage, int pageSize) {
         append(queryMap, "facet.field", field);
         String prefix = "f." + field + ".facet.";
-        // TODO: Check if startPage is counted from 0 or 1
+        // TODO: Check if startPage is counted from 0 or 1 (Solr counts from 0)
+        // TODO: Add support for ALPHA-sort
         queryMap.put(prefix + "offset", Arrays.asList(Integer.toString(startPage * pageSize)));
         queryMap.put(prefix + "limit",  Arrays.asList(Integer.toString(pageSize)));
     }
