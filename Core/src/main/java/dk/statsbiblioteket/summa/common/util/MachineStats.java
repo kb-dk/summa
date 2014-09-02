@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.Locale;
 
@@ -84,6 +85,22 @@ public class MachineStats implements Runnable {
     public static final String CONF_DESIGNATION = "summa.machinestats.designation";
     public static final String DEFAULT_DESIGNATION = "Anonymous";
 
+    /**
+     * If true, continuous logging of stats will be activated.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_ACTIVE = "summa.machinestats.active";
+    public static final boolean DEFAULT_ACTIVE = true;
+
+    /**
+     * If true, machine stats are logged at INFO level, if false the level is DEBUG.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_LOGINFO = "summa.machinestats.loginfo";
+    public static final boolean DEFAULT_LOGINFO = false;
+
     private int logIntervalPings = DEFAULT_LOG_INTERVAL_PINGS;
     private int logIntervalMS =    DEFAULT_LOG_INTERVAL_MS;
     private boolean gcBeforeLog =  DEFAULT_GC_BEFORE_LOG;
@@ -94,7 +111,8 @@ public class MachineStats implements Runnable {
     private long receivedPings = 0;
     private long lastLogCount = Long.MIN_VALUE;
     private long lastLogTime = 0;
-    private boolean running = true;
+    private boolean running;
+    private final boolean logInfo;
     private dk.statsbiblioteket.util.Profiler profiler;
 
     public MachineStats(Configuration conf) {
@@ -102,6 +120,7 @@ public class MachineStats implements Runnable {
     }
 
     public MachineStats(Configuration conf, String designation) {
+        logInfo = conf.getBoolean(CONF_LOGINFO, DEFAULT_LOGINFO);
         logIntervalPings = conf.getInt(CONF_LOG_INTERVAL_PINGS, logIntervalPings);
         logIntervalMS = conf.getInt(CONF_LOG_INTERVAL_MS, logIntervalMS);
         gcBeforeLog = conf.getBoolean(CONF_GC_BEFORE_LOG, gcBeforeLog);
@@ -120,7 +139,13 @@ public class MachineStats implements Runnable {
         profiler = new Profiler(500);
         watcher = new Thread(this, "MachineStats daemon");
         watcher.setDaemon(true);
-        watcher.start();
+        running = conf.getBoolean(CONF_ACTIVE, DEFAULT_ACTIVE);
+        if (running) {
+            log.info("Activating " + this);
+            watcher.start();
+        } else {
+            log.info("Creating dormant " + this);
+        }
     }
 
     /**
@@ -181,11 +206,20 @@ public class MachineStats implements Runnable {
                 }
             }
         }
-        log.debug(String.format(locale,
-            "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f, %s",
-            designation, receivedPings, profiler.getSpendTime(), profiler.getBps(true), stats()));
+        if (logInfo && log.isInfoEnabled()) {
+            log.info(getPingStats());
+        } else if (log.isDebugEnabled()) {
+            log.debug(getPingStats());
+        }
         lastLogCount = receivedPings;
         lastLogTime = System.currentTimeMillis();
+    }
+
+    public String getPingStats() {
+        return String.format(
+                locale,
+                "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f, %s",
+                designation, receivedPings, profiler.getSpendTime(), profiler.getBps(true), stats());
     }
 
     public static String stats() {
@@ -193,13 +227,35 @@ public class MachineStats implements Runnable {
         return String.format(locale, "Allocated memory: %s, Allocated unused memory: %s, "
                                      + "Heap memory used: %s, Max memory: %s, "
                                      + "Threads: %d, "
-                                     + "Load average: %s",
+                                     + "Load average: %s, %s",
             reduce(r.totalMemory()), reduce(r.freeMemory()),
             reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed()), reduce(r.maxMemory()),
             ManagementFactory.getThreadMXBean().getThreadCount(),
-            ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage()
+            ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage(), GCStats()
             );
     }
+
+    // http://stackoverflow.com/questions/466878/can-you-get-basic-gc-stats-in-java
+    public static String GCStats() {
+        long totalGarbageCollections = 0;
+        long garbageCollectionTime = 0;
+
+        for(GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
+
+            long count = gc.getCollectionCount();
+            if(count >= 0) {
+                totalGarbageCollections += count;
+            }
+            long time = gc.getCollectionTime();
+            if(time >= 0) {
+                garbageCollectionTime += time;
+            }
+        }
+        return "GC(" + totalGarbageCollections + " collections in " + garbageCollectionTime + "ms: "
+               + (totalGarbageCollections == 0 ? "N/A" : garbageCollectionTime/totalGarbageCollections)
+               + " ms/collection avg)";
+    }
+
 
     private static String reduce(long bytes) {
         return bytes / 1048576 + "MB";
@@ -208,6 +264,16 @@ public class MachineStats implements Runnable {
     public void close() {
         log.debug("Closing down");
         running = false;
+        doStat();
+    }
+
+    @Override
+    public String toString() {
+        return "MachineStats(" +
+               "logIntervalPings=" + logIntervalPings + ", logIntervalMS=" + logIntervalMS +
+               ", gcBeforeLog=" + gcBeforeLog + ", gcSleepMS=" + gcSleepMS +
+               ", designation='" + designation + '\'' + ", receivedPings=" + receivedPings +
+               ", lastLogCount=" + lastLogCount + ", lastLogTime=" + lastLogTime +
+               ", running=" + running + ", stats(" + stats() + "))";
     }
 }
-
