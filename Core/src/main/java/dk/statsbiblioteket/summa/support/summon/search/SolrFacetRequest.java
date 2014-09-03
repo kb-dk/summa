@@ -35,6 +35,7 @@ import java.util.*;
         author = "te")
 public class SolrFacetRequest {
     private static Log log = LogFactory.getLog(SolrFacetRequest.class);
+    private final int reverseFacetSize = 200; // TODO: Ugly hack since external services might have other limits
     private String originalRequest;
     private Structure originalStructure;
     private int minCount;
@@ -64,6 +65,7 @@ public class SolrFacetRequest {
                          + "will not be repeated");
                 fieldWarningFired = true;
             }
+            int requestedTags = Math.max(fc.getWantedTags(), fc.isReverse() ? reverseFacetSize : fc.getWantedTags());
             facets.add(new Facet(fc.getFields()[0], combineMode, 0, fc.getWantedTags())); // Start at 0?
         }
         log.trace("Constructed facet request from '" + facetsDef + "' with defaultFacetPageSize=" + defaultFacetPageSize
@@ -99,7 +101,7 @@ public class SolrFacetRequest {
         append(queryMap, "facet.mincount", Integer.toString(minCount));
         for (Facet facet: facets) {
             addFacetQuery(
-                queryMap, facet.getField(), facet.getCombineMode(), facet.getStartPage(), facet.getPageSize());
+                queryMap, facet.getField(), facet.getCombineMode(), facet.getStartPage(), facet.getRequestSize());
         }
     }
 
@@ -151,8 +153,12 @@ public class SolrFacetRequest {
         private String combineMode;
         private int startPage;
         private int pageSize;
+        private int requestSize;
 
         public Facet(String field, String combineMode, int startPage, int pageSize) {
+            this(field, combineMode, startPage, pageSize, pageSize);
+        }
+        public Facet(String field, String combineMode, int startPage, int pageSize, int requestSize) {
             this.field = field;
             if (!("and".equals(combineMode) || "or".equals(combineMode))) {
                 throw new IllegalArgumentException(
@@ -161,6 +167,7 @@ public class SolrFacetRequest {
             this.combineMode = combineMode;
             this.startPage = startPage;
             this.pageSize = pageSize;
+            this.requestSize = requestSize;
         }
 
         public String getField() {
@@ -177,6 +184,10 @@ public class SolrFacetRequest {
 
         public int getPageSize() {
             return pageSize;
+        }
+
+        public int getRequestSize() {
+            return requestSize;
         }
     }
 }
