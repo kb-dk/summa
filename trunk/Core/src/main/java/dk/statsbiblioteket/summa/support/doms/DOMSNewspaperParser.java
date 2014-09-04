@@ -25,8 +25,11 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.xml.stream.*;
-import java.io.*;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +51,7 @@ import java.util.Map;
  * ...doms-postfix-xml...
  * </p>
  */
-// TODO: Better handling of compound-words (writer both compoundwords and compuntd-words)
+// TODO: Better handling of compound-words (write both compoundwords and compund-words)
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -72,6 +75,12 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     public static final String CONF_SEGMENT_MIN_WORDS = "segment.minwords";
     public static final int DEFAULT_SEGMENT_MIN_WORDS = 20;
 
+    /**
+     * The base for te generated Reords.
+     * </p><p>
+     * Optional. Default is 'aviser'.
+     */
+
     public static final String CONF_BASE = "domsnewspaperparser.base";
     public static final String DEFAULT_BASE = "aviser";
 
@@ -91,8 +100,12 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     protected void protectedRun(Payload source) throws PayloadException {
         // Hackity hack. We should stream-process the XML, which seems to require quite a lot of custom coding
 
+        // Unbound schemaLocation makes Java 1.7 XML streaming throw an exception, so we must remove it
+        final String PROBLEM = "xsi:schemaLocation=\"http://www.loc.gov/standards/alto alto-v2.0.xsd\"";
+        final String SOLUTION = "";
+
         // Split the DOMS XML into start, ALTO and end
-        String content = RecordUtil.getString(source);
+        String content = RecordUtil.getString(source).replace(PROBLEM, SOLUTION);
         int altoStart = content.indexOf("<alto ");
         int altoEnd = content.indexOf(">", content.indexOf("</alto"))+1;
         if (altoStart < 0 || altoEnd < 1) {
@@ -105,12 +118,9 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
 
     private void produceSegments(Payload payload, String content, int altoStart, int altoEnd) throws PayloadException {
         // Compensate for wring declaration in the ALTO XMLK
-        final String PROBLEM = "<alto xmlns=\"http://www.loc.gov/standards/alto/ns-v2#\" " +
-                               "xsi:schemaLocation=\"http://www.loc.gov/standards/alto alto-v2.0.xsd\">";
-        final String SOLUTION = "<alto xmlns=\"http://www.loc.gov/standards/alto/ns-v2#\">";
         Alto alto;
         try {
-            alto = new Alto(content.substring(altoStart, altoEnd).replace(PROBLEM, SOLUTION), payload.getId());
+            alto = new Alto(content.substring(altoStart, altoEnd), payload.getId());
         } catch (XMLStreamException e) {
             throw new PayloadException("Unable to parse ALTO for substring " + altoStart + ", " + altoEnd, e, payload);
         }
