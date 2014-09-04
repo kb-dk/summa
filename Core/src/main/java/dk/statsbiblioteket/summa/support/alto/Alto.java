@@ -60,7 +60,7 @@ public class Alto {
     private Map<String, TextStyle> styles = new HashMap<>();
     private List<Page> layout = new ArrayList<>();
 
-    public Alto(String xml, String origin) throws XMLStreamException, FileNotFoundException {
+    public Alto(String xml, String origin) throws XMLStreamException {
         this(new StringReader(xml), origin);
     }
     public Alto(File xml) throws XMLStreamException, FileNotFoundException {
@@ -186,6 +186,7 @@ public class Alto {
                     }
                 }
                 // No links, create a new group
+                // TODO: Smarter name generation by sorting blocks according to linked ID and using the first ID
                 String groupID = "segment_" + counter++;
                 log.trace("Creating group " + groupID + " for block " + currentBlock.getID());
                 groups.put(groupID, new ArrayList<>(Arrays.asList(currentBlock)));
