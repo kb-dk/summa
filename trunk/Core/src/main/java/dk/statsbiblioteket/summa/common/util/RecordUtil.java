@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
@@ -848,6 +849,25 @@ public class RecordUtil {
     public static String getString(Payload payload) {
         return getString(payload, PART_CONTENT);
     }
+
+    /**
+     * If the Payload encapsulates a Stream, the bytes from that stream will be returned. Else the bytes from the
+     * Record content will be returned.
+     * </p><p>
+     * Warning: The byte-array might be shared with the Payload. The caller should not modify it.
+     * @param payload the Payload with wanted content.
+     * @return a byte array with the content, regardless of Payload type.
+     * @throws java.io.IOException if there was an error accessing the stream of the Payload.
+     */
+    public static byte[] getBytes(Payload payload) throws IOException {
+        if (payload.getStream() == null) {
+            return payload.getRecord().getContent();
+        }
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Streams.pipe(payload.getStream(), bos);
+        return bos.toByteArray();
+    }
+
 
     /**
      * Return a stream from a Record's content, id, base of meta-field.
