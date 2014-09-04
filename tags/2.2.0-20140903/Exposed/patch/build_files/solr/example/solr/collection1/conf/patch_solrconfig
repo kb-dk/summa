@@ -1,0 +1,33 @@
+Index: solrconfig.xml
+===================================================================
+--- solrconfig.xml	(revision 1583611)
++++ solrconfig.xml	(working copy)
+@@ -84,6 +84,8 @@
+   <lib dir="../../../contrib/velocity/lib" regex=".*\.jar" />
+   <lib dir="../../../dist/" regex="solr-velocity-\d.*\.jar" />
+ 
++  <lib dir="../../../dist/" regex="apache-solr-exposed-\d.*\.jar" />
++
+   <!-- an exact 'path' can be used instead of a 'dir' to specify a 
+        specific jar file.  This will cause a serious error to be logged 
+        if it can't be loaded.
+@@ -1822,4 +1824,19 @@
+     <defaultQuery>*:*</defaultQuery>
+   </admin>
+ 
++<!-- Exposed parameters below this -->
++  <searchComponent name="exposedComponent" class="org.apache.solr.exposed.ExposedFacetQueryComponent">
++    <lst name="poolfactory">
++      <int name="pools">10</int>
++      <int name="filled">5</int>
++      <int name="fresh">5</int>
++    </lst>
++  </searchComponent>
++
++  <requestHandler name="/exposed" class="org.apache.solr.handler.component.SearchHandler">
++    <arr name="last-components">
++      <str>exposedComponent</str>
++    </arr>
++  </requestHandler> 
++
+ </config>
