@@ -1,4 +1,5 @@
 #!/bin/bash
 # Updates the Maven versions in modules based on the super pom.xml
 
-mvn -N versions:update-child-modules
+#mvn -N versions:update-child-modules
+echo "svn commit -m \"Bumped to `cat pom.xml | grep -A 1 "<artifactId>summa" | tr '\n' ' ' | sed 's/.*<version>\([^>]\+\)<\/version>.*/\1/'`\""
