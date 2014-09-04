@@ -142,13 +142,17 @@ public abstract class ThreadedStreamParser implements StreamParser {
                     sourcePayload, streamPayload));
         }
         queue.clear(); // Clean-up from previous runs
-        if (streamPayload.getStream() == null) {
+        if (streamPayload.getStream() == null && !acceptStreamlessPayloads()) {
             log.warn("No stream in received " + streamPayload + ". No Records will be generated");
             empty = true;
             return;
         }
         sourcePayload = streamPayload;
         startThread();
+    }
+
+    protected boolean acceptStreamlessPayloads() {
+        return false;
     }
 
     private void startThread() {

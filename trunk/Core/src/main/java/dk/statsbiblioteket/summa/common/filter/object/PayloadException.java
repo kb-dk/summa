@@ -112,7 +112,7 @@ public class PayloadException extends Exception {
 
     @Override
     public String getMessage() {
-        return super.getMessage() + (payload == null ? "" : payload.toString());
+        return super.getMessage() + (payload == null ? "" : ": " + payload.toString());
     }
 }
 

@@ -25,8 +25,7 @@ import java.util.Iterator;
  * Payloads. Normally used by  {@link StreamController}.
  * A StreamParser is reusable and is cleared and initialized by {@link #open}.
  * </p><p>
- * Note: Implemenetations must return false for hasNext if open has not been
- * called.
+ * Note: Implementations must return false for hasNext if open has not been called.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
