@@ -101,11 +101,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         // Hackity hack. We should stream-process the XML, which seems to require quite a lot of custom coding
 
         // Unbound schemaLocation makes Java 1.7 XML streaming throw an exception, so we must remove it
-        final String PROBLEM = "xsi:schemaLocation=\"http://www.loc.gov/standards/alto alto-v2.0.xsd\"";
-        final String SOLUTION = "";
-
-        // Split the DOMS XML into start, ALTO and end
-        String content = RecordUtil.getString(source).replace(PROBLEM, SOLUTION);
+        String content = RecordUtil.getString(source).replaceAll("xsi:schemaLocation=\"[^\"]+\"", "");
         int altoStart = content.indexOf("<alto ");
         int altoEnd = content.indexOf(">", content.indexOf("</alto"))+1;
         if (altoStart < 0 || altoEnd < 1) {
