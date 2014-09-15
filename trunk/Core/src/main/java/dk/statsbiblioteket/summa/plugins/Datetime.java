@@ -94,7 +94,7 @@ public class Datetime {
         String month = matcher.group(2);
         String day = matcher.group(3);
 
-        buffer.setLength(0);
+        StringBuilder buffer = new StringBuilder(100);
         buffer.append(year).append("-").append(month).append("-").append(day);
         buffer.append(" ");
         buffer.append(day).append("/").append(month).append("-").append(year);
@@ -128,7 +128,6 @@ public class Datetime {
         return buffer.toString();
     }
 
-    public static final StringBuffer buffer = new StringBuffer(100);
     /**
      * Produces tokens with common variations of entering the given time.
      * If the input does not match the pattern {@link #timePattern}, the
@@ -148,7 +147,7 @@ public class Datetime {
         String minute = matcher.group(2);
         String second = matcher.groupCount() == 3 ? matcher.group(1) : null;
 
-        buffer.setLength(0);
+        StringBuilder buffer = new StringBuilder(100);
         buffer.append(hour).append(":").append(minute).append(" ");
         buffer.append(hour).append(".").append(minute).append(" ");
         buffer.append(hour).append(minute).append(" ");
@@ -193,7 +192,7 @@ public class Datetime {
 
             }
         }
-        buffer.setLength(0);
+        StringBuilder buffer = new StringBuilder(100);
         for (int i = start-1 ; i < end && i < tokens.size() ; i++) {
             if (i != start-1) {
                 buffer.append("/");
