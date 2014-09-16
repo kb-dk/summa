@@ -208,7 +208,7 @@ public class Alto {
     private Map<String, Map<String, List<TextBlock>>> minGroups = new HashMap<>();
     /**
      * Works like {@link #getTextBlockGroups()} with the differences that groups containing less than minWords are
-     * collapsed into the single group NOGROUP.
+     * collapsed into the single group {@link #NOGROUP}.
      * @param minBlocks the minimum amount of blocks needed to constitute a group.
      * @param minWords  the minimum amount of words needed to constitute a group.
      * @return the groups as described above.
