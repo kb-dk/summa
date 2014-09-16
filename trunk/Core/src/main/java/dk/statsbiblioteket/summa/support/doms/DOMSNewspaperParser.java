@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.doms;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -30,7 +31,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -84,15 +87,31 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     public static final String CONF_BASE = "domsnewspaperparser.base";
     public static final String DEFAULT_BASE = "aviser";
 
+    /**
+     * Whether or not to pass ALTO-less records onwards.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_ACCEPT_ALTOLESS = "domsnewspaperparser.acceptaltoless";
+    public static final boolean DEFAULT_ACCEPT_ALTOLESS = true;
+
+    public static final String NOALTO = "_noalto_";
+
     final private int minBlocks;
     final private int minWords;
+    final private boolean acceptALTOLess;
     final private String base;
+    private final NumberFormat spatial = NumberFormat.getInstance(Locale.ENGLISH);
+    {
+        spatial.setGroupingUsed(false);
+    }
 
     public DOMSNewspaperParser(Configuration conf) {
         super(conf);
         minBlocks = conf.getInt(CONF_SEGMENT_MIN_BLOCKS, DEFAULT_SEGMENT_MIN_BLOCKS);
         minWords = conf.getInt(CONF_SEGMENT_MIN_WORDS, DEFAULT_SEGMENT_MIN_WORDS);
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
+        acceptALTOLess = conf.getBoolean(CONF_ACCEPT_ALTOLESS, DEFAULT_ACCEPT_ALTOLESS);
         log.info("Created " + this);
     }
 
@@ -105,11 +124,21 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         int altoStart = content.indexOf("<alto ");
         int altoEnd = content.indexOf(">", content.indexOf("</alto"))+1;
         if (altoStart < 0 || altoEnd < 1) {
-            throw new PayloadException(
-                    "Unable to locate start (" + altoStart + ") or end (" + altoEnd + ") tags for element 'alto'",
-                    source);
+            if (!acceptALTOLess) {
+                throw new PayloadException(
+                        "Unable to locate start (" + altoStart + ") or end (" + altoEnd + ") tags for element 'alto'",
+                        source);
+            }
+            Logging.logProcess("DOMSNewspaperParser", "Unable to locate ALTO. Passing content unmodified",
+                               Logging.LogLevel.INFO, source);
+            try {
+                addToQueue(new Record(source.getId() + NOALTO, base, content.getBytes("utf-8")));
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("utf-8 not supported", e);
+            }
+        } else {
+            produceSegments(source, content, altoStart, altoEnd);
         }
-        produceSegments(source, content, altoStart, altoEnd);
     }
 
     private void produceSegments(Payload payload, String content, int altoStart, int altoEnd) throws PayloadException {
@@ -162,6 +191,10 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                 segmentXML.writeCharacters("\n");
                 for (Alto.TextBlock block: group.getValue()) {
                     segmentXML.writeStartElement("textblock");
+                    segmentXML.writeAttribute("x", spatial.format(block.getHposFraction()));
+                    segmentXML.writeAttribute("y", spatial.format(block.getVposFraction()));
+                    segmentXML.writeAttribute("width", spatial.format(block.getWidthFraction()));
+                    segmentXML.writeAttribute("height", spatial.format(block.getHeightFraction()));
                     segmentXML.writeCharacters(block.getAllText());
                     segmentXML.writeEndElement();
                     segmentXML.writeCharacters("\n");
