@@ -153,7 +153,7 @@ fi
 LOCALRMI="-Djava.rmi.server.hostname=localhost"
 
 # The quotes around classpath are essential as we use wildcards
-COMMAND="$JAVA_HOME/bin/java $LOCALRMI $JVM_OPTS $CONFIGURATION $SECURITY_POLICY $JMX -VISUALVM_NAME -cp \"$CLASSPATH\" $MAINCLASS"
+COMMAND="$JAVA_HOME/bin/java $LOCALRMI $JVM_OPTS $CONFIGURATION $SECURITY_POLICY $JMX $VISUALVM_NAME -cp \"$CLASSPATH\" $MAINCLASS"
 
 # Report settings
 if [ ! -z $PRINT_CONFIG ]; then
