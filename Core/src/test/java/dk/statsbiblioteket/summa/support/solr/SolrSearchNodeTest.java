@@ -92,7 +92,7 @@ public class SolrSearchNodeTest extends TestCase {
         performBasicIngest();
         ResponseCollection responses = search(new Request(
                 DocumentKeys.SEARCH_QUERY, "fulltext:first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
         ));
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -106,7 +106,7 @@ public class SolrSearchNodeTest extends TestCase {
         performBasicIngest();
         ResponseCollection responses = search(new Request(
                 "foosearch." + SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "fulltext:first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
         ));
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
@@ -165,7 +165,7 @@ public class SolrSearchNodeTest extends TestCase {
             ResponseCollection responses = search(new Request(
                     DocumentKeys.SEARCH_FILTER, "fulltext:nomatch",
                     "foosearch." + SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "fulltext:first",
-                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
             ));
             assertTrue("There should be a response for nomatch", responses.iterator().hasNext());
             assertEquals("There should be the right number of hits for nomatch. Response was\n" + responses.toXML(),
@@ -180,7 +180,7 @@ public class SolrSearchNodeTest extends TestCase {
             ResponseCollection responses = search(new Request(
                     DocumentKeys.SEARCH_FILTER, "fulltext:nomatch",
                     "foosearch." + SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "q", "fulltext:first",
-                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext",
                     "foosearch." + SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fq", "fulltext:first"
             ));
             assertTrue("There should be a response for nomatch AND match", responses.iterator().hasNext());
@@ -207,7 +207,7 @@ public class SolrSearchNodeTest extends TestCase {
         try {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(new Request(
-                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
             ), responses);
             assertFalse("There should not be a response", responses.iterator().hasNext());
         } finally {
@@ -343,7 +343,7 @@ public class SolrSearchNodeTest extends TestCase {
     public void testFilterFacets() throws Exception {
         performBasicIngest();
         final String QUERY = "recordID:doc1";
-        final String FACET = "title:Document";
+        final String FACET = "title_org:Document";
         SearchNode searcher = getSearcher();
         try {
             assertEquals("There should be at least one hit for standard positive faceting",
@@ -378,7 +378,7 @@ public class SolrSearchNodeTest extends TestCase {
     public void testFilterFacetsNoHits() throws Exception {
         performBasicIngest();
         final String QUERY = "recordID:doc1";
-        final String FACET = "title:nonexisting";
+        final String FACET = "title_org:nonexisting";
         SearchNode searcher = getSearcher();
         try {
             assertEquals("There should be at least one hit for search with no filter",
@@ -410,7 +410,7 @@ public class SolrSearchNodeTest extends TestCase {
         try {
             assertResult(searcher, new Request(
                 DocumentKeys.SEARCH_QUERY, "first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
             ), 1, "Solr sample document");
         } finally {
             searcher.close();
@@ -422,7 +422,7 @@ public class SolrSearchNodeTest extends TestCase {
         performBasicIngest();
         Request request = new Request(
                 DocumentKeys.SEARCH_QUERY, "(+fulltext:first)",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
         );
 /*        {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
@@ -449,7 +449,7 @@ public class SolrSearchNodeTest extends TestCase {
         try {
             assertResult(searcher, new Request(
                     DocumentKeys.SEARCH_QUERY, "first",
-                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext"
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
             ), 1, "Solr sample document");
         } finally {
             searcher.close();
@@ -608,14 +608,14 @@ public class SolrSearchNodeTest extends TestCase {
         log.info("Finished ingesting " + docCount + " documents");
         {
             SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
-                    SolrSearchNode.CONF_SOLR_FACETS, "title(" + docCount + " ALPHA)",
+                    SolrSearchNode.CONF_SOLR_FACETS, "title_org(" + docCount + " ALPHA)",
                     SolrSearchNode.CONF_SOLR_FACETS_DEFAULTPAGESIZE, "1" // To ensure that overriding works
             ));
             try {
                 for (int i = 0 ; i < docCount ; i++) {
                     String docID = "Document_" + String.format("%07d", i);
-                    assertHits("There should be a hit for 'title:" + docID + "'",
-                               searcher, DocumentKeys.SEARCH_QUERY, "title:" + docID);
+                    assertHits("There should be a hit for 'title_org:" + docID + "'",
+                               searcher, DocumentKeys.SEARCH_QUERY, "title_org:" + docID);
                 }
                 assertFacetOrder("ALPHA", searcher, EXPECTED_ALPHA);
             } finally {
@@ -662,7 +662,7 @@ public class SolrSearchNodeTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
                 DocumentKeys.SEARCH_QUERY, "*:*",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title_org fulltext",
                 DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
                 FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
@@ -679,7 +679,7 @@ public class SolrSearchNodeTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         searcher.search(new Request(
                 DocumentKeys.SEARCH_QUERY, "first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title fulltext",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID score title_org fulltext",
                 DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
                 FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
@@ -697,7 +697,7 @@ public class SolrSearchNodeTest extends TestCase {
         searcher.search(new Request(
                 DocumentKeys.SEARCH_FILTER, "recordBase:dummy",
                 DocumentKeys.SEARCH_QUERY, "first",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext",
                 DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
                 FacetKeys.SEARCH_FACET_FACETS, "fulltext"
         ), responses);
@@ -716,7 +716,7 @@ public class SolrSearchNodeTest extends TestCase {
             searcher.search(new Request(
                     DocumentKeys.SEARCH_FILTER, "recordBase:nothere",
                     DocumentKeys.SEARCH_QUERY, "first",
-                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title fulltext",
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext",
                     DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
                     FacetKeys.SEARCH_FACET_FACETS, "fulltext"
             ), responses);
@@ -766,11 +766,11 @@ public class SolrSearchNodeTest extends TestCase {
     }
     private void testFuzzySearch(int samples) throws IOException {
         final String QUERIES[] = new String[] {
-                "title:mxyzptll~",
-                "title:mxyzptlk", // Non-fuzzy
-                "title:mxyzpelk~",
-                "title:xmyzpelk~",
-                "title:mxyzptl~"
+                "title_org:mxyzptll~",
+                "title_org:mxyzptlk", // Non-fuzzy
+                "title_org:mxyzpelk~",
+                "title_org:xmyzpelk~",
+                "title_org:mxyzptl~"
         };
         ObjectFilter feeder = getFuzzyFeeder(samples, "squid", "mxyzptlk");
         ObjectFilter indexer = getIndexer();
@@ -807,7 +807,7 @@ public class SolrSearchNodeTest extends TestCase {
         );
         for (int i = 0 ; i < searches ; i++) {
             responses.clear();
-            request.put(DocumentKeys.SEARCH_QUERY, "title:" + getFuzzyWord(random));
+            request.put(DocumentKeys.SEARCH_QUERY, "title_org:" + getFuzzyWord(random));
             searcher.search(request, responses);
             assertTrue("There should be at least 1 response in the collection", responses.iterator().hasNext());
         }
@@ -847,7 +847,7 @@ public class SolrSearchNodeTest extends TestCase {
                             ("<doc>\n"
                              + "<field name=\"recordID\">doc" + count + "</field>\n"
                              + "<field name=\"recordBase\">dummy</field>\n"
-                             + "<field name=\"title\">" + fuzzy + "</field>\n"
+                             + "<field name=\"title_org\">" + fuzzy + "</field>\n"
                              + "</doc>\n").getBytes("utf-8")));
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException("UTF-8 should be supported", e);
