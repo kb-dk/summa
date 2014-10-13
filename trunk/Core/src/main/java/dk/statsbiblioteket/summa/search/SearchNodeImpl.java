@@ -327,6 +327,10 @@ public abstract class SearchNodeImpl implements SearchNode {
     @Override
     public void search(Request request, ResponseCollection responses) throws RemoteException {
         log.trace("search called");
+        if (request.getBoolean(DocumentKeys.PING, false)) {
+            log.debug("Ping requested, returning immediately");
+            return;
+        }
         try {
             // TODO: Consider timeout for slot acquirement
             if (!slots.tryAcquire(1, searcherAvailabilityTimeout, TimeUnit.MILLISECONDS)) {

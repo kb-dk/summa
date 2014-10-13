@@ -1,6 +1,6 @@
 <doc>
     <field name="recordID">doc2</field>
     <field name="recordBase">dummy</field>
-    <field name="title">Document 2</field>
+    <field name="title_org">Document 2</field>
     <field name="fulltext">The second and just as simple Solr sample document. Now with 100% more pizza!</field>
 </doc>

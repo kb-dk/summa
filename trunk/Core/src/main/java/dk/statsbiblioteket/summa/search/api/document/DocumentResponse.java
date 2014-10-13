@@ -34,8 +34,10 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class DocumentResponse extends ResponseImpl implements DocumentKeys {
-    private static final long serialVersionUID = 268188L;
+    private static final long serialVersionUID = 268189L;
     private static Log log = LogFactory.getLog(DocumentResponse.class);
+
+    public static final String NAME = "DocumentResponse";
 
     /**
      * If true, records with missing sort-field will be put either at the
@@ -67,10 +69,29 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     private long searchTime;
     private long hitCount;
 
-    public static final String NAME = "DocumentResponse";
-
     private List<Record> records;
+
+    // Subset of https://cwiki.apache.org/confluence/display/solr/Result+Grouping
+    private boolean group = false;
+    private String groupField = null; // Must be defined if group == true
+    private int groupRows = 10;
+    private int groupLimit = 1;
+
+    // If {@link #group} is true, records will be ignored
+    private List<Group> groups = null;
+
 //    private final Collator collator;
+
+    public DocumentResponse(String filter, String query, long startIndex, long maxRecords, String sortKey,
+                            boolean reverseSort, String[] resultFields, long searchTime, long hitCount,
+                            boolean group, String groupField, int groupRows, int groupLimit) {
+        this(filter, query, startIndex, maxRecords, sortKey, reverseSort, resultFields, searchTime, hitCount);
+        this.group = group;
+        this.groupField = groupField;
+        this.groupRows = groupRows;
+        this.groupLimit = groupLimit;
+        groups = new ArrayList<>(groupRows*5);
+    }
 
     public DocumentResponse(String filter, String query, long startIndex, long maxRecords, String sortKey,
                             boolean reverseSort, String[] resultFields, long searchTime, long hitCount) {
@@ -92,6 +113,68 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 //    public Collator getCollator() {
 //        return collator;
 //    }
+
+    /**
+     * A mirror of Solr's group representation
+     * https://cwiki.apache.org/confluence/display/solr/Result+Grouping
+     */
+    public static class Group implements Serializable {
+        private String groupValue;
+        private int numFound;
+        private List<Record> docs = new ArrayList<>();
+
+        public Group(String groupValue, int numFound) {
+            this.groupValue = groupValue;
+            this.numFound = numFound;
+        }
+
+        public void addRecord(Record record) {
+            docs.add(record);
+        }
+        public void addRecords(List<Record> records) {
+            docs.addAll(records);
+        }
+
+        public void sort() {
+            Collections.sort(docs, new Comparator<Record>() {
+                @SuppressWarnings("FloatingPointEquality")
+                @Override
+                public int compare(Record o1, Record o2) {
+                    return o1.score == o2.score ?
+                            o1.id == null ? 0 : o1.id.compareTo(o2.id) : o1.score < o2.score ? -1 : 1;
+                }
+            });
+        }
+
+        public void reduce(int maxRecords) {
+            sort();
+            if (docs.size() > maxRecords) {
+                docs = docs.subList(0, maxRecords);
+            }
+        }
+
+        public void merge(Group other) {
+            if (!groupValue.equals(other.groupValue)) {
+                throw new IllegalArgumentException("Only groups with the same group value can be merged. Had '"
+                                                   + groupValue + "', encountered '" + groupValue + "'");
+            }
+            numFound += other.numFound;
+            addRecords(other.docs);
+        }
+
+        public void toXML(StringWriter sw, String indent) {
+            sw.append(indent);
+            sw.append("<group groupValue=\"").append(groupValue);
+            sw.append("\" numFound=\"").append(Integer.toString(numFound));
+            sw.append("\" score=\"").append(docs.isEmpty() ? "" : Float.toString(docs.get(0).getScore()));
+            sw.append("\">\n");
+            for (Record record: docs) {
+                record.toXML(sw, indent + "  ");
+            }
+            sw.append(indent);
+            sw.append("</group>\n");
+        }
+    }
 
     /**
      * Contains a representation of each hit from a search.
@@ -136,8 +219,9 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             fields.add(field);
         }
 
-        public void toXML(StringWriter sw) {
-            sw.append("  <record score=\"").append(Float.toString(score));
+        public void toXML(StringWriter sw, String indent) {
+            sw.append(indent);
+            sw.append("<record score=\"").append(Float.toString(score));
             sw.append("\"");
             // Only not equal if the score has been changed
             //noinspection FloatingPointEquality
@@ -150,9 +234,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             appendIfDefined(sw, "source", source);
             sw.append(">\n");
             for (Field field : fields) {
-                field.toXML(sw);
+                field.toXML(sw, indent + "  ");
             }
-            sw.append("  </record>\n");
+            sw.append(indent);
+            sw.append("</record>\n");
         }
 
         public String getId() {
@@ -199,16 +284,14 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             this.escapeContent = escapeContent;
         }
 
-        public void toXML(StringWriter sw) {
+        public void toXML(StringWriter sw, String indent) {
             if (content == null || "".equals(content)) {
                 return;
             }
-            sw.append("    <field name=\"").append(name).append("\">");
-            if (escapeContent) {
-                sw.append(XMLUtil.encode(content)).append("</field>\n");
-            } else {
-                sw.append(content).append("</field>\n");
-            }
+            sw.append(indent);
+            sw.append("<field name=\"").append(name).append("\">");
+            sw.append(escapeContent ? XMLUtil.encode(content) : content);
+            sw.append("</field>\n");
         }
 
         public String getName() {
@@ -244,6 +327,9 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     public void addRecord(Record record) {
         if (record == null) {
             throw new IllegalArgumentException("Expected a Record, got null");
+        }
+        if (!groups.isEmpty()) {
+            log.warn("Adding record directly when there are groups defined is a logic error " + record);
         }
         records.add(record);
     }
@@ -398,7 +484,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         sw.append(" hitCount=\"");
         sw.append(Long.toString(hitCount)).append("\">\n");
         for (Record record : records) {
-            record.toXML(sw);
+            record.toXML(sw, "  ");
         }
         sw.append("</documentresult>\n");
         log.trace("Returning XML from toXML()");

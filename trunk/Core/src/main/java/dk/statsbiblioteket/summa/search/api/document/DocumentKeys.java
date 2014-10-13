@@ -171,4 +171,8 @@ public interface DocumentKeys {
      */
     public static final String RECORD_BASE = "recordBase";
 
+    /**
+     * If present and with the value 'true', the searcher is free to return immediately with empty result set.
+     */
+    public static final String PING = "ping";
 }

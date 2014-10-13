@@ -235,8 +235,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final String idPrefix;
     protected final int defaultPageSize;
     protected final int minCount;
-    protected final int defaultFacetPageSize;
-    protected final String defaultFacets;
+    protected int defaultFacetPageSize = DEFAULT_SOLR_FACETS_DEFAULTPAGESIZE;
+    protected String defaultFacets = DEFAULT_SOLR_FACETS;
     protected final String combineMode;
     protected final Map<String, List<String>> solrDefaultParams;
     protected final boolean supportsPureNegative;
@@ -247,6 +247,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final boolean emptyQueryNoSearch;
     protected final boolean emptyFilterNoSearch;
     protected final boolean mltEnabled;
+    protected String solrSchema = null;
 
     // Debug & feedback
     protected long lastConnectTime = -1;
@@ -268,8 +269,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         idPrefix =   conf.getString(CONF_SOLR_IDPREFIX, DEFAULT_SOLR_IDPREFIX);
         defaultPageSize = conf.getInt(CONF_SOLR_DEFAULTPAGESIZE, DEFAULT_SOLR_DEFAULTPAGESIZE);
         minCount = conf.getInt(CONF_SOLR_MINCOUNT, DEFAULT_SOLR_MINCOUNT);
-        defaultFacetPageSize = conf.getInt(CONF_SOLR_FACETS_DEFAULTPAGESIZE, DEFAULT_SOLR_FACETS_DEFAULTPAGESIZE);
-        defaultFacets = conf.getString(CONF_SOLR_FACETS, DEFAULT_SOLR_FACETS);
+        resolveDefaultFacets(conf);
         combineMode = conf.getString(CONF_SOLR_FACETS_COMBINEMODE, DEFAULT_SOLR_FACETS_COMBINEMODE);
         fieldID = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         supportsPureNegative = conf.getBoolean(
@@ -286,6 +286,26 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         readyWithoutOpen();
         log.info("Created SolrSearchNode(" + getID() + ")");
         // TODO: Add proper toString;
+    }
+
+    /**
+     * Attempts to resolve default facets from the Solr schema.
+     * @param conf fallback configuration of facets.
+     */
+    private void resolveDefaultFacets(Configuration conf) {
+        defaultFacetPageSize = conf.getInt(CONF_SOLR_FACETS_DEFAULTPAGESIZE, DEFAULT_SOLR_FACETS_DEFAULTPAGESIZE);
+        defaultFacets = conf.getString(CONF_SOLR_FACETS, DEFAULT_SOLR_FACETS);
+
+        // TODO: Actually implement this
+/*        try {
+            solrSchema = getData(restCall, "schema.xml&contentType=text/xml;charset=utf-8", new ResponseCollection());
+        } catch (IOException e) {
+            log.warn("IOException trying to resolve Solr schema.xml. Using fallback facet setup", e);
+            defaultFacetPageSize = conf.getInt(CONF_SOLR_FACETS_DEFAULTPAGESIZE, DEFAULT_SOLR_FACETS_DEFAULTPAGESIZE);
+            defaultFacets = conf.getString(CONF_SOLR_FACETS, DEFAULT_SOLR_FACETS);
+            return;
+        }
+        System.out.println("Got Solr schema " + solrSchema);*/
     }
 
     /**

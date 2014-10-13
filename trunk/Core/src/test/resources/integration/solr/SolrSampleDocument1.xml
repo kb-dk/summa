@@ -1,6 +1,6 @@
 <doc>
     <field name="recordID">doc1</field>
     <field name="recordBase">dummy</field>
-    <field name="title">Document 1</field>
+    <field name="title_org">Document 1</field>
     <field name="fulltext">The first and very simple Solr sample document.</field>
 </doc>
