@@ -302,7 +302,7 @@ public class InteractionAdjusterTest extends TestCase {
             new String[0], 10, 10);
         DocumentResponse.Record record = new DocumentResponse.Record(
             "foo", "bar", 1.0f, "dummy");
-        record.addField(new DocumentResponse.Field("Author", "baz", true));
+        record.add(new DocumentResponse.Field("Author", "baz", true));
         docResponse.addRecord(record);
         ResponseCollection responses = new ResponseCollection();
         responses.add(docResponse);

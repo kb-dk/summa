@@ -726,8 +726,8 @@ public class SolrResponseBuilder implements Configurable {
                 }
                 DocumentResponse.Record record = new DocumentResponse.Record(id, searcherID, score, sortValue);
                 for (SimplePair<String, String> field : fields) {
-                    record.addField(new DocumentResponse.Field(
-                        field.getKey(), field.getValue(), !nonescapedFields.contains(field.getKey())));
+                    record.add(new DocumentResponse.Field(
+                            field.getKey(), field.getValue(), !nonescapedFields.contains(field.getKey())));
                 }
                 if (log.isTraceEnabled()) {
                     log.trace("constructed and added " + record);

@@ -336,7 +336,7 @@ public class RelationResolverTest extends TestCase {
         int counter = 0;
         for (String id : ids) {
             DocumentResponse.Record record = new DocumentResponse.Record(Integer.toString(counter++), "foo", 1.0f, "");
-            record.addField(new DocumentResponse.Field(DocumentKeys.RECORD_ID, id, false));
+            record.add(new DocumentResponse.Field(DocumentKeys.RECORD_ID, id, false));
             response.addRecord(record);
         }
         return response;

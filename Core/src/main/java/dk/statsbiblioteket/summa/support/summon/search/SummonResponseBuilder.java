@@ -516,7 +516,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         DocumentResponse.Record record = new DocumentResponse.Record(
                 recordID, searcherID, extracted.getFloat("Score", lastScore), sortV);
         for (DocumentResponse.Field field: fields) {
-            record.addField(field);
+            record.add(field);
         }
         return record;
     }

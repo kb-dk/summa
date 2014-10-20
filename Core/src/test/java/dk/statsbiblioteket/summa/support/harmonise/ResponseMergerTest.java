@@ -322,8 +322,8 @@ public class ResponseMergerTest extends TestCase {
             float score = (Float)records.get(i+1);
             DocumentResponse.Record record = new DocumentResponse.Record(
                 id, searcherID, score, DocumentKeys.SORT_ON_SCORE);
-            record.addField(new DocumentResponse.Field(
-                DocumentKeys.RECORD_ID, id, true));
+            record.add(new DocumentResponse.Field(
+                    DocumentKeys.RECORD_ID, id, true));
             docs.addRecord(record);
         }
         return new SummaSearcherAggregator.ResponseHolder(
