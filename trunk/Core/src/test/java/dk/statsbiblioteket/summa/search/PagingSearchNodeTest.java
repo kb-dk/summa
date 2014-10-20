@@ -147,8 +147,8 @@ public class PagingSearchNodeTest extends TestCase {
             for (int i = start ; i < start + maxRecords ; i++) {
                 DocumentResponse.Record record = new DocumentResponse.Record(
                         "index_" + i, "dummy", 0.001f + i, Integer.toString(i));
-                record.addField(new DocumentResponse.Field("recordID", "index_" + i, false));
-                record.addField(new DocumentResponse.Field("recordBase", "dummy", false));
+                record.add(new DocumentResponse.Field("recordID", "index_" + i, false));
+                record.add(new DocumentResponse.Field("recordBase", "dummy", false));
                 docs.addRecord(record);
             }
             responses.add(docs);

@@ -813,7 +813,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                             log.debug("Appending explanation:\n" + explanation);
                         }
                         if (explanation != null) {
-                            record.addField(new DocumentResponse.Field(
+                            record.add(new DocumentResponse.Field(
                                     DocumentKeys.EXPLAIN_RESPONSE_FIELD, explanation, false));
                         }
                         continue;
@@ -821,11 +821,11 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                     for (IndexableField iField: doc.getFields(field)) {
                         if (iField == null || iField.stringValue() == null || "".equals(iField.stringValue())) {
                             if (fallbacks != null && fallbacks.length != 0) {
-                                record.addField(new DocumentResponse.Field(
+                                record.add(new DocumentResponse.Field(
                                         field, fallbacks[fieldIndex], !nonescapedFields.contains(field)));
                             }
                         } else {
-                            record.addField(new DocumentResponse.Field(
+                            record.add(new DocumentResponse.Field(
                                     field, iField.stringValue(), !nonescapedFields.contains(field)));
                         }
                     }

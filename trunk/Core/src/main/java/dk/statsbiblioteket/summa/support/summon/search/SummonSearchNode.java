@@ -632,7 +632,7 @@ public class SummonSearchNode extends SolrSearchNode {
                     }
                     log.debug("fixID: Explicit search for recordID:\"" + id + "\" resulted in ID '" + record.getId()
                               + "'");
-                    record.addField(new DocumentResponse.Field(ORIGINAL_LOOKUP_ID, originalID, true));
+                    record.add(new DocumentResponse.Field(ORIGINAL_LOOKUP_ID, originalID, true));
                 }
             }
         }
@@ -687,7 +687,7 @@ public class SummonSearchNode extends SolrSearchNode {
             for (int foundIndex = nonMatchedRecords.size()-1 ; foundIndex >= 0 ; foundIndex--) {
                 final String returnedID = removePrefix(nonMatchedRecords.get(foundIndex).getId());
                 if (requestIDVariants.contains(returnedID)) { // Found the record
-                    nonMatchedRecords.get(foundIndex).addField(
+                    nonMatchedRecords.get(foundIndex).add(
                             new DocumentResponse.Field(ORIGINAL_LOOKUP_ID, requestID, true));
                     nonMatchedRecords.remove(foundIndex);
                     continue requestedLoop;

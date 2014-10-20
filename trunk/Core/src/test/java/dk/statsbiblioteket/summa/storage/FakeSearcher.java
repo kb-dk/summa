@@ -49,10 +49,10 @@ public class FakeSearcher implements SummaSearcher {
                 1 // hitCount
         );
         DocumentResponse.Record record = new DocumentResponse.Record("someRecord", "someBase", 87.0f, "a");
-        record.addField(new DocumentResponse.Field("recordID", "someRecord", true));
-        record.addField(new DocumentResponse.Field("recordBase", "someBase", true));
-        record.addField(new DocumentResponse.Field("shortformat", "<myxml>foo</myxml>", true));
-        record.addField(new DocumentResponse.Field("text", "myText", true));
+        record.add(new DocumentResponse.Field("recordID", "someRecord", true));
+        record.add(new DocumentResponse.Field("recordBase", "someBase", true));
+        record.add(new DocumentResponse.Field("shortformat", "<myxml>foo</myxml>", true));
+        record.add(new DocumentResponse.Field("text", "myText", true));
         docs.addRecord(record);
         collection.add(docs);
         return collection;

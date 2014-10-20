@@ -28,6 +28,9 @@ import java.util.*;
 
 /**
  * The result of a search, suitable for later merging and sorting.
+ * </p><p>
+ * All insertion and merging operations treats documents as grouped. The property {@link #grouped} whether XML output
+ * is grouped or not. If a merge occurs, the grouped-property is set to {@code this.grouped() | other.grouped()}.
  */
 // TODO: Handle sort-aggregator?
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -68,25 +71,23 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     private String[] resultFields;
     private long searchTime;
     private long hitCount;
-
-    private List<Record> records;
+    private boolean grouped;
 
     // Subset of https://cwiki.apache.org/confluence/display/solr/Result+Grouping
-    private boolean group = false;
     private String groupField = null; // Must be defined if group == true
     private int groupRows = 10;
     private int groupLimit = 1;
 
-    // If {@link #group} is true, records will be ignored
-    private List<Group> groups = null;
+    private List<Group> groups = new ArrayList<>();
 
 //    private final Collator collator;
 
+    // Born-grouped response
     public DocumentResponse(String filter, String query, long startIndex, long maxRecords, String sortKey,
                             boolean reverseSort, String[] resultFields, long searchTime, long hitCount,
-                            boolean group, String groupField, int groupRows, int groupLimit) {
+                            String groupField, int groupRows, int groupLimit) {
         this(filter, query, startIndex, maxRecords, sortKey, reverseSort, resultFields, searchTime, hitCount);
-        this.group = group;
+        this.grouped = true;
         this.groupField = groupField;
         this.groupRows = groupRows;
         this.groupLimit = groupLimit;
@@ -105,20 +106,17 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         this.resultFields = resultFields;
         this.searchTime = searchTime;
         this.hitCount = hitCount;
-        records = new ArrayList<>(50);
+        this.grouped = false;
         // TODO: Port proper collator creation from stable
 //        collator = Collator.getInstance(new Locale("da"));
     }
-
-//    public Collator getCollator() {
-//        return collator;
-//    }
 
     /**
      * A mirror of Solr's group representation
      * https://cwiki.apache.org/confluence/display/solr/Result+Grouping
      */
-    public static class Group implements Serializable {
+    public static class Group extends AbstractList<Record> implements Serializable {
+        private static final long serialVersionUID = 48759222L;
         private String groupValue;
         private int numFound;
         private List<Record> docs = new ArrayList<>();
@@ -128,9 +126,32 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             this.numFound = numFound;
         }
 
-        public void addRecord(Record record) {
+        // Creates a single-member Group from the given Record
+        public Group(Record record, String groupField) {
+            this.numFound = 1;
             docs.add(record);
+            for (Field field: record.getFields()) {
+                if (groupField != null && groupField.equals(field.getName())) {
+                    this.groupValue = field.getContent();
+                    return;
+                }
+            }
+            log.debug("Unable to locate field '" + groupField + "' for groupValue in " + record + ". Using empty");
+            groupValue = "";
         }
+
+        /**
+         * Constructor that performs a deep copy of the provided group.
+         * @param otherGroup the group to deep-copy for the new Group.
+         */
+        public Group(Group otherGroup) {
+            groupValue = otherGroup.groupValue;
+            numFound = otherGroup.numFound;
+            for (Record record: otherGroup.docs) {
+                docs.add(new Record(record));
+            }
+        }
+
         public void addRecords(List<Record> records) {
             docs.addAll(records);
         }
@@ -155,14 +176,15 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
         public void merge(Group other) {
             if (!groupValue.equals(other.groupValue)) {
-                throw new IllegalArgumentException("Only groups with the same group value can be merged. Had '"
-                                                   + groupValue + "', encountered '" + groupValue + "'");
+                throw new IllegalArgumentException(
+                        "Only groups with the same group value can be merged. " +
+                        "Had '" + groupValue + "', encountered '" + groupValue + "'");
             }
             numFound += other.numFound;
             addRecords(other.docs);
         }
 
-        public void toXML(StringWriter sw, String indent) {
+        public void toXML(StringWriter sw, String indent, boolean grouped) {
             sw.append(indent);
             sw.append("<group groupValue=\"").append(groupValue);
             sw.append("\" numFound=\"").append(Integer.toString(numFound));
@@ -174,20 +196,58 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             sw.append(indent);
             sw.append("</group>\n");
         }
+
+        public void setGroupField(String groupField) {
+            String gv = null;
+            for (Record record: docs) {
+                String cgv = record.getFieldValue(groupField, null);
+                if (cgv == null) {
+                    log.trace("Unable to locate field '" + groupField + "' in " + record);
+                } else if (gv == null) {
+                    gv = cgv;
+
+                } else if(!gv.equals(cgv)) {
+                    log.warn(String.format("setGroupField(%s): Different groupValues encountered: '%s' and '%s'",
+                                           groupField, gv, cgv));
+                }
+            }
+            if (gv == null) {
+                log.debug("Unable to locate any values for groupField '" + groupField + "'");
+            }
+        }
+
+        @Override
+        public Record get(int index) {
+            return docs.get(index);
+        }
+
+        @Override
+        public int size() {
+            return docs.size();
+        }
+
+        @Override
+        public boolean add(Record record) {
+            return docs.add(record);
+        }
+
+        @Override
+        public Record set(int index, Record element) {
+            return docs.set(index, element);
+        }
+
+        @Override
+        public Record remove(int index) {
+            return docs.remove(index);
+        }
     }
 
     /**
      * Contains a representation of each hit from a search.
      */
-    public static class Record implements Serializable {
-        private static final long serialVersionUID = 48785612L;
+    public static class Record extends AbstractList<Field> implements Serializable {
+        private static final long serialVersionUID = 48785613L;
         private float score;
-
-        @Override
-        public String toString() {
-            return "Record(id='" + id + "', sortValue='" + sortValue + "', source='" + source + "', score=" + score
-                   + ", #fields=" + fields.size() + ')';
-        }
 
         private final float originalScore;
         private String sortValue;
@@ -215,8 +275,44 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             this.sortValue = sortValue;
         }
 
-        public void addField(Field field) {
-            fields.add(field);
+        /**
+         * Deep copy constructor.
+         * @param other all content of this will be deep copied.
+         */
+        public Record(Record other) {
+            score = other.score;
+            originalScore = other.originalScore;
+            sortValue = other.sortValue;
+            id = other.id;
+            source = other.source;
+            for (Field field: other.fields) {
+                fields.add(new Field(field));
+            }
+        }
+
+        @Override
+        public boolean add(Field field) {
+            return fields.add(field);
+        }
+
+        @Override
+        public Field get(int index) {
+            return fields.get(index);
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            return fields.remove(o);
+        }
+
+        @Override
+        public int size() {
+            return fields.size();
+        }
+
+        @Override
+        public Field set(int index, Field element) {
+            return fields.set(index, element);
         }
 
         public void toXML(StringWriter sw, String indent) {
@@ -264,9 +360,30 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             this.sortValue = sortValue;
         }
 
+        /**
+         * @deprecated use the Record-class directly instead.
+         * @return the fields in this Record.
+         */
+        @Deprecated
         public List<Field> getFields() {
             return fields;
         }
+
+        public String getFieldValue(String groupField, String defaultValue) {
+            for (Field field: fields) {
+                if (groupField.equals(field.getName())) {
+                    return field.getContent();
+                }
+            }
+            return defaultValue;
+        }
+
+        @Override
+        public String toString() {
+            return "Record(id='" + id + "', sortValue='" + sortValue + "', source='" + source + "', score=" + score
+                   + ", #fields=" + fields.size() + ')';
+        }
+
     }
 
     /**
@@ -282,6 +399,16 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             this.name = name;
             this.content = content;
             this.escapeContent = escapeContent;
+        }
+
+        /**
+         * Deep copy contructor.
+         * @param other the attributes from this field will be assigned to the new one.
+         */
+        public Field(Field other) {
+            name = other.name;
+            content = other.content;
+            escapeContent = other.escapeContent;
         }
 
         public void toXML(StringWriter sw, String indent) {
@@ -328,10 +455,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         if (record == null) {
             throw new IllegalArgumentException("Expected a Record, got null");
         }
-        if (!groups.isEmpty()) {
-            log.warn("Adding record directly when there are groups defined is a logic error " + record);
-        }
-        records.add(record);
+        log.debug("Adding Record " + record + " packed as single-member group");
+        groups.add(new Group(record, groupField));
     }
 
     @Override
@@ -349,39 +474,74 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
      * sortKey having different values, this result wins and a human-readable
      * warning is returned.
      *
-     * @param other The search result that should be merged into this.
+     * @param otherO The search result that should be merged into this.
      */
     @Override
-    public void merge(Response other) {
+    public void merge(Response otherO) {
         log.trace("merge called");
-        if (!(other instanceof DocumentResponse)) {
+        if (!(otherO instanceof DocumentResponse)) {
             throw new IllegalArgumentException(String.format("Expected response of class '%s' but got '%s'",
-                                                             getClass().toString(), other.getClass().toString()));
+                                                             getClass().toString(), otherO.getClass().toString()));
         }
-        super.merge(other);
-        DocumentResponse docResponse = (DocumentResponse) other;
-        log.debug("Merging " + ((DocumentResponse) other).getRecords().size() + " records into this "
+        super.merge(otherO);
+        DocumentResponse other = (DocumentResponse) otherO;
+        log.debug("Merging " + other.getRecords().size() + " records into this "
                   + getRecords().size() + " records with max records " + getMaxRecords() + " and "
-                  + docResponse.getMaxRecords());
-        setMaxRecords(Math.max(getMaxRecords(), docResponse.getMaxRecords()));
+                  + other.getMaxRecords());
         // TODO: Check for differences in basic attributes and warn if needed
-        //Collator collator = null;
-/*     * @param collator determines the order of Records, based on their
-     *                 sortValue. If no collator is given or sortKey equals
-     *                 {@link #SORT_ON_SCORE} or sortKey equals
-     *                 null, the values of {@link Record#score} are compared in
-     *                 natural order.<br />
-     *                 Note that the collator should ignore the property
-     *                 {@link #reverseSort}, as the merge method will take care
-     *                 of this if needed.
-*/
+        maxRecords = Math.max(getMaxRecords(), other.getMaxRecords());
+        hitCount += other.hitCount;
+        // This could also be additive, but we assume parallel calls
+        searchTime = Math.max(searchTime, other.searchTime);
 
-        records.addAll(docResponse.getRecords());
-        Collections.sort(records, getComparator());
+        if (!this.grouped && other.grouped) { // Copy group-attributes from other
+            grouped = true;
+            groupLimit = other.groupLimit;
+            groupRows= other.groupRows;
+            setGroupField(other.groupField); // Updates existing Records
+        }
+        boolean setOtherGroup = this.grouped && !other.grouped; // Update the valueField of other before assigning
 
-        hitCount += docResponse.getHitCount();
-        // TODO: This is only right for sequential searches
-        searchTime += docResponse.getSearchTime();
+        outer:
+        for (Group otherGroup: other.groups) {
+            for (Group thisGroup: groups) {
+                if (thisGroup.groupValue != null && thisGroup.groupValue.equals(otherGroup.groupValue)) {
+                    if (setOtherGroup) {
+                        Group otherClone = new Group(otherGroup);
+                        otherClone.setGroupField(groupField);
+                        thisGroup.merge(otherClone);
+                    } else {
+                        thisGroup.merge(otherGroup);
+                    }
+                    continue outer;
+                }
+            }
+            groups.add(otherGroup);
+        }
+        sort();
+        reduce();
+    }
+
+    private void reduce() {
+        while (groups.size() > maxRecords) {
+            groups.remove(groups.size()-1);
+        }
+    }
+
+    private void sort() {
+        Collections.sort(groups, getGroupComparator());
+    }
+
+
+    /**
+     * Assigns a new group field, stepping through all groups and updating the relevant attributes.
+     * @param groupField new field for existing response content.
+     */
+    private void setGroupField(String groupField) {
+        this.groupField = groupField;
+        for (Group group: groups) {
+            group.setGroupField(groupField);
+        }
     }
 
     /**
@@ -413,6 +573,22 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 //                    throw new IllegalStateException("Collator support not "
 //                                                    + "finished");
                 return collator.compare(s1, s2) * (reverseSort ? -1 : 1);
+            }
+        };
+    }
+
+    public Comparator<Group> getGroupComparator() {
+        final Comparator<Record> recordComparator = getComparator();
+        return new Comparator<Group>() {
+            @Override
+            public int compare(Group g1, Group g2) {
+                if (g1.isEmpty()) {
+                    return g2.isEmpty() ? 0 : -1;
+                }
+                if (g2.isEmpty()) {
+                    return 1;
+                }
+                return recordComparator.compare(g1.get(0), g2.get(0));
             }
         };
     }
@@ -456,6 +632,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public String toXML() {
         log.trace("toXML() called");
+        if (grouped) {
+            sort();
+            reduce();
+        }
         StringWriter sw = new StringWriter(2000);
         sw.append("<documentresult");
         appendIfDefined(sw, "filter", filter);
@@ -483,8 +663,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         sw.append(XMLUtil.encode(getTiming())).append("\"");
         sw.append(" hitCount=\"");
         sw.append(Long.toString(hitCount)).append("\">\n");
-        for (Record record : records) {
-            record.toXML(sw, "  ");
+        for (Group group: groups) {
+            group.toXML(sw, "  ", grouped);
         }
         sw.append("</documentresult>\n");
         log.trace("Returning XML from toXML()");
@@ -493,7 +673,14 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
     /* Getters and setters */
 
+    /**
+     * @return all records in all groups as a one-dimensional list.
+     */
     public List<Record> getRecords() {
+        List<Record> records = new ArrayList<>(groups.size());
+        for (Group group: groups) {
+            records.addAll(group);
+        }
         return records;
     }
 
@@ -526,7 +713,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             throw new IllegalArgumentException(
                     "The records list was of class " + records.getClass() + " which is not serializable");
         }
-        this.records = records;
+        groups.clear();
+        for (Record record: records) {
+            addRecord(record);
+        }
     }
 
     public void setHitCount(long hitCount) {
@@ -563,10 +753,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     }
 
     /**
-     * @return The amount of added Records.
+     * @return The amount of groups.
      */
     public int size() {
-        return records.size();
+        return groups.size();
     }
 
     public long getSearchTime() {
@@ -579,6 +769,6 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
     @Override
     public String toString() {
-        return "DocumentResponse(hitCount=" + hitCount + ", #records=" + records.size() + ")";
+        return "DocumentResponse(hitCount=" + hitCount + ", #groups=" + groups.size() + ")";
     }
 }
