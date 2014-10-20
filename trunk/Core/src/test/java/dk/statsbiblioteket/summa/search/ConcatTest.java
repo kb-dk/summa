@@ -145,7 +145,7 @@ public class ConcatTest extends TestCase {
             if (response instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)response;
                 for (DocumentResponse.Record record: docs.getRecords()) {
-                    for (DocumentResponse.Field field: record.getFields()) {
+                    for (DocumentResponse.Field field: record) {
                         if ("id".equals(field.getName())) {
                             ids.add(field.getContent());
                         }
@@ -275,7 +275,7 @@ public class ConcatTest extends TestCase {
             if (response instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)response;
                 for (DocumentResponse.Record record: docs.getRecords()) {
-                    for (DocumentResponse.Field f: record.getFields()) {
+                    for (DocumentResponse.Field f: record) {
                         if (field.equals(f.getName())) {
                             terms.add(f.getContent());
                         }

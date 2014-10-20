@@ -116,7 +116,7 @@ public class SearchTest extends NoExitTestCase {
 
     public static File root = new File(Resolver.getURL(
         "integration/search/SearchTest_IngestConfiguration.xml").getFile()).getParentFile();
-    public static String BASE = "fagref";
+    public static final String BASE = "fagref";
 
     public void testResourceCopying() {
         assertTrue("Source '" + fagref_hj + "' should exist", Resolver.getFile(fagref_hj).exists());
@@ -188,7 +188,6 @@ public class SearchTest extends NoExitTestCase {
         InitialContext context = new InitialContext();
         String paramValue = (String) context.lookup("NonExisting");
         System.out.println(paramValue);
-
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -281,10 +280,9 @@ public class SearchTest extends NoExitTestCase {
     private static List<String> getContent(DocumentResponse docs, String fieldName) {
         List<String> terms = new ArrayList<>();
         for (DocumentResponse.Record records: docs.getRecords()) {
-            for (DocumentResponse.Field field: records.getFields()) {
-                if (fieldName.equals(field.getName())) {
-                    terms.add(field.getContent());
-                }
+            String content = records.getFieldValue(fieldName, null);
+            if (content != null) {
+                terms.add(content);
             }
         }
         return terms;
@@ -304,10 +302,10 @@ public class SearchTest extends NoExitTestCase {
         final SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
 
         ExecutorService executor = Executors.newFixedThreadPool(THREADS);
-        List<Future> tasks = new ArrayList<>(THREADS);
+        List<Future<Object>> tasks = new ArrayList<>(THREADS);
         log.info("Starting " + THREADS + " search threads");
         for (int t = 0 ; t < THREADS ; t++) {
-            FutureTask task = new FutureTask(new Callable() {
+            FutureTask<Object> task = new FutureTask<>(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
                     for (int h = 0 ; h < HAMMER_RUNS ; h++) {
@@ -328,7 +326,7 @@ public class SearchTest extends NoExitTestCase {
         }
         log.info("Waiting for search threads to finish");
         int counter = 0;
-        for (Future task: tasks) {
+        for (Future<Object> task: tasks) {
             int concurrent = searcher.getConcurrentSearches();
             log.debug("Waiting for task " + counter++ +". Concurrent searchers: " + concurrent);
             task.get();

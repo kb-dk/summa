@@ -814,8 +814,8 @@ public class InteractionAdjuster implements Configurable {
         }
         log.trace("Replacing document fields (" + docFieldMap.getForward().size() + " replacements)");
         for (DocumentResponse.Record record: documentResponse.getRecords()) {
-            List<DocumentResponse.Field> newFields = new ArrayList<>(record.getFields().size()*2);
-            for (DocumentResponse.Field field: record.getFields()) {
+            List<DocumentResponse.Field> newFields = new ArrayList<>(record.size()*2);
+            for (DocumentResponse.Field field: record) {
                 if (docFieldMap.getReverse().containsKey(field.getName())) {
                     if (log.isTraceEnabled()) {
                         log.trace("Changing field name '" + field.getName() + "' to '" + Strings.join(
@@ -834,8 +834,8 @@ public class InteractionAdjuster implements Configurable {
                     newFields.add(field);
                 }
             }
-            record.getFields().clear();
-            record.getFields().addAll(newFields);
+            record.clear();
+            record.addAll(newFields);
         }
         documentResponse.addTiming("interactionadjuster.replacedocumentfields", System.currentTimeMillis() - startTime);
     }
@@ -855,9 +855,9 @@ public class InteractionAdjuster implements Configurable {
                 && !request.getBoolean(SummonSearchNode.SEARCH_SOLR_FILTER_IS_FACET, false)
                 && pureNegativeNotSimple && request.containsKey(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE);
 
-        boolean isSimple = (!filtersContaminateQuery
+        boolean isSimple = !filtersContaminateQuery
                             && request.containsKey(DocumentKeys.SEARCH_QUERY)
-                            && qrw.isSimple(request.getString(DocumentKeys.SEARCH_QUERY)));
+                            && qrw.isSimple(request.getString(DocumentKeys.SEARCH_QUERY));
 
         double factor = isSimple ? simpleBaseFactor : baseFactor;
         double addition = isSimple ? simpleBaseAddition : baseAddition;

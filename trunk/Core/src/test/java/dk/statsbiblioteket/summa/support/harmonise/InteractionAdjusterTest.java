@@ -277,8 +277,7 @@ public class InteractionAdjusterTest extends TestCase {
             adjuster.adjust(request, responses);
             assertEquals("The adjusted response should contain rewritten field",
                          "author_normalised",
-                         ((DocumentResponse)responses.iterator().next()).
-                             getRecords().get(0).getFields().get(0).getName());
+                         ((DocumentResponse)responses.iterator().next()).getRecords().get(0).get(0).getName());
         }
 
         {
@@ -291,8 +290,7 @@ public class InteractionAdjusterTest extends TestCase {
 
             assertEquals("The adjusted response should not rewrite",
                          "Author",
-                         ((DocumentResponse)responses.iterator().next()).
-                             getRecords().get(0).getFields().get(0).getName());
+                         ((DocumentResponse)responses.iterator().next()).getRecords().get(0).get(0).getName());
         }
     }
 

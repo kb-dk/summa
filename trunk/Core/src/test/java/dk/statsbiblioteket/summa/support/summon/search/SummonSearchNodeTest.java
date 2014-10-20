@@ -283,14 +283,7 @@ public class SummonSearchNodeTest extends TestCase {
             if (response instanceof DocumentResponse) {
                 DocumentResponse docs = (DocumentResponse)response;
                 for (DocumentResponse.Record record: docs.getRecords()) {
-                    Pair<String, String> ids = new Pair<>(record.getId(), null);
-                    for (DocumentResponse.Field field: record.getFields()) {
-                        if (field.getName().equals(fieldName)) {
-                            ids.setValue(field.getContent());
-                            break;
-                        }
-                    }
-                    idPairs.add(ids);
+                    idPairs.add(new Pair<>(record.getId(), record.getFieldValue(fieldName, null)));
                 }
             }
         }
@@ -538,7 +531,7 @@ public class SummonSearchNodeTest extends TestCase {
         DocumentResponse docs = (DocumentResponse)result.iterator().next();
         assertEquals("There should be a single result", 1, docs.size());
         boolean pubFound = false;
-        for (DocumentResponse.Field field: docs.getRecords().get(0).getFields()) {
+        for (DocumentResponse.Field field: docs.getRecords().get(0)) {
             if ("PublicationTitle".equals(field.getName())) {
                 pubFound = true;
                 break;
@@ -2185,7 +2178,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals(message + ". There should only be a single hit", 1, docs.getHitCount());
         boolean found = false;
         for (DocumentResponse.Record record: docs.getRecords()) {
-            for (DocumentResponse.Field field: record.getFields()) {
+            for (DocumentResponse.Field field: record) {
                 if (fieldName.equals(field.getName())) {
                     String content = field.getContent();
                     if (sort) {
