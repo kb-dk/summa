@@ -285,10 +285,9 @@ public class RelationResolver extends ObjectFilterImpl {
     private void assignRelatives(Payload payload, DocumentResponse docResponse) {
         List<String> hitIDs = new ArrayList<>(docResponse.getRecords().size());
         for (DocumentResponse.Record hitRecord : docResponse.getRecords()) {
-            for (DocumentResponse.Field field : hitRecord.getFields()) {
-                if (DocumentResponse.RECORD_ID.equals(field.getName())) {
-                    hitIDs.add(field.getContent());
-                }
+            String id = hitRecord.getFieldValue(DocumentResponse.RECORD_ID, null);
+            if (id != null) {
+                hitIDs.add(id);
             }
         }
 

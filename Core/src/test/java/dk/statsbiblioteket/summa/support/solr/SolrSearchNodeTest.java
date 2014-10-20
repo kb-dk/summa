@@ -233,7 +233,7 @@ public class SolrSearchNodeTest extends TestCase {
             // TODO: Grep for sortKey != null
             for (DocumentResponse.Record record: docs.getRecords()) {
                 System.out.print("Record: " + record + ":");
-                for (DocumentResponse.Field field: record.getFields()) {
+                for (DocumentResponse.Field field: record) {
                     System.out.print(" " + field.getName() + "=\"" + field.getContent() + "\"");
                 }
                 System.out.println();
@@ -331,7 +331,7 @@ public class SolrSearchNodeTest extends TestCase {
     private List<String> getContent(DocumentResponse docs, String fieldName) {
         List<String> terms = new ArrayList<>();
         for (DocumentResponse.Record records: docs.getRecords()) {
-            for (DocumentResponse.Field field: records.getFields()) {
+            for (DocumentResponse.Field field: records) {
                 if (fieldName.equals(field.getName())) {
                     terms.add(field.getContent());
                 }

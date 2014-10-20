@@ -97,7 +97,7 @@ public class SummonResponseBuilderTest extends TestCase {
         DocumentResponse docs = (DocumentResponse) rc.iterator().next();
         for (DocumentResponse.Record rec: docs.getRecords()) {
             int authorCount = 0;
-            for (DocumentResponse.Field field: rec.getFields()) {
+            for (DocumentResponse.Field field: rec) {
                 if ("Author".equals(field.getName())) {
                     authorCount++;
                 }
@@ -106,7 +106,7 @@ public class SummonResponseBuilderTest extends TestCase {
                 continue;
             }
             // Only the ones with more than 1 author are interesting
-            for (DocumentResponse.Field field: rec.getFields()) {
+            for (DocumentResponse.Field field: rec) {
                 if (field.getName().startsWith("Author")) {
                     System.out.println(field.getName() + ": " + field.getContent());
                 } else if ("shortformat".equals(field.getName())) {

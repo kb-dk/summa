@@ -130,7 +130,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         public Group(Record record, String groupField) {
             this.numFound = 1;
             docs.add(record);
-            for (Field field: record.getFields()) {
+            for (Field field: record) {
                 if (groupField != null && groupField.equals(field.getName())) {
                     this.groupValue = field.getContent();
                     return;
@@ -186,15 +186,21 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
         public void toXML(StringWriter sw, String indent, boolean grouped) {
             sw.append(indent);
-            sw.append("<group groupValue=\"").append(groupValue);
-            sw.append("\" numFound=\"").append(Integer.toString(numFound));
-            sw.append("\" score=\"").append(docs.isEmpty() ? "" : Float.toString(docs.get(0).getScore()));
-            sw.append("\">\n");
-            for (Record record: docs) {
-                record.toXML(sw, indent + "  ");
+            if (grouped) {
+                sw.append("<group groupValue=\"").append(groupValue);
+                sw.append("\" numFound=\"").append(Integer.toString(numFound));
+                sw.append("\" score=\"").append(docs.isEmpty() ? "" : Float.toString(docs.get(0).getScore()));
+                sw.append("\">\n");
+                for (Record record: docs) {
+                    record.toXML(sw, indent + "  ");
+                }
+                sw.append(indent);
+                sw.append("</group>\n");
+            } else {
+                for (Record record: docs) {
+                    record.toXML(sw, indent);
+                }
             }
-            sw.append(indent);
-            sw.append("</group>\n");
         }
 
         public void setGroupField(String groupField) {
@@ -315,6 +321,16 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             return fields.set(index, element);
         }
 
+        @Override
+        public void add(int index, Field element) {
+            fields.add(index, element);
+        }
+
+        @Override
+        public Field remove(int index) {
+            return fields.remove(index);
+        }
+
         public void toXML(StringWriter sw, String indent) {
             sw.append(indent);
             sw.append("<record score=\"").append(Float.toString(score));
@@ -369,9 +385,9 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             return fields;
         }
 
-        public String getFieldValue(String groupField, String defaultValue) {
+        public String getFieldValue(String fieldName, String defaultValue) {
             for (Field field: fields) {
-                if (groupField.equals(field.getName())) {
+                if (fieldName.equals(field.getName())) {
                     return field.getContent();
                 }
             }
