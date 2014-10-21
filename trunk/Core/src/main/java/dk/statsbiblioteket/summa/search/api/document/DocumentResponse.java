@@ -75,8 +75,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
     // Subset of https://cwiki.apache.org/confluence/display/solr/Result+Grouping
     private String groupField = null; // Must be defined if group == true
-    private int groupRows = 10;
-    private int groupLimit = 1;
+    private int groupRows = DocumentKeys.DEFAULT_ROWS;
+    private int groupLimit = DocumentKeys.DEFAULT_GROUP_LIMIT;
 
     private List<Group> groups = new ArrayList<>();
 
@@ -118,10 +118,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     public static class Group extends AbstractList<Record> implements Serializable {
         private static final long serialVersionUID = 48759222L;
         private String groupValue;
-        private int numFound;
+        private long numFound;
         private List<Record> docs = new ArrayList<>();
 
-        public Group(String groupValue, int numFound) {
+        public Group(String groupValue, long numFound) {
             this.groupValue = groupValue;
             this.numFound = numFound;
         }
@@ -188,7 +188,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             sw.append(indent);
             if (grouped) {
                 sw.append("<group groupValue=\"").append(groupValue);
-                sw.append("\" numFound=\"").append(Integer.toString(numFound));
+                sw.append("\" numFound=\"").append(Long.toString(numFound));
                 sw.append("\" score=\"").append(docs.isEmpty() ? "" : Float.toString(docs.get(0).getScore()));
                 sw.append("\">\n");
                 for (Record record: docs) {
@@ -475,6 +475,18 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         groups.add(new Group(record, groupField));
     }
 
+    /**
+     * Add a Group to the SearchResult.
+     * @param group A group that belongs to the search result.
+     */
+    public void addGroup(Group group) {
+        if (group == null) {
+            throw new IllegalArgumentException("Expected a Group, got null");
+        }
+        log.debug("Adding Group " + group);
+        groups.add(group);
+    }
+
     @Override
     public String getName() {
         return NAME;
@@ -539,8 +551,11 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     }
 
     private void reduce() {
-        while (groups.size() > maxRecords) {
+        while (groups.size() > maxRecords) { // TODO: Should we use rows here?
             groups.remove(groups.size()-1);
+        }
+        for (Group group: groups) {
+            group.reduce(groupLimit);
         }
     }
 

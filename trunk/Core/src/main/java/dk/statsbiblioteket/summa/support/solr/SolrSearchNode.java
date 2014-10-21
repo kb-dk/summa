@@ -860,6 +860,16 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
 
         queryMap.put("start", Arrays.asList(Integer.toString(startPage)));
         queryMap.put("rows", Arrays.asList(Integer.toString(maxRecords)));
+        // TODO: Add support for explicit row parameter
+        queryMap.put(DocumentKeys.GROUP, Arrays.asList(
+                request.getBoolean(DocumentKeys.GROUP, false).toString()));
+        queryMap.put(DocumentKeys.GROUP_FIELD, Arrays.asList(
+                request.getString(DocumentKeys.GROUP_FIELD)));
+        queryMap.put(DocumentKeys.GROUP_LIMIT, Arrays.asList(
+                request.getInt(DocumentKeys.GROUP_LIMIT, DocumentKeys.DEFAULT_GROUP_LIMIT).toString()));
+        queryMap.put(DocumentKeys.ROWS, Arrays.asList(
+                request.getInt(DocumentKeys.ROWS, maxRecords).toString()));
+
 
         // TODO: Add support for sorting on multiple fields
         if (reverseSort && sortKey == null) {
