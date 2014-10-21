@@ -206,7 +206,7 @@ public class SearchStorage implements Storage {
         List<Record> records = new ArrayList<>(batchSize);
         for (DocumentResponse.Record doc: documents.getRecords()) {
             StringWriter sw = new StringWriter();
-            doc.toXML(sw);
+            doc.toXML(sw, "");
             try {
                 records.add(new Record(doc.getId(), recordBase, sw.toString().getBytes("utf-8")));
             } catch (UnsupportedEncodingException e) {

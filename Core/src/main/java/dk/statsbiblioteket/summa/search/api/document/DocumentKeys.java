@@ -137,6 +137,39 @@ public interface DocumentKeys {
     public static final String SEARCH_COLLECT_DOCIDS = "search.document.collectdocids";
 
     /**
+     * Equivalent to
+     * <a href="https://cwiki.apache.org/confluence/display/solr/Result+Grouping">Solr Result Grouping</a>.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String GROUP = "group";
+    /**
+     * Equivalent to
+     * <a href="https://cwiki.apache.org/confluence/display/solr/Result+Grouping">Solr Result Grouping</a>.
+     * </p><p>
+     * The field to group on.
+     * </p><p>
+     * Mandatory if group==true.
+     */
+    public static final String GROUP_FIELD = "group.field";
+    /**
+     *  Equivalent to
+     * <a href="https://cwiki.apache.org/confluence/display/solr/Result+Grouping">Solr Result Grouping</a>.
+     * </p><p>
+     * Optional. Default is 10.
+     */
+    public static final String ROWS = "rows";
+    public static final int DEFAULT_ROWS = 10;
+    /**
+     *  Equivalent to
+     * <a href="https://cwiki.apache.org/confluence/display/solr/Result+Grouping">Solr Result Grouping</a>.
+     * </p><p>
+     * Optional. Default is 1.
+     */
+    public static final String GROUP_LIMIT = "group.limit";
+    public static final int DEFAULT_GROUP_LIMIT = 1;
+
+    /**
      * Boolean ("true" or "false"). Optional. Default is false.
      * </p><p>
      * If true, explain how the searcher arrived at the result. This is

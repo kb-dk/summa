@@ -196,6 +196,11 @@ public class SolrResponseBuilder implements Configurable {
                         // Cursor is at end of sub tree after parseHeader
                         return true;
                     }
+                    if ("grouped".equals(name)) {
+                        parseGrouped(xml, documentResponse);
+                        // Cursor is at end of sub tree after parseHeader
+                        return true;
+                    }
                     log.debug("Encountered unsupported name in response '" + name + "'. Skipping element");
                     XMLStepper.skipSubTree(xml);
                     return true;
@@ -623,6 +628,102 @@ public class SolrResponseBuilder implements Configurable {
         parseDocumentsInResponse(xml, response);
     }
 
+    /*
+    <lst name="grouped">
+      <lst name="sort_year_desc">
+        <int name="matches">3569</int>
+        <arr name="groups">
+          <lst>
+            <str name="groupValue">2012</str>
+            <result name="doclist" numFound="70" start="0" maxScore="19.005508">
+              <doc>
+                <str name="recordID">sb_5588484</str>
+     */
+    private void parseGrouped(XMLStreamReader xml, final DocumentResponse docResponse) throws XMLStreamException {
+        XMLStepper.findTagStart(xml, "lst");
+        final String groupField = XMLStepper.getAttribute(xml, "name", null);
+        if (groupField == null) {
+            log.warn("Unable to locate <lst name=\"...\"> in grouped response");
+            return;
+        }
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+            @Override
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
+                    throws XMLStreamException {
+                if ("int".equals(current) && "matches".equals(XMLStepper.getAttribute(xml, "name", null))) {
+                    xml.next(); // At content
+                    docResponse.setHitCount(Long.parseLong(xml.getElementText()));
+                    return true;
+                }
+                if ("arr".equals(current) && "groups".equals(XMLStepper.getAttribute(xml, "name", null))) {
+                    XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+                        @Override
+                        public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
+                                throws XMLStreamException {
+                            if ("lst".equals(current)) {
+                                parseGroupedInnerList(xml, docResponse, groupField);
+                                return true;
+                            }
+                            log.debug("parseGrouped: Unexpected tag '" + current + "' while iterating groups");
+                            return false;
+                        }
+                    });
+                    return true; // Is this always correct? Should iterateTags respond whether the mark has moved?
+                }
+                log.debug("parseGrouped: Unexpected tag in group " + groupField + ": " + current);
+                return false;
+            }
+        });
+    }
+
+    /*
+    <lst>
+      <str name="groupValue">2012</str>
+      <result name="doclist" numFound="70" start="0" maxScore="19.005508">
+        <doc>
+          <str name="recordID">sb_5588484</str>
+     */
+    private void parseGroupedInnerList(XMLStreamReader xml, final DocumentResponse docResponse, final String groupName)
+            throws XMLStreamException {
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+            private String groupValue = null;
+            private long numFound = -1;
+            private List<DocumentResponse.Record> records = null;
+            @Override
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
+                    throws XMLStreamException {
+                if ("str".equals(current) && "groupValue".equals(XMLStepper.getAttribute(xml, "name", null))) {
+                    xml.next(); // At content
+                    groupValue = xml.getElementText();
+                    return true;
+                }
+                // What about maxScore? Inferred from first record in the group?
+                if ("result".equals(current) && "doclist".equals(XMLStepper.getAttribute(xml, "name", null))) {
+                    numFound = Long.parseLong(XMLStepper.getAttribute(xml, "numFound", "-1"));
+                    records = extractRecords(xml, docResponse);
+                    return true;
+                }
+                log.debug("parseGroupedInnerList: Unexpected tag '" + current + "'");
+                return false;
+            }
+
+            @Override
+            public void end() {
+                if (groupValue == null) {
+                    log.warn("parseGroupedInnerList: Unable to locate groupValue for group '" + groupName + "'");
+                } else if (records == null || records.isEmpty()) {
+                    log.warn(String.format(
+                            "parseGroupedInnerList: Got groupValue '%s' for group '%s' but no records",
+                            groupValue, groupName));
+                } else {
+                    DocumentResponse.Group group = new DocumentResponse.Group(groupValue, numFound);
+                    group.addAll(records);
+                    docResponse.addGroup(group);
+                }
+            }
+        });
+    }
+
     private void parseDocumentsInResponse(XMLStreamReader xml, final DocumentResponse response)
             throws XMLStreamException {
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
@@ -640,10 +741,18 @@ public class SolrResponseBuilder implements Configurable {
     }
 
     private void parseDoc(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
+        log.trace("parseDoc(...) called");
+        List<DocumentResponse.Record> records = extractRecords(xml, response);
+        for (DocumentResponse.Record record: records) {
+            response.addRecord(record);
+        }
+    }
+
+    private List<DocumentResponse.Record> extractRecords(XMLStreamReader xml, final DocumentResponse response)
+            throws XMLStreamException {
         final String sortKey = response.getSortKey() == null || response.getSortKey().equals(DocumentKeys.SORT_ON_SCORE)
                                ? null : response.getSortKey();
-
-        log.trace("parseDoc(...) called");
+        final List<DocumentResponse.Record> records = new ArrayList<>();
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             float score = 0.0f;
             String id = null;
@@ -652,16 +761,17 @@ public class SolrResponseBuilder implements Configurable {
             String lastArrName = null; // For <arr name="foo"><str>term1</str><str>term1</str></arr> structures
 
             @Override
-            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
+                    throws XMLStreamException {
                 if ("arr".equals(current)) {
                     lastArrName = XMLStepper.getAttribute(xml, "name", null);
                     return false;
                 }
                 String name = tags.size() > 1 && "arr".equals(tags.get(tags.size() - 2)) ?
-                              // We're inside a list of terms for the same multi value field so use the name from the arr
-                              lastArrName :
-                              // Single value field, so the name must be specified
-                              XMLStepper.getAttribute(xml, "name", null);
+                        // We're inside a list of terms for the same multi value field so use the name from the arr
+                        lastArrName :
+                        // Single value field, so the name must be specified
+                        XMLStepper.getAttribute(xml, "name", null);
                 if (name == null) {
                     log.warn("Encountered tag '" + current + "' without expected attribute 'name'. Skipping");
                     return false;
@@ -732,9 +842,10 @@ public class SolrResponseBuilder implements Configurable {
                 if (log.isTraceEnabled()) {
                     log.trace("constructed and added " + record);
                 }
-                response.addRecord(record);
+                records.add(record);
             }
         });
+        return records;
     }
 
     public String getRecordBase() {
@@ -744,12 +855,19 @@ public class SolrResponseBuilder implements Configurable {
     protected DocumentResponse createBasicDocumentResponse(Request request) {
         String query =    request.getString( DocumentKeys.SEARCH_QUERY, null);
         String filter =   request.getString( DocumentKeys.SEARCH_FILTER, null);
-        int startIndex =  request.getInt(    DocumentKeys.SEARCH_START_INDEX, 0);
-        int maxRecords =  request.getInt(    DocumentKeys.SEARCH_MAX_RECORDS, 0);
-        String sortKey =  request.getString( DocumentKeys.SEARCH_SORTKEY, null);
+        int startIndex =  request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
+        int maxRecords =  request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, 0);
+        String sortKey =  request.getString(DocumentKeys.SEARCH_SORTKEY, null);
         boolean reverse = request.getBoolean(DocumentKeys.SEARCH_REVERSE, false);
-        DocumentResponse response = new DocumentResponse(
-            filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1);
+        boolean grouped = request.getBoolean(DocumentKeys.GROUP, false);
+        int rows =        request.getInt(DocumentKeys.ROWS,
+                                         request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, DocumentKeys.DEFAULT_ROWS));
+        int groupLimit =  request.getInt(DocumentKeys.GROUP_LIMIT, DocumentKeys.DEFAULT_GROUP_LIMIT);
+        String groupField=request.getString(DocumentKeys.GROUP_FIELD, "");
+        DocumentResponse response = grouped ?
+                new DocumentResponse(filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1,
+                                     groupField, rows, groupLimit) :
+                new DocumentResponse(filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1);
         response.setPrefix(searcherID + ".");
         return response;
     }
