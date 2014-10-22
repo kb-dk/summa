@@ -94,7 +94,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
                 String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
                 if (query != null) {
                     QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(query);
-                    log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
+                    log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery() + "'");
                     request.put(DocumentKeys.SEARCH_QUERY, clean.getLastQuery());
                 }
             }
@@ -102,7 +102,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
                 String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
                 if (filter!= null) {
                     QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(filter);
-                    log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery());
+                    log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery() + "'");
                     request.put(DocumentKeys.SEARCH_FILTER, clean.getLastQuery());
                 }
             }
