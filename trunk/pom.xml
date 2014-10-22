@@ -9,7 +9,7 @@
 
     <properties>
         <solr_lucene_version>4.8.1</solr_lucene_version>
-        <sbutil_version>0.5.24</sbutil_version>
+        <sbutil_version>0.5.28</sbutil_version>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
