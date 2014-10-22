@@ -102,6 +102,23 @@ public class SolrSearchNodeTest extends TestCase {
         assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
     }
 
+    public void testGrouping() throws Exception {
+        performBasicIngest();
+        ResponseCollection responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "*:*",
+                DocumentKeys.GROUP, "true",
+                DocumentKeys.GROUP_FIELD, "recordBase",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
+        ));
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     4, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+        System.out.println(responses.toXML().replace(">", ">\n"));
+        String PHRASE = "Solr sample document";
+        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+    }
+
     public void testSolrParamPrefix() throws Exception {
         performBasicIngest();
         ResponseCollection responses = search(new Request(
@@ -969,7 +986,7 @@ public class SolrSearchNodeTest extends TestCase {
         log.debug("Finished basic ingest");
     }
 
-    final static int SAMPLES = 2;
+    final static int SAMPLES = 4;
     private ObjectFilter getDataProvider(boolean deleted) throws IOException {
         List<Payload> samples = new ArrayList<>(SAMPLES);
         for (int i = 1 ; i <= SAMPLES ; i++) {
