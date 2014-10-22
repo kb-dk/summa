@@ -247,7 +247,6 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final boolean emptyQueryNoSearch;
     protected final boolean emptyFilterNoSearch;
     protected final boolean mltEnabled;
-    protected String solrSchema = null;
 
     // Debug & feedback
     protected long lastConnectTime = -1;
