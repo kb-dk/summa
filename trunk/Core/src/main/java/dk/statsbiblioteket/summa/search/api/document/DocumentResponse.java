@@ -452,6 +452,11 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         public boolean isEscapeContent() {
             return escapeContent;
         }
+
+        @Override
+        public String toString() {
+            return "Field(" + name + ":" + content + ")";
+        }
     }
 
     private static void appendIfDefined(StringWriter sw, String name, String value) {

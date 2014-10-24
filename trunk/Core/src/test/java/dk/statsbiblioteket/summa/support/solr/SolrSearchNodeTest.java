@@ -108,7 +108,7 @@ public class SolrSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_QUERY, "*:*",
                 DocumentKeys.GROUP, "true",
                 DocumentKeys.GROUP_FIELD, "recordBase",
-                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID recordBase score title_org fulltext"
         ));
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
