@@ -607,7 +607,6 @@ public class SolrResponseBuilder implements Configurable {
                         log.debug("No MoreLikeThis for '" + currentName + "'. Skipping document extraction");
                         return false;
                     }
-                    xml.next();
                     parseDocumentsInResponse(xml, documentResponse);
                     return true;
                 }
@@ -617,14 +616,12 @@ public class SolrResponseBuilder implements Configurable {
         documentResponse.setHitCount(hitCount.get());
     }
     /*
-   <result name="response" numFound="1" start="0">
-       <doc>
-           <str name="recordID">sb_pure_ddfmxd:42657</str>
+       <doc>*
+           <str name="recordID">sb_pure_ddfmxd:42657</str>*
      */
     private void parseResponse(XMLStreamReader xml, final DocumentResponse response) throws XMLStreamException {
         log.trace("parseResponse(...) called");
         response.setHitCount(Long.parseLong(XMLStepper.getAttribute(xml, "numFound", "-1")));
-        xml.next();
         parseDocumentsInResponse(xml, response);
     }
 
@@ -650,15 +647,30 @@ public class SolrResponseBuilder implements Configurable {
             @Override
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
+                if ("lst".equals(current)) { // start tag
+                    return false;
+                }
+                // <int name="matches">3569</int>
                 if ("int".equals(current) && "matches".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     docResponse.setHitCount(Long.parseLong(xml.getElementText()));
                     return true;
                 }
+                /*
+                  <arr name="groups">
+                    <lst>*
+                      <str name="groupValue">2012</str>
+                        <result name="doclist" numFound="70" start="0" maxScore="19.005508">
+                         <doc>*
+                           <str name="recordID">sb_5588484</str>*
+                 */
                 if ("arr".equals(current) && "groups".equals(XMLStepper.getAttribute(xml, "name", null))) {
-                    XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+                    XMLStepper.iterateTags(xml, true, new XMLStepper.Callback() {
                         @Override
                         public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                                 throws XMLStreamException {
+                            if ("arr".equals(current)) { // start tag
+                                return false;
+                            }
                             if ("lst".equals(current)) {
                                 parseGroupedInnerList(xml, docResponse, groupField);
                                 return true;
@@ -680,18 +692,22 @@ public class SolrResponseBuilder implements Configurable {
     <lst>
       <str name="groupValue">2012</str>
       <result name="doclist" numFound="70" start="0" maxScore="19.005508">
-        <doc>
-          <str name="recordID">sb_5588484</str>
+        <doc>*
+          <str name="recordID">sb_5588484</str>*
      */
     private void parseGroupedInnerList(XMLStreamReader xml, final DocumentResponse docResponse, final String groupName)
             throws XMLStreamException {
-        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+        XMLStepper.iterateTags(xml, true, new XMLStepper.Callback() {
             private String groupValue = null;
             private long numFound = -1;
             private List<DocumentResponse.Record> records = null;
             @Override
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
+                log.debug("parseGroupedInnerList: Current tag: '" + current + "'");
+                if ("lst".equals(current)) { // start tag
+                    return false;
+                }
                 if ("str".equals(current) && "groupValue".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     groupValue = xml.getElementText();
                     return true;
@@ -700,7 +716,15 @@ public class SolrResponseBuilder implements Configurable {
                 if ("result".equals(current) && "doclist".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     numFound = Long.parseLong(XMLStepper.getAttribute(xml, "numFound", "-1"));
                     records = getDocumentsInResponse(xml, docResponse);
-                    System.out.println("*** After record extraction positioned at " + XMLUtil.eventID2String(xml.getEventType()) + ": " + xml.getName());
+                    System.out.println("*** After record extraction positioned at "
+                                       + XMLUtil.eventID2String(xml.getEventType()) + ": " + xml.getName() + " with "
+                                       + records.size() + " records");
+                    for (DocumentResponse.Record record: records) {
+                        System.out.println("  " + record);
+                        for (DocumentResponse.Field field: record) {
+                            System.out.println("    " + field);
+                        }
+                    }
                     return true;
                 }
                 log.debug("parseGroupedInnerList: Unexpected tag '" + current + "'");
@@ -731,25 +755,22 @@ public class SolrResponseBuilder implements Configurable {
         }
     }
 
+    /*
+      <result name="doclist" numFound="70" start="0" maxScore="19.005508">
+        <doc>*
+          <str name="recordID">sb_5588484</str>*
+
+     */
     private List<DocumentResponse.Record> getDocumentsInResponse(XMLStreamReader xml, final DocumentResponse response)
             throws XMLStreamException {
         final List<DocumentResponse.Record> records = new ArrayList<>(); // Contains only a single record
-        XMLStepper.iterateElements(xml, "result", "doc", new XMLStepper.XMLCallback() {
-            @Override
-            public void execute(XMLStreamReader xml) throws XMLStreamException {
-                if ("doc".equals(xml.getLocalName())) {
-                    xml.next();
-                    DocumentResponse.Record record = extractRecord(xml, response);
-                    if (record != null) {
-                        records.add(record);
-                    }
-                }
-            }
+        System.out.println("*** <getDocumentsInResponse>");
+        XMLStepper.iterateTags(xml, true, new XMLStepper.Callback() {
 
+            @Override
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
                 if ("doc".equals(current)) {
-                    xml.next();
                     DocumentResponse.Record record = extractRecord(xml, response);
                     if (record != null) {
                         records.add(record);
@@ -759,10 +780,14 @@ public class SolrResponseBuilder implements Configurable {
                 return false;
             }
         });
+        System.out.println("*** </getDocumentsInResponse>");
         System.out.println("*** After docs extraction positioned at " + XMLUtil.eventID2String(xml.getEventType()) + ": " + xml.getName());
         return records;
     }
-
+    /*
+        <doc>
+          <str name="recordID">sb_5588484</str>*
+     */
     private DocumentResponse.Record extractRecord(XMLStreamReader xml, final DocumentResponse response)
             throws XMLStreamException {
         final String sortKey = response.getSortKey() == null || response.getSortKey().equals(DocumentKeys.SORT_ON_SCORE)
@@ -778,6 +803,10 @@ public class SolrResponseBuilder implements Configurable {
             @Override
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
+                System.out.println("extractRecord start tag: " + current);
+                if ("doc".equals(current)) { // outer element
+                    return false;
+                }
                 if ("arr".equals(current)) {
                     lastArrName = XMLStepper.getAttribute(xml, "name", null);
                     return false;
@@ -817,6 +846,7 @@ public class SolrResponseBuilder implements Configurable {
                 } else if (baseField.equals(name)) {
                     base = content;
                 }
+                System.out.println("extractRecord adding field: " + name + ":" + content);
                 fields.add(new SimplePair<>(name, content));
                 return true;
             }
