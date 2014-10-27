@@ -114,7 +114,7 @@ public class SolrSearchNodeTest extends TestCase {
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      4, ((DocumentResponse)responses.iterator().next()).getHitCount());
 
-        System.out.println(responses.toXML().replace(">", ">\n"));
+        System.out.println(responses.toXML());
         String PHRASE = "Solr sample document";
         assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
     }
@@ -140,7 +140,7 @@ public class SolrSearchNodeTest extends TestCase {
                     DocumentKeys.SEARCH_QUERY, "*:*"
             ));
             assertEquals("There should be the right number of hits for match all.\n" + responses.toXML(),
-                         2, ((DocumentResponse)responses.iterator().next()).getHitCount());
+                         4, ((DocumentResponse)responses.iterator().next()).getHitCount());
         }
         {
             ResponseCollection responses = search(new Request(
@@ -458,7 +458,7 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
-    public void testNonQualifiedEdismax() throws Exception {
+    public void deprecated_testNonQualifiedEdismax() throws Exception {
         performBasicIngest();
         SearchNode searcher = new SolrSearchNode(Configuration.newMemoryBased(
                 SolrSearchNode.CONF_SOLR_RESTCALL, "/solr/edismax"
@@ -686,9 +686,10 @@ public class SolrSearchNodeTest extends TestCase {
 
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     2, ((DocumentResponse) responses.iterator().next()).getHitCount());
-        assertTrue("The result should contain tag 'solr' with count 2\n" + responses.toXML(),
-                   responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
+                     SAMPLES, ((DocumentResponse) responses.iterator().next()).getHitCount());
+        assertTrue("The result should contain tag 'solr' with count " + SAMPLES + "\n" + responses.toXML(),
+                   responses.toXML().contains(
+                           "<tag name=\"solr\" addedobjects=\"" + SAMPLES + "\" reliability=\"PRECISE\">"));
 //        System.out.println(responses.toXML());
     }
 
@@ -953,9 +954,9 @@ public class SolrSearchNodeTest extends TestCase {
 //        System.out.println(responses.toXML());
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
-                     2, ((DocumentResponse) responses.iterator().next()).getHitCount());
-        assertTrue("The result should contain tag 'solr' with count 1\n" + responses.toXML(),
-                   responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
+                     4, ((DocumentResponse) responses.iterator().next()).getHitCount());
+        assertTrue("The result should contain tag 'solr' with count 4\n" + responses.toXML(),
+                   responses.toXML().contains("<tag name=\"solr\" addedobjects=\"4\" reliability=\"PRECISE\">"));
     }
 
     private void performBasicIngest() throws Exception {

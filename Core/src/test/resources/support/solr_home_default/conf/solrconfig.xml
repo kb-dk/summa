@@ -156,6 +156,7 @@ But this is avery rare situation.
 
             <str name="qf">
                 sort_title^2.0
+                fulltext^0.5
                 freetext^0.5
                 author_main_org^2.0
                 author_main_norm^0.75
