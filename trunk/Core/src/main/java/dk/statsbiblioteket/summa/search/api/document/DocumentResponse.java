@@ -556,7 +556,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     }
 
     private void reduce() {
-        while (groups.size() > maxRecords) { // TODO: Should we use rows here?
+        while (groups.size() > groupRows) {
             groups.remove(groups.size()-1);
         }
         for (Group group: groups) {

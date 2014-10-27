@@ -390,6 +390,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         // We perform this ugly hack to get the empty string back if the value is the empty string.
         String rawQuery = request.getString(
                 DocumentKeys.SEARCH_QUERY, request.containsKey(DocumentKeys.SEARCH_QUERY) ? "" : null);
+        // TODO: Add support for multiple filters
         String filter =  request.getString(
                 DocumentKeys.SEARCH_FILTER, request.containsKey(DocumentKeys.SEARCH_FILTER) ? "" : null);
         String sortKey = getEmptyIsNull(request, DocumentKeys.SEARCH_SORTKEY);
