@@ -889,10 +889,10 @@ public class SolrResponseBuilder implements Configurable {
     }
 
     protected DocumentResponse createBasicDocumentResponse(Request request) {
-        String query =    request.getString( DocumentKeys.SEARCH_QUERY, null);
-        String filter =   request.getString( DocumentKeys.SEARCH_FILTER, null);
+        String query =    request.getString(DocumentKeys.SEARCH_QUERY, null);
+        String filter =   request.getString(DocumentKeys.SEARCH_FILTER, null);
         int startIndex =  request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
-        int maxRecords =  request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, 0);
+        int maxRecords =  request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, DocumentKeys.DEFAULT_MAX_RECORDS);
         String sortKey =  request.getString(DocumentKeys.SEARCH_SORTKEY, null);
         boolean reverse = request.getBoolean(DocumentKeys.SEARCH_REVERSE, false);
         boolean grouped = request.getBoolean(DocumentKeys.GROUP, false);
