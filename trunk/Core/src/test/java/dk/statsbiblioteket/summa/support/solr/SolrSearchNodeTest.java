@@ -108,15 +108,19 @@ public class SolrSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_QUERY, "*:*",
                 DocumentKeys.GROUP, "true",
                 DocumentKeys.GROUP_FIELD, "recordBase",
+                DocumentKeys.GROUP_LIMIT, "2",
                 SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID recordBase score title_org fulltext"
         ));
         assertTrue("There should be a response", responses.iterator().hasNext());
         assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
                      4, ((DocumentResponse)responses.iterator().next()).getHitCount());
 
-        System.out.println(responses.toXML());
+        //System.out.println(responses.toXML());
         String PHRASE = "Solr sample document";
         assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+
+        assertTrue("The result should have a group 'dummy' with 2 elements",
+                   responses.toXML().contains("<group groupValue=\"dummy\" numFound=\"2\""));
     }
 
     public void testSolrParamPrefix() throws Exception {
