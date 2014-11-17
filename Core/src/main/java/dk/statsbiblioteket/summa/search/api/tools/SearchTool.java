@@ -148,10 +148,6 @@ public class SearchTool {
         return rq;
     }
 
-    private static void expandJSON(Request rq, String json) {
-        // TODO: Implement this
-    }
-
     private static String alias(String command) {
         for (String[] pair: SHORTCUTS) {
             if (pair[1].equals(command)) {

@@ -249,16 +249,15 @@ public class StorageTool {
      * @throws IOException If error occur while communicating to storage.
      */
     private static int actionDump(String[] argv, StorageReaderClient storage) throws IOException {
-        String base;
         long count = 0;
 
-        if (argv.length == 1) {
-            System.err.println("Dumping on all bases");
-            base = null;
-        } else {
-            base = argv[1];
-            System.err.println("Dumping base '" + base + "'");
-        }
+        final String base = argv.length == 1 ? null : argv[1];
+        final long maxRecords = argv.length < 3 ? -1 : Long.parseLong(argv[2]);
+        final String format = argv.length < 4 ? "content" : argv[3];
+
+        System.err.println((base == null ? "Dumping on all bases" : "Dumping base '" + base + "'")
+                           + " with maxRecords=" + (maxRecords == -1 ? "unlimited" : maxRecords)
+                           + ", format=" + format);
 
         long startTime = System.currentTimeMillis();
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
@@ -267,10 +266,14 @@ public class StorageTool {
         System.err.println("Got iterator after " + (System.currentTimeMillis() - startTime) + " ms");
 
         Record rec;
-        while (records.hasNext()) {
+        while (records.hasNext() && count < maxRecords) {
             count++;
             rec = records.next();
-            System.out.println(rec.getContentAsUTF8());
+            if ("meta".equals(format) || "full".equals(format)) {
+                printRecord(rec, "full".equals(format));
+            } else {
+                System.out.println(rec.getContentAsUTF8());
+            }
         }
 
         if (base != null) {
@@ -475,11 +478,13 @@ public class StorageTool {
                 + "\tget  <record_id>\n"
                 + "\tdelete  <record_id>\n"
                 + "\tpeek [base] [max_count=5]\n"
-                + "\ttouch <record_id> [record_id...]\n\txslt <record_id> <xslt_url>\n"
-                + "\tdump [base]     (dump storage on stdout)\n"
-                + "\tclear base      (clear all records from base)\n\tholdings\n"
+                + "\ttouch <record_id> [record_id...]\n"
+                + "\txslt <record_id> <xslt_url>\n"
+                + "\tdump [base [maxrecords [format]]]   (dump storage on stdout)\n"
+                + "\t                        format=content|meta|full\n"
+                + "\tclear base   (clear all records from base)\n\tholdings\n"
                 + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
-                + "\tbackup <destination> (full copy of the running storage at the point of command execution)\n");
+                + "\tbackup <destination>   (full copy of the running storage at the point of command execution)\n");
     }
 
     /**
