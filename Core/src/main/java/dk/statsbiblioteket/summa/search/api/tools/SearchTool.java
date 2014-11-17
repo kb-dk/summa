@@ -112,6 +112,8 @@ public class SearchTool {
         System.err.println("Special:");
         System.err.println("\tsearch-tool.sh ping");
         System.err.println("\tsearch-tool.sh solrparam.spellcheck=true solrparam.spellcheck.build=true");
+        System.err.println("\tsearch-tool.sh "
+                           + "json='{\"search.document.query\":\"*:*\",\"search.document.startindex\":100}'");
         System.err.println("Shortcuts:");
         for (String[] s: SHORTCUTS) {
             System.err.println("\t" + s[1] + ": " + s[0]);
@@ -137,9 +139,17 @@ public class SearchTool {
             if (keyVal.length != 2) {
                 throw new RuntimeException("Argument '" + arg + "' is not a valid assignment string. Fx summa.foo=bar");
             }
-            rq.put(alias(keyVal[0]), keyVal[1]);
+            if ("json".equals(keyVal[0])) {
+                rq.addJSON(keyVal[1]);
+            } else {
+                rq.put(alias(keyVal[0]), keyVal[1]);
+            }
         }
         return rq;
+    }
+
+    private static void expandJSON(Request rq, String json) {
+        // TODO: Implement this
     }
 
     private static String alias(String command) {
