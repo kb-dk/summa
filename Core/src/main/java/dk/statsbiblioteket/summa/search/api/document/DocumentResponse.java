@@ -154,6 +154,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
         public void addRecords(List<Record> records) {
             docs.addAll(records);
+            sort();
         }
 
         public void sort() {
@@ -162,7 +163,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
                 @Override
                 public int compare(Record o1, Record o2) {
                     return o1.score == o2.score ?
-                            o1.id == null ? 0 : o1.id.compareTo(o2.id) : o1.score < o2.score ? -1 : 1;
+                            o1.id == null ? 0 : o1.id.compareTo(o2.id) : o1.score > o2.score ? -1 : 1;
                 }
             });
         }
@@ -234,7 +235,11 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
         @Override
         public boolean add(Record record) {
-            return docs.add(record);
+            try {
+                return docs.add(record);
+            } finally {
+                sort();
+            }
         }
 
         @Override
