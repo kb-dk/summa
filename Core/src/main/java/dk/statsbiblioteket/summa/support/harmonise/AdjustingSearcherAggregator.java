@@ -128,8 +128,7 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
             log.debug("Creating adjusting search client with term stat based adjuster " + adjuster);
             searcher = new AdjustingSearchClient(searcherConf, adjuster);
             String searcherName = searcherConf.getString(CONF_SEARCHER_DESIGNATION, searcher.getVendorId());
-            String adjustID = ((AdjustingSearchClient)searcher).
-                    getAdjuster().getId();
+            String adjustID = ((AdjustingSearchClient)searcher).getAdjuster().getId();
             if (!adjustID.equals(searcherName)) {
                 throw new ConfigurationException(
                         "An AdjustingSearchClient was created with ID '" + adjustID + "' with an inner searcherID of '"

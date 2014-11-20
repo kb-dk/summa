@@ -111,6 +111,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 //        collator = Collator.getInstance(new Locale("da"));
     }
 
+    public void setGrouped(boolean grouped) {
+        this.grouped = grouped;
+    }
+
     /**
      * A mirror of Solr's group representation
      * https://cwiki.apache.org/confluence/display/solr/Result+Grouping
@@ -250,6 +254,14 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         @Override
         public Record remove(int index) {
             return docs.remove(index);
+        }
+
+        public String getGroupValue() {
+            return groupValue;
+        }
+
+        public long getNumFound() {
+            return numFound;
         }
     }
 
@@ -723,6 +735,14 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             records.addAll(group);
         }
         return records;
+    }
+
+    public List<Group> getGroups() {
+        return groups;
+    }
+
+    public boolean isGrouped() {
+        return grouped;
     }
 
     public String getFilter() {
