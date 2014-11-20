@@ -375,8 +375,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     }
 
     private static final String MLT_KEY = CONF_SOLR_PARAM_PREFIX + "mlt";
-    protected void barrierSearch(Request request, ResponseCollection responses) throws RemoteException {
+    protected void barrierSearch(Request oRequest, ResponseCollection responses) throws RemoteException {
         long startTime = System.currentTimeMillis();
+        final Request request = oRequest.getPrefixAdjustedView(this.getID() + ".");
         if (!handleMLT(request, responses)) {
             return;
         }

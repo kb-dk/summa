@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * A request to a SummaSearcher contains arguments to every SearchNode under the Searcher.
@@ -34,10 +35,25 @@ import java.io.Serializable;
         state = QAInfo.State.QA_OK,
         author = "te")
 public class Request extends ConvenientMap {
-    private static final long serialVersionUID = 12L;
+    private static final long serialVersionUID = 3496587392L;
 
     public Request(Serializable... args) {
         super(args);
+    }
+
+    /**
+     * Creates a copy of this Request where all {@code prefixkey-value} pairs with the given prefix are converted
+     * to {@code key-value}.
+     * @param prefix the prefix to remove where present.
+     * @return a new Request where no keys have the given prefix.
+     */
+    public Request getPrefixAdjustedView(String prefix) {
+        Request r = new Request();
+        for (Map.Entry<String, Serializable> entry: this.entrySet()) {
+            r.put(entry.getKey().startsWith(prefix) ? entry.getKey().substring(prefix.length()) : entry.getKey(),
+                  entry.getValue());
+        }
+        return r;
     }
 }
 

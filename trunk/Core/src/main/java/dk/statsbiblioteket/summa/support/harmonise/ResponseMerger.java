@@ -82,8 +82,7 @@ public class ResponseMerger implements Configurable {
     public static final String SEARCH_POST = CONF_POST;
 
     /**
-     * Overall merging mode for documents. Note that some of these modes require
-     * extra parameters.
+     * Overall merging mode for documents. Note that some of these modes require extra parameters.
      * standard:    Order provided by the DocumentResponses.<br/>
      * score:       Direct sort by score.<br/>
      * concatenate: Directly concatenate the lists of responses.
@@ -93,6 +92,8 @@ public class ResponseMerger implements Configurable {
      *              other, then the second and so forth.
      *              The parameters {@link #CONF_ORDER} or {@link #SEARCH_ORDER}
      *              must be specified to use this merger.<br/>
+     * Important: If grouping is specified for 1 or more responses, the specified merge mode will be ignored
+     * and groups will be merged solely on their score.
      */
     public static enum MODE {
         /**
@@ -263,6 +264,8 @@ public class ResponseMerger implements Configurable {
                 log.debug("AdjustWrapper: max=" + base.getMaxRecords() + ", other max=" + docResponse.getMaxRecords());
             }
             base.setMaxRecords(Math.max(base.getMaxRecords(), docResponse.getMaxRecords()));
+            // TODO: Better group param merge
+            base.setGrouped(base.isGrouped() || docResponse.isGrouped());
         }
 
         private static class AdjustRecord {
@@ -302,8 +305,10 @@ public class ResponseMerger implements Configurable {
             return aw.externalize();
         }
         merge(request, aw);
-        postProcess(request, aw);
-        trim(request, aw);
+        if (!aw.getBase().isGrouped()) {
+            postProcess(request, aw);
+            trim(request, aw);
+        } // TODO: Add trim
         ResponseCollection result = aw.externalize();
         result.addTiming("responsemerger.total", System.currentTimeMillis() - startTime);
         return result;
@@ -426,6 +431,12 @@ public class ResponseMerger implements Configurable {
 
     private AdjustWrapper deconstruct(List<SummaSearcherAggregator.ResponseHolder> responses) {
         AdjustWrapper aw = new AdjustWrapper();
+        boolean grouped = false;
+        for (SummaSearcherAggregator.ResponseHolder response: responses) {
+            for (Response r: response.getResponses()) {
+                grouped |= (r instanceof DocumentResponse) && ((DocumentResponse)r).isGrouped();
+            }
+        }
         List<AdjustWrapper.AdjustRecord> adjustRecords = new ArrayList<>();
         for (SummaSearcherAggregator.ResponseHolder response: responses) {
             if (!"".equals(response.getResponses().getTopLevelTiming())) {
@@ -438,6 +449,11 @@ public class ResponseMerger implements Configurable {
                 }
                 DocumentResponse dr = (DocumentResponse)r;
                 aw.adjustParams(dr);
+                if (grouped) {
+                    aw.getMerged().add(r);
+                    continue;
+                }
+
                 for (DocumentResponse.Record record: dr.getRecords()) {
                     adjustRecords.add(new AdjustWrapper.AdjustRecord(response.getSearcherID(), record));
                 }
