@@ -30,6 +30,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -50,7 +52,7 @@ public class DOMSNewspaperParserTest extends TestCase {
             return;
         }
 
-        ObjectFilter splitter = getSplitter();
+        ObjectFilter splitter = getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
         assertTrue("There should be a Record available", splitter.hasNext());
         int counter = 0;
         while (splitter.hasNext()) {
@@ -60,6 +62,28 @@ public class DOMSNewspaperParserTest extends TestCase {
             counter++;
         }
         assertEquals("Test record should be split into the right number of segments", EXPECTED_SEGMENTS, counter);
+    }
+
+    public void testHeadline() throws IOException {
+        if (!DOMS_ALTO.exists()) {
+            log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
+            return;
+        }
+        final int MAX_HEADLINE_WORDS = 2;
+        final Pattern HEADLINE = Pattern.compile("<headline>(.*)</headline>");
+
+        ObjectFilter splitter = getSplitter(MAX_HEADLINE_WORDS);
+        assertTrue("There should be a Record available", splitter.hasNext());
+        while (splitter.hasNext()) {
+            Payload payload = splitter.next();
+            log.info("Extracted " + payload.getId());
+            Matcher matcher = HEADLINE.matcher(RecordUtil.getString(payload));
+            while (matcher.find()) {
+                String headline = matcher.group(1);
+                assertTrue("There should be no more than " + MAX_HEADLINE_WORDS + " words in any headline, got '"
+                           + headline + "'", MAX_HEADLINE_WORDS >= headline.split(" ").length);
+            }
+        }
     }
 
     public void testTransformer() throws Exception {
@@ -87,7 +111,7 @@ public class DOMSNewspaperParserTest extends TestCase {
     }
 
     private ObjectFilter getTransformer() throws IOException {
-        ObjectFilter splitter = getSplitter();
+        ObjectFilter splitter = getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
         Configuration conf = Configuration.newMemoryBased(
                 GraphFilter.CONF_SUCCESS_REQUIREMENT, GraphFilter.REQUIREMENT.origin,
                 GraphFilter.CONF_VISIT_CHILDREN, false);
@@ -100,10 +124,11 @@ public class DOMSNewspaperParserTest extends TestCase {
         return transformer;
     }
 
-    private ObjectFilter getSplitter() throws IOException {
+    private ObjectFilter getSplitter(int maxHeadlineWords) throws IOException {
         ObjectFilter source = new PayloadFeederHelper(0, DOMS_ALTO.toString());
         ObjectFilter splitter = new StreamController(Configuration.newMemoryBased(
-                StreamController.CONF_PARSER, DOMSNewspaperParser.class.getCanonicalName()
+                StreamController.CONF_PARSER, DOMSNewspaperParser.class.getCanonicalName(),
+                DOMSNewspaperParser.CONF_HEADLINE_MAX_WORDS, maxHeadlineWords
         ));
         splitter.setSource(source);
         return splitter;

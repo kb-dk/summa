@@ -360,10 +360,13 @@ public class Alto {
     // <TextLine ID="Tl_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87">
     //   <String ID="TS_0001" STYLEREFS="TXT_1" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87" CONTENT="SONDAG" />
     public static final class TextLine extends PositionedElement {
+        private final String style;
         private List<TextString> strings = new ArrayList<>();
 
         public TextLine(XMLStreamReader xml) throws XMLStreamException {
             super(xml);
+            style = XMLStepper.getAttribute(xml, "STYLEREFS", null);
+
             xml.next();
             XMLStepper.iterateElements(xml, "TextLine", "String", new XMLStepper.XMLCallback() {
                 @Override
@@ -378,6 +381,10 @@ public class Alto {
 
         public List<TextString> getTextStrings() {
             return strings;
+        }
+
+        public String getStyle() {
+            return style;
         }
 
         public String getAllText() {

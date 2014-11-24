@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.summa.support.alto.Alto;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,6 +33,7 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -79,6 +81,22 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     public static final int DEFAULT_SEGMENT_MIN_WORDS = 20;
 
     /**
+     * The maximum number of terms in extracted headlines.
+     * </p><p>
+     * Optional. Default is 10.
+     */
+    public static final String CONF_HEADLINE_MAX_WORDS = "headline.maxwords";
+    public static final int DEFAULT_HEADLINE_MAX_WORDS = 10;
+
+    /**
+     * The maximum number of characters in extracted headlines.
+     * </p><p>
+     * Optional. Default is 40.
+     */
+    public static final String CONF_HEADLINE_MAX_CHARS = "headline.maxchars";
+    public static final int DEFAULT_HEADLINE_MAX_CHARS = DEFAULT_HEADLINE_MAX_WORDS*4;
+
+    /**
      * The base for te generated Reords.
      * </p><p>
      * Optional. Default is 'aviser'.
@@ -99,6 +117,8 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
 
     final private int minBlocks;
     final private int minWords;
+    private final int maxHeadlineWords;
+    private final int maxHeadlineChars;
     final private boolean acceptALTOLess;
     final private String base;
     private final NumberFormat spatial = NumberFormat.getInstance(Locale.ENGLISH);
@@ -110,6 +130,8 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         super(conf);
         minBlocks = conf.getInt(CONF_SEGMENT_MIN_BLOCKS, DEFAULT_SEGMENT_MIN_BLOCKS);
         minWords = conf.getInt(CONF_SEGMENT_MIN_WORDS, DEFAULT_SEGMENT_MIN_WORDS);
+        maxHeadlineWords = conf.getInt(CONF_HEADLINE_MAX_WORDS, DEFAULT_HEADLINE_MAX_WORDS);
+        maxHeadlineChars = conf.getInt(CONF_HEADLINE_MAX_CHARS, DEFAULT_HEADLINE_MAX_CHARS);
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
         acceptALTOLess = conf.getBoolean(CONF_ACCEPT_ALTOLESS, DEFAULT_ACCEPT_ALTOLESS);
         log.info("Created " + this);
@@ -220,9 +242,38 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
 
     }
 
-    // TODO: Consider creating a more intelligent headline extractor that looks at font size and has a max length
+    // TODO: Consider creating a more intelligent headline extractor that looks at font size
     private String getHeadline(List<Alto.TextBlock> segment) {
-        return segment.isEmpty() ? "N/A" : segment.get(0).getAllText();
+        final String NO_STYLE = "notDefinedYet";
+
+        if (segment.isEmpty()) {
+            return "N/A";
+        }
+        int length = 0;
+        String previousStyle = NO_STYLE;
+        List<String> headline = new ArrayList<>();
+        out:
+        for (Alto.TextLine line: segment.get(0).getLines()) {
+            String style = line.getStyle() == null ? "" : line.getStyle();
+            if (NO_STYLE.equals(previousStyle)) {
+                previousStyle = style;
+            }
+            if (length > maxHeadlineChars || headline.size() > maxHeadlineWords ||
+                !previousStyle.equals(style)) {
+                break;
+            }
+            for (String s: line.getAllTexts()) {
+                if (length + s.length() > maxHeadlineChars || headline.size() == maxHeadlineWords) {
+                    break out;
+                }
+                length += s.length();
+                headline.add(s);
+            }
+        }
+        if (headline.isEmpty()) {
+            return "N/A";
+        }
+        return Strings.join(headline, " ");
     }
 
     @Override

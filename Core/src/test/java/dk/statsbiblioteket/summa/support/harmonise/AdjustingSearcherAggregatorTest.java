@@ -100,8 +100,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
             assertTrue("There should be no duplicate groups for single aggregated searcher."
                        + " Returned groups were\n" + Strings.join(groups, "\n"),
                        uGroups.size() == groups.size());
-            System.out.println(responses.toXML());
-            singleAggregator.close();
+//            System.out.println(responses.toXML());
         } finally {
             singleAggregator.close();
         }
