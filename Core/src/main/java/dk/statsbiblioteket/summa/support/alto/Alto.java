@@ -219,18 +219,18 @@ public class Alto {
             return minGroups.get(key);
         }
         Map<String, List<TextBlock>> all = getTextBlockGroups();
-        List<TextBlock> no = new ArrayList<>();
+        List<TextBlock> rubble = new ArrayList<>();
         Map<String, List<TextBlock>> pruned = new HashMap<>(all.size());
 
         for (Map.Entry<String, List<TextBlock>> entry: all.entrySet()) {
             if (entry.getValue().size() < minBlocks || countWords(entry.getValue()) < minWords) {
-                no.addAll(entry.getValue());
+                rubble.addAll(entry.getValue());
             } else {
                 pruned.put(entry.getKey(), entry.getValue());
             }
         }
-        if (!no.isEmpty()) {
-            pruned.put(NOGROUP, no);
+        if (!rubble.isEmpty()) {
+            pruned.put(NOGROUP, rubble);
         }
         minGroups.put(key, pruned);
         return pruned;
