@@ -86,6 +86,24 @@ public class DOMSNewspaperParserTest extends TestCase {
         }
     }
 
+    public void testNoGroup() throws IOException {
+        if (!DOMS_ALTO.exists()) {
+            log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
+            return;
+        }
+        final Pattern ALTO_SEGMENT = Pattern.compile("<altosegment(.*)</altosegment>", Pattern.DOTALL);
+
+        ObjectFilter splitter = getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
+        assertTrue("There should be a Record available", splitter.hasNext());
+        while (splitter.hasNext()) {
+            Payload payload = splitter.next();
+            Matcher matcher = ALTO_SEGMENT.matcher(RecordUtil.getString(payload));
+            assertTrue("There should be altosegment in " + payload.getId() + "\n" + RecordUtil.getString(payload),
+                       matcher.find());
+            log.info("Found altosegment in " + payload.getId());
+        }
+    }
+
     public void testTransformer() throws Exception {
         if (!DOMS_ALTO.exists()) {
             log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
