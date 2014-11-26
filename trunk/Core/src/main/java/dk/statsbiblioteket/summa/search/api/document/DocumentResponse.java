@@ -77,6 +77,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     private String groupField = null; // Must be defined if group == true
     private int groupRows = DocumentKeys.DEFAULT_ROWS;
     private int groupLimit = DocumentKeys.DEFAULT_GROUP_LIMIT;
+    private String groupSort = null;
 
     private List<Group> groups = new ArrayList<>();
 
@@ -85,12 +86,21 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     // Born-grouped response
     public DocumentResponse(String filter, String query, long startIndex, long maxRecords, String sortKey,
                             boolean reverseSort, String[] resultFields, long searchTime, long hitCount,
-                            String groupField, int groupRows, int groupLimit) {
+                            String groupField, int groupRows, int groupLimit, String groupSort) {
         this(filter, query, startIndex, maxRecords, sortKey, reverseSort, resultFields, searchTime, hitCount);
         this.grouped = true;
         this.groupField = groupField;
         this.groupRows = groupRows;
         this.groupLimit = groupLimit;
+        if ("".equals(groupSort)) {
+            groupSort = null;
+        }
+        if (groupSort != null && groupSort.split(" ").length < 2) {
+            throw new IllegalArgumentException(
+                    "The group.sort parameter must be specified as 'sortfield asc' or "
+                    + "'sortfield desc', but was '" + groupSort + "'");
+        }
+        this.groupSort = groupSort;
         groups = new ArrayList<>(groupRows*5);
     }
 
@@ -102,7 +112,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         this.startIndex = startIndex;
         this.maxRecords = maxRecords;
         this.sortKey = sortKey;
-        this.reverseSort = reverseSort;
+        // Ugly, but for backwards compatibility, sorting on score always means reverse
+        this.reverseSort = sortKey == null || "score".equals(sortKey) || reverseSort;
         this.resultFields = resultFields;
         this.searchTime = searchTime;
         this.hitCount = hitCount;
@@ -111,10 +122,42 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 //        collator = Collator.getInstance(new Locale("da"));
     }
 
+    public String getGroupSortKey() {
+        return groupSort != null ? groupSort.split(" ")[0] : sortKey == null ? "score" : sortKey;
+    }
+    public boolean getGroupSortReverse() {
+        return groupSort != null ? "desc".equals(groupSort.split(" ")[1]) : sortKey == null || reverseSort;
+    }
+
     public void setGrouped(boolean grouped) {
         this.grouped = grouped;
     }
 
+    /**
+     * Creates a group inheriting default parameters from the DocumentResponse, add the group and returns it.
+     * @param groupValue the value for the group.field.
+     * @param numFound the number of hits within the group.
+     * @return the newly created and added group.
+     */
+    public Group createAndAddGroup(String groupValue, long numFound) {
+        Group group = new Group(groupValue, numFound, getGroupSortKey(), getGroupSortReverse());
+        addGroup(group);
+        return group;
+    }
+    /**
+     * Creates a group inheriting default parameters from the DocumentResponse, add the group and returns it.
+     * Also adds supplied records.
+     * @param groupValue the value for the group.field.
+     * @param numFound   the number of hits within the group.
+     * @param records    initial Records for the group.
+     * @return the newly created and added group.
+     */
+    public Group createAndAddGroup(String groupValue, long numFound, List<Record> records) {
+        Group group = new Group(groupValue, numFound, getGroupSortKey(), getGroupSortReverse());
+        group.addAll(records);
+        addGroup(group);
+        return group;
+    }
     /**
      * A mirror of Solr's group representation
      * https://cwiki.apache.org/confluence/display/solr/Result+Grouping
@@ -123,11 +166,15 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         private static final long serialVersionUID = 48759222L;
         private String groupValue;
         private long numFound;
+        private String sortKey;
+        private boolean reverse;
         private List<Record> docs = new ArrayList<>();
 
-        public Group(String groupValue, long numFound) {
+        public Group(String groupValue, long numFound, String sortKey, boolean reverse) {
             this.groupValue = groupValue;
             this.numFound = numFound;
+            this.sortKey = sortKey;
+            this.reverse = reverse;
         }
 
         // Creates a single-member Group from the given Record
@@ -161,15 +208,11 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             sort();
         }
 
+        /**
+         * Sort the group internally, by the order specified from group.sort, if present.
+         */
         public void sort() {
-            Collections.sort(docs, new Comparator<Record>() {
-                @SuppressWarnings("FloatingPointEquality")
-                @Override
-                public int compare(Record o1, Record o2) {
-                    return o1.score == o2.score ?
-                            o1.id == null ? 0 : o1.id.compareTo(o2.id) : o1.score > o2.score ? -1 : 1;
-                }
-            });
+            Collections.sort(docs, getComparator(sortKey, reverse));
         }
 
         public void reduce(int maxRecords) {
@@ -281,14 +324,13 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         /**
          * @param id        A source-specific id for the Record.
          *                  For Lucene searchers this would be an integer.
-         * @param source    A designation for the searcher that provided the
-         *                  Record. This is currently only used for debugging
-         *                  and thus there are no formal requirements for the
-         *                  structure of the value.
+         * @param source    A designation for the searcher that provided the Record.
+         *                  This is currently only used for debugging and thus there are no formal requirements
+         *                  for the structure of the value.
          * @param score     A ranking-score for the Record. Higher scores means
          *                  more fitting to the query.
-         * @param sortValue The value used for sorting. It is legal to provide
-         *                  null here, if score is to be used for sorting.
+         * @param sortValue The value used for sorting.
+         *                  It is legal to provide null here, if score is to be used for sorting.
          */
         public Record(String id, String source, float score, String sortValue) {
             this.id = id;
@@ -581,7 +623,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         }
     }
 
-    private void sort() {
+    public void sort() {
         Collections.sort(groups, getGroupComparator());
     }
 
@@ -598,12 +640,15 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     }
 
     /**
-     * @return the comparator used for ordering Records belonging to this
-     *         response.
+     * @return the comparator used for ordering Records belonging to this response.
      */
     public Comparator<Record> getComparator() {
+        return getComparator(sortKey, reverseSort);
+    }
+
+    protected static Comparator<Record> getComparator(final String sortKey, final boolean reverse) {
         if (sortKey == null || SORT_ON_SCORE.equals(sortKey)) {
-            return scoreComparator;
+            return getScoreComparator(reverse);
         }
         final Collator collator = Collator.getInstance(new Locale("da"));
 
@@ -617,7 +662,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
                     // Handle empty cases
                     if ("".equals(s1)) {
                         return "".equals(s2) ?
-                               scoreComparator.compare(o1, o2) :
+                               getScoreComparator(reverse).compare(o1, o2) :
                                NON_DEFINED_FIELDS_ARE_SORTED_LAST ? -1 : 1;
                     } else if ("".equals(s2)) {
                         return NON_DEFINED_FIELDS_ARE_SORTED_LAST ? 1 : -1;
@@ -625,7 +670,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
                 }
 //                    throw new IllegalStateException("Collator support not "
 //                                                    + "finished");
-                return collator.compare(s1, s2) * (reverseSort ? -1 : 1);
+                return collator.compare(s1, s2) * (reverse ? -1 : 1);
             }
         };
     }
@@ -646,15 +691,25 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         };
     }
 
-    private Comparator<Record> scoreComparator = new ScoreComparator();
-
+    private static ScoreComparator getScoreComparator(boolean reverse) {
+        return reverse ? scoreComparatorDesc : scoreComparatorAsc;
+    }
+    private static ScoreComparator scoreComparatorAsc = new ScoreComparator(false);
+    private static ScoreComparator scoreComparatorDesc = new ScoreComparator(true);
     private static class ScoreComparator implements Comparator<Record>, Serializable {
-        private static final long serialVersionUID = 168413841L;
+        private static final long serialVersionUID = 168413842L;
+        private int direction;
 
+        public ScoreComparator(boolean reverse) {
+            this.direction = reverse ? -1 : 1;
+        }
+
+        @SuppressWarnings("FloatingPointEquality")
         @Override
         public int compare(Record o1, Record o2) {
-            float diff = o2.getScore() - o1.getScore();
-            return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+            return direction * (
+                    o1.score == o2.score ? o1.id == null ? 0 : o1.id.compareTo(o2.id) : o1.score > o2.score ? -1 : 1);
+
         }
     }
 

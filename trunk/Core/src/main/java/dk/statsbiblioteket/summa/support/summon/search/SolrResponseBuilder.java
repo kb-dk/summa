@@ -737,9 +737,7 @@ public class SolrResponseBuilder implements Configurable {
                             "parseGroupedInnerList: Got groupValue '%s' for group '%s' but no records",
                             groupValue, groupName));
                 } else {
-                    DocumentResponse.Group group = new DocumentResponse.Group(groupValue, numFound);
-                    group.addAll(records);
-                    docResponse.addGroup(group);
+                    docResponse.createAndAddGroup(groupValue, numFound, records);
                 }
             }
         });
@@ -899,10 +897,11 @@ public class SolrResponseBuilder implements Configurable {
         int rows =        request.getInt(DocumentKeys.ROWS,
                                          request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, DocumentKeys.DEFAULT_ROWS));
         int groupLimit =  request.getInt(DocumentKeys.GROUP_LIMIT, DocumentKeys.DEFAULT_GROUP_LIMIT);
+        String groupSort =request.getString(DocumentKeys.GROUP_SORT, null);
         String groupField=request.getString(DocumentKeys.GROUP_FIELD, "");
         DocumentResponse response = grouped ?
-                new DocumentResponse(filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1,
-                                     groupField, rows, groupLimit) :
+                new DocumentResponse(filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1, groupField, rows, groupLimit, groupSort
+                ) :
                 new DocumentResponse(filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1);
         response.setPrefix(searcherID + ".");
         return response;
