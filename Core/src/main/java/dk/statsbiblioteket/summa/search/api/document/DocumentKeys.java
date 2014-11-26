@@ -160,6 +160,7 @@ public interface DocumentKeys {
      */
     public static final String ROWS = "rows";
     public static final int DEFAULT_ROWS = 10;
+
     /**
      *  Equivalent to
      * <a href="https://cwiki.apache.org/confluence/display/solr/Result+Grouping">Solr Result Grouping</a>.
@@ -168,6 +169,15 @@ public interface DocumentKeys {
      */
     public static final String GROUP_LIMIT = "group.limit";
     public static final int DEFAULT_GROUP_LIMIT = 1;
+
+    /**
+     *  Equivalent to
+     * <a href="https://cwiki.apache.org/confluence/display/solr/Result+Grouping">Solr Result Grouping</a>.
+     * </p><p>
+     * Optional. Default is not specified, which means it is created from {@link #SEARCH_SORTKEY} and
+     * {@link #SEARCH_REVERSE} if specified, else "score desc".
+     */
+    public static final String GROUP_SORT = "group.sort";
 
     /**
      * Boolean ("true" or "false"). Optional. Default is false.

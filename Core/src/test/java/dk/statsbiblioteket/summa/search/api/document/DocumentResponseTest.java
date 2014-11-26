@@ -19,9 +19,6 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -29,58 +26,108 @@ public class DocumentResponseTest extends TestCase {
     private static Log log = LogFactory.getLog(DocumentResponseTest.class);
 
     public void testGrouping() {
-        DocumentResponse response1 = new DocumentResponse(
-                "myfilter", "myquery", 0, 10, null, false, new String[]{"resultField1", "resultField2"}, 123,
-                100, "groupField", 2, 2);
-        { // Group 1a
-            DocumentResponse.Group group = new DocumentResponse.Group("group1a", 2);
-            {
-                DocumentResponse.Record record1 = new DocumentResponse.Record("record1.1", "source1", 2.0f, "2.0");
-                record1.add(new DocumentResponse.Field("field1.1", "content1", false));
-                group.add(record1);
-            }
-            {
-                DocumentResponse.Record record1 = new DocumentResponse.Record("record1.2", "source1", 3.0f, "3.0");
-                record1.add(new DocumentResponse.Field("field1.2", "content2", false));
-                group.add(record1);
-            }
-            response1.addGroup(group);
-        }
+        DocumentResponse response1 = getDocumentResponse1(null, null);
+        DocumentResponse response2 = getDocumentResponse2(null, null);
 
-        DocumentResponse response2 = new DocumentResponse(
-                "myfilter", "myquery", 0, 10, null, false, new String[]{"resultField1", "resultField2"}, 124,
-                200, "groupField", 2, 2);
+        assertGroupOrder("Response 1, null sorters", new String[][]{{"c", "b"}}, response1);
+        assertGroupOrder("Response 2, null sorters", new String[][]{{"a"}, {"e", "d"}}, response2);
+
+        response1.merge(response2);
+        assertGroupOrder("Merged, null sorters", new String[][]{{"a", "c"}, {"e", "d"}}, response1);
+    }
+
+    public void testGroupSortingReverse() {
+        final String SORT_KEY = "basesortfield";
+        final String GROUP_SORT = "basesortfield desc";
+        DocumentResponse response1 = getDocumentResponse1(SORT_KEY, GROUP_SORT);
+        DocumentResponse response2 = getDocumentResponse2(SORT_KEY, GROUP_SORT);
+        response1.merge(response2);
+
+        assertGroupOrder("basesortfield asc, basesortfield desc",
+                         new String[][]{{"c", "b"}, {"e", "d"}}, response1);
+    }
+
+    public void testGroupSortingEqual() {
+        final String SORT_KEY = "basesortfield";
+        final String GROUP_SORT = "basesortfield asc";
+        DocumentResponse response1 = getDocumentResponse1(SORT_KEY, GROUP_SORT);
+        DocumentResponse response2 = getDocumentResponse2(SORT_KEY, GROUP_SORT);
+        response1.merge(response2);
+
+        assertGroupOrder("basesortfield asc, basesortfield asc",
+                         new String[][]{{"a", "b"}, {"d", "e"}}, response1);
+    }
+
+    private void assertGroupOrder(String message, String[][] expectedOrder, DocumentResponse response) {
+        for (int g = 0 ; g < response.getGroups().size() ; g++) {
+            String[] expectedGroup = expectedOrder[g];
+            for (int r = 0 ; r < response.getGroups().get(g).size() ; r++) {
+                DocumentResponse.Record record = response.getGroups().get(g).get(r);
+                assertEquals(message + ". Group " + g + ", record " + r + " should have the expected ID\n"
+                             + response.toXML(),
+                             "record_" + expectedGroup[r], record.getId());
+            }
+        }
+    }
+
+    private DocumentResponse getDocumentResponse1(String sortKey, String groupSort) {
+        DocumentResponse response = new DocumentResponse(
+                "myfilter", "myquery", 0, 10, sortKey, false, new String[]{"resultField1", "resultField2"},
+                123, 100, "groupField", 2, 2, groupSort);
         { // Group 1a
-            DocumentResponse.Group group = new DocumentResponse.Group("group1a", 1);
+            DocumentResponse.Group group = response.createAndAddGroup("group1a", 2);
             {
-                DocumentResponse.Record record = new DocumentResponse.Record("record2.1", "source2", 5.0f, "5.0");
-                record.add(new DocumentResponse.Field("field2.1", "content3", false));
+                DocumentResponse.Record record = new DocumentResponse.Record(
+                        "record_b", "source1", 2.0f, sortKey == null ? "2.0" : "b");
+                record.add(new DocumentResponse.Field("field1.1", "content1", false));
+                record.add(new DocumentResponse.Field("basesortfield", "b", false));
                 group.add(record);
             }
-            response2.addGroup(group);
+            {
+                DocumentResponse.Record record = new DocumentResponse.Record(
+                        "record_c", "source1", 3.0f, sortKey == null ? "3.0" : "c");
+                record.add(new DocumentResponse.Field("field1.2", "content2", false));
+                record.add(new DocumentResponse.Field("basesortfield", "c", false));
+                group.add(record);
+            }
+        }
+        response.sort();
+        return response;
+    }
+
+    private DocumentResponse getDocumentResponse2(String sortKey, String groupSort) {
+        DocumentResponse response = new DocumentResponse(
+                "myfilter", "myquery", 0, 10, sortKey, false, new String[]{"resultField1", "resultField2"},
+                124, 200, "groupField", 2, 2, groupSort
+        );
+        { // Group 1a
+            DocumentResponse.Group group = response.createAndAddGroup("group1a", 1);
+            {
+                DocumentResponse.Record record = new DocumentResponse.Record(
+                        "record_a", "source2", 5.0f, sortKey == null ? "5.0" : "a");
+                record.add(new DocumentResponse.Field("field2.1", "content3", false));
+                record.add(new DocumentResponse.Field("basesortfield", "a", false));
+                group.add(record);
+            }
         }
         { // Group 1b
-            DocumentResponse.Group group = new DocumentResponse.Group("group1b", 2);
+            DocumentResponse.Group group = response.createAndAddGroup("group1b", 2);
             {
-                DocumentResponse.Record record = new DocumentResponse.Record("record2b.1", "source2", 11.0f, "11.0");
+                DocumentResponse.Record record = new DocumentResponse.Record(
+                        "record_d", "source2", 11.0f, sortKey == null ? "11.0" : "d");
                 record.add(new DocumentResponse.Field("field2b.1", "content5", false));
+                record.add(new DocumentResponse.Field("basesortfield", "d", false));
                 group.add(record);
             }
             {
-                DocumentResponse.Record record1 = new DocumentResponse.Record("record2b.2", "source2", 13.0f, "13.0");
-                record1.add(new DocumentResponse.Field("field2b.2", "content6", false));
-                group.add(record1);
+                DocumentResponse.Record record = new DocumentResponse.Record(
+                        "record_e", "source2", 13.0f, sortKey == null ? "13.0" : "e");
+                record.add(new DocumentResponse.Field("field2b.2", "content6", false));
+                record.add(new DocumentResponse.Field("basesortfield", "e", false));
+                group.add(record);
             }
-            response2.addGroup(group);
         }
-
-        System.out.println("*********************** 1");
-        System.out.println(response1.toXML());
-        System.out.println("*********************** 2");
-        System.out.println(response2.toXML());
-        System.out.println("*********************** 1+2");
-        response1.merge(response2);
-        System.out.println(response1.toXML());
-
+        response.sort();
+        return response;
     }
 }
