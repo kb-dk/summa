@@ -243,7 +243,7 @@ public class SolrSearchNodeTest extends TestCase {
         {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(new Request(
-                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy",
+                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy*",
 //                    DocumentKeys.SEARCH_SORTKEY, "sort_title",
                     DocumentKeys.SEARCH_SORTKEY, "sort_year_asc",
                     //DocumentKeys.SEARCH_REVERSE, "true",

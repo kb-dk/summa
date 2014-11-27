@@ -151,7 +151,7 @@ public class SolrResponseBuilder implements Configurable {
         System.err.println(request);
         System.out.println("***");
         System.out.println(solrResponse.replace(">", ">\n"));
-        */
+  */
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
