@@ -52,7 +52,7 @@ public class DOMSNewspaperParserTest extends TestCase {
             return;
         }
 
-        ObjectFilter splitter = getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
+        ObjectFilter splitter = getSplitter();
         assertTrue("There should be a Record available", splitter.hasNext());
         int counter = 0;
         while (splitter.hasNext()) {
@@ -86,6 +86,24 @@ public class DOMSNewspaperParserTest extends TestCase {
         }
     }
 
+    public void testOCR() throws IOException {
+        if (!DOMS_ALTO.exists()) {
+            log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
+            return;
+        }
+        final Pattern PWA = Pattern.compile("<predictedWordAccuracy>(.*)</predictedWordAccuracy>");
+
+        ObjectFilter splitter = getSplitter();
+        assertTrue("There should be a Record available", splitter.hasNext());
+        while (splitter.hasNext()) {
+            Payload payload = splitter.next();
+            log.info("Extracted " + payload.getId());
+            Matcher matcher = PWA.matcher(RecordUtil.getString(payload));
+            assertTrue("There should be a pwa present\n" + RecordUtil.getString(payload), matcher.find());
+            log.info("The PWA was " + matcher.group(1));
+        }
+    }
+
     public void testNoGroup() throws IOException {
         if (!DOMS_ALTO.exists()) {
             log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
@@ -93,7 +111,7 @@ public class DOMSNewspaperParserTest extends TestCase {
         }
         final Pattern ALTO_SEGMENT = Pattern.compile("<altosegment(.*)</altosegment>", Pattern.DOTALL);
 
-        ObjectFilter splitter = getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
+        ObjectFilter splitter = getSplitter();
         assertTrue("There should be a Record available", splitter.hasNext());
         while (splitter.hasNext()) {
             Payload payload = splitter.next();
@@ -129,7 +147,7 @@ public class DOMSNewspaperParserTest extends TestCase {
     }
 
     private ObjectFilter getTransformer() throws IOException {
-        ObjectFilter splitter = getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
+        ObjectFilter splitter = getSplitter();
         Configuration conf = Configuration.newMemoryBased(
                 GraphFilter.CONF_SUCCESS_REQUIREMENT, GraphFilter.REQUIREMENT.origin,
                 GraphFilter.CONF_VISIT_CHILDREN, false);
@@ -140,6 +158,10 @@ public class DOMSNewspaperParserTest extends TestCase {
         ObjectFilter transformer = new XMLTransformer(conf);
         transformer.setSource(splitter);
         return transformer;
+    }
+
+    private ObjectFilter getSplitter() throws IOException {
+        return getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
     }
 
     private ObjectFilter getSplitter(int maxHeadlineWords) throws IOException {
