@@ -208,7 +208,12 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                     segmentXML.writeEndElement();
                 }
                 segmentXML.writeCharacters("\n");
-
+                writeIfDefined(segmentXML, "filename", alto.getFilename());
+                writeIfDefined(segmentXML, "origin", alto.getOrigin());
+                writeIfDefined(segmentXML, "processingStepSettings", alto.getProcessingStepSettings());
+                writeIfDefined(segmentXML, "measurementUnit", alto.getMeasurementUnit().toString());
+                writeIfDefined(segmentXML, "predictedWordAccuracy", alto.getPredictedWordAccuracy());
+                writeIfDefined(segmentXML, "characterErrorRatio", alto.getCharacterErrorRatio());
                 segmentXML.writeStartElement("content");
                 segmentXML.writeCharacters("\n");
                 for (Alto.TextBlock block: group.getValue()) {
@@ -240,6 +245,16 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
             }
         }
 
+    }
+
+    private void writeIfDefined(XMLStreamWriter xml, String element, Object content) throws XMLStreamException {
+        if (content != null && !content.toString().isEmpty()) {
+            xml.writeStartElement(element);
+            xml.writeCharacters(content.toString());
+            xml.writeEndElement();
+            xml.writeCharacters("\n");
+        }
+        // TODO: Implement this
     }
 
     // TODO: Consider creating a more intelligent headline extractor that looks at font size

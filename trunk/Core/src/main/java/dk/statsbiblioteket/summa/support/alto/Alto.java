@@ -24,6 +24,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An object representation of an Alto-file.
@@ -56,6 +58,7 @@ public class Alto {
 
     private String filename = null;
     private String origin = null;
+    private String processingStepSettings = null;
     private MEASUREMENT_UNIT measurementUnit = DEFAULT_MEASUREMENT_UNIT;
     private Map<String, TextStyle> styles = new HashMap<>();
     private List<Page> layout = new ArrayList<>();
@@ -98,8 +101,24 @@ public class Alto {
                     }
                     return true;
                 }
+//              <sourceImageInformation>
+//                  <fileName>400026952148-1\2002-01-31-01\morgenavisenjyllandsposten-2002-01-31-01-0570A.jp2</fileName>
+//              </sourceImageInformation>
                 if ("fileName".equals(current)) {
                     filename = xml.getElementText();
+                    return true;
+                }
+
+//                <OCRProcessing ID="OCR1">
+//                    <ocrProcessingStep>
+//                        <processingStepSettings>
+                if ("ocrProcessingStep".equals(current)) {
+                    XMLStepper.jumpToNextTagStart(xml);
+                    if ("processingStepSettings".equals(xml.getLocalName())) {
+                        processingStepSettings = xml.getElementText();
+                    }
+                    XMLStepper.findTagEnd(xml, xml.getLocalName());
+                    xml.next();
                     return true;
                 }
                 if ("Styles".equals(current)) {
@@ -138,6 +157,29 @@ public class Alto {
     }
     public MEASUREMENT_UNIT getMeasurementUnit() {
         return measurementUnit;
+    }
+    public String getProcessingStepSettings() {
+        return processingStepSettings;
+    }
+    private final static Pattern PWA = Pattern.compile("Predicted Word Accuracy:([0-9]+.[0-9]+)", Pattern.DOTALL);
+    private final static Pattern CER = Pattern.compile("Character Error Ratio:([0-9]+.[0-9]+)", Pattern.DOTALL);
+    public Double getPredictedWordAccuracy() {
+        return getDouble(PWA);
+    }
+    public Double getCharacterErrorRatio() {
+        return getDouble(CER);
+    }
+    private Double getDouble(Pattern pattern) {
+        Matcher matcher;
+        if (processingStepSettings == null || !(matcher = pattern.matcher(processingStepSettings)).find()) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(matcher.group(1));
+        } catch (NumberFormatException e) {
+            log.warn("Unable to parse '" + matcher.group(1) + "' as a double from pattern " + pattern.pattern());
+        }
+        return null;
     }
     public Map<String, TextStyle> getStyles() {
         return styles;
