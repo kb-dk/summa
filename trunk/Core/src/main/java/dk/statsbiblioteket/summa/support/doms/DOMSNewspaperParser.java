@@ -213,7 +213,9 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                 writeIfDefined(segmentXML, "processingStepSettings", alto.getProcessingStepSettings());
                 writeIfDefined(segmentXML, "measurementUnit", alto.getMeasurementUnit().toString());
                 writeIfDefined(segmentXML, "predictedWordAccuracy", alto.getPredictedWordAccuracy());
+                writeIfDefined(segmentXML, "predictedWordAccuracy_sort", padDouble(alto.getPredictedWordAccuracy()));
                 writeIfDefined(segmentXML, "characterErrorRatio", alto.getCharacterErrorRatio());
+                writeIfDefined(segmentXML, "characterErrorRatio_sort", padDouble(alto.getCharacterErrorRatio()));
                 segmentXML.writeStartElement("content");
                 segmentXML.writeCharacters("\n");
                 for (Alto.TextBlock block: group.getValue()) {
@@ -244,7 +246,9 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                 throw new RuntimeException("utf-8 not supported", e);
             }
         }
-
+    }
+    private String padDouble(Double val) {
+        return val == null ? null : Double.toString(val + 100000).substring(1);
     }
 
     private void writeIfDefined(XMLStreamWriter xml, String element, Object content) throws XMLStreamException {

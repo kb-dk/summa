@@ -101,6 +101,7 @@ public class DOMSNewspaperParserTest extends TestCase {
             Matcher matcher = PWA.matcher(RecordUtil.getString(payload));
             assertTrue("There should be a pwa present\n" + RecordUtil.getString(payload), matcher.find());
             log.info("The PWA was " + matcher.group(1));
+//            System.out.println(RecordUtil.getString(payload));
         }
     }
 
