@@ -36,6 +36,15 @@ public class DocumentResponseTest extends TestCase {
         assertGroupOrder("Merged, null sorters", new String[][]{{"a", "c"}, {"e", "d"}}, response1);
     }
 
+    public void testGroupSortingMissing() {
+        final String SORT_KEY = "basesortfield";
+        final String GROUP_SORT = "basesortfield desc";
+        DocumentResponse response1 = getDocumentResponse1(SORT_KEY, GROUP_SORT);
+        DocumentResponse responseEmpty = getDocumentResponseEmpty(SORT_KEY, GROUP_SORT);
+        response1.merge(responseEmpty);
+        System.out.println(response1.toXML());
+    }
+
     public void testGroupSortingReverse() {
         final String SORT_KEY = "basesortfield";
         final String GROUP_SORT = "basesortfield desc";
@@ -130,4 +139,23 @@ public class DocumentResponseTest extends TestCase {
         response.sort();
         return response;
     }
+
+    private DocumentResponse getDocumentResponseEmpty(String sortKey, String groupSort) {
+        DocumentResponse response = new DocumentResponse(
+                "myfilter", "myquery", 0, 10, sortKey, false, new String[]{"resultField1", "resultField2"},
+                124, 200, "groupField", 2, 2, groupSort);
+        { // Group 1a
+            DocumentResponse.Group group = response.createAndAddGroup("", 1);
+            {
+                DocumentResponse.Record record = new DocumentResponse.Record(
+                        "record_e", "sourceE", 17.0f, "");
+                record.add(new DocumentResponse.Field("fieldE.1", "contentE", false));
+//                record.add(new DocumentResponse.Field("basesortfield", "a", false));
+                group.add(record);
+            }
+        }
+        response.sort();
+        return response;
+    }
+
 }

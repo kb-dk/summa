@@ -37,6 +37,10 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class DocumentResponse extends ResponseImpl implements DocumentKeys {
+    /**
+     *  If a group value was not present and documents without a group is treated as one group, this name will be used.
+     */
+    public static final String NULL_GROUP = "null";
     private static final long serialVersionUID = 268189L;
     private static Log log = LogFactory.getLog(DocumentResponse.class);
 

@@ -108,6 +108,15 @@ public class SolrResponseBuilder implements Configurable {
     public static final String CONF_BASE_FIELD = "solr.field.base";
     public static final String DEFAULT_BASE_FIELD = IndexUtils.RECORD_BASE;
 
+    /**
+     * If grouping is active and there are no group value (no vale for the group.field), setting this to true means that each such entry
+     * will be delivered as a separate group. If false, they will be collapsed in a "null"-group.
+     * </p><p>
+     * Optional. Default is true;
+     */
+    public static final String CONF_GROUP_NULL_AS_SEPARATE = "group.nullasseparate";
+    public static final boolean DEFAULT_GROUP_NULL_AS_SEPARATE = true;
+
     protected XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
@@ -122,6 +131,7 @@ public class SolrResponseBuilder implements Configurable {
     protected IndexRequest defaultIndexRequest;
     protected final String idField;
     protected final String baseField;
+    protected final boolean groupNullAsSeparate;
 
     public SolrResponseBuilder(Configuration conf) {
         recordBase = "".equals(conf.getString(CONF_RECORDBASE, DEFAULT_RECORDBASE)) ?
@@ -141,6 +151,7 @@ public class SolrResponseBuilder implements Configurable {
             sortRedirect.put(tokens[0], tokens[1]);
         }
         defaultIndexRequest = new IndexRequest(conf);
+        groupNullAsSeparate = conf.getBoolean(CONF_GROUP_NULL_AS_SEPARATE, DEFAULT_GROUP_NULL_AS_SEPARATE);
         log.info("Created SolrResponseBuilder " + searcherID + " with base '" + recordBase + "' and sort field "
                  + "redirect rules '" + Strings.join(rules, ", ") + "'");
     }
@@ -151,7 +162,7 @@ public class SolrResponseBuilder implements Configurable {
         System.err.println(request);
         System.out.println("***");
         System.out.println(solrResponse.replace(">", ">\n"));
-  */
+*/
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
@@ -701,6 +712,9 @@ public class SolrResponseBuilder implements Configurable {
       <result name="doclist" numFound="70" start="0" maxScore="19.005508">
         <doc>*
           <str name="recordID">sb_5588484</str>*
+
+     If there are no value in the group field, the group will be
+     <null name="groupValue"/>
      */
     private void parseGroupedInnerList(XMLStreamReader xml, final DocumentResponse docResponse, final String groupName)
             throws XMLStreamException {
@@ -713,9 +727,15 @@ public class SolrResponseBuilder implements Configurable {
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
                 log.debug("parseGroupedInnerList: Current tag: '" + current + "'");
+                // <str name="groupValue">2012</str>
                 if ("str".equals(current) && "groupValue".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     groupValue = xml.getElementText();
                     return true;
+                }
+                // <null name="groupValue"/>
+                if ("null".equals(current) && "groupValue".equals(XMLStepper.getAttribute(xml, "name", null))) {
+                    groupValue = DocumentResponse.NULL_GROUP;
+                    return false;
                 }
                 // What about maxScore? Inferred from first record in the group?
                 if ("result".equals(current) && "doclist".equals(XMLStepper.getAttribute(xml, "name", null))) {
@@ -737,7 +757,13 @@ public class SolrResponseBuilder implements Configurable {
                             "parseGroupedInnerList: Got groupValue '%s' for group '%s' but no records",
                             groupValue, groupName));
                 } else {
-                    docResponse.createAndAddGroup(groupValue, numFound, records);
+                    if (groupNullAsSeparate && DocumentResponse.NULL_GROUP.equals(groupValue)) {
+                       for (DocumentResponse.Record record: records) {
+                           docResponse.createAndAddGroup(record.getId(), 1, Arrays.asList(record));
+                       }
+                    } else {
+                        docResponse.createAndAddGroup(groupValue, numFound, records);
+                    }
                 }
             }
         });
