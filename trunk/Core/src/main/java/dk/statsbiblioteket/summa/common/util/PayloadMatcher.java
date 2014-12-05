@@ -68,14 +68,33 @@ public class PayloadMatcher {
      * The list of regexps corresponfing to {@link #CONF_META_KEY}. Should be
      * defined if CONF_META_KEY, but if null, all values will match.
      */
-    public static final String CONF_META_VALUE_REGEXP =
-            "summa.record.metavaluepattern";
+    public static final String CONF_META_VALUE_REGEXP = "summa.record.metavaluepattern";
+
+    /**
+     * The default condition for matching. Possible values:<br/>
+     * full:    The regexp must match the full input.<br/>
+     * partial: The regexp must match part of the input.
+     * </p><p>
+     * Optional. Default is full.
+     */
+    public static final String CONF_MATCH_METHOD = "payloadmatcher.method";
+    public static final String DEFAULT_MATCH_METHOD = "full";
+
+    /**
+     * Whether or not all regexp patterns should be treated as DOT_ALL (multi line matching).
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_DOT_ALL = "payloadmatcher.dotall";
+    public static final boolean DEFAULT_DOT_ALL = false;
 
     private List<Matcher> idMatchers;
     private List<Matcher> baseMatchers;
     private List<Matcher> contentMatchers;
     private List<String> metaKeys;
     private List<Matcher> metaValueMatchers;
+    private final boolean methodFull;
+    private final boolean dotAll;
 
 
     public PayloadMatcher(Configuration conf) {
@@ -96,7 +115,7 @@ public class PayloadMatcher {
             && metaKeys.size() != metaValueMatchers.size()) {
             throw new IllegalArgumentException(String.format(
                     "The number of %s was %d while number of %s was %s. As the"
-                    + " lists are used in parallen, the numbers must match",
+                    + " lists are used in parallel, the numbers must match",
                     CONF_META_KEY, metaKeys.size(),
                     CONF_META_VALUE_REGEXP, metaValueMatchers.size()));
         }
@@ -109,14 +128,15 @@ public class PayloadMatcher {
                      + PayloadMatcher.CONF_CONTENT_REGEX
                      + " to control the behaviour");
         }
+        methodFull = "full".equals(conf.getString(CONF_MATCH_METHOD, DEFAULT_MATCH_METHOD));
+        dotAll = conf.getBoolean(CONF_DOT_ALL, DEFAULT_DOT_ALL);
     }
 
     /**
      * @return true is any match property is set.
      */
     public boolean isMatcherActive() {
-        return idMatchers != null || baseMatchers != null
-               || contentMatchers != null || metaKeys != null;
+        return idMatchers != null || baseMatchers != null || contentMatchers != null || metaKeys != null;
     }
 
     private List<Matcher> getMatchers(Configuration conf,
@@ -128,7 +148,8 @@ public class PayloadMatcher {
         List<Matcher> matchers = new ArrayList<>(regexps.size());
         for (String regex : regexps) {
             log.debug("Compiling " + type + " filter regex: " + regex);
-            matchers.add(Pattern.compile(regex).matcher(""));
+            matchers.add(dotAll ? Pattern.compile(regex, Pattern.DOTALL).matcher("") :
+                                 Pattern.compile(regex).matcher(""));
         }
         return matchers;
     }
@@ -204,7 +225,7 @@ public class PayloadMatcher {
             return false;
         }
         for (Matcher m : matchers) {
-            if (m.reset(value).matches()) {
+            if (methodFull ? m.reset(value).matches() : m.reset(value).find()) {
                 return true;
             }
         }
