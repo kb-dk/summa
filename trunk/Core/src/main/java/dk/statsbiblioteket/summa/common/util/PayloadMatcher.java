@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -102,7 +103,7 @@ public class PayloadMatcher {
     }
 
     public PayloadMatcher(Configuration conf, boolean warnOnNoMatchers) {
-        log.trace("Constructing PayloadMatcher");
+        log.debug("Constructing PayloadMatcher");
         idMatchers = getMatchers(conf, CONF_ID_REGEX, "id");
         baseMatchers = getMatchers(conf, CONF_BASE_REGEX, "base");
         //noinspection DuplicateStringLiteralInspection
@@ -130,6 +131,7 @@ public class PayloadMatcher {
         }
         methodFull = "full".equals(conf.getString(CONF_MATCH_METHOD, DEFAULT_MATCH_METHOD));
         dotAll = conf.getBoolean(CONF_DOT_ALL, DEFAULT_DOT_ALL);
+        log.info("Constructed " + this);
     }
 
     /**
@@ -139,8 +141,7 @@ public class PayloadMatcher {
         return idMatchers != null || baseMatchers != null || contentMatchers != null || metaKeys != null;
     }
 
-    private List<Matcher> getMatchers(Configuration conf,
-                                      String confKey, String type) {
+    private List<Matcher> getMatchers(Configuration conf, String confKey, String type) {
         List<String> regexps = conf.getStrings(confKey, (List<String>)null);
         if (regexps == null) {
             return null;
@@ -230,5 +231,27 @@ public class PayloadMatcher {
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "PayloadMatcher(dotAll=" + dotAll + ", matchMethod=" + (methodFull ? "full" : "partial") + "idPatterns=["
+                + toString(idMatchers) + "], basePatterns=[" + toString(baseMatchers) + "], contentPatterns=["
+                + toString(contentMatchers) + "], metaKeys=[" + (metaKeys == null ? "" : Strings.join(metaKeys))
+                + "], metaPatterns=[" + toString(metaValueMatchers) + "])";
+    }
+
+    private String toString(List<Matcher> matchers) {
+        if (matchers == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Matcher matcher: matchers) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(matcher.pattern());
+        }
+        return sb.toString();
     }
 }
