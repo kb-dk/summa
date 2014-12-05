@@ -189,6 +189,9 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
 
     private static final int PROFILER_SPAN = 1000;
 
+    // While sleeping a long time, check with this interval for finish
+    private static final long MAX_INTERVAL_SLEEP = 1000; // 1 second
+
     /* The indexRoot is the main root. Indexes will always be in sub-folders */
     @SuppressWarnings({"FieldCanBeLocal"}) // Saved for auto-change of location
     private File indexRoot;
@@ -338,15 +341,14 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
             wakeupTime = consolidateTimeout == -1 ? wakeupTime :
                          Math.min(wakeupTime, lastConsolidate + consolidateTimeout);
             long sleepTime = wakeupTime - System.currentTimeMillis();
-            if (sleepTime > 0) {
-                log.trace("Watchdog sleeping for " + sleepTime + " ms");
+            long intervalSleepTime = Math.min(sleepTime, MAX_INTERVAL_SLEEP);
+            while (isRunning() && wakeupTime > System.currentTimeMillis()) {
+                log.trace("Watchdog sleeping for " + intervalSleepTime + " ms for a collective wait of " + sleepTime);
                 try {
-                    Thread.sleep(sleepTime);
+                    Thread.sleep(intervalSleepTime);
                 } catch (InterruptedException e) {
                     throw new RuntimeException("Interrupted while sleeping. Stopping timer-based watchdog", e);
                 }
-            } else {
-                log.trace("No sleep-time in Watchdog. This eats a lot of resources");
             }
             try {
                 triggerCheck();
