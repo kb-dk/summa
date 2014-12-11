@@ -20,7 +20,6 @@
 package dk.statsbiblioteket.summa.plugins;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.lang.NotImplementedException;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -44,10 +43,18 @@ public class Datetime {
         Pattern.compile("^[0-9]{4}.?[0-9]{2}.?[0-9]{2}.?([0-9]{2}).?([0-9]{2}).?([0-9]{2})?.*");
 
 
-    // TODO: Allow more fuzziness
+    // TODO: Allow more fuzziness, handle milliseconds, handle timezones
+    public static final Pattern solrDayHourMinuteSecondPattern =
+            Pattern.compile("[^0-9]*([0-9]{4})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2})[^0-9]?"
+                            + "([0-9]{2})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2}).*");
+    public static final Pattern solrDayHourMinutePattern =
+            Pattern.compile("[^0-9]*([0-9]{4})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2}).*");
+    // YYYY-MM-DD
     public static final Pattern solrDayPattern =
             Pattern.compile("[^0-9]*([0-9]{4})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2}).*");
+    // YYYY-MM
     public static final Pattern solrMonthPattern = Pattern.compile("[^0-9]*([0-9]{4})[^0-9]?([0-9]{2}).*");
+    // YYYY
     public static final Pattern solrYearPattern = Pattern.compile("[^0-9]*([0-9]{4}).*");
     /**
      * Extremely lenient date/time-parser that produces SOLR-date-time, as expected by TrieDateField.
@@ -61,6 +68,18 @@ public class Datetime {
      * @return Solr date format compliant {@code YYYY-MM-DDTHH:mm:SSZ} or the empty String is no date was extracted.
      */
     public static synchronized String solrDateTime(String datetime) {
+        Matcher dayHMSMatcher = solrDayHourMinuteSecondPattern.matcher(datetime);
+        if (dayHMSMatcher.matches()) {
+            return String.format("%s-%s-%sT%s:%s:%sZ",
+                                 dayHMSMatcher.group(1), dayHMSMatcher.group(2), dayHMSMatcher.group(3),
+                                 dayHMSMatcher.group(4), dayHMSMatcher.group(5), dayHMSMatcher.group(6));
+        }
+        Matcher dayHMMatcher = solrDayHourMinutePattern.matcher(datetime);
+        if (dayHMMatcher.matches()) {
+            return String.format("%s-%s-%sT%s:%s:00Z",
+                                 dayHMMatcher.group(1), dayHMMatcher.group(2), dayHMMatcher.group(3),
+                                 dayHMMatcher.group(4), dayHMMatcher.group(5));
+        }
         Matcher dayMatcher = solrDayPattern.matcher(datetime);
         if (dayMatcher.matches()) {
             return String.format("%s-%s-%sT00:00:00Z", dayMatcher.group(1), dayMatcher.group(2), dayMatcher.group(3));
@@ -235,14 +254,4 @@ public class Datetime {
         return dateExpand(iso, locale) + " " + timeExpand(iso, locale);
     }
 
-    /**
-     * Parses the input and attempts to generate a Solr-compatible timestamp as defined in
-     * https://lucene.apache.org/solr/4_10_2/solr-core/org/apache/solr/schema/DateField.html
-     * @param timestamp the timestamp to convert.
-     * @param fallback  if the timestamp could not be parsed, this value will be returned.
-     * @return a Solr-compatible timestamp or the fallback. Example: 1995-12-31T23:59:59Z.
-     */
-    public static String solrISO(String timestamp, String fallback) {
-        throw new NotImplementedException("Not implemented yet");
-    }
 }
