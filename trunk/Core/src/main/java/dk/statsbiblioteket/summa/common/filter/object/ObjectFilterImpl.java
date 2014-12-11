@@ -58,6 +58,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
         processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
+        log.info("Created " + this);
     }
 
     // if hasNext is true, a processed Payload is ready for delivery
@@ -76,7 +77,12 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             long startTime = System.nanoTime();
             try {
                 log.trace("Processing Payload");
-                if (!processPayload(processedPayload)) {
+                payloadCount++; // A bit prematurely but we also want to count exceptions
+                boolean discard = !processPayload(processedPayload);
+                long ms = (System.nanoTime() - startTime) / 1000000;
+                Logging.logProcess(name, "processPayload #" + payloadCount + " finished in " + ms + "ms for " + name,
+                                   processLogLevel, processedPayload);
+                if (discard) {
                     processedPayload.close();
                     processedPayload = null;
                     continue;
@@ -113,7 +119,6 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
 
             long spendTime = System.nanoTime() - startTime;
             totalTimeNS += spendTime;
-            payloadCount++;
             String ms = Double.toString(spendTime / 1000000.0);
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
@@ -122,8 +127,6 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             } else if (log.isDebugEnabled() && feedback) {
                 log.debug(getName() + " processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms");
             }
-            Logging.logProcess(name, "processPayload #" + payloadCount + " finished in " + ms + "ms for " + name,
-                               processLogLevel, processedPayload);
             break;
         }
         return processedPayload != null;
@@ -228,6 +231,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
 
     @Override
     public String toString() {
-        return "Filter '" + getName() + "' " + getProcessStats();
+        return getName() + "(feedback=" + feedback + ", processLogLevel=" + processLogLevel
+               + ", stats=" + getProcessStats() + ")";
     }
 }

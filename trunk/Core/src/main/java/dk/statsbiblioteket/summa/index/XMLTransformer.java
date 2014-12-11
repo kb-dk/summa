@@ -227,7 +227,8 @@ public class XMLTransformer extends GraphFilter<Object> {
 
     @Override
     public String toString() {
-        return "XMLTransformer '" + getName() + "' with " + changelings.size() + " sub transformers";
+        return "XMLTransformer '" + getName() + "' with " + (changelings == null ? "null" : changelings.size())
+               + " sub transformers";
     }
 
     private class Changeling {
