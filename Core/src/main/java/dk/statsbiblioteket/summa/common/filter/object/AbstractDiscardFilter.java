@@ -36,13 +36,22 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
     public static final String CONF_MARK = "discard.markpayload";
     public static final boolean DEFAULT_MARK = false;
 
-    protected boolean logDiscards = true;
+    /**
+     * If true, discarded records are logged in the process log.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_LOG_DISCARDS = "discard.logdiscards";
+    public static final boolean DEFAULT_LOG_DISCARDS = true;
+
+    protected boolean logDiscards;
     protected boolean markDiscards;
 
     @SuppressWarnings({"UnusedDeclaration"})
     public AbstractDiscardFilter(Configuration conf) {
         super(conf);
         markDiscards = conf.getBoolean(CONF_MARK, DEFAULT_MARK);
+        logDiscards = conf.getBoolean(CONF_LOG_DISCARDS, DEFAULT_LOG_DISCARDS);
     }
 
     /**
@@ -63,20 +72,20 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
             return true;
         }
         // Discard signaled
-            if (markDiscards) {
-                if (payload.getRecord() == null) {
-                    Logging.logProcess(getName(),
-                                       "Payload.record should be marked as deleted but did not contain a Record. " +
-                                       "Discarding Payload", Logging.LogLevel.WARN, payload);
-                    return false;
-                } else {
-                    if (logDiscards) {
-                        Logging.logProcess(getName(), "Marking as deleted", Logging.LogLevel.DEBUG, payload);
-                    }
-                    payload.getRecord().setDeleted(true);
-                    return true;
+        if (markDiscards) {
+            if (payload.getRecord() == null) {
+                Logging.logProcess(getName(),
+                                   "Payload.record should be marked as deleted but did not contain a Record. " +
+                                   "Discarding Payload", Logging.LogLevel.WARN, payload);
+                return false;
+            } else {
+                if (logDiscards) {
+                    Logging.logProcess(getName(), "Marking as deleted", Logging.LogLevel.DEBUG, payload);
                 }
+                payload.getRecord().setDeleted(true);
+                return true;
             }
+        }
         if (logDiscards) {
             Logging.logProcess(getName(), "Discarding payload", Logging.LogLevel.DEBUG, payload);
         }
