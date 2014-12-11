@@ -2,8 +2,8 @@ package dk.statsbiblioteket.summa.plugins;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -87,6 +87,20 @@ public class DatetimeTest extends TestCase {
     public void testSolrDateTimeDay() {
         String EXPECTED = "2013-02-03T00:00:00Z";
         String[] TESTS = new String[]{"2013-02-03", "mydate 2013-02-03done", "2013-02-03f", "20130203"};
+        assertSolrDates(EXPECTED, TESTS);
+    }
+
+    public void testSolrDateTimeDayMH() {
+        String EXPECTED = "2013-02-03T12:30:00Z";
+        String[] TESTS = new String[]{"2013-02-03T1230", "mydate 2013-02-03 12:30done",
+                                      "2013-02-03f12:30:00+100", "201302031230"};
+        assertSolrDates(EXPECTED, TESTS);
+    }
+
+    public void testSolrDateTimeDayMHS() {
+        String EXPECTED = "2013-02-03T12:30:54Z";
+        String[] TESTS = new String[]{"2013-02-03T123054", "mydate 2013-02-03 12:30:54done",
+                                      "2013-02-03f12:30:54+100", "20130203123054"};
         assertSolrDates(EXPECTED, TESTS);
     }
 
