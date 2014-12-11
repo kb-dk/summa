@@ -20,6 +20,7 @@
 package dk.statsbiblioteket.summa.plugins;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.lang.NotImplementedException;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -232,5 +233,16 @@ public class Datetime {
      */
     public static String dateAndTimeExpand(String iso, String locale) {
         return dateExpand(iso, locale) + " " + timeExpand(iso, locale);
+    }
+
+    /**
+     * Parses the input and attempts to generate a Solr-compatible timestamp as defined in
+     * https://lucene.apache.org/solr/4_10_2/solr-core/org/apache/solr/schema/DateField.html
+     * @param timestamp the timestamp to convert.
+     * @param fallback  if the timestamp could not be parsed, this value will be returned.
+     * @return a Solr-compatible timestamp or the fallback. Example: 1995-12-31T23:59:59Z.
+     */
+    public static String solrISO(String timestamp, String fallback) {
+        throw new NotImplementedException("Not implemented yet");
     }
 }
