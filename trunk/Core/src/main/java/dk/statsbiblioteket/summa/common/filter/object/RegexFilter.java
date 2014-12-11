@@ -56,7 +56,6 @@ public class RegexFilter extends AbstractDiscardFilter {
 
         isInclusive = parseIsInclusive(conf);
         payloadMatcher = new PayloadMatcher(conf);
-
     }
 
     private boolean parseIsInclusive(Configuration conf) {

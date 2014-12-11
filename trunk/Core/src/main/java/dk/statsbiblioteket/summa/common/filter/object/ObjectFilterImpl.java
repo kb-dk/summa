@@ -36,17 +36,28 @@ import java.io.IOException;
 public abstract class ObjectFilterImpl implements ObjectFilter {
     private Log log = LogFactory.getLog(ObjectFilterImpl.class.getName() + "#" + this.getClass().getSimpleName());
 
+    /**
+     * The feedback level used to log statistics to the process log.
+     * Valid values are FATAL, ERROR, WARN, INFO, DEBUG and TRACE.
+     * </p><p>
+     * Optional. Default is TRACE.
+     */
+    public static final String CONF_PROCESS_LOGLEVEL = "process.loglevel";
+    public static final Logging.LogLevel DEFAULT_FEEDBACK = Logging.LogLevel.TRACE;
+
     private ObjectFilter source;
     private long payloadCount = 0;
     private long totalTimeNS = 0;
 
     private String name;
     private Payload processedPayload = null;
-    // If true, process-time statistics are logged after processPayload-calls
     protected boolean feedback = true;
+    // If true, process-time statistics are logged after processPayload-calls
+    private Logging.LogLevel processLogLevel;
 
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
+        processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
     }
 
     // if hasNext is true, a processed Payload is ready for delivery
@@ -106,12 +117,13 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             String ms = Double.toString(spendTime / 1000000.0);
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace("Processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms using " + this);
+                log.trace(getName() + " processed " + processedPayload + ", #" + payloadCount + ", in " + ms
+                          + " ms using " + this);
             } else if (log.isDebugEnabled() && feedback) {
-                log.debug("Processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms");
+                log.debug(getName() + " processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms");
             }
             Logging.logProcess(name, "processPayload #" + payloadCount + " finished in " + ms + "ms for " + name,
-                               Logging.LogLevel.TRACE, processedPayload);
+                               processLogLevel, processedPayload);
             break;
         }
         return processedPayload != null;
@@ -144,8 +156,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
      *         not make sense. Throwing this means that the Payload will be
      *         discarded by ObjectFilterImpl.
      */
-    protected abstract boolean processPayload(Payload payload) throws
-                                                               PayloadException;
+    protected abstract boolean processPayload(Payload payload) throws PayloadException;
 
     @Override
     public void remove() {
