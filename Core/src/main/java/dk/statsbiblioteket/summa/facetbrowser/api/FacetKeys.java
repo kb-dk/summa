@@ -45,6 +45,48 @@ public interface FacetKeys {
     // TODO: Add reverse option
     public static final String SEARCH_FACET_FACETS = "search.facet.facets";
 
+    /* The facet range is modelled closely to Solr:
+     * https://wiki.apache.org/solr/SimpleFacetParameters#Facet_by_Range
+     */
+
+    /**
+     * A comma-separated list of fields to perform range faceting on.
+     * </p><p>
+     * Optional.
+     */
+    public static final String FACET_RANGE = "facet.range";
+
+    /**
+     * Description from Solr:<br/>
+     * The lower bound of the ranges.<br/>
+     * This parameter can be specified on a per field basis.<br/>
+     *
+     * Example: {@code f.price.facet.range.start=0.0&f.age.facet.range.start=10}
+     */
+    public static final String FACET_RANGE_START = "facet.range.start";
+
+    /**
+     * Description from Solr:<br/>
+     * The upper bound of the ranges.<br/>
+     * This parameter can be specified on a per field basis.<br/>
+     *
+     * Example: {@code f.price.facet.range.end=1000.0&f.age.facet.range.start=99}
+     */
+    public static final String FACET_RANGE_END = "facet.range.start";
+
+    /**
+     * Description from Solr:<br/>
+     * The size of each range expressed as a value to be added to the lower bound.
+     * For date fields, this should be expressed using the DateMathParser syntax.
+     * (ie: facet.range.gap=%2B1DAY, decoded = "+1DAY", URL encoding uses a normal
+     * plus sign as a space, so passing a plus to Solr request URL Hex encoding as %2B )
+     * </p><p>
+     * This parameter can be specified on a per field basis.
+     *
+     * Example: f.price.facet.range.gap=100&f.age.facet.range.gap=10
+     */
+    public static final String FACET_RANGE_GAP = "facet.range.gap";
+
     /**
      * A request for a faceting structure as defined by FacetRequest.xsd in
      * LUCENE-2369 (aka exposed). The return format is FacetResponse.xsd.

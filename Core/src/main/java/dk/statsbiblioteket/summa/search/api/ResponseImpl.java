@@ -27,8 +27,7 @@ import java.io.Serializable;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-abstract public class ResponseImpl extends TimerImpl
-    implements Response, Serializable {
+abstract public class ResponseImpl extends TimerImpl implements Response, Serializable {
     /**
      * Constructor without explicit prefix. {@link #getName()} + "." will be
      * used for prefix, but will be lazily requested.

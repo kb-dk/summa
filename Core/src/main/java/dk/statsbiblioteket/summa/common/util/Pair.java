@@ -24,8 +24,7 @@ import java.io.Serializable;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class Pair <T extends Comparable<T> , S>
-        implements Comparable<Pair<T, S>>, Serializable {
+public class Pair <T extends Comparable<T> , S> implements Comparable<Pair<T, S>>, Serializable {
     private static final long serialVersionUID = 340404402L;
     protected T key;
     protected S value;
