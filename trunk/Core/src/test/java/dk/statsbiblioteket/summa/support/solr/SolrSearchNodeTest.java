@@ -329,13 +329,13 @@ public class SolrSearchNodeTest extends TestCase {
                     "f.boostdate." + FacetKeys.FACET_RANGE_END, "2018-01-01T00:00:00Z",
                     "f.boostdate." + FacetKeys.FACET_RANGE_GAP, "+1MONTH",
 
-                    "f.double_test" + FacetKeys.FACET_RANGE_START, "100",
-                    "f.double_test" + FacetKeys.FACET_RANGE_END, "800",
-                    "f.double_test" + FacetKeys.FACET_RANGE_GAP, "50",
+                    "f.double_test." + FacetKeys.FACET_RANGE_START, "100",
+                    "f.double_test." + FacetKeys.FACET_RANGE_END, "800",
+                    "f.double_test." + FacetKeys.FACET_RANGE_GAP, "50",
 
-                    "f.int_test" + FacetKeys.FACET_RANGE_START, "0",
-                    "f.int_test" + FacetKeys.FACET_RANGE_END, "1000",
-                    "f.int_test" + FacetKeys.FACET_RANGE_GAP, "100"
+                    "f.int_test." + FacetKeys.FACET_RANGE_START, "0",
+                    "f.int_test." + FacetKeys.FACET_RANGE_END, "1000",
+                    "f.int_test." + FacetKeys.FACET_RANGE_GAP, "100"
             ), responses);
             DocumentResponse docs = (DocumentResponse)responses.iterator().next();
             System.out.println(docs.toXML());

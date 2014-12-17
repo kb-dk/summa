@@ -72,7 +72,7 @@ public interface FacetKeys {
      *
      * Example: {@code f.price.facet.range.end=1000.0&f.age.facet.range.start=99}
      */
-    public static final String FACET_RANGE_END = "facet.range.start";
+    public static final String FACET_RANGE_END = "facet.range.end";
 
     /**
      * Description from Solr:<br/>

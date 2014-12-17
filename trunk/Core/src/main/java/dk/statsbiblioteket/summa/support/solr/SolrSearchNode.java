@@ -421,6 +421,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         Map<String, List<String>> solrSearchParams = new HashMap<>(solrDefaultParams);
         for (Map.Entry<String, Serializable> entry : request.entrySet()) {
             convertSolrParam(solrSearchParams, entry);
+            convertFacetRangeRequest(solrSearchParams, entry);
         }
         if (query != null && !passThroughQuery) {
             query = convertQuery(query, solrSearchParams);
@@ -577,9 +578,16 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             log.trace("convertSolrParam got unsupported key " + entry.getKey() + ". Ignoring entry");
             return false;
         }
-        if (entry.getValue() instanceof List) {
+        Serializable value = entry.getValue();
+
+        putSolrParam(solrParam, key, value);
+        return true;
+    }
+
+    private void putSolrParam(Map<String, List<String>> solrParam, String key, Serializable value) {
+        if (value instanceof List) {
             ArrayList<String> values = new ArrayList<>();
-            for (Object v: (List)entry.getValue()) {
+            for (Object v: (List)value) {
                 if (v instanceof String) {
                     values.add((String)v);
                 } else {
@@ -595,19 +603,38 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                 }
                 solrParam.put(key, values);
             }
-        } else if (entry.getValue() instanceof String[]) {
+        } else if (value instanceof String[]) {
             if (log.isTraceEnabled()) {
-                log.trace("convertSolrParam assigning array " + key + ":"
-                          + Strings.join((String[]) entry.getValue(), ", "));
+                log.trace("convertSolrParam assigning array " + key + ":" + Strings.join((String[]) value, ", "));
             }
-            solrParam.put(key, Arrays.asList((String[]) entry.getValue()));
+            solrParam.put(key, Arrays.asList((String[]) value));
         } else { // Simple type (String, Integer...)
-            solrParam.put(key, Arrays.asList(entry.getValue().toString()));
+            solrParam.put(key, Arrays.asList(value.toString()));
             if (log.isTraceEnabled()) {
-                log.trace("convertSolrParam assigning " + key + ":" + entry.getValue());
+                log.trace("convertSolrParam assigning " + key + ":" + value);
             }
         }
-        return true;
+    }
+
+    /**
+     * Extracts facet range parameters and converts them to Solr params.
+     * @param solrParams the map where the converted key/value will potentially be stored.
+     * @param entry the source for the key/value pair.
+     */
+    protected void convertFacetRangeRequest(
+            Map<String, List<String>> solrParams, Map.Entry<String, Serializable> entry) {
+        String key = entry.getKey();
+        if (FacetKeys.FACET_RANGE.equals(key)) {
+            if (entry.getValue() instanceof String) {
+                putSolrParam(solrParams, key, ((String)entry.getValue()).split(", *"));
+            } else {
+                putSolrParam(solrParams, key, entry.getValue());
+            }
+        } else if (key.contains(FacetKeys.FACET_RANGE_START) ||
+                   key.contains(FacetKeys.FACET_RANGE_END) ||
+                   key.contains(FacetKeys.FACET_RANGE_GAP)) {
+            putSolrParam(solrParams, key, entry.getValue());
+        }
     }
 
     /* If the key is prefixed the right way, the prefix is removed and the key returned, else null is returned */
