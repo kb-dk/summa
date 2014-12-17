@@ -207,6 +207,8 @@
         
         <!-- Use dfor date boosting. Precision is hour -->
         <fieldType name="bdate" class="solr.TrieDateField" omitNorms="true" precisionStep="6" positionIncrementGap="0"/>
+        <fieldType name="double" class="solr.TrieDoubleField" omitNorms="true" precisionStep="6" positionIncrementGap="0"/>
+        <fieldType name="int" class="solr.TrieIntField" omitNorms="true" precisionStep="6" positionIncrementGap="0"/>
     </types>
 
     <fields>
@@ -449,7 +451,9 @@
 
        <!-- Boosting most recent -->
        <field name="boostdate" type="bdate" indexed="true" stored="true" required="false" />
-
+       <!-- Used by SolrSearchNodeTest -->
+        <field name="double_test" type="double" indexed="true" stored="true" required="false" />
+        <field name="int_test" type="int" indexed="true" stored="true" required="false" />
     </fields>
 
     <!-- Field to use to determine and enforce document uniqueness.

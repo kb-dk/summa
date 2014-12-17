@@ -315,6 +315,33 @@ public class SolrSearchNodeTest extends TestCase {
         }
     }
 
+    public void testFacetRange() throws Exception {
+        final int RECORDS = 100;
+        ingestFacets(RECORDS);
+        SearchNode searcher = getSearcher();
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*",
+                    FacetKeys.FACET_RANGE, "boostdate,double_test,int_test",
+
+                    "f.boostdate." + FacetKeys.FACET_RANGE_START, "2014-01-01T00:00:00Z",
+                    "f.boostdate." + FacetKeys.FACET_RANGE_END, "2018-01-01T00:00:00Z",
+                    "f.boostdate." + FacetKeys.FACET_RANGE_GAP, "+1MONTH",
+
+                    "f.double_test" + FacetKeys.FACET_RANGE_START, "100",
+                    "f.double_test" + FacetKeys.FACET_RANGE_END, "800",
+                    "f.double_test" + FacetKeys.FACET_RANGE_GAP, "50",
+
+                    "f.int_test" + FacetKeys.FACET_RANGE_START, "0",
+                    "f.int_test" + FacetKeys.FACET_RANGE_END, "1000",
+                    "f.int_test" + FacetKeys.FACET_RANGE_GAP, "100"
+            ), responses);
+            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            System.out.println(docs.toXML());
+        }
+    }
+
     public void testPaging() throws Exception {
         final int RECORDS = 100;
         final int PAGE_SIZE = 20;
@@ -1079,10 +1106,18 @@ public class SolrSearchNodeTest extends TestCase {
             if ((i & 0x03) == 0) {
                 sb.append("<field name=\"lma_long\">01_quart</field>\n");
             }
+            sb.append("<field name=\"boostdate\">").append(getTimestamp(random)).append("</field>\n");
+            sb.append("<field name=\"double_test\">").append(random.nextDouble()*1000).append("</field>\n");
+            sb.append("<field name=\"int_test\">").append(random.nextInt(1000)).append("</field>\n");
             sb.append("</doc>\n");
             samples.add(new Payload(new Record("doc" + i, "dummy", sb.toString().getBytes("utf-8"))));
         }
         return new PayloadFeederHelper(samples);
+    }
+
+    private String getTimestamp(Random random) {
+        //  2007-03-06T00:00:00Z
+        return String.format("201%d-%02d-%02dT00:00:00Z", random.nextInt(10), random.nextInt(13), random.nextInt(31));
     }
 
     private IndexController getIndexer() throws IOException {
