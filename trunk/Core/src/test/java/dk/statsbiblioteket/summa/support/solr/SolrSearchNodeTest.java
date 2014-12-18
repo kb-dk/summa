@@ -21,11 +21,14 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetRangeResponse;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
@@ -338,8 +341,33 @@ public class SolrSearchNodeTest extends TestCase {
                     "f.int_test." + FacetKeys.FACET_RANGE_END, "1000",
                     "f.int_test." + FacetKeys.FACET_RANGE_GAP, "100"
             ), responses);
-            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
-            System.out.println(docs.toXML());
+            FacetRangeResponse rangeResponse = null;
+            for (Response response: responses) {
+                if (response instanceof FacetRangeResponse) {
+                    rangeResponse = (FacetRangeResponse)response;
+                    break;
+                }
+            }
+            assertNotNull("There should have been a FacetRangeResponse in\n" + responses.toXML(), rangeResponse);
+            assertEquals("There should be the correct number of ranges", 3, rangeResponse.size());
+
+            for (String field: new String[]{"boostdate", "double_test", "int_test"}) {
+                assertFacetRange(rangeResponse, field);
+            }
+        }
+    }
+
+    private void assertFacetRange(FacetRangeResponse rangeResponse, String field) {
+        FacetRangeResponse.FacetRange range = rangeResponse.get(field);
+        assertNotNull("There should be a range response for field " + field, range);
+        assertTrue("There should be at least 1 range in " + field, !range.isEmpty());
+        String previous = null;
+        for (Pair<String, Long> entry: range) {
+            if (previous != null) {
+                assertTrue("The previous key '" + previous + "' should be ordered before '" + entry.getKey() + "'",
+                           previous.compareTo(entry.getKey()) <= 0);
+            }
+            previous = entry.getKey();
         }
     }
 
