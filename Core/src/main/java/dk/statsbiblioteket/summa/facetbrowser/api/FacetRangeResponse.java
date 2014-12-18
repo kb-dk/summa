@@ -72,6 +72,22 @@ public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeR
         }
     }
 
+    /**
+     *
+     * @param field a field from the index.
+     * @return the facet range response for the field, if present in the overall facet range response structure. null uf not present.
+     */
+    public FacetRange get(String field) {
+        for (FacetRange response: this) {
+            if (field.equals(response.getField())) {
+                return response;
+            }
+        }
+        return null;
+    }
+
+
+
     @Override
     public String toXML() {
         try {
@@ -91,7 +107,7 @@ public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeR
             out.flush();
             return os.toString("utf-8");
         } catch (XMLStreamException e) {
-            throw new RuntimeException("Unable to create an XMLStreamWriter", e);
+            throw new RuntimeException("Unable to serialize response to XML", e);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("utf-8 not supported", e);
         }
@@ -154,7 +170,7 @@ public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeR
                 xml.writeCharacters("\n");
             }
             xml.writeCharacters(indent);
-            xml.writeEndDocument();
+            xml.writeEndElement();
             xml.writeCharacters("\n");
         }
 
@@ -189,6 +205,7 @@ public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeR
         private boolean eq(String s1, String s2) {
             return s1 == null ? s2 == null : s1.equals(s2);
         }
+
         /* Plain mutators below */
 
         public String getField() {

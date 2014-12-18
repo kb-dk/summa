@@ -158,12 +158,12 @@ public class SolrResponseBuilder implements Configurable {
 
     public long buildResponses(final Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
-
+/*
         System.out.println("***");
         System.err.println(request);
         System.out.println("***");
         System.out.println(solrResponse.replace(">", ">\n"));
-
+   */
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
@@ -542,6 +542,8 @@ public class SolrResponseBuilder implements Configurable {
             log.warn("parseFacetRanges: Expected attribute 'name' in element 'lst' but did not find it");
             return false;
         }
+        xml.next();
+
         log.debug("Parsing facet ranges for field " + field);
         // We take the default arguments from the request but allow for later override
         final String start = request.getString("f." + field + ".", FacetKeys.FACET_RANGE_START, "N/A");
@@ -555,10 +557,10 @@ public class SolrResponseBuilder implements Configurable {
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
                 final String name = XMLStepper.getAttribute(xml, "name", null);
                 if ("lst".equals(current)) {
-                    if (name == null) {
-                        log.warn("parseFacetRanges: Expected attribute name for element lst in field '" + field
-                                 + "' but found none");
-                        return true;
+                    if (name == null || !"counts".equals(name)) {
+                        log.warn("parseFacetRanges: Expected attribute name=counts for element lst in field '" + field
+                                 + "' but got " + name);
+                        return false;
                     }
                     parseFacetRangeCounts(xml, facetRange);
                     return true;
