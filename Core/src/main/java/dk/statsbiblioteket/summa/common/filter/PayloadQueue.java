@@ -212,7 +212,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
 
     @Override
     public int drainTo(Collection<? super Payload> c, int maxElements) {
-        throw new UnsupportedOperationException("drainTo with max not supported yet");
+        throw new UnsupportedOperationException("drainTo with max not supported yet. Requested max was " + maxElements);
 /*        int count = super.drainTo(c, maxElements);    // TODO: Implement this
         flag.notifyAll();
         return count;*/
