@@ -158,11 +158,12 @@ public class SolrResponseBuilder implements Configurable {
 
     public long buildResponses(final Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
-/*        System.out.println("***");
+
+        System.out.println("***");
         System.err.println(request);
         System.out.println("***");
         System.out.println(solrResponse.replace(">", ">\n"));
-*/
+
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
@@ -239,11 +240,11 @@ public class SolrResponseBuilder implements Configurable {
                         return true;
                     }
                     if ("facet_counts".equals(name) || "efacet_counts".equals(name)) {
-                        if (facets == null) {
+    /*                    if (facets == null) {
                             XMLStepper.skipSubTree(xml);
                             return true;
-                        }
-                        parseFacets(xml, facets, responses);
+                        }*/
+                        parseFacets(xml, request, facets, responses);
                         // Cursor is at end of sub tree after parseFacets
                         return true;
                     }
@@ -494,9 +495,173 @@ public class SolrResponseBuilder implements Configurable {
         }
         return false;
     }
+    // <lst name="facet_ranges">
+    // <lst name="crawl_date">
+    private void parseFacetRanges(XMLStreamReader xml, final Request request, ResponseCollection responses)
+            throws XMLStreamException {
+        log.info("Parsing facet_ranges");
+        long startTime = System.currentTimeMillis();
+        final FacetRangeResponse facetRangeResponse = new FacetRangeResponse();
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+            @Override
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
+                    throws XMLStreamException {
+                if ("lst".equals(current)) {
+                    String name = XMLStepper.getAttribute(xml, "name", null);
+                    if (name == null) {
+                        log.warn("parseFacetRanges: Expected attribute 'name' in element 'lst'");
+                        return false;
+                    }
+                    return parseFacetRanges(xml, request, facetRangeResponse);
+                }
+                log.warn("parseFacetRanges: Only expected sub element in facet_ranges is 'lst', but got " + current);
+                return false;
+            }
+        });
+        facetRangeResponse.addTiming("buildresponses.facetranges", System.currentTimeMillis() - startTime);
+        if (!facetRangeResponse.isEmpty()) {
+            log.debug("parseFacetRanges: Adding " + facetRangeResponse.size() + " facet ranges to response");
+            responses.add(facetRangeResponse);
+        } else {
+            log.debug("parseFacetRanges: Empty facet_ranges element");
+        }
+    }
 
-    private void parseFacets(
-        XMLStreamReader xml, SolrFacetRequest facets, ResponseCollection responses) throws XMLStreamException {
+    //     <lst name="crawl_date">
+    //      <lst name="counts">
+    //        <int name="2011-09-01T00:00:00Z">194</int>
+    //        <int name="2011-12-01T00:00:00Z">122</int>
+    //      </lst>
+    //      <str name="gap">+1MONTH</str>
+    //      <date name="start">2011-01-01T00:00:00Z</date>
+    //      <date name="end">2013-01-01T00:00:00Z</date>
+    private boolean parseFacetRanges(XMLStreamReader xml, Request request, FacetRangeResponse facetRangeResponse)
+            throws XMLStreamException {
+        final String field = XMLStepper.getAttribute(xml, "name", null);
+        if (field == null) {
+            log.warn("parseFacetRanges: Expected attribute 'name' in element 'lst' but did not find it");
+            return false;
+        }
+        log.debug("Parsing facet ranges for field " + field);
+        // We take the default arguments from the request but allow for later override
+        final String start = request.getString("f." + field + ".", FacetKeys.FACET_RANGE_START, "N/A");
+        final String end =   request.getString("f." + field + ".", FacetKeys.FACET_RANGE_END,   "N/A");
+        final String gap =   request.getString("f." + field + ".", FacetKeys.FACET_RANGE_GAP,   "N/A");
+
+        final FacetRangeResponse.FacetRange facetRange = new FacetRangeResponse.FacetRange(field, start, end, gap);
+
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+            @Override
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                final String name = XMLStepper.getAttribute(xml, "name", null);
+                if ("lst".equals(current)) {
+                    if (name == null) {
+                        log.warn("parseFacetRanges: Expected attribute name for element lst in field '" + field
+                                 + "' but found none");
+                        return true;
+                    }
+                    parseFacetRangeCounts(xml, facetRange);
+                    return true;
+                }
+                if ("start".equals(name)) {
+                    String returnedStart= xml.getElementText();
+                    if (returnedStart != null) {
+                        facetRange.setStart(returnedStart);
+                    }
+                    return true;
+                }
+                if ("end".equals(name)) {
+                    String returnedEnd= xml.getElementText();
+                    if (returnedEnd != null) {
+                        facetRange.setEnd(returnedEnd);
+                    }
+                    return true;
+                }
+                if ("gap".equals(name)) {
+                    String returnedGap= xml.getElementText();
+                    if (returnedGap != null) {
+                        facetRange.setGap(returnedGap);
+                    }
+                    return true;
+                }
+                log.warn(String.format(
+                        "parseFacetRanges: Expected only elements with known name attributes, " +
+                        "got element %s with name %s", current, name));
+                return false;
+            }
+        });
+        if (!facetRange.isEmpty()) {
+            facetRangeResponse.add(facetRange);
+        }
+        return true;
+    }
+
+    //      <lst name="counts">
+    //        <int name="2011-09-01T00:00:00Z">194</int>
+    //        <int name="2011-12-01T00:00:00Z">122</int>
+    //      </lst>
+
+    private void parseFacetRangeCounts(XMLStreamReader xml, final FacetRangeResponse.FacetRange facetRange)
+            throws XMLStreamException {
+        xml.next();
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+            @Override
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
+                    throws XMLStreamException {
+                final String name = XMLStepper.getAttribute(xml, "name", null);
+                if (name == null) {
+                    log.warn("parseFacetRangeCounts: For field " + facetRange.getField()
+                             + " expected name attribute for element " + current);
+                    return false;
+                }
+                try {
+                    facetRange.add(new Pair<>(name, Long.valueOf(xml.getElementText())));
+                } catch (Exception e) {
+                    log.warn("parseFacetRangeCounts: For field " + facetRange.getField()
+                             + " expected text content for element '" + current + "', name='" + name
+                             + "' to be parseable as long", e);
+                }
+                return true;
+            }
+        });
+    }
+
+    private void parseFacets(XMLStreamReader xml, final Request request, final SolrFacetRequest facets,
+                             final ResponseCollection responses) throws XMLStreamException {
+        log.debug("Parsing facet response");
+        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+            @Override
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                String name = XMLStepper.getAttribute(xml, "name", null);
+                if ("facet_fields".equals(name) || "efacet_fields".equals(name)) {
+                    if (facets == null) {
+                        log.debug("parseFacets: No plain facets requested. Skipping sub tree");
+                        xml.next();
+                        XMLStepper.skipSubTree(xml);
+                        return true;
+                    }
+                    xml.next();
+                    parseBaseFacets(xml, facets, responses);
+                    return true;
+                }
+                //  <lst name="facet_ranges">
+                //    <lst name="crawl_date">
+                if ("facet_ranges".equals(name)) {
+                    xml.next();
+                    parseFacetRanges(xml, request, responses);
+                    // Cursor is at end of sub tree after parseFacets
+                    return true;
+                }
+
+                // TODO: <lst name="facet_dates"/> <lst name="facet_ranges"/>
+                return false;
+            }
+        });
+    }
+
+    private void parseBaseFacets(XMLStreamReader xml, SolrFacetRequest facets, ResponseCollection responses)
+            throws XMLStreamException {
+        log.debug("Parsing plain facets");
         long startTime = System.currentTimeMillis();
         HashMap<String, Integer> facetIDs = new HashMap<>(facets.getFacets().size());
         // 1 facet = 1 field in Solr-world
@@ -510,22 +675,11 @@ public class SolrResponseBuilder implements Configurable {
         final FacetResultExternal facetResult = new FacetResultExternal(
             facets.getMaxTags(), facetIDs, fields, facets.getOriginalStructure());
         facetResult.setPrefix(searcherID + ".");
-        XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
-            @Override
-            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-                if ("facet_fields".equals(XMLStepper.getAttribute(xml, "name", null))
-                    || "efacet_fields".equals(XMLStepper.getAttribute(xml, "name", null))) {
-                    xml.next();
-                    parseFacets(xml, facetResult);
-                    return true;
-                }
-                // TODO: <lst name="facet_dates"/> <lst name="facet_ranges"/>
-                return false;
-            }
-        });
+        parseFacets(xml, facetResult);
         facetResult.sortFacets();
         facetResult.addTiming("buildresponses.facets", System.currentTimeMillis() - startTime);
         responses.add(facetResult);
+
     }
 
     private void parseFacets(XMLStreamReader xml, final FacetResultExternal facets) throws XMLStreamException {

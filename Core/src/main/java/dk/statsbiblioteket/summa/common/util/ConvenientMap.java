@@ -44,15 +44,15 @@ import java.util.regex.Pattern;
         author = "te",
         comment = "Some methods needs JavaDoc")
 public class ConvenientMap extends HashMap<String, Serializable> {
-    public static final long serialVersionUID = 384681318L;
+    public static final long serialVersionUID = 384681319L;
     private static Log log = LogFactory.getLog(ConvenientMap.class);
 
     public ConvenientMap(Serializable... args) {
         super();
         log.trace("Constructing with " + args.length + " arguments");
         if (args.length % 2 != 0) {
-            throw new IllegalArgumentException("There must be an even number of arguments. Argument count was "
-                                               + args.length);
+            throw new IllegalArgumentException(
+                    "There must be an even number of arguments. Argument count was " + args.length);
         }
         for (int i = 0 ; i < args.length ; i += 2) {
             put((String)args[i], args[i+1]);
@@ -73,12 +73,12 @@ public class ConvenientMap extends HashMap<String, Serializable> {
     private void addJSON(JSONObject jsonObject) {
         for (int i = 0 ; i < jsonObject.size() ; i++) {
             for (Object o: jsonObject.entrySet()) {
-                ListOrderedMap.Entry entry = (ListOrderedMap.Entry)o;
+                // TODO Make better error messages on cast fail
+                ListOrderedMap.Entry<String, Serializable> entry = (ListOrderedMap.Entry<String, Serializable>)o;
                 if (log.isTraceEnabled()) {
                     log.trace("Putting " + entry.getKey() + ", " + entry.getValue());
                 }
-                // TODO Make better error messages on cast fail
-                put((String)entry.getKey(), (Serializable)entry.getValue());
+                put(entry.getKey(), entry.getValue());
             }
         }
     }
@@ -90,6 +90,34 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         }
         return value;
     }
+    /**
+     * In order of priority (highest to lowest), return the value for {@code prefix + key}, {@code key},
+     * {@code defaultValue} (if present).
+     * @param prefix prepended to key as first lookup attempt. If null, this is ignored.
+     * @param key the key for the value to return.
+     * @param defaultValue the value to return if the key dod not exist and failOnNotFound==true.
+     * @param failOnNotFound if true, an exception is thrown for missing values.
+     * @return the value for the key.
+     * @throws NullPointerException if the key was not present and failOnNotFound was true.
+     */
+    public Serializable get(String prefix, String key, Serializable defaultValue, boolean failOnNotFound) {
+        Serializable value = prefix != null ? super.get(prefix + key) : null;
+        if (value == null) {
+            value = super.get(key);
+        }
+        if (value != null) {
+            return value;
+        }
+        if (failOnNotFound) {
+            if (prefix == null) {
+                throw new NullPointerException("Unable to locate key '" + key + "'");
+            } else {
+                throw new NullPointerException("Unable to locate key '" + prefix + key + "' or '" + key + "'");
+            }
+        }
+        return defaultValue;
+    }
+
     private String getStringNONPE(String key) {
         Object o = super.get(key);
         return o == null ? null : "".equals(o) ? null : (String)o;
@@ -107,143 +135,150 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         return res == null ? defaultValue : res;
     }
 
+    /**
+     * In order of priority (highest to lowest), return the value for
+     * {@code prefix + key}, {@code key}, {@code defaultValue}.
+     * @param prefix prepended to key as first lookup attempt. If null, this is ignored.
+     * @param key the key for the value to return.
+     * @param defaultValue if neither {@code prefix + key}, nor {@code key} could be located, return this.
+     * @return the value for the key.
+     */
+    public String getString(String prefix, String key, String defaultValue) {
+        return (String)get(prefix, key, defaultValue, false);
+    }
+
+    /* Integer */
     public Integer getInt(String key) {
-        Object o = get(key);
-        //noinspection OverlyBroadCatchBlock
-        try {
-            if (o instanceof Integer) {
-                return (Integer)o;
-            }
-            /* Converting to a String and parsing that is a catch-all method
-             * for cases where the value is an Long or Character */
-            return Integer.parseInt(o.toString());
-        } catch (Exception e) {
-            log.warn(String.format("Exception extracting int for key '%s'", key), e);
-            return null;
-        }
+        return toInt(key, get(null, key, null, true));
     }
     public Integer getInt(String key, Integer defaultValue) {
+        return toInt(key, get(null, key, defaultValue, false));
+    }
+    public Integer getInt(String prefix, String key, Integer defaultValue) {
+        return toInt(key, get(prefix, key, defaultValue, false));
+    }
+    private Integer toInt(String key, Serializable value) {
+        if (value == null || value instanceof Integer) {
+            return (Integer)value;
+        }
         try {
-            return getInt(key);
+            return Integer.parseInt(value.toString());
         } catch (Exception e) {
-            return defaultValue;
+            log.warn(String.format("Exception extracting int for key '%s', value '%s", key, value), e);
+            return null;
         }
     }
 
+    /* Long */
     public Long getLong(String key) {
-        Object o = get(key);
-        //noinspection OverlyBroadCatchBlock
-        try {
-            if (o instanceof Long) {
-                return (Long)o;
-            }
-            /* Converting to a String and parsing that is a catch-all method
-             * for cases where the value is an Integer or Character */
-            return Long.parseLong(o.toString());
-        } catch (Exception e) {
-            log.warn(String.format("Exception extracting long for key '%s'", key), e);
-            return null;
-        }
+        return toLong(key, get(null, key, null, true));
     }
     public Long getLong(String key, Long defaultValue) {
+        return toLong(key, get(null, key, defaultValue, false));
+    }
+    public Long getLong(String prefix, String key, Long defaultValue) {
+        return toLong(key, get(prefix, key, defaultValue, false));
+    }
+    private Long toLong(String key, Serializable value) {
+        if (value == null || value instanceof Long) {
+            return (Long)value;
+        }
         try {
-            return getLong(key);
+            return Long.parseLong(value.toString());
         } catch (Exception e) {
-            return defaultValue;
+            log.warn(String.format("Exception extracting Long for key '%s', value '%s", key, value), e);
+            return null;
         }
     }
 
+    /* Double */
     public Double getDouble(String key) {
-        Object o = get(key);
-        //noinspection OverlyBroadCatchBlock
-        try {
-            if (o instanceof Double) {
-                return (Double)o;
-            }
-            /* Converting to a String and parsing that is a catch-all method
-             * for cases where the value is an Integer or Character */
-            return Double.parseDouble(o.toString());
-        } catch (Exception e) {
-            log.warn(String.format("Exception extracting Double for key '%s'", key), e);
-            return null;
-        }
+        return toDouble(key, get(null, key, null, true));
     }
     public Double getDouble(String key, Double defaultValue) {
+        return toDouble(key, get(null, key, defaultValue, false));
+    }
+    public Double getDouble(String prefix, String key, Double defaultValue) {
+        return toDouble(key, get(prefix, key, defaultValue, false));
+    }
+    private Double toDouble(String key, Serializable value) {
+        if (value == null || value instanceof Double) {
+            return (Double)value;
+        }
         try {
-            return getDouble(key);
+            return Double.parseDouble(value.toString());
         } catch (Exception e) {
-            return defaultValue;
+            log.warn(String.format("Exception extracting Double for key '%s', value '%s", key, value), e);
+            return null;
         }
     }
 
+    /* Float */
     public Float getFloat(String key) {
-        Object o = get(key);
-        //noinspection OverlyBroadCatchBlock
-        try {
-            if (o instanceof Float) {
-                return (Float)o;
-            }
-            /* Converting to a String and parsing that is a catch-all method
-             * for cases where the value is an Integer or Character */
-            return Float.parseFloat(o.toString());
-        } catch (Exception e) {
-            log.warn(String.format(
-                    "Exception extracting Float for key '%s'", key), e);
-            return null;
-        }
+        return toFloat(key, get(null, key, null, true));
     }
     public Float getFloat(String key, Float defaultValue) {
+        return toFloat(key, get(null, key, defaultValue, false));
+    }
+    public Float getFloat(String prefix, String key, Float defaultValue) {
+        return toFloat(key, get(prefix, key, defaultValue, false));
+    }
+    private Float toFloat(String key, Serializable value) {
+        if (value == null || value instanceof Float) {
+            return (Float)value;
+        }
         try {
-            return getFloat(key);
+            return Float.parseFloat(value.toString());
         } catch (Exception e) {
-            return defaultValue;
+            log.warn(String.format("Exception extracting Float for key '%s', value '%s", key, value), e);
+            return null;
         }
     }
 
+    /* Short */
     public Short getShort(String key) {
-        Object o = get(key);
-        //noinspection OverlyBroadCatchBlock
-        try {
-            if (o instanceof Short) {
-                return (Short)o;
-            }
-            /* Converting to a String and parsing that is a catch-all method
-             * for cases where the value is an Integer or Character */
-            return Short.parseShort(o.toString());
-        } catch (Exception e) {
-            log.warn(String.format("Exception extracting Short for key '%s'", key), e);
-            return null;
-        }
+        return toShort(key, get(null, key, null, true));
     }
     public Short getShort(String key, Short defaultValue) {
-        try {
-            return getShort(key);
-        } catch (Exception e) {
-            return defaultValue;
-        }
+        return toShort(key, get(null, key, defaultValue, false));
     }
-
-    public Boolean getBoolean(String key) {
-        Object o = get(key);
+    public Short getShort(String prefix, String key, Short defaultValue) {
+        return toShort(key, get(prefix, key, defaultValue, false));
+    }
+    private Short toShort(String key, Serializable value) {
+        if (value == null || value instanceof Short) {
+            return (Short)value;
+        }
         try {
-            if (o instanceof Boolean) {
-                return (Boolean)o;
-            }
-            /* Converting to a String and parsing that is a catch-all method
-             * for cases where the value is an Integer or Character */
-            return Boolean.parseBoolean(o.toString());
+            return Short.parseShort(value.toString());
         } catch (Exception e) {
-            log.warn(String.format("Exception extracting boolean for key '%s'", key), e);
+            log.warn(String.format("Exception extracting Short for key '%s', value '%s", key, value), e);
             return null;
         }
     }
+
+    /* Boolean */
+    public Boolean getBoolean(String key) {
+        return toBoolean(key, get(null, key, null, true));
+    }
     public Boolean getBoolean(String key, Boolean defaultValue) {
+        return toBoolean(key, get(null, key, defaultValue, false));
+    }
+    public Boolean getBoolean(String prefix, String key, Boolean defaultValue) {
+        return toBoolean(key, get(prefix, key, defaultValue, false));
+    }
+    private Boolean toBoolean(String key, Serializable value) {
+        if (value == null || value instanceof Boolean) {
+            return (Boolean)value;
+        }
         try {
-            return getBoolean(key);
+            return Boolean.parseBoolean(value.toString());
         } catch (Exception e) {
-            return defaultValue;
+            log.warn(String.format("Exception extracting Boolean for key '%s', value '%s", key, value), e);
+            return null;
         }
     }
+
     /**
      * Properly retrieves lists of Strings stored as List<String>, String[] or
      * as a comma-separated list.
@@ -297,8 +332,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
      */
     public String[] getStrings(String key, String[] defaultValues) {
         List<String> result = getStrings(key, defaultValues == null ? null : Arrays.asList(defaultValues));
-        return result == null ? null :
-               result.toArray(new String[result.size()]);
+        return result == null ? null : result.toArray(new String[result.size()]);
     }
 
     public static class Pair<T, U> {
@@ -316,8 +350,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         }
     }
 
-    protected Pattern numberPattern =
-            Pattern.compile("(.+)\\( *(\\-?[0-9]+) *\\).*");
+    protected Pattern numberPattern = Pattern.compile("(.+)\\( *(\\-?[0-9]+) *\\).*");
     /**
      * Parses the value for the key for Strings and Integers and returns them
      * as a list of Pairs.
