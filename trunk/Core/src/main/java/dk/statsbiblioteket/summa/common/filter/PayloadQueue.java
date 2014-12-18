@@ -203,6 +203,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     @Override
     public int drainTo(Collection<? super Payload> c) {
         int count = super.drainTo(c);
+        // TODO: Should this not be derived from count?
         totalSize.set(0);
         synchronized (flag) {
             flag.notifyAll();
@@ -212,19 +213,13 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
 
     @Override
     public int drainTo(Collection<? super Payload> c, int maxElements) {
-        if (maxElements == Integer.MAX_VALUE) {
-            int count = super.drainTo(c);
-            totalSize.set(0);
-            synchronized (flag) {
-                flag.notifyAll();
-                return count;
-             }
+        int count = super.drainTo(c, maxElements);
+        // TODO: Should this not be derived from count?
+        totalSize.set(0);
+        synchronized (flag) {
+            flag.notifyAll();
+            return count;
         }
-
-        throw new UnsupportedOperationException("drainTo with max not supported yet. Requested max was " + maxElements);
-/*        int count = super.drainTo(c, maxElements);    // TODO: Implement this
-        flag.notifyAll();
-        return count;*/
     }
 
     /**
