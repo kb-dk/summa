@@ -323,6 +323,7 @@ public class SolrSearchNodeTest extends TestCase {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(new Request(
                     DocumentKeys.SEARCH_QUERY, "*:*",
+                    DocumentKeys.SEARCH_MAX_RECORDS, 1,
                     FacetKeys.FACET_RANGE, "boostdate,double_test,int_test",
 
                     "f.boostdate." + FacetKeys.FACET_RANGE_START, "2014-01-01T00:00:00Z",

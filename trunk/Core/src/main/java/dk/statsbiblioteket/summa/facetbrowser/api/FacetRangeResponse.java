@@ -27,15 +27,12 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 
 /**
  * Represents buckets of data, modelled closely after https://wiki.apache.org/solr/SimpleFacetParameters#Facet_by_Range.
  */
-public class FacetRangeResponse extends ResponseImpl {
+public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeResponse.FacetRange> {
     private static final transient Log log = LogFactory.getLog(FacetRange.class);
     private final transient XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
     private static final long serialVersionUID = 7271119850L;
@@ -100,7 +97,7 @@ public class FacetRangeResponse extends ResponseImpl {
         }
     }
 
-    public class FacetRange extends AbstractList<Pair<String, Long>> implements Serializable {
+    public static class FacetRange extends AbstractList<Pair<String, Long>> implements Serializable {
         private static final long serialVersionUID = 127394189850L;
         private String field;
         private String start;
@@ -192,7 +189,7 @@ public class FacetRangeResponse extends ResponseImpl {
         private boolean eq(String s1, String s2) {
             return s1 == null ? s2 == null : s1.equals(s2);
         }
-        /* Plain getters below */
+        /* Plain mutators below */
 
         public String getField() {
             return field;
@@ -208,6 +205,18 @@ public class FacetRangeResponse extends ResponseImpl {
 
         public String getGap() {
             return gap;
+        }
+
+        public void setStart(String start) {
+            this.start = start;
+        }
+
+        public void setEnd(String end) {
+            this.end = end;
+        }
+
+        public void setGap(String gap) {
+            this.gap = gap;
         }
 
         /* Delegations to count below */
@@ -265,4 +274,126 @@ public class FacetRangeResponse extends ResponseImpl {
   </lst>
 
      */
+
+    /* Basic delegations below */
+
+    @Override
+    public int size() {
+        return ranges.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return ranges.isEmpty();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        return ranges.contains(o);
+    }
+
+    @Override
+    public Iterator<FacetRange> iterator() {
+        return ranges.iterator();
+    }
+
+    @Override
+    public Object[] toArray() {
+        return ranges.toArray();
+    }
+
+    @Override
+    public <FacetRange> FacetRange[] toArray(FacetRange[] a) {
+        return ranges.toArray(a);
+    }
+
+    @Override
+    public boolean add(FacetRange pairs) {
+        return ranges.add(pairs);
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        return ranges.remove(o);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c) {
+        return ranges.containsAll(c);
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends FacetRange> c) {
+        return ranges.addAll(c);
+    }
+
+    @Override
+    public boolean addAll(int index, Collection<? extends FacetRange> c) {
+        return ranges.addAll(index, c);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        return ranges.removeAll(c);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        return ranges.retainAll(c);
+    }
+
+    @Override
+    public void clear() {
+        ranges.clear();
+    }
+
+    @Override
+    public int hashCode() {
+        return ranges.hashCode();
+    }
+
+    @Override
+    public FacetRange get(int index) {
+        return ranges.get(index);
+    }
+
+    @Override
+    public FacetRange set(int index, FacetRange element) {
+        return ranges.set(index, element);
+    }
+
+    @Override
+    public void add(int index, FacetRange element) {
+        ranges.add(index, element);
+    }
+
+    @Override
+    public FacetRange remove(int index) {
+        return ranges.remove(index);
+    }
+
+    @Override
+    public int indexOf(Object o) {
+        return ranges.indexOf(o);
+    }
+
+    @Override
+    public int lastIndexOf(Object o) {
+        return ranges.lastIndexOf(o);
+    }
+
+    @Override
+    public ListIterator<FacetRange> listIterator() {
+        return ranges.listIterator();
+    }
+
+    @Override
+    public ListIterator<FacetRange> listIterator(int index) {
+        return ranges.listIterator(index);
+    }
+
+    @Override
+    public List<FacetRange> subList(int fromIndex, int toIndex) {
+        return ranges.subList(fromIndex, toIndex);
+    }
 }
