@@ -34,18 +34,20 @@ import java.util.*;
  */
 public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeResponse.FacetRange> {
     private static final transient Log log = LogFactory.getLog(FacetRange.class);
-    private final transient XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
+    private final transient XMLOutputFactory xmlOutFactory;
     private static final long serialVersionUID = 7271119850L;
 
     protected ArrayList<FacetRange> ranges;
 
     public FacetRangeResponse() {
         this.ranges = new ArrayList<>();
+        xmlOutFactory = XMLOutputFactory.newInstance();
     }
 
     public FacetRangeResponse(String prefix) {
         super(prefix);
         this.ranges = new ArrayList<>();
+        xmlOutFactory = XMLOutputFactory.newInstance();
     }
 
     @Override
