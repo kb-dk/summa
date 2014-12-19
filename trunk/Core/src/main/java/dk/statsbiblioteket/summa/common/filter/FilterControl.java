@@ -18,8 +18,10 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.util.StateThread;
+import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -89,7 +91,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
         try {
             chainConfs = configuration.getSubConfigurations(CONF_CHAINS);
         } catch (SubConfigurationsNotSupportedException e) {
-            throw new ConfigurationException("Storage doesn't support sub configurations");
+            throw new ConfigurationException("Configuration Storage doesn't support sub configurations");
         } catch (NullPointerException e) {
             throw new ConfigurationException(String.format("Could not locate a list of chain-Configurations at key %s",
                                                            CONF_CHAINS), e);
@@ -179,6 +181,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
         for (FilterPump pump : pumps) {
             log.debug("Waiting for " + pump.getChainName());
             pump.waitForFinish(timeout);
+            log.debug(pump.getChainName() + " finished");
         }
     }
 
@@ -249,6 +252,11 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
             filterControl.start();
             filterControl.waitForFinish();
             log.info("Filter chain completed");
+            if (conf.getBoolean(FilterService.CONF_EXIT_WITH_FILTER, FilterService.DEFAULT_EXIT_WITH_FILTER)) {
+                log.info("Activating JVM shutdown daemon as " + FilterService.CONF_EXIT_WITH_FILTER
+                         + " is true. This should clean up any rogue threads.");
+                new DeferredSystemExit(0, 5000);
+            }
         } catch (Throwable t) {
             Logging.fatal(log, "FilterControl.main", "Caught top level exception", t);
             t.printStackTrace(System.err);

@@ -48,12 +48,7 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
      * when the internal filter control stops or crashes. The default value
      * is {@code true}.
      */
-    public static final String CONF_EXIT_WITH_FILTER =
-                                         "summa.control.service.exitwithfilter";
-
-    /**
-     * Default value for {@link #CONF_EXIT_WITH_FILTER}
-     */
+    public static final String CONF_EXIT_WITH_FILTER = "summa.control.service.exitwithfilter";
     public static final boolean DEFAULT_EXIT_WITH_FILTER = true;
 
     /**
@@ -72,21 +67,18 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
     public FilterService(Configuration conf) throws IOException {
         super(conf);
         this.conf = conf;
-        exitWithFilter = conf.getBoolean(CONF_EXIT_WITH_FILTER,
-                                         DEFAULT_EXIT_WITH_FILTER);
-        log.debug("Will exit the JVM when filter stops: " + exitWithFilter);
+        exitWithFilter = conf.getBoolean(CONF_EXIT_WITH_FILTER, DEFAULT_EXIT_WITH_FILTER);
 
         exportRemoteInterfaces();
 
-        setStatus(Status.CODE.constructed, "Remote interfaces are up",
-                  Logging.LogLevel.DEBUG);
+        setStatus(Status.CODE.constructed, "Remote interfaces are up", Logging.LogLevel.DEBUG);
+        log.info("Constructed " + this);
     }
 
     @Override
     public void start() throws RemoteException {
         if (filterControl == null) {
-            log.info("Start requested with no filter control, "
-                     + "creating a new one");
+            log.info("Start requested with no filter control, creating a new one");
             createFilterControl();
         } else {
             StateThread.STATUS status = filterControl.getStatus();
@@ -101,16 +93,13 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
                             getClientId(),
                             getId(),
                             "start",
-                            "Service is already running. Please "
-                            + "wait for it to finish or stop it"
-                            + " explicitly");
+                            "Service is already running. Please wait for it to finish or stop it explicitly");
                 case stopping:
                     throw new InvalidServiceStateException(
                             getClientId(),
                             getId(),
                             "start",
-                            "Service is current stopping. Please "
-                            + "wait for it to finish before restarting");
+                            "Service is current stopping. Please wait for it to finish before restarting");
                 case error:
                 case stopped:
                     // We create a new filter control on 'error' or 'stopped'
@@ -137,10 +126,8 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
         } catch (Throwable t) {
             //noinspection DuplicateStringLiteralInspection
             setStatus(Status.CODE.crashed,
-                      "Crashed due to unexpected Throwable when starting "
-                      + "FilterControl", Logging.LogLevel.FATAL, t);
-            throw new RemoteException("Crashed with throwable during startup",
-                                      t);
+                      "Crashed due to unexpected Throwable when starting FilterControl", Logging.LogLevel.FATAL, t);
+            throw new RemoteException("Crashed with throwable during startup", t);
         }
         setStatusRunning("The FilterControl service is running");
     }
@@ -153,33 +140,26 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
                 protected void finishedCallback() {
                     switch (getStatus()) {
                         case error:
-                            setStatus(Status.CODE.crashed, "Crashed",
-                                      Logging.LogLevel.ERROR);
+                            setStatus(Status.CODE.crashed, "Crashed", Logging.LogLevel.ERROR);
                             break;
                         case ready:
                         case stopping:
                         case stopped:
-                            setStatus(Status.CODE.stopped,
-                                      "Stopped with substatus "
-                                      + getStatus(),
+                            setStatus(Status.CODE.stopped, "Stopped with substatus " + getStatus(),
                                       Logging.LogLevel.DEBUG);
                             break;
                         default:
-                            setStatus(Status.CODE.stopped,
-                                      "Stopped with unknown state "
-                                      + getStatus(),
+                            setStatus(Status.CODE.stopped, "Stopped with unknown state " + getStatus(),
                                       Logging.LogLevel.WARN);
 
                     }
 
                     if (exitWithFilter) {
-                        log.info("Preparing to exit the JVM."
-                                 + " Waiting for filters to flush");
+                        log.info("Preparing to exit the JVM. Waiting for filters to flush");
                         try {
                             filterControl.waitForFinish();
                         } catch (InterruptedException e) {
-                            log.warn("Interrupted while waiting for filters. "
-                                     + "This may cause data loss");
+                            log.warn("Interrupted while waiting for filters. This may cause data loss");
                         }
 
                         try {
@@ -204,7 +184,7 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
 
     @Override
     public void stop() throws RemoteException {
-        log.trace("Recieved request to stop FilterControl service");
+        log.trace("Received request to stop FilterControl service");
 
         if (filterControl == null) {
             setStatus(Status.CODE.stopped,
@@ -232,12 +212,10 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
             setStatus(Status.CODE.crashed,
                       "FilterControl crashed while stopping",
                       Logging.LogLevel.ERROR, t);
-            throw new RemoteException("Throwable when stopping FilterControl ",
-                                      t);
+            throw new RemoteException("Throwable when stopping FilterControl ", t);
         }
         setStatus(Status.CODE.stopped,
-                  "Filtercontrol service down, all lights green, performing "
-                  + "clean-up",
+                  "Filtercontrol service down, all lights green, performing clean-up",
                   Logging.LogLevel.INFO);
 
     }
@@ -246,8 +224,9 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
     public FilterControl getFilterControl() {
         return filterControl;
     }
+
+    @Override
+    public String toString() {
+        return "FilterService(exitWithFilter=" + exitWithFilter + ", control=" + filterControl + ")";
+    }
 }
-
-
-
-
