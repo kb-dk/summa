@@ -46,6 +46,8 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
 
     protected boolean logDiscards;
     protected boolean markDiscards;
+    protected long totalCount = 0;
+    protected long discardCount = 0;
 
     @SuppressWarnings({"UnusedDeclaration"})
     public AbstractDiscardFilter(Configuration conf) {
@@ -64,7 +66,11 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
+        totalCount++;
         boolean discard = checkDiscard(payload);
+        if (discard) {
+            discardCount++;
+        }
         if (!discard) {
             if (logDiscards) {
                 Logging.logProcess(getName(), "Payload not discarded", Logging.LogLevel.TRACE, payload);
@@ -91,5 +97,10 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
         }
         return !discard;
     }
-}
 
+    @Override
+    public String toString() {
+        return "AbstractDiscardFilter(logDiscards=" + logDiscards + ", markDiscards=" + markDiscards
+               + ", discarded=" + discardCount + "/" + totalCount + ")";
+    }
+}

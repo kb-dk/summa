@@ -80,5 +80,15 @@ public class RegexFilter extends AbstractDiscardFilter {
         }
         return isInclusive;
     }
-}
 
+    @Override
+    public void close(boolean success) {
+        super.close(success);
+        log.info("Closed " + this);
+    }
+
+    @Override
+    public String toString() {
+        return "RegexFilter(isInclusive=" + isInclusive + ", " + payloadMatcher + ", " + super.toString() + ")";
+    }
+}
