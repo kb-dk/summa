@@ -33,8 +33,8 @@ import java.util.*;
  * Represents buckets of data, modelled closely after https://wiki.apache.org/solr/SimpleFacetParameters#Facet_by_Range.
  */
 public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeResponse.FacetRange> {
-    private static final transient Log log = LogFactory.getLog(FacetRange.class);
-    private final transient XMLOutputFactory xmlOutFactory;
+    private static transient Log log = LogFactory.getLog(FacetRange.class);
+    private transient XMLOutputFactory xmlOutFactory;
     private static final long serialVersionUID = 7271119850L;
 
     protected ArrayList<FacetRange> ranges;
@@ -94,6 +94,9 @@ public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeR
     public String toXML() {
         try {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
+            if (xmlOutFactory == null) { // Check due to serializing of this class
+                xmlOutFactory = XMLOutputFactory.newInstance();
+            }
             XMLStreamWriter out = xmlOutFactory.createXMLStreamWriter(os);
             String indent = "  ";
 
