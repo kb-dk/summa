@@ -711,6 +711,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             storageWatcher.stop();
             log.info("Storage watcher stopped");
         }
+        log.info("Finished closing " + this);
     }
 
     /**
@@ -734,10 +735,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         return String.format(
                 "RecordReader(startFromScratch=%b, storage=%s, bases=%s, startMTime=%s, progress=%s, "
                 + "maxRecords=%d, maxSeconds=%d, batchSize=%d, loadDate=%b, stayAlive=%b, "
-                + "stopOnNewer=%b, allowPartialDeliveries=%b) started",
+                + "stopOnNewer=%b, allowPartialDeliveries=%b, readRecords=%d) started",
                 startFromScratch, storage, base == null || "".equals(base) ? "*" : base,
                 String.format(ProgressTracker.ISO_TIME, lastRecordTimestamp), progressTracker,
                 maxReadRecords, maxReadSeconds, batchSize, loadData, storageWatcher != null,
-                stopOnNewer, allowPartialDeliveries);
+                stopOnNewer, allowPartialDeliveries, recordCounter);
     }
 }
