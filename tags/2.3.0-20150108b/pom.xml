@@ -1,0 +1,653 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>org.sbforge</groupId>
+        <artifactId>sbforge-parent</artifactId>
+        <version>8</version>
+    </parent>
+
+    <properties>
+        <solr_lucene_version>4.8.1</solr_lucene_version>
+        <sbutil_version>0.5.28</sbutil_version>
+    </properties>
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>dk.statsbiblioteket.summa</groupId>
+    <artifactId>summa</artifactId>
+    <version>2.3.0-20150108b</version>
+    <ciManagement>
+        <system>hudson</system>
+        <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
+    </ciManagement>
+    <inceptionYear>2014</inceptionYear>
+    <url>http://summa.sourceforge.net/projects/summa/</url>
+    <packaging>pom</packaging>
+    <name>Summa</name>
+
+
+    <distributionManagement>
+        <repository>
+            <id>sbforge-nexus</id>
+            <name>SBForgeb Nexus Repo manager</name>
+            <url>https://sbforge.org/nexus/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>sbforge-nexus</id>
+            <name>SBForgeb Nexus Repo manager</name>
+            <url>https://sbforge.org/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+      </distributionManagement>
+
+    <!-- Summa modules -->
+    <modules>
+        <module>SBSolr</module>
+        <module>Core</module>
+        <module>Exposed</module>
+        <!--<module>Common</module> -->
+        <!--<module>Storage</module>  -->
+        <!--<module>Search</module>  -->
+        <!--<module>Ingest</module>  -->
+        <!--<module>Index</module>  -->
+        <!--<module>FacetBrowser</module>  -->
+        <!--<module>Support</module>  -->
+        <module>Web</module>
+        <!-- <module>Samples/Integration/</module> -->
+        <!-- <module>Samples/Assembly/</module>   Module only creates .jar containing all .jars from modules. It it not used currently.-->
+        <module>Summix/</module> <!-- This must be last-->
+
+    </modules>
+
+    <!-- Summa dependencies -->
+    <dependencies>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.0.3</version>
+            </dependency>
+            <dependency>
+                <groupId>janino</groupId>
+                <artifactId>janino</artifactId>
+                <version>2.5.10</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.ant</groupId>
+                <artifactId>ant-junit</artifactId>
+                <version>1.8.1</version>
+            </dependency>
+            <!--
+                        <dependency>
+                            <groupId>org.neo4j</groupId>
+                            <artifactId>neo4j</artifactId>
+                            <version>1.3</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.neo4j</groupId>
+                            <artifactId>neo4j-lucene-index</artifactId>
+                            <version>1.3</version>
+                        </dependency>
+            -->
+            <dependency>
+                <groupId>com.ibm.icu</groupId>
+                <artifactId>icu4j</artifactId>
+                <version>4.6</version>
+            </dependency>
+            <dependency>
+            	<groupId>de.schlichtherle.truezip</groupId>
+            	<artifactId>truezip-file</artifactId>
+                <!-- <version>7.0-rc1</version> -->
+
+            	<version>7.6.6</version>
+            </dependency>
+            <dependency>
+                <groupId>de.schlichtherle.truezip</groupId>
+                <artifactId>truezip-driver-zip</artifactId>
+<!--                <version>7.0-rc1</version>-->
+                <version>7.6.6</version>
+            </dependency>
+            <dependency>
+                <groupId>de.schlichtherle.truezip</groupId>
+                <artifactId>truezip-driver-tar</artifactId>
+                <version>7.6.6</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sf.json-lib</groupId>
+                <artifactId>json-lib</artifactId>
+                <version>2.4</version>
+                <classifier>jdk15</classifier>
+            </dependency>
+            <dependency>
+                <groupId>axis</groupId>
+                <artifactId>axis</artifactId>
+                <version>1.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.axis</groupId>
+                <artifactId>axis-jaxrpc</artifactId>
+                <version>1.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.axis</groupId>
+                <artifactId>axis-saaj</artifactId>
+                <version>1.4</version>
+            </dependency>
+            <dependency>
+                <groupId>axis</groupId>
+                <artifactId>axis-wsdl4j</artifactId>
+                <version>1.5.1</version>
+            </dependency>
+            <dependency> <!-- Tired of tiny changes to Java XSLT processing -->
+            	<groupId>xalan</groupId>
+            	<artifactId>xalan</artifactId>
+            	<version>2.7.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>1.2.139</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-discovery</groupId>
+                <artifactId>commons-discovery</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>logkit</groupId>
+                        <artifactId>logkit</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>avalon-framework</groupId>
+                        <artifactId>avalon-framework</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>commons-cli</groupId>
+                <artifactId>commons-cli</artifactId>
+                <version>1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>dk.statsbiblioteket.sbutil</groupId>
+                <artifactId>sbutil-common</artifactId>
+                <version>${sbutil_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dk.statsbiblioteket.sbutil</groupId>
+                <artifactId>sbutil-qa</artifactId>
+                <version>${sbutil_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dk.statsbiblioteket.sbutil</groupId>
+                <artifactId>sbutil-xproperties</artifactId>
+                <version>${sbutil_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fastutil</groupId>
+                <artifactId>fastutil</artifactId>
+                <version>5.0.4</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+
+<!--            <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr-core</artifactId>
+                <version>4.0.0-BETA</version>
+            </dependency>
+    -->
+            <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr-core</artifactId>
+                <version>${solr_lucene_version}</version>
+                <classifier>pom</classifier>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-jdk14</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-analyzers-morfologik</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-analyzers-kuromoji</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-analyzers-phonetic</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-analyzers-smartcn</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-analyzers-stempel</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-analyzers-uima</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-highlighter</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-spatial</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.zookeeper</groupId>
+                        <artifactId>zookeeper</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr-core</artifactId>
+                <version>${solr_lucene_version}</version>
+                <classifier>sources</classifier>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-jdk14</artifactId>
+                    </exclusion>
+                 
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-common</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-icu</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+       <!--
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-kuromoji</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+           -->
+            <!-- We do not need this and it breaks the Orcale Java 1.6.0_24 compiler -->
+              <!--
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-morfologik</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-phonetic</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-smartcn</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-stempel</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+                  -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-uima</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+
+           <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr-analysis-extras</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-queryparser</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-queries</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+<!--
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-suggest</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-highlighter</artifactId>
+                <version>4.0.0</version>
+            </dependency>
+    -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-test-framework</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr</artifactId>
+                <version>${solr_lucene_version}</version>
+                <type>war</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr-core</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr-test-framework</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.solr</groupId>
+                <artifactId>solr-solrj</artifactId>
+                <version>${solr_lucene_version}</version>
+            </dependency>                    
+            
+            <!-- commons-httpclient is deprecated, but needed for heritrix in core -->
+            <dependency>
+                <groupId>commons-httpclient</groupId>
+                <artifactId>commons-httpclient</artifactId>
+                <version>3.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.2.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.2.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>2.5</version>
+            </dependency>
+            <dependency>
+                <groupId>jline</groupId>
+                <artifactId>jline</artifactId>
+                <version>0.9.94</version>
+            </dependency>
+
+            <!-- To get the Tika libraries, use instead of tika-core -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-core</artifactId>
+                <version>0.6</version>
+<!--                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.pdfbox</groupId>
+                        <artifactId>pdfbox</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.poi</groupId>
+                        <artifactId>poi</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.poi</groupId>
+                        <artifactId>poi-ooxml</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.poi</groupId>
+                        <artifactId>poi-ooxml-schemas</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.poi</groupId>
+                        <artifactId>poi-scratchpad</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId></groupId>
+                        <artifactId></artifactId>
+                    </exclusion>
+                </exclusions>-->
+            </dependency>
+
+            <dependency>
+                <groupId>org.archive</groupId>
+                <artifactId>heritrix</artifactId>
+                <!-- 1.14.4 has conflict with apache commons lang 2.1 -->
+                <version>1.14.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.marc4j</groupId>
+                <artifactId>marc4j</artifactId>
+                <version>2.4</version>
+            </dependency>
+
+
+            <!-- jersey used by Web/Hub -->
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-client</artifactId>
+                <version>1.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+                <version>1.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+                <version>1.17.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-servlet</artifactId>
+                <version>1.17.1</version>
+            </dependency>
+            <!-- End jersey -->
+
+
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- General building for summa -->
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-5</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>all-jar.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <!-- <executions>
+                    <execution>
+                        <id>package-all</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions> -->
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.1</version>
+                <configuration>
+                    <compilerVersion>1.7.0</compilerVersion>
+                    <optimize>true</optimize>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <compilerArgument>-Xlint</compilerArgument>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.9</version>
+                <configuration>
+                    <testFailureIgnore>true</testFailureIgnore>
+                    <enableAssertions>false</enableAssertions>
+                    <trimStackTrace>false</trimStackTrace>
+                    <forkMode>always</forkMode>
+                    <argLine>-Xms256m -Xmx768m</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>./</directory>
+                            <includes>
+                                <include>**/configuration.*.xml</include>
+                                <include>**/xconfiguration.*.xml</include>
+                            </includes>
+                            <!--
+                                <excludes>
+                                <exclude>**/important.log</exclude>
+                                <exclude>**/another-important.log</exclude>
+                                </excludes>
+                            -->
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <!-- Jars -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.7</version>
+            </plugin>
+        </plugins>
+
+    </build>
+
+    <!-- plugin to generate html output for test cases -->
+    <reporting>
+        <plugins>
+            <!--            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <showSuccess>false</showSuccess>
+                </configuration>
+            </plugin>-->
+            <!-- Aggregate javadoc for all sub modules -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.7</version>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <organization>
+        <name>Statsbiblioteket</name>
+        <url>http://www.statsbiblioteket.dk</url>
+    </organization>
+    <developers>
+        <developer>
+            <name>Toke Eskildsen</name>
+            <organization>Statsbiblioteket.dk</organization>
+            <email>te@statsbiblioteket.dk</email>
+        </developer>
+        <developer>
+            <name>Thomas Egense</name>
+            <organization>Statsbiblioteket.dk</organization>
+            <email>teg@statsbiblioteket.dk</email>
+        </developer>
+    </developers>
+    <issueManagement>
+        <system>trac</system>
+        <url>https://sourceforge.net/apps/trac/summa/report/1</url>
+    </issueManagement>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:svn:https://summa.svn.sourceforge.net/svnroot/summa/trunk</connection>
+        <developerConnection>scm:svn:https://summa.svn.sourceforge.net/svnroot/summa/trunk</developerConnection>
+        <tag>HEAD</tag>
+        <url>http://summa.svn.sourceforge.net/viewvc/summa/</url>
+    </scm>
+
+</project>

@@ -1,0 +1,25 @@
+This folder contains files used by SearchTest.
+
+- SearchTest_IndexDescriptor.xml
+Describes fields and groups used in the index in the test.
+This is used by the indexer as well as the searcher.
+
+- SearchTest_IngestConfiguration.xml
+The setup for Ingest. Ingest is invoked several times, in order to add
+records gradually.
+
+- SearchTest_IndexConfiguration.xml
+The setup for Index. Index is invoked several times, in order to react
+to changes in storage.
+
+- SearchTest_SearchConfiguration.xml
+The setup for Search. Search is kept running during the whole test and
+auto-discovers changes to the index.
+
+- fagref_xslt
+The XSLTs used by the indexer to transform raw fagref-data to SummaDocuments.
+
+- input
+ - part1
+ - part2
+Input-data in fagref-format.
