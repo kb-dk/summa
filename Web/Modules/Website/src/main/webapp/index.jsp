@@ -16,6 +16,7 @@
     WebServices services = WebServices.getInstance();
 
     String search_html = "";
+    String xml_search_result = "N/A";
     String facet_html = "";
     String didyoumean_html = "";
     String form_filter = "";
@@ -110,7 +111,6 @@
         dymXSLT += System.currentTimeMillis();
             
         searchCall = -System.currentTimeMillis();
-        String xml_search_result = null;
 
         if (json != null) {
             xml_search_result = (String)services.execute("directjson", json);
@@ -355,6 +355,15 @@
      <li><%= tokens[0] + ": " + (ms > 1000 ? "<strong>" + ms + "</strong>" : Long.toString(ms)) %> ms</li>          
 <% } %>
 </ul>
+
+<!--
+
+*******************************************
+***         Raw search result           ***
+*******************************************
+
+<%= xml_search_result %>
+-->
 
 </body>
 </html>
