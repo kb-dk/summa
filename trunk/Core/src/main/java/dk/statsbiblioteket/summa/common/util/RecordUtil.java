@@ -1045,4 +1045,53 @@ public class RecordUtil {
         }
         return sw.toString();
     }
+
+    private static final byte[] EMPTY = new byte[0];
+    /**
+     * Deep copy of the Record. Children and Parents are cloned as well.
+     * </p><p>
+     * Note: Meta content from {@link dk.statsbiblioteket.summa.common.Record#getMeta()} is only shallow copied.
+     * @param record the record to clone.
+     * @param referenceContent if true, the content of the Record is shared. If false, it is copied, making the
+     *                         newly created Record fully independent of the old.
+     * @return an identical copy of record.
+     */
+    public static Record clone(Record record, boolean referenceContent) {
+        Record newRecord = new Record(record.getId(), record.getBase(), EMPTY);
+        byte[] rawContent = record.getContent(false);
+        newRecord.setRawContent(referenceContent ?
+                                        rawContent :
+                                        Arrays.copyOf(rawContent, rawContent.length), record.isContentCompressed());
+        newRecord.setDeleted(record.isDeleted());
+        newRecord.setIndexable(record.isIndexable());
+        newRecord.setCreationTime(record.getCreationTime());
+        newRecord.setModificationTime(record.getModificationTime());
+        newRecord.setHasRelations(record.isHasRelations());
+        if (record.getChildIds() != null) {
+            newRecord.setChildIds(new ArrayList<>(record.getChildIds()));
+        }
+        if (record.getChildren() != null) {
+            List<Record> newChildren = new ArrayList<>(record.getChildren().size());
+            for (Record childRecord: record.getChildren()) {
+                newChildren.add(clone(childRecord, referenceContent));
+            }
+            record.setChildren(newChildren);
+        }
+        if (record.getParentIds() != null) {
+            newRecord.setParentIds(new ArrayList<>(record.getParentIds()));
+        }
+        if (record.getParents() != null) {
+            List<Record> newParents = new ArrayList<>(record.getParents().size());
+            for (Record childRecord: record.getParents()) {
+                newParents.add(clone(childRecord, referenceContent));
+            }
+            record.setParents(newParents);
+        }
+        if (record.hasMeta()) {
+            for (Map.Entry<String, String> entry: record.getMeta().entrySet()) {
+                newRecord.addMeta(entry.getKey(), entry.getValue());
+            }
+        }
+        return newRecord;
+    }
 }
