@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,9 +48,109 @@ public abstract class MultiFilterBase implements ObjectFilter {
     public static final String CONF_PROCESS_LOGLEVEL = "process.loglevel";
     public static final Logging.LogLevel DEFAULT_FEEDBACK = Logging.LogLevel.TRACE;
 
+    /**
+     * How and if matching on source Payloads should be done. Possible values are<br/>
+     * {@code process}:           Process all incoming Payloads.<br/>
+     * {@code passthrough}:       Send all incoming Payloads onwards unprocessed.<br/>
+     * {@code whitelist_discard}: Process all Payloads satisfying {@link PayloadMatcher}.
+     *                            Payload not matching are discarded.<br/>
+     * {@code whitelist_pass}:    Process all Payloads satisfying {@link PayloadMatcher}.
+     *                            Payload not matching are forwarded unprocessed.<br/>
+     * {@code blacklist_discard}: Process all Payloads not satisfying {@link PayloadMatcher}.
+     *                            Payload matching are discarded.<br/>
+     * {@code blacklist_pass}:    Process all Payloads not satisfying {@link PayloadMatcher}.
+     *                            Payload matching are forwarded unprocessed.
+     * </p><p>
+     * Optional. Default is passthrough. If a white- or black-list value is specified, relevant setup for
+     * {@link PayloadMatcher} should also be specified.
+     */
+    public static final String CONF_MATCH_MODE = "match.mode";
+    public static final String DEFAULT_MATCH_MODE = MATCHER.defaultMatcher().toString();
+
+    public static enum MATCHER {
+        whitelist_discard {
+            @Override
+            public boolean shouldProcess(Payload payload) {
+                return getMatcher().isMatch(payload);
+            }
+            @Override
+            public boolean passNonProcessed() {
+                return false;
+            }
+        },
+        whitelist_pass{
+            @Override
+            public boolean shouldProcess(Payload payload) {
+                return getMatcher().isMatch(payload);
+            }
+        },
+        blacklist_discard{
+            @Override
+            public boolean shouldProcess(Payload payload) {
+                return !getMatcher().isMatch(payload);
+            }
+            @Override
+            public boolean passNonProcessed() {
+                return false;
+            }
+        },
+        blacklist_pass{
+            @Override
+            public boolean shouldProcess(Payload payload) {
+                return !getMatcher().isMatch(payload);
+            }
+        },
+        passthrough {
+            @Override
+            public boolean needsMatcher() {
+                return false;
+            }
+            @Override
+            public boolean shouldProcess(Payload payload) {
+                return false;
+            }
+        },
+        process {
+            @Override
+            public boolean needsMatcher() {
+                return false;
+            }
+            @Override
+            public boolean shouldProcess(Payload payload) {
+                return true;
+            }
+        };
+        public boolean needsMatcher() {
+            return true;
+        }
+        private PayloadMatcher matcher = null;
+        public PayloadMatcher getMatcher() {
+            return matcher;
+        }
+        public static MATCHER defaultMatcher() {
+            return passthrough;
+        }
+        public static MATCHER initialize(Configuration conf) {
+            MATCHER mode = MATCHER.valueOf(conf.getString(CONF_MATCH_MODE, defaultMatcher().toString()));
+            if (mode.needsMatcher()) {
+                mode.matcher = new PayloadMatcher(conf);
+            }
+            return mode;
+        }
+        public abstract boolean shouldProcess(Payload payload);
+        public boolean passNonProcessed() {
+            return true;
+        }
+
+        public String toVerboseString() {
+            return super.toString() + (needsMatcher() ? "(" + matcher + ")" : "");
+        }
+    }
+
     private ObjectFilter source;
     private long payloadCount = 0;
     private long totalTimeNS = 0;
+    private final MATCHER matcher;
 
     private String name;
     private final List<Payload> queue = new ArrayList<>();
@@ -60,6 +161,8 @@ public abstract class MultiFilterBase implements ObjectFilter {
     public MultiFilterBase(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
         processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
+        matcher = MATCHER.initialize(conf);
+
 //        log.info("Created " + this);
     }
 
@@ -73,7 +176,14 @@ public abstract class MultiFilterBase implements ObjectFilter {
                 log.debug("hasNext(): Got null from source. This is legal but unusual. Skipping to next payload");
                 continue;
             }
-            wrappedProcess(inPayload);
+            if (matcher.shouldProcess(inPayload)) {
+                wrappedProcess(inPayload);
+            } else if (matcher.passNonProcessed()) {
+                Logging.logProcess(name, "passing unmodified", Logging.LogLevel.DEBUG, inPayload);
+                deliver(inPayload);
+            } else {
+                Logging.logProcess(name, "discarding", Logging.LogLevel.DEBUG, inPayload);
+            }
         }
         if (queue.isEmpty()) {
             log.info("No more Payloads available from " + this);
@@ -218,6 +328,6 @@ public abstract class MultiFilterBase implements ObjectFilter {
     @Override
     public String toString() {
         return getName() + "(feedback=" + feedback + ", processLogLevel=" + processLogLevel
-               + ", stats=" + getProcessStats() + ")";
+               + ", stats=" + getProcessStats() + ", matcher=" + matcher.toVerboseString() + ")";
     }
 }

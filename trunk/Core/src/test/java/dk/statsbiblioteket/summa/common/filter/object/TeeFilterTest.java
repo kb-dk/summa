@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
@@ -34,7 +35,7 @@ public class TeeFilterTest extends TestCase {
     public void testQuad() {
         PayloadFeederHelper feeder = getFeeder();
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
-                TeeFilter.CONF_BASES, "baseA, baseB",
+                TeeFilter.CONF_NEW_BASES, "baseA, baseB",
                 TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 8);
@@ -65,12 +66,47 @@ public class TeeFilterTest extends TestCase {
     public void testBase() {
         PayloadFeederHelper feeder = getFeeder();
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
-                TeeFilter.CONF_BASES, "baseA, baseB"
+                TeeFilter.CONF_NEW_BASES, "baseA, baseB"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 4);
         for (String id: Arrays.asList("original1", "original2")) {
             for (String base: Arrays.asList("baseA", "baseB")) {
                 assertContains(id, base, generated);
+            }
+        }
+    }
+
+    public void testWhitelistPass() {
+        PayloadFeederHelper feeder = getFeeder();
+        ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
+                TeeFilter.CONF_NEW_BASES, "baseA, baseB",
+                TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_",
+                TeeFilter.CONF_MATCH_MODE, TeeFilter.MATCHER.whitelist_pass,
+                PayloadMatcher.CONF_ID_REGEX, "original1"
+        ));
+        List<Payload> generated = extractRecords(feeder, tee, 5);
+        for (String prefix: Arrays.asList("prefixA_", "prefixB_")) {
+            String concat = prefix + "original1";
+            for (String base: Arrays.asList("baseA", "baseB")) {
+                assertContains(concat, base, generated);
+            }
+        }
+        assertContains("original2", "originalBase", generated);
+    }
+
+    public void testBlacklistDiscard() {
+        PayloadFeederHelper feeder = getFeeder();
+        ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
+                TeeFilter.CONF_NEW_BASES, "baseA, baseB",
+                TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_",
+                TeeFilter.CONF_MATCH_MODE, TeeFilter.MATCHER.blacklist_discard,
+                PayloadMatcher.CONF_ID_REGEX, "original1"
+        ));
+        List<Payload> generated = extractRecords(feeder, tee, 4);
+        for (String prefix: Arrays.asList("prefixA_", "prefixB_")) {
+            String concat = prefix + "original2";
+            for (String base: Arrays.asList("baseA", "baseB")) {
+                assertContains(concat, base, generated);
             }
         }
     }

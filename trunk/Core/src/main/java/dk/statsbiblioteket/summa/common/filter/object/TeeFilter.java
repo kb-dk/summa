@@ -42,7 +42,7 @@ public class TeeFilter extends MultiFilterBase {
      * </p><p>
      * Half mandatory: Either tee.bases or tee.idprefixes must be defined.
      */
-    public static final String CONF_BASES = "tee.bases";
+    public static final String CONF_NEW_BASES = "tee.newbases";
 
     /**
      * The idPrefixes for the outgoing Records.
@@ -72,12 +72,12 @@ public class TeeFilter extends MultiFilterBase {
     public TeeFilter(Configuration conf) {
         super(conf);
         feedback = false;
-        recordBases = getStrings(conf, CONF_BASES);
+        recordBases = getStrings(conf, CONF_NEW_BASES);
         idPrefixes = getStrings(conf, CONF_ID_PREFIXES);
         referenceContent = conf.getBoolean(CONF_REFERENCE_CONTENT, DEFAULT_REFERENCE_CONTENT);
         if (recordBases.isEmpty() && idPrefixes.isEmpty()) {
             throw new ConfigurationException(
-                    "Either " + CONF_BASES + " or " + CONF_ID_PREFIXES + " must be specified and have content");
+                    "Either " + CONF_NEW_BASES + " or " + CONF_ID_PREFIXES + " must be specified and have content");
         }
         log.info("Created " + this);
     }
