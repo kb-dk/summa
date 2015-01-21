@@ -220,6 +220,13 @@ public class QueryRewriterTest extends TestCase {
         assertIdentity("new:umat\\ 11*", query);
     }
 
+    // Automatic lowercasing on truncation is arguably wrong behaviour, but as practically all fields are lowercased,
+    // this will result in the expected result from a user perspective.
+    public void testTruncationCasing() throws ParseException {
+        String query = "new:A*";
+        assertIdentity("new:a*", query);
+    }
+
     public void testEscapedWhitespaceWithTruncation2() throws ParseException {
         String query = "new:umat\\ humbo\\ *";
         assertIdentity("new:umat\\ humbo\\ *", query);
