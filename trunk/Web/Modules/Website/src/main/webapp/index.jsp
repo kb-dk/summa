@@ -356,14 +356,11 @@
 <% } %>
 </ul>
 
-<!--
+<h2>Raw search result</h2>
+<pre>
 
-*******************************************
-***         Raw search result           ***
-*******************************************
-
-<%= xml_search_result %>
--->
+<%= xml_search_result.replace("&", "&nbsp;").replace("<", "&lt;").replace(">", "&gt;") %>
+</pre>
 
 </body>
 </html>
