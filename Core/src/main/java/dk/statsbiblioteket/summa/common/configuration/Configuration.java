@@ -911,7 +911,7 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
             return (Class<T>) val;
         } catch (ClassCastException e) {
             throw new IllegalArgumentException(
-                    "The property " + key + " does not map to a subclass of " + classType, e);
+                    "The property " + key + "='" + val + "' does not map to a subclass of " + classType, e);
         }
     }
 
