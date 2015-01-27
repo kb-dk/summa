@@ -46,6 +46,11 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
+    <logger name="dk.statsbiblioteket.summa.support.alto.AltoBoxSearcher">
+        <level value="DEBUG" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
 
 
     <root>

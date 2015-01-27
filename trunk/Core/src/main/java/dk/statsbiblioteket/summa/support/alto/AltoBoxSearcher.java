@@ -21,7 +21,9 @@ import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.api.document.HighlightResponse;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLStepper;
@@ -49,7 +51,6 @@ import java.util.regex.Pattern;
 public class AltoBoxSearcher extends SearchNodeImpl {
     private static Log log = LogFactory.getLog(AltoBoxSearcher.class);
     private static final long M = 1000000;
-    private static final Pattern HL_PATTERN = Pattern.compile("<h>([^<]+)</h>");
     private final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
     {
         xmlFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
@@ -67,18 +68,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     public static final boolean DEFAULT_BOX = false;
 
     /**
-     * The fields with highlighting information, stated as a list of verbatim Strings.
-     * {@code *} is special and designates all fields.
-     * </p><p>
-     * Optional. Default is empty (all fields).
-     */
-    public static final String CONF_HIGHLIGHT_FIELDS = "box.field";
-    public static final String SEARCH_HIGHLIGHT_FIELDS = "box.field";
-    public static final String DEFAULT_HIGHLIGHT_FIELDS = "";
-
-    /**
-     * If stated, this will disable {@link #SEARCH_HIGHLIGHT_FIELDS}.
-     * The given terms will be used for resolving the bounding boxes.
+     * If stated, this will disable standard term extraction from {@link HighlightResponse}s.
      * </p><p>
      * Optional. Default is undefined.
      */
@@ -101,17 +91,26 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     public static final String SEARCH_ID_FIELD = CONF_ID_FIELD;
     public static final String DEFAULT_ID_FIELD = "";
 
+    /**
+     * The tag used by Solr to designate highlights.
+     * </p><p>
+     * Optional. Default is {@code em}.
+     */
+    public static final String CONF_HIGHLIGHT_TAG = "box.highlighttag";
+    public static final String SEARCH_HIGHLIGHT_TAG = CONF_HIGHLIGHT_TAG;
+    public static final String DEFAULT_HIGHLIGHT_TAG = "em";
+
     private final StorageReaderClient storage;
     private final boolean defaultBox;
     private final String defaultIDField;
-    private final Set<String> defaultFields;
+    private final String defaultHighlightTag;
 
     public AltoBoxSearcher(Configuration conf) throws RemoteException {
         super(conf);
         storage = new StorageReaderClient(conf);
         defaultBox = conf.getBoolean(CONF_BOX, DEFAULT_BOX);
         defaultIDField = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
-        defaultFields = new HashSet<>(conf.getStrings(CONF_HIGHLIGHT_FIELDS, Arrays.asList(DEFAULT_HIGHLIGHT_FIELDS)));
+        defaultHighlightTag = conf.getString(CONF_HIGHLIGHT_TAG, DEFAULT_HIGHLIGHT_TAG);
         readyWithoutOpen();
         log.info("Created " + this);
     }
@@ -126,7 +125,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                 request.getStrings(SEARCH_LOOKUP_TERMS, Collections.<String>emptyList()),
                 request.getStrings(SEARCH_RECORDIDS, Collections.<String>emptyList()));
         responses.add(boxResponse);
-
+        log.debug("Created " + boxResponse);
         final long stringStart = System.nanoTime();
         if (boxResponse.getRequestTerms().isEmpty()) {
             resolveHighlights(request, responses, boxResponse);
@@ -137,36 +136,38 @@ public class AltoBoxSearcher extends SearchNodeImpl {
             log.debug("No terms resolved for " + request);
             return;
         }
+        if (boxResponse.getLookupRecordIDs().isEmpty()) {
+            log.debug("No recordIDs resolved for " + request);
+            return;
+        }
         resolveBoxes(boxResponse);
     }
 
     /*
     Iterates previous responses and tries to locate a DocumentResponse, from which to extract highlighted terms.
      */
-    private List<String> resolveHighlights(Request request, ResponseCollection responses, AltoBoxResponse boxResponse) {
-        final String recordField = request.getString(SEARCH_ID_FIELD, defaultIDField);
-        final Set<String> highlightFields =
-                request.containsKey(SEARCH_ID_FIELD) ?
-                new HashSet<>(request.getStrings(SEARCH_ID_FIELD)) :
-                defaultFields;
-
+    private void resolveHighlights(Request request, ResponseCollection responses, AltoBoxResponse boxResponse) {
+        log.debug("Resolving highlights for query " + request.getString(DocumentKeys.SEARCH_QUERY, ""));
+        final String idField = request.getString(SEARCH_ID_FIELD, defaultIDField);
+        // Only extract docIDs if the ID field is not equal to Solr's ID field
+        // docIDs extracted from the highlight if the idField is equal to Solr default ID (i.e. "")
+        final Set<String> hlDocIDs = new HashSet<>();
         final Set<String> terms = new HashSet<>();
+
         for (Response response: responses) {
-            if (response instanceof DocumentResponse) {
-                DocumentResponse docResponse = (DocumentResponse)response;
-                for (DocumentResponse.Record record: docResponse.getRecords()) {
-                    String recordID = "".equals(recordField) ? record.getId() : record.getFieldValue(recordField, null);
-                    // Is the Record OK?
-                    if (!boxResponse.getRequestRecordIDs().isEmpty() &&
-                        !boxResponse.getRequestRecordIDs().contains(recordID)) {
-                        log.debug("resolveHighlights: Skipped " + recordID + " as it was not requested");
-                        continue;
+            if (response instanceof HighlightResponse) {
+                String highlightTag = request.getString(SEARCH_HIGHLIGHT_TAG, defaultHighlightTag);
+                Pattern highlightPattern = Pattern.compile("<" + highlightTag + ">([^<]+)</" + highlightTag + ">");
+
+                HighlightResponse docResponse = (HighlightResponse)response;
+                    // Map<id, Map<field, List<content>>>
+                for (Map.Entry<String, Map<String, List<String>>> hlEntry: docResponse.getHighlights().entrySet()) {
+                    if ("".equals(idField)) {
+                        hlDocIDs.add(hlEntry.getKey());
                     }
-                    boxResponse.addResolvedRecordID(recordID);
-                    // Find fields, extract highlights
-                    for (DocumentResponse.Field field: record) {
-                        if (highlightFields.isEmpty() || highlightFields.contains(field.getName())) {
-                            Matcher hlMatcher = HL_PATTERN.matcher(field.getContent());
+                    for (Map.Entry<String, List<String>> fieldEntry: hlEntry.getValue().entrySet()) {
+                        for (String content: fieldEntry.getValue()) {
+                            Matcher hlMatcher = highlightPattern.matcher(content);
                             while (hlMatcher.find()) {
                                 terms.add(hlMatcher.group(1));
                             }
@@ -175,17 +176,57 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                 }
             }
         }
-        return new ArrayList<>(terms);
+        if (terms.isEmpty()) {
+            log.debug("Unable to extract any terms");
+            return;
+        }
+        boxResponse.addAllResolvedTerms(terms);
+        if (!boxResponse.getLookupRecordIDs().isEmpty()) {
+            log.debug("No resolving of recordIDs as " + boxResponse.getLookupRecordIDs().size()
+                      + " specific IDs has been requested");
+            return;
+        }
+        if ("".equals(idField)) {
+            log.debug("Adding " + hlDocIDs + " recordIDs resolved from highlight response");
+            boxResponse.addAllResolvedRecordIDs(hlDocIDs);
+        }
+        Set<String> returnedIDs = getRecordIDs(request, responses, boxResponse);
+        log.debug("idField '" + idField + "' not equal to default Solr ID field: All " + returnedIDs.size()
+                  + " recordIDs from DocumentResponse will be used for lookup");
+        boxResponse.addAllResolvedRecordIDs(returnedIDs);
+    }
+
+    // Extract custom document IDs from the DocumentResponse (if available).
+    private Set<String> getRecordIDs(Request request, ResponseCollection responses, AltoBoxResponse boxResponse) {
+        final String recordField = request.getString(SEARCH_ID_FIELD, defaultIDField);
+        Set<String> recordIDs = new HashSet<>();
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docResponse = (DocumentResponse)response;
+                for (DocumentResponse.Record record: docResponse.getRecords()) {
+                    String recordID = "".equals(recordField) ? record.getId() : record.getFieldValue(recordField, null);
+                    if (recordID == null) {
+                        log.warn("Unable to locate recordID from " + record + " with field '" + recordField + "'");
+                    } else {
+                        recordIDs.add(recordID);
+                    }
+                }
+            }
+        }
+        return recordIDs;
     }
 
     /*
     Requests records from Storage, using ALTO-xml to resolve boxes for highlighted terms.
      */
+    // TODO: Request more than one record at a time, but use paging as the single records can be quite large
     private void resolveBoxes(AltoBoxResponse boxResponse) {
         final long resolveStart = System.nanoTime();
         for (String recordID: boxResponse.getLookupRecordIDs()) {
             try {
+                log.debug("Requesting record " + recordID);
                 Record record = storage.getRecord(recordID, null);
+                log.debug("Got " + record);
                 XMLStreamReader xml =
                         xmlFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART_CONTENT));
                 resolveBoxes(xml, recordID, boxResponse);
@@ -235,6 +276,6 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     @Override
     public String toString() {
         return "AltoBoxSearcher(storage=" + storage + ", defaultBox=" + defaultBox
-               + ", defaultFields=" + defaultFields + ", idField=" + defaultIDField + ")";
+               + ", idField=" + defaultIDField + ")";
     }
 }
