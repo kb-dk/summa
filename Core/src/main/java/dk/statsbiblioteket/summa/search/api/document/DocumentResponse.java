@@ -237,8 +237,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         }
 
         public void toXML(StringWriter sw, String indent, boolean grouped) {
-            sw.append(indent);
             if (grouped) {
+                sw.append(indent);
                 sw.append("<group groupValue=\"").append(groupValue);
                 sw.append("\" numFound=\"").append(Long.toString(numFound));
                 sw.append("\" score=\"").append(docs.isEmpty() ? "" : Float.toString(docs.get(0).getScore()));
