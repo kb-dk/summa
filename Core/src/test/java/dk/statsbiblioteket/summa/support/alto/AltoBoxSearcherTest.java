@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.search.SearchNodeAggregator;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
@@ -30,7 +31,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A very poor test as it relies on instances running at Statsbiblioteket's test machine.
@@ -41,16 +44,52 @@ import java.util.List;
 public class AltoBoxSearcherTest extends TestCase {
     private static Log log = LogFactory.getLog(AltoBoxSearcherTest.class);
 
-    public void testFullPackage() throws IOException {
+    public void testNoTermsNoHighlight() throws IOException {
         SummaSearcher searcher = getAvailableSearcher();
         if (searcher == null) {
             return;
         }
         ResponseCollection responses = getFullStack().search(new Request(
                 DocumentKeys.SEARCH_QUERY, "hest",
-                AltoBoxSearcher.CONF_BOX, true
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
+                AltoBoxSearcher.CONF_BOX, true,
+                AltoBoxSearcher.CONF_ID_FIELD, "pageUUID"
         ));
-        System.out.println(responses.toXML());
+        List<AltoBoxResponse.Box> boxes = getBoxes(responses);
+        assertEquals("Without highlighting and no requestTerms there should be no boxes", 0, boxes.size());
+//        System.out.println(responses.toXML());
+    }
+
+    public void testTermsNoHighlight() throws IOException {
+        SummaSearcher searcher = getAvailableSearcher();
+        if (searcher == null) {
+            return;
+        }
+        ResponseCollection responses = getFullStack().search(new Request(
+                DocumentKeys.SEARCH_QUERY, "hest",
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
+                AltoBoxSearcher.CONF_BOX, true,
+                AltoBoxSearcher.CONF_ID_FIELD, "pageUUID",
+                "solrparam.hl", true,
+                "solrparam.hl.fl", "fulltext_org",
+                "solrparam.hl.snippets", 20
+        ));
+        List<AltoBoxResponse.Box> boxes = getBoxes(responses);
+        assertFalse("With highlighting there should be at least one box", boxes.isEmpty());
+        //System.out.println(responses.toXML());
+    }
+
+    private List<AltoBoxResponse.Box> getBoxes(ResponseCollection responses) {
+        List<AltoBoxResponse.Box> boxes = new ArrayList<>();
+        for (Response response: responses) {
+            if (response instanceof AltoBoxResponse) {
+                for (Map.Entry<String, List<AltoBoxResponse.Box>> entry:
+                        ((AltoBoxResponse)response).getBoxes().entrySet()) {
+                    boxes.addAll(entry.getValue());
+                }
+            }
+        }
+        return boxes;
     }
 
     private SummaSearcher getAvailableSearcher() throws IOException {
@@ -73,13 +112,15 @@ public class AltoBoxSearcherTest extends TestCase {
         List<Configuration> nodeConfs = searcherConf.createSubConfigurations(SearchNodeFactory.CONF_NODES, 2);
 
         nodeConfs.get(0).set(SearchNodeFactory.CONF_NODE_CLASS, SBSolrSearchNode.class.getCanonicalName());
-        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_HOST, "mars:57008");
-        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_RESTCALL, "/sb/sbsolr/select");
+        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_HOST, "mars:56708");
+        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_RESTCALL, "/aviser/sbsolr/select");
         nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_CONNECTION_TIMEOUT, 500);
         nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_READ_TIMEOUT, 5000);
 
         nodeConfs.get(1).set(SearchNodeFactory.CONF_NODE_CLASS, AltoBoxSearcher.class.getCanonicalName());
-        nodeConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:57008/sb-storage");
+        nodeConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:56708/aviser-storage");
+        nodeConfs.get(1).set(ConnectionConsumer.CONF_INITIAL_GRACE_TIME, 500);
+        nodeConfs.get(1).set(ConnectionConsumer.CONF_SUBSEQUENT_GRACE_TIME, 1000);
         return new SummaSearcherImpl(searcherConf);
     }
 }

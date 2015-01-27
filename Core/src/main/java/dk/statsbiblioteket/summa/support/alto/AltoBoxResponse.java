@@ -18,11 +18,8 @@ import dk.statsbiblioteket.summa.search.api.ResponseImpl;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
@@ -33,9 +30,6 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class AltoBoxResponse extends ResponseImpl {
-    private static volatile XMLOutputFactory xmlOutFactory;
-    private volatile ByteArrayOutputStream os;
-
     private Set<String> requestTerms;
     private Set<String> resolvedTerms = new HashSet<>();
     private Set<String> requestRecordIDs;
@@ -43,15 +37,9 @@ public class AltoBoxResponse extends ResponseImpl {
     private Map<String, List<Box>> boxes = new HashMap<>();
 
     public AltoBoxResponse(Collection<String> requestTerms, Collection<String> requestRecordIDs) {
-        super("altobox");
+        super("altobox.");
         this.requestTerms = new HashSet<>(requestTerms);
         this.requestRecordIDs = new HashSet<>(requestRecordIDs);
-        synchronized (AltoBoxResponse.class) {
-            if (xmlOutFactory == null) {
-                xmlOutFactory = XMLOutputFactory.newInstance();
-            }
-        }
-        os = new ByteArrayOutputStream();
     }
 
     public void add(String recordID, Box box) {
@@ -84,6 +72,9 @@ public class AltoBoxResponse extends ResponseImpl {
     public void addResolvedRecordID(String recordID) {
         resolvedRecordIDs.add(recordID);
     }
+    public void addAllResolvedRecordIDs(Collection<String> recordIDs) {
+        resolvedRecordIDs.addAll(recordIDs);
+    }
     public Set<String> getResolvedRecordIDs() {
         return resolvedRecordIDs;
     }
@@ -95,6 +86,9 @@ public class AltoBoxResponse extends ResponseImpl {
 
     public Set<String> getLookupRecordIDs() {
         return resolvedRecordIDs.isEmpty() ? requestRecordIDs : resolvedRecordIDs;
+    }
+    public Map<String, List<Box>> getBoxes() {
+        return boxes;
     }
 
     @Override
@@ -120,50 +114,23 @@ public class AltoBoxResponse extends ResponseImpl {
     }
 
     @Override
-    public String toXML() {
-        os.reset();
-        XMLStreamWriter xml;
-        try {
-            xml = xmlOutFactory.createXMLStreamWriter(os);
-        } catch (XMLStreamException e) {
-            throw new RuntimeException("Unable to create XMLStreamWriter", e);
-        }
+    public void toXML(XMLStreamWriter xml) throws XMLStreamException {
+        startln(xml, "boxresponse",
+                "requestTerms", Strings.join(requestTerms),
+                "resolvedTerms", Strings.join(resolvedTerms),
+                "requestRecords", Strings.join(requestRecordIDs),
+                "resolvedRecords", Strings.join(resolvedRecordIDs),
+                TIMING, getTiming());
 
-        try {
-            xml.writeStartElement("boxresponse");
-            xml.writeAttribute("requestTerms", Strings.join(requestTerms));
-            xml.writeAttribute("resolvedTerms", Strings.join(resolvedTerms));
-            xml.writeAttribute("requestRecords", Strings.join(requestRecordIDs));
-            xml.writeAttribute("resolvedRecords", Strings.join(resolvedRecordIDs));
-            xml.writeAttribute(TIMING, getTiming());
-            xml.writeCharacters("\n");
-
-            for (Map.Entry<String, List<Box>> entry: boxes.entrySet()) {
-                xml.writeCharacters("  ");
-                xml.writeStartElement("document");
-                xml.writeAttribute("id", entry.getKey());
-                xml.writeCharacters("\n");
-                for (Box box: entry.getValue()) {
-                    box.toXML(xml);
-                }
-                xml.writeEndElement(); // document
-                xml.writeCharacters("\n");
+        for (Map.Entry<String, List<Box>> entry: boxes.entrySet()) {
+            xml.writeCharacters("  ");
+            startln(xml, "document", "id", entry.getKey());
+            for (Box box: entry.getValue()) {
+                box.toXML(xml);
             }
-            xml.writeEndElement(); // boxResponse
-            xml.writeCharacters("\n");
-
-        // TODO: Implement this
-
-            xml.flush();
-        } catch (XMLStreamException e) {
-            throw new RuntimeException("XMLStreamException", e);
+            endln(xml); // document
         }
-        try {
-            os.flush();
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to flush output stream", e);
-        }
-        return os.toString();
+        endln(xml); // boxResponse
     }
 
     public static class Box implements Serializable {
@@ -190,16 +157,20 @@ public class AltoBoxResponse extends ResponseImpl {
 
         public void toXML(XMLStreamWriter xml) throws XMLStreamException {
             xml.writeCharacters("    ");
-            xml.writeStartElement("textblock");
-            xml.writeAttribute("x", Integer.toString(hpos));
-            xml.writeAttribute("y", Integer.toString(vpos));
-            xml.writeAttribute("width", Integer.toString(width));
-            xml.writeAttribute("height", Integer.toString(height));
-            xml.writeAttribute("wc", wc);
-            xml.writeAttribute("cc", cc);
+            start(xml, "textblock",
+                  "x", Integer.toString(hpos),
+                  "y", Integer.toString(vpos),
+                  "width", Integer.toString(width),
+                  "height", Integer.toString(height),
+                  "wc", wc,
+                  "cc", cc);
             xml.writeCharacters(content);
-            xml.writeEndElement(); // textblock
-            xml.writeCharacters("\n");
+            endln(xml);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AltoBoxResponse(boxes=" + boxes.size() + ")";
     }
 }
