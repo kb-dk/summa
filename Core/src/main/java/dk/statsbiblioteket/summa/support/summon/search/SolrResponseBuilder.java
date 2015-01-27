@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.api.document.HighlightResponse;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
 import dk.statsbiblioteket.summa.support.api.DidYouMeanResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
@@ -237,6 +238,15 @@ public class SolrResponseBuilder implements Configurable {
                     if ("responseHeader".equals(name)) {
                         parseHeader(xml, documentResponse);
                         // Cursor is at end of sub tree after parseHeader
+                        return true;
+                    }
+                    if ("highlighting".equals(name)) {
+                        HighlightResponse hlr = new HighlightResponse();
+                        hlr.parseSolr(xml);
+                        if (hlr.isEmpty()) {
+                            log.debug("Got empty highlight response");
+                        }
+                        responses.add(hlr);
                         return true;
                     }
                     if ("facet_counts".equals(name) || "efacet_counts".equals(name)) {
