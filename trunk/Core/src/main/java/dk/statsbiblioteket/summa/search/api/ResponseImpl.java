@@ -16,23 +16,33 @@ package dk.statsbiblioteket.summa.search.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * Convenience class for keeping track of timing information.
+ * Convenience class for keeping track of timing information and making it easier to provide XML output.
  * </p><p>
- * Remember to call super.merge(Response) when implementing merge in order to
- * merge timing information.
+ * Implementing classes should either override {@link #toXML()} or {@link #toXML(XMLStreamWriter)}.
+ * </p><p>
+ * Remember to call super.merge(Response) when implementing merge in order to merge timing information.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 abstract public class ResponseImpl extends TimerImpl implements Response, Serializable {
+    private static volatile XMLOutputFactory xmlOutFactory;
+    private volatile ByteArrayOutputStream os;
+
     /**
      * Constructor without explicit prefix. {@link #getName()} + "." will be
      * used for prefix, but will be lazily requested.
      */
     protected ResponseImpl() {
+        this(null);
     }
 
     /**
@@ -41,6 +51,12 @@ abstract public class ResponseImpl extends TimerImpl implements Response, Serial
      */
     protected ResponseImpl(String prefix) {
         super(prefix);
+        synchronized (ResponseImpl.class) {
+            if (xmlOutFactory == null) {
+                xmlOutFactory = XMLOutputFactory.newInstance();
+            }
+        }
+        os = new ByteArrayOutputStream();
     }
 
     @Override
@@ -49,6 +65,57 @@ abstract public class ResponseImpl extends TimerImpl implements Response, Serial
             return;
         }
         super.addTiming(other.getTiming());
+    }
+
+    @Override
+    public String toXML() {
+        os.reset();
+        XMLStreamWriter xml;
+        try {
+            xml = xmlOutFactory.createXMLStreamWriter(os);
+        } catch (XMLStreamException e) {
+            throw new RuntimeException("Unable to create XMLStreamWriter", e);
+        }
+        try {
+            toXML(xml);
+            xml.flush();
+        } catch (XMLStreamException e) {
+            throw new RuntimeException("XMLStreamException", e);
+        }
+        try {
+            os.flush();
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to flush output stream", e);
+        }
+        return os.toString();
+    }
+
+    public void toXML(XMLStreamWriter xml) throws XMLStreamException {
+        xml.writeComment("Summa error: toXML not implemented for " + getName());
+    }
+
+    // Convenience methods for generating XML
+    protected static void start(XMLStreamWriter xml, String tag, String... attributePairs) throws XMLStreamException {
+        if (attributePairs.length % 2 == 1) {
+            throw new IllegalArgumentException(
+                    "attributePairs should contain an even number but had " + attributePairs.length + " elements");
+        }
+        xml.writeStartElement(tag);
+        for (int i = 0 ; i < attributePairs.length ; i+=2) {
+            xml.writeAttribute(attributePairs[i], attributePairs[i+1]);
+        }
+    }
+    protected static void startln(XMLStreamWriter xml, String tag, String... attributePairs) throws XMLStreamException {
+        start(xml, tag, attributePairs);
+        xml.writeCharacters("\n");
+    }
+    public static void endln(XMLStreamWriter xml) throws XMLStreamException {
+        endln(xml, "");
+    }
+    public static void endln(XMLStreamWriter xml, String indent) throws XMLStreamException {
+        xml.writeCharacters(indent);
+        xml.writeEndElement();
+        xml.writeCharacters("\n");
     }
 
     @Override
