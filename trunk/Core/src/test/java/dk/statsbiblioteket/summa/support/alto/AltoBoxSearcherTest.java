@@ -68,15 +68,20 @@ public class AltoBoxSearcherTest extends TestCase {
         ResponseCollection responses = getFullStack().search(new Request(
                 DocumentKeys.SEARCH_QUERY, "hest",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
-                AltoBoxSearcher.CONF_BOX, true,
-                AltoBoxSearcher.CONF_ID_FIELD, "pageUUID",
+                AltoBoxSearcher.SEARCH_BOX, true,
+                AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
+                //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad-segment_1
+                //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad
+                AltoBoxSearcher.SEARCH_ID_REGEXP, "(doms_newspaperCollection:uuid:[0-9abcdef]{8}-[0-9abcdef]{4}-"
+                                                  + "[0-9abcdef]{4}-[0-9abcdef]{4}-[0-9abcdef]{12}).*",
+                AltoBoxSearcher.SEARCH_ID_TEMPLATE, "$1",
                 "solrparam.hl", true,
                 "solrparam.hl.fl", "fulltext_org",
                 "solrparam.hl.snippets", 20
         ));
         List<AltoBoxResponse.Box> boxes = getBoxes(responses);
         assertFalse("With highlighting there should be at least one box", boxes.isEmpty());
-        //System.out.println(responses.toXML());
+        System.out.println(responses.toXML());
     }
 
     private List<AltoBoxResponse.Box> getBoxes(ResponseCollection responses) {
@@ -118,7 +123,7 @@ public class AltoBoxSearcherTest extends TestCase {
         nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_READ_TIMEOUT, 5000);
 
         nodeConfs.get(1).set(SearchNodeFactory.CONF_NODE_CLASS, AltoBoxSearcher.class.getCanonicalName());
-        nodeConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:56708/aviser-storage");
+        nodeConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:56700/aviser-storage");
         nodeConfs.get(1).set(ConnectionConsumer.CONF_INITIAL_GRACE_TIME, 500);
         nodeConfs.get(1).set(ConnectionConsumer.CONF_SUBSEQUENT_GRACE_TIME, 1000);
         return new SummaSearcherImpl(searcherConf);

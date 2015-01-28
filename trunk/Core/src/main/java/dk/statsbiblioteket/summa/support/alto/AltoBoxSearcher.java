@@ -100,10 +100,32 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     public static final String SEARCH_HIGHLIGHT_TAG = CONF_HIGHLIGHT_TAG;
     public static final String DEFAULT_HIGHLIGHT_TAG = "em";
 
+    /**
+     * If defined, extracted IDs are matched with the given regexp and {@link #CONF_ID_TEMPLATE} applied to the result.
+     * </p><p>
+     * Note: This is only applied to <em>extracted</em> IDs, not IDs specified with {@link #SEARCH_RECORDIDS}.
+     * </p><p>
+     * Optional. Default is "" (no adjustment of IDs).
+     */
+    public static final String CONF_ID_REGEXP = "box.idadjust.regexp";
+    public static final String SEARCH_ID_REGEXP = CONF_ID_REGEXP;
+    public static final String DEFAULT_ID_REGEXP = "";
+
+    /**
+     * If {@link #CONF_ID_REGEXP} is defined, this template is used to control the output.
+     * </p><p>
+     * Optional. Default is {@code $0} (output full match).
+     */
+    public static final String CONF_ID_TEMPLATE = "box.idadjust.template";
+    public static final String SEARCH_ID_TEMPLATE = CONF_ID_TEMPLATE;
+    public static final String DEFAULT_ID_TEMPLATE = "$0";
+
     private final StorageReaderClient storage;
     private final boolean defaultBox;
     private final String defaultIDField;
     private final String defaultHighlightTag;
+    private final String defaultIDAdjustRegexp;
+    private final String defaultIDAdjustTemplate;
 
     public AltoBoxSearcher(Configuration conf) throws RemoteException {
         super(conf);
@@ -111,6 +133,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
         defaultBox = conf.getBoolean(CONF_BOX, DEFAULT_BOX);
         defaultIDField = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         defaultHighlightTag = conf.getString(CONF_HIGHLIGHT_TAG, DEFAULT_HIGHLIGHT_TAG);
+        defaultIDAdjustRegexp = conf.getString(CONF_ID_REGEXP, DEFAULT_ID_REGEXP);
+        defaultIDAdjustTemplate = conf.getString(CONF_ID_TEMPLATE, DEFAULT_ID_TEMPLATE);
         readyWithoutOpen();
         log.info("Created " + this);
     }
@@ -153,6 +177,9 @@ public class AltoBoxSearcher extends SearchNodeImpl {
         // docIDs extracted from the highlight if the idField is equal to Solr default ID (i.e. "")
         final Set<String> hlDocIDs = new HashSet<>();
         final Set<String> terms = new HashSet<>();
+        String pattern = request.getString(SEARCH_ID_REGEXP, defaultIDAdjustRegexp);
+        final Pattern idPattern = pattern.isEmpty() ? null : Pattern.compile(pattern);
+        final String idTemplate = request.getString(SEARCH_ID_TEMPLATE, defaultIDAdjustTemplate);
 
         for (Response response: responses) {
             if (response instanceof HighlightResponse) {
@@ -163,7 +190,18 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                     // Map<id, Map<field, List<content>>>
                 for (Map.Entry<String, Map<String, List<String>>> hlEntry: docResponse.getHighlights().entrySet()) {
                     if ("".equals(idField)) {
-                        hlDocIDs.add(hlEntry.getKey());
+                        if (idPattern == null) {
+                            hlDocIDs.add(hlEntry.getKey());
+                        } else {
+                            String transformedID = transform(hlEntry.getKey(), idPattern, idTemplate);
+                            if (transformedID.isEmpty()) {
+                                log.warn(String.format(
+                                        "Discarding recordID '%s' as regexp '%s' and template '%s' gave empty result",
+                                        hlEntry.getKey(), idPattern.pattern(), idTemplate));
+                            } else {
+                                hlDocIDs.add(transformedID);
+                            }
+                        }
                     }
                     for (Map.Entry<String, List<String>> fieldEntry: hlEntry.getValue().entrySet()) {
                         for (String content: fieldEntry.getValue()) {
@@ -189,11 +227,25 @@ public class AltoBoxSearcher extends SearchNodeImpl {
         if ("".equals(idField)) {
             log.debug("Adding " + hlDocIDs + " recordIDs resolved from highlight response");
             boxResponse.addAllResolvedRecordIDs(hlDocIDs);
+            return;
         }
         Set<String> returnedIDs = getRecordIDs(request, responses, boxResponse);
         log.debug("idField '" + idField + "' not equal to default Solr ID field: All " + returnedIDs.size()
                   + " recordIDs from DocumentResponse will be used for lookup");
         boxResponse.addAllResolvedRecordIDs(returnedIDs);
+    }
+
+    private final StringBuffer buffer = new StringBuffer(50);
+    private synchronized String transform(String id, Pattern pattern, String template) {
+        buffer.setLength(0);
+        Matcher matcher = pattern.matcher(id);
+        if (!matcher.find()) {
+            return "";
+        }
+        buffer.setLength(0);
+        int matchPos = matcher.start();
+        matcher.appendReplacement(buffer, template);
+        return buffer.toString().substring(matchPos);
     }
 
     // Extract custom document IDs from the DocumentResponse (if available).
@@ -226,6 +278,10 @@ public class AltoBoxSearcher extends SearchNodeImpl {
             try {
                 log.debug("Requesting record " + recordID);
                 Record record = storage.getRecord(recordID, null);
+                if (record == null) {
+                    log.warn("Unable to resolve " + recordID + " from " + storage.getVendorId());
+                    continue;
+                }
                 log.debug("Got " + record);
                 XMLStreamReader xml =
                         xmlFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART_CONTENT));
