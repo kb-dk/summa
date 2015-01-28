@@ -60,7 +60,7 @@ public class AltoBoxSearcherTest extends TestCase {
 //        System.out.println(responses.toXML());
     }
 
-    public void testTermsNoHighlight() throws IOException {
+    public void testHighlight() throws IOException {
         SummaSearcher searcher = getAvailableSearcher();
         if (searcher == null) {
             return;
@@ -81,7 +81,29 @@ public class AltoBoxSearcherTest extends TestCase {
         ));
         List<AltoBoxResponse.Box> boxes = getBoxes(responses);
         assertFalse("With highlighting there should be at least one box", boxes.isEmpty());
-        System.out.println(responses.toXML());
+        //System.out.println(responses.toXML());
+    }
+
+    public void testEnabledNoHighlight() throws IOException {
+        SummaSearcher searcher = getAvailableSearcher();
+        if (searcher == null) {
+            return;
+        }
+        ResponseCollection responses = getFullStack().search(new Request(
+                DocumentKeys.SEARCH_QUERY, "hest",
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
+                AltoBoxSearcher.SEARCH_BOX, true,
+                AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
+                //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad-segment_1
+                //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad
+                AltoBoxSearcher.SEARCH_ID_REGEXP, "(doms_newspaperCollection:uuid:[0-9abcdef]{8}-[0-9abcdef]{4}-"
+                                                  + "[0-9abcdef]{4}-[0-9abcdef]{4}-[0-9abcdef]{12}).*",
+                AltoBoxSearcher.SEARCH_ID_TEMPLATE, "$1",
+                "solrparam.hl", false
+        ));
+        List<AltoBoxResponse.Box> boxes = getBoxes(responses);
+        assertTrue("Without highlighting there should be no boxes", boxes.isEmpty());
+        //System.out.println(responses.toXML());
     }
 
     private List<AltoBoxResponse.Box> getBoxes(ResponseCollection responses) {
