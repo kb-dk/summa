@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<mainJar>storage-service-@summa.version@.jar</mainJar>
+	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
+    <autoStart>true</autoStart>
+    <property name="com.sun.management.jmxremote.port" value="2771"/>
+    <property name="com.sun.management.jmxremote.ssl" value="false"/>
+    <description>Test bundle for a Storage service</description>
+	<bundleId>test-storage-1</bundleId>
+	<publicApi>
+        <file>lib/summa-common-@summa.version@.jar</file>
+        <file>lib/summa-storage-api-@summa.version@.jar</file>
+    </publicApi>
+</bundle>
+
+
