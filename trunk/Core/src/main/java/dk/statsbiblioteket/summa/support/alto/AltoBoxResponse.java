@@ -128,7 +128,7 @@ public class AltoBoxResponse extends ResponseImpl {
             for (Box box: entry.getValue()) {
                 box.toXML(xml);
             }
-            endln(xml); // document
+            endln(xml, "  "); // document
         }
         endln(xml); // boxResponse
     }

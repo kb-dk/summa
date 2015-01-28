@@ -34,8 +34,8 @@ import java.io.Serializable;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 abstract public class ResponseImpl extends TimerImpl implements Response, Serializable {
-    private static volatile XMLOutputFactory xmlOutFactory;
-    private volatile ByteArrayOutputStream os;
+    private static transient XMLOutputFactory xmlOutFactory;
+    private transient ByteArrayOutputStream os;
 
     /**
      * Constructor without explicit prefix. {@link #getName()} + "." will be
@@ -51,12 +51,6 @@ abstract public class ResponseImpl extends TimerImpl implements Response, Serial
      */
     protected ResponseImpl(String prefix) {
         super(prefix);
-        synchronized (ResponseImpl.class) {
-            if (xmlOutFactory == null) {
-                xmlOutFactory = XMLOutputFactory.newInstance();
-            }
-        }
-        os = new ByteArrayOutputStream();
     }
 
     @Override
@@ -69,6 +63,7 @@ abstract public class ResponseImpl extends TimerImpl implements Response, Serial
 
     @Override
     public String toXML() {
+        checkTransient();
         os.reset();
         XMLStreamWriter xml;
         try {
@@ -89,6 +84,14 @@ abstract public class ResponseImpl extends TimerImpl implements Response, Serial
         }
         return os.toString();
     }
+
+    protected synchronized void checkTransient() {
+        if (xmlOutFactory == null) {
+            xmlOutFactory = XMLOutputFactory.newInstance();
+        }
+        os = new ByteArrayOutputStream();
+    }
+
 
     public void toXML(XMLStreamWriter xml) throws XMLStreamException {
         xml.writeComment("Summa error: toXML not implemented for " + getName());
