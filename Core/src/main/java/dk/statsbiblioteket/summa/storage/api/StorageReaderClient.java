@@ -214,7 +214,9 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage> imp
         if (storage != null) {
             return storage;
         }
-        final String message = "Unable to connect to remote storage " + connId;
+        final String message =
+                "Unable to connect to remote storage " + connId + (connId != null && !connId.startsWith("//") ?
+                        ". Should the connection ID be prepended with '//'" : "");
         log.error(message);
         throw new NullPointerException(message);
     }
