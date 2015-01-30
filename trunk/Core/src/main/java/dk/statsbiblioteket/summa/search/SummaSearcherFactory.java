@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.search;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
@@ -56,7 +57,7 @@ public class SummaSearcherFactory {
             return searcher;
         } catch (Exception e) {
             String message = String.format("Failed to instantiate searcher class %s", seacherClass);
-            log.error(message, e);
+            Logging.fatal(log, "SummaSearcherFactory", message, e);
             throw new Configurable.ConfigurationException(message, e);
         }
     }
@@ -71,7 +72,3 @@ public class SummaSearcherFactory {
         return createSearcher(conf, SummaSearcherImpl.class);
     }
 }
-
-
-
-
