@@ -113,6 +113,16 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     public static final String CONF_ACCEPT_ALTOLESS = "domsnewspaperparser.acceptaltoless";
     public static final boolean DEFAULT_ACCEPT_ALTOLESS = true;
 
+    /**
+     * How to handle hyphenated multi-line terms. Valid values are
+     * {@code split}; hyphenated words are reported as distinct words,
+     * {@code join}, hyphenated words are joined without hyphenation sign.
+     * </p><p>
+     * Optional. Default is {@code join}.
+     */
+    public static final String CONF_HYPHENATION = "altoparser.hyphenation";
+    public static final String DEFAULT_HYPHENATION = Alto.HYPHEN_MODE.join.toString();
+
     public static final String NOALTO = "_noalto_";
 
     final private int minBlocks;
@@ -121,6 +131,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     private final int maxHeadlineChars;
     final private boolean acceptALTOLess;
     final private String base;
+    private final Alto.HYPHEN_MODE hyphenMode;
     private final NumberFormat spatial = NumberFormat.getInstance(Locale.ENGLISH);
     {
         spatial.setGroupingUsed(false);
@@ -134,6 +145,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         maxHeadlineChars = conf.getInt(CONF_HEADLINE_MAX_CHARS, DEFAULT_HEADLINE_MAX_CHARS);
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
         acceptALTOLess = conf.getBoolean(CONF_ACCEPT_ALTOLESS, DEFAULT_ACCEPT_ALTOLESS);
+        hyphenMode = Alto.HYPHEN_MODE.valueOf(conf.getString(CONF_HYPHENATION, DEFAULT_HYPHENATION));
         log.info("Created " + this);
     }
 
@@ -168,6 +180,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         Alto alto;
         try {
             alto = new Alto(content.substring(altoStart, altoEnd), payload.getId());
+            alto.setHyphenMode(hyphenMode);
         } catch (XMLStreamException e) {
             throw new PayloadException("Unable to parse ALTO for substring " + altoStart + ", " + altoEnd, e, payload);
         }
@@ -303,8 +316,8 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     @Override
     public String toString() {
         return String.format(
-                "DOMSNewspaperSplitter(minBlocks=%d, minWords=%d)",
-                minBlocks, minWords);
+                "DOMSNewspaperSplitter(minBlocks=%d, minWords=%d, hyphenMode=%s)",
+                minBlocks, minWords, hyphenMode);
     }
 
     // This did not work due to buffering of the ByteArrayInputStream, making the position unreliable

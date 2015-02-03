@@ -62,6 +62,9 @@ public class Alto {
     private MEASUREMENT_UNIT measurementUnit = DEFAULT_MEASUREMENT_UNIT;
     private Map<String, TextStyle> styles = new HashMap<>();
     private List<Page> layout = new ArrayList<>();
+    private HYPHEN_MODE hyphenMode = HYPHEN_MODE.join;
+
+    public enum HYPHEN_MODE {split, join}
 
     public Alto(String xml, String origin) throws XMLStreamException {
         this(new StringReader(xml), origin);
@@ -322,7 +325,7 @@ public class Alto {
     //   <BottomMargin ID="BM1" HPOS="0" VPOS="3566" WIDTH="2557" HEIGHT="39" />
     //   <PrintSpace ID="BS1" HPOS="192" VPOS="153" WIDTH="2244" HEIGHT="3413">
     //     <TextBlock ID="TB_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="128">
-    public static final class Page extends PositionedElement {
+    public final class Page extends PositionedElement {
         private List<TextBlock> printSpace = new ArrayList<>();
 
         public Page(XMLStreamReader xml) throws XMLStreamException {
@@ -354,7 +357,7 @@ public class Alto {
 
     // <TextBlock ID="TB_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="128">
     //   <TextLine ID="Tl_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87">
-    public static final class TextBlock extends PositionedElement {
+    public final class TextBlock extends PositionedElement {
         private List<TextLine> lines = new ArrayList<>();
 
         public TextBlock(XMLStreamReader xml) throws XMLStreamException {
@@ -401,7 +404,7 @@ public class Alto {
 
     // <TextLine ID="Tl_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87">
     //   <String ID="TS_0001" STYLEREFS="TXT_1" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87" CONTENT="SONDAG" />
-    public static final class TextLine extends PositionedElement {
+    public final class TextLine extends PositionedElement {
         private final String style;
         private List<TextString> strings = new ArrayList<>();
 
@@ -452,14 +455,17 @@ public class Alto {
 
     // <String ID="TS_0001" STYLEREFS="TXT_1" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="87" CONTENT="SONDAG" />
 
-    public static final class TextString extends PositionedElement {
+    public final class TextString extends PositionedElement {
         private final String content;
         private final String styleRefs;
+        private final String subsContent; // The whole term from multi-line hyphenated terms. Only 2 lines supported!
 
         public TextString(XMLStreamReader xml) throws XMLStreamException {
             super(xml);
             content = XMLStepper.getAttribute(xml, "CONTENT", null);
             styleRefs = XMLStepper.getAttribute(xml, "STYLEREFS", null);
+    // <String ID="S369" CONTENT="her" WC="0.852" CC="7 8 8" HEIGHT="148" WIDTH="176" HPOS="3700" VPOS="8052" SUBS_TYPE="HypPart1" SUBS_CONTENT="herfra"/>
+            subsContent = XMLStepper.getAttribute(xml, "SUBS_CONTENT", null);
             xml.next();
         }
 
@@ -472,6 +478,13 @@ public class Alto {
 
         @Override
         public List<String> getAllTexts() {
+            if (subsContent != null && hyphenMode == HYPHEN_MODE.join) {
+                if (content.equals(subsContent.substring(0, content.length()))) { // Content is prefix
+                    return Arrays.asList(subsContent);
+                }
+                return Collections.emptyList();
+
+            }
             return Arrays.asList(content);
         }
     }
@@ -531,6 +544,15 @@ public class Alto {
         public String getIDNext() {
             return idNext;
         }
+    }
+
+    /**
+     * When extracting text from lines or above, multi-line hyphenated words can be exported in multiple ways.
+     * @param hyphenMode if {@code split}, hyphenated words are reported as distinct words,
+     *                   if {@code join}, hyphenated words are joined without hyphenation sign.
+     */
+    public void setHyphenMode(HYPHEN_MODE hyphenMode) {
+        this.hyphenMode = hyphenMode;
     }
 
     public static class Box {
