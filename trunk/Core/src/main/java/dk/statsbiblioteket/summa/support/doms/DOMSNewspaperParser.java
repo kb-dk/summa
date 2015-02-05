@@ -33,10 +33,7 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Highly Statsbiblioteket specific filter for splitting DOMS Records containing newspaper meta data and ALTO-XML
@@ -186,8 +183,10 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         }
         Map<String, List<Alto.TextBlock>> groups = alto.getTextBlockGroups(minBlocks, minWords);
         if (groups.isEmpty()) {
-            log.warn("Unable to extract any groups at all from " + payload.getId());
-            return;
+            Logging.logProcess("DOMSNewspaperParser",
+                               "Unable to extract any groups at all. Creating empty NOGROUP segment",
+                               Logging.LogLevel.INFO, payload);
+            groups.put(Alto.NOGROUP, Collections.<Alto.TextBlock>emptyList());
         }
 
         final String pre = content.substring(0, altoStart);
