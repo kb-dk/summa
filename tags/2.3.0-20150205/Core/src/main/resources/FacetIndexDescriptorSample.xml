@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  An extension of the standard IndexDescriptor with Facet-specific entries.
+  -->
+<IndexDescriptor version="1.0"
+                 xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor"
+        >
+
+    <!-- Basic elements -->
+
+    <groups>
+        <group name="ti">
+            <alias name="titel" lang="da"/>
+            <field ref="title"/>
+            <field ref="titel"/>
+        </group>
+        <group name="subtitle">
+            <field ref="lessimportanttitle"/>
+        </group>
+    </groups>
+
+    <fields>
+        <field name="author" parent="text" indexed="true" stored="true" multiValued="true" indexBoost="2.0" queryBoost="1.5" sortLocale="da" inFreeText="true" required="true">
+            <alias name="forfatter" lang="da"/>
+        </field>
+
+        <field name="title" parent="text" indexed="true" stored="true"/>
+        <field name="titel" parent="text" indexed="true" stored="true"/>
+        <field name="lessimportanttitle" parent="text" indexed="true" stored="false"/>
+    </fields>
+
+    <defaultLanguage>da</defaultLanguage>
+    
+    <defaultSearchFields>
+        <field ref="freetext"/>
+        <field ref="ti"/>
+        <field ref="id"/>
+    </defaultSearchFields>
+
+    <!-- Used by the Facet module -->
+    <fa:facets xmlns:fa="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+
+        <!-- Fields as well as groups can be referenced by ref -->
+        <fa:facet ref="freetext" name="Big_bag" maxTags="200" defaultTags="20" sort="ALPHA" sortLocale="da"/>
+        <fa:facet ref="ti" sort="ALPHA"/>
+        <fa:facet ref="author"/>
+    </fa:facets>
+
+    <QueryParser defaultOperator="OR"/>
+
+</IndexDescriptor>
+
+
