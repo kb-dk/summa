@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.support.harmonise;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -209,7 +210,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
 
     public void testSingleSearchTiming() throws IOException {
         Configuration conf = Configuration.newMemoryBased(
-                AdjustingSearchClient.CONF_RPC_TARGET, "//localhost:57000/sb-searcher",
+                ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57000/sb-searcher",
                 InteractionAdjuster.CONF_IDENTIFIER, "sb");
         AdjustingSearchClient asc = new AdjustingSearchClient(conf);
         Request request = new Request(
@@ -259,7 +260,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         sbConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "sb");
         sbConf.set(InteractionAdjuster.CONF_IDENTIFIER, "sb");
         sbConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
-        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//localhost:57000/sb-searcher");
+        sbConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57000/sb-searcher");
         sbConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_MULTIPLY, 5.0);
 
         // Summon
@@ -267,7 +268,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         summonConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "summon");
         summonConf.set(InteractionAdjuster.CONF_IDENTIFIER, "summon");
         summonConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
-        summonConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//localhost:57400/summon-searcher");
+        summonConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57400/summon-searcher");
         summonConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_ADD, -0.5);
         summonConf.set(InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
                        "author_normalised - Author, lma_long - ContentType, llang - Language, lsubject - SubjectTerms");
@@ -292,12 +293,12 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         Configuration sbConf = searcherConfs.get(0);
         sbConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "doms");
         sbConf.set(InteractionAdjuster.CONF_IDENTIFIER, "doms");
-        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//mars:57300/doms-searcher");
+        sbConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:57300/doms-searcher");
 
         Configuration summonConf = searcherConfs.get(1);
         summonConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "aviser");
         summonConf.set(InteractionAdjuster.CONF_IDENTIFIER, "aviser");
-        summonConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//mars:56700/aviser-searcher");
+        summonConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:56700/aviser-searcher");
 
         return new AdjustingSearcherAggregator(conf);
     }
@@ -313,7 +314,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         Configuration summonConf = searcherConfs.get(0);
         summonConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "aviser");
         summonConf.set(InteractionAdjuster.CONF_IDENTIFIER, "aviser");
-        summonConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//mars:56700/aviser-searcher");
+        summonConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:56700/aviser-searcher");
 
         return new AdjustingSearcherAggregator(conf);
     }
@@ -341,7 +342,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         sbConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "sb");
         sbConf.set(InteractionAdjuster.CONF_IDENTIFIER, "sb");
         sbConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
-        sbConf.set(AdjustingSearchClient.CONF_RPC_TARGET, "//localhost:57000/sb-searcher");
+        sbConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57000/sb-searcher");
         sbConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_MULTIPLY, 5.0);
 
         log.debug("Creating adjusting aggregator");

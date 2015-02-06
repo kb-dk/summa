@@ -15,8 +15,8 @@
 package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.dummy.SummaSearcherDummy;
 import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
@@ -115,7 +115,7 @@ public class SummaSearcherAggregatorTest extends TestCase {
         List<Configuration> connections = conf.createSubConfigurations(
                 SummaSearcherAggregator.CONF_SEARCHERS, shards.length);
         for (int shardNumber = 0 ; shardNumber < shards.length ; shardNumber++){
-            connections.get(shardNumber).set(SearchClient.CONF_RPC_TARGET, "//localhost:28000/" + shards[shardNumber]);
+            connections.get(shardNumber).set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/" + shards[shardNumber]);
         }
         return new SummaSearcherAggregator(conf);
     }
