@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.summa.common.lucene.distribution.TermStat;
 import dk.statsbiblioteket.summa.common.lucene.distribution.TermStatClient;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.util.Pair;
@@ -33,7 +34,6 @@ import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
@@ -347,7 +347,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         for (int shardNumber = 0; shardNumber < searchers.size(); shardNumber++) {
             String address = "//localhost:28000/searcher_" + shardNumber;
             log.debug("Connecting aggregator to '" + address + "'");
-            connections.get(shardNumber).set(SearchClient.CONF_RPC_TARGET, address);
+            connections.get(shardNumber).set(ConnectionConsumer.CONF_RPC_TARGET, address);
         }
         return new SummaSearcherAggregator(conf);
     }

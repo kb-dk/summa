@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.doms;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.GraphFilter;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
@@ -45,6 +46,20 @@ public class DOMSNewspaperParserTest extends TestCase {
     private final int EXPECTED_SEGMENTS = 12;
     private final File DOMS_XSLT = new File("/home/te/tmp/sumfresh/sites/aviser/xslt/index/aviser/doms_aviser.xsl");
 
+    private final File DOMS_PROBLEM = Resolver.getFile("support/alto/faulty_alto.xml");
+
+    public void testFaulty() throws Exception {
+        ObjectFilter splitter = getSplitter(DOMS_PROBLEM, DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
+        assertTrue("There should be a Record available", splitter.hasNext());
+        int counter = 0;
+        while (splitter.hasNext()) {
+            Payload payload = splitter.next();
+            log.info("Extracted " + payload.getId());
+            System.out.println(RecordUtil.getString(payload));
+            counter++;
+        }
+        assertEquals("Test record should be split into the right number of segments", 10, counter);
+    }
 
     public void testSegmenter() throws Exception {
         if (!DOMS_ALTO.exists()) {
@@ -166,7 +181,11 @@ public class DOMSNewspaperParserTest extends TestCase {
     }
 
     private ObjectFilter getSplitter(int maxHeadlineWords) throws IOException {
-        ObjectFilter source = new PayloadFeederHelper(0, DOMS_ALTO.toString());
+        return getSplitter(DOMS_ALTO, maxHeadlineWords);
+    }
+
+    private ObjectFilter getSplitter(File altofile, int maxHeadlineWords) throws IOException {
+        ObjectFilter source = new PayloadFeederHelper(0, altofile.toString());
         ObjectFilter splitter = new StreamController(Configuration.newMemoryBased(
                 StreamController.CONF_PARSER, DOMSNewspaperParser.class.getCanonicalName(),
                 DOMSNewspaperParser.CONF_HEADLINE_MAX_WORDS, maxHeadlineWords

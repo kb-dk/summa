@@ -40,7 +40,7 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,
         author = "mke")
-public class SearchClient extends ConnectionConsumer<SummaSearcher> implements Configurable, SummaSearcher {
+public class SearchClient implements Configurable, SummaSearcher {
     private static Log log = LogFactory.getLog(SearchClient.class);
 
     /**
@@ -52,11 +52,13 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher> implements C
 
     private String target;
     private final boolean enabled;
+    private final ConnectionConsumer<SummaSearcher> rmi;
 
     public SearchClient(Configuration conf) {
-        super(conf);
+        rmi = new ConnectionConsumer<>(conf);
         target = conf.getString(ConnectionConsumer.CONF_RPC_TARGET);
         enabled = conf.getBoolean(CONF_ENABLED, DEFAULT_ENABLED);
+
         log.debug(String.format("Created %s SearchClient with %s=%s",
                                 enabled ? "active" : "inactive", ConnectionConsumer.CONF_RPC_TARGET, target));
     }
@@ -76,7 +78,7 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher> implements C
             return new ResponseCollection();
         }
         long connectTime = -System.currentTimeMillis();
-        SummaSearcher searcher = getConnection();
+        SummaSearcher searcher = rmi.getConnection();
         connectTime += System.currentTimeMillis();
 
         if (searcher == null) {
@@ -87,15 +89,19 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher> implements C
         try {
             return searcher.search(request);
         } catch (Throwable t) {
-            connectionError(t);
+            rmi.connectionError(t);
             throw new IOException("Search failed: " + t.getMessage(), t);
         } finally {
-            releaseConnection();
+            rmi.releaseConnection();
         }
     }
 
     @Override
     public void close() throws IOException {
-        releaseConnection();
+        rmi.releaseConnection();
+    }
+
+    public String getVendorId() {
+        return rmi.getVendorId();
     }
 }
