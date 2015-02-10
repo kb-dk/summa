@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.*;
@@ -35,6 +36,7 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
         comment="Better class description needed  ")
+@XmlRootElement
 public class ResponseCollection extends TimerImpl
     implements Collection<Response>, Serializable {
     private static final long serialVersionUID = 13841868527L;

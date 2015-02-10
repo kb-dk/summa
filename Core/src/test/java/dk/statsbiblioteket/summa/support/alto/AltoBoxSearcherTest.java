@@ -84,6 +84,46 @@ public class AltoBoxSearcherTest extends TestCase {
         //System.out.println(responses.toXML());
     }
 
+    public void testHighlightRelative() throws IOException {
+        SummaSearcher searcher = getAvailableSearcher();
+        if (searcher == null) {
+            return;
+        }
+        ResponseCollection responses = getFullStack().search(new Request(
+                DocumentKeys.SEARCH_QUERY, "hest",
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
+                AltoBoxSearcher.SEARCH_BOX, true,
+                AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
+                //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad-segment_1
+                //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad
+                AltoBoxSearcher.SEARCH_ID_REGEXP, "(doms_newspaperCollection:uuid:[0-9abcdef]{8}-[0-9abcdef]{4}-"
+                                                  + "[0-9abcdef]{4}-[0-9abcdef]{4}-[0-9abcdef]{12}).*",
+                AltoBoxSearcher.SEARCH_ID_TEMPLATE, "$1",
+                AltoBoxSearcher.SEARCH_COORDINATES_RELATIVE, "true",
+                "solrparam.hl", true,
+                "solrparam.hl.fl", "fulltext_org",
+                "solrparam.hl.snippets", 20
+        ));
+        List<AltoBoxResponse.Box> boxes = getBoxes(responses);
+        assertFalse("With highlighting there should be at least one box", boxes.isEmpty());
+        int vposAbove = 0;
+        int heightAbove = 0;
+        for (AltoBoxResponse.Box box: boxes) {
+            assertTrue("Expected relative for " + box.content, box.relative);
+            assertTrue("Expected hpos <= 1.0 with relative. Got " + box.hpos + " for " + box.content, box.hpos <= 1.0);
+            assertTrue("Expected vpos <= 2.0 with relative. Got " + box.vpos + " for " + box.content, box.vpos <= 2.0);
+            assertTrue("Expected 0.0 <= width <= 1.0 with relative. Got " + box.width + " for " + box.content,
+                       0.0 <= box.width && box.width <= 1.0);
+            assertTrue("Expected 0.0 <= height <= 2.0 with relative. Got " + box.height + " for " + box.content,
+                       0.0 <= box.height && box.height <= 2.0);
+            vposAbove += box.vpos > 1.0 ? 1 : 0;
+            heightAbove += box.height > 1.0 ? 1 : 0;
+        }
+        // Too much pure chance for a real test
+        //assertTrue("There should be at least one box at relative vpos > 1.0 due to yisx=true", vposAbove != 0);
+        //System.out.println(responses.toXML());
+    }
+
     public void testEnabledNoHighlight() throws IOException {
         SummaSearcher searcher = getAvailableSearcher();
         if (searcher == null) {
