@@ -120,12 +120,34 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     public static final String SEARCH_ID_TEMPLATE = CONF_ID_TEMPLATE;
     public static final String DEFAULT_ID_TEMPLATE = "$0";
 
+    /**
+     * If true, x, y, width and height of the boxes are relative to the overall page.
+     * If false, they are stated in absolute pixels.
+     * </p><p>
+     * Optional. Default is true;
+     */
+    public static final String CONF_COORDINATES_RELATIVE = "box.coordinates.relative";
+    public static final String SEARCH_COORDINATES_RELATIVE = CONF_COORDINATES_RELATIVE;
+    public static final boolean DEFAULT_COORDINATES_RELATIVE = true;
+
+    /**
+     * If {@link #CONF_COORDINATES_RELATIVE} is true, this determines if the y and height are relative
+     * to page width (true) or relative to page height (false).
+     * </p><p>
+     * Optional. Default is true (relative to page width).
+     */
+    public static final String CONF_COORDINATES_YISX = "box.coordinates.yisx";
+    public static final String SEARCH_COORDINATES_YISX = CONF_COORDINATES_YISX;
+    public static final boolean DEFAULT_COORDINATES_YISX = true;
+
     private final StorageReaderClient storage;
     private final boolean defaultBox;
     private final String defaultIDField;
     private final String defaultHighlightTag;
     private final String defaultIDAdjustRegexp;
     private final String defaultIDAdjustTemplate;
+    private final boolean defaultRelativeCoordinates;
+    private final boolean defaultYisx;
 
     public AltoBoxSearcher(Configuration conf) throws RemoteException {
         super(conf);
@@ -135,6 +157,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
         defaultHighlightTag = conf.getString(CONF_HIGHLIGHT_TAG, DEFAULT_HIGHLIGHT_TAG);
         defaultIDAdjustRegexp = conf.getString(CONF_ID_REGEXP, DEFAULT_ID_REGEXP);
         defaultIDAdjustTemplate = conf.getString(CONF_ID_TEMPLATE, DEFAULT_ID_TEMPLATE);
+        defaultRelativeCoordinates = conf.getBoolean(CONF_COORDINATES_RELATIVE, DEFAULT_COORDINATES_RELATIVE);
+        defaultYisx = conf.getBoolean(CONF_COORDINATES_YISX, DEFAULT_COORDINATES_YISX);
         readyWithoutOpen();
         log.info("Created " + this);
     }
@@ -148,6 +172,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
         AltoBoxResponse boxResponse = new AltoBoxResponse(
                 request.getStrings(SEARCH_LOOKUP_TERMS, Collections.<String>emptyList()),
                 request.getStrings(SEARCH_RECORDIDS, Collections.<String>emptyList()));
+        boxResponse.setRelativeCoordinates(request.getBoolean(SEARCH_COORDINATES_RELATIVE, defaultRelativeCoordinates));
+        boxResponse.setYisx(request.getBoolean(SEARCH_COORDINATES_YISX, defaultYisx));
         responses.add(boxResponse);
         log.debug("Created " + boxResponse);
         final long stringStart = System.nanoTime();
@@ -298,22 +324,55 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     private void resolveBoxes(XMLStreamReader xml, final String recordID, final AltoBoxResponse boxResponse)
             throws XMLStreamException {
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+            int pageWidth = -1;
+            int pageHeight = -1;
+            boolean warnedNoPageSize = false;
+
             @Override
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
+
+                // <Page ID="PAGE2" HEIGHT="11408" WIDTH="9304" PHYSICAL_IMG_NR="2" QUALITY="OK" POSITION="Single" PROCESSING="OCR1"  ACCURACY="85.29" PC="0.852900">
+                if ("Page".equals(current)) {
+                    pageWidth = Integer.parseInt(XMLStepper.getAttribute(xml, "WIDTH", Integer.toString(pageWidth)));
+                    pageHeight = Integer.parseInt(XMLStepper.getAttribute(xml, "HEIGHT", Integer.toString(pageHeight)));
+                }
+
                 // <TextLine ID="LINE3" STYLEREFS="TS20" HEIGHT="276" WIDTH="3740" HPOS="756" VPOS="1292">
                 // <String ID="S17" CONTENT="Den" WC="0.852" CC="7 8 8" HEIGHT="244" WIDTH="624" HPOS="756" VPOS="1316"/>
 
                 if ("String".equals(current) && tags.size() > 1 && "TextLine".equals(tags.get(tags.size()-2))) {
                     String content = XMLStepper.getAttribute(xml, "CONTENT", null);
+                    if (boxResponse.isRelativeCoordinates() && (pageWidth == -1 || pageHeight == -1) &&
+                        !warnedNoPageSize) {
+                        log.warn("Relative coordinated requested, but no page size has been determined. "
+                                 + "Using absolute coordinates");
+                        warnedNoPageSize = true;
+                    }
                     if (boxResponse.getLookupTerms().contains(content)) {
-                        boxResponse.add(recordID, new AltoBoxResponse.Box(
-                                getInt(xml, "HPOS"), getInt(xml, "VPOS"), getInt(xml, "WIDTH"), getInt(xml, "HEIGHT"),
-                                content,
-                                XMLStepper.getAttribute(xml, "WC", "N/A"), XMLStepper.getAttribute(xml, "CC", "N/A")));
+                        if (!boxResponse.isRelativeCoordinates() || pageWidth == -1 || pageHeight == -1) {
+                            boxResponse.add(recordID, new AltoBoxResponse.Box(
+                                    getInt(xml, "HPOS"), getInt(xml, "VPOS"),
+                                    getInt(xml, "WIDTH"), getInt(xml, "HEIGHT"),
+                                    content,
+                                    XMLStepper.getAttribute(xml, "WC", "N/A"),
+                                    XMLStepper.getAttribute(xml, "CC", "N/A"), false));
+                        } else {
+                            int ph = boxResponse.isYisx() ? pageHeight : pageWidth;
+                            boxResponse.add(recordID, new AltoBoxResponse.Box(
+                                    getRel(xml, "HPOS", pageWidth), getRel(xml, "VPOS", ph),
+                                    getRel(xml, "WIDTH", pageWidth), getRel(xml, "HEIGHT", ph),
+                                    content,
+                                    XMLStepper.getAttribute(xml, "WC", "N/A"),
+                                    XMLStepper.getAttribute(xml, "CC", "N/A"), true));
+                        }
                     }
                 }
                 return false;
+            }
+
+            private double getRel(XMLStreamReader xml, String attributeName, int page) {
+                return Double.parseDouble(XMLStepper.getAttribute(xml, attributeName, "-1")) / page;
             }
 
             private int getInt(XMLStreamReader xml, String attributeName) {

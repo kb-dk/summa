@@ -35,6 +35,9 @@ public class AltoBoxResponse extends ResponseImpl {
     private Set<String> requestRecordIDs;
     private Set<String> resolvedRecordIDs = new HashSet<>();
     private Map<String, List<Box>> boxes = new HashMap<>();
+    private Boolean relativeCoordinates = true;
+    // If relative coordinates are used, calculate y and height relative to width, not height
+    private boolean yisx = true;
 
     public AltoBoxResponse(Collection<String> requestTerms, Collection<String> requestRecordIDs) {
         super("altobox.");
@@ -120,6 +123,8 @@ public class AltoBoxResponse extends ResponseImpl {
                 "resolvedTerms", Strings.join(resolvedTerms),
                 "requestRecords", Strings.join(requestRecordIDs),
                 "resolvedRecords", Strings.join(resolvedRecordIDs),
+                "relative", Boolean.toString(relativeCoordinates),
+                "relative_yisx", Boolean.toString(yisx),
                 TIMING, getTiming());
 
         for (Map.Entry<String, List<Box>> entry: boxes.entrySet()) {
@@ -133,19 +138,37 @@ public class AltoBoxResponse extends ResponseImpl {
         endln(xml); // boxResponse
     }
 
+    public void setRelativeCoordinates(Boolean relativeCoordinates) {
+        this.relativeCoordinates = relativeCoordinates;
+    }
+
+    public Boolean isRelativeCoordinates() {
+        return relativeCoordinates;
+    }
+
+    public boolean isYisx() {
+        return yisx;
+    }
+
+    public void setYisx(boolean relativeCoordinatesYisx) {
+        this.yisx = relativeCoordinatesYisx;
+    }
+
     public static class Box implements Serializable {
-        protected  int hpos;
-        protected  int vpos;
-        protected  int width;
-        protected  int height;
+        protected boolean relative;
+        protected  double hpos;
+        protected  double vpos;
+        protected  double width;
+        protected  double height;
         protected String content;
         protected String wc;
         protected String cc;
 
-        public Box(int hpos, int vpos, int width, int height, String content) {
-            this(hpos, vpos, width, height, content, "N/A", "N/A");
+        public Box(double hpos, double vpos, double width, double height, String content, boolean relative) {
+            this(hpos, vpos, width, height, content, "N/A", "N/A", relative);
         }
-        public Box(int hpos, int vpos, int width, int height, String content, String wc, String cc) {
+        public Box(double hpos, double vpos, double width, double height, String content, String wc, String cc,
+                   boolean relative) {
             this.hpos = hpos;
             this.vpos = vpos;
             this.width = width;
@@ -153,19 +176,25 @@ public class AltoBoxResponse extends ResponseImpl {
             this.content = content;
             this.wc = wc;
             this.cc = cc;
+            this.relative = relative;
         }
 
         public void toXML(XMLStreamWriter xml) throws XMLStreamException {
             xml.writeCharacters("    ");
             start(xml, "textblock",
-                  "x", Integer.toString(hpos),
-                  "y", Integer.toString(vpos),
-                  "width", Integer.toString(width),
-                  "height", Integer.toString(height),
+                  "x", rel(hpos),
+                  "y", rel(vpos),
+                  "width", rel(width),
+                  "height", rel(height),
                   "wc", wc,
-                  "cc", cc);
+                  "cc", cc,
+                  "rel", Boolean.toString(relative));
             xml.writeCharacters(content);
             endln(xml);
+        }
+
+        private String rel(double val) {
+            return relative ? Double.toString(val) : Integer.toString((int) val);
         }
     }
 
