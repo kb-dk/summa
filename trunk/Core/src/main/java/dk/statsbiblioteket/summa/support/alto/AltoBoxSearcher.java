@@ -138,7 +138,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
      */
     public static final String CONF_COORDINATES_YISX = "box.coordinates.yisx";
     public static final String SEARCH_COORDINATES_YISX = CONF_COORDINATES_YISX;
-    public static final boolean DEFAULT_COORDINATES_YISX = true;
+    public static final boolean DEFAULT_COORDINATES_YISX = false;
 
     private final StorageReaderClient storage;
     private final boolean defaultBox;
@@ -210,7 +210,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
         for (Response response: responses) {
             if (response instanceof HighlightResponse) {
                 String highlightTag = request.getString(SEARCH_HIGHLIGHT_TAG, defaultHighlightTag);
-                Pattern highlightPattern = Pattern.compile("<" + highlightTag + ">([^<]+)</" + highlightTag + ">");
+                Pattern highlightPattern = Pattern.compile(
+                        " ([^ ]*<" + highlightTag + ">[^<]+</" + highlightTag + ">[^ ]*) ");
 
                 HighlightResponse docResponse = (HighlightResponse)response;
                     // Map<id, Map<field, List<content>>>
@@ -231,9 +232,9 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                     }
                     for (Map.Entry<String, List<String>> fieldEntry: hlEntry.getValue().entrySet()) {
                         for (String content: fieldEntry.getValue()) {
-                            Matcher hlMatcher = highlightPattern.matcher(content);
+                            Matcher hlMatcher = highlightPattern.matcher(" " + content + " ");
                             while (hlMatcher.find()) {
-                                terms.add(hlMatcher.group(1));
+                                terms.add(hlMatcher.group(1).replace("<em>", "").replace("</em>", ""));
                             }
                         }
                     }

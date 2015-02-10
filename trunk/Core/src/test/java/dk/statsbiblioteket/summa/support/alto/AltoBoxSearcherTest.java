@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A very poor test as it relies on instances running at Statsbiblioteket's test machine.
@@ -122,6 +124,16 @@ public class AltoBoxSearcherTest extends TestCase {
         // Too much pure chance for a real test
         //assertTrue("There should be at least one box at relative vpos > 1.0 due to yisx=true", vposAbove != 0);
         //System.out.println(responses.toXML());
+    }
+
+    public void testPattern() {
+        final String content = "men i øvrigt se ud som en <em>hest</em>. Dyret sk:l være 2 mete";
+        Pattern highlightPattern = Pattern.compile(" ([^ ]*<em>[^<]+</em>[^ ]*) ");
+        Matcher hlMatcher = highlightPattern.matcher(" " + content + " ");
+        if (hlMatcher.find()) {
+            assertEquals("hest.", hlMatcher.group(1).replace("<em>", "").replace("</em>", ""));
+        }
+
     }
 
     public void testEnabledNoHighlight() throws IOException {
