@@ -1,0 +1,21 @@
+# Summa character transliteration
+# Transliteration rules for default replace
+  
+# Syntax:
+#   "source" => "target"
+#     "source".length() > 0 (source cannot be empty.)
+#     "target".length() >= 0 (target can be empty.)
+
+# example:
+#   "À" => "A"
+#   "\u00C0" => "A"
+#   "\u00C0" => "\u0041"
+#   "ß" => "ss"
+#   "\t" => " "
+#   "\n" => ""
+
+"c++" => "cplusplus"
+"c#" => "csharp"
+"c* algebra" => "cstaralgebra"
+"c*-algebra" => "cstaralgebra"
+".net" => "dotnet"

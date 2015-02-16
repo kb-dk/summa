@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# exit on any errors
+set -e 
+
+USER_FILE="upload.id"
+if [ ! -e $USER_FILE ]; then
+    echo "The file '$USER_FILE' must exist and must contain your SourceForge user-ID."
+    echo ""
+    echo "Warning: Do not add $USER_FILE to the version control system!"
+    exit 2
+fi
+USER=`cat $USER_FILE | head -n 1`
+#echo $ID
+
+echo "Cleaning, deploying to Maven repository and uploading to SourceForge for user $USER"
+
+mvn clean
+mvn deploy -DskipTests
+
+
+# After package_full has been executed, this script
+# takes summix from Samples/Summix/target and uploads
+# it to SourceForge, effectively creating a release.
+
+
+cd Summix/target
+echo "MD5Sum: `md5sum summix-*.zip`"
+
+#VERSION=`ls *SNAPSHOT.zip | tail -n 1 | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*SNAPSHOT[.]zip/\\1/"`
+VERSION=`ls summix-*.zip | tail -n 1 | sed -E "s/.*([0-9][.][0-9][.][0-9]-[0-9]{8,8}).*[.]zip/\\1/"`
+
+FOLDER=$VERSION
+if [ ! -d $FOLDER ]
+then
+    mkdir $FOLDER
+fi
+#cp summix-*-SNAPSHOT.zip $FOLDER
+cp summix-*.zip $FOLDER
+
+echo "Deploying folder $FOLDER with content `ls $FOLDER` for user $USER"
+echo "scp -r $FOLDER  $USER,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/"
+scp -r $FOLDER  $USER,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/
+
+#scp Samples/Summix/target/summix-*.zip  toke-sb,summa@frs.sourceforge.net:/home/frs/project/s/su/summa/releases/1.8.0-20110830-l4exp-SNAPSHOT/

@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head></head>
+<body bgcolor="white">
+<p>
+    Indexing takes place using the Filter Framework defined in Summa Commons.
+    As such there are no hard requirements on how it is handled, but the
+    typical path is as follows:
+</p><p>
+    A Storage RecordReader starts the chain by pumping Records from a Storage.
+    The Record is passed through a chain of filters that are modifies the
+    content or adds meta-data. One example would be the addition of the current
+    status of availability for a book.
+    The Record content is transformed from source-specific XML to
+    SummaDocumentXML by the filter XMLTransformer.
+    The SummaDocumentXML is transformed to a Lucene Document by the filter
+    CreateDocument.
+    The Lucene Document is added to an existing index by the filter
+    IndexController.
+</p><p>
+    In case of very rapidly changing meta-data, such as availability for books,
+    an alternative path could be:
+</p><p>
+    1. Storage1 => XMLTransformer => Storage2.
+    2. Storage2 => EnrichWithAvailability => CreateDocument => IndexController.
+    Where step 1 is performed when new books arrive and step 2 is performed
+    upon changed in availability status.
+</p><p>
+    Since a hook to availability data from an external system could modify the
+    meta-data for a given Record in Storage2 by itself, step 2 could simply be:
+</p><p>
+    2. Storage2 => CreateDocument => IndexController.
+<p>
+
+<h2>Related Documentation</h2>
+
+Summa Common module: dk.statsbiblioteket.summa.common.filter
+Summa Storage module: dk.statsbiblioteket.summa.storage.filter.RecordReader
+
+</body>
+</html>
