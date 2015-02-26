@@ -119,6 +119,9 @@ public class SearchClient implements Configurable, SummaSearcher {
 
         if (server.startsWith("//")) {
             log.debug("Establishing RMI connection to " + server);
+            if (!conf.containsKey(ConnectionConsumer.CONF_RPC_TARGET)) {
+                conf.set(ConnectionConsumer.CONF_RPC_TARGET, server);
+            }
             rmi = new ConnectionConsumer<>(conf);
             rest = null;
         } else {
