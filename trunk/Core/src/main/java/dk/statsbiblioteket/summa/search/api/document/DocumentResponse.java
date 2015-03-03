@@ -800,6 +800,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         return groups;
     }
 
+    public void setGroups(List<Group> groups) {
+        this.groups = groups instanceof Serializable ? groups : new ArrayList<>(groups);
+    }
+
     public boolean isGrouped() {
         return grouped;
     }

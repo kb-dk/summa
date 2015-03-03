@@ -1,11 +1,11 @@
 package dk.statsbiblioteket.summa.support.embeddedsolr;
 
-import java.io.File;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.webapp.WebAppContext;
+
+import java.io.File;
 
 
 
@@ -55,7 +55,9 @@ public class EmbeddedJettyWithSolrServer extends Thread {
 		//Copy solrconfig.xml, schema.xml etc. to the solrhome.
 		SolrServerUnitTestUtil.populateSolrHome( new File(solrHome));
 
-		System.setProperty("solr.solr.home", solrHome+	SolrServerUnitTestUtil.SOLR_HOME_SUFFIX);
+        String systemHome = solrHome+SolrServerUnitTestUtil.SOLR_HOME_SUFFIX;
+        log.info("System home " + systemHome + " exists=" + new File(systemHome).exists());
+		System.setProperty("solr.solr.home", systemHome);
 
 		server = new Server(port);
 		WebAppContext webapp = new WebAppContext(solrWar,context);

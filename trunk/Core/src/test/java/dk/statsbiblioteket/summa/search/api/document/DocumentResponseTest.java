@@ -14,16 +14,70 @@
  */
 package dk.statsbiblioteket.summa.search.api.document;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
+import dk.statsbiblioteket.summa.search.api.*;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class DocumentResponseTest extends TestCase {
-    private static Log log = LogFactory.getLog(DocumentResponseTest.class);
+
+    // Invalid test outside of SB
+    public void testRemote() throws IOException {
+        final String ADDRESS = "//mars:56700/aviser-searcher";
+        SummaSearcher searcher = new SearchClient(Configuration.newMemoryBased(
+                SearchClient.CONF_SERVER, ADDRESS));
+        ResponseCollection responses = searcher.search(new Request(DocumentSearcher.SEARCH_QUERY, "hest"));
+        assertFalse("There should be at least one response from " + ADDRESS, responses.isEmpty());
+
+        List<String> groupsAll = getGroups(searcher.search(new Request(
+                DocumentSearcher.SEARCH_QUERY, "hest",
+                DocumentSearcher.GROUP, true,
+                DocumentSearcher.GROUP_FIELD, "editionUUID",
+                DocumentSearcher.SEARCH_MAX_RECORDS, 6
+        )));
+
+        List<String> groupsFirst3 = getGroups(searcher.search(new Request(
+                DocumentSearcher.SEARCH_QUERY, "hest",
+                DocumentSearcher.GROUP, true,
+                DocumentSearcher.GROUP_FIELD, "editionUUID",
+                DocumentSearcher.SEARCH_MAX_RECORDS, 3
+        )));
+        List<String> groupsSecond3 = getGroups(searcher.search(new Request(
+                DocumentSearcher.SEARCH_QUERY, "hest",
+                DocumentSearcher.GROUP, true,
+                DocumentSearcher.GROUP_FIELD, "editionUUID",
+                DocumentSearcher.SEARCH_MAX_RECORDS, 3,
+                DocumentSearcher.SEARCH_START_INDEX, 2
+        )));
+        assertEquals("All-group should contain the right number of groups", 6, groupsAll.size());
+        ExtraAsserts.assertEquals("The first 3 groups should match those from the all-group",
+                                  groupsAll.subList(0, 3), groupsFirst3);
+        ExtraAsserts.assertEquals("The second 3 groups should match those from the all-group",
+                                  groupsAll.subList(3, 6), groupsSecond3);
+
+        searcher.close();
+    }
+
+    private List<String> getGroups(ResponseCollection responses) {
+        List<String> groups = new ArrayList<>();
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                for (DocumentResponse.Group group: ((DocumentResponse)response).getGroups()) {
+                    groups.add(group.getGroupValue() + "(" + group.getNumFound() + ")");
+                }
+            }
+        }
+        return groups;
+    }
 
     public void testGrouping() {
         DocumentResponse response1 = getDocumentResponse1(null, null);

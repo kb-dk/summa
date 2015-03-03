@@ -16,6 +16,7 @@ USER=`cat $USER_FILE | head -n 1`
 echo "Cleaning, deploying to Maven repository and uploading to SourceForge for user $USER"
 
 mvn clean
+source ~/bin/jdk17
 mvn deploy -DskipTests
 
 

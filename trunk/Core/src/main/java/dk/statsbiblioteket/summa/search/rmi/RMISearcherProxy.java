@@ -40,7 +40,7 @@ import java.rmi.server.UnicastRemoteObject;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT)
 public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearcher {
-    private static final long serialVersionUID = 488468553186L; 
+    private static final long serialVersionUID = 488468553187L;
     private static final Log log = LogFactory.getLog (RMISearcherProxy.class);
 
     /**
@@ -106,43 +106,27 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
      * @throws RemoteException if the proxy could not be created.
      */
     public RMISearcherProxy (Configuration conf) throws IOException {
+        this(conf, createBackend(conf));
+    }
+
+    /**
+     * Create a new searcher proxy, wrapping the given searcher.
+     * The configuration passed in must specify
+     * {@link SummaSearcher#CONF_SERVICE_PORT} for the RMI service port to use,
+     * as well as either {@link SummaSearcher#CONF_CLASS} or
+     * {@link RMISearcherProxy#CONF_BACKEND} to define what backend searcher to
+     * use.
+     * @param conf the configuration for the proxy.
+     * @throws RemoteException if the proxy could not be created.
+     */
+    public RMISearcherProxy (Configuration conf, SummaSearcher backend) throws IOException {
         super (getServicePort(conf));
         flattenExceptions = conf.getBoolean(CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
-        /* Create configuration for the backend, based on our own,
-         * rewriting the class property if necessary */
-        // FIXME: The below config should really be kept entirely in memory,
-        //        but we can't use a memorybased config because of bug:
-        //        https://gforge.statsbiblioteket.dk/tracker/index.php?func=detail&aid=1453&group_id=8&atid=109
-        Configuration backendConf = new Configuration (new XStorage(false));
-        backendConf.importConfiguration (conf);
-        if (conf.valueExists (CONF_BACKEND)) {
-            backendConf.set (CONF_CLASS, conf.getString (CONF_BACKEND));
-        } else {
-            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND + " for backend");
-            backendConf.set (CONF_CLASS, DEFAULT_BACKEND);
-        }
-
-        /* If the backend is set to be another RMISeacherProxy then avoid
-         * infinite recursion by forcing it into a SummaSearcherImpl */
-        if (backendConf.valueExists (CONF_CLASS)) {
-            if (this.getClass().getName().equals(backendConf.getString (CONF_CLASS))) {
-                log.warn ("Backend set to RMISearcherProxy. Forcing backend class to " + DEFAULT_BACKEND.getName()
-                          + " to avoid infinite recursion");
-                backendConf.set (CONF_CLASS, DEFAULT_BACKEND.getName());
-            }
-        }
-
-        if (log.isTraceEnabled ()) {
-            log.trace ("Backend conf:\n" + backendConf.dumpString ());
-        }
-
-        log.debug("Creating searcher backend");
-        backend = SummaSearcherFactory.createSearcher (backendConf);
-        log.info("Created inner searcher " + backend.getClass().getName());
+        this.backend = backend;
 
         serviceName = conf.getString(CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
         registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
-        
+
         RemoteHelper.exportRemoteInterface (this, registryPort, serviceName);
 
         try {
@@ -157,6 +141,34 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
   //          }
         }
         log.info("Created " + this);
+    }
+
+    private static SummaSearcher createBackend(Configuration conf) throws IOException {
+        Configuration backendConf = new Configuration (new XStorage(false));
+        backendConf.importConfiguration (conf);
+        if (conf.valueExists (CONF_BACKEND)) {
+            backendConf.set (CONF_CLASS, conf.getString (CONF_BACKEND));
+        } else {
+            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND + " for backend");
+            backendConf.set (CONF_CLASS, DEFAULT_BACKEND);
+        }
+
+        /* If the backend is set to be another RMISeacherProxy then avoid
+         * infinite recursion by forcing it into a SummaSearcherImpl */
+        if (backendConf.valueExists (CONF_CLASS)) {
+            if (RMISearcherProxy.class.getClass().getName().equals(backendConf.getString (CONF_CLASS))) {
+                log.warn ("Backend set to RMISearcherProxy. Forcing backend class to " + DEFAULT_BACKEND.getName()
+                          + " to avoid infinite recursion");
+                backendConf.set (CONF_CLASS, DEFAULT_BACKEND.getName());
+            }
+        }
+
+        if (log.isTraceEnabled ()) {
+            log.trace ("Backend conf:\n" + backendConf.dumpString ());
+        }
+
+        log.debug("Creating searcher backend");
+        return SummaSearcherFactory.createSearcher(backendConf);
     }
 
   /**
