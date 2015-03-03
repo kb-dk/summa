@@ -30,7 +30,6 @@ import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServe
 import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearcherAggregator;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
 import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -216,32 +215,33 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 DocumentSearcher.SEARCH_QUERY, "hest",
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, "editionUUID",
-                DocumentSearcher.SEARCH_MAX_RECORDS, 6
+                DocumentSearcher.SEARCH_MAX_RECORDS, 20
         )));
-        log.info("All\n" + Strings.join(groupsAll, "\n"));
+//        log.info("All\n" + Strings.join(groupsAll, "\n"));
 
         List<String> groupsFirst3 = getGroups(searcher.search(new Request(
                 DocumentSearcher.SEARCH_QUERY, "hest",
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, "editionUUID",
-                DocumentSearcher.SEARCH_MAX_RECORDS, 3
+                DocumentSearcher.SEARCH_START_INDEX, 0,
+                DocumentSearcher.SEARCH_MAX_RECORDS, 20
         )));
-        log.info("First3\n" + Strings.join(groupsFirst3, "\n"));
+//        log.info("First3\n" + Strings.join(groupsFirst3, "\n"));
 
         List<String> groupsSecond3 = getGroups(searcher.search(new Request(
                 DocumentSearcher.SEARCH_QUERY, "hest",
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, "editionUUID",
-                DocumentSearcher.SEARCH_MAX_RECORDS, 3,
-                DocumentSearcher.SEARCH_START_INDEX, 3
+                DocumentSearcher.SEARCH_START_INDEX, 3,
+                DocumentSearcher.SEARCH_MAX_RECORDS, 17
         )));
-        log.info("Second3\n" + Strings.join(groupsSecond3, "\n"));
+//        log.info("Second3\n" + Strings.join(groupsSecond3, "\n"));
 
-        assertEquals("All-group should contain the right number of groups", 6, groupsAll.size());
+        assertEquals("All-group should contain the right number of groups", 20, groupsAll.size());
         ExtraAsserts.assertEquals("The first 3 groups should match those from the all-group",
-                                  groupsAll.subList(0, 3), groupsFirst3);
+                                  groupsAll.subList(0, 3), groupsFirst3.subList(0, 3));
         ExtraAsserts.assertEquals("The second 3 groups should match those from the all-group",
-                                  groupsAll.subList(3, 6), groupsSecond3);
+                                  groupsAll.subList(3, 6), groupsSecond3.subList(0, 3));
 
         searcher.close();
     }

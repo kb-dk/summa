@@ -183,6 +183,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             }
 
             long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX, 0L);
+            // TODO: We should over-ask maxRecords to raise probability of getting the right group merge-result
             long maxRecords = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, 0L);
             if (startIndex > 0) {
                 if (log.isTraceEnabled()) {
