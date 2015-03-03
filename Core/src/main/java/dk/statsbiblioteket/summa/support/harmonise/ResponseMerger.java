@@ -184,6 +184,20 @@ public class ResponseMerger implements Configurable {
     public static final String CONF_SEQUENTIAL = "responsemerger.sequential";
     public static final boolean DEFAULT_SEQUENTIAL = false;
 
+    /**
+     * If true, groups are flattened to records and merged according to the
+     * given merge rules. If false, merging of groups are a null-process,
+     * using the DocumentResponse default merge.
+     * </p><p>
+     * Note: Setting this to true with real groups will result in erratic
+     * behaviour with paging.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_FORCE_GROUP_MERGE = "responsemerger.groups.force";
+    public static final String SEARCH_FORCE_GROUP_MERGE = CONF_FORCE_GROUP_MERGE;
+    public static final boolean DEFAULT_FORCE_GROUP_MERGE = false;
+
     private MODE defaultMode = DEFAULT_MODE;
     private POST defaultPost = DEFAULT_POST;
     private List<String> defaultOrder = new ArrayList<>();
@@ -191,6 +205,7 @@ public class ResponseMerger implements Configurable {
     private List<Pair<String, Integer>> defaultForceRules = null;
     private boolean sequential = DEFAULT_SEQUENTIAL;
     private final long fallBackMaxRecords;
+    private final boolean defaultForceGroupMerge;
 
     public ResponseMerger(Configuration conf) {
         defaultMode = MODE.valueOf(conf.getString(CONF_MODE, defaultMode.toString()));
@@ -200,6 +215,7 @@ public class ResponseMerger implements Configurable {
         if (conf.valueExists(CONF_FORCE_RULES)) {
             defaultForceRules = parseForceRules(conf.getString(CONF_FORCE_RULES));
         }
+        defaultForceGroupMerge = conf.getBoolean(CONF_FORCE_GROUP_MERGE, DEFAULT_FORCE_GROUP_MERGE);
         sequential = conf.getBoolean(CONF_SEQUENTIAL, sequential);
         fallBackMaxRecords = conf.getLong(DocumentSearcher.CONF_RECORDS, DocumentSearcher.DEFAULT_RECORDS);
         log.debug("Created response merger");
@@ -298,7 +314,24 @@ public class ResponseMerger implements Configurable {
      * @return a merge of the given ResponseCollections.
      */
     public ResponseCollection merge(Request request, List<SummaSearcherAggregator.ResponseHolder> responses) {
+        // Check for grouping
+        if (!defaultForceGroupMerge) {
+            for (SummaSearcherAggregator.ResponseHolder responseHolder: responses) {
+                for (Response response: responseHolder.getResponses()) {
+                    if (response instanceof DocumentResponse) {
+                        if (((DocumentResponse)response).isGrouped()) {
+                            return groupMerge(request, responses);
+                        }
+                    }
+                }
+            }
+        }
+        return fieldMerge(request, responses);
+    }
+
+    private ResponseCollection fieldMerge(Request request, List<SummaSearcherAggregator.ResponseHolder> responses) {
         long startTime = System.currentTimeMillis();
+        log.debug("Performing fieldMerge with " + responses.size() + " response collections");
         AdjustWrapper aw = deconstruct(responses);
         if (aw.getBase() == null) {
             log.debug("No DocumentResponses present in responses, skipping merge");
@@ -312,6 +345,17 @@ public class ResponseMerger implements Configurable {
         ResponseCollection result = aw.externalize();
         result.addTiming("responsemerger.total", System.currentTimeMillis() - startTime);
         return result;
+    }
+
+    private ResponseCollection groupMerge(Request request, List<SummaSearcherAggregator.ResponseHolder> responses) {
+        long startTime = System.currentTimeMillis();
+        log.debug("Performing groupMerge with " + responses.size() + " response collections");
+        ResponseCollection merged = new ResponseCollection();
+        for (SummaSearcherAggregator.ResponseHolder responseHolder: responses) {
+            merged.addAll(responseHolder.getResponses());
+        }
+        merged.addTiming("responsemerger.total", System.currentTimeMillis() - startTime);
+        return merged;
     }
 
     private void trim(Request request, AdjustWrapper aw) {
