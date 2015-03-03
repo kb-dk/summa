@@ -892,7 +892,7 @@ public class SolrResponseBuilder implements Configurable {
             @Override
             public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
                     throws XMLStreamException {
-                log.debug("parseGroupedInnerList: Current tag: '" + current + "'");
+                log.trace("parseGroupedInnerList: Current tag: '" + current + "'");
                 // <str name="groupValue">2012</str>
                 if ("str".equals(current) && "groupValue".equals(XMLStepper.getAttribute(xml, "name", null))) {
                     groupValue = xml.getElementText();
@@ -915,7 +915,7 @@ public class SolrResponseBuilder implements Configurable {
 
             @Override
             public void end() {
-                log.debug("parseGroupedInnerList: End lst reached");
+                log.trace("parseGroupedInnerList: End lst reached");
                 if (groupValue == null) {
                     log.warn("parseGroupedInnerList: Unable to locate groupValue for group '" + groupName + "'");
                 } else if (records == null || records.isEmpty()) {

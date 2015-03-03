@@ -23,7 +23,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
@@ -42,34 +41,6 @@ public class TermStatAggregatorTest extends SolrSearchDualTestBase {
     private static Log log = LogFactory.getLog(TermStatAggregatorTest.class);
 
     // TODO: Test force top X
-
-    public void testBasicIngest() throws IOException, SolrServerException {
-        log.info("testBasicIngest()");
-        ingest(0, "fulltext", Arrays.asList("bar"));
-        ingest(1, "fulltext", Arrays.asList("zoo"));
-
-        {
-            QueryResponse r0 = solrServer0.query(new SolrQuery("fulltext:bar"));
-            assertEquals("There should be hits from Solr 0",
-                         1, r0.getResults().getNumFound());
-            assertEquals("The hit for solr 0 should be correct",
-                         "bar", ((ArrayList)r0.getResults().get(0).getFieldValue("fulltext")).get(0));
-        }
-
-        {
-            QueryResponse r1 = solrServer1.query(new SolrQuery("fulltext:zoo"));
-            assertEquals("There should be hits from Solr 1",
-                         1, r1.getResults().getNumFound());
-            assertEquals("The hit for solr 0 should be correct",
-                         "zoo", ((ArrayList) r1.getResults().get(0).getFieldValue("fulltext")).get(0));
-        }
-
-        {
-            QueryResponse r1f = solrServer1.query(new SolrQuery("fulltext:bar"));
-            assertEquals("There should be no hits from Solr 1 when searching for 'bar'",
-                         0, r1f.getResults().getNumFound());
-        }
-    }
 
     public void testDocumentMergeScoreIgnoreOrder() throws Exception {
         log.info("testDocumentMergeScoreIgnoreOrder()");

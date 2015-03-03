@@ -132,6 +132,13 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
      * @throws RemoteException if the underlying SearchNode could not be constructed.
      */
     public SummaSearcherImpl(Configuration conf) throws RemoteException {
+        this(conf, SearchNodeFactory.createSearchNode(conf, SearchNodeDummy.class));
+    }
+    /**
+     * Extracts basic settings from the configuration and uses the given searchNode directly.
+     * @param conf the configuration for the searcher.
+     */
+    public SummaSearcherImpl(Configuration conf, SearchNode searchNode) {
         log.info("Constructing SummaSearcherImpl");
         int searchQueueMaxSize = conf.getInt(CONF_SEARCH_QUEUE_MAX_SIZE, DEFAULT_SEARCH_QUEUE_MAX_SIZE);
         searcherAvailabilityTimeout = conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT, searcherAvailabilityTimeout);
@@ -139,7 +146,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
 
         searchQueue = new ChangingSemaphore(searchQueueMaxSize, true);
         log.trace("Constructing search node");
-        searchNode = SearchNodeFactory.createSearchNode(conf, SearchNodeDummy.class);
+        this.searchNode = searchNode;
         emptySearchAllowed = conf.getBoolean(CONF_ALLOW_EMPTY_SEARCH, DEFAULT_ALLOW_EMPTY_SEARCH);
 
         // Ready for open

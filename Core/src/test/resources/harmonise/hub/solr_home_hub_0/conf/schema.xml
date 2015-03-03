@@ -243,6 +243,7 @@
 
         <field name="recordID" type="key"/>
         <field name="recordBase" type="key"/>
+        <field name="group" type="key"/> <!-- For group experiments -->
 
         <!-- Gruppe enrich -->
         <field name="enrich_editor" type="text"  multiValued="true"/>

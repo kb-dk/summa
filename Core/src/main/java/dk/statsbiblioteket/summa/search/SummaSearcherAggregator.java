@@ -228,6 +228,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
             }
             merged = merge(request, responses);
             postProcessPaging(merged, startIndex, maxRecords);
+
             log.debug("Finished search in " + (System.currentTimeMillis() - startTime) + " ms");
             merged.addTiming("aggregator.searchandmergeall", System.currentTimeMillis() - startTime);
             success = true;
@@ -302,14 +303,24 @@ public class SummaSearcherAggregator implements SummaSearcher {
             DocumentResponse docResponse = (DocumentResponse)response;
             docResponse.setStartIndex(startIndex);
             docResponse.setMaxRecords(maxRecords);
-            List<DocumentResponse.Record> records = docResponse.getRecords();
-            if (records.size() < startIndex) {
-                records.clear();
+            if (docResponse.isGrouped()) {
+                List<DocumentResponse.Group> groups = docResponse.getGroups();
+                if (groups.size() < startIndex) {
+                    groups.clear();
+                } else {
+                    docResponse.setGroups(groups.subList(
+                            (int)startIndex, (int)Math.min(groups.size(), startIndex+maxRecords)));
+                }
             } else {
-                records = new ArrayList<>(
-                        records.subList((int)startIndex, (int)Math.min(records.size(), startIndex+maxRecords)));
+                List<DocumentResponse.Record> records = docResponse.getRecords();
+                if (records.size() < startIndex) {
+                    records.clear();
+                } else {
+                    records = new ArrayList<>(
+                            records.subList((int)startIndex, (int)Math.min(records.size(), startIndex+maxRecords)));
+                }
+                docResponse.setRecords(records);
             }
-            docResponse.setRecords(records);
         }
     }
 

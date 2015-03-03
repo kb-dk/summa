@@ -60,8 +60,10 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
     private ExecutorService executor = Executors.newFixedThreadPool(CONCURRENT);
 
     public SearchNodeAggregator(Configuration conf) throws RemoteException {
+        this(conf, SearchNodeFactory.createSearchNodes(conf));
+    }
+    public SearchNodeAggregator(Configuration conf, List<SearchNode> nodes) throws RemoteException {
         sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
-        List<SearchNode> nodes = SearchNodeFactory.createSearchNodes(conf);
         log.info(String.format(
                 "Constructed %s SearchNodeAggregator with %d SearchNodes",
                 sequential ? "sequential" : "parallel", nodes.size()));

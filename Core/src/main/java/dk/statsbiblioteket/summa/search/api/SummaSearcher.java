@@ -14,13 +14,14 @@
  */
 package dk.statsbiblioteket.summa.search.api;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.rmi.RemoteException;
+import java.io.Closeable;
 import java.io.IOException;
+import java.rmi.RemoteException;
 
 /**
  * A SummaSearcher is a collection of one or more SearchNodes. Any given Search
@@ -29,7 +30,7 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface SummaSearcher extends Configurable {
+public interface SummaSearcher extends Configurable, Closeable {
 
     static final Log queries = LogFactory.getLog("queries");
 
@@ -61,12 +62,6 @@ public interface SummaSearcher extends Configurable {
      */
     public ResponseCollection search(Request request) throws IOException;
 
-    /**
-     * Close down the searcher. The searcher is not available for search after
-     * this.
-     * @throws RemoteException if an error happened during close.
-     */
-    public void close() throws IOException;
 }
 
 
