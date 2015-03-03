@@ -149,11 +149,11 @@ public class SearchClient implements Configurable, SummaSearcher {
             log.debug("Skipping search to " + server + " as the SearchClient is disabled");
             return new ResponseCollection();
         }
-        log.debug("Performing RMI based remote search");
+        log.debug("Performing RMI based remote search against " + server);
         if (rmi != null) {
             return searchRMI(request);
         }
-        log.debug("Performing REST based remote search");
+        log.debug("Performing REST based remote search against " + server);
         return searchRest(request);
     }
 
@@ -176,7 +176,8 @@ public class SearchClient implements Configurable, SummaSearcher {
         connectTime += System.currentTimeMillis();
 
         if (searcher == null) {
-            final String msg = "The searcher retrieved from getConnection was null after " + connectTime + "ms";
+            final String msg = "The searcher retrieved from getConnection(" + server
+                               + ") was null after " + connectTime + "ms";
             log.warn(msg);
             throw new IOException("Unable to connect to '" + server + "' in " + connectTime + "ms");
         }
@@ -184,7 +185,7 @@ public class SearchClient implements Configurable, SummaSearcher {
             return searcher.search(request);
         } catch (Throwable t) {
             rmi.connectionError(t);
-            throw new IOException("Search failed: " + t.getMessage(), t);
+            throw new IOException("Search failed against " + server + ": " + t.getMessage(), t);
         } finally {
             rmi.releaseConnection();
         }
