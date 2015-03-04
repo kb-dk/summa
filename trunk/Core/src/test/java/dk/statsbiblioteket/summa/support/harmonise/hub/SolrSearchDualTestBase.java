@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -159,14 +160,16 @@ public class SolrSearchDualTestBase extends TestCase {
         return new PayloadFeederHelper(samples);
     }
 
+    private Random random = new Random(88);
     protected ObjectFilter getDataProvider(String field, List<String> terms) throws UnsupportedEncodingException {
         List<Payload> samples = new ArrayList<>(terms.size());
         for (int i = 0 ; i < terms.size() ; i++) {
             samples.add(new Payload(new Record(
-                "doc" + i, "dummy",
-                ("<doc><field name=\"recordID\">doc" + i + "</field>\n"
-                 + "   <field name=\"recordBase\">myBase</field>\n"
-                 + "   <field name=\"" + field + "\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
+                    "doc" + i, "dummy",
+                    ("<doc boost=\"" + (0.5 + random.nextDouble()) + "\"><field name=\"recordID\">doc" + i + "</field>\n"
+                     + "   <field name=\"recordBase\">myBase</field>\n"
+                     + "   <field name=\"fulltext\">r" + (char) ('a' + random.nextInt(10)) + " c" + i + "</field>\n"
+                     + "   <field name=\"" + field + "\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
         }
         return new PayloadFeederHelper(samples);
     }

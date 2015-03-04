@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServe
 import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearcherAggregator;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
 import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,9 +40,7 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -49,7 +48,7 @@ import java.util.List;
 public class GroupMergeTest extends SolrSearchDualTestBase {
     private static Log log = LogFactory.getLog(GroupMergeTest.class);
 
-    public static final int DOCS = 100;
+    public static final int DOCS = 200;
 
     @Override
     public void setUp() throws Exception {
@@ -80,7 +79,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 SolrSearchNode.CONF_SOLR_HOST, "localhost:" + (EmbeddedJettyWithSolrServer.DEFAULT_PORT+1)
         ));
         ResponseCollection responses = new ResponseCollection();
-        searchNode.search(new Request(DocumentKeys.SEARCH_QUERY, "*:*"), responses);
+        searchNode.search(new Request(DocumentKeys.SEARCH_QUERY, "fulltext:ra"), responses);
         assertTrue("There should be hits", ((DocumentResponse)responses.iterator().next()).getHitCount() > 0);
         searchNode.close();
     }
@@ -94,7 +93,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
         searchNode.close();
     }
 
-    public void testLocalNodeAggregator() throws RemoteException {
+    public void testLocalNodeAggregatorPaging() throws RemoteException {
         SearchNodeAggregator aggregator = new SearchNodeAggregator(
                 Configuration.newMemoryBased(),
                 new ArrayList<SearchNode>(Arrays.asList(
@@ -106,6 +105,34 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                                 "localhost:" + (EmbeddedJettyWithSolrServer.DEFAULT_PORT+2)))
                 )));
         testPaging(aggregator);
+        aggregator.close();
+    }
+
+    public void testLocalNodeAggregatorScoreOrder() throws RemoteException {
+        SearchNodeAggregator aggregator = new SearchNodeAggregator(
+                Configuration.newMemoryBased(),
+                new ArrayList<SearchNode>(Arrays.asList(
+                        new SolrSearchNode(Configuration.newMemoryBased(
+                                SolrSearchNode.CONF_SOLR_HOST,
+                                "localhost:" + (EmbeddedJettyWithSolrServer.DEFAULT_PORT+1))),
+                        new SolrSearchNode(Configuration.newMemoryBased(
+                                SolrSearchNode.CONF_SOLR_HOST,
+                                "localhost:" + (EmbeddedJettyWithSolrServer.DEFAULT_PORT+2)))
+                )));
+        ResponseCollection responses = new ResponseCollection();
+        aggregator.search(new Request(
+                DocumentKeys.SEARCH_QUERY, "fulltext:ra"
+        ), responses);
+        assertTrue("There should be hits", ((DocumentResponse) responses.iterator().next()).getHitCount() > 0);
+        List<Double> scores = getScores(responses);
+        List<Double> sortedScores = new ArrayList<>(scores);
+        Collections.sort(sortedScores, new Comparator<Double>() {
+            @Override
+            public int compare(Double o1, Double o2) {
+                return o2.compareTo(o1); // Reverse
+            }
+        });
+        assertEquals("The score order should be descending", Strings.join(sortedScores), Strings.join(scores));
         aggregator.close();
     }
 
@@ -168,8 +195,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
             SearchNode searchNode, String group, int start, int maxGroups) throws RemoteException {
         ResponseCollection responses = new ResponseCollection();
         searchNode.search(new Request(
-                DocumentKeys.SEARCH_QUERY, "*:*",
-                DocumentKeys.SEARCH_SORTKEY, "group",
+                DocumentKeys.SEARCH_QUERY, "fulltext:ra",
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, group,
                 DocumentSearcher.SEARCH_START_INDEX, start,
@@ -181,8 +207,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
     private List<String> getGroups(
             SummaSearcher searcher, String group, int start, int maxGroups) throws IOException {
         ResponseCollection responses = searcher.search(new Request(
-                DocumentKeys.SEARCH_QUERY, "*:*",
-                DocumentKeys.SEARCH_SORTKEY, "group",
+                DocumentKeys.SEARCH_QUERY, "fulltext:ra",
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, group,
                 DocumentSearcher.SEARCH_START_INDEX, start,
@@ -215,7 +240,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 DocumentSearcher.SEARCH_QUERY, "hest",
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, "editionUUID",
-                DocumentSearcher.SEARCH_MAX_RECORDS, 20
+                DocumentSearcher.SEARCH_MAX_RECORDS, 6
         )));
 //        log.info("All\n" + Strings.join(groupsAll, "\n"));
 
@@ -224,7 +249,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, "editionUUID",
                 DocumentSearcher.SEARCH_START_INDEX, 0,
-                DocumentSearcher.SEARCH_MAX_RECORDS, 20
+                DocumentSearcher.SEARCH_MAX_RECORDS, 3
         )));
 //        log.info("First3\n" + Strings.join(groupsFirst3, "\n"));
 
@@ -233,11 +258,11 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, "editionUUID",
                 DocumentSearcher.SEARCH_START_INDEX, 3,
-                DocumentSearcher.SEARCH_MAX_RECORDS, 17
+                DocumentSearcher.SEARCH_MAX_RECORDS, 3
         )));
 //        log.info("Second3\n" + Strings.join(groupsSecond3, "\n"));
 
-        assertEquals("All-group should contain the right number of groups", 20, groupsAll.size());
+        assertEquals("All-group should contain the right number of groups", 6, groupsAll.size());
         ExtraAsserts.assertEquals("The first 3 groups should match those from the all-group",
                                   groupsAll.subList(0, 3), groupsFirst3.subList(0, 3));
         ExtraAsserts.assertEquals("The second 3 groups should match those from the all-group",
@@ -251,10 +276,31 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
                 for (DocumentResponse.Group group: ((DocumentResponse)response).getGroups()) {
-                    groups.add(group.getGroupValue() + "(" + group.getNumFound() + ")");
+                    groups.add(
+                            group.getGroupValue() + "(" + group.getNumFound() + ", " + group.get(0).getScore() + ")");
                 }
             }
         }
         return groups;
     }
+
+    private List<Double> getScores(ResponseCollection responses) {
+        List<Double> scores = new ArrayList<>();
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)response;
+                if (docs.isGrouped()) {
+                    for (DocumentResponse.Group group: docs.getGroups()) {
+                        scores.add((double)group.get(0).getScore());
+                    }
+                } else {
+                    for (DocumentResponse.Record record: docs.getRecords()) {
+                        scores.add((double)record.getScore());
+                    }
+                }
+            }
+        }
+        return scores;
+    }
+
 }

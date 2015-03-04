@@ -171,7 +171,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         private String groupValue;
         private long numFound;
         private String sortKey;
-        private boolean reverse;
+        private boolean reverse = true; // as sortKey default is null, sort will be on score
         private List<Record> docs = new ArrayList<>();
 
         public Group(String groupValue, long numFound, String sortKey, boolean reverse) {
@@ -295,7 +295,11 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 
         @Override
         public Record set(int index, Record element) {
-            return docs.set(index, element);
+            try {
+                return docs.set(index, element);
+            } finally {
+                sort();
+            }
         }
 
         @Override
@@ -701,7 +705,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     private static ScoreComparator scoreComparatorAsc = new ScoreComparator(false);
     private static ScoreComparator scoreComparatorDesc = new ScoreComparator(true);
     private static class ScoreComparator implements Comparator<Record>, Serializable {
-        private static final long serialVersionUID = 168413842L;
+        private static final long serialVersionUID = 168413843L;
+        private static final float SLOP = 0.0001f;
         private int direction;
 
         public ScoreComparator(boolean reverse) {
@@ -712,8 +717,9 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         @Override
         public int compare(Record o1, Record o2) {
             return direction * (
-                    o1.score == o2.score ? o1.id == null ? 0 : o1.id.compareTo(o2.id) : o1.score > o2.score ? -1 : 1);
-
+                    Math.abs(o1.score-o2.score) < SLOP ?
+                            o1.id == null ? 0 : o1.id.compareTo(o2.id) :
+                            o1.score < o2.score ? -1 : 1);
         }
     }
 
