@@ -126,6 +126,11 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 DocumentKeys.SEARCH_QUERY, "fulltext:ra"
         ), responses);
         assertTrue("There should be hits", ((DocumentResponse) responses.iterator().next()).getHitCount() > 0);
+        assertOrdered("The score order should be descending for local aggregator", responses);
+        aggregator.close();
+    }
+
+    private void assertOrdered(String message, ResponseCollection responses) {
         List<Double> scores = getScores(responses);
         List<Double> sortedScores = new ArrayList<>(scores);
         Collections.sort(sortedScores, new Comparator<Double>() {
@@ -134,17 +139,16 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 return o2.compareTo(o1); // Reverse
             }
         });
-        assertEquals("The score order should be descending", Strings.join(sortedScores), Strings.join(scores));
-        aggregator.close();
+        assertEquals(message, Strings.join(sortedScores), Strings.join(scores));
     }
 
     public void testLocalSingleSearcher() throws Exception {
         SummaSearcher searcher = getSearcher(1);
-        testPaging(searcher);
+        testPaging(searcher, "fulltext:ra");
         searcher.close();
     }
 
-    public void testSearcherAggregator() throws Exception {
+    public void testLocalSearcherAggregator() throws Exception {
         Configuration aggConf = Configuration.newMemoryBased();
         List<Configuration> subConfs =  aggConf.createSubConfigurations(AdjustingSearcherAggregator.CONF_SEARCHERS, 2);
         for (int i = 0 ; i < subConfs.size() ; i++) {
@@ -155,7 +159,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
         try (SummaSearcher searcher1 = getSearcher(1); // Yes they are used!
              SummaSearcher searcher2 = getSearcher(2);
              AdjustingSearcherAggregator aggregator = new AdjustingSearcherAggregator(aggConf)) {
-            testPaging(aggregator);
+            testPaging(aggregator, "fulltext:ra NOT recordBase:backend1");
         }
     }
 
@@ -170,15 +174,15 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
         ), searcher);
     }
 
-    private void testPaging(SummaSearcher searcher) throws IOException {
-        List<String> groupsAll = getGroups(searcher, "group", 0, 6);
+    private void testPaging(SummaSearcher searcher, String query) throws IOException {
+        List<String> groupsAll = getGroups(searcher, query, "group", 0, 6);
         assertEquals("There should be the right number of all-groups", 6, groupsAll.size());
 
-        List<String> groupsFirst3 = getGroups(searcher, "group", 0, 3);
-        List<String> groupsSecond3 = getGroups(searcher, "group", 3, 3);
-        ExtraAsserts.assertEquals("The first 3 groups should match those from the all-group",
+        List<String> groupsFirst3 = getGroups(searcher, query, "group", 0, 3);
+        List<String> groupsSecond3 = getGroups(searcher, query, "group", 3, 3);
+        ExtraAsserts.assertEquals("The first 4 groups should match those from the all-group",
                                   groupsAll.subList(0, 3), groupsFirst3);
-        ExtraAsserts.assertEquals("The second 3 groups should match those from the all-group",
+        ExtraAsserts.assertEquals("The second 4 groups should match those from the all-group",
                                   groupsAll.subList(3, 6), groupsSecond3);
     }
     private void testPaging(SearchNode searchNode) throws RemoteException {
@@ -207,9 +211,9 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
     }
 
     private List<String> getGroups(
-            SummaSearcher searcher, String group, int start, int maxGroups) throws IOException {
+            SummaSearcher searcher, String query, String group, int start, int maxGroups) throws IOException {
         ResponseCollection responses = searcher.search(new Request(
-                DocumentKeys.SEARCH_QUERY, "fulltext:ra",
+                DocumentKeys.SEARCH_QUERY, query,
                 DocumentSearcher.GROUP, true,
                 DocumentSearcher.GROUP_FIELD, group,
                 DocumentSearcher.SEARCH_START_INDEX, start,
@@ -273,6 +277,51 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
         searcher.close();
     }
 
+    public void testRemoteConcreteProblem() throws IOException {
+        final String ADDRESS = "//mars:56800/mediehub-searcher";
+        //final String ADDRESS = "//mars:57300/doms-searcher";
+        //final String ADDRESS = "//mars:56700/aviser-searcher";
+        SummaSearcher searcher = new SearchClient(Configuration.newMemoryBased(
+                SearchClient.CONF_SERVER, ADDRESS));
+        ResponseCollection responses = searcher.search(new Request(DocumentSearcher.SEARCH_QUERY, "hest"));
+        assertFalse("There should be at least one response from " + ADDRESS, responses.isEmpty());
+
+        ResponseCollection responsesAll = searcher.search(getConcreteProblemBase(0, 20));
+        List<String> groupsAll = getGroups(responsesAll);
+        log.info("All\n" + Strings.join(groupsAll, "\n"));
+        assertOrdered("Top-20 remote should be ordered", responsesAll);
+
+        ResponseCollection responsesFirst = searcher.search(getConcreteProblemBase(0, 10));
+        List<String> groupsFirst = getGroups(responsesFirst);
+        log.info("Page 1\n" + Strings.join(groupsFirst, "\n"));
+        assertOrdered("Top-10 remote should be ordered", responsesFirst);
+
+        ResponseCollection responsesSecond = searcher.search(getConcreteProblemBase(10, 10));
+        List<String> groupsSecond = getGroups(responsesSecond);
+        log.info("Page 2\n" + Strings.join(groupsSecond, "\n"));
+        assertOrdered("Page 2 @ 10 remote should be ordered", responsesSecond);
+
+        assertEquals("All-group should contain the right number of groups", 20, groupsAll.size());
+        ExtraAsserts.assertEquals("The first 10 groups should match those from the all-group",
+                                  groupsAll.subList(0, 10), groupsFirst.subList(0, 10));
+        ExtraAsserts.assertEquals("The second 10 groups should match those from the all-group",
+                                  groupsAll.subList(10, 20), groupsSecond.subList(0, 10));
+
+        searcher.close();
+    }
+
+    private Request getConcreteProblemBase(int start, int max) {
+        return new Request(
+                DocumentKeys.SEARCH_QUERY, "hest",
+                DocumentKeys.SEARCH_START_INDEX, start,
+                DocumentKeys.SEARCH_MAX_RECORDS, max,
+                DocumentKeys.SEARCH_FILTER, "lma_long:avis",
+                DocumentKeys.GROUP, true,
+                DocumentKeys.GROUP_FIELD, "editionUUID",
+                DocumentKeys.GROUP_LIMIT, 10
+        );
+    }
+
     private List<String> getGroups(ResponseCollection responses) {
         List<String> groups = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -284,7 +333,8 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                         if (sb.length() != 0) {
                             sb.append(", ");
                         }
-                        sb.append(Float.toString(record.getScore()));
+                        sb.append(Float.toString(record.getScore())).
+                                append("(").append(record.getId()).append(")");
                     }
                     groups.add(
                             group.getGroupValue() + "(" + group.getNumFound() + ": " + sb.toString() + ")");
