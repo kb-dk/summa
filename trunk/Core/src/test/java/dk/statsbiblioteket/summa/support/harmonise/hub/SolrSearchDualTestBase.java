@@ -118,7 +118,7 @@ public class SolrSearchDualTestBase extends TestCase {
         if (backend != 0 && backend != 1) {
             throw new IllegalArgumentException("The only valid backends are 0 and 1");
         }
-        ObjectFilter data = getDataProvider(field, terms);
+        ObjectFilter data = getDataProvider(backend, field, terms);
         ObjectFilter indexer = getIndexer(EmbeddedJettyWithSolrServer.DEFAULT_PORT + 1 + backend);
         indexer.setSource(data);
         //noinspection StatementWithEmptyBody
@@ -161,14 +161,25 @@ public class SolrSearchDualTestBase extends TestCase {
     }
 
     private Random random = new Random(88);
-    protected ObjectFilter getDataProvider(String field, List<String> terms) throws UnsupportedEncodingException {
+    protected ObjectFilter getDataProvider(int backend, String field, List<String> terms) throws UnsupportedEncodingException {
         List<Payload> samples = new ArrayList<>(terms.size());
+        StringBuilder sb = new StringBuilder();
         for (int i = 0 ; i < terms.size() ; i++) {
+            sb.setLength(0);
+            double boost = 0.5 + random.nextDouble()*10;
+            char c = (char) ('a' + random.nextInt(10));
+            for (int token = random.nextInt(terms.size()*2) + 1 ; token >= 0 ; token--) {
+                if (sb.length() != 0) {
+                    sb.append(" ");
+                }
+                sb.append("r").append(c);
+            }
+            System.out.println(terms.get(i) + " " + boost);
             samples.add(new Payload(new Record(
                     "doc" + i, "dummy",
-                    ("<doc boost=\"" + (0.5 + random.nextDouble()) + "\"><field name=\"recordID\">doc" + i + "</field>\n"
-                     + "   <field name=\"recordBase\">myBase</field>\n"
-                     + "   <field name=\"fulltext\">r" + (char) ('a' + random.nextInt(10)) + " c" + i + "</field>\n"
+                    ("<doc boost=\"" + boost + "\"><field name=\"recordID\">doc" + i + "</field>\n"
+                     + "   <field name=\"recordBase\">backend" + backend + "</field>\n"
+                     + "   <field name=\"fulltext\">" + sb.toString() + " c" + i + "</field>\n"
                      + "   <field name=\"" + field + "\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
         }
         return new PayloadFeederHelper(samples);
