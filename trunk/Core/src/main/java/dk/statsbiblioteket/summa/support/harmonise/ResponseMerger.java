@@ -354,6 +354,15 @@ public class ResponseMerger implements Configurable {
         for (SummaSearcherAggregator.ResponseHolder responseHolder: responses) {
             merged.addAll(responseHolder.getResponses());
         }
+        for (Response response: merged) {
+            if (response instanceof DocumentResponse) {
+                DocumentResponse docs = (DocumentResponse)response;
+                if (docs.isGrouped()) {
+                    docs.sort();
+                    docs.reduce();
+                }
+            }
+        }
         merged.addTiming("responsemerger.total", System.currentTimeMillis() - startTime);
         return merged;
     }

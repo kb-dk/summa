@@ -622,7 +622,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         reduce();
     }
 
-    private void reduce() {
+    public void reduce() {
         while (groups.size() > groupRows) {
             groups.remove(groups.size()-1);
         }

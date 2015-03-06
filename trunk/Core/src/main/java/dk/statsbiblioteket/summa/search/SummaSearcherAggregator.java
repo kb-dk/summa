@@ -150,13 +150,17 @@ public class SummaSearcherAggregator implements SummaSearcher {
     @SuppressWarnings({"UnusedDeclaration"})
     protected ResponseCollection merge(Request request, List<ResponseHolder> responses) {
         ResponseCollection merged = new ResponseCollection();
+        addMergedTiming(request, responses, merged);
+        return merged;
+    }
+
+    protected void addMergedTiming(Request request, List<ResponseHolder> responses, ResponseCollection merged) {
         for (ResponseHolder holder: responses) {
             merged.addAll(holder.getResponses());
             if (!"".equals(holder.getResponses().getTopLevelTiming())) {
                 merged.addTiming(holder.getResponses().getTopLevelTiming());
             }
         }
-        return merged;
     }
 
     protected void preProcess(Request request) {
@@ -199,6 +203,11 @@ public class SummaSearcherAggregator implements SummaSearcher {
             List<String> notActives = request.getStrings(SEARCH_NOT_ACTIVE, (List<String>)null);
             if (notActives != null) {
                 selected.removeAll(notActives);
+            }
+            if (request.containsKey(DocumentKeys.SEARCH_MAX_RECORDS)) {
+                // Ask for a bit more to guard against semi-random order for records with same score
+                request.put(DocumentKeys.SEARCH_MAX_RECORDS,
+                            request.getInt(DocumentKeys.SEARCH_MAX_RECORDS) + selected.size() * 2);
             }
             List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<>(selected.size());
             for (Pair<String, SearchClient> searcher: searchers) {
@@ -292,10 +301,11 @@ public class SummaSearcherAggregator implements SummaSearcher {
     }
 
     private void postProcessPaging(ResponseCollection merged, long startIndex, long maxRecords) {
-        if (startIndex == 0) {
+        // We over-ask so we always need this step
+/*        if (startIndex == 0) {
             log.trace("No paging fix needed");
             return;
-        }
+        }*/
         log.trace("Fixing paging with startIndex=" + startIndex + " and maxRecords=" + maxRecords);
         for (Response response: merged) {
             if (!(response instanceof DocumentResponse)) {
