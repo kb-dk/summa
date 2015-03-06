@@ -114,8 +114,8 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
 
 
                 fail(message + ". The objects at position " + counter
-                     + " were not equal. Expected \n'" + expectedO
-                     + "'\n, got \n'" + actualO + "'" + extra);
+                     + " were not equal:\\n'" + expectedO
+                     + "'\n'" + actualO + "'" + extra);
             }
             counter++;
         }

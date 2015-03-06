@@ -167,6 +167,7 @@ public class SolrSearchDualTestBase extends TestCase {
         for (int i = 0 ; i < terms.size() ; i++) {
             sb.setLength(0);
             double boost = 0.5 + random.nextDouble()*10;
+
             char c = (char) ('a' + random.nextInt(10));
             for (int token = random.nextInt(terms.size()*2) + 1 ; token >= 0 ; token--) {
                 if (sb.length() != 0) {
@@ -174,7 +175,6 @@ public class SolrSearchDualTestBase extends TestCase {
                 }
                 sb.append("r").append(c);
             }
-            System.out.println(terms.get(i) + " " + boost);
             samples.add(new Payload(new Record(
                     "doc" + i, "dummy",
                     ("<doc boost=\"" + boost + "\"><field name=\"recordID\">doc" + i + "</field>\n"

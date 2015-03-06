@@ -175,26 +175,30 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
     }
 
     private void testPaging(SummaSearcher searcher, String query) throws IOException {
-        List<String> groupsAll = getGroups(searcher, query, "group", 0, 6);
-        assertEquals("There should be the right number of all-groups", 6, groupsAll.size());
-
-        List<String> groupsFirst3 = getGroups(searcher, query, "group", 0, 3);
-        List<String> groupsSecond3 = getGroups(searcher, query, "group", 3, 3);
-        ExtraAsserts.assertEquals("The first 4 groups should match those from the all-group",
-                                  groupsAll.subList(0, 3), groupsFirst3);
-        ExtraAsserts.assertEquals("The second 4 groups should match those from the all-group",
-                                  groupsAll.subList(3, 6), groupsSecond3);
+        final int PAGE = 3;
+        assertPaging(PAGE,
+                     getGroups(searcher, query, "group", 0, PAGE * 2),
+                     getGroups(searcher, query, "group", 0, PAGE),
+                     getGroups(searcher, query, "group", PAGE, PAGE)
+        );
     }
-    private void testPaging(SearchNode searchNode) throws RemoteException {
-        List<String> groupsAll = getGroups(searchNode, "group", 0, 6);
-        assertEquals("There should be the right number of all-groups", 6, groupsAll.size());
 
-        List<String> groupsFirst3 = getGroups(searchNode, "group", 0, 3);
-        List<String> groupsSecond3 = getGroups(searchNode, "group", 3, 3);
-        ExtraAsserts.assertEquals("The first 3 groups should match those from the all-group",
-                                  groupsAll.subList(0, 3), groupsFirst3);
-        ExtraAsserts.assertEquals("The second 3 groups should match those from the all-group",
-                                  groupsAll.subList(3, 6), groupsSecond3);
+    private void testPaging(SearchNode searchNode) throws RemoteException {
+        final int PAGE = 3;
+
+        assertPaging(PAGE,
+                     getGroups(searchNode, "group", 0, PAGE * 2),
+                     getGroups(searchNode, "group", 0, PAGE),
+                     getGroups(searchNode, "group", PAGE, PAGE)
+        );
+    }
+
+    private void assertPaging(int pageSize, List<String> groupsAll, List<String> groupsFirst, List<String> groupsSecond) {
+        assertEquals("There should be the right number of all-groups", pageSize*2, groupsAll.size());
+        ExtraAsserts.assertEquals("The first " + pageSize + " groups should match those from the all-group",
+                                  groupsAll.subList(0, pageSize), groupsFirst);
+        ExtraAsserts.assertEquals("The second " + pageSize + " groups should match those from the all-group",
+                                  groupsAll.subList(pageSize, pageSize*2), groupsSecond);
     }
 
     private List<String> getGroups(
