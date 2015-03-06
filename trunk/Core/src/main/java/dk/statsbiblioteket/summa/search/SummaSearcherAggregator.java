@@ -206,8 +206,8 @@ public class SummaSearcherAggregator implements SummaSearcher {
             }
             if (request.containsKey(DocumentKeys.SEARCH_MAX_RECORDS)) {
                 // Ask for a bit more to guard against semi-random order for records with same score
-                request.put(DocumentKeys.SEARCH_MAX_RECORDS,
-                            request.getInt(DocumentKeys.SEARCH_MAX_RECORDS) + selected.size() * 2);
+//                request.put(DocumentKeys.SEARCH_MAX_RECORDS,
+//                            request.getInt(DocumentKeys.SEARCH_MAX_RECORDS) + selected.size() * 2);
             }
             List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<>(selected.size());
             for (Pair<String, SearchClient> searcher: searchers) {
@@ -312,6 +312,11 @@ public class SummaSearcherAggregator implements SummaSearcher {
                 continue;
             }
             DocumentResponse docResponse = (DocumentResponse)response;
+/*            System.out.println("*** postAggregate Group count " + docResponse.getGroups().size());
+            for (DocumentResponse.Group group: docResponse.getGroups()) {
+                System.out.println("Group " + group.get(0).getScore() + " " + group.get(0).getFieldValue("group", "N/A"));
+            }
+  */
             docResponse.setStartIndex(startIndex);
             docResponse.setMaxRecords(maxRecords);
             if (docResponse.isGrouped()) {

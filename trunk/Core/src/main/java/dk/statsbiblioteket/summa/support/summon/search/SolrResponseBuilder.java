@@ -159,12 +159,12 @@ public class SolrResponseBuilder implements Configurable {
 
     public long buildResponses(final Request request, final SolrFacetRequest facets, final ResponseCollection responses,
                                String solrResponse, String solrTiming) throws XMLStreamException {
-/*
-        System.out.println("***");
-        System.err.println(request);
-        System.out.println("***");
-        System.out.println(solrResponse.replace(">", ">\n"));
-   */
+
+   //     System.out.println("***");
+   //     System.err.println(request);
+//        System.out.println("***");
+//        System.out.println(solrResponse.replace(">", ">\n"));
+
         long startTime = System.currentTimeMillis();
         log.debug("buildResponses(...) called");
         XMLStreamReader xml;
@@ -281,6 +281,11 @@ public class SolrResponseBuilder implements Configurable {
         documentResponse.addTiming("reportedtime", documentResponse.getSearchTime());
         documentResponse.addTiming("buildresponses.total", System.currentTimeMillis() - startTime);
         responses.add(documentResponse);
+/*        System.out.println("*** Solr group count " + documentResponse.getGroups().size());
+        for (DocumentResponse.Group group: documentResponse.getGroups()) {
+            System.out.println("Group " + group.get(0).getScore() + " " + group.get(0).getFieldValue("group", "N/A"));
+        }
+  */
         return documentResponse.getHitCount();
     }
 
