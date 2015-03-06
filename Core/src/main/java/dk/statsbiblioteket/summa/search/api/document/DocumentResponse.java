@@ -632,6 +632,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     }
 
     public void sort() {
+/*        System.out.println("*** sort-pre Group count " + getGroups().size());
+        for (DocumentResponse.Group group: getGroups()) {
+            System.out.println("Group " + group.get(0).getScore() + " " + group.get(0).getFieldValue("group", "N/A"));
+        }*/
         Collections.sort(groups, getGroupComparator());
     }
 
@@ -713,14 +717,21 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             this.direction = reverse ? -1 : 1;
         }
 
-        @SuppressWarnings("FloatingPointEquality")
+        // We cannot default to id comparison as Solr stops at score qeuality
+        // See Lucene's FieldComparator.RelevanceComparator#compareBottom
+        @Override
+        public int compare(Record o1, Record o2) {
+            return direction * Float.compare(o1.getScore(), o2.getScore());
+        }
+
+/*        @SuppressWarnings("FloatingPointEquality")
         @Override
         public int compare(Record o1, Record o2) {
             return direction * (
                     Math.abs(o1.score-o2.score) < SLOP ?
                             o1.id == null ? 0 : o1.id.compareTo(o2.id) :
                             o1.score < o2.score ? -1 : 1);
-        }
+        }*/
     }
 
     /**

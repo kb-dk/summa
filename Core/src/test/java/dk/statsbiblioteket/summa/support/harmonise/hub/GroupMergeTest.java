@@ -148,7 +148,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
         searcher.close();
     }
 
-    public void testLocalSearcherAggregator() throws Exception {
+    public void testLocalAggregatorLocalSearchers() throws Exception {
         Configuration aggConf = Configuration.newMemoryBased();
         List<Configuration> subConfs =  aggConf.createSubConfigurations(AdjustingSearcherAggregator.CONF_SEARCHERS, 2);
         for (int i = 0 ; i < subConfs.size() ; i++) {
@@ -163,6 +163,22 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
         }
     }
 
+    // Only works on SB
+    public void testLocalAggregatorRemoteSearchers() throws Exception {
+        Configuration aggConf = Configuration.newMemoryBased();
+        List<Configuration> subConfs =  aggConf.createSubConfigurations(AdjustingSearcherAggregator.CONF_SEARCHERS, 2);
+        subConfs.get(0).set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "doms");
+        subConfs.get(0).set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:57300/doms-searcher");
+        subConfs.get(0).set(InteractionAdjuster.CONF_IDENTIFIER, "doms");
+        subConfs.get(1).set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "aviser");
+        subConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:56700/aviser-searcher");
+        subConfs.get(1).set(InteractionAdjuster.CONF_IDENTIFIER, "aviser");
+
+        try (AdjustingSearcherAggregator aggregator = new AdjustingSearcherAggregator(aggConf)) {
+            testPaging(aggregator, "hest lma_long:avis", "editionUUID");
+        }
+    }
+
     private RMISearcherProxy getSearcher(int searcherID) throws IOException {
         SolrSearchNode searchNode = new SolrSearchNode(Configuration.newMemoryBased(
                 SolrSearchNode.CONF_SOLR_HOST, "localhost:" + (EmbeddedJettyWithSolrServer.DEFAULT_PORT + searcherID)
@@ -173,6 +189,30 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 RMISearcherProxy.CONF_SERVICE_NAME, "searcher" + searcherID
         ), searcher);
     }
+    /*
+
+ *** Group count 6
+Group 30.989357 doc80
+Group 24.157986 doc26
+Group 20.518549 doc85
+Group 20.518549 doc45
+Group 20.059034 doc18
+Group 12.384978 doc34
+
+ *** Group count 3
+Group 30.989357 doc80
+Group 24.157986 doc26
+Group 20.518549 doc45
+
+ *** Group count 6
+Group 30.989357 doc80
+Group 24.157986 doc26
+Group 20.518549 doc85
+Group 20.518549 doc45
+Group 20.059034 doc18
+Group 12.384978 doc34
+     */
+
 
     private void testPaging(SummaSearcher searcher, String query) throws IOException {
         final int PAGE = 3;
@@ -180,6 +220,15 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                      getGroups(searcher, query, "group", 0, PAGE * 2),
                      getGroups(searcher, query, "group", 0, PAGE),
                      getGroups(searcher, query, "group", PAGE, PAGE)
+        );
+    }
+
+    private void testPaging(SummaSearcher searcher, String query, String group) throws IOException {
+        final int PAGE = 3;
+        assertPaging(PAGE,
+                     getGroups(searcher, query, group, 0, PAGE * 2),
+                     getGroups(searcher, query, group, 0, PAGE),
+                     getGroups(searcher, query, group, PAGE, PAGE)
         );
     }
 
@@ -223,7 +272,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                 DocumentSearcher.SEARCH_START_INDEX, start,
                 DocumentSearcher.SEARCH_MAX_RECORDS, maxGroups
         ));
-        return getGroups(responses);
+        return getGroups(responses, group);
     }
 
     private void basicIngest(int docs) throws IOException {
@@ -327,6 +376,10 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
     }
 
     private List<String> getGroups(ResponseCollection responses) {
+        return getGroups(responses, "recordID");
+    }
+
+    private List<String> getGroups(ResponseCollection responses, String field) {
         List<String> groups = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         for (Response response: responses) {
@@ -338,7 +391,7 @@ public class GroupMergeTest extends SolrSearchDualTestBase {
                             sb.append(", ");
                         }
                         sb.append(Float.toString(record.getScore())).
-                                append("(").append(record.getId()).append(")");
+                                append("(").append(record.getFieldValue(field, "N/A")).append(")");
                     }
                     groups.add(
                             group.getGroupValue() + "(" + group.getNumFound() + ": " + sb.toString() + ")");
