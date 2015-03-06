@@ -175,7 +175,7 @@ public class FacetQueryTransformer {
         if (tq.getTerm().text() == null || "".equals(tq.getTerm().text())) {
             throw new ParseException("Encountered TermQuery without text '" + tq + "'");
         }
-        addFacetQuery(querymap, tq.getTerm().field(), tq.getTerm().text(), negated);
+        addFacetQuery(querymap, tq.getTerm().field(), tq.getTerm().text().replace(",", "%5C"), negated);
         //append(querymap, "s.fvf", tq.getTerm().field() + "," + tq.getTerm().text() + "," + negated);
     }
 
