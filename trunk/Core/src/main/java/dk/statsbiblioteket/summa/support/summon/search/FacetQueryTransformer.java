@@ -150,7 +150,7 @@ public class FacetQueryTransformer {
             }
             terms.append(term.text());
         }
-        addFacetQuery(querymap, pq.getTerms()[0].field(), terms.toString(), negated);
+        addFacetQuery(querymap, pq.getTerms()[0].field(), terms.toString().replace(",", "%5C"), negated);
     }
 
     /**
