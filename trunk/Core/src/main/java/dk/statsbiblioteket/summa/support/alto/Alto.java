@@ -479,7 +479,8 @@ public class Alto {
         @Override
         public List<String> getAllTexts() {
             if (subsContent != null && hyphenMode == HYPHEN_MODE.join) {
-                if (content.equals(subsContent.substring(0, content.length()))) { // Content is prefix
+                if (content.length() <= subsContent.length() &&
+                    content.equals(subsContent.substring(0, content.length()))) { // Content is prefix
                     return Arrays.asList(subsContent);
                 }
                 return Collections.emptyList();
