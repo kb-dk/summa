@@ -93,7 +93,8 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
             }
         }
         if (logDiscards) {
-            Logging.logProcess(getName(), "Discarding payload", Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess(getName(), "Discarding payload #" + discardCount + "/" + totalCount,
+                               Logging.LogLevel.DEBUG, payload);
         }
         return !discard;
     }
