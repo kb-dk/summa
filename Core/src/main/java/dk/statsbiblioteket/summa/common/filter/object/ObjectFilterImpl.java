@@ -45,6 +45,14 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     public static final String CONF_PROCESS_LOGLEVEL = "process.loglevel";
     public static final Logging.LogLevel DEFAULT_FEEDBACK = Logging.LogLevel.TRACE;
 
+    /**
+     * Log overall status in the class log for every x Payloads processed.
+     * </p><p>
+     * Optional. Default is 0 (disabled).
+     */
+    public static final String CONF_STATUS_EVERY = "process.status.every";
+    public static final int DEFAULT_STATUS_EVERY = 0;
+
     private ObjectFilter source;
     private long payloadCount = 0;
     private long totalTimeNS = 0;
@@ -52,12 +60,14 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     private String name;
     private Payload processedPayload = null;
     protected boolean feedback = true;
+    private final int everyStatus;
     // If true, process-time statistics are logged after processPayload-calls
     private Logging.LogLevel processLogLevel;
 
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
         processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
+        everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         log.info("Created " + this);
     }
 
@@ -128,6 +138,9 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 log.debug(getName() + " processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms");
             }
             break;
+        }
+        if (everyStatus > 0 && payloadCount % everyStatus == 0) {
+            log.info(this);
         }
         return processedPayload != null;
     }
