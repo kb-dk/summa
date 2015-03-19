@@ -52,6 +52,15 @@ import java.util.NoSuchElementException;
 // TODO: If keepalive, the state should be saved at regular intervals
 // TODO: Change the + 1000 ms when the time granularity of JavaDB improves
 public class RecordReader implements ObjectFilter, StorageChangeListener {
+
+    /**
+     * Log overall status in the class log on INFO for every x Payloads processed.
+     * </p><p>
+     * Optional. Default is 0 (disabled).
+     */
+    public static final String CONF_STATUS_EVERY = "process.status.every";
+    public static final int DEFAULT_STATUS_EVERY = 0;
+
     /**
      * Local log instance.
      */
@@ -295,6 +304,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private final boolean stopOnNewer;
     private final boolean allowPartialDeliveries;
     private long firstRecordReceivedTime = -1; // -1 means no records received
+    private final int everyStatus;
 
     /**
      * The storage watcher used to check for changes.
@@ -373,6 +383,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS, DEFAULT_MAX_READ_SECONDS);
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         loadData = conf.getBoolean(CONF_LOAD_DATA_COLUMN, DEFAULT_LOAD_DATA_COLUMN);
+        everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         allowPartialDeliveries = conf.getBoolean(
                 CONF_ALLOW_PARTIAL_DELIVERIES, StorageIterator.DEFAULT_ALLOW_PARTIAL_DELIVERIES);
         if (usePersistence) {
@@ -620,8 +631,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 markEof();
             }
             recordCounter++;
-
-            log.debug("Emitting " + payload);
+            log.debug("Emitting #" + recordCounter + ": " + payload);
+            if (everyStatus > 0 && recordCounter % everyStatus == 0) {
+                log.info(this);
+            }
 
             if (log.isTraceEnabled()) {
                 log.trace("next(): Got lastModified timestamp " +

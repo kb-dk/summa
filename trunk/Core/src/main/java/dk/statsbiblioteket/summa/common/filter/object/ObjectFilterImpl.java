@@ -46,7 +46,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     public static final Logging.LogLevel DEFAULT_FEEDBACK = Logging.LogLevel.TRACE;
 
     /**
-     * Log overall status in the class log for every x Payloads processed.
+     * Log overall status in the class log on INFO for every x Payloads processed.
      * </p><p>
      * Optional. Default is 0 (disabled).
      */
