@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+    <!-- Note that boost is no longer a valid attribute for fields.
+     Instead indexBoost and queryBoost should be used.
+     The boosts has been left in this file to use as
+     inspiration for queryBoosts.
+     Note: Tweaks to boosts should be subtle.
+           A boost of 10 is almost always too much.
+           Go for 1.5 or maybe 2 instead.
+     Note: Boosts below 1 works just fine.
+           Negative boosts are illegal.
+ -->
+    <groups>
+        <group name="ti">
+            <field ref="title"/>
+        </group>
+        <group name="lma">
+            <field ref="lma"/>
+            <field ref="lma_long"/>
+        </group>
+    </groups>
+
+    <fields>
+        <field name="freetext" parent="freetext" queryBoost="0.5"/>
+        <field name="title" parent="text" queryBoost="1.8" multiValued="false" inFreeText="true"/>
+        <field name="sort_title" parent="keyword" inFreeText="true" sortLocale="da"/>
+        <field name="sort_time" parent="keyword"/>
+        <field name="lma" parent="storedKeyword" inFreeText="true"/>
+        <field name="lma_long" parent="storedKeyword" inFreeText="true"/>
+
+        <field name="content" parent="text" multiValued="true" inFreeText="true"/>
+        <field name="starttime" parent="storedVerbatim" inFreeText="true"/>
+        <field name="endtime" parent="storedVerbatim" inFreeText="true"/>
+        <field name="boundingbox" parent="storedVerbatim" inFreeText="false"/>
+        <field name="boundingboxfraction" parent="storedVerbatim" inFreeText="false"/>
+        <field name="url" parent="storedVerbatim"/>
+        <field name="timeapproximate" parent="storedKeyword" inFreeText="false"/>
+        <field name="filename" parent="storedVerbatim" inFreeText="true"/>
+        <field name="date" parent="storedVerbatim" inFreeText="true"/>
+        <field name="year" parent="storedVerbatim" inFreeText="true"/>
+    </fields>
+    <defaultLanguage>da</defaultLanguage>
+
+    <defaultSearchFields>
+        <field ref="ti"/>
+        <field ref="content"/>
+        <field ref="freetext"/>
+    </defaultSearchFields>
+
+    <QueryParser defaultOperator="AND"/>
+
+    <!-- Used by MoreLikeThis in LucenesearchNode -->
+    <lu:moreLikethisFields xmlns:lu="http://statsbiblioteket.dk/summa/2009/LuceneIndexDescriptor">
+        <field ref="title"/>
+        <field ref="content"/>
+        <field ref="starttime"/>
+        <field ref="endtime"/>
+    </lu:moreLikethisFields>
+
+    <facets xmlns="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+        <facet ref="recordBase" defaultTags="20"/>
+        <facet ref="title"/>
+        <facet ref="starttime"/>
+        <facet ref="year"/>
+        <facet ref="date"/>
+    </facets>
+
+</IndexDescriptor>
