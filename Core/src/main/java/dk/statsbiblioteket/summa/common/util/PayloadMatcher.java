@@ -79,7 +79,45 @@ public class PayloadMatcher {
      * Optional. Default is full.
      */
     public static final String CONF_MATCH_METHOD = "payloadmatcher.method";
-    public static final String DEFAULT_MATCH_METHOD = "full";
+    public static final String DEFAULT_MATCH_METHOD = MATCH_METHOD.full.toString();
+    public static enum MATCH_METHOD {full, partial}
+
+    /**
+     * Paired with {@link #CONF_MATCH_AMOUNT} to define the amount of matches needed.
+     * </p><p>
+     * Optional. Default it 'more', with CONT_MATCH_AMOUNT=0, thereby requiring 1 or more matches.
+     * </p>
+     */
+    public static final String CONF_MATCH_AMOUNT_EQUALITY = "payloadmatcher.amount.equality";
+    public static final String DEFAULT_MATCH_AMOUNT_EQUALITY = MATCH_AMOUNT_EQUALITY.more.toString();
+    public static enum MATCH_AMOUNT_EQUALITY {
+        less {
+            @Override
+            public String sign() {
+                return "<";
+            }
+        }, equal {
+            @Override
+            public String sign() {
+                return "=";
+            }
+        }, more {
+            @Override
+            public String sign() {
+                return ">";
+            }
+        };
+        public abstract String sign();
+    }
+
+    /**
+     * The amount of matches required, measured with the {@link #CONF_MATCH_AMOUNT_EQUALITY} modifier.
+     * </p><p>
+     * Optional. Default is 0.
+     */
+    public static final String CONF_MATCH_AMOUNT = "payloadmatcher.amount";
+    public static final int DEFAULT_MATCH_AMOUNT = 0;
+
 
     /**
      * Whether or not all regexp patterns should be treated as DOT_ALL (multi line matching).
@@ -94,8 +132,10 @@ public class PayloadMatcher {
     private List<Matcher> contentMatchers;
     private List<String> metaKeys;
     private List<Matcher> metaValueMatchers;
-    private final boolean methodFull;
+    private final MATCH_METHOD matchMethod;
     private final boolean dotAll;
+    private final int matchAmount;
+    private final MATCH_AMOUNT_EQUALITY matchEquality;
 
 
     public PayloadMatcher(Configuration conf) {
@@ -129,8 +169,11 @@ public class PayloadMatcher {
                      + PayloadMatcher.CONF_CONTENT_REGEX
                      + " to control the behaviour");
         }
-        methodFull = "full".equals(conf.getString(CONF_MATCH_METHOD, DEFAULT_MATCH_METHOD));
+        matchMethod = MATCH_METHOD.valueOf(conf.getString(CONF_MATCH_METHOD, DEFAULT_MATCH_METHOD));
         dotAll = conf.getBoolean(CONF_DOT_ALL, DEFAULT_DOT_ALL);
+        matchAmount = conf.getInt(CONF_MATCH_AMOUNT, DEFAULT_MATCH_AMOUNT);
+        matchEquality = MATCH_AMOUNT_EQUALITY.valueOf(
+                conf.getString(CONF_MATCH_AMOUNT_EQUALITY, DEFAULT_MATCH_AMOUNT_EQUALITY));
         log.info("Constructed " + this);
     }
 
@@ -163,12 +206,14 @@ public class PayloadMatcher {
         if (log.isTraceEnabled()) {
             log.trace("matching " + payload);
         }
-        if (isMatch(idMatchers, payload.getId())) {
-            return true;
+        MatchState matchState = new MatchState();
+
+        updateMatch(idMatchers, payload.getId(), matchState);
+        if (matchState.canTerminateEarly()) {
+            return matchState.earlyTerminationResult();
         }
 
-        if (baseMatchers != null || contentMatchers != null ||
-            metaKeys != null) {
+        if (baseMatchers != null || contentMatchers != null || metaKeys != null) {
             if (payload.getRecord() == null) {
                 Logging.logProcess(this.getClass().getSimpleName(),
                         "Payload without Record. Cannot perform extended matching",
@@ -183,12 +228,15 @@ public class PayloadMatcher {
                 if (value != null &&
                     (metaValueMatchers == null
                      || metaValueMatchers.get(i).reset(value.toString()).matches())) {
-                    return true;
+                    matchState.inc();
+                    if (matchState.canTerminateEarly()) {
+                        return matchState.earlyTerminationResult();
+                    }
                 }
             }
         }
 
-        return isMatch(payload.getRecord());
+        return isMatch(payload.getRecord(), matchState);
     }
 
     /**
@@ -196,49 +244,142 @@ public class PayloadMatcher {
      * @return true if the Record matched, else false.
      */
     public boolean isMatch(Record record) {
-        if (isMatch(idMatchers, record.getId())) {
-            return true;
+        return isMatch(record, new MatchState());
+    }
+    private boolean isMatch(Record record, MatchState matchState) {
+        if (updateMatch(idMatchers, record.getId(), matchState)) {
+            return matchState.earlyTerminationResult();
         }
-        if (baseMatchers != null && isMatch(baseMatchers, record.getBase())) {
-            return true;
+
+        if (updateMatch(baseMatchers, record.getBase(), matchState)) {
+            return matchState.earlyTerminationResult();
         }
-        if (contentMatchers != null &&
-            isMatch(contentMatchers, record.getContentAsUTF8())) {
-            return true;
+        if (contentMatchers != null && updateMatch(contentMatchers, record.getContentAsUTF8(), matchState)) {
+            return matchState.earlyTerminationResult();
         }
         if (metaKeys != null) {
             for (int i = 0 ; i < metaKeys.size() ; i++) {
                 String metaKey = metaKeys.get(i);
                 Object value;
                 if ((value = record.getMeta(metaKey)) != null) {
-                    if (metaValueMatchers == null ||
-                        metaValueMatchers.get(i).reset(value.toString()).matches()) {
-                        return true;
+                    if (metaValueMatchers == null || metaValueMatchers.get(i).reset(value.toString()).matches()) {
+                        matchState.inc();
+                        if (matchState.canTerminateEarly()) {
+                            return matchState.earlyTerminationResult();
+                        }
                     }
                 }
             }
         }
+
+        // Final evaluation
+        if (matchState.hasSucceeded(true)) {
+            return true;
+        }
+        if (matchState.hasFailed(true)) {
+            return false;
+        }
+        Logging.logProcess("PayloadMatcher", "Unable to calculate final match state, returning false",
+                           Logging.LogLevel.ERROR, record.getId());
         return false;
     }
 
-    private boolean isMatch(List<Matcher> matchers, String value) {
+    private class MatchState {
+        int count = 0;
+        public boolean hasFailed(boolean finished) {
+            if (finished) {
+                switch (matchEquality) {
+                    case equal: return count != matchAmount;
+                    case less: return count >= matchAmount;
+                    case more: return count <= matchAmount;
+                    default: throw new IllegalArgumentException("Unknown equality '" + matchEquality + "'");
+                }
+            }
+            // Not finished
+            switch (matchEquality) {
+                case equal: return count > matchAmount; // Only if exceeded
+                case less: return count >= matchAmount; // If equal or exceeded
+                case more: return false; // Cannot be sure yet
+                default: throw new IllegalArgumentException("Unknown equality '" + matchEquality + "'");
+            }
+        }
+
+        public boolean hasSucceeded(boolean finished) {
+            if (finished) {
+                switch (matchEquality) {
+                    case equal: return count == matchAmount;
+                    case less: return count < matchAmount;
+                    case more: return count > matchAmount;
+                    default: throw new IllegalArgumentException("Unknown equality '" + matchEquality + "'");
+                }
+            }
+            // Not finished
+            switch (matchEquality) {
+                case equal: return false; // Cannot be sure yet
+                case less: return false; // Cannot be sure yet
+                case more: return count > matchAmount;
+                default: throw new IllegalArgumentException("Unknown equality '" + matchEquality + "'");
+            }
+        }
+
+        public boolean canTerminateEarly() {
+            return hasSucceeded(false) || hasFailed(false);
+        }
+
+        public boolean earlyTerminationResult() {
+            if (hasSucceeded(false)) {
+                return true;
+            } else if (hasFailed(false)) {
+                return false;
+            }
+            throw new IllegalStateException(
+                    "Unable to calculate early termination result with canTerminateEarly()==" + canTerminateEarly());
+        }
+
+        // Add 1 match point
+        public void inc() {
+            count++;
+        }
+    }
+
+    private boolean updateMatch(List<Matcher> matchers, String value, MatchState matchState) {
         if (matchers == null) {
-            return false;
+            return matchState.canTerminateEarly();
         }
         for (Matcher m : matchers) {
-            if (methodFull ? m.reset(value).matches() : m.reset(value).find()) {
+            switch (matchMethod) {
+                case full: {
+                    if (m.reset(value).matches()) {
+                        matchState.inc();
+                    }
+                    break;
+                }
+                case partial: {
+                    m.reset(value);
+                    while (m.find()) {
+                        matchState.inc();
+                        if (matchState.canTerminateEarly()) {
+                            return true;
+                        }
+                    }
+                    break;
+                }
+                default: throw new IllegalArgumentException("The match method '" + matchMethod + "' is not supported");
+            }
+            if (matchState.canTerminateEarly()) {
                 return true;
             }
         }
-        return false;
+        return matchState.canTerminateEarly();
     }
 
     @Override
     public String toString() {
-        return "PayloadMatcher(dotAll=" + dotAll + ", matchMethod=" + (methodFull ? "full" : "partial") + "idPatterns=["
+        return "PayloadMatcher(dotAll=" + dotAll + ", matchMethod=" + matchMethod + ", idPatterns=["
                 + toString(idMatchers) + "], basePatterns=[" + toString(baseMatchers) + "], contentPatterns=["
                 + toString(contentMatchers) + "], metaKeys=[" + (metaKeys == null ? "" : Strings.join(metaKeys))
-                + "], metaPatterns=[" + toString(metaValueMatchers) + "])";
+                + "], metaPatterns=[" + toString(metaValueMatchers)
+                + "], matchEquality/amount: " + matchEquality.sign() + " " + matchAmount + ")";
     }
 
     private String toString(List<Matcher> matchers) {
