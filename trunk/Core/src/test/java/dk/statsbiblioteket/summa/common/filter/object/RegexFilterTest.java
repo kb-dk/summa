@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import junit.framework.TestCase;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -119,7 +120,43 @@ public class RegexFilterTest extends TestCase {
 
         assertEquals(2, buf.size());
         assertEquals("id1", buf.get(0).getRecord().getId());
+        assertEquals("id2", buf.get(1).getRecord().getId());
+    }
+
+    public void testEqualityEqual() throws Exception {
+        PayloadBufferFilter buf = getEqualityResult(PayloadMatcher.MATCH_AMOUNT_EQUALITY.equal, 2);
+        assertEquals(1, buf.size());
         assertEquals("id1", buf.get(0).getRecord().getId());
+    }
+    public void testEqualityLess() throws Exception {
+        PayloadBufferFilter buf = getEqualityResult(PayloadMatcher.MATCH_AMOUNT_EQUALITY.less, 2);
+        assertEquals(1, buf.size());
+        assertEquals("id2", buf.get(0).getRecord().getId());
+    }
+    public void testEqualityMore() throws Exception {
+        PayloadBufferFilter buf = getEqualityResult(PayloadMatcher.MATCH_AMOUNT_EQUALITY.more, 1);
+        assertEquals(1, buf.size());
+        assertEquals("id1", buf.get(0).getRecord().getId());
+    }
+
+    private PayloadBufferFilter getEqualityResult(
+            PayloadMatcher.MATCH_AMOUNT_EQUALITY matchEquality, int matchAmount) throws IOException {
+        RegexFilter filter = new RegexFilter(Configuration.newMemoryBased(
+                PayloadMatcher.CONF_CONTENT_REGEX, "test",
+                PayloadMatcher.CONF_MATCH_METHOD, PayloadMatcher.MATCH_METHOD.partial,
+                PayloadMatcher.CONF_MATCH_AMOUNT, matchAmount,
+                PayloadMatcher.CONF_MATCH_AMOUNT_EQUALITY, matchEquality,
+                RegexFilter.CONF_MODE, "inclusive"
+        ));
+
+        PayloadBufferFilter buf = prepareFilterChain(
+                       filter,
+                       new Record("id1", "base1", "test content 1a and test content 1b".getBytes()),
+                       new Record("id2", "base1", "test content 2".getBytes()));
+
+        // Flush the filter chain
+        while (buf.pump()){}
+        return buf;
     }
 
     public void testUnconfiguredInclusive() throws Exception {
