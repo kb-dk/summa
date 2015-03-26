@@ -792,7 +792,7 @@ public class SummonSearchNode extends SolrSearchNode {
      * Perform a search in Summon.
      *
      * @param request    the basic request.
-     * @param filter     a Solr-style filter (same syntax as query).
+     * @param filters    Solr-style filters (same syntax as query).
      * @param query      a Solr-style query.
      * @param solrParams optional extended params for Solr. If not null, these will be added to the Solr request.
      * @param facets     which facets to request or null if no facets are wanted.
@@ -806,9 +806,9 @@ public class SummonSearchNode extends SolrSearchNode {
      */
     @Override
     protected Pair<String, String> solrSearch(
-        Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
-        int startIndex, int maxRecords, String sortKey, boolean reverseSort, ResponseCollection responses)
-                                                                                                throws RemoteException {
+        Request request, List<String> filters, String query, Map<String, List<String>> solrParams,
+        SolrFacetRequest facets, int startIndex, int maxRecords, String sortKey, boolean reverseSort,
+        ResponseCollection responses) throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
 
         // Summon treats startIndex as pages and counts from 1
@@ -819,7 +819,7 @@ public class SummonSearchNode extends SolrSearchNode {
         Map<String, List<String>> queryMap;
         try {
             queryMap = buildSolrQuery(
-                request, filter, query, solrParams, facets, startIndex, maxRecords, sortKey, reverseSort);
+                request, filters, query, solrParams, facets, startIndex, maxRecords, sortKey, reverseSort);
         } catch (ParseException e) {
             throw new RemoteException("Unable to build Solr query", e);
         }
@@ -912,8 +912,9 @@ public class SummonSearchNode extends SolrSearchNode {
 
     @Override
     protected Map<String, List<String>> buildSolrQuery(
-        Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
-        int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
+        Request request, List<String> filters, String query, Map<String, List<String>> solrParams,
+        SolrFacetRequest facets, int startIndex, int maxRecords, String sortKey, boolean reverseSort)
+            throws ParseException {
 
         if (maxRecords <= 0) {
             maxRecords = DocumentKeys.DEFAULT_MAX_RECORDS;
@@ -927,33 +928,36 @@ public class SummonSearchNode extends SolrSearchNode {
 
         queryMap.put("s.dym", Arrays.asList("true"));
         queryMap.put("s.ho", Arrays.asList("true"));
-        if (filter != null) { // We allow missing filter
+        if (!filters.isEmpty()) { // We allow missing filter
             boolean facetsHandled = false;
             if (request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
-                Map<String, List<String>> facetRequest = facetQueryTransformer.convertQueryToFacet(filter);
+                Map<String, List<String>> facetRequest = facetQueryTransformer.convertQueriesToFacet(filters);
                 if (facetRequest == null) {
-                    log.debug("Unable to convert facet filter '" + filter + "' to Solr facet request. Switching to "
-                              + "filter/query based handling");
+                    log.debug("Unable to convert facet filter [" + Strings.join(filters) + "] to Solr facet request. " +
+                              "Switching to filter/query based handling");
                 } else {
-                    log.debug("Successfully converted filter '" + filter + "' to Solr facet query");
+                    log.debug("Successfully converted filter [" + Strings.join(filters) + "] to Solr facet query");
                     queryMap.putAll(facetRequest);
                     facetsHandled = true;
                 }
             }
             if (!facetsHandled) {
                 if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
-                    String reducedFilter = convertQuery(filter, null);
-                    if (reducedFilter != null) {
-                        queryMap.put("s.fq", Arrays.asList(reducedFilter)); // FilterQuery
+                    List<String> reducedFilters = convertQueries(filters, null);
+                    if (!reducedFilters.isEmpty()) {
+                        queryMap.put("s.fq", reducedFilters); // FilterQuery
                     }
                 } else {
                     if (query == null) {
                         throw new IllegalArgumentException(
                             "No query and filter marked with '" + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE
-                            + "' is not possible in summon. Filter is '" + filter + "'");
+                            + "' is not possible in summon. Filters are [" + Strings.join(filters) + "]");
                     }
-                    query = "(" + query + ") " + filter;
-                    log.debug("Munging filter after query as the filter '" + filter + "' is marked '"
+                    query = "(" + query + ")";
+                    for (String filter: filters) {
+                        query += "AND (" + filter + ")";
+                    }
+                    log.debug("Munging filter after query as the filters [" + Strings.join(filters) + "] are marked '"
                               + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE + "' and summon is set up to not support pure "
                               + "negative filters natively. resulting query is '" + query + "'");
                 }

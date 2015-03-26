@@ -311,7 +311,7 @@ public class ResponseMergerTest extends TestCase {
         List<Object> records) {
         ResponseCollection collection = new ResponseCollection();
         DocumentResponse docs = new DocumentResponse(
-            request.getString(DocumentKeys.SEARCH_FILTER, null),
+            request.getStrings(DocumentKeys.SEARCH_FILTER, new ArrayList<String>()),
             request.getString(DocumentKeys.SEARCH_QUERY, null),
             0, request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, 20),
             DocumentKeys.SORT_ON_SCORE, false,

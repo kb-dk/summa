@@ -46,7 +46,7 @@ public class SearchClientTest extends TestCase {
             public ResponseCollection search(Request request) throws IOException {
                 ResponseCollection responses = new ResponseCollection();
                 DocumentResponse docResponse = new DocumentResponse(
-                        request.getString(DocumentKeys.SEARCH_FILTER), request.getString(DocumentKeys.SEARCH_QUERY),
+                        request.getStrings(DocumentKeys.SEARCH_FILTER), request.getString(DocumentKeys.SEARCH_QUERY),
                         0, 10, null, false, null, 123, 456);
                 docResponse.addRecord(new DocumentResponse.Record("myrecord", "dummy", 0.5f, null));
                 responses.add(docResponse);

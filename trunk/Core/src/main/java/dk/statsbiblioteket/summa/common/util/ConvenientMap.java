@@ -120,7 +120,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
 
     private String getStringNONPE(String key) {
         Object o = super.get(key);
-        return o == null ? null : "".equals(o) ? null : (String)o;
+        return o == null ? null : "".equals(o) ? null : o.toString();
     }
 
     public String getString(String key) {

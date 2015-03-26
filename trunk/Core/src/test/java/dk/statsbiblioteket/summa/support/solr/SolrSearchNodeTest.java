@@ -380,7 +380,7 @@ public class SolrSearchNodeTest extends TestCase {
         {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(new Request(
-                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy",
+                    DocumentKeys.SEARCH_QUERY, "*:*",
                     DocumentKeys.SEARCH_SORTKEY, "recordID",
                     DocumentKeys.SEARCH_MAX_RECORDS, 20,
                     DocumentKeys.SEARCH_RESULT_FIELDS, "recordID"
@@ -391,7 +391,7 @@ public class SolrSearchNodeTest extends TestCase {
         {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(new Request(
-                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy",
+                    DocumentKeys.SEARCH_QUERY, "*:*",
                     DocumentKeys.SEARCH_SORTKEY, "recordID",
                     DocumentKeys.SEARCH_START_INDEX, 0,
                     DocumentKeys.SEARCH_MAX_RECORDS, 20,
@@ -403,7 +403,7 @@ public class SolrSearchNodeTest extends TestCase {
         {
             ResponseCollection responses = new ResponseCollection();
             searcher.search(new Request(
-                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy",
+                    DocumentKeys.SEARCH_QUERY, "*:*",
                     DocumentKeys.SEARCH_SORTKEY, "recordID",
                     DocumentKeys.SEARCH_START_INDEX, PAGE_SIZE,
                     DocumentKeys.SEARCH_MAX_RECORDS, PAGE_SIZE,

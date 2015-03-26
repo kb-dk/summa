@@ -85,10 +85,10 @@ public class SBSolrSearchNode extends SolrSearchNode {
 
     @Override
     protected Map<String, List<String>> buildSolrQuery(
-        Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
+        Request request, List<String> filters, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
         int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
         Map<String, List<String>> solr = super.buildSolrQuery(
-            request, filter, query, solrParams, facets, startIndex, maxRecords, sortKey, reverseSort);
+            request, filters, query, solrParams, facets, startIndex, maxRecords, sortKey, reverseSort);
         // IndexLookup
 
         buildIndexLookup(request, solr);

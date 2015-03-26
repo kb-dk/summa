@@ -25,6 +25,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.util.ArrayList;
+
 /**
  * Little tool to hook up to a {@link SummaSearcher} and launch a search
  * on it and print the result to stdout.
@@ -142,7 +144,13 @@ public class SearchTool {
             if ("json".equals(keyVal[0])) {
                 rq.addJSON(keyVal[1]);
             } else {
-                rq.put(alias(keyVal[0]), keyVal[1]);
+                if (rq.containsKey(alias(keyVal[0]))) { // Primarily to support multiple filters
+                    ArrayList<String> values = new ArrayList<String>(rq.getStrings(alias(keyVal[0])));
+                    values.add(keyVal[1]);
+                    rq.put(alias(keyVal[0]), values);
+                } else {
+                    rq.put(alias(keyVal[0]), keyVal[1]);
+                }
             }
         }
         return rq;
