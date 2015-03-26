@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.util.Strings;
 import junit.framework.TestCase;
 
 import java.util.Arrays;
@@ -47,6 +48,34 @@ public class ConvenientMapTest extends TestCase {
         assertEquals("bar", map.getString("foo"));
         assertEquals("baz", map.getString("zoo"));
         assertEquals(Integer.valueOf(87), map.getInt("noo"));
+    }
+
+    public void testJSONStringArray() throws Exception {
+        final String JSON_ARRAY = "{ manatee:\"codependent\", foo:[\"bar\", \"zoo\"]}";
+        ConvenientMap map = new ConvenientMap();
+        map.addJSON(JSON_ARRAY);
+        assertEquals("bar, zoo", Strings.join(map.getStrings("foo")));
+    }
+
+    public void testJSONStringArraySingleIn() throws Exception {
+        final String JSON_ARRAY = "{ manatee:\"codependent\", foo:\"bar\"}";
+        ConvenientMap map = new ConvenientMap();
+        map.addJSON(JSON_ARRAY);
+        assertEquals("bar", Strings.join(map.getStrings("foo")));
+    }
+
+    public void testJSONStringArraySingleAIn() throws Exception {
+        final String JSON_ARRAY = "{ manatee:\"codependent\", foo:[\"bar\"]}";
+        ConvenientMap map = new ConvenientMap();
+        map.addJSON(JSON_ARRAY);
+        assertEquals("bar", Strings.join(map.getStrings("foo")));
+    }
+
+    public void testJSONStringArrayAsSingle() throws Exception {
+        final String JSON_ARRAY = "{ manatee:\"codependent\", foo:[\"bar\", \"zoo\"]}";
+        ConvenientMap map = new ConvenientMap();
+        map.addJSON(JSON_ARRAY);
+        assertEquals("[\"bar\",\"zoo\"]", map.getString("foo"));
     }
 
     public void testJSONEscape() throws Exception {

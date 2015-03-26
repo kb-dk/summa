@@ -336,9 +336,13 @@ public class InteractionAdjuster implements Configurable {
         }
 
         log.trace("Rewriting fields and content in document filter, query and sort");
-        final String filter = request.getString(DocumentKeys.SEARCH_FILTER, "");
-        if (!"".equals(filter)) {
-            request.put(DocumentKeys.SEARCH_FILTER, rewriteQuery(filter, documentFieldMap, facetFieldMap));
+        final List<String> oldFilters = request.getStrings(DocumentKeys.SEARCH_FILTER, new ArrayList<String>());
+        if (!oldFilters.isEmpty()) {
+            final ArrayList<String> newFilters = new ArrayList<>(oldFilters.size());
+            for (String oldFilter: oldFilters) {
+                newFilters.add(rewriteQuery(oldFilter, documentFieldMap, facetFieldMap));
+            }
+            request.put(DocumentKeys.SEARCH_FILTER, newFilters);
         }
         final String query = request.getString(DocumentKeys.SEARCH_QUERY, "");
         if (!"".equals(query)) {

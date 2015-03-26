@@ -1085,7 +1085,7 @@ public class SolrResponseBuilder implements Configurable {
 
     protected DocumentResponse createBasicDocumentResponse(Request request) {
         String query =    request.getString(DocumentKeys.SEARCH_QUERY, null);
-        String filter =   request.getString(DocumentKeys.SEARCH_FILTER, null);
+        List<String> filters = request.getStrings(DocumentKeys.SEARCH_FILTER, new ArrayList<String>());
         int startIndex =  request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
         int maxRecords =  request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, DocumentKeys.DEFAULT_MAX_RECORDS);
         String sortKey =  request.getString(DocumentKeys.SEARCH_SORTKEY, null);
@@ -1097,9 +1097,9 @@ public class SolrResponseBuilder implements Configurable {
         String groupSort =request.getString(DocumentKeys.GROUP_SORT, null);
         String groupField=request.getString(DocumentKeys.GROUP_FIELD, "");
         DocumentResponse response = grouped ?
-                new DocumentResponse(filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1, groupField, rows, groupLimit, groupSort
-                ) :
-                new DocumentResponse(filter, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1);
+                new DocumentResponse(filters, query, startIndex, maxRecords, sortKey, reverse,
+                                     new String[0], -1, -1, groupField, rows, groupLimit, groupSort) :
+                new DocumentResponse(filters, query, startIndex, maxRecords, sortKey, reverse, new String[0], -1, -1);
         response.setPrefix(searcherID + ".");
         return response;
     }

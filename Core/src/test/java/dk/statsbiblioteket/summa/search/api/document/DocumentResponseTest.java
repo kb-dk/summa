@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -135,8 +136,8 @@ public class DocumentResponseTest extends TestCase {
 
     private DocumentResponse getDocumentResponse1(String sortKey, String groupSort) {
         DocumentResponse response = new DocumentResponse(
-                "myfilter", "myquery", 0, 10, sortKey, false, new String[]{"resultField1", "resultField2"},
-                123, 100, "groupField", 2, 2, groupSort);
+                Arrays.asList("myfilter"), "myquery", 0, 10, sortKey, false,
+                new String[]{"resultField1", "resultField2"}, 123, 100, "groupField", 2, 2, groupSort);
         { // Group 1a
             DocumentResponse.Group group = response.createAndAddGroup("group1a", 2);
             {
@@ -160,7 +161,7 @@ public class DocumentResponseTest extends TestCase {
 
     private DocumentResponse getDocumentResponse2(String sortKey, String groupSort) {
         DocumentResponse response = new DocumentResponse(
-                "myfilter", "myquery", 0, 10, sortKey, false, new String[]{"resultField1", "resultField2"},
+                Arrays.asList("myfilter"), "myquery", 0, 10, sortKey, false, new String[]{"resultField1", "resultField2"},
                 124, 200, "groupField", 2, 2, groupSort
         );
         { // Group 1a
@@ -196,8 +197,8 @@ public class DocumentResponseTest extends TestCase {
 
     private DocumentResponse getDocumentResponseEmpty(String sortKey, String groupSort) {
         DocumentResponse response = new DocumentResponse(
-                "myfilter", "myquery", 0, 10, sortKey, false, new String[]{"resultField1", "resultField2"},
-                124, 200, "groupField", 2, 2, groupSort);
+                Arrays.asList("myfilter"), "myquery", 0, 10, sortKey, false,
+                new String[]{"resultField1", "resultField2"}, 124, 200, "groupField", 2, 2, groupSort);
         { // Group 1a
             DocumentResponse.Group group = response.createAndAddGroup("", 1);
             {

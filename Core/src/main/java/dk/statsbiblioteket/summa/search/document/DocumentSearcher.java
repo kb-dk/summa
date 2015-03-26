@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
+import java.util.List;
 
 /**
  * A DocumentSearcher performs a query-based search and returns a set of fields
@@ -267,8 +268,9 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * how the records should be represented.<br />
      * Optional parameters can be null, signifying that they are not defined.
      *
+     *
      * @param request      the unprocessed request. This can be null.
-     * @param filter       a query that narrows the search. A filter does not
+     * @param filters       a query that narrows the search. A filter does not
      *                     affect scores.<br />
      *                     This parameter is optional. Default is null.
      * @param query        a query as entered by a user. This is expanded to
@@ -302,7 +304,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * @return the result of a search, suitable for merging and XML generation.
      * @throws RemoteException if there was an exception during search.
      */
-    public DocumentResponse fullSearch(Request request, String filter, String query, long startIndex,
+    public DocumentResponse fullSearch(Request request, List<String> filters, String query, long startIndex,
                                        long maxRecords, String sortKey, boolean reverseSort, String[] resultFields,
                                        String[] fallbacks) throws RemoteException;
 

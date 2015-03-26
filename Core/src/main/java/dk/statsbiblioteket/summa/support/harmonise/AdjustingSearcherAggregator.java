@@ -30,6 +30,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -99,11 +100,15 @@ public class AdjustingSearcherAggregator extends SummaSearcherAggregator {
                 }
             }
             {
-                String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
-                if (filter!= null) {
-                    QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(filter);
-                    log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery() + "'");
-                    request.put(DocumentKeys.SEARCH_FILTER, clean.getLastQuery());
+                List<String> oldFilters = request.getStrings(DocumentKeys.SEARCH_FILTER, new ArrayList<String>());
+                if (!oldFilters.isEmpty()) {
+                    ArrayList<String> newFilters = new ArrayList<String>(oldFilters.size());
+                    for (String oldFilter: oldFilters) {
+                        QuerySanitizer.SanitizedQuery clean = sanitizer.sanitize(oldFilter);
+                        log.debug("Sanitized '" + clean.getOriginalQuery() + "' -> '" + clean.getLastQuery() + "'");
+                        newFilters.add(clean.getLastQuery());
+                    }
+                    request.put(DocumentKeys.SEARCH_FILTER, newFilters);
                 }
             }
         }

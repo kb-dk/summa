@@ -131,7 +131,7 @@ public class InteractionAdjusterTest extends TestCase {
         assertEquals("The rewritten space escaped query should be as expected",
                      "foo:\"bar zoo\"", rewritten.getString(DocumentKeys.SEARCH_QUERY));
         assertEquals("The rewritten space escaped filter should be as expected",
-                     "baz:\"bam bom\"", rewritten.getString(DocumentKeys.SEARCH_FILTER));
+                     "[baz:\"bam bom\"]", rewritten.getString(DocumentKeys.SEARCH_FILTER).toString());
     }
 
     public void testFacetFieldSizeAndOrder() {
@@ -255,7 +255,7 @@ public class InteractionAdjusterTest extends TestCase {
             DocumentKeys.SEARCH_SORTKEY, "sort_year_asc"
         );
         DocumentResponse docResponse = new DocumentResponse(
-            "filter", "query", 0, 10, "PublicationDate", false, new String[0], 10, 10);
+            Arrays.asList("filter"), "query", 0, 10, "PublicationDate", false, new String[0], 10, 10);
         ResponseCollection responses = new ResponseCollection();
         responses.add(docResponse);
         adjuster.adjust(request, responses);
@@ -296,7 +296,7 @@ public class InteractionAdjusterTest extends TestCase {
 
     private ResponseCollection createSampleResponseWithFields() {
         DocumentResponse docResponse = new DocumentResponse(
-            "filter", "query", 0, 10, "PublicationDate", false,
+            Arrays.asList("filter"), "query", 0, 10, "PublicationDate", false,
             new String[0], 10, 10);
         DocumentResponse.Record record = new DocumentResponse.Record(
             "foo", "bar", 1.0f, "dummy");
@@ -698,8 +698,8 @@ public class InteractionAdjusterTest extends TestCase {
                      expected,
                      rewritten.get(DocumentKeys.SEARCH_QUERY));
         assertEquals("The filter should be rewritten correctly",
-                     expected,
-                     rewritten.get(DocumentKeys.SEARCH_FILTER));
+                     "[" + expected + "]", // Base form is String array
+                     rewritten.get(DocumentKeys.SEARCH_FILTER).toString());
     }
 
 }

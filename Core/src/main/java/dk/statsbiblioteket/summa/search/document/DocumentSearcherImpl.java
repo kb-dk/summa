@@ -27,10 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -165,7 +162,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
         long startTime = System.currentTimeMillis();
 
         String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
-        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
+        List<String> filters = request.getStrings(DocumentKeys.SEARCH_FILTER, (List<String>)null);
         //noinspection OverlyBroadCatchBlock
         long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX, this.startIndex);
         long records = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, this.records);
@@ -186,13 +183,13 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
             try {
                 long hitstart = System.currentTimeMillis();
                 DocumentResponse response = new DocumentResponse(
-                        filter, query, startIndex, records, sortKey, reverse, resultFields,
-                        System.currentTimeMillis() - startTime, getHitCount(request, query, filter));
+                        filters, query, startIndex, records, sortKey, reverse, resultFields,
+                        System.currentTimeMillis() - startTime, getHitCount(request, query, filters));
                 response.addTiming("lucene.hitcount", System.currentTimeMillis() - hitstart);
                 responses.add(response);
             } catch (Exception e) {
                 throw new RemoteException(String.format(
-                        "Unable to perform fast hit counting for query '%s' with filter '%s'", query, filter), e);
+                        "Unable to perform fast hit counting for query '%s' with filter '%s'", query, filters), e);
             }
         } else if (records > 0) { // Standard search
             log.trace("Performing standard search");
@@ -205,28 +202,28 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
                 }
                 fallbackValues = fixFallbackValues(resultFields, fallbackValues);
 
-                responses.add(fullSearch(request, filter, query, startIndex, records, sortKey, reverse, resultFields,
+                responses.add(fullSearch(request, filters, query, startIndex, records, sortKey, reverse, resultFields,
                                          fallbackValues));
             } catch (Exception e) {
                 throw new RemoteException(String.format("Unable to perform search for query '%s' with filter '%s'",
-                                                        query, filter), e);
+                                                        query, filters), e);
             }
         }
         if (doCollectDocIDs) { // Collect docIDs for faceting et al
             try {
-                DocIDCollector collector = collectDocIDs(request, query, filter);
+                DocIDCollector collector = collectDocIDs(request, query, filters);
                 responses.getTransient().put(DOCIDS, collector);
                 if (records == 0) {
                     long docTime = System.currentTimeMillis();
                     DocumentResponse docResponse = new DocumentResponse(
-                            filter, query, startIndex, records, sortKey, reverse, resultFields,
+                            filters, query, startIndex, records, sortKey, reverse, resultFields,
                             System.currentTimeMillis() - startTime, collector.getBits().cardinality());
                     docResponse.addTiming("lucene.collectDocIDSearch", System.currentTimeMillis() - docTime);
                     responses.add(docResponse);
                 }
             } catch (IOException e) {
                 throw new RemoteException(String.format("Unable to collect doc ids for query '%s', filter '%s'",
-                                                        query, filter), e);
+                                                        query, filters), e);
             }
         }
         responses.addTiming("documentsearcher.total", System.currentTimeMillis() - startTime);
@@ -237,11 +234,11 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
      *
      * @param request the original request.
      * @param query   the search query.
-     * @param filter  the search filter.
+     * @param filters the search filters.
      * @return the total number of hits for a search with the given parameters.
      * @throws java.io.IOException if the search failed due to I/O errors.
      */
-    protected abstract long getHitCount(Request request, String query, String filter) throws IOException;
+    protected abstract long getHitCount(Request request, String query, List<String> filters) throws IOException;
 
 
     /**
@@ -254,15 +251,21 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
     protected boolean isRequestUsable(Request request) {
         String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
         List<String> ids = request.getStrings(DocumentKeys.SEARCH_IDS, (List<String>)null);
-        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
-        if ((query == null || "".equals(query)) && (filter == null || "".equals(filter)) && ids == null) {
+        List<String> filters = request.getStrings(DocumentKeys.SEARCH_FILTER, new ArrayList<String>());
+        if ((query == null || "".equals(query)) &&
+            (filters.isEmpty() || (filters.size() == 1 && "".equals(filters.get(0))))
+            && ids == null) {
             log.trace("No query, no filter, no IDs, returning false");
             return false;
         }
         return true;
     }
 
-    protected abstract DocIDCollector collectDocIDs(Request request, String query, String filter) throws IOException;
+    protected abstract DocIDCollector collectDocIDs(Request request, String query, String filter)
+            throws IOException;
+
+    protected abstract DocIDCollector collectDocIDs(Request request, String query, List<String> filters)
+            throws IOException;
 
 
     /* Mutators */

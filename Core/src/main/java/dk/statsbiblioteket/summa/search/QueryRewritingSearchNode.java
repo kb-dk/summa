@@ -25,12 +25,15 @@ import dk.statsbiblioteket.summa.search.tools.QueryPhraser;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
 import dk.statsbiblioteket.summa.search.tools.QuerySanitizer;
 import dk.statsbiblioteket.summa.support.harmonise.hub.QueryReducer;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryparser.classic.ParseException;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A search node wrapper that sanitizes queries and filters for common query syntax errors.
@@ -195,7 +198,7 @@ public class QueryRewritingSearchNode implements SearchNode {
         if (oldQuery != null && request.getBoolean(prefix + SEARCH_SANITIZE_QUERIES,
                                                    request.getBoolean(SEARCH_SANITIZE_QUERIES, sanitizeQueries))) {
             if ("".equals(oldQuery)) {
-                log.debug("Input query was empty. Removing " + DocumentKeys.SEARCH_FILTER + " from request");
+                log.debug("Input query was empty. Removing " + DocumentKeys.SEARCH_QUERY + " from request");
                 request.remove(DocumentKeys.SEARCH_QUERY);
             } else {
                 String newQuery = sanitizer.sanitize(oldQuery).getLastQuery();
@@ -221,32 +224,36 @@ public class QueryRewritingSearchNode implements SearchNode {
                 }
             }
         }
-        final String oldFilter = getAlsoEmpty(request, DocumentKeys.SEARCH_FILTER, null);
-        if (oldFilter != null // TODO: Feedback should bubble to front end
+        final List<String> oldFilters = request.getStrings(DocumentKeys.SEARCH_FILTER, new ArrayList<String>());
+                //getAlsoEmpty(request, DocumentKeys.SEARCH_FILTER, null);
+        if (!oldFilters.isEmpty() // TODO: Feedback should bubble to front end
             && request.getBoolean(prefix + SEARCH_SANITIZE_FILTERS,
                                   request.getBoolean(SEARCH_SANITIZE_FILTERS, sanitizeFilters))) {
-            if ("".equals(oldFilter)) {
+            if (oldFilters.size() == 1 && oldFilters.get(0).isEmpty()) {
                 log.debug("Input filter was empty. Removing " + DocumentKeys.SEARCH_FILTER + " from request");
                 request.remove(DocumentKeys.SEARCH_FILTER);
             } else {
-                String newFilter = sanitizer.sanitize(oldFilter).getLastQuery();
-                if (reducer != null) {
-                    newFilter = reducer.reduce(null, newFilter);
+                ArrayList<String> newFilters = new ArrayList<>(oldFilters.size());
+                for (String oldFilter: oldFilters) {
+                    String newFilter = sanitizer.sanitize(oldFilter).getLastQuery();
+                    if (reducer != null) {
+                        newFilter = reducer.reduce(null, newFilter);
+                    }
+                    if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
+                                           request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
+                        newFilter = normalizer.rewrite(newFilter);
+                    }
+                    if (keepEmptyFilters || !newFilter.isEmpty()) {
+                        newFilters.add(newFilter);
+                    }
                 }
-                if (request.getBoolean(prefix + SEARCH_SANITIZE_NORMALIZE,
-                                       request.getBoolean(SEARCH_SANITIZE_NORMALIZE, normalize))) {
-                    newFilter = normalizer.rewrite(newFilter);
-                }
-                if (!keepEmptyFilters && newFilter.isEmpty()) {
-                    request.remove(newFilter);
+                if (Strings.join(oldFilters).equals(Strings.join(newFilters))) {
+                    log.debug("Sanitized filters are unchanged: [" + Strings.join(oldFilters) + "]");
                 } else {
-                    request.put(DocumentKeys.SEARCH_FILTER, newFilter);
+                    log.debug("Sanitized filters [" + Strings.join(oldFilters) + "] to ["
+                              + Strings.join(newFilters) + "]");
                 }
-                if (oldFilter.equals(newFilter)) {
-                    log.debug("Sanitized filter is unchanged: '" + oldFilter + "'");
-                } else {
-                    log.debug("Sanitized filter '" + oldFilter + "' to '" + newFilter + "'");
-                }
+                request.put(DocumentKeys.SEARCH_FILTER, newFilters);
             }
         }
         final String query = request.getString(DocumentKeys.SEARCH_QUERY, null);

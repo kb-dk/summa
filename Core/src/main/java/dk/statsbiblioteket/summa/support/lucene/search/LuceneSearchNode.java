@@ -44,6 +44,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
+import org.apache.lucene.queries.BooleanFilter;
 import org.apache.lucene.queries.mlt.MoreLikeThis;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.*;
@@ -60,10 +61,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -619,26 +617,26 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
 
     @Override
     public DocumentResponse fullSearch(
-        Request request, String filter, String query, long startIndex, long maxRecords, String sortKey,
+        Request request, List<String> filters, String query, long startIndex, long maxRecords, String sortKey,
         boolean reverseSort, String[] fields, String[] fallbacks) throws RemoteException {
         return fullSearch(
-            request, filter, query, startIndex, maxRecords, sortKey, reverseSort, fields, fallbacks, true);
+            request, filters, query, startIndex, maxRecords, sortKey, reverseSort, fields, fallbacks, true);
     }
 
     private DocumentResponse fullSearch(
-        Request request, String filter, String query, long startIndex, long maxRecords, String sortKey,
+        Request request, List<String> filters, String query, long startIndex, long maxRecords, String sortKey,
         boolean reverseSort, String[] fields, String[] fallbacks, boolean doLog) throws RemoteException {
         long queryTime = -System.currentTimeMillis();
         sanityCheck(startIndex, maxRecords);
         if (sortKey == null) {
             sortKey = getSortKey();
         }
-        Filter luceneFilter;
+        List<Filter> luceneFilters;
         Query luceneQuery;
         try {
             if (log.isTraceEnabled() && doLog) {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace("fullSearch('" + filter + "', '" + query + "', "
+                log.trace("fullSearch([" + Strings.join(filters, ", ") + "], '" + query + "', "
                           + startIndex + ", " + maxRecords + ", '" + sortKey
                           + "', " + reverseSort + ", " + Arrays.toString(fields)
                           + ", " + Arrays.toString(fallbacks) + ") called");
@@ -647,21 +645,21 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                 fields = getResultFields();
                 fallbacks = getFallbackValues();
             }
-            luceneFilter = parseFilter(filter, request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false));
+            luceneFilters = parseFilters(filters, request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false));
             luceneQuery = parseQuery(request, query);
         } catch (ParseException e) {
             throw new QueryException("QueryRewritingSearchNode", request.toString(true),
                                      "Index '" + location + ": " + e.getMessage());
         }
-        if (luceneQuery == null && luceneFilter == null) {
-            log.debug("Both query and filter is null, returning empty result");
+        if (luceneQuery == null && luceneFilters.isEmpty()) {
+            log.debug("Both query and filter is empty, returning empty result");
             return new DocumentResponse(
-                    filter, query, startIndex, maxRecords, sortKey, reverseSort, fallbacks, 0, 0);
+                    filters, query, startIndex, maxRecords, sortKey, reverseSort, fallbacks, 0, 0);
         }
         queryTime += System.currentTimeMillis();
         log.trace("Calling private fullSearch with parsed query");
         DocumentResponse response = fullSearch(
-            request, luceneFilter, luceneQuery, filter, query, startIndex, maxRecords, sortKey, reverseSort,
+            request, luceneFilters, luceneQuery, filters, query, startIndex, maxRecords, sortKey, reverseSort,
             fields, fallbacks, doLog);
         response.addTiming("lucene.queryparse", queryTime);
         return response;
@@ -741,15 +739,17 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         return mlt_enabled && request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
     }
 
-    private Filter parseFilter(String rawFilter, boolean pureNegative)
-                                                         throws ParseException {
-        String filter =  pureNegative && filterMatchAll != null
-                         && !"".equals(filterMatchAll) && rawFilter != null
-                         && !"".equals(rawFilter) ?
-                         "(" + filterMatchAll + ") " + rawFilter :
-                         rawFilter;
-        return filter == null || "".equals(filter) || "*".equals(filter)
-               ? null : new QueryWrapperFilter(getParser().parse(filter));
+    private List<Filter> parseFilters(List<String> rawFilters, boolean pureNegative) throws ParseException {
+        List<Filter> luceneFilters = new ArrayList<>(rawFilters.size());
+        for (String rawFilter: rawFilters) {
+            String filter =  pureNegative && filterMatchAll != null
+                             && !"".equals(filterMatchAll) && rawFilters != null
+                             && !"".equals(rawFilter) ? "(" + filterMatchAll + ") " + rawFilter : rawFilter;
+            if (filter != null && !filter.isEmpty() && !"*".equals(filter)) {
+                luceneFilters.add(new QueryWrapperFilter(getParser().parse(filter)));
+            }
+        }
+        return luceneFilters;
     }
 
     private Query parseQuery(String query) throws ParseException {
@@ -757,7 +757,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     }
 
     private DocumentResponse fullSearch(
-        Request request, Filter luceneFilter, Query luceneQuery, String filter, String query,
+        Request request, List<Filter> luceneFilter, Query luceneQuery, List<String> filters, String query,
         long startIndex, long maxRecords, String sortKey, boolean reverseSort, String[] fields, String[] fallbacks,
         boolean doLog) throws RemoteException {
         long startTime = System.currentTimeMillis();
@@ -767,7 +767,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             // MoreLikeThis needs an extra in max to compensate for self-match
             rawSearch = -System.currentTimeMillis();
             TopFieldDocs topDocs = searcher.search(
-                    luceneQuery, luceneFilter, (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
+                    luceneQuery, join(luceneFilter), (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
                     mlt_request || sortKey == null || "".equals(sortKey) || sortKey.equals(DocumentKeys.SORT_ON_SCORE) ?
                     Sort.RELEVANCE : sortPool.getSort(sortKey, reverseSort), true, false);
             rawSearch += System.currentTimeMillis();
@@ -788,7 +788,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             }
 
             DocumentResponse result = new DocumentResponse(
-                        filter, query, startIndex, maxRecords, sortKey, reverseSort, fields, 0, topDocs.totalHits);
+                        filters, query, startIndex, maxRecords, sortKey, reverseSort, fields, 0, topDocs.totalHits);
             result.setPrefix("");
             boolean sortWarned = false;
             // TODO: What about longs for startIndex and maxRecords?
@@ -837,9 +837,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             result.setSearchTime(System.currentTimeMillis()-startTime);
             if (doLog) {
                 //noinspection DuplicateStringLiteralInspection
-                log.debug("fullSearch(..., query '" + query + "', filter '" + filter + ") returning " + result.size()
-                          + "/" + topDocs.totalHits + " hits found in " + (System.currentTimeMillis()-startTime)
-                          + " ms");
+                log.debug("fullSearch(..., query '" + query + "', filters [" + Strings.join(filters) + "] returning "
+                          + result.size() + "/" + topDocs.totalHits + " hits found in "
+                          + (System.currentTimeMillis()-startTime) + " ms");
             }
             return result;
         } catch (CorruptIndexException e) {
@@ -852,6 +852,14 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         } catch (Throwable t) {
             throw new RemoteException(String.format("Exception during search for query '%s'", query), t);
         }
+    }
+
+    private Filter join(List<Filter> filters) {
+        BooleanFilter boolFilter = new BooleanFilter();
+        for (Filter filter: filters) {
+            boolFilter.add(filter, BooleanClause.Occur.MUST);
+        }
+        return boolFilter;
     }
 
     private boolean assignSortValue(
@@ -959,13 +967,18 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
 
     @Override
     protected DocIDCollector collectDocIDs(Request request, String query, String filter) throws IOException {
+        return collectDocIDs(request, query, Arrays.asList(filter));
+    }
+
+    @Override
+    protected DocIDCollector collectDocIDs(Request request, String query, List<String> filters) throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.trace("collectDocIDs(" + filter + ", " + query + ") called");
-        Filter luceneFilter;
+        log.trace("collectDocIDs([" + Strings.join(filters) + ", " + query + ") called");
+        List<Filter> luceneFilters;
         Query luceneQuery;
         try {
             //noinspection AssignmentToNull
-            luceneFilter = parseFilter(filter, request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false));
+            luceneFilters = parseFilters(filters, request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false));
         } catch (ParseException e) {
             throw new RemoteException(String.format("Unable to parse filter '%s'", query), e);
         }
@@ -978,10 +991,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         if (luceneQuery == null) {
             throw new RemoteException(String.format("The query '%s' parsed to null", query));
         }
-        return collectDocIDs(luceneQuery, luceneFilter);
+        return collectDocIDs(luceneQuery, luceneFilters);
     }
 
-    private DocIDCollector collectDocIDs(Query query, Filter filter) throws IOException {
+    private DocIDCollector collectDocIDs(Query query, List<Filter> filters) throws IOException {
         log.trace("collectDocIDs() called");
         long startTime = System.currentTimeMillis();
 
@@ -995,11 +1008,11 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             throw new RemoteException(String.format("Timeout after %d milliseconds, while requesting a DocIDCollector",
                                                     COLLECTOR_REQUEST_TIMEOUT));
         }
-        if (filter == null) {
+        if (filters.isEmpty()) {
             //System.out.println(query);
             searcher.search(query, collector);
         } else {
-            searcher.search(query, filter, collector);
+            searcher.search(query, join(filters), collector);
         }
         if (log.isTraceEnabled()) {
             log.trace("Finished collectDocIDs in " + (System.currentTimeMillis() - startTime)
@@ -1025,17 +1038,17 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
     }
 
     @Override
-    protected long getHitCount(Request request, String query, String filter) throws IOException {
+    protected long getHitCount(Request request, String query, List<String> filters) throws IOException {
         long startTime = System.currentTimeMillis();
 
         // Special handling of match all
-        if ("*".equals(query) && filter != null && !"".equals(filter)) {
+        if ("*".equals(query) && !filters.isEmpty()) {
             query = null;
         }
-        if ("*".equals(filter) && query != null && !"".equals(filter)) {
-            filter = null;
+        if (filters.size() ==1 && "*".equals(filters.get(0)) && query != null) {
+            filters.clear();
         }
-        if ("*".equals(query) || "*".equals(filter)) {
+        if ("*".equals(query) || (filters.size() == 1 && "*".equals(filters.get(0)))) {
             log.trace("getHitCount for * (match all) called");
             List<AtomicReader> readers = LuceneUtil.gatherSubReaders(searcher.getIndexReader());
 
@@ -1062,8 +1075,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                 }
 
             }
-            log.debug("getHitCount(..., query '" + query + "', filter '" + filter + "') got hit count " + count
-                      + " in " + (System.currentTimeMillis() - startTime) + " ms");
+            log.debug("getHitCount(..., query '" + query + "', filters ['" + Strings.join(filters)
+                      + "') got hit count " + count + " in " + (System.currentTimeMillis() - startTime) + " ms");
             return count;
         }
 
@@ -1075,12 +1088,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         }
         Query f;
         try {
-            f = parseQuery(filter);
+            f = parseAndJoinQueries(filters);
         } catch (ParseException e) {
             throw new IOException(String.format("Exception parsing filter '%s'", query), e);
         }
         if (q == null && f == null) {
-            throw new IOException(String.format("Could not parse either query '%s' nor filter '%s'", query, filter));
+            throw new IOException(String.format("Could not parse either query '%s' nor filter '%s'",
+                                                query, Strings.join(filters)));
         }
 
         Query amalgam;
@@ -1128,8 +1142,26 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             }
         }
             //noinspection DuplicateStringLiteralInspection
-        log.debug("getHitCount(..., query '" + query + "', filter '" + filter + "') got hit count " + count
-                  + " in " + (System.currentTimeMillis() - startTime) + " ms");
+        log.debug("getHitCount(..., query '" + query + "', filters [" + Strings.join(filters) + "]) got hit count "
+                  + count + " in " + (System.currentTimeMillis() - startTime) + " ms");
         return count;
+    }
+
+    private Query parseAndJoinQueries(List<String> queryStrings) throws ParseException {
+        List<Query> queries = new ArrayList<>(queryStrings.size());
+        for (String queryString: queryStrings) {
+            Query query = parseQuery(queryString);
+            if (query != null) {
+                queries.add(query);
+            }
+        }
+        if (queries.isEmpty()) {
+            return null;
+        }
+        BooleanQuery boolQuery = new BooleanQuery();
+        for (Query query: queries) {
+            boolQuery.add(query, BooleanClause.Occur.MUST);
+        }
+        return boolQuery;
     }
 }

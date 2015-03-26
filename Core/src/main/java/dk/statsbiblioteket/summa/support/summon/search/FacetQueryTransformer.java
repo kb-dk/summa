@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.tools.QueryRewriter;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,9 +49,7 @@ public class FacetQueryTransformer {
     static final QueryRewriter qr = new QueryRewriter(Configuration.newMemoryBased(), null, null);
 
     @SuppressWarnings({"UnusedParameters"})
-    public FacetQueryTransformer(Configuration conf) {
-
-    }
+    public FacetQueryTransformer(Configuration conf) { }
 
 
     // TODO: Remove synchronized and use a pool of parsers
@@ -79,6 +78,20 @@ public class FacetQueryTransformer {
             return solrRequest;
         }
         return convertQueryToFacet(qp.parse(query), solrRequest, false) ? solrRequest : null;
+    }
+
+    public synchronized Map<String, List<String>> convertQueriesToFacet(List<String> queries) throws ParseException {
+        log.debug("Converting queries [" + Strings.join(queries) + "] to facet queries");
+        Map<String, List<String>> solrRequest = new HashMap<>(20);
+        if (queries.isEmpty() || (queries.size() == 1 && queries.get(0).isEmpty())) {
+            return solrRequest;
+        }
+        for (String query: queries) {
+            if (!convertQueryToFacet(qp.parse(query), solrRequest, false)) {
+                return null; // Exit at first problem
+            }
+        }
+        return solrRequest;
     }
 
     // True if success
@@ -121,8 +134,7 @@ public class FacetQueryTransformer {
                     }
                     return false;
                 }
-                if (!convertQueryToFacet(
-                    clause.getQuery(), solrRequest, true)) {
+                if (!convertQueryToFacet(clause.getQuery(), solrRequest, true)) {
                     return false;
                 }
             }
@@ -168,7 +180,7 @@ public class FacetQueryTransformer {
     }
 
     private void convertTermQuery(
-        Map<String, List<String>> querymap, TermQuery tq, boolean negated) throws ParseException {
+            Map<String, List<String>> querymap, TermQuery tq, boolean negated) throws ParseException {
         if (tq.getTerm().field() == null || "".equals(tq.getTerm().field())) {
             throw new ParseException("Encountered TermQuery without field '" + tq + "'");
         }

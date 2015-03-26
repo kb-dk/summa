@@ -38,7 +38,7 @@ public class FakeSearcher implements SummaSearcher {
         requests.add(request);
         ResponseCollection collection = new ResponseCollection();
         DocumentResponse docs = new DocumentResponse(
-                request.getString(DocumentKeys.SEARCH_FILTER, null),
+                request.getStrings(DocumentKeys.SEARCH_FILTER, new ArrayList<String>()),
                 request.getString(DocumentKeys.SEARCH_QUERY, null),
                 request.getLong(DocumentKeys.SEARCH_START_INDEX, 0L),
                 request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, 10L),

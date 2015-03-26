@@ -391,9 +391,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         // We perform this ugly hack to get the empty string back if the value is the empty string.
         String rawQuery = request.getString(
                 DocumentKeys.SEARCH_QUERY, request.containsKey(DocumentKeys.SEARCH_QUERY) ? "" : null);
-        // TODO: Add support for multiple filters
-        String filter =  request.getString(
-                DocumentKeys.SEARCH_FILTER, request.containsKey(DocumentKeys.SEARCH_FILTER) ? "" : null);
+        List<String> filters =  request.getStrings(
+                DocumentKeys.SEARCH_FILTER, request.containsKey(DocumentKeys.SEARCH_FILTER) ?
+                Arrays.asList("") : new ArrayList<String>());
         String sortKey = getEmptyIsNull(request, DocumentKeys.SEARCH_SORTKEY);
         if (DocumentKeys.SORT_ON_SCORE.equals(sortKey)) {
             sortKey = null; // null equals relevance ranking
@@ -404,7 +404,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         boolean collectdocIDs = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         boolean passThroughQuery = request.getBoolean(SEARCH_PASSTHROUGH_QUERY, DEFAULT_PASSTHROUGH_QUERY);
 
-        if (rawQuery == null && filter == null) {
+        if (rawQuery == null && filters.isEmpty()) {
             log.debug("No filter or query, proceeding anyway as other params might be specified");
         }
 
@@ -433,16 +433,23 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             }
             query = null;
         }
-        if (filter != null && !passThroughQuery && !request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
-            filter = convertQuery(filter, solrSearchParams);
+        if (!filters.isEmpty() && !passThroughQuery && !request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
+            List<String> convertedFilters = new ArrayList<>(filters.size());
+            for (String filter: filters) {
+                String convertedFilter = convertQuery(filter, solrSearchParams);
+                if (convertedFilter != null) {
+                    convertedFilters.add(convertedFilter);
+                }
+            }
+            filters = convertedFilters;
         }
-        if ("".equals(filter)) {
+        if (filters.size() == 1 && filters.get(0).isEmpty()) {
             if (emptyFilterNoSearch) {
                 log.debug("Filter was empty string and emptyFilterNoSearch==true for query='" + query + "'. " +
                           "Returning without search");
                 return;
             }
-            filter = null;
+            filters.clear();
         }
 
         long searchTime = -System.currentTimeMillis();
@@ -460,7 +467,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         String solrTiming;
         try {
             Pair<String, String> sums = solrSearch(
-                request, filter, query, solrSearchParams, collectdocIDs ? facets : null,
+                request, filters, query, solrSearchParams, collectdocIDs ? facets : null,
                 startIndex, maxRecords, sortKey, reverseSort, responses);
             solrResponse = sums.getKey();
             solrTiming = sums.getValue();
@@ -472,9 +479,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         }
         if (solrResponse == null || solrResponse.isEmpty()) {
             if (log.isDebugEnabled()) {
-                log.debug("fullSearch(" + request.toString(true) + ", " + filter + ", " + rawQuery + ", " + startIndex
-                          + ", " + maxRecords + ", " + sortKey + ", " + reverseSort + ") did not return a result. " +
-                          "This might be due to missing query and filter");
+                log.debug("fullSearch(" + request.toString(true) + ", [" + Strings.join(filters) + "], " + rawQuery
+                          + ", " + startIndex + ", " + maxRecords + ", " + sortKey + ", " + reverseSort
+                          + ") did not return a result. This might be due to missing query and filter");
             }
             responses.addTiming(getID() + ".search.total", System.currentTimeMillis() - startTime);
             responses.addTiming(solrTiming);
@@ -506,8 +513,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         buildResponseTime += System.currentTimeMillis();
 
         if (log.isDebugEnabled()) {
-            log.debug("fullSearch(" + request.toString(true) + ", " + filter + ", " + rawQuery + ", " + startIndex
-                      + ", " + maxRecords + ", " + sortKey + ", " + reverseSort + ") with " + hitCount
+            log.debug("fullSearch(" + request.toString(true) + ", [" + Strings.join(filters) + "], " + rawQuery + ", "
+                      + startIndex + ", " + maxRecords + ", " + sortKey + ", " + reverseSort + ") with " + hitCount
                       + " hits finished in " + searchTime + " ms (" + searchTime + " ms for remote search call, "
                       + buildResponseTime + " ms for converting to Summa response)");
         }
@@ -683,11 +690,23 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         return query;
     }
 
+    protected List<String> convertQueries(List<String> queries, Map<String, List<String>> solrSearchParams) {
+        log.trace("Default convertQueries does not change the input");
+        List<String> convertedQueries = new ArrayList<>(queries.size());
+        for (String query: queries) {
+            String convertedQuery = convertQuery(query, solrSearchParams);
+            if (convertedQuery != null) {
+                convertedQueries.add(convertedQuery);
+            }
+        }
+        return convertedQueries;
+    }
+
     /**
      * Perform a search in Solr. Override this to get different behaviour for search backends other than standard Solr.
      *
      * @param request    a standard Summa Search request, primarily filled with values from {@link DocumentKeys}.
-     * @param filter     a Solr-style filter (same syntax as query). This is based on {@link DocumentKeys#SEARCH_FILTER}
+     * @param filters    Solr-style filters (same syntax as query). This is based on {@link DocumentKeys#SEARCH_FILTER}
      *                   but might have been rewritten.
      * @param query      a Solr-style query. This is based on {@link DocumentKeys#SEARCH_QUERY} but might have been
      *                   rewritten.
@@ -702,15 +721,15 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * @throws java.rmi.RemoteException if there were an error performing the remote search call.
      */
     protected Pair<String, String> solrSearch(
-        Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
-        int startIndex, int maxRecords, String sortKey, boolean reverseSort, ResponseCollection responses)
-                                                                                                throws RemoteException {
+        Request request, List<String> filters, String query, Map<String, List<String>> solrParams,
+        SolrFacetRequest facets, int startIndex, int maxRecords, String sortKey, boolean reverseSort,
+        ResponseCollection responses) throws RemoteException {
         long buildQuery = -System.currentTimeMillis();
         log.trace("Calling simpleSearch(" + query + ", " + facets + ", " + startIndex + ", " + maxRecords + ")");
         Map<String, List<String>> queryMap;
         try {
             queryMap = buildSolrQuery(
-                request, filter, query, solrParams, facets, startIndex, maxRecords, sortKey, reverseSort);
+                request, filters, query, solrParams, facets, startIndex, maxRecords, sortKey, reverseSort);
         } catch (ParseException e) {
             throw new RemoteException("Unable to build Solr query", e);
         }
@@ -825,7 +844,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     /**
      * Generate a map of search backend specific request parameters.
      * @param request    a standard Summa Search request, primarily filled with values from {@link DocumentKeys}.
-     * @param filter     a Solr-style filter (same syntax as query). This is based on {@link DocumentKeys#SEARCH_FILTER}
+     * @param filters    Solr-style filters (same syntax as query). This is based on {@link DocumentKeys#SEARCH_FILTER}
      *                   but might have been rewritten.
      * @param query      a Solr-style query. This is based on {@link DocumentKeys#SEARCH_QUERY} but might have been
      *                   rewritten.
@@ -839,8 +858,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      * @throws ParseException if the facets could not be parsed.
      */
     protected Map<String, List<String>> buildSolrQuery(
-        Request request, String filter, String query, Map<String, List<String>> solrParams, SolrFacetRequest facets,
-        int startIndex, int maxRecords, String sortKey, boolean reverseSort) throws ParseException {
+        Request request, List<String> filters, String query, Map<String, List<String>> solrParams,
+        SolrFacetRequest facets, int startIndex, int maxRecords, String sortKey, boolean reverseSort)
+            throws ParseException {
         int startPage = Math.max(0, startIndex); // Solr pages exactly as Lucene
         //int startPage = Math.max(0, maxRecords == 0 ? 0 : (startIndex-1) / maxRecords);
         Map<String, List<String>> queryMap = new HashMap<>();
@@ -853,30 +873,33 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         } else if (sortKey != null) {
             queryMap.put("fl", Arrays.asList("*," + sortKey));
         }
-        if (filter != null) { // We allow missing filter
+        if (!filters.isEmpty()) { // We allow missing filter
             boolean facetsHandled = false;
             if (explicitFacetFilter && request.getBoolean(SEARCH_SOLR_FILTER_IS_FACET, false)) {
-                Map<String, List<String>> facetRequest = facetQueryTransformer.convertQueryToFacet(filter);
+                Map<String, List<String>> facetRequest = facetQueryTransformer.convertQueriesToFacet(filters);
                 if (facetRequest == null) {
-                    log.debug("Unable to convert facet filter '" + filter + "' to Solr facet request. Switching to "
-                              + "filter/query based handling");
+                    log.debug("Unable to convert facet filters [" + Strings.join(filters) + "' to Solr facet request." +
+                              " Switching to filter/query based handling");
                 } else {
-                    log.debug("Successfully converted filter '" + filter + "' to Solr facet query");
+                    log.debug("Successfully converted filter [" + Strings.join(filters) + "] to Solr facet query");
                     queryMap.putAll(facetRequest);
                     facetsHandled = true;
                 }
             }
             if (!facetsHandled) {
                 if (supportsPureNegative || !request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false)) {
-                    queryMap.put("fq", Arrays.asList(filter)); // FilterQuery
+                    queryMap.put("fq", filters); // FilterQuery
                 } else {
                     if (query == null) {
                         throw new IllegalArgumentException(
                             "No query and filter marked with '" + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE
-                            + "' is not possible in Solr. Filter is '" + filter + "'");
+                            + "' is not possible in Solr. Filters are [" + Strings.join(filters) + "]");
                     }
-                    query = "(" + query + ") " + filter;
-                    log.debug("Munging filter after query as the filter '" + filter + "' is marked '"
+                    query = "(" + query + ")";
+                    for (String filter: filters) {
+                        query += "AND (" + filter + ")";
+                    }
+                    log.debug("Munging filter after query as the filters '" + Strings.join(filters) + "' are marked '"
                               + DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE + "' and Solr is set up to not support pure "
                               + "negative filters natively. resulting query is '" + query + "'");
                 }
@@ -968,6 +991,4 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public long getLastDataTime() {
         return lastDataTime;
     }
-
-
 }

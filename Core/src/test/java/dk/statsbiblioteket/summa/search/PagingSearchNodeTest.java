@@ -25,6 +25,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -135,7 +136,7 @@ public class PagingSearchNodeTest extends TestCase {
             int start = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
             int maxRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, 20);
             DocumentResponse docs = new DocumentResponse(
-                    request.getString(DocumentKeys.SEARCH_FILTER, null),
+                    request.getStrings(DocumentKeys.SEARCH_FILTER, new ArrayList<String>()),
                     request.getString(DocumentKeys.SEARCH_QUERY, null),
                     request.getInt(DocumentKeys.SEARCH_START_INDEX, 0),
                     maxRecords,

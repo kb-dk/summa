@@ -45,10 +45,10 @@ public interface DocumentKeys {
     public static final String SEARCH_IDS = "search.document.ids";
 
     /**
-     * String ("foo"). Optional.
+     * One or more Strings ("foo"). Optional.
      * </p><p>
-     * The filter limits the amount of possible documents from a search.
-     * It has the exact same syntax as a Query.
+     * The filters limits the amount of possible documents from a search.
+     * They have the exact same syntax as a Query.
      *
      * @see #SEARCH_QUERY
      */

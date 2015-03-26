@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.search.api.document;
 import com.ibm.icu.text.Collator;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseImpl;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -66,7 +67,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
      */
     private static final boolean NON_DEFINED_FIELDS_ARE_SORTED_LAST = true;
 
-    private String filter;
+    private List<String> filters;
     private String query;
     private long startIndex;
     private long maxRecords;
@@ -88,7 +89,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
 //    private final Collator collator;
 
     // Born-grouped response
-    public DocumentResponse(String filter, String query, long startIndex, long maxRecords, String sortKey,
+    public DocumentResponse(List<String> filter, String query, long startIndex, long maxRecords, String sortKey,
                             boolean reverseSort, String[] resultFields, long searchTime, long hitCount,
                             String groupField, int groupRows, int groupLimit, String groupSort) {
         this(filter, query, startIndex, maxRecords, sortKey, reverseSort, resultFields, searchTime, hitCount);
@@ -108,10 +109,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         groups = new ArrayList<>(groupRows*5);
     }
 
-    public DocumentResponse(String filter, String query, long startIndex, long maxRecords, String sortKey,
+    public DocumentResponse(List<String> filters, String query, long startIndex, long maxRecords, String sortKey,
                             boolean reverseSort, String[] resultFields, long searchTime, long hitCount) {
         log.trace("Creating search result for query '" + query + "'");
-        this.filter = filter;
+        this.filters = filters == null ? new ArrayList<String>() : filters;
         this.query = query;
         this.startIndex = startIndex;
         this.maxRecords = maxRecords;
@@ -185,6 +186,11 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         public Group(Record record, String groupField) {
             this.numFound = 1;
             docs.add(record);
+            if (groupField == null) {
+                log.trace("Group constructor: Group is null, so no group value assigned");
+                groupValue = "";
+                return;
+            }
             for (Field field: record) {
                 if (groupField != null && groupField.equals(field.getName())) {
                     this.groupValue = field.getContent();
@@ -767,7 +773,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         }
         StringWriter sw = new StringWriter(2000);
         sw.append("<documentresult");
-        appendIfDefined(sw, "filter", filter);
+        appendIfDefined(sw, "filters", Strings.join(filters));
         appendIfDefined(sw, "query", query);
         sw.append(" startIndex=\"");
         sw.append(Long.toString(startIndex)).append("\"");
@@ -825,8 +831,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         return grouped;
     }
 
-    public String getFilter() {
-        return filter;
+    public List<String> getFilters() {
+        return filters;
     }
 
     public String getQuery() {
@@ -877,8 +883,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         this.maxRecords = maxRecords;
     }
 
-    public void setFilter(String filter) {
-        this.filter = filter;
+    public void setFilters(List<String> filters) {
+        this.filters = filters;
     }
 
     public void setQuery(String query) {
