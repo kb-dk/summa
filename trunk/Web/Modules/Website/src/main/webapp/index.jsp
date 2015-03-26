@@ -16,7 +16,6 @@
     WebServices services = WebServices.getInstance();
 
     String search_html = "";
-    String xml_search_result = "N/A";
     String facet_html = "";
     String didyoumean_html = "";
     String form_filter = "";
@@ -28,6 +27,7 @@
     boolean reverseSort = false;
     String searchTiming = "";
     String facetTiming = "";
+    String xml_search_result = "";
 
     long searchCall = 0;
     long searchXSLT = 0;
@@ -111,6 +111,7 @@
         dymXSLT += System.currentTimeMillis();
             
         searchCall = -System.currentTimeMillis();
+        xml_search_result = null;
 
         if (json != null) {
             xml_search_result = (String)services.execute("directjson", json);
@@ -356,11 +357,9 @@
 <% } %>
 </ul>
 
-<h2>Raw search result</h2>
+<h5>Raw</h5>
 <pre>
-
-<%= xml_search_result.replace("&", "&nbsp;").replace("<", "&lt;").replace(">", "&gt;") %>
+<%= xml_search_result.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") %>
 </pre>
-
 </body>
 </html>
