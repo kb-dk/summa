@@ -27,6 +27,7 @@
     boolean reverseSort = false;
     String searchTiming = "";
     String facetTiming = "";
+    String xml_search_result = "";
 
     long searchCall = 0;
     long searchXSLT = 0;
@@ -110,7 +111,7 @@
         dymXSLT += System.currentTimeMillis();
             
         searchCall = -System.currentTimeMillis();
-        String xml_search_result = null;
+        xml_search_result = null;
 
         if (json != null) {
             xml_search_result = (String)services.execute("directjson", json);
@@ -356,5 +357,9 @@
 <% } %>
 </ul>
 
+<h5>Raw</h5>
+<pre>
+<%= xml_search_result.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") %>
+</pre>
 </body>
 </html>
