@@ -277,7 +277,7 @@
 
 <div class="searchBoxContainer" id="searchBoxContainer">
     <div class="searchBox" id="searchBox">
-        <form action="index.jsp" class="searchBoxTweak" id="fpSearch">
+<!--        <form action="index.jsp" class="searchBoxTweak" id="fpSearch">
             <div>
                 <label for="q">Standard search</label>
                 <input type="text" name="query" size="65" id="q" value="<%= form_query %>" />
@@ -302,7 +302,7 @@
         </form>
         --%>
 	<hr />
-
+-->
         <form action="index.jsp" class="searchBoxTweak" id="fpFilterSortSearch">
             <div>
                 Filter sorted search<br />
