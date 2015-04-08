@@ -19,6 +19,7 @@
  */
 package dk.statsbiblioteket.summa.search.tools;
 
+import com.ibm.icu.text.DecimalFormat;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -371,6 +372,7 @@ public class QueryRewriter {
         return convertQueryToString(query, true);
     }
     private String convertQueryToString(Query query, boolean top) {
+        DecimalFormat floatToStr = new DecimalFormat("#.#######");
         String result = "";
         if (query instanceof TermQuery) {
             TermQuery tq = (TermQuery) query;
@@ -381,7 +383,7 @@ public class QueryRewriter {
             // It does not hurt if we mistakenly send on 1.0 by bad comparison
             //noinspection FloatingPointEquality
             if (tq.getBoost() != 1.0f) {
-                result += "^" + tq.getBoost();
+                result += "^" + floatToStr.format(tq.getBoost());
             }
         } else if (query instanceof PhraseQuery) {
             PhraseQuery phraseQuery = (PhraseQuery)query;

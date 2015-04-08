@@ -37,6 +37,18 @@ public class QueryRewriterTest extends TestCase {
                 "foo\\/bar");
     }
 
+    public void testSmallBoost() throws ParseException {
+        assertIdentity(
+                "\"foo\"^0.000123",
+                "foo^0.000123");
+    }
+
+    public void testLargeBoost() throws ParseException {
+        assertIdentity(
+                "\"foo\"^123.0100021", // Rounding error
+                "foo^123.01");
+    }
+
     public void testParenthesized1() throws ParseException {
         assertIdentity(
                 "\"foo\" OR (\"bar\" \"baz\")",
