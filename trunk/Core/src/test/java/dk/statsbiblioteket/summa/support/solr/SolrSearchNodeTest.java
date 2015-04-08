@@ -163,6 +163,24 @@ public class SolrSearchNodeTest extends TestCase {
         assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
     }
 
+    public void testCacheDisable() throws Exception {
+        performBasicIngest();
+        {
+            ResponseCollection responses = search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "*:*"
+            ));
+            assertEquals("There should be the right number of hits for match all.\n" + responses.toXML(),
+                         4, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
+        {
+            ResponseCollection responses = search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "{!cache=false}*:*"
+            ));
+            assertEquals("There should be the right number of hits for non cache match all.\n" + responses.toXML(),
+                         4, ((DocumentResponse)responses.iterator().next()).getHitCount());
+        }
+    }
+
     public void testSolrMultiFilter() throws Exception {
         performBasicIngest();
         {
