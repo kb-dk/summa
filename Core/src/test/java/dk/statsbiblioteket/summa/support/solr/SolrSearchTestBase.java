@@ -53,10 +53,15 @@ public class SolrSearchTestBase extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         System.setProperty("basedir", ".");
-        server = new EmbeddedJettyWithSolrServer(SOLR_HOME);
+        server = new EmbeddedJettyWithSolrServer(getHome());
         server.run();
         solrServer = new HttpSolrServer(server.getServerUrl());
         solrServer.deleteByQuery("*:*");
+    }
+
+    // Override this to get use another home
+    public String getHome() {
+        return SOLR_HOME;
     }
 
     @Override
