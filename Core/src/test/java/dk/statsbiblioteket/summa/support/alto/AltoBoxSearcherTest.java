@@ -93,10 +93,32 @@ public class AltoBoxSearcherTest extends TestCase {
         if (searcher == null) {
             return;
         }
-        //http://mars:56708/aviser/index.jsp?filter=&query=&json={solrparam.q%3A%22lyk%C3%B8nskning^0.7689525%22%2C%0D%0Asolrparam.hl%3A%22true%22%2C+box%3A%22true%22%2C%0D%0Asolrparam.fq%3A%22pageUUID%3A\%22doms_aviser_page\%3Auuid\%3A4ab71f1e\-f5d4\-4e64\-ba26\-1f62ef2503c2\%22%22}&sort=&userfiltersortsearch=true
         ResponseCollection responses = getFullStack().search(new Request(
                 DocumentKeys.SEARCH_QUERY,
                 "lykønskning pageUUID:\"doms_aviser_page:uuid:4ab71f1e-f5d4-4e64-ba26-1f62ef2503c2\"",
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
+                AltoBoxSearcher.SEARCH_BOX, true,
+                AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
+                AltoBoxSearcher.SEARCH_ID_REGEXP, "(doms_newspaperCollection:uuid:[0-9abcdef]{8}-[0-9abcdef]{4}-"
+                                                  + "[0-9abcdef]{4}-[0-9abcdef]{4}-[0-9abcdef]{12}).*",
+                AltoBoxSearcher.SEARCH_ID_TEMPLATE, "$1",
+                "solrparam.hl", true,
+                "solrparam.hl.fl", "fulltext_org",
+                "solrparam.hl.snippets", 20
+        ));
+        List<AltoBoxResponse.Box> boxes = getBoxes(responses);
+        assertFalse("With highlighting there should be at least one box", boxes.isEmpty());
+        //System.out.println(responses.toXML());
+    }
+
+    public void testPhraseHighlight() throws IOException {
+        SummaSearcher searcher = getAvailableSearcher();
+        if (searcher == null) {
+            return;
+        }
+        ResponseCollection responses = getFullStack().search(new Request(
+                DocumentKeys.SEARCH_QUERY,
+                "\"Jesper Tørring blev\"",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
                 AltoBoxSearcher.SEARCH_BOX, true,
                 AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
