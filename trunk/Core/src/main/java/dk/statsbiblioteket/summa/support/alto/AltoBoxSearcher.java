@@ -140,6 +140,14 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     public static final String SEARCH_COORDINATES_YISX = CONF_COORDINATES_YISX;
     public static final boolean DEFAULT_COORDINATES_YISX = false;
 
+    /**
+     * ALTO String content considered for highlighting is trimmed with this prefix and a template of "$1" applied.
+     * </p><p>
+     * Optional. Default is {@code ^[,.-/!? ]*(.*?)[,.-/!? ]*$}.
+     */
+    public static final String CONF_ALTO_STRING_TRIM_REGEXP = "box.altostringtrim.regexp";
+    public static final String DEFAULT_ALTO_STRING_TRIM_REGEXP = "^[-,./!?\" ]*(.*?)[-,./!?\" ]*$";
+
     private final StorageReaderClient storage;
     private final boolean defaultBox;
     private final String defaultIDField;
@@ -148,6 +156,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     private final String defaultIDAdjustTemplate;
     private final boolean defaultRelativeCoordinates;
     private final boolean defaultYisx;
+    private final Pattern altoStringTrimmer;
 
     public AltoBoxSearcher(Configuration conf) throws RemoteException {
         super(conf);
@@ -159,6 +168,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
         defaultIDAdjustTemplate = conf.getString(CONF_ID_TEMPLATE, DEFAULT_ID_TEMPLATE);
         defaultRelativeCoordinates = conf.getBoolean(CONF_COORDINATES_RELATIVE, DEFAULT_COORDINATES_RELATIVE);
         defaultYisx = conf.getBoolean(CONF_COORDINATES_YISX, DEFAULT_COORDINATES_YISX);
+        altoStringTrimmer = Pattern.compile(
+                conf.getString(CONF_ALTO_STRING_TRIM_REGEXP, DEFAULT_ALTO_STRING_TRIM_REGEXP));
         readyWithoutOpen();
         log.info("Created " + this);
     }
@@ -344,12 +355,14 @@ public class AltoBoxSearcher extends SearchNodeImpl {
 
                 if ("String".equals(current) && tags.size() > 1 && "TextLine".equals(tags.get(tags.size()-2))) {
                     String content = XMLStepper.getAttribute(xml, "CONTENT", null);
+                    content = altoStringTrimmer.matcher(content).replaceAll("$1");
                     if (boxResponse.isRelativeCoordinates() && (pageWidth == -1 || pageHeight == -1) &&
                         !warnedNoPageSize) {
                         log.warn("Relative coordinated requested, but no page size has been determined. "
                                  + "Using absolute coordinates");
                         warnedNoPageSize = true;
                     }
+
                     if (boxResponse.getLookupTerms().contains(content)) {
                         if (!boxResponse.isRelativeCoordinates() || pageWidth == -1 || pageHeight == -1) {
                             boxResponse.add(recordID, new AltoBoxResponse.Box(
