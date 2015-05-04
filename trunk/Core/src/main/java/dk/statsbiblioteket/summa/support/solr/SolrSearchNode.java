@@ -742,8 +742,13 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                 result = getData(restCall, queryString, responses);
 //                System.out.println("*** " + result.replace("<", "\n<"));
             } catch (Exception e) {
+                String message = e.getMessage();
+                if (message == null) {
+                    log.warn("solrSearch: Exception with null message thrown when performing remote call to "
+                             + host + restCall + " with argument '" + queryString, e);
+                }
                 throw new RemoteException("SolrSearchNode: Unable to perform remote call to "  + host + restCall
-                                          + " with argument '" + queryString + " and message " + e.getMessage());
+                                          + " with argument '" + queryString + " and message " + message);
             }
         }
         log.trace("simpleSearch done in " + (System.currentTimeMillis() - buildQuery) + "ms");
