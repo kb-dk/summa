@@ -222,7 +222,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
             if (response instanceof HighlightResponse) {
                 String highlightTag = request.getString(SEARCH_HIGHLIGHT_TAG, defaultHighlightTag);
                 Pattern highlightPattern = Pattern.compile(
-                        " ([^ ]*<" + highlightTag + ">[^<]+</" + highlightTag + ">[^ ]*) ");
+                        "[^ ]*<" + highlightTag + ">([^<]+)</" + highlightTag + ">");
 
                 HighlightResponse docResponse = (HighlightResponse)response;
                     // Map<id, Map<field, List<content>>>
@@ -243,9 +243,10 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                     }
                     for (Map.Entry<String, List<String>> fieldEntry: hlEntry.getValue().entrySet()) {
                         for (String content: fieldEntry.getValue()) {
+                            // Why the spaces?
                             Matcher hlMatcher = highlightPattern.matcher(" " + content + " ");
                             while (hlMatcher.find()) {
-                                terms.add(hlMatcher.group(1).replace("<em>", "").replace("</em>", ""));
+                                terms.add(hlMatcher.group(1));
                             }
                         }
                     }
