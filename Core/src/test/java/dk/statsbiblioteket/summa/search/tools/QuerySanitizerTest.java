@@ -82,6 +82,10 @@ public class QuerySanitizerTest extends TestCase {
         assertSanitize("Escaped trailing exclamation mark", "foo bar\\!",   "foo bar\\!",   false);
     }
 
+    public void testDash() {
+        assertSanitize("Phrased words with dash",            "\"foo-bar\"", "\"foo-bar\"", true);
+    }
+
     public void testRemoveOption() {
         assertSanitize("Bad trailing exclamation mark",     "foo bar",     "foo bar!", true, SYNTAX);
         assertSanitize("Bad trailing exclamation mark",     "foo bar",     "foo! bar", true, SYNTAX);
