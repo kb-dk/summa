@@ -199,6 +199,8 @@ public class AltoBoxSearcherTest extends TestCase {
                 {"foo", "foo!?,/ \""},
                 {"foo", "foo!?,/ \"."},
                 {"foo", "foo!?,/ \".-"},
+                {"foo", "foo:"},
+                {"foo", "foo;"},
                 {"foo!?,/ \".-bar", "!?,/ \".-foo!?,/ \".-bar!?,/ \".-"},
                 {"foo", "foo,"}
         };
