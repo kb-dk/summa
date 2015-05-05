@@ -62,6 +62,18 @@ public class QueryRewriterTest extends TestCase {
                 "foo bar OR zoo", false);
     }
 
+    public void testQuotedDash() throws ParseException {
+        assertQuote(
+                "\"foo-bar\"",
+                "\"foo-bar\"", true);
+    }
+
+    public void testQuotedQuotedDashNonRemoval() throws ParseException {
+        assertQuote(
+                "\"foo-bar\"",
+                "\"foo-bar\"", false);
+    }
+
     // The OR binds stronger than the explicit AND
     public void testNonTerseExplicitAnd() throws ParseException {
         assertIdentity(
@@ -312,19 +324,19 @@ public class QueryRewriterTest extends TestCase {
     }
 
     public void testProximityWeighted() throws ParseException {
-        assertIdentity("\"foo\"^2.0 \"bar\"^3.0",
+        assertIdentity("\"foo\"^2 \"bar\"^3",
                        "foo^2 bar^3");
     }
 
     public void testQuoteWeight() throws ParseException {
-        assertIdentity("\"foo\"^2.2123",
+        assertIdentity("\"foo\"^2.2123001",
                        "\"foo\"^2.2123");
     }
 
     public void testEscapeWeight() throws ParseException {
         String[][] TESTS = new String[][]{
-                {"foo:bar\\:zoo^2.2123", "foo:bar\\:zoo^2.2123"},
-                {"foo:bar\\:zoo^2.2123", "foo:\"bar\\:zoo\"^2.2123"}
+                {"foo:bar\\:zoo^2.2123001", "foo:bar\\:zoo^2.2123"},
+                {"foo:bar\\:zoo^2.2123001", "foo:\"bar\\:zoo\"^2.2123"}
         };
         QueryRewriter qr = new QueryRewriter(Configuration.newMemoryBased(
                 QueryRewriter.CONF_QUOTE_TERMS, false
@@ -402,6 +414,12 @@ public class QueryRewriterTest extends TestCase {
         assertEquals("Rewrite should be correct",
                      expected, new QueryRewriter(
                 Configuration.newMemoryBased(QueryRewriter.CONF_TERSE, terse),
+                null, new QueryRewriter.Event()).rewrite(input));
+    }
+    private void assertQuote(String expected, String input, boolean quote) throws ParseException {
+        assertEquals("Rewrite with quote=" + quote + " should be correct",
+                     expected, new QueryRewriter(
+                Configuration.newMemoryBased(QueryRewriter.CONF_QUOTE_TERMS, quote),
                 null, new QueryRewriter.Event()).rewrite(input));
     }
 }

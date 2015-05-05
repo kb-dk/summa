@@ -491,11 +491,10 @@ public class QueryRewriter {
     }
 
     private String convertSubqueryToString(String field, String text, boolean quote) {
-/*        text = unquotedEscaper.transform(QueryParser.escape(text));
-        if (quote) {
-            text = "\"" + text + "\"";
-        }*/
-        text = quote ? "\"" + escape(text, true) + "\"" : escape(text, false);
+/*        text = unquotedEscaper.transform(QueryParser.escape(text));*/
+
+        // The dash-check is a hack. We would really like to know if the original query was quoted or not
+        text = quote || text.contains("-") ? "\"" + escape(text, true) + "\"" : escape(text, false);
         return field == null || field.isEmpty() ? text : field + ":" + text;
     }
 /*    private String convertSubqueryToString(String field, String text, boolean quote) {
