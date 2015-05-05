@@ -146,7 +146,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
      * Optional. Default is {@code ^[,.-/!? ]*(.*?)[,.-/!? ]*$}.
      */
     public static final String CONF_ALTO_STRING_TRIM_REGEXP = "box.altostringtrim.regexp";
-    public static final String DEFAULT_ALTO_STRING_TRIM_REGEXP = "^[-,./!?\" ]*(.*?)[-,./!?\" ]*$";
+    public static final String DEFAULT_ALTO_STRING_TRIM_REGEXP = "^[-,./!?\" :;]*(.*?)[-,./!?\" :;]*$";
 
     private final StorageReaderClient storage;
     private final boolean defaultBox;
