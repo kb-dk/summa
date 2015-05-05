@@ -135,6 +135,30 @@ public class AltoBoxSearcherTest extends TestCase {
         //System.out.println(responses.toXML());
     }
 
+    public void testSpecificHansJensen() throws IOException {
+        SummaSearcher searcher = getAvailableSearcher();
+        if (searcher == null) {
+            return;
+        }
+        ResponseCollection responses = getFullStack().search(new Request(
+                DocumentKeys.SEARCH_QUERY,
+                "\"hans jensen\" editionUUID:\"doms_aviser_edition:uuid:6e8dff93-d59d-4bec-be95-321cb73b8c9c\"",
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
+                AltoBoxSearcher.SEARCH_BOX, true,
+                AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
+                AltoBoxSearcher.SEARCH_ID_REGEXP, "(doms_newspaperCollection:uuid:[0-9abcdef]{8}-[0-9abcdef]{4}-"
+                                                  + "[0-9abcdef]{4}-[0-9abcdef]{4}-[0-9abcdef]{12}).*",
+                AltoBoxSearcher.SEARCH_ID_TEMPLATE, "$1",
+                "solrparam.hl", true,
+                "solrparam.hl.fl", "fulltext_org",
+                "solrparam.hl.snippets", 20
+        ));
+        System.out.println(responses.toXML());
+        List<AltoBoxResponse.Box> boxes = getBoxes(responses);
+        assertEquals("With highlighting there should be the right number of boxes", 2, boxes.size());
+        //System.out.println(responses.toXML());
+    }
+
     public void testHighlightRelative() throws IOException {
         SummaSearcher searcher = getAvailableSearcher();
         if (searcher == null) {
