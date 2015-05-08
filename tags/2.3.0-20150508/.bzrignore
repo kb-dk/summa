@@ -1,0 +1,8 @@
+*.iws
+*.log
+*_db?
+*_db??
+*/classes
+*/dist
+*/doc
+*/summa-*.jar
