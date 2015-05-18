@@ -9,18 +9,18 @@
 
     <properties>
         <solr_lucene_version>4.8.1</solr_lucene_version>
-        <sbutil_version>0.5.28</sbutil_version>
+        <sbutil_version>0.5.29</sbutil_version>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>2.3.0-20150504-SNAPSHOT</version>
+    <version>2.3.0-20150518-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
     </ciManagement>
-    <inceptionYear>2014</inceptionYear>
+    <inceptionYear>2015</inceptionYear>
     <url>http://summa.sourceforge.net/projects/summa/</url>
     <packaging>pom</packaging>
     <name>Summa</name>

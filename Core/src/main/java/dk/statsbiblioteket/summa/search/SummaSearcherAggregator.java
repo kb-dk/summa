@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -188,7 +189,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
 
             long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX, 0L);
             // TODO: We should over-ask maxRecords to raise probability of getting the right group merge-result
-            long maxRecords = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS, 0L);
+            List<String> getIDs = request.getStrings(DocumentKeys.SEARCH_IDS, (List<String>) null);
+            long maxRecords = request.getLong(
+                    DocumentKeys.SEARCH_MAX_RECORDS,
+                    (long)(getIDs == null ? DocumentKeys.DEFAULT_MAX_RECORDS : getIDs.size()));
             if (startIndex > 0) {
                 if (log.isTraceEnabled()) {
                     log.trace(
