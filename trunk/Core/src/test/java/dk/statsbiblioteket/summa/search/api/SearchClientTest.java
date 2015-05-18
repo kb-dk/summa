@@ -20,6 +20,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.search.rmi.SummaRest;
+import dk.statsbiblioteket.summa.support.api.DidYouMeanKeys;
+import dk.statsbiblioteket.summa.support.api.DidYouMeanResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
@@ -62,6 +64,30 @@ public class SearchClientTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         SummaRest.getInstance().unregister(SID);
+    }
+
+    public void testRemoteDYMDirect() throws IOException {
+        testRemoteDYM("//mars:57000/sb-searcher");
+    }
+
+    public void testRemoteDYMAggregated() throws IOException {
+        testRemoteDYM("//mars:56600/aulhub-searcher");
+    }
+
+    private void testRemoteDYM(String remote) throws IOException {
+        SummaSearcher searcher = new SearchClient(Configuration.newMemoryBased(
+                ConnectionConsumer.CONF_RPC_TARGET, remote));
+        ResponseCollection responses = searcher.search(new Request(
+                DidYouMeanKeys.SEARCH_QUERY, "hestt"));
+        for (Response response: responses) {
+            if (response instanceof DidYouMeanResponse) {
+                System.out.println(response.toXML());
+                return;
+            }
+        }
+        fail("No DidYouMean response for 'hestt' from " + remote + "\n" + responses.toXML());
+        assertTrue("The DYM result from " + remote + " should contain 'heart'\n" + responses.toXML(),                   responses.toXML().contains("heart"));
+        searcher.close();
     }
 
     public void testRemoteRMI() throws IOException {

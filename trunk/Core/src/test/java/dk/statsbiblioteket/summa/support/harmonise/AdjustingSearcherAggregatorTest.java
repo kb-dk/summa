@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -51,7 +52,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
 
     // Very bogus as it requires already running searchers at specific addresses on localhost
     public void testPagingFacet() throws IOException, SubConfigurationsNotSupportedException {
-        AdjustingSearcherAggregator aggregator = getAggregator();
+        AdjustingSearcherAggregator aggregator = getSBAggregator("localhost");
         Request request = new Request();
         request.addJSON(
                 "{\"search.document.query\":\"peter\"," +
@@ -122,7 +123,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
     // Very bogus as it requires already running searchers at specific addresses on localhost
     // TODO: Create a unit test that works independently of running searchers
     public void testAggregator() throws IOException, SubConfigurationsNotSupportedException {
-        AdjustingSearcherAggregator aggregator = getAggregator();
+        AdjustingSearcherAggregator aggregator = getSBAggregator("localhost");
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
@@ -170,7 +171,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
     }
 
     public void testAggregatorDivider() throws IOException, SubConfigurationsNotSupportedException {
-        AdjustingSearcherAggregator aggregator = getAggregator();
+        AdjustingSearcherAggregator aggregator = getSBAggregator("localhost");
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "foo - bar");
         request.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
@@ -184,15 +185,26 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         aggregator.close();
     }
 
-    public void testTimingAggregation() throws IOException,
-                                        SubConfigurationsNotSupportedException {
-        AdjustingSearcherAggregator aggregator = getAggregator();
+    public void testTimingAggregation() throws IOException, SubConfigurationsNotSupportedException {
+        AdjustingSearcherAggregator aggregator = getSBAggregator("localhost");
         Request request = new Request(
             DocumentKeys.SEARCH_QUERY, "foo",
             DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
         log.debug("Searching");
         ResponseCollection responses = aggregator.search(request);
         assertUniqueTiming("Aggregated search", responses);
+        //System.out.println(timings);
+    }
+
+    public void testMarsIDLookup() throws IOException, SubConfigurationsNotSupportedException {
+        AdjustingSearcherAggregator aggregator = getSBAggregator("mars");
+        Request request = new Request(
+            DocumentKeys.SEARCH_IDS, "sb_2874180",
+            DocumentKeys.SEARCH_COLLECT_DOCIDS, false
+        );
+        log.debug("Searching");
+        ResponseCollection responses = aggregator.search(request);
+        System.out.println(responses.toXML());
         //System.out.println(timings);
     }
 
@@ -247,7 +259,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         return null;
     }
 
-    private AdjustingSearcherAggregator getAggregator() throws IOException {
+    private AdjustingSearcherAggregator getSBAggregator(String host) throws IOException {
         Configuration conf = Configuration.newMemoryBased(
             ResponseMerger.CONF_ORDER, "summon, sb",
             ResponseMerger.CONF_MODE,
@@ -260,7 +272,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         sbConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "sb");
         sbConf.set(InteractionAdjuster.CONF_IDENTIFIER, "sb");
         sbConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
-        sbConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57000/sb-searcher");
+        sbConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//" + host + ":57000/sb-searcher");
         sbConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_MULTIPLY, 5.0);
 
         // Summon
@@ -268,7 +280,7 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         summonConf.set(SummaSearcherAggregator.CONF_SEARCHER_DESIGNATION, "summon");
         summonConf.set(InteractionAdjuster.CONF_IDENTIFIER, "summon");
         summonConf.set(AdjustingSearcherAggregator.CONF_SEARCH_ADJUSTING, true);
-        summonConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57400/summon-searcher");
+        summonConf.set(ConnectionConsumer.CONF_RPC_TARGET, "//" + host + ":57400/summon-searcher");
         summonConf.set(InteractionAdjuster.CONF_ADJUST_SCORE_ADD, -0.5);
         summonConf.set(InteractionAdjuster.CONF_ADJUST_FACET_FIELDS,
                        "author_normalised - Author, lma_long - ContentType, llang - Language, lsubject - SubjectTerms");
