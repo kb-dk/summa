@@ -228,7 +228,8 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         public void reduce(int maxRecords) {
             sort();
             if (docs.size() > maxRecords) {
-                docs = docs.subList(0, maxRecords);
+                // new ArrayList to ensure Serializability
+                docs = new ArrayList<>(docs.subList(0, maxRecords));
             }
         }
 
