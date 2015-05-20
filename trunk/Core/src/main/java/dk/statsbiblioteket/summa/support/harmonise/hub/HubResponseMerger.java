@@ -280,7 +280,8 @@ public class HubResponseMerger implements Configurable {
     private void trim(SolrParams request, AdjustWrapper aw) {
         Integer rows = request.getInt(CommonParams.ROWS);
         if (rows != null && aw.getDocs().size() > rows) {
-            aw.setDocs(aw.getDocs().subList(0, rows));
+            // new ArrayList to ensure Serializability
+            aw.setDocs(new ArrayList<>(aw.getDocs().subList(0, rows)));
         }
     }
 

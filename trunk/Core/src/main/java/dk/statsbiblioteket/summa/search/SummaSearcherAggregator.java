@@ -31,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -328,14 +327,16 @@ public class SummaSearcherAggregator implements SummaSearcher {
                 if (groups.size() < startIndex) {
                     groups.clear();
                 } else {
-                    docResponse.setGroups(groups.subList(
-                            (int)startIndex, (int)Math.min(groups.size(), startIndex+maxRecords)));
+                    // new ArrayList to ensure Serializability
+                    docResponse.setGroups(new ArrayList<>(groups.subList(
+                            (int)startIndex, (int)Math.min(groups.size(), startIndex+maxRecords))));
                 }
             } else {
                 List<DocumentResponse.Record> records = docResponse.getRecords();
                 if (records.size() < startIndex) {
                     records.clear();
                 } else {
+                    // new ArrayList to ensure Serializability
                     records = new ArrayList<>(
                             records.subList((int)startIndex, (int)Math.min(records.size(), startIndex+maxRecords)));
                 }

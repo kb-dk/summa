@@ -372,7 +372,8 @@ public class ResponseMerger implements Configurable {
         long maxRecords = aw.getBase() == null ? this.fallBackMaxRecords : aw.getBase().getMaxRecords();
         log.trace("trim called with maxRecords " + maxRecords);
         if (aw.getRecords().size() > maxRecords) {
-            aw.setRecords(aw.getRecords().subList(0, (int)maxRecords));
+            // new ArrayList to ensure Serializability
+            aw.setRecords(new ArrayList<>(aw.getRecords().subList(0, (int)maxRecords)));
         }
     }
 
