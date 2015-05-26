@@ -66,7 +66,7 @@ public class FacetStructure implements Serializable {
      * This property is optional. Default is {@link #DEFAULT_TAGS_MAX}.
      */
     public static final String CONF_FACET_TAGS_MAX = "summa.facet.tags.max";
-    public static final int DEFAULT_TAGS_MAX = 200;
+    public static final int DEFAULT_TAGS_MAX = 5000;
     /**
      * The default wanted number of Tags for a Facet. This number can be
      * overridden when a Facet representation is requested.
