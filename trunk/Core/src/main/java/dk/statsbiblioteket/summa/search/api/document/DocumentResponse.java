@@ -774,7 +774,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         }
         StringWriter sw = new StringWriter(2000);
         sw.append("<documentresult");
-        appendIfDefined(sw, "filters", Strings.join(filters));
+        appendIfDefined(sw, "filters", filters == null ? null : Strings.join(filters));
         appendIfDefined(sw, "query", query);
         sw.append(" startIndex=\"");
         sw.append(Long.toString(startIndex)).append("\"");
