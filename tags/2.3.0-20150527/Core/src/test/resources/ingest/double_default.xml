@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<foo xmlns="http://barristo" xmlns:klaf="http://klafspace">
+    <sometag someattribute="bar">zoo</sometag>
+    <inner xmlns="http://cheese">
+        <myinnertag>innertagvalue</myinnertag>
+        <klaf:myklaftag>innerklafvalue</klaf:myklaftag>
+    </inner>
+</foo>
