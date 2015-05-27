@@ -63,6 +63,13 @@ public class QuerySanitizerTest extends TestCase {
         assertSanitize("Escaped colon", "foo\\: bar",   "foo\\: bar",    false);
     }
 
+    public void testKeepExplicitBooleans() {
+        assertSanitize("Keep the booleans",
+                       "foo AND bar AND zoo:(moo OR boo)",    "foo AND bar AND zoo:(moo OR boo)", false);
+//        assertSanitize("OR anywhere means explicit booleans everywhere",
+//                       "foo AND bar AND zoo:(moo OR boo)",    "foo bar zoo:(moo OR boo)", false);
+    }
+
     public void testEscaping() {
         assertEquals("Space in term", Configuration.newMemoryBased(), "foo\\ bar", "foo\\ bar");
         assertEquals("Space in term, qualified", Configuration.newMemoryBased(),
