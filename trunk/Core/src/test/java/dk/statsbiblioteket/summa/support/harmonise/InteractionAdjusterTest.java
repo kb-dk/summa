@@ -390,8 +390,28 @@ public class InteractionAdjusterTest extends TestCase {
     }
 
     public void testExplicitBooleanPreservation() {
-        assertAdjustment(createAdjuster(), "+foo +bar +zoo:(baz OR bom)", "foo AND bar AND zoo:(baz OR bom)");
+        assertAdjustment(createAdjuster(),
+                         "+deress +ContentType:avis +(familyId:14september OR familyId:altumitrott)",
+                         "deres AND lma_long:\"avis\" AND familyId:(14september OR altumitrott)");
     }
+
+    public void testExplicitPlusPreservation() {
+        assertAdjustment(createAdjuster(),
+                         "+deres^1.1167583 +iso_date:[1300-01-01 TO 1997-12-31] +ContentType:avis^1.1167583 "
+                         + "+(familyId:14september^1.1167583 OR familyId:vikutidindi^1.1167583)",
+
+                         "+\"deres\"^1.1167583 +iso_date:[1300-01-01 TO 1997-12-31] +lma_long:\"avis\"^1.1167583 "
+                         + "+(familyId:\"14september\"^1.1167583 OR familyId:\"vikutidindi\"^1.1167583)");
+    }
+
+    // Unsure what the best translation is here
+    /*    public void testAND_OR() {
+        assertAdjustment(createAdjuster(),
+                         "+deres +ContentType:\"avis\" OR familyId:14september",
+                         "deres AND lma_long:\"avis\" OR familyId:(14september)");
+    } */
+
+
 
     public void testExplicitBooleanAddition() {
         assertAdjustment(createAdjuster(), "+foo +bar +zoo:(baz OR bom)", "foo bar zoo:(baz OR bom)");
@@ -400,6 +420,26 @@ public class InteractionAdjusterTest extends TestCase {
     public void testImplicitANDBooleanRemoval() {
         assertAdjustment(createAdjuster(), "foo bar (zoo:baz zoo:bom)", "foo bar zoo:(baz AND bom)");
     }
+
+    public void testImplicitANDBooleanRemovalLong() {
+        assertAdjustment(createAdjuster(),
+
+                         "+deres +iso_date:[1300-01-01 TO 1997-12-31] +ContentType:avis +(familyId:14september OR "
+                         + "familyId:altumitrott OR familyId:dagbladid1934 OR familyId:dagbladid1935 OR "
+                         + "familyId:dimmalaetting OR familyId:eysturoyggin OR familyId:ffbladid OR "
+                         + "familyId:friufoeroyar1983 OR familyId:foeringurin OR familyId:sosialurin OR "
+                         + "familyId:foeroyatidindi OR familyId:gladustrok OR familyId:losjutidindi OR "
+                         + "familyId:nordlysid OR familyId:oyggjatidindi OR familyId:suduroyartidindi OR "
+                         + "familyId:tingakrossur OR familyId:vikutidindi)",
+
+                         "deres iso_date:[1300-01-01 TO 1997-12-31] AND lma_long:\"avis\" AND "
+                         + "familyId:(14september OR altumitrott OR dagbladid1934 OR dagbladid1935 OR dimmalaetting OR "
+                         + "eysturoyggin OR ffbladid OR friufoeroyar1983 OR foeringurin OR sosialurin OR foeroyatidindi"
+                         + " OR gladustrok OR losjutidindi OR nordlysid OR oyggjatidindi OR suduroyartidindi OR "
+                         + "tingakrossur OR vikutidindi)");
+    }
+
+
 
     public void testQualifiedEscaping() {
         assertAdjustment(createAdjuster(), "Language:\"foo bar\"", "llang:foo\\ bar");
