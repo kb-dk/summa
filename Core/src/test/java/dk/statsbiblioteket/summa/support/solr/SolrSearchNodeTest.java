@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetRangeResponse;
 import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
+import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -34,6 +35,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.embeddedsolr.EmbeddedJettyWithSolrServer;
+import dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode;
+import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
 import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
@@ -1076,6 +1079,47 @@ public class SolrSearchNodeTest extends TestCase {
 //                       responses.toXML().contains("<tag name=\"solr\" addedobjects=\"2\" reliability=\"PRECISE\">"));
         } finally {
             searcher.close();
+        }
+    }
+
+    public void testMarsDoms() throws RemoteException {
+        SolrSearchNode ss = new SolrSearchNode(Configuration.newMemoryBased(
+                SolrSearchNode.CONF_SOLR_HOST, "mars:57308",
+                SolrSearchNode.CONF_SOLR_RESTCALL, "/doms/sbsolr/select",
+                SolrSearchNode.CONF_ID, "marsdoms"
+        ));
+        testMarsDomsHelper(ss);
+    }
+
+    public void testMarsDomsWrapped() throws IOException {
+        Configuration conf = Configuration.newMemoryBased(
+                InteractionAdjuster.CONF_IDENTIFIER, "marsdomsadj"
+        );
+        Configuration sbsConf = conf.createSubConfiguration(AdjustingSearchNode.CONF_INNER_SEARCHNODE);
+        sbsConf.set(SearchNodeFactory.CONF_NODE_CLASS, SBSolrSearchNode.class.getCanonicalName());
+        sbsConf.set(SolrSearchNode.CONF_SOLR_HOST, "mars:57308");
+        sbsConf.set(SolrSearchNode.CONF_SOLR_RESTCALL, "/doms/sbsolr/select");
+        sbsConf.set(SolrSearchNode.CONF_ID, "marsdoms");
+
+        testMarsDomsHelper(new AdjustingSearchNode(conf));
+    }
+
+    private void testMarsDomsHelper(SearchNode ss) throws RemoteException {
+        {
+            ResponseCollection responses = new ResponseCollection();
+            ss.search(new Request(DocumentKeys.SEARCH_QUERY,
+                                  "deres"
+            ), responses);
+            assertTrue("Search for 'deres' in (radio/TV) DOMS should yield >0 results\n" + responses.toXML(),
+                       ((DocumentResponse) responses.iterator().next()).size() > 0);
+        }
+        {
+            ResponseCollection responses = new ResponseCollection();
+            ss.search(new Request(DocumentKeys.SEARCH_QUERY,
+                                  "deres AND lma_long:avis AND familyId:(14september OR altumitrott)"
+            ), responses);
+            assertEquals("Search for lma_long:avis in (radio/TV) DOMS should give 0 results\n" + responses.toXML(),
+                         0, ((DocumentResponse)responses.iterator().next()).size());
         }
     }
 
