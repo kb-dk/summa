@@ -451,6 +451,13 @@ public class QueryRewriter {
             if (booleanQuery.getClauses()[i].getOccur() != BooleanClause.Occur.MUST) {
                 return false;
             }
+
+            Query sub = booleanQuery.getClauses()[i].getQuery();
+            if (sub instanceof BooleanQuery) {
+                if (!containsOnlyMust((BooleanQuery)sub)) {
+                    return false;
+                }
+            }
         }
         return true;
     }

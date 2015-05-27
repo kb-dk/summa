@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.search.api.document;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -25,6 +26,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -65,6 +68,32 @@ public class DocumentResponseTest extends TestCase {
         ExtraAsserts.assertEquals("The second 3 groups should match those from the all-group",
                                   groupsAll.subList(3, 6), groupsSecond3);
 
+        searcher.close();
+    }
+
+    // Invalid test outside of SB
+    public void testRemoteMars() throws IOException {
+        final String ADDRESS = "//mars:56700/aviser-searcher";
+        SummaSearcher searcher = new SearchClient(Configuration.newMemoryBased(
+                SearchClient.CONF_SERVER, ADDRESS));
+        ResponseCollection responses = searcher.search(new Request(
+                DocumentSearcher.SEARCH_QUERY, "*:*",
+                DocumentKeys.SEARCH_COLLECT_DOCIDS, true,
+                FacetKeys.SEARCH_FACET_FACETS, "timestamp (1500 ALPHA)"));
+        assertFalse("There should be at least one response from " + ADDRESS, responses.isEmpty());
+
+        String result = responses.toXML().replace("\n", " ");
+        Matcher outer = Pattern.compile("<facetmodel.*./facetmodel").matcher(result);
+        assertTrue("There should be a facet response\n" + responses.toXML(), outer.find());
+        Matcher tagM = Pattern.compile("<tag[^>]+").matcher(outer.group());
+        List<String> tags = new ArrayList<>();
+        while (tagM.find()) {
+            tags.add(tagM.group());
+        }
+        assertTrue("There should be at least 205 facet entries, but there were only " + tags.size() + "\n"
+                   + responses.toXML(),
+                   tags.size() > 205);
+        System.out.println("There were " + tags.size() + " facet tags");
         searcher.close();
     }
 

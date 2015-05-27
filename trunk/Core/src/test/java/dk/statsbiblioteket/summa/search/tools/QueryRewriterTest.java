@@ -88,6 +88,12 @@ public class QueryRewriterTest extends TestCase {
                 "foo bar OR zoo goo", false);
     }
 
+    public void testPreserveExplicitBooleans() throws ParseException {
+        assertIdentity(
+                "(+\"foo\" +\"bar\" +(zoo:\"goo\" OR zoo:\"boo\"))",
+                "foo AND bar AND zoo:(goo OR boo)", false);
+    }
+
     public void testParenthesized3() throws ParseException {
         assertIdentity(
                 "\"foo\" (\"bar\" \"baz\")",

@@ -389,6 +389,18 @@ public class InteractionAdjusterTest extends TestCase {
         assertAdjustment(adjuster, "FieldB:ContentA OR FieldA:ContentA", "fa:ca");
     }
 
+    public void testExplicitBooleanPreservation() {
+        assertAdjustment(createAdjuster(), "+foo +bar +zoo:(baz OR bom)", "foo AND bar AND zoo:(baz OR bom)");
+    }
+
+    public void testExplicitBooleanAddition() {
+        assertAdjustment(createAdjuster(), "+foo +bar +zoo:(baz OR bom)", "foo bar zoo:(baz OR bom)");
+    }
+
+    public void testImplicitANDBooleanRemoval() {
+        assertAdjustment(createAdjuster(), "foo bar (zoo:baz zoo:bom)", "foo bar zoo:(baz AND bom)");
+    }
+
     public void testQualifiedEscaping() {
         assertAdjustment(createAdjuster(), "Language:\"foo bar\"", "llang:foo\\ bar");
     }
@@ -567,7 +579,7 @@ public class InteractionAdjusterTest extends TestCase {
         InteractionAdjuster adjuster = createAdjuster();
         assertAdjustment(
             adjuster,
-            "(Language:Doo OR Language:Moo) Language:Boom",
+            "+(Language:Doo OR Language:Moo) +Language:Boom",
             "llang:\"single\" llang:boo");
     }
 
