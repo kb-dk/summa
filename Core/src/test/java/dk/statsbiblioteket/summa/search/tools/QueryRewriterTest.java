@@ -314,7 +314,19 @@ public class QueryRewriterTest extends TestCase {
 
     public void testBooleanQueryInBooleanQuery() throws ParseException {
         String query = "foo AND (bar OR - )";
-        assertIdentity("\"foo\" (\"bar\" OR \"-\")", query);
+        assertIdentity("+\"foo\" +(\"bar\" OR \"-\")", query);
+    }
+
+    public void testTruncation() throws ParseException {
+        assertIdentity("foo*", "foo*");
+    }
+
+    public void testTruncationWithDash() throws ParseException {
+        assertIdentity("foo\\-bar*", "foo-bar*");
+    }
+
+    public void testTruncationWithFieldAndDash() throws ParseException {
+        assertIdentity("foo:bar\\-zoo*", "foo:bar-zoo*");
     }
 
     public void testProximity() throws ParseException {

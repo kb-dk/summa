@@ -391,7 +391,7 @@ public class InteractionAdjusterTest extends TestCase {
 
     public void testExplicitBooleanPreservation() {
         assertAdjustment(createAdjuster(),
-                         "+deress +ContentType:avis +(familyId:14september OR familyId:altumitrott)",
+                         "+deres +ContentType:avis +(familyId:14september OR familyId:altumitrott)",
                          "deres AND lma_long:\"avis\" AND familyId:(14september OR altumitrott)");
     }
 
@@ -414,7 +414,7 @@ public class InteractionAdjusterTest extends TestCase {
 
 
     public void testExplicitBooleanAddition() {
-        assertAdjustment(createAdjuster(), "+foo +bar +zoo:(baz OR bom)", "foo bar zoo:(baz OR bom)");
+        assertAdjustment(createAdjuster(), "+foo +bar +(zoo:baz OR zoo:bom)", "foo bar zoo:(baz OR bom)");
     }
 
     public void testImplicitANDBooleanRemoval() {
@@ -600,7 +600,7 @@ public class InteractionAdjusterTest extends TestCase {
 
     public void testQueryDividerRewrite_multiValue() {
         InteractionAdjuster adjuster = createAdjuster();
-        assertAdjustment(adjuster, "foo \\- bar", "foo - bar");
+        assertAdjustment(adjuster, "foo \"-\" bar", "foo - bar");
     }
 
     public void testQueryDividerPhraseRewrite_multiValue() {

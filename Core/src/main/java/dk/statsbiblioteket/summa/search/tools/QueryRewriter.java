@@ -402,7 +402,9 @@ public class QueryRewriter {
             result += phraseQuery.getSlop() == 0 ? "" : "~" + phraseQuery.getSlop();
         } else if (query instanceof PrefixQuery) {
             PrefixQuery prefixQuery = (PrefixQuery) query;
-            return convertSubqueryToString(prefixQuery.getField(), prefixQuery.getPrefix().text(), false) + "*";
+            return ("".equals(prefixQuery.getField()) ? "" : prefixQuery.getField() + ":")
+                   + escape(((PrefixQuery) query).getPrefix().text(), false) + "*";
+//            return convertSubqueryToString(prefixQuery.getField(), prefixQuery.getPrefix().text(), false) + "*";
         } else if (query instanceof BooleanQuery) {
             String inner = booleanQueryToString((BooleanQuery) query);
             result += top && terse ? inner.trim() : "(" + inner.trim() + ")";
