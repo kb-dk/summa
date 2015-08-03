@@ -1427,6 +1427,52 @@ public class SummonSearchNodeTest extends TestCase {
                         Strings.join(ids1, ", "), Strings.join(ids2, ", "));
     }
 
+    public void testPaging20() throws RemoteException {
+        testPaging(20);
+    }
+
+    private void testPaging(int pageSize) throws RemoteException {
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+//        summon.open(""); // Fake open for setting permits
+        List<String> ids0 = getAttributes(
+                summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, pageSize,
+                DocumentKeys.SEARCH_START_INDEX, 0),
+                "id", false);
+        List<String> ids1 = getAttributes(
+                summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, pageSize,
+                DocumentKeys.SEARCH_START_INDEX, pageSize),
+                "id", false);
+        List<String> ids2 = getAttributes(
+                summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, pageSize,
+                DocumentKeys.SEARCH_START_INDEX, 2*pageSize),
+                "id", false);
+
+        assertNotEquals("The hits should differ from page 0 and 1",
+                        Strings.join(ids0, ", "), Strings.join(ids1, ", "));
+        assertNotEquals("The hits should differ from page 1 and 2",
+                        Strings.join(ids1, ", "), Strings.join(ids2, ", "));
+
+        List<String> ids12 = getAttributes(
+                summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, 2*pageSize,
+                DocumentKeys.SEARCH_START_INDEX, 0),
+                "id", false);
+
+        List<String> idsConcatenated = new ArrayList<>(3*pageSize);
+        idsConcatenated.addAll(ids0);
+        idsConcatenated.addAll(ids1);
+
+        assertEquals("The hits for 1 page of " + 2 * pageSize + " and 2 pages of " + pageSize + " should match",
+                     Strings.join(ids12, "\n"), Strings.join(idsConcatenated, "\n"));
+    }
+
     public void testPingFromSummaSearcher() throws IOException {
         Configuration conf = Configuration.newMemoryBased();
         SimplePair<String, String> credentials = SummonTestHelper.getCredentials();
