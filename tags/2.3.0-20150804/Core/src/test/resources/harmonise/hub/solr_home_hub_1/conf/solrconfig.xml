@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<config>
+
+  <luceneMatchVersion>LUCENE_40</luceneMatchVersion>
+
+  <!-- We might need this later if IndexLookUp is put in own jar/patch etc
+         <lib dir="./lib" />  A whole directory
+         <lib path="../some_patch.jar" /> Single jar. This file must exist or startup will fail 
+  -->
+  
+  <!-- Specify where index is stored. Default is /data under SOLR_HOME.-->
+  <dataDir>${solr.data.dir:}</dataDir>
+
+  <!-- The DirectoryFactory to use for indexes. Can be changed to NIO, memory based etc.  -->
+  <directoryFactory name="DirectoryFactory"  class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
+
+  <indexConfig>
+    
+       <maxFieldLength>50000</maxFieldLength>  <!-- maxFieldLength specifies max number of *tokens* indexed per field. Default: 10000 -->
+       <writeLockTimeout>1000</writeLockTimeout> <!-- Maximum time to wait for a write lock (ms) for an IndexWriter. Default: 1000 -->
+       
+       <!-- Default false(recommended) in SOLR4.0. Setting it to true may improve performance at the cost of more files in the index directory.-->         
+       <useCompoundFile>false</useCompoundFile>
+
+       <ramBufferSizeMB>32</ramBufferSizeMB> 
+       <maxBufferedDocs>1000</maxBufferedDocs>
+
+       <unlockOnStartup>false</unlockOnStartup>
+    
+       <termIndexInterval>128</termIndexInterval> <!-- Default is 128 which is good for most. Can be used for performance tuning. --> 
+       <reopenReaders>true</reopenReaders>
+   
+       <!-- <infoStream file="INFOSTREAM.txt">false</infoStream> -->  <!-- Enable if we want lucene debug information -->
+  </indexConfig>
+
+
+  <!-- The default high-performance update handler -->
+  <updateHandler class="solr.DirectUpdateHandler2">
+
+    <!-- OpenSearcher - if false, the commit causes recent index changes to be flushed to stable storage, but does not cause a new
+         searcher to be opened to make those changes visible. -->
+     <autoCommit> 
+       <maxTime>15000</maxTime> 
+       <openSearcher>false</openSearcher> 
+     </autoCommit>
+  
+    <updateLog>
+      <str name="dir">${solr.data.dir:}</str>
+    </updateLog>
+   
+
+  </updateHandler>
+  
+  <query>
+  
+    <!--Maximum number of clauses in each BooleanQuery,  an exception is thrown if exceeded. -->        
+    <maxBooleanClauses>1024</maxBooleanClauses> 
+
+
+    <!--Advanced properties. Defaults -->
+    <filterCache class="solr.FastLRUCache"
+                 size="512"
+                 initialSize="512"
+                 autowarmCount="0"/>
+
+    <queryResultCache class="solr.LRUCache"
+                     size="512"
+                     initialSize="512"
+                     autowarmCount="0"/>
+   
+    <documentCache class="solr.LRUCache"
+                   size="512"
+                   initialSize="512"
+                   autowarmCount="0"/>
+    
+    <enableLazyFieldLoading>true</enableLazyFieldLoading>
+
+
+   <!-- 20 is default. Summa shows 20 records on page 1. Next page (records 21-40) is cached   -->
+   <queryResultWindowSize>40</queryResultWindowSize>
+
+   <!-- Changed from default 200 -->   
+   <queryResultMaxDocsCached>1000</queryResultMaxDocsCached>
+
+   <!-- Query Related Event Listeners        -->
+    <listener event="newSearcher" class="solr.QuerySenderListener">
+      <arr name="queries">
+        <!--
+           <lst><str name="q">solr</str><str name="sort">price asc</str></lst>
+           <lst><str name="q">rocks</str><str name="sort">weight asc</str></lst>
+          -->
+      </arr>
+    </listener>
+    <listener event="firstSearcher" class="solr.QuerySenderListener">
+      <arr name="queries">
+        <lst>
+          <str name="q">static firstSearcher warming in solrconfig.xml</str>
+        </lst>
+      </arr>
+    </listener>
+
+    <useColdSearcher>false</useColdSearcher>
+    <maxWarmingSearchers>2</maxWarmingSearchers>
+
+  </query>
+
+
+
+  <requestDispatcher handleSelect="true" >
+
+
+    <!-- For Security set this to false. We do not need remote streaming --> 
+    <requestParsers enableRemoteStreaming="false" multipartUploadLimitInKB="2048000" />
+
+    <httpCaching never304="true" />   
+  </requestDispatcher>
+    
+    
+<!--
+Field boost not working exactly as intended. summa identity alias'es with boost (lperi=lperi^2.0 etc.) are not boosted
+Also boost are not applied to fields when specifing several fields in query and the default dismax is not used.
+But this is avery rare situation.
+-->  
+    
+<requestHandler name="/edismax" default="true" class="solr.SearchHandler">
+   <lst name="defaults">
+     <str name="echoParams">explicit</str>
+     <!-- Query settings -->
+     <str name="defType">edismax</str>
+     <str name="rows">10</str>
+     <str name="q.op">AND</str>    
+     <!-- This we probably have to tune a lot -->         
+     <str name="mm">100%</str>
+       <!-- fulltext is for testing only (for now) -->
+     <str name="qf">
+       fulltext
+       sort_title
+       freetext^0.5
+       author_main^2.0
+       author_person
+       au_other
+       author_corporation
+       title^1.8 
+       se
+       main_title^4.0
+       html_h1
+       html_h2
+       html_h3
+       html_h4
+       html_h5
+       html_h6
+       subject_dk5
+       subject_serial_solutions
+       subject_ulrichs
+       subject_controlled^1.2
+       subject_other
+       lma_long
+       id     
+       enrich_editor^0.2
+       enrich_isbn^0.2
+       enrich_publisher^0.2
+       enrich_publishdate^0.2
+       enrich_title^0.2
+       enrich_head^0.2
+       enrich_freetext^0.05
+       lti                                                 
+     </str>
+     <!--Phrase fields, read SOLR book page 154. Performance can be improved by shingling common-grams -->
+     <str name="pf">
+       fulltext^0.5
+       sort_title^0.5
+       freetext^0.25
+       author_main^1.0
+       author_person^0.5
+       au_other^0.5
+       author_corporation^0.5
+       title^0.9
+       se^0.5
+       main_title^2.0
+       html_h1^0.5
+       html_h2^0.5
+       html_h3^0.5
+       html_h4^0.5
+       html_h5^0.5
+       html_h6^0.5
+       subject_dk5^0.5
+       subject_serial_solutions^0.5
+       subject_ulrichs^0.5
+       subject_controlled^0.6
+       subject_other^0.5
+       lma_long^0.5
+       <!--  id  Single term field,  no need to include in phrase -->
+       enrich_editor^0.1
+       enrich_isbn^0.1
+       enrich_publisher^0.1
+       enrich_publishdate^0.1
+       enrich_title^0.1
+       enrich_head^0.1
+       enrich_freetext^0.025
+       lti
+     </str>     
+     <str name="fl">*,score</str>
+     <str name="lowercaseOperators">false</str>
+     <str name="facet">on</str>
+     <str name="facet.mincount">1</str>
+     <str name="facet.limit">75</str>
+     
+     <str name="facet.field">recordBase</str>     
+     <str name="facet.field">lma_long</str>
+     <str name="facet.field">lsubject</str>
+     <str name="facet.field">location_normalised</str>
+     <str name="facet.field">author_normalised</str>
+     <str name="facet.field">llfo</str>
+     <str name="facet.field">year</str>
+     <str name="facet.field">llang</str>
+     <str name="facet.field">lcl_all</str>
+     <str name="facet.field">su_dk</str>
+     <str name="facet.field">su_lc</str>
+     <str name="facet.field">mesh</str>
+     <str name="facet.field">ldk5</str>
+     <str name="facet.field">lddc</str>
+     <str name="facet.field">lnlm</str>
+     <str name="facet.field">lkl</str>
+     <str name="facet.field">lti</str>
+     <str name="facet.field">lperi</str>
+     <str name="facet.field">ava</str>
+     
+     <!--Facet sort (lex or count). Only lma_long uses lex -->
+     <str name="f.lma_long.facet.sort">lex</str>
+     
+     <!--Virtual fields(summa alias/alias-groups) for query -->
+     <str name="f.titel.qf">title^1.8</str>   
+     <str name="f.ht.qf">main_title^4.0</str>
+     <str name="f.klassif.qf">class_other</str>   
+     <str name="f.po.qf">author_main^2.0</str>
+     <str name="f.pe.qf">author_person</str>
+     <str name="f.fo_andet.qf">au_other</str>
+     <str name="f.ko.qf">author_corporation</str>
+     <str name="f.ib.qf">issb</str>
+     <str name="f.in.qf">issn</str>
+     <str name="f.nummer.qf">number</str>
+     <str name="f.is.qf">standard_number</str>
+     <str name="f.lms.qf">mesh</str>
+     <str name="f.lek.qf">su_corp</str>     
+     <str name="f.llcm.qf">su_lc</str>
+     <str name="f.lep.qf">su_pe</str>
+     <str name="f.ldb.qf">su_dk</str>
+     <str name="f.uk_ser_sol.qf">subject_serial_solutions</str>
+     <str name="f.uk_ulrichs.qf">subject_ulrichs</str>
+     <str name="f.ke.qf">subject_controlled</str>     
+     <str name="f.uk.qf">subject_other</str>
+     <str name="f.klynge.qf">cluster</str>
+     <str name="f.lvp.qf">lso</str>
+     <str name="f.fb.qf">author_descr</str>
+     <str name="f.l_stregkode.qf">barcode_normalised</str>
+     <str name="f.opst.qf">call</str>
+     <str name="f.samling.qf">collection</str>
+     <str name="f.l_samling.qf">collection_normalised</str>
+     <str name="f.ul.qf">country</str>
+     <str name="f.matkat.qf">itype</str>
+     <str name="f.lop.qf">l_call</str>
+     <str name="f.lokation.qf">location</str>
+     <str name="f.l_lokation.qf">location_normalised</str>
+     <str name="f.ma_lang.qf">ma_long</str>
+     <str name="f.ou.qf">original_language</str>
+     <str name="f.andet.qf">other</str>
+     <str name="f.pu.qf">place</str>
+     <str name="f.lse.qf">series_normalised</str>
+     <str name="f.reklamefilm_subj.qf">commercials_subject</str>     
+     <str name="f.lfo.qf">author_normalised</str>
+     <str name="f.lsp.qf">llang</str>
+     <str name="f.fl.qf">publ</str>
+     <str name="f.år.qf">py</str>
+     <str name="f.sort_titel.qf">sort_title</str>
+     <str name="f.sort_år_asc.qf">sort_year_asc</str>
+     <str name="f.sort_år_desc.qf">sort_year_desc</str>
+     <str name="f.hjemme.qf">ava</str>
+     <str name="f.ny.qf">new</str>   
+     <str name="f.ti.qf">title^1.8 se main_title^4.0</str>
+     <str name="f.cl.qf">class_other ddc_kw dk inst kl lcc_kw nlm_kw</str>
+     <str name="f.au.qf">author_main author_person au_other author_corporation</str>
+     <str name="f.fo.qf">author_main author_person au_other author_corporation</str>
+     <str name="f.lma.qf">lma_long</str>
+     <str name="f.ma.qf">ma_short</str>
+     <str name="f.numbers.qf">isbn issn number standard_number id ww fmlb fubl</str>
+     <str name="f.nr.qf">isbn issn number standard_number id ww fmlb fubl</str>
+     <str name="f.lsubj.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
+     <str name="f.lem.qf">mesh su_corp su_lc su_pe lsu_ser_sol lsu_ulrichs lsu_ulrichs_hier su_dk lsu_oai lsubject led</str>
+     <str name="f.su.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled^1.2 subject_other</str>
+     <str name="f.em.qf">subject_dk5 subject_serial_solutions subject_ulrichs subject_controlled^1.2 subject_other</str>
+     <str name="f.lcl.qf">lcl_csa lcl_all ldbk lddc ldk5 lfn linst lkl llcc lnlm ludk</str>
+     <str name="f.html_header.qf">html_h1 html_h2 html_h3 html_h4 html_h5 html_h6</str>
+     <str name="f.enrich_header.qf">enrich_editor^0.2 enrich_isbn^0.2 enrich_publisher^0.2 enrich_publishdate^0.2 enrich_title^0.2 enrich_head^0.2 enrich_freetext^0.05</str>         
+
+       <!-- Spellcheck (DidyouMean) setup -->
+       <str  name="spellcheck.dictionary">summa_spell</str>
+       <bool name="spellcheck.extendedResults">true</bool>
+       <bool name="spellcheck.collate">true</bool>
+       <bool name="spellcheck.collateExtendedResults">true</bool>
+       <int  name="spellcheck.maxCollationTries">5</int>
+       <int  name="spellcheck.count">5</int>
+
+   </lst>
+   <arr name="last-components">
+      <str>spellcheck</str>
+   </arr>
+   
+</requestHandler>
+
+
+  <requestHandler name="/update" class="solr.UpdateRequestHandler">
+    <!-- See below for information on defining 
+         updateRequestProcessorChains that can be used by name 
+         on each Update Request
+      -->
+    <!--
+       <lst name="defaults">
+         <str name="update.chain">dedupe</str>
+       </lst>
+       -->
+  </requestHandler>
+  
+
+
+  <requestHandler name="/update/extract" 
+                  startup="lazy"
+                  class="solr.extraction.ExtractingRequestHandler" >
+    <lst name="defaults">
+      <!-- All the main content goes into "text"... if you need to return
+           the extracted text or do highlighting, use a stored field. -->
+      <str name="fmap.content">text</str>
+      <str name="lowernames">true</str>
+      <str name="uprefix">ignored_</str>
+
+      <!-- capture link hrefs but ignore div attributes -->
+      <str name="captureAttr">true</str>
+      <str name="fmap.a">links</str>
+      <str name="fmap.div">ignored_</str>
+    </lst>
+  </requestHandler>
+
+  <requestHandler name="/analysis/field" 
+                  startup="lazy"
+                  class="solr.FieldAnalysisRequestHandler" />
+
+
+  <requestHandler name="/analysis/document" 
+                  class="solr.DocumentAnalysisRequestHandler" 
+                  startup="lazy" />
+
+
+  <requestHandler name="/admin/" 
+                  class="solr.admin.AdminHandlers" />
+
+  <!-- ping/healthcheck -->
+  <requestHandler name="/admin/ping" class="solr.PingRequestHandler">
+    <lst name="invariants">
+      <str name="q">solrpingquery</str>
+    </lst>
+    <lst name="defaults">
+      <str name="echoParams">all</str>
+    </lst>   
+    <!-- <str name="healthcheckFile">server-enabled.txt</str> -->
+  </requestHandler>
+
+  <!-- Echo the request contents back to the client -->
+  <requestHandler name="/debug/dump" class="solr.DumpRequestHandler" >
+    <lst name="defaults">
+     <str name="echoParams">explicit</str> 
+     <str name="echoHandler">true</str>
+    </lst>
+  </requestHandler>
+  
+  
+  <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
+
+    <str name="queryAnalyzerFieldType">textSpell</str>
+    
+    <!-- a spellchecker built from a field of the main index. Use spellcheck.dictionary=summa_spell for this-->
+
+    <lst name="spellchecker">    
+      <str name="name">summa_spell</str>
+      <str name="field">summa_spell</str>
+      <str name="buildOnOptimize">true</str>
+      <str name="spellcheckIndexDir">./spellchecker_summa_spell</str>                  
+    </lst>
+
+  </searchComponent>
+ 
+  <searchComponent name="tvComponent" class="solr.TermVectorComponent"/>
+  <searchComponent name="terms" class="solr.TermsComponent"/>
+
+  <!-- A request handler for demonstrating the terms component -->
+  <requestHandler name="/terms" class="solr.SearchHandler" startup="lazy">
+     <lst name="defaults">
+      <bool name="terms">true</bool>
+    </lst>     
+    <arr name="components">
+      <str>terms</str>
+    </arr>
+  </requestHandler>
+
+  
+  <queryResponseWriter name="json" class="solr.JSONResponseWriter">
+     <!-- For the purposes of the tutorial, JSON responses are written as
+      plain text so that they are easy to read in *any* browser.
+      If you expect a MIME type of "application/json" just remove this override.
+     -->
+    <str name="content-type">text/plain; charset=UTF-8</str>
+  </queryResponseWriter>
+  
+  <queryResponseWriter name="velocity" class="solr.VelocityResponseWriter" startup="lazy"/>
+  
+  
+  <!-- Legacy config for the admin interface -->
+  <admin>
+    <defaultQuery>*:*</defaultQuery>
+  </admin>
+
+    <!-- Component developed by Statsbiblioteket for (hierarchical) faceting -->   
+    <searchComponent name="exposed" class="org.apache.solr.exposed.ExposedFacetQueryComponent">
+      <lst name="poolfactory">
+        <int name="pools">10</int>
+        <int name="filled">5</int>
+        <int name="fresh">5</int>
+      </lst>
+    </searchComponent>
+
+    <requestHandler name="/exposed" class="solr.SearchHandler">
+        <lst name="defaults">
+        <!-- TODO: We need to mirror the whole setup from the edismax handler -->
+        <str name="defType">edismax</str>
+        <str name="qf">
+          fulltext
+          sort_title
+          freetext^0.5
+          author_main^2.0
+          author_person
+          au_other
+          author_corporation
+          title^1.8
+          se
+          main_title^4.0
+          html_h1
+          html_h2
+          html_h3
+          html_h4
+          html_h5
+          html_h6
+          subject_dk5
+          subject_serial_solutions
+          subject_ulrichs
+          subject_controlled^1.2
+          subject_other
+          lma_long
+          id
+          enrich_editor^0.2
+          enrich_isbn^0.2
+          enrich_publisher^0.2
+          enrich_publishdate^0.2
+          enrich_title^0.2
+          enrich_head^0.2
+          enrich_freetext^0.05
+          lti
+        </str>
+       </lst>
+      <arr name="last-components">
+        <str>exposed</str>
+      </arr>
+    </requestHandler>
+
+    <!-- Component developed by Statsbiblioteket for index lookup -->
+    <searchComponent name="lookup" class="org.apache.solr.exposed.ExposedIndexLookupQueryComponent">
+      <lst name="poolfactory">
+        <int name="pools">6</int>
+        <int name="filled">2</int>
+        <int name="fresh">2</int>
+      </lst>
+    </searchComponent>
+
+     <requestHandler name="/lookup" class="org.apache.solr.handler.component.SearchHandler">
+      <lst name="defaults">
+        <str name="elookup.sort">locale</str>
+        <str name="elookup.sort.locale">da</str>
+      </lst>
+      <arr name="last-components">
+        <str>lookup</str>
+      </arr>
+    </requestHandler>
+
+</config>
