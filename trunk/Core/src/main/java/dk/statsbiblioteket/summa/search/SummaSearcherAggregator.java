@@ -328,9 +328,10 @@ public class SummaSearcherAggregator implements SummaSearcher {
                     groups.clear();
                 } else {
                     // new ArrayList to ensure Serializability
-                    docResponse.setGroups(new ArrayList<>(groups.subList(
-                            (int)startIndex, (int)Math.min(groups.size(), startIndex+maxRecords))));
+                    groups = new ArrayList<>(
+                            groups.subList((int)startIndex, (int)Math.min(groups.size(), startIndex+maxRecords)));
                 }
+                docResponse.setGroups(groups);
             } else {
                 List<DocumentResponse.Record> records = docResponse.getRecords();
                 if (records.size() < startIndex) {

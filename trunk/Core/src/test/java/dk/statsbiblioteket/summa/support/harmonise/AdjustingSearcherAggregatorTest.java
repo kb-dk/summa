@@ -3,7 +3,6 @@ package dk.statsbiblioteket.summa.support.harmonise;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -194,6 +193,18 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         ResponseCollection responses = aggregator.search(request);
         assertUniqueTiming("Aggregated search", responses);
         //System.out.println(timings);
+    }
+
+    public void testPagingMars() throws IOException {
+        AdjustingSearcherAggregator aggregator = getSBAggregator("mars");
+        Request request = new Request(
+            DocumentKeys.SEARCH_QUERY, "reactive arthritis -recordBase:sb*",
+            DocumentKeys.SEARCH_MAX_RECORDS, "20",
+            DocumentKeys.SEARCH_START_INDEX, "40"
+        );
+        ResponseCollection responses = aggregator.search(request);
+        System.out.println(responses.toXML());
+        assertEquals("The number of returned groups should be correct", 20, getGroups(responses).size());
     }
 
     public void testMarsIDLookup() throws IOException, SubConfigurationsNotSupportedException {
