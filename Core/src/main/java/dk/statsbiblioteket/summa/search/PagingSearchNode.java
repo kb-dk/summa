@@ -222,7 +222,11 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
                          + ". Merging skipped for that response");
                 continue;
             }
-            mergedDocs.getRecords().addAll(docs.getRecords());
+            // We cannot use getRecords().addAll as it bypasses grouping
+            for (DocumentResponse.Group group: docs.getGroups()) {
+                mergedDocs.addGroup(group);
+            }
+            // mergedDocs.getRecords().addAll(docs.getRecords());
         }
 
         // TODO: Fix timing info

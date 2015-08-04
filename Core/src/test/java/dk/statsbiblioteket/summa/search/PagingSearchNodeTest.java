@@ -79,7 +79,7 @@ public class PagingSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_START_INDEX, 20,
                 DocumentKeys.SEARCH_MAX_RECORDS, 60
         ));
-        assertResponse("Base search", responses, 20, 60, 123, 80); // 80 == 2*40
+        assertResponse("Base search", responses, 20, 60, 123, 80); // 80 == 2*40  TODO: Shouldn't this be 60?
     }
 
     public void testDummyNode() {
