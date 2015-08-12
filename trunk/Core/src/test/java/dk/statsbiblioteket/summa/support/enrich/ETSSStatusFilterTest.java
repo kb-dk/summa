@@ -39,7 +39,10 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ETSSStatusFilterTest extends TestCase {
-    private final String HYPERION =
+    private static final String JSON_ENDPOINT =
+            //"http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals";
+            "http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_$ID_AND_PROVIDER";
+    private static final String HYPERION =
             "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER";
 
     public ETSSStatusFilterTest(String name) {
@@ -67,6 +70,15 @@ public class ETSSStatusFilterTest extends TestCase {
         };
         for (String e: existing) {
             assertStatusFromID(e, true);
+        }
+    }
+
+    public void testExistingJSONFromID() throws IOException, XMLStreamException, ParseException {
+        String[] existing = new String[] {
+            "0001-5547_scienceprintersandpublishersonlinemedicaljournals"
+        };
+        for (String e: existing) {
+            assertStatusFromIDJSON(e, true);
         }
     }
 
@@ -221,7 +233,7 @@ public class ETSSStatusFilterTest extends TestCase {
 
     public void testProviderNormaliser() {
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST, "dummy"
+                ETSSStatusFilter.CONF_REST, "dummy"
         ));
         assertEquals("foobar", statusFilter.normaliseProvider("Foo Bar"));
         assertEquals("foobar", statusFilter.normaliseProvider("Foo Bæar"));
@@ -236,6 +248,20 @@ public class ETSSStatusFilterTest extends TestCase {
         assertEquals("The password status for " + id + " should be correct",
                      hasPassword,
                      statusFilter.needsPassword(statusFilter.lookup(id, statusFilter.getLookupURI(id, id))));
+    }
+
+    private void assertStatusFromIDJSON(String id, boolean hasPassword) throws IOException {
+        ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
+            ETSSStatusFilter.CONF_REST, JSON_ENDPOINT,
+            ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json
+        ));
+        String lookupURI = statusFilter.getLookupURI(id, id);
+        String lookup = statusFilter.lookup(id, lookupURI);
+        System.out.println("lookupURI=" + lookupURI + ", lookup=" + lookup);
+        assertEquals("The password status for " + id + " should be correct with lookupURI='" + lookupURI
+                     + "' and lookup='" + statusFilter.lookup(id, lookupURI) + "'",
+                     hasPassword,
+                     statusFilter.needsPassword(lookup));
     }
 
     public void testCommentID() throws IOException, XMLStreamException, ParseException {
