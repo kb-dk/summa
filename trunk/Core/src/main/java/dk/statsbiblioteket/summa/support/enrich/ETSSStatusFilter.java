@@ -303,8 +303,8 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     </soapenv:Envelope>
 
      JSON:
-    [{"key":"genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals",
-      "value":"<info><username>31540</username><password>dsbibliot540</password><group></group><comment></comment></info>",
+    [{"key":"genericderby.access_etss_0011-5477_sciencntercentersandsonlinepublishermedicaljournals",
+      "value":"<info><username>1234</username><password>abcdefg</password><group></group><comment></comment></info>",
       "modified":1434527979547,"expire":9999999999999,"expired":false}]
      */
     // Returns remote service response for the given recordID. Null is a valid response
@@ -342,9 +342,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         return unwrap(response, recordID);
     }
 
-    //  [{"key":"genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals",
-    //    "value":"<info><username>31540</username><password>dsbibliot540</password><group></group><comment></comment></info>",
-    //    "modified":1434527979547,"expire":9999999999999,"expired":false}]
+    //    [{"key":"genericderby.access_etss_0011-5477_sciencntercentersandsonlinepublishermedicaljournals",
+    //      "value":"<info><username>1234</username><password>abcdefg</password><group></group><comment></comment></info>",
+    //      "modified":1434527979547,"expire":9999999999999,"expired":false}]
 
     private String unwrap(String response, String recordID) {
         switch (packaging) {

@@ -187,6 +187,7 @@ public class ETSSStatusFilterTest extends TestCase {
         return pumped;
     }
 
+
     public void testNonExisting() throws IOException, XMLStreamException, ParseException {
         assertStatus("common/marc/single_marc.xml", false);
         assertStatus("common/marc/existing_245a.xml", false); // Due to collapse of '-' in 245*a
