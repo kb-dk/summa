@@ -181,7 +181,6 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
         return copy;
     }
 
-
     // Merge is a bit special as only the documents are added and nothing else changed
     private void mergeResponses(Request request, ResponseCollection merged, List<ResponseCollection> responses,
                                 long processingTime) {

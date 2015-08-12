@@ -24,6 +24,8 @@ import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLStepper;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
@@ -117,6 +119,16 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     public static final String PROVIDER_SPECIFIC_ID = "w"; // Record Control Number in 856
     public static final String COMMENT_SUBFIELD = "l"; // In 856
 
+    /**
+     * The wrapping format for the answer from the service.
+     * </p><p>
+     * Optional. Valid values are {@code soap} and {@code json}. Default is {@code soap}.
+     */
+    public static final String CONF_RETURN_PACKAGING = "etss.returnpackaging";
+    public static final String DEFAULT_RETURN_PACKAGING = RETURN_PACKAGING_FORMAT.soap.toString();
+
+    public enum RETURN_PACKAGING_FORMAT {soap, json}
+
     protected final int connectionTimeout;
     protected final int readTimeout;
     protected final boolean haltOnError;
@@ -124,6 +136,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     protected final boolean discardUnchanged;
     protected final boolean discardDeleted;
     protected final String rest;
+    protected final RETURN_PACKAGING_FORMAT packaging;
 
     public ETSSStatusFilter(Configuration conf) {
         super(conf);
@@ -135,9 +148,11 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         cleanPrevious = conf.getBoolean(CONF_CLEAN_PREVIOUS_STATUS, DEFAULT_CLEAN_PREVIOUS_STATUS);
         discardUnchanged = conf.getBoolean(CONF_DISCARD_UNCHANGED, DEFAULT_DISCARD_UNCHANGED);
         discardDeleted = conf.getBoolean(CONF_DISCARD_DELETED, DEFAULT_DISCARD_DELETED);
+        packaging = RETURN_PACKAGING_FORMAT.valueOf(conf.getString(CONF_RETURN_PACKAGING, DEFAULT_RETURN_PACKAGING));
         log.info(String.format("Constructed filter with REST='%s', haltOnError=%b, cleanPrevious=%b, "
-                               + "discardUnchanged=%b, discardDeleted=%b",
-                               rest, haltOnError, cleanPrevious, discardUnchanged, discardDeleted));
+                               + "discardUnchanged=%b, discardDeleted=%b, return packaging format=%s",
+                               rest, haltOnError, cleanPrevious, discardUnchanged, discardDeleted,
+                               packaging));
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
@@ -236,27 +251,27 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             return;
         }
         String response = lookup(recordID, lookupURI);
+
         List<MARCObject.SubField> subFields = url.getSubFields();
-        if (response == null || "".equals(response)) {
-            Logging.logProcess("ETSSStatusFilter.enrich", String.format(
-                "No requirements for lookupURI '%s'. Marking sub field as not needing password", lookupURI),
-                               Logging.LogLevel.DEBUG, recordID);
-            doesNotNeedPassword.add(lookupURI);
-        } else {
-            if (needsPassword(response)) {
-                subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
-                needsPassword.add(lookupURI);
-            } else {
-                doesNotNeedPassword.add(lookupURI);
-            }
+        if (providerPlusID != null) {
+            subFields.add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
+        }
+
+        if (response != null && !"".equals(response)) {
             String comment = getComment(response);
             if (comment != null) {
                 subFields.add(new MARCObject.SubField(COMMENT_SUBFIELD, comment));
             }
+            if (needsPassword(response)) {
+                subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
+                needsPassword.add(lookupURI);
+                return;
+            }
         }
-        if (providerPlusID != null) {
-            subFields.add(new MARCObject.SubField(PROVIDER_SPECIFIC_ID, providerPlusID));
-        }
+        Logging.logProcess("ETSSStatusFilter.enrich", String.format(
+                "No requirements for lookupURI '%s'. Marking sub field as not needing password", lookupURI),
+                           Logging.LogLevel.DEBUG, recordID);
+        doesNotNeedPassword.add(lookupURI);
     }
 
     // Cleans all previous password enrichments
@@ -276,6 +291,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     private HttpClient http = new DefaultHttpClient();
 
     /*
+    SOAP:
     <?xml version="1.0" encoding="UTF-8"?>
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <soapenv:Body>
@@ -286,6 +302,10 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     </soapenv:Body>
     </soapenv:Envelope>
 
+     JSON:
+    [{"key":"genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals",
+      "value":"<info><username>31540</username><password>dsbibliot540</password><group></group><comment></comment></info>",
+      "modified":1434527979547,"expire":9999999999999,"expired":false}]
      */
     // Returns remote service response for the given recordID. Null is a valid response
     // This methods unpacks the content from SOAP
@@ -319,6 +339,91 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         if (response == null) {
             return null;
         }
+        return unwrap(response, recordID);
+    }
+
+    //  [{"key":"genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals",
+    //    "value":"<info><username>31540</username><password>dsbibliot540</password><group></group><comment></comment></info>",
+    //    "modified":1434527979547,"expire":9999999999999,"expired":false}]
+
+    private String unwrap(String response, String recordID) {
+        switch (packaging) {
+            case soap: return unwrapSOAP(response, recordID);
+            case json: return unwrapJSON(response, recordID);
+            default: throw new UnsupportedOperationException(
+                    "The return packaging format '" + packaging + "' is unknown");
+        }
+    }
+
+    private String unwrapJSON(String response, String recordID) {
+        if (!(response.startsWith("[") && response.endsWith("]"))) {
+            Logging.logProcess("ETSSStatusFilter.unwrapJSON",
+                               "Expected a response starting with '[' and ending with ']': '"
+                               + Logging.getSnippet(response) + "'", Logging.LogLevel.WARN, recordID);
+            return null;
+        }
+        response = "{\"list\":" + response + "}"; // Yes, ugly, but the input format is not valid JSON
+
+
+        JSONObject json = JSONObject.fromObject(response);
+        JSONObject inner;
+        try {
+            inner = (JSONObject)((JSONArray)json.get("list")).get(0);
+
+            //String key = inner.get("key").toString(); // Should we check the key?
+            String value = inner.get("value").toString();
+            return value;
+        } catch (Exception e) {
+            Logging.logProcess("ETSSStatusFilter.unwrapJSON",
+                               "Unable to extract key and value from '" + Logging.getSnippet(response)
+                               + "' due to exception " + e.getMessage(),
+                               Logging.LogLevel.DEBUG, recordID);
+            return null;
+        }
+/*
+        if (json.isEmpty()) {
+            Logging.logProcess("ETSSStatusFilter.unwrapJSON",
+                               "Empty JSON response: '" + Logging.getSnippet(response) + "'",
+                               Logging.LogLevel.DEBUG, recordID);
+            return null;
+        }
+        Set outerCol = json.entrySet();
+        if (outerCol.isEmpty()) {
+            Logging.logProcess("ETSSStatusFilter.unwrapJSON",
+                               "Empty top level collection in JSON response: '" + Logging.getSnippet(response) + "'",
+                               Logging.LogLevel.DEBUG, recordID);
+            return null;
+        }
+        Object listObject = outerCol.iterator().next();
+        if (!(listObject instanceof ListOrderedMap.Entry)) {
+            Logging.logProcess("ETSSStatusFilter.unwrapJSON",
+                               "Expected a ListOrderedMap.Entry in JSON but got " + listObject.getClass()
+                               + " from response: '" + Logging.getSnippet(response) + "'",
+                               Logging.LogLevel.DEBUG, recordID);
+            return null;
+        }
+        ListOrderedMap.Entry lomEntry = (ListOrderedMap.Entry)listObject;
+        Object jrObject = lomEntry.getValue();
+        if (jrObject == null) {
+            log.error("unwrapJSON wrapping error. Empty value in ListOrderedMap.Entry in JSON from response: '"
+                      + Logging.getSnippet(response) + "' for " + recordID);
+            Logging.logProcess("ETSSStatusFilter.unwrapJSON",
+                               "Wrapping error. Empty value in ListOrderedMap.Entry from response: '"
+                               + Logging.getSnippet(response) + "'", Logging.LogLevel.WARN, recordID);
+            return null;
+        }
+        if (!(jrObject instanceof JSONArray)) {
+            Logging.logProcess("ETSSStatusFilter.unwrapJSON",
+                               "Expected a JSONArray in JSON but got " + jrObject.getClass() + " from response: '"
+                               + Logging.getSnippet(response) + "'", Logging.LogLevel.DEBUG, recordID);
+            return null;
+        }
+
+        return jrObject.toString();
+        */
+    }
+
+    private String unwrapSOAP(String response, String recordID) {
         try {
             return XMLStepper.getFirstElementText(response, "getFromDBReturn");
         } catch (XMLStreamException e) {
@@ -330,8 +435,10 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         }
     }
 
-    // TODO: Where to store the generated provider-ID?
+    // Old style
     // http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_0040-5671_theologischeliteraturzeitung
+    // New style (post 20150812)
+    // http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals
     protected String getLookupURI(String recordID, String providerPlusID) {
         if (providerPlusID == null) {
             Logging.logProcess("ETSSStatusFilter.getETTSURI", "Unable to resolve id from dataField)",
@@ -379,15 +486,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     }
 
     /*
-    <?xml version="1.0" encoding="UTF-8"?>
-    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <soapenv:Body>
-    <getFromDBResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <getFromDBReturn xsi:type="soapenc:string" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
-    &lt;info&gt;&lt;username&gt;lsa@statsbiblioteket.dk&lt;/username&gt;&lt;password&gt;dame7896&lt;/password&gt;&lt;group&gt;&lt;/group&gt;&lt;comment&gt;Dette er en kommentar&lt;/comment&gt;&lt;/info&gt;</getFromDBReturn>
-    </getFromDBResponse>
-    </soapenv:Body>
-    </soapenv:Envelope>
+    <info><username>lsa@statsbiblioteket.dk</username><password>dame7896</password><group></group><comment>Dette er en kommentar</comment></info></getFromDBReturn>
      */
     protected boolean needsPassword(String response) {
         try {
