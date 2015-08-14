@@ -75,10 +75,29 @@ public class ETSSStatusFilterTest extends TestCase {
 
     public void testExistingJSONFromID() throws IOException, XMLStreamException, ParseException {
         String[] existing = new String[] {
+            "0001-5547_scienceprintersandpublishersonlinemedicaljournals", // To debug a connection re-use issue
+            "0001-5547_scienceprintersandpublishersonlinemedicaljournals",
             "0001-5547_scienceprintersandpublishersonlinemedicaljournals"
         };
         for (String e: existing) {
             assertStatusFromIDJSON(e, true);
+        }
+    }
+
+    public void testNonExistingJSONFromID() throws IOException, XMLStreamException, ParseException {
+        String[] existing = new String[] {
+            "invalid_id"
+        };
+        for (String e: existing) {
+            assertStatusFromIDJSON(e, false);
+        }
+    }
+
+    public void testExistingJSONFromIDHammer() throws IOException, XMLStreamException, ParseException {
+        int RUNS = 10;
+        String existing = "0001-5547_scienceprintersandpublishersonlinemedicaljournals";
+        for (int i = 0 ; i < RUNS ; i++)  {
+            assertStatusFromIDJSON(existing, true);
         }
     }
 
@@ -248,7 +267,7 @@ public class ETSSStatusFilterTest extends TestCase {
         ));
         assertEquals("The password status for " + id + " should be correct",
                      hasPassword,
-                     statusFilter.needsPassword(statusFilter.lookup(id, statusFilter.getLookupURI(id, id))));
+                     statusFilter.needsPassword(statusFilter.lookup(id, statusFilter.getLookupURI(id, id), false)));
     }
 
     private void assertStatusFromIDJSON(String id, boolean hasPassword) throws IOException {
@@ -257,12 +276,10 @@ public class ETSSStatusFilterTest extends TestCase {
             ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json
         ));
         String lookupURI = statusFilter.getLookupURI(id, id);
-        String lookup = statusFilter.lookup(id, lookupURI);
-        System.out.println("lookupURI=" + lookupURI + ", lookup=" + lookup);
+        String lookup = statusFilter.lookup(id, lookupURI, true);
+//        System.out.println("lookupURI=" + lookupURI + ", lookup=" + lookup);
         assertEquals("The password status for " + id + " should be correct with lookupURI='" + lookupURI
-                     + "' and lookup='" + statusFilter.lookup(id, lookupURI) + "'",
-                     hasPassword,
-                     statusFilter.needsPassword(lookup));
+                     + "' and lookup='" + lookup + "'", hasPassword, statusFilter.needsPassword(lookup));
     }
 
     public void testCommentID() throws IOException, XMLStreamException, ParseException {
@@ -283,7 +300,8 @@ public class ETSSStatusFilterTest extends TestCase {
             HYPERION
         ));
         assertEquals("The comment for " + id + " should be correct",
-                     comment, statusFilter.getComment(statusFilter.lookup(id, statusFilter.getLookupURI(id, id))));
+                     comment, statusFilter.getComment(
+                statusFilter.lookup(id, statusFilter.getLookupURI(id, id), false)));
     }
 
     public void assertStatus(String marcFile, boolean hasPassword)
