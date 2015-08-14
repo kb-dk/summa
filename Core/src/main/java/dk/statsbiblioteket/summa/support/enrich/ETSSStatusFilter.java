@@ -34,6 +34,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
@@ -250,7 +251,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             doesNotNeedPassword.add("Unresolved(" + recordID + ")");
             return;
         }
-        String response = lookup(recordID, lookupURI);
+        // The REST service for JSON uses 404 to signal unknown key
+        // This is problematic as we cannot distinguish between wrong URL and unknown key
+        String response = lookup(recordID, lookupURI, packaging == RETURN_PACKAGING_FORMAT.json);
 
         List<MARCObject.SubField> subFields = url.getSubFields();
         if (providerPlusID != null) {
@@ -309,12 +312,18 @@ public class ETSSStatusFilter extends MARCObjectFilter {
      */
     // Returns remote service response for the given recordID. Null is a valid response
     // This methods unpacks the content from SOAP
-    protected String lookup(String recordID, String lookupURI) throws IOException {
+    protected String lookup(String recordID, String lookupURI, boolean notFoundIsNotAvailable) throws IOException {
         HttpGet method = new HttpGet(lookupURI);
         String response;
+        HttpResponse httpResponse = null;
         try {
             Long readTime = -System.currentTimeMillis();
-            HttpResponse httpResponse = http.execute(method);
+            httpResponse = http.execute(method);
+            if (notFoundIsNotAvailable && httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                Logging.logProcess("ETSSStatusFilter.lookup", "404 from service, which means no password " + lookupURI,
+                                   Logging.LogLevel.DEBUG, recordID);
+                return null;
+            }
             if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 throw new IOException(String.format(
                     "Expected return code %d, got %d for '%s' with call %s",
@@ -335,6 +344,12 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             entity.getContent().close();
         } catch (IOException e) {
             throw new IOException("Unable to connect to remote ETSS service with URI '" + lookupURI + "'", e);
+        } finally {
+            // http://stackoverflow.com/questions/14866362/invalid-use-of-basicclientconnmanager-connection-still-allocated
+            // http://stackoverflow.com/questions/4728683/workaround-to-not-shutdown-defaulthttpclient-each-time-after-usage
+            if (httpResponse != null) {
+                EntityUtils.consumeQuietly(httpResponse.getEntity());
+            }
         }
         if (response == null) {
             return null;
@@ -489,6 +504,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     <info><username>lsa@statsbiblioteket.dk</username><password>dame7896</password><group></group><comment>Dette er en kommentar</comment></info></getFromDBReturn>
      */
     protected boolean needsPassword(String response) {
+        if (response == null) {
+            return false;
+        }
         try {
             return XMLStepper.getFirstElementText(response, "password") != null;
         } catch (XMLStreamException e) {
