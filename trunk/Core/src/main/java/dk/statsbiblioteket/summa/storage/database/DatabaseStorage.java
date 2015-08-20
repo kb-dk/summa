@@ -14,6 +14,32 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.TreeSet;
+
+import javax.script.ScriptException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -34,16 +60,6 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.script.ScriptException;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.sql.*;
-import java.util.*;
 
 /**
  * An abstract implementation of a SQL database driven extension
@@ -1671,6 +1687,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public Record getRecordWithFullObjectTree(String recordId) throws IOException {
         long startTime = System.currentTimeMillis();
+        String orgRecordId= recordId;
         log.trace("getRecordWithFullObjectTree(" + recordId + ") called");
 
         long connectTime = -System.nanoTime();
@@ -1725,7 +1742,7 @@ public abstract class DatabaseStorage extends StorageBase {
             long iterateTime = -System.nanoTime();
             if (!resultSet.next()) {
                 log.warn("Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"
-                         + parentId + " .Only children are loaded");
+                         + parentId + " .Only children are loaded. Original recordId in query:"+orgRecordId);
                 stmt.setString(1, recordId);//using the record requested as top-parent
                 resultSet = stmt.executeQuery();
                 resultSet.next();
@@ -1739,7 +1756,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 if (!topParentRecord.getId().equals(recordId)) {
                     throw new RuntimeException(
                             "Database inconsistency hasRelations for id" + topParentRecord.getId() + " and "
-                            + recordId);
+                            + recordId +" Original recordId in query:"+orgRecordId);
                 }
                 if (log.isDebugEnabled()) {
                     log.debug(String.format(
@@ -1769,7 +1786,7 @@ public abstract class DatabaseStorage extends StorageBase {
             return recordNode;
 
         } catch (SQLException e) {
-            log.error(String.format("Failed to load record '%s'", recordId), e);
+            log.error(String.format("Failed to load record '%s' for original recordId '%s'", recordId, orgRecordId), e);
             return null;
         } finally {
             try {
