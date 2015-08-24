@@ -1740,13 +1740,21 @@ public abstract class DatabaseStorage extends StorageBase {
             executeTime += System.nanoTime();
 
             long iterateTime = -System.nanoTime();
-            if (!resultSet.next()) {
-                log.warn("Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"
-                         + parentId + " .Only children are loaded. Original recordId in query:"+orgRecordId);
+            if (!resultSet.next() && parentId != recordId) { 
+               String  msg="Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"+ parentId + " .Only children are loaded. Original recordId in query:"+orgRecordId;
+                log.warn(msg);           
+                throw new RuntimeException(msg);
+            }
+            else if (parentId == recordId){ // No parent from. Using recordid as top-parent
                 stmt.setString(1, recordId);//using the record requested as top-parent
                 resultSet = stmt.executeQuery();
-                resultSet.next();
-            }
+                boolean next = resultSet.next();                                                
+
+                if(!next){
+                    log.warn(String.format("RecordId '%s' not found" , recordId));                     
+                    return null;
+                }               
+            }            
             iterateTime += System.nanoTime();
 
             long childTime = -System.nanoTime();
@@ -1786,7 +1794,7 @@ public abstract class DatabaseStorage extends StorageBase {
             return recordNode;
 
         } catch (SQLException e) {
-            log.error(String.format("Failed to load record '%s' for original recordId '%s'", recordId, orgRecordId), e);
+            log.warn(String.format("Failed to load record '%s' for original recordId '%s'", recordId, orgRecordId), e);
             return null;
         } finally {
             try {
