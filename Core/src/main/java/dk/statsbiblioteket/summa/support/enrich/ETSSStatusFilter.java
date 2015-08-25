@@ -143,6 +143,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         super(conf);
         feedback = false;
         rest = conf.getString(CONF_REST);
+        if (rest == null) {
+            throw new ConfigurationException("No " + CONF_REST + " defined in properties. Unable to create filter");
+        }
         connectionTimeout = conf.getInt(CONF_ETSS_CONNECTION_TIMEOUT, DEFAULT_ETSS_CONNECTION_TIMEOUT);
         readTimeout = conf.getInt(CONF_ETSS_READ_TIMEOUT, DEFAULT_ETSS_READ_TIMEOUT);
         haltOnError = conf.getBoolean(CONF_HALT_ON_EXTERNAL_ERROR, DEFAULT_HALT_ON_EXTERNAL_ERROR);
