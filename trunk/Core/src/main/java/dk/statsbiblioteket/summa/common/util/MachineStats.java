@@ -256,7 +256,6 @@ public class MachineStats implements Runnable {
                + " ms/collection avg)";
     }
 
-
     private static String reduce(long bytes) {
         return bytes / 1048576 + "MB";
     }

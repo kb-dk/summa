@@ -185,6 +185,15 @@ public class SolrSearchNodeTest extends TestCase {
     }
 
     public void testSolrMultiFilter() throws Exception {
+        testSolrFilter(false);
+    }
+
+    public void testSolrNoCacheFilter() throws Exception {
+        testSolrFilter(true);
+    }
+
+    private void testSolrFilter(boolean noCache) throws Exception {
+        final String cache = noCache ? "{!cache=false}" : "";
         performBasicIngest();
         {
             ResponseCollection responses = search(new Request(
@@ -203,7 +212,7 @@ public class SolrSearchNodeTest extends TestCase {
         {
             ResponseCollection responses = search(new Request(
                     DocumentKeys.SEARCH_QUERY, "*:*",
-                    DocumentKeys.SEARCH_FILTER, "recordID:doc1"
+                    DocumentKeys.SEARCH_FILTER, cache + "recordID:doc1"
             ));
             assertEquals("There should be the right number of hits for single filter query 1.\n" + responses.toXML(),
                          1, ((DocumentResponse)responses.iterator().next()).getHitCount());
@@ -211,7 +220,7 @@ public class SolrSearchNodeTest extends TestCase {
         {
             ResponseCollection responses = search(new Request(
                     DocumentKeys.SEARCH_QUERY, "*:*",
-                    DocumentKeys.SEARCH_FILTER, "recordID:doc2"
+                    DocumentKeys.SEARCH_FILTER, cache + "recordID:doc2"
             ));
             assertEquals("There should be the right number of hits for single filter query 2.\n" + responses.toXML(),
                          1, ((DocumentResponse)responses.iterator().next()).getHitCount());
@@ -220,11 +229,12 @@ public class SolrSearchNodeTest extends TestCase {
             ResponseCollection responses = search(new Request(
                     DocumentKeys.SEARCH_QUERY, "*:*",
                     DocumentKeys.SEARCH_FILTER, new ArrayList<>(Arrays.asList(new String[]{
-                    "recordID:doc1", "recordID:doc2"}))
+                    cache + "recordID:doc1", cache + "recordID:doc2"}))
             ));
             assertEquals("There should be the right number of hits for multi filter query.\n" + responses.toXML(),
                          0, ((DocumentResponse)responses.iterator().next()).getHitCount());
         }
+
     }
 
     public void testSolrParamPlainFilter() throws Exception {
