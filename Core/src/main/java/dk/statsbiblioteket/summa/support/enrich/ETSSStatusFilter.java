@@ -153,10 +153,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         discardUnchanged = conf.getBoolean(CONF_DISCARD_UNCHANGED, DEFAULT_DISCARD_UNCHANGED);
         discardDeleted = conf.getBoolean(CONF_DISCARD_DELETED, DEFAULT_DISCARD_DELETED);
         packaging = RETURN_PACKAGING_FORMAT.valueOf(conf.getString(CONF_RETURN_PACKAGING, DEFAULT_RETURN_PACKAGING));
-        log.info(String.format("Constructed filter with REST='%s', haltOnError=%b, cleanPrevious=%b, "
-                               + "discardUnchanged=%b, discardDeleted=%b, return packaging format=%s",
-                               rest, haltOnError, cleanPrevious, discardUnchanged, discardDeleted,
-                               packaging));
+        log.info("Constructed " + this);
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
@@ -269,6 +266,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 subFields.add(new MARCObject.SubField(COMMENT_SUBFIELD, comment));
             }
             if (needsPassword(response)) {
+                Logging.logProcess("ETSSStatusFilter.enrich", String.format(
+                        "Username/password requirements for lookupURI '%s'. Marking sub field", lookupURI),
+                                   Logging.LogLevel.DEBUG, recordID);
                 subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
                 needsPassword.add(lookupURI);
                 return;
@@ -544,5 +544,19 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     @Override
     public void close(boolean success) {
         super.close(success);
+    }
+
+    @Override
+    public String toString() {
+        return "ETSSStatusFilter(" +
+               "connectionTimeout=" + connectionTimeout +
+               ", readTimeout=" + readTimeout +
+               ", haltOnError=" + haltOnError +
+               ", cleanPrevious=" + cleanPrevious +
+               ", discardUnchanged=" + discardUnchanged +
+               ", discardDeleted=" + discardDeleted +
+               ", rest='" + rest + '\'' +
+               ", packaging=" + packaging +
+               ')';
     }
 }
