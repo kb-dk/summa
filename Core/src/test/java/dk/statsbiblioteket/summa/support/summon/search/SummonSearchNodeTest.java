@@ -166,19 +166,29 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testBulkDocIDRequestSingle() throws RemoteException {
-        final List<String> IDs = Arrays.asList(
-                "FETCH-proquest_dll_15622214411"
-        );
-        final int EXPECTED = 1;
+        assertBulkDocIDRequest("Single document", 1, "FETCH-proquest_dll_15622214411");
+    }
 
+    public void testBulkDocIDRequestSuspects() throws RemoteException {
+        assertBulkDocIDRequest(
+                "Logged failures due to excessive requests",
+                 "summon_FETCH-gale_infotrac_3444967783", "summon_FETCH-ceeol_primary_6028eac9_2805_43c5_b049_fcb57262c6df3", "summon_FETCH-ceeol_primary_82c23408_c5b6_4d98_81c2_88caab35c06a3", "summon_FETCH-LOGICAL-c542-d32295a0b3abcf23ee5f961ab45f5affc12ff200de52ade59600b465de0109ce3", "summon_FETCH-ceeol_primary_3b0d936f_4d45_4b3e_8c87_74ce177114563", "ebog_ssj0000285817", "summon_FETCH-ceeol_primary_1d1fa935_ee27_4d66_a498_cc7bbadda63d3", "summon_FETCH-ceeol_primary_2469c8d7_42d9_4bd3_8532_ead2da38b9623", "summon_FETCH-ceeol_primary_4594fa9c_1faa_468c_bf9a_1cdc986099553", "sb_1457358", "sb_3780907", "summon_FETCH-LOGICAL-p1352-a2a3ec4495d94d60538bdd1c00eec8ee641ec6f999ee1c0af50c3e66d810b7663", "sb_5224660", "sb_1430796", "summon_FETCH-LOGICAL-g1053-2f7ca39419f7b6608f2b11d604d68fea17f4b135f9934829f6f3b979244ee24b3", "summon_FETCH-ceeol_primary_33e6a6a7_784f_4c65_b84e_9b2d255ffe8b3", "summon_FETCH-ceeol_primary_a2caadb4_c758_4ae4_b33a_74477cc4e6e73", "summon_FETCH-ceeol_primary_499dfd62_00fc_4fe2_956b_baedd69840c83", "summon_FETCH-chadwyckhealey_abell_R038076053", "sb_2660986", "summon_FETCH-ceeol_primary_4a7cba7b_404e_49d9_817b_91c5b7c3b5ab3", "summon_FETCH-ceeol_primary_75a19239_fb4e_49fe_883a_896c27c5b6ee3", "summon_FETCH-ceeol_primary_0a445665_866a_4b37_a324_737e450fd0cc3", "summon_FETCH-ceeol_primary_81692c05_6f8d_4b7a_8db5_bc6917e7a8b13", "summon_FETCH-ceeol_primary_c945d32d_c7cd_44cc_bdb1_71c8bc29527d3", "summon_FETCH-ceeol_primary_59b3e5e2_ab8e_47eb_a63a_af5a02a475ec3", "summon_FETCH-LOGICAL-p521-a9b2972a52b5aad5f545d46433657f9358d772a7a55e5cea268b150787b297983", "summon_FETCH-ceeol_primary_bb66dbde_8418_4ada_81b6_7fbf3e53b3c43", "summon_FETCH-LOGICAL-c1732-d61397792c8e653ea6cba7349b8d713649656f499d172fd39764cfcde7fc59b43", "summon_FETCH-econis_primary_4890304323", "summon_FETCH-proquest_dll_4958018113", "summon_FETCH-ceeol_primary_8f768815_f080_429b_8780_e1a4e5441c773", "sb_1429124", "sb_6025088", "sb_6136585", "summon_FETCH-ceeol_primary_5dcc27c5_c20d_44a9_b71b_67a6870583ee3", "sb_6137032", "summon_FETCH-ceeol_primary_a809abb5_2cdf_4ab0_b3d1_f8a793f68c4d3", "ebog_ssj0000084319", "summon_FETCH-LOGICAL-c521-b287af49d16678cba334d26040803f81c42ae96dae21397a16ea02c5e6b2d1163", "summon_FETCH-ceeol_primary_cbf035ce_8db4_4407_8c9f_c10900d223e43", "sb_851285", "sb_1505947", "summon_FETCH-ceeol_primary_24db9397_bdaa_4aff_b14a_11f3c9ce785d3", "summon_FETCH-ceeol_primary_c21b2433_690c_4cc2_a762_155529ff16803", "sb_1486347", "sb_742963", "summon_FETCH-ceeol_primary_63ccbc18_921b_4ec4_8a9e_72cd355877333", "ebog_ssj0000176155", "sb_1421743", "summon_FETCH-ceeol_primary_1a10623d_c583_4780_9f36_e2a264cadc873", "sb_2204643", "summon_FETCH-ceeol_primary_28ad2ad7_9276_4d17_b292_82ca4e5a886f3", "summon_FETCH-ceeol_primary_59685b67_7b53_4baa_861b_4ec248dd6c3f3", "summon_FETCH-ceeol_primary_674f1110_e52e_42e5_ac8c_ba904c67eca63", "summon_FETCH-proquest_dll_26518994913", "sb_994179", "summon_FETCH-LOGICAL-c1592-8b6220ac609952b15fbbdf59c639e68a39d0d3c0a40824b806779f11e4fc94103", "summon_FETCH-proquest_dll_93744193", "summon_FETCH-ceeol_primary_c9c30509_d9d2_4ead_b4b7_2fb827cdf9a43", "sb_742959", "summon_FETCH-ceeol_primary_b2103865_47c1_4ceb_a41f_2be30879ea553", "summon_FETCH-ceeol_primary_ffee5d0a_f613_4c13_8fa6_94d4ecef91023", "summon_FETCH-ceeol_primary_387a2027_ed26_4c7b_912f_fc4c2ea5b45a3", "sb_2764111", "ebog_ssj0000085499", "sb_pure_ddfmxd:134f7720-05a2-11df-b95d-000ea68e967b", "summon_FETCH-LOGICAL-c1272-7f2c91963b13a717a81643d915bc9f33bc1a6c316ff9a9f9dc6d3cb89553ac013", "summon_FETCH-ceeol_primary_0aec95f4_394d_4a0f_b786_8223e03b49843", "summon_FETCH-ceeol_primary_7548a60f_6deb_418d_b66d_2d2bd8d4fa1a3", "summon_FETCH-LOGICAL-c825-fd16a6cf3663c9719263b12b680aa8f64827075924c1c1ad634b218a105e0d8b3", "summon_FETCH-ceeol_primary_70f4f96b_2060_456a_8a87_5b4ee6fb42333", "summon_FETCH-ceeol_primary_154fb8f7_b569_49cd_b6e5_6e66d5d5bc093", "sb_1813935", "ebog_ssj0000688265", "summon_FETCH-LOGICAL-c1475-83dd1d022972997fa88508403418bb21117e04404d9066cd97db44f63845a3f73", "summon_FETCH-LOGICAL-g918-6f332d5c0a4bfd753df4183542c16b1f15ba7948a2b26136b28be08a01fde1343", "summon_FETCH-ceeol_primary_1401215e_9b6d_4a4f_941f_d6f04bf812c33", "summon_FETCH-ceeol_primary_72a313fc_a64c_4622_b723_a8bc68ca32953", "summon_FETCH-gale_infotrac_2960260883", "summon_FETCH-ceeol_primary_a63e3b24_e8d3_40fd_9bcc_f77ccfc8b0673", "summon_FETCH-ceeol_primary_c1093feb_6f73_491d_90a9_9b18f6e763223", "ebog_ssj0000136470", "summon_FETCH-ceeol_primary_14c9920a_b76b_4cde_b965_650030680d783", "summon_FETCH-proquest_dll_35586531413", "sb_4429900", "summon_FETCH-LOGICAL-c2099-f1f55cb9e3a251cbe6f529e16d50b46a5ff315779ca3b142c69a34877a517c8f3", "summon_FETCH-ceeol_primary_94f72080_42d8_4197_8cab_1c919774965f3", "sb_742665", "summon_FETCH-ceeol_primary_289e46c7_f87f_4ef0_b3e2_9a31201bd7cc3");
+    }
+
+    private void assertBulkDocIDRequest(String message, String... summonIDs) throws RemoteException {
+        assertBulkDocIDRequest(message, summonIDs.length, summonIDs);
+    }
+    private void assertBulkDocIDRequest(String message, int expected, String... summonIDs) throws RemoteException {
+        List<String> ids = Arrays.asList(summonIDs);
         SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        List<String> first = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
+        List<String> first = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(ids));
 
-        Collections.sort(IDs);
+        Collections.sort(ids);
         Collections.sort(first);
-        System.out.println("Requested: " + Strings.join(IDs));
-        System.out.println("Received:  " + Strings.join(first));
-        assertEquals("There should be the expected number of Records for first class ID lookup", EXPECTED, first.size());
+//        System.out.println("Requested: " + Strings.join(ids));
+//        System.out.println("Received:  " + Strings.join(first));
+        assertEquals(message + ". There should be the expected number of Records for first class ID lookup",
+                     expected, first.size());
     }
 
     public void testBulkDocIDRequestMulti() throws RemoteException {

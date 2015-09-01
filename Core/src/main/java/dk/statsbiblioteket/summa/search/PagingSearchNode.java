@@ -133,6 +133,11 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
     public void search(final Request request, final ResponseCollection responses) throws RemoteException {
         log.trace("Starting search");
         long processingTime = -System.currentTimeMillis();
+        if (request.containsValue(DocumentKeys.SEARCH_IDS)) {
+            log.debug("Passing request directly as it is a document-lookup (key " + DocumentKeys.SEARCH_IDS + ")");
+            subNode.search(request, responses);
+            return;
+        }
         final int origiStart = request.getInt(DocumentKeys.SEARCH_START_INDEX, 0);
         int requestedRecords;
         if ((requestedRecords = request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, DocumentKeys.DEFAULT_MAX_RECORDS))
