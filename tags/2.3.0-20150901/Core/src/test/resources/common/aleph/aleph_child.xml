@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record xmlns="http://www.loc.gov/MARC21/slim" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd">
+    <leader>00000nam  2200000   4500</leader>
+    <controlfield tag="FMT">BK</controlfield>
+    <controlfield tag="LDR">00000nam  2200000   4500</controlfield>
+    <datafield tag="004" ind1="0" ind2="0">
+        <subfield code="a">b</subfield>
+    </datafield>
+    <datafield tag="008" ind1="0" ind2="0">
+        <subfield code="b">de</subfield>
+        <subfield code="t">m</subfield>
+        <subfield code="a">1978</subfield>
+        <subfield code="l">ger</subfield>
+    </datafield>
+    <datafield tag="009" ind1="0" ind2="0">
+        <subfield code="a">a</subfield>
+        <subfield code="g">xx</subfield>
+    </datafield>
+    <datafield tag="010" ind1="0" ind2="0">
+        <subfield code="a">2207553</subfield>
+    </datafield>
+    <datafield tag="014" ind1="0" ind2="0">
+        <subfield code="a">2207552</subfield>
+    </datafield>
+    <datafield tag="245" ind1="0" ind2="0">
+        <subfield code="g">&lt;&lt;Bd. 1=1-1&gt;&gt;</subfield>
+        <subfield code="a">Frühe Schriften</subfield>
+    </datafield>
+    <datafield tag="260" ind1="0" ind2="0">
+        <subfield code="c">1978</subfield>
+    </datafield>
+    <datafield tag="001" ind1=" " ind2=" ">
+        <subfield code="a">002207553</subfield>
+        <subfield code="f">a</subfield>
+    </datafield>
+    <datafield tag="AVA" ind1=" " ind2=" ">
+        <subfield code="a">SOL50</subfield>
+        <subfield code="b">SBSKE</subfield>
+        <subfield code="c">Magasin</subfield>
+        <subfield code="d">1-83-7282</subfield>
+        <subfield code="e">unavailable</subfield>
+        <subfield code="f">1</subfield>
+        <subfield code="g">1</subfield>
+        <subfield code="h">Y</subfield>
+        <subfield code="i">0</subfield>
+        <subfield code="j">SMAG</subfield>
+    </datafield>
+    <datafield tag="Z30" ind1="-" ind2="1">
+        <subfield code="l">SOL01</subfield>
+        <subfield code="8">20090101</subfield>
+        <subfield code="m">BOG</subfield>
+        <subfield code="1">SBSKE</subfield>
+        <subfield code="2">SMAG</subfield>
+        <subfield code="3">1-83-7282</subfield>
+        <subfield code="5">400000018463</subfield>
+        <subfield code="b">Bd. 1</subfield>
+        <subfield code="f">10</subfield>
+        <subfield code="h">Bd. 1</subfield>
+    </datafield>
+    <datafield tag="PST" ind1="0" ind2=" ">
+        <subfield code="0">Z30</subfield>
+        <subfield code="1">002207553000010</subfield>
+        <subfield code="b">SBSKE</subfield>
+        <subfield code="c">SMAG</subfield>
+        <subfield code="o">BOG</subfield>
+        <subfield code="d">10</subfield>
+        <subfield code="f">N</subfield>
+        <subfield code="r">SOL60-000000000</subfield>
+        <subfield code="n">0</subfield>
+        <subfield code="h">1-83-7282</subfield>
+        <subfield code="3">Bøger</subfield>
+        <subfield code="4">SB Magasin, Skejby</subfield>
+        <subfield code="5">Magasin</subfield>
+        <subfield code="6">Alm. udlån (10)</subfield>
+    </datafield>
+    <datafield tag="SBL" ind1=" " ind2=" ">
+        <subfield code="a">SBSKE</subfield>
+    </datafield>
+    <datafield tag="LOC" ind1="0" ind2=" ">
+        <subfield code="b">SBSKE</subfield>
+        <subfield code="c">SMAG</subfield>
+        <subfield code="h">1-83-7282</subfield>
+        <subfield code="o">BOG</subfield>
+    </datafield>
+    <datafield tag="STS" ind1=" " ind2=" ">
+        <subfield code="a">10</subfield>
+    </datafield>
+</record>
