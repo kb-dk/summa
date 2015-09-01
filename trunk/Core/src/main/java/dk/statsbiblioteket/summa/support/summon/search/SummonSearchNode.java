@@ -520,7 +520,7 @@ public class SummonSearchNode extends SolrSearchNode {
                     try {
                         this.wait(SUMMON_ID_SEARCH_WAIT);
                     } catch (InterruptedException e) {
-                        log.debug("handleDocIDsPaged: Interrupted while waiting. Not a problem as it was just a delay");
+                        log.warn("handleDocIDsPaged: Interrupted while waiting. Not a problem as it was just a delay");
                     }
                 }
             } else {
@@ -528,6 +528,7 @@ public class SummonSearchNode extends SolrSearchNode {
             }
         }
 
+        final int singleLookups = nonResolved.size();
         List<String> missing;
         try {
             missing = singleStepIDLookup(nonResolved, rawResponses);
@@ -558,6 +559,9 @@ public class SummonSearchNode extends SolrSearchNode {
         if (!missing.isEmpty()) {
             log.debug("handleDocIDsPaged: Unable to resolve IDs " + Strings.join(missing, 50));
         }
+        log.info(summonIDs.size() + " documents requested. chunks_size=" + SUMMON_MAX_IDS + ", single_lookups="
+                  + singleLookups + ", unresolved=" + missing.size() +
+                  (missing.isEmpty() ? "" : "(" + Strings.join(missing, 3) + ")"));
     }
 
     /**
@@ -599,12 +603,13 @@ public class SummonSearchNode extends SolrSearchNode {
             }
         }
         log.debug("singleStepIDLookup(" + Strings.join(recordIDs, 10) + ", ...) got "
-                  + (recordIDs.size()-missing.size()) + " records in " + (System.currentTimeMillis() - startTime)
+                  + (recordIDs.size() - missing.size()) + " records in " + (System.currentTimeMillis() - startTime)
                   + "ms." + (missing.isEmpty() ? "All resolved" : ("Unresolvable: " + Strings.join(missing))));
         return missing;
     }
 
-    private boolean singleIDSearch(List<ResponseCollection> responses, String originalID, String id)
+    // Returns true if the ID-lookup was processes
+    private boolean singleIDSearch(List<ResponseCollection> responses, final String originalID, String id)
             throws RemoteException {
         Request singleRequest = new Request();
         ResponseCollection singleResponses = new ResponseCollection();
