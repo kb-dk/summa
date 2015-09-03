@@ -133,7 +133,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
     public void search(final Request request, final ResponseCollection responses) throws RemoteException {
         log.trace("Starting search");
         long processingTime = -System.currentTimeMillis();
-        if (request.containsValue(DocumentKeys.SEARCH_IDS)) {
+        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
             log.debug("Passing request directly as it is a document-lookup (key " + DocumentKeys.SEARCH_IDS + ")");
             subNode.search(request, responses);
             return;
@@ -241,6 +241,9 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
         Set<Class> encountered = new HashSet<>();
         for (ResponseCollection collection: responses) {
             for (Response res: collection) {
+                if (res instanceof DocumentResponse) {
+                    continue;
+                }
                 if (encountered.add(res.getClass())) {
                     merged.add(res);
                 } else {

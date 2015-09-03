@@ -16,6 +16,8 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
+import dk.statsbiblioteket.summa.search.PagingSearchNode;
+import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,6 +34,15 @@ public class SummonTestHelper {
 
     public static SummonSearchNode createSummonSearchNode() {
         return createSummonSearchNode(SummonResponseBuilder.DEFAULT_SHORT_DATE);
+    }
+
+    public static SearchNode createPagingSummonSearchNode() {
+        SummonSearchNode summonNode = createSummonSearchNode(SummonResponseBuilder.DEFAULT_SHORT_DATE);
+        Configuration conf = Configuration.newMemoryBased(
+                PagingSearchNode.CONF_SEQUENTIAL, false,
+                PagingSearchNode.CONF_MAXPAGESIZE, 50
+        );
+        return new PagingSearchNode(conf, summonNode);
     }
 
     public static SummonSearchNode createSummonSearchNode(boolean useShortDate) {
