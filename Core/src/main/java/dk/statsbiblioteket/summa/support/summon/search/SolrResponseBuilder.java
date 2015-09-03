@@ -1093,7 +1093,11 @@ public class SolrResponseBuilder implements Configurable {
         boolean grouped = request.getBoolean(DocumentKeys.GROUP, false);
         int rows =        request.getInt(DocumentKeys.ROWS,
                                          request.getInt(DocumentKeys.SEARCH_MAX_RECORDS, DocumentKeys.DEFAULT_ROWS));
+//      TODO: Maybe maxRecords should be the default?
         int groupLimit =  request.getInt(DocumentKeys.GROUP_LIMIT, DocumentKeys.DEFAULT_GROUP_LIMIT);
+        if (request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            groupLimit = Integer.MAX_VALUE;
+        }
         String groupSort =request.getString(DocumentKeys.GROUP_SORT, null);
         String groupField=request.getString(DocumentKeys.GROUP_FIELD, "");
         DocumentResponse response = grouped ?
