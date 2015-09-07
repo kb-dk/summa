@@ -1,0 +1,23 @@
+README for the SBSolr war
+------------------------------------
+
+About SBSolr
+------------
+SBSolr is a patched Solr war where java util logging has been replaced with logback.
+
+
+Configuration
+-------------
+SBSolr is expected to be configured through the use of context environment entries but reasonable default values are
+provided as a fallback.
+
+Solr requires a way to find the location of its installation directory, this can be configured through the environment
+variable SOLR_HOME or through JNDI lookup of 'solr/home'. When deployed in a Tomcat, configuration through the use of
+JNDI is preferred.
+
+SBSolr adds configuration of logging through JNDI lookup of 'solr/logback' to the standard Solr configuration. The
+'solr/logback' context environment parameter can contain either a file or an url pointing to a logback configuration to
+be included in the skeleton logback configuration included in the SBSolr war.
+
+The file 'context.xml.default' contains a sample SBSolr configuration in the form of a Tomcat default context
+The file 'logback-include.xml' contains a sample logback configuration.
