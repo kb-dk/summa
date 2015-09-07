@@ -173,13 +173,31 @@ public class SummonSearchNodeTest extends TestCase {
         SearchNode summon = SummonTestHelper.createPagingSummonSearchNode();
         List<String> ids = getAttributes(summon, new Request(
                 DocumentKeys.SEARCH_QUERY, "whale",
-                DocumentKeys.SEARCH_MAX_RECORDS, 60
+                DocumentKeys.SEARCH_MAX_RECORDS, 70
         ), "id", false);
         assertTrue("There should be at least 51 IDs (to trigger paging), but there were only " + ids.size(),
                    ids.size() > 50);
 
         String[] aIDs = new String[ids.size()];
         ids.toArray(aIDs);
+        log.info("testBulkIDOverflow: Got " + ids.size() + " IDs");
+        assertBulkDocIDRequest("Paging request", summon, aIDs.length, aIDs);
+    }
+
+    public void testBulkIDOverflowRandomize() throws Exception {
+        SearchNode summon = SummonTestHelper.createPagingSummonSearchNode();
+        List<String> ids = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "children",
+                DocumentKeys.SEARCH_MAX_RECORDS, 70
+        ), "id", false);
+        assertTrue("There should be at least 51 IDs (to trigger paging), but there were only " + ids.size(),
+                   ids.size() > 50);
+
+        Collections.shuffle(ids);
+        ids = ids.subList(0, 51);
+        String[] aIDs = new String[ids.size()];
+        ids.toArray(aIDs);
+
         assertBulkDocIDRequest("Paging request", summon, aIDs.length, aIDs);
     }
 
@@ -196,6 +214,7 @@ public class SummonSearchNodeTest extends TestCase {
 
         Collections.sort(ids);
         Collections.sort(first);
+
 //        System.out.println("Requested: " + Strings.join(ids));
 //        System.out.println("Received:  " + Strings.join(first));
         assertEquals(message + ". There should be the expected number of Records for first class ID lookup",
