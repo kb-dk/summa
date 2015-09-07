@@ -124,6 +124,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         this.hitCount = hitCount;
         this.grouped = false;
         this.groupLimit = (int) maxRecords;
+        this.groupRows = (int) maxRecords;
         // TODO: Port proper collator creation from stable
 //        collator = Collator.getInstance(new Locale("da"));
     }
