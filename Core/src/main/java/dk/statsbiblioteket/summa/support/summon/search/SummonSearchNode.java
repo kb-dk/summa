@@ -512,6 +512,7 @@ public class SummonSearchNode extends SolrSearchNode {
             subRequess.putAll(request);
             subRequess.put(DocumentKeys.SEARCH_IDS, sub);
             subRequess.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
+            subRequess.put(DocumentKeys.ROWS, SUMMON_MAX_IDS);
             barrierSearch(subRequess, subResponses);
             cleanupDocIDResponse(sub, subResponses, nonResolved);
             rawResponses.add(subResponses);
@@ -544,6 +545,7 @@ public class SummonSearchNode extends SolrSearchNode {
                 if (r instanceof DocumentResponse) {
                     DocumentResponse docs = (DocumentResponse)r;
                     docs.setMaxRecords(Integer.MAX_VALUE); // No trim on merge!
+                    docs.setMaxRows(Integer.MAX_VALUE); // No trim on merge!
                     responses.add(docs);
                     continue raws;
                 }

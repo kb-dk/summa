@@ -85,6 +85,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     private String groupSort = null;
 
     private List<Group> groups = new ArrayList<>();
+    private int maxRows;
 
 //    private final Collator collator;
 
@@ -165,6 +166,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         addGroup(group);
         return group;
     }
+
     /**
      * A mirror of Solr's group representation
      * https://cwiki.apache.org/confluence/display/solr/Result+Grouping
@@ -599,6 +601,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
                   + other.getMaxRecords());
         // TODO: Check for differences in basic attributes and warn if needed
         maxRecords = Math.max(getMaxRecords(), other.getMaxRecords());
+        groupRows = Math.max(groupRows, other.groupRows);
         hitCount += other.hitCount;
         // This could also be additive, but we assume parallel calls
         searchTime = Math.max(searchTime, other.searchTime);
@@ -609,23 +612,28 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
             groupRows= other.groupRows;
             setGroupField(other.groupField); // Updates existing Records
         }
-        boolean setOtherGroup = this.grouped && !other.grouped; // Update the valueField of other before assigning
 
-        outer:
-        for (Group otherGroup: other.groups) {
-            for (Group thisGroup: groups) {
-                if (thisGroup.groupValue != null && thisGroup.groupValue.equals(otherGroup.groupValue)) {
-                    if (setOtherGroup) {
-                        Group otherClone = new Group(otherGroup);
-                        otherClone.setGroupField(groupField);
-                        thisGroup.merge(otherClone);
-                    } else {
-                        thisGroup.merge(otherGroup);
+        if (!this.grouped && !other.grouped) {
+            log.debug("Neither this, nor other are true groups. other.getGroups are added verbatim");
+            groups.addAll(other.getGroups());
+        } else {
+            boolean setOtherGroup = this.grouped && !other.grouped; // Update the valueField of other before assigning
+            outer:
+            for (Group otherGroup: other.groups) {
+                for (Group thisGroup: groups) {
+                    if (thisGroup.groupValue != null && thisGroup.groupValue.equals(otherGroup.groupValue)) {
+                        if (setOtherGroup) {
+                            Group otherClone = new Group(otherGroup);
+                            otherClone.setGroupField(groupField);
+                            thisGroup.merge(otherClone);
+                        } else {
+                            thisGroup.merge(otherGroup);
+                        }
+                        continue outer;
                     }
-                    continue outer;
                 }
+                groups.add(otherGroup);
             }
-            groups.add(otherGroup);
         }
         sort();
         reduce();
@@ -658,6 +666,10 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
         for (Group group: groups) {
             group.setGroupField(groupField);
         }
+    }
+
+    public void setMaxRows(int maxRows) {
+        this.groupRows = maxRows;
     }
 
     /**
