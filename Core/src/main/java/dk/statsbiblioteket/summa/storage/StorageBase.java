@@ -75,8 +75,8 @@ public abstract class StorageBase implements Storage {
 
     /**
      * When a record with parents or children is added or updated, the graph of parent/child relations originating
-     * from the record is to be transitively traversed and marked as updated. This property controls how which relations
-     * should be followed. Allowed values are
+     * from the record is to be transitively traversed and encountered records marked as updated. This property control
+     * which relations should be followed. Allowed values are
      * <ul>
      *   <li>none:   Only the record itself should be marked as updated.</li>
      *   <li>all:    All records in the transitive graphs originating in this object should be marked as updated.</li>
@@ -84,32 +84,37 @@ public abstract class StorageBase implements Storage {
      *   <li>parent: Only follow relations where the record is the child and links points to parents.</li>
      * </ul>
      * </p><p>
-     * Important: If {@link #CONF_RELATION_CLEAR} is not none, the transitive update should be performed before clear
-     * and after the
+     * Important: If {@link #CONF_RELATION_CLEAR} is not 'none', the transitive update should be performed before the
+     * clear old relations operation as well as after updating of relations.
      * </p><p>
      * Optional. Default is all.
      */
-    public static final String CONF_RELATION_UPDATE = "storage.relations.update";
-    public static final RELATION DEFAULT_RELATION_UPDATE = RELATION.all;
+    public static final String CONF_RELATION_TOUCH = "storage.relations.touch";
+    public static final RELATION DEFAULT_RELATION_TOUCH = RELATION.all;
 
     /**
-     * When a record with parents or children is added or updated, the graph of parent/child relations originating
-     * from the record is to be transitively traverseand marked as updated. This property controls how which relations should
-     * be followed. Allowed values are
+     * When a record with parents or children is added or updated, previously registered parent or child relations
+     * with the record ID should be cleared before adding new relations. This property controls how which relations
+     * should be cleared. Allowed values are
      * <ul>
-     *   <li>none:   Only the record itself should be marked as updated.</li>
-     *   <li>all:    All records in the transitive graphs originating in this object should be marked as updated.</li>
-     *   <li>child:  Only follow relations where the record is the parent and links points to children.</li>
-     *   <li>parent: Only follow relations where the record is the child and links points to parents.</li>
+     *   <li>none:   No clearing of relations.</li>
+     *   <li>all:    All relations where the record ID is either parent or child should be cleared.</li>
+     *   <li>child:  All relations where the record ID is parent should be cleared.</li>
+     *   <li>parent: All relations where the record ID is child should be cleared.</li>
      * </ul>
      * </p><p>
-     * Optional. Default is all.
+     * Note: Clearing is not transitive. Only the immediate relations should be considered.
+     * </p><p>
+     * Optional. Default is none.
      */
     public static final String CONF_RELATION_CLEAR = "storage.relations.clear";
     public static final RELATION DEFAULT_RELATION_CLEAR = RELATION.none;
 
 
     public static enum RELATION {parent, child, none, all}
+
+    protected final RELATION relationsTouch;
+    protected final RELATION relationsClear;
 
     /**
      * Storage base constructor.
@@ -122,6 +127,8 @@ public abstract class StorageBase implements Storage {
         storageStartTime = System.currentTimeMillis();
         lastFlushTimes = new HashMap<>(hashMapSize);
         privateIdMatcher = Pattern.compile("__.+__").matcher("");
+        relationsTouch = RELATION.valueOf(conf.getString(CONF_RELATION_TOUCH, DEFAULT_RELATION_TOUCH.toString()));
+        relationsClear = RELATION.valueOf(conf.getString(CONF_RELATION_CLEAR, DEFAULT_RELATION_CLEAR.toString()));
     }
 
     /**
