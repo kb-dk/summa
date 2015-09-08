@@ -74,6 +74,44 @@ public abstract class StorageBase implements Storage {
     private Matcher privateIdMatcher;
 
     /**
+     * When a record with parents or children is added or updated, the graph of parent/child relations originating
+     * from the record is to be transitively traversed and marked as updated. This property controls how which relations
+     * should be followed. Allowed values are
+     * <ul>
+     *   <li>none:   Only the record itself should be marked as updated.</li>
+     *   <li>all:    All records in the transitive graphs originating in this object should be marked as updated.</li>
+     *   <li>child:  Only follow relations where the record is the parent and links points to children.</li>
+     *   <li>parent: Only follow relations where the record is the child and links points to parents.</li>
+     * </ul>
+     * </p><p>
+     * Important: If {@link #CONF_RELATION_CLEAR} is not none, the transitive update should be performed before clear
+     * and after the
+     * </p><p>
+     * Optional. Default is all.
+     */
+    public static final String CONF_RELATION_UPDATE = "storage.relations.update";
+    public static final RELATION DEFAULT_RELATION_UPDATE = RELATION.all;
+
+    /**
+     * When a record with parents or children is added or updated, the graph of parent/child relations originating
+     * from the record is to be transitively traverseand marked as updated. This property controls how which relations should
+     * be followed. Allowed values are
+     * <ul>
+     *   <li>none:   Only the record itself should be marked as updated.</li>
+     *   <li>all:    All records in the transitive graphs originating in this object should be marked as updated.</li>
+     *   <li>child:  Only follow relations where the record is the parent and links points to children.</li>
+     *   <li>parent: Only follow relations where the record is the child and links points to parents.</li>
+     * </ul>
+     * </p><p>
+     * Optional. Default is all.
+     */
+    public static final String CONF_RELATION_CLEAR = "storage.relations.clear";
+    public static final RELATION DEFAULT_RELATION_CLEAR = RELATION.none;
+
+
+    public static enum RELATION {parent, child, none, all}
+
+    /**
      * Storage base constructor.
      *
      * @param conf Configuration to create this storage base with.
