@@ -581,9 +581,6 @@ public class SummonSearchNode extends SolrSearchNode {
         }
         List<String> missing = new ArrayList<>(recordIDs.size());
         for (final String id: recordIDs) { // FETCH_<id>
-            if (singleIDSearch(responses, id, incl(id))) {
-                continue;
-            }
             synchronized (this) {
                 try {
                     this.wait(SUMMON_ID_SEARCH_WAIT);
@@ -592,7 +589,7 @@ public class SummonSearchNode extends SolrSearchNode {
                               + "guard against the summon request throughput limiter");
                 }
             }
-            if (singleIDSearch(responses, id, sans(id))) { // <id>
+            if (singleIDSearch(responses, id, incl(id)) || singleIDSearch(responses, id, sans(id))) { // <id>
                 continue;
             }
             missing.add(id);
