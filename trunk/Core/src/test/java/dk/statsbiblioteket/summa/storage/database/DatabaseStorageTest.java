@@ -16,18 +16,22 @@ package dk.statsbiblioteket.summa.storage.database;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.BaseStats;
+import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.StorageTestBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * These test cases are meant to test functionality specifically requiring the
@@ -172,6 +176,136 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(4, base.getTotalCount());
         assertEquals(1, base.getLiveCount());
     }
+
+    public void testTouchNone() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "None", StorageBase.RELATION.none, StorageBase.RELATION.none, Arrays.asList(
+                createRecord("m1", Collections.<String>emptyList(), Collections.<String>emptyList())
+        ), new HashSet<>(Arrays.asList("m1")));
+    }
+    public void testTouchAll() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Direct all", StorageBase.RELATION.none, StorageBase.RELATION.all, Arrays.asList(
+                createRecord("m1", Collections.<String>emptyList(), Collections.<String>emptyList())
+        ), new HashSet<>(Arrays.asList("t1", "m1", "b1")));
+    }
+    public void testTouchParents() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Direct parent", StorageBase.RELATION.none, StorageBase.RELATION.parent, Arrays.asList(
+                createRecord("m1", Collections.<String>emptyList(), Collections.<String>emptyList())
+        ), new HashSet<>(Arrays.asList("t1", "m1")));
+    }
+    // This test fails, which seems like a regression error as we have previously worked under the assumption
+    // that touching a parent also touched its children. Same for testTouchAll.
+    public void testTouchChildren() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Direct children", StorageBase.RELATION.none, StorageBase.RELATION.child, Arrays.asList(
+                createRecord("m1", Collections.<String>emptyList(), Collections.<String>emptyList())
+        ), new HashSet<>(Arrays.asList("m1", "b1")));
+    }
+
+    public void testClearNoneUpdateParent() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "No clear", StorageBase.RELATION.none, StorageBase.RELATION.parent, Arrays.asList(
+                createRecord("m1", Arrays.asList("t2"), Collections.<String>emptyList())
+        ), new HashSet<>(Arrays.asList("t1", "t2", "m1", "b1")));
+    }
+    public void testClearParentUpdateParent() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Parent clear", StorageBase.RELATION.parent, StorageBase.RELATION.parent, Arrays.asList(
+                createRecord("m1", Arrays.asList("t2"), Collections.<String>emptyList())
+        ), new HashSet<>(Arrays.asList("t2", "m1", "b1")));
+    }
+    public void testClearChildUpdateParent() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Child clear", StorageBase.RELATION.child, StorageBase.RELATION.parent, Arrays.asList(
+                createRecord("m1", Arrays.asList("t2"), Collections.<String>emptyList())
+        ), new HashSet<>(Arrays.asList("t1", "t2", "m1")));
+    }
+    public void testClearAllUpdateParent() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "All clear", StorageBase.RELATION.all, StorageBase.RELATION.parent, Arrays.asList(
+                createRecord("m1", Arrays.asList("t2"), Collections.<String>emptyList())
+        ), new HashSet<>(Arrays.asList("t2", "m1")));
+    }
+
+    private Record createRecord(String id, List<String> parents, List<String> children) {
+        Record record = new Record(id, testBase1, testContent1);
+        record.setParentIds(parents);
+        record.setChildIds(children);
+        return record;
+    }
+
+    /**
+     * This helper creates an isolated storage and adds a small collection of records:
+     * <ul>
+     * <li>t1 (m1 as child)</li>
+     * <li>t2 (no relatives)</li>
+     * <li>m1 (t1 as parent, b1 as child)</li>
+     * <li>m2 (no relatives)</li>
+     * <li>b1 (m1 as parent)</li>
+     * <li>b2 (no relatives)</li>
+     * </ul>
+     * The given updates are then flushed and the IDs of all touched Records are compared to the expected set.
+     * @param message   fail message.
+     * @param clear     relation clear configuration {@link StorageBase#CONF_RELATION_CLEAR}.
+     * @param touch     relation touch configuration {@link StorageBase#CONF_RELATION_TOUCH}.
+     * @param updates   new or updated Records.
+     * @param expected  IDs of the Records with updated modification times.
+     */
+    private void assertClearAndUpdateTimestamps(
+            String message, StorageBase.RELATION clear, StorageBase.RELATION touch,
+            List<Record> updates, Set<String> expected) throws Exception {
+        Configuration conf = createConf(); // ReleaseHelper.getStorageConfiguration("RelationsTest");
+        conf.set(DatabaseStorage.CONF_RELATION_TOUCH, touch);
+        conf.set(DatabaseStorage.CONF_RELATION_CLEAR, clear);
+        Storage storage = new H2Storage(conf);
+        try {
+            storage.flushAll(Arrays.asList(
+                    createRecord("t1", EMPTY, Arrays.asList("m1")),
+                    createRecord("t2", EMPTY, EMPTY),
+                    createRecord("m1", Arrays.asList("t1"), Arrays.asList("b1")),
+                    createRecord("m2", EMPTY, EMPTY),
+                    createRecord("b1", Arrays.asList("m1"), EMPTY),
+                    createRecord("b2", EMPTY, EMPTY)
+            ));
+            Map<String, Long> originalTS = getTimestamps(storage);
+            storage.flushAll(updates);
+            Map<String, Long> flushedTS = getTimestamps(storage);
+            Set<String> changed = calculateChangedTimestamps(originalTS, flushedTS);
+
+            final String debug =
+                    "touch=" + touch + ", clear=" + clear
+                    + ", expected=[" + Strings.join(expected) + "], actual=[" + Strings.join(changed) + "]";
+            ExtraAsserts.assertEquals(message + ", " + debug + ", expected changed records should match actual",
+                                      expected, changed);
+        } finally {
+            storage.close();
+        }
+    }
+
+    private Set<String> calculateChangedTimestamps(Map<String, Long> preTS, Map<String, Long> postTS) {
+        Set<String> changed = new HashSet<>();
+        for (Map.Entry<String, Long> postEntry: postTS.entrySet()) {
+            Long ts = preTS.get(postEntry.getKey());
+            if (ts == null || !ts.equals(postEntry.getValue())) {
+                changed.add(postEntry.getKey());
+            }
+        }
+        return changed;
+    }
+
+    private Map<String, Long> getTimestamps(Storage storage) throws IOException {
+        Map<String, Long> ts = new HashMap<>();
+        long iteratorKey = storage.getRecordsModifiedAfter(0L, testBase1, null);
+        List<Record> records = storage.next(iteratorKey, 10000); // We should get them all in one go
+        for (Record record: records) {
+            ts.put(record.getId(), record.getLastModified());
+        }
+        return ts;
+    }
+
+    private static final List<String> EMPTY = Collections.emptyList();
 
     public void testSelfReference() throws IOException {
         Record r1 = new Record(testId1, testBase1, testContent1);
