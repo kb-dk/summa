@@ -113,6 +113,7 @@ public class StorageTestBase extends TestCase {
     public void setUp() throws Exception {
         testStartTime = System.currentTimeMillis();
         if (dbRoot.exists()) {
+            log.warn("Old root '" + dbRoot + "' exists. Deleting...");
             Files.delete(dbRoot);
         }
         storage = StorageFactory.createStorage(createConf());
