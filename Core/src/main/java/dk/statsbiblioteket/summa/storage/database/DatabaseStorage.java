@@ -3381,21 +3381,13 @@ public abstract class DatabaseStorage extends StorageBase {
             break;           
         case child:           
             clearChildrenWithConnection(record.getId(), conn);           
-            record.setChildIds(new ArrayList<String>());
-            record.setChildren(null);
             break;
         case parent:
             clearParentsWithConnection(record.getId(), conn);
-            record.setParentIds(new ArrayList<String>());
-            record.setParents(null);
             break;
         case all:
             clearChildrenWithConnection(record.getId(), conn);
-            clearParentsWithConnection(record.getId(), conn);
-            record.setChildIds(new ArrayList<String>());
-            record.setChildren(null);
-            record.setParentIds(new ArrayList<String>());
-            record.setParents(null);                        
+            clearParentsWithConnection(record.getId(), conn);                                   
             break;
         }
 
