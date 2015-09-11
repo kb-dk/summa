@@ -34,10 +34,12 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.script.ScriptException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -51,8 +53,8 @@ import java.util.*;
  */
 @SuppressWarnings("DuplicateStringLiteralInspection")
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te, teg, mke")
+state = QAInfo.State.IN_DEVELOPMENT,
+author = "te, teg, mke")
 public abstract class DatabaseStorage extends StorageBase {
     private static Log recordlog = LogFactory.getLog("storagequeries");
     private static Log log = LogFactory.getLog(DatabaseStorage.class);
@@ -400,7 +402,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private static final long EMPTY_ITERATOR_KEY = -1;
 
-/*
+    /*
     private StatementHandle stmtGetModifiedAfter;
     private StatementHandle stmtGetModifiedAfterAll;
     private StatementHandle stmtGetModifiedAfterNoData;
@@ -418,22 +420,22 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtGetRelatedIds;
     private StatementHandle stmtMarkHasRelations;
     private StatementHandle stmtCreateRelation;
-    */
+     */
     /** Update statement for modification time of a base. */
-//    private StatementHandle stmtUpdateMtimForBase;
+    //    private StatementHandle stmtUpdateMtimForBase;
     /** Insert statement for base statistic. */
-//    private StatementHandle stmtInsertBaseStats;
+    //    private StatementHandle stmtInsertBaseStats;
     /** Sets a base statistic row in invalid. */
-//    private StatementHandle stmtSetBaseStatsInvalid;
+    //    private StatementHandle stmtSetBaseStatsInvalid;
     /** Retrieves the last modification time for a base. */
-//    private StatementHandle stmtGetLastModificationTime;
+    //    private StatementHandle stmtGetLastModificationTime;
     /** Insert full set of data into base statistic row. */
-//    private StatementHandle stmtInsertFullBaseStats;
+    //    private StatementHandle stmtInsertFullBaseStats;
     /** Update full set of base statistic. */
-//    private StatementHandle stmtUpdateFullBaseStats;
+    //    private StatementHandle stmtUpdateFullBaseStats;
     /** String for all columns. */
-//    private String allColumns;
-//    private String allColumnsButDataAndMeta;
+    //    private String allColumns;
+    //    private String allColumnsButDataAndMeta;
 
     /**
      * Iterator keys.
@@ -558,8 +560,8 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             return options instanceof RecursionQueryOptions ?
-                   ((RecursionQueryOptions) options).resetRecursionLevels() :
-                   new RecursionQueryOptions(options);
+                    ((RecursionQueryOptions) options).resetRecursionLevels() :
+                        new RecursionQueryOptions(options);
         }
 
         /**
@@ -630,7 +632,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (usePagingModel) {
             pageSize = conf.getInt(CONF_PAGE_SIZE, DEFAULT_PAGE_SIZE);
             pageSizeUpdate = conf.getInt(CONF_PAGE_SIZE_UPDATE,
-                                         conf.containsKey(CONF_PAGE_SIZE) ? pageSize : DEFAULT_PAGE_SIZE_UPDATE);
+                    conf.containsKey(CONF_PAGE_SIZE) ? pageSize : DEFAULT_PAGE_SIZE_UPDATE);
             log.debug("Using paging model for large result sets. Page size: " + pageSize);
         } else {
             log.debug("Using default model for large result sets");
@@ -923,15 +925,15 @@ public abstract class DatabaseStorage extends StorageBase {
     private void prepareStatements() throws SQLException {
         log.debug("Preparing SQL statements");
 
-/*        String allCellsRelationsCols;
+        /*        String allCellsRelationsCols;
         if (useLazyRelations) {
             // Always select empty cells for relations and look them up later
             allCellsRelationsCols = "'', ''";
         } else {
             allCellsRelationsCols = RELATIONS + "." + PARENT_ID_COLUMN + "," + RELATIONS + "." + CHILD_ID_COLUMN;
         }
-  */
-  /*
+         */
+        /*
         allColumns = RECORDS + "." + ID_COLUMN + ","
                      + RECORDS + "." + BASE_COLUMN + ","
                      + RECORDS + "." + DELETED_COLUMN + ","
@@ -960,10 +962,10 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + RELATIONS + "." + PARENT_ID_COLUMN
                                 + " OR " + RECORDS + "." + ID_COLUMN + "="
                                 + RELATIONS + "." + CHILD_ID_COLUMN;
-    */
+         */
         /* modifiedAfter */
         // We can order by mtime only because the generated mtimes are unique
-/*        String modifiedAfterQuery;
+        /*        String modifiedAfterQuery;
         String modifiedAfterQueryNoData;
         if (useLazyRelations) {
             modifiedAfterQuery = "SELECT " + allColumns
@@ -971,14 +973,14 @@ public abstract class DatabaseStorage extends StorageBase {
                                  + " WHERE " + BASE_COLUMN + "=?"
                                  + " AND " + MTIME_COLUMN + ">?"
                                  + " ORDER BY " + MTIME_COLUMN;
-   
+
             modifiedAfterQueryNoData = "SELECT " + allColumnsButDataAndMeta
                     + " FROM " + RECORDS
                     + " WHERE " + BASE_COLUMN + "=?"
                     + " AND " + MTIME_COLUMN + ">?"
                     + " ORDER BY " + MTIME_COLUMN;
 
-        
+
         } else {
             modifiedAfterQuery = "SELECT " + allColumns
                                  + " FROM " + RECORDS
@@ -987,7 +989,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                  + " WHERE " + BASE_COLUMN + "=?"
                                  + " AND " + MTIME_COLUMN + ">?"
                                  + " ORDER BY " + MTIME_COLUMN;
-            
+
             modifiedAfterQueryNoData = "SELECT " + allColumnsButDataAndMeta
                     + " FROM " + RECORDS
                     + " LEFT JOIN " + RELATIONS
@@ -995,34 +997,34 @@ public abstract class DatabaseStorage extends StorageBase {
                     + " WHERE " + BASE_COLUMN + "=?"
                     + " AND " + MTIME_COLUMN + ">?"
                     + " ORDER BY " + MTIME_COLUMN;            
-        
+
         }*/
-//        if (usePagingModel) {
-//            modifiedAfterQuery = getPagingStatement(modifiedAfterQuery);
-//            modifiedAfterQueryNoData = getPagingStatement(modifiedAfterQueryNoData,5000);
-//        }
-/*        log.debug("Preparing query getModifiedAfter with '"  + modifiedAfterQuery + "'");
+        //        if (usePagingModel) {
+        //            modifiedAfterQuery = getPagingStatement(modifiedAfterQuery);
+        //            modifiedAfterQueryNoData = getPagingStatement(modifiedAfterQueryNoData,5000);
+        //        }
+        /*        log.debug("Preparing query getModifiedAfter with '"  + modifiedAfterQuery + "'");
         stmtGetModifiedAfter = prepareStatement(modifiedAfterQuery);
         stmtGetModifiedAfterNoData = prepareStatement(modifiedAfterQueryNoData);
 
         log.debug("getModifiedAfter handle: " + stmtGetModifiedAfter);
         log.debug("getModifiedAfterNoData handle: " + stmtGetModifiedAfterNoData);
-  */
+         */
         /* modifiedAfterAll */
         // We can order by mtime only because the generated mtimes are unique
-/*        String modifiedAfterAllQuery;
+        /*        String modifiedAfterAllQuery;
         String modifiedAfterAllQueryNoData;
         if (useLazyRelations){
             modifiedAfterAllQuery = "SELECT " + allColumns
                                     + " FROM " + RECORDS
                                     + " WHERE " + MTIME_COLUMN + ">?"
                                     + " ORDER BY " + MTIME_COLUMN;
-            
+
             modifiedAfterAllQueryNoData = "SELECT " + allColumnsButDataAndMeta
                     + " FROM " + RECORDS
                     + " WHERE " + MTIME_COLUMN + ">?"
                     + " ORDER BY " + MTIME_COLUMN;
-        
+
         } else {
             modifiedAfterAllQuery = "SELECT " + allColumns
                                     + " FROM " + RECORDS
@@ -1030,14 +1032,14 @@ public abstract class DatabaseStorage extends StorageBase {
                                     + " ON " + relationsClause
                                     + " WHERE " + MTIME_COLUMN + ">?"
                                     + " ORDER BY " + MTIME_COLUMN;
-        
+
             modifiedAfterAllQueryNoData = "SELECT " + allColumnsButDataAndMeta
                     + " FROM " + RECORDS
                     + " LEFT JOIN " + RELATIONS
                     + " ON " + relationsClause
                     + " WHERE " + MTIME_COLUMN + ">?"
                     + " ORDER BY " + MTIME_COLUMN;
-            
+
         }
         if (usePagingModel) {
             modifiedAfterAllQuery = getPagingStatement(modifiedAfterAllQuery);
@@ -1050,11 +1052,11 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetModifiedAfterAllNoData = prepareStatement(modifiedAfterAllQueryNoData);
         log.debug("getModifiedAfterAll handle: " + stmtGetModifiedAfterAll);
         log.debug("getModifiedAfterAllNoData handle: " + stmtGetModifiedAfterAllNoData);
-  */
+         */
         /* getRecord */
         // getRecordsQuery uses JOINs no matter if useLazyRelations is set.
         // Fetching single records using a LEFT JOIN is generally not a problem
-/*        String getRecordQuery = "SELECT " + allColumns
+        /*        String getRecordQuery = "SELECT " + allColumns
                                 + " FROM " + RECORDS
                                 + " LEFT JOIN " + RELATIONS
                                 + " ON " + relationsClause
@@ -1063,22 +1065,22 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetRecord = prepareStatement(getRecordQuery);
         log.debug("getRecord handle: " + stmtGetRecord);
 
-  */
-/*        String  getRecordQueryTemp = "SELECT " + allColumns
+         */
+        /*        String  getRecordQueryTemp = "SELECT " + allColumns
                 + " FROM " + RECORDS
                 + " WHERE " + RECORDS + "." + ID_COLUMN + "=?";
                   log.debug("Preparing query getRecordTemp with '" + getRecordQueryTemp + "'");
         stmtGetRecordTemp = prepareStatement(getRecordQueryTemp);
              log.debug("getRecord handle: " + stmtGetRecordTemp);
-  */
+         */
 
-/*         String getParentIDQuery=
+        /*         String getParentIDQuery=
         		  "SELECT  SUMMA_RECORDS.id, SUMMA_RELATIONS.parentID from" +
                   " SUMMA_RECORDS join SUMMA_RELATIONS on SUMMA_RECORDS.id = SUMMA_RELATIONS.childid" +
            		  " where SUMMA_RECORDS.id = ?";
          stmtGetParentIDQuery=prepareStatement(getParentIDQuery);
-  */
-        
+         */
+
         /*
          FIXME: We might want a prepared statement to fetch multiple records in
                 one go. However it seems to be inefficient to use prepared
@@ -1094,7 +1096,7 @@ public abstract class DatabaseStorage extends StorageBase {
          */
 
         /* deleteRecord */
-/*        String deleteRecordQuery = "UPDATE " + RECORDS
+        /*        String deleteRecordQuery = "UPDATE " + RECORDS
                                    + " SET " + MTIME_COLUMN + "=?, "
                                    + DELETED_COLUMN + "=?"
                                    + " WHERE " + ID_COLUMN + "=?";
@@ -1102,9 +1104,9 @@ public abstract class DatabaseStorage extends StorageBase {
                   + deleteRecordQuery + "'");
         stmtDeleteRecord = prepareStatement(deleteRecordQuery);
         log.debug("deleteRecord handle: " + stmtDeleteRecord);
-  */
+         */
         /* createRecord */
-/*        String createRecordQuery = "INSERT INTO " + RECORDS
+        /*        String createRecordQuery = "INSERT INTO " + RECORDS
                                 + " (" + ID_COLUMN + ", "
                                        + BASE_COLUMN + ", "
                                        + DELETED_COLUMN + ", "
@@ -1119,9 +1121,9 @@ public abstract class DatabaseStorage extends StorageBase {
                   + "'");
         stmtCreateRecord = prepareStatement(createRecordQuery);
         log.debug("createRecord handle: " + stmtCreateRecord);
-  */
+         */
         /* updateRecord */
-/*        String updateRecordQuery = "UPDATE " + RECORDS + " SET "
+        /*        String updateRecordQuery = "UPDATE " + RECORDS + " SET "
                                    + BASE_COLUMN + "=?, "
                                    + DELETED_COLUMN + "=?, "
                                    + INDEXABLE_COLUMN + "=?, "
@@ -1134,17 +1136,17 @@ public abstract class DatabaseStorage extends StorageBase {
                   + "'");
         stmtUpdateRecord = prepareStatement(updateRecordQuery);
         log.debug("updateRecord handle: " + stmtUpdateRecord);
-  */
+         */
         /* touchRecord */
-    /*    String touchRecordQuery = "UPDATE " + RECORDS + " SET "
+        /*    String touchRecordQuery = "UPDATE " + RECORDS + " SET "
                                    + MTIME_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN + "=?";
         log.debug("Preparing query touchRecord with '" + touchRecordQuery
                   + "'");
         stmtTouchRecord = prepareStatement(touchRecordQuery);
-      */
+         */
         /* touchParents */
-/*        String touchParentsQuery = "UPDATE " + RECORDS
+        /*        String touchParentsQuery = "UPDATE " + RECORDS
                                 + " SET " + MTIME_COLUMN + "=? "
                                 + " WHERE " + ID_COLUMN + " IN ("
                                 + " SELECT " + PARENT_ID_COLUMN
@@ -1154,9 +1156,9 @@ public abstract class DatabaseStorage extends StorageBase {
                   + "'");
         stmtTouchParents = prepareStatement(touchParentsQuery);
         log.debug("touchParents handle: " + stmtTouchParents);
-  */
+         */
         /* getChildren */
-/*        String getChildrenQuery = "SELECT " + allColumns
+        /*        String getChildrenQuery = "SELECT " + allColumns
                                 + " FROM " + RELATIONS
                                 + " JOIN " + RECORDS
                                 + " ON " + RECORDS + "." + ID_COLUMN + "="
@@ -1168,9 +1170,9 @@ public abstract class DatabaseStorage extends StorageBase {
                   + "'");
         stmtGetChildren = prepareStatement(getChildrenQuery);
         log.debug("getChildren handle: " + stmtGetChildren);
-  */
+         */
         /* getParents */
-/*        String getParentsQuery = "SELECT " + allColumns
+        /*        String getParentsQuery = "SELECT " + allColumns
                                 + " FROM " + RELATIONS
                                 + " JOIN " + RECORDS
                                 + " ON " + RECORDS + "." + ID_COLUMN + "="
@@ -1182,13 +1184,13 @@ public abstract class DatabaseStorage extends StorageBase {
                   + "'");
         stmtGetParents = prepareStatement(getParentsQuery);
         log.debug("getParents handle: " + stmtGetParents);
-  */
+         */
         /* getRelatedIds */
         // The obvious thing to do here was to use an OR instead of the UNION,
         // however some query optimizers have problems using the right indexes
         // when ORing (H2 for instance). Using a UNION is easier for the
         // optimizer
-  /*      String getRelatedIdsQuery = "SELECT " + PARENT_ID_COLUMN
+        /*      String getRelatedIdsQuery = "SELECT " + PARENT_ID_COLUMN
                                     + ", " + CHILD_ID_COLUMN
                                     + " FROM " + RELATIONS
                                     + " WHERE " + PARENT_ID_COLUMN + "=?"
@@ -1201,18 +1203,18 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Preparing getRelatedIds with '" + getRelatedIdsQuery + "'");
         stmtGetRelatedIds = prepareStatement(getRelatedIdsQuery);
         log.debug("getRelatedIds handle: " + stmtGetRelatedIds);
-    */
+         */
         /* markHasRelations */
-/*        String markHasRelationsQuery = "UPDATE " + RECORDS
+        /*        String markHasRelationsQuery = "UPDATE " + RECORDS
                                     + " SET " + HAS_RELATIONS_COLUMN + "=1 "
                                     + " WHERE " + ID_COLUMN + "=?";
         log.debug("Preparing markHasRelations with '"
                   + markHasRelationsQuery + "'");
         stmtMarkHasRelations = prepareStatement(markHasRelationsQuery);
         log.debug("markHasRelations handle: " + stmtMarkHasRelations);
-    */
+         */
         /* createRelation */
-  /*      String createRelation = "INSERT INTO " + RELATIONS
+        /*      String createRelation = "INSERT INTO " + RELATIONS
                                 + " (" + PARENT_ID_COLUMN + ","
                                        + CHILD_ID_COLUMN
                                        + ") VALUES (?,?)";
@@ -1283,7 +1285,7 @@ public abstract class DatabaseStorage extends StorageBase {
                   + insertFullBaseStats + "'");
         stmtInsertFullBaseStats = prepareStatement(insertFullBaseStats);
         log.debug("insertFullBaseStats handle: " + stmtInsertFullBaseStats);
-*/
+         */
         log.debug("Finished preparing SQL statements");
     }
 
@@ -1350,14 +1352,14 @@ public abstract class DatabaseStorage extends StorageBase {
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
                     "MTIME must be part of QueryOptions-ATTRIBUTES when requesting a MTIME-based iterator. "
-                    + "Defined attributes were " + Strings.join(options.getAttributes(), ", "));
+                            + "Defined attributes were " + Strings.join(options.getAttributes(), ", "));
         }
 
         // Convert time to the internal binary format used by DatabaseStorage
         long mtimeTimestamp = timestampGenerator.baseTimestamp(mtime);
 
         Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
-//        Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
+        //        Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
 
         if (iter == null) {
             return EMPTY_ITERATOR_KEY;
@@ -1390,7 +1392,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return a iteration key.
      * @throws IOException if prepared SQL statement is invalid.
      */
-/*
+    /*
     public synchronized long getRecordsModifiedAfterLoadData(
              long mtime, String base, QueryOptions options) throws IOException {
 
@@ -1409,7 +1411,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
         return registerCursor(iter);
     }
-  */
+     */
 
     /**
      * Get a {@link ResultSetCursor} over all records with an {@code mtime}
@@ -1440,14 +1442,14 @@ public abstract class DatabaseStorage extends StorageBase {
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
                     "MTIME must be part of QueryOptions-ATTRIBUTES when requesting a MTIME-based iterator. "
-                    + "Defined attributes were " + Strings.join(options.getAttributes(), ", "));
+                            + "Defined attributes were " + Strings.join(options.getAttributes(), ", "));
         }
 
         try {
             handle = base == null ?
-                     statementHandler.getGetModifiedAfterAll(options) :
-                     statementHandler.getGetModifiedAfter(options);
-/*            if (base == null) {
+                    statementHandler.getGetModifiedAfterAll(options) :
+                        statementHandler.getGetModifiedAfter(options);
+                    /*            if (base == null) {
                 statement = stmtGetModifiedAfterAllNoData.getSql();
                 stmt = getManagedStatement(stmtGetModifiedAfterAllNoData);
             } else {
@@ -1455,8 +1457,8 @@ public abstract class DatabaseStorage extends StorageBase {
                 stmt = getManagedStatement(stmtGetModifiedAfterNoData);
             }*/
 
-            log.debug("getRecordsModifiedAfterCursor statement: " + handle.getSql());
-            stmt = getManagedStatement(handle);
+                    log.debug("getRecordsModifiedAfterCursor statement: " + handle.getSql());
+                    stmt = getManagedStatement(handle);
         } catch (SQLException e) {
             throw new IOException("Failed to manage prepared statement for base '" + base + "'. SQL: 'N/A'", e);
         }
@@ -1500,14 +1502,14 @@ public abstract class DatabaseStorage extends StorageBase {
      *         caller to avoid leaking connections and locking up the storage.
      * @throws IOException if prepared SQL statement is invalid.
      */
-/*    public ResultSetCursor getRecordsModifiedAfterCursorLoadData(long mtime,
+    /*    public ResultSetCursor getRecordsModifiedAfterCursorLoadData(long mtime,
                          String base, QueryOptions options) throws IOException {
         PreparedStatement stmt;
         String statement = "";
         log.debug("DatabaseStorage.getRecordsModifiedAfterCursorLoadData(" + mtime + ", '" + base + "', "
                   + options + ").");
         return getRecordsModifiedAfterCursor(mtime, base, options);*/
-/*        try {
+    /*        try {
             if (base == null) {
                 statement = stmtGetModifiedAfterAll.getSql();
                 stmt = getManagedStatement(stmtGetModifiedAfterAll);
@@ -1515,9 +1517,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 statement = stmtGetModifiedAfter.getSql();
                 stmt = getManagedStatement(stmtGetModifiedAfter);
             }
-      
+
         log.debug("getRecordsModifiedAfterCursorLoadData statement:"+statement );
-        
+
         } catch (SQLException e) {
             throw new IOException("Failed to get prepared statement "
                                   + statement + ": "
@@ -1526,7 +1528,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
         // be closed together with that iterator
         return doGetRecordsModifiedAfterCursor(mtime, base, options, stmt);
-        */
+     */
     //}
 
 
@@ -1555,7 +1557,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
                     "MTIME must be part of QueryOptions-ATTRIBUTES when requesting a MTIME-based iterator. "
-                    + "Defined attributes were " + Strings.join(options.getAttributes(), ", "));
+                            + "Defined attributes were " + Strings.join(options.getAttributes(), ", "));
         }
 
         // Set the statement up for fetching of large result sets, see fx.
@@ -1575,7 +1577,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         if (timestampGenerator.systemTime(mtimeTimestamp) > getModificationTime(base)) {
             log.info("Storage not flushed after " + mtimeTimestamp + " for base '" + base
-                     + ". Returning empty iterator");
+                    + ". Returning empty iterator");
             try {
                 stmt.close();
             } catch (SQLException e) {
@@ -1590,7 +1592,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 stmt.setLong(1, mtimeTimestamp);
             } catch (SQLException e) {
                 throw new IOException(String.format("Could not prepare stmtGetModifiedAfterAll with time %d",
-                                                    mtimeTimestamp), e);
+                        mtimeTimestamp), e);
             }
 
             // stmt will be closed when the iterator is closed
@@ -1612,24 +1614,24 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
-      
+
         List<Record> result= new  ArrayList<>();
-        
-            profiler.beat();
-        
-            for (String currentID : ids){
-                Record record = getRecord(currentID, options);
-                result.add(record);                               
-            }
+
+        profiler.beat();
+
+        for (String currentID : ids){
+            Record record = getRecord(currentID, options);
+            result.add(record);                               
+        }
         if (log.isDebugEnabled()) {
             String message = "Finished getRecords(" + ids.size() + " ids (" + Strings.join(ids, 10) + ")) with "
-                             + result.size() + " results (" + Strings.join(result, 10) + ") in "
-                             + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
+                    + result.size() + " results (" + Strings.join(result, 10) + ") in "
+                    + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(message);
         }
-//            recordlog.info(message); // Already logged in getRecord
-            return result;
-        
+        //            recordlog.info(message); // Already logged in getRecord
+        return result;
+
     }
 
     /**
@@ -1695,14 +1697,14 @@ public abstract class DatabaseStorage extends StorageBase {
                 ResultSet parentRS = pstmtParentIdOnly.executeQuery();
                 mayHaveParent = parentRS.next();
                 if (mayHaveParent) {
-                   parentId = parentRS.getString("parentID"); //Set new Parent
-                   if (parents.contains(parentId)){
-                       Logging.logProcess(this.getClass().getName(), "Parent-child cycle detected for id",
-                               Logging.LogLevel.WARN, parentId);
-                      mayHaveParent=false; //stop resolving parents
-                  }
-                   parents.add(parentId); 
-                   
+                    parentId = parentRS.getString("parentID"); //Set new Parent
+                    if (parents.contains(parentId)){
+                        Logging.logProcess(this.getClass().getName(), "Parent-child cycle detected for id",
+                                Logging.LogLevel.WARN, parentId);
+                        mayHaveParent=false; //stop resolving parents
+                    }
+                    parents.add(parentId); 
+
                 }
                 parentRS.close();
             }
@@ -1725,7 +1727,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             long iterateTime = -System.nanoTime();
             if (!resultSet.next() && parentId != recordId) { 
-               String  msg="Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"+ parentId + " .Only children are loaded. Original recordId in query:"+orgRecordId;
+                String  msg="Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"+ parentId + " .Only children are loaded. Original recordId in query:"+orgRecordId;
                 log.warn(msg);           
                 throw new RuntimeException(msg);
             }
@@ -1748,14 +1750,14 @@ public abstract class DatabaseStorage extends StorageBase {
                 if (!topParentRecord.getId().equals(recordId)) {
                     throw new RuntimeException(
                             "Database inconsistency hasRelations for id" + topParentRecord.getId() + " and "
-                            + recordId +" Original recordId in query:"+orgRecordId);
+                                    + recordId +" Original recordId in query:"+orgRecordId);
                 }
                 if (log.isDebugEnabled()) {
                     log.debug(String.format(
                             "Finished getRecordWithFullObjectTree(%s) in %dms total (%.1f connect, %.1f parentID, " +
-                            "%.1f prepareStatement, %.1f execute, %.1f iterate)",
-                            recordId, System.currentTimeMillis() - startTime, connectTime/M, parentIDTime/M,
-                            statementTime/M, executeTime/M, iterateTime/M));
+                                    "%.1f prepareStatement, %.1f execute, %.1f iterate)",
+                                    recordId, System.currentTimeMillis() - startTime, connectTime/M, parentIDTime/M,
+                                    statementTime/M, executeTime/M, iterateTime/M));
                 }
                 return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests
             }
@@ -1771,9 +1773,9 @@ public abstract class DatabaseStorage extends StorageBase {
             if (log.isDebugEnabled()) {
                 log.debug(String.format(
                         "Finished getRecordWithFullObjectTree(%s) in %dms total (%.1f connect, %.1f parentID, " +
-                        "%.1f prepareStatement, %.1f execute, %.1f iterate, %.1f child, %.1f postOrder)",
-                        recordId, System.currentTimeMillis() - startTime, connectTime/M, parentIDTime/M,
-                        statementTime/M, executeTime/M, iterateTime/M, childTime/M, postOrderTime/M));
+                                "%.1f prepareStatement, %.1f execute, %.1f iterate, %.1f child, %.1f postOrder)",
+                                recordId, System.currentTimeMillis() - startTime, connectTime/M, parentIDTime/M,
+                                statementTime/M, executeTime/M, iterateTime/M, childTime/M, postOrderTime/M));
             }
             return recordNode;
 
@@ -1862,12 +1864,12 @@ public abstract class DatabaseStorage extends StorageBase {
         ctime = timestampGenerator.systemTime(ctime);
         mtime = timestampGenerator.systemTime(mtime);
 
-		/* The result set cursor will now be on the start of the next record */
+        /* The result set cursor will now be on the start of the next record */
 
-		/* Create a record with gzipped content. The content will be unzipped
-		 * lazily by the Record class upon access */
+        /* Create a record with gzipped content. The content will be unzipped
+         * lazily by the Record class upon access */
         Record record = new Record(id, base, deleted, indexable, gzippedContent, ctime, mtime, null, null,
-                                   meta.length == 0 ? null : StringMap.fromFormal(meta), gzippedContent.length != 0);
+                meta.length == 0 ? null : StringMap.fromFormal(meta), gzippedContent.length != 0);
         record.setHasRelations(hasRelations);
 
         return record;
@@ -1882,7 +1884,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         if (options.parentHeight() == -1 && options.childDepth() == -1 &&
-            (options.meta() == null || options.meta().isEmpty())) {
+                (options.meta() == null || options.meta().isEmpty())) {
             return getRecordWithFullObjectTree(id);
         }
 
@@ -1902,13 +1904,13 @@ public abstract class DatabaseStorage extends StorageBase {
             Record record = getRecordWithConnection(id, options, conn);
             profiler.beat();
             String m = "Finished getRecord(" + id + ", ...) " + (record == null ? "without" : "with")
-                       + " result in " + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
+                    + " result in " + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(m);
             recordlog.info(m);
             return record;
         } catch (SQLException e) {
             String m = "Failed getRecord(" + id + ", ...) in " + (System.currentTimeMillis() - startTime)
-                       + "ms. " + getRequestStats();
+                    + "ms. " + getRequestStats();
             log.error(m, e);
             recordlog.error(m);
             return null;
@@ -1920,7 +1922,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private String getRequestStats() {
         return "Stats(#getRecords=" + profiler.getBeats()
-               + ", q/s(last " + profiler.getBpsSpan() + ")=" + profiler.getBps(true);
+                + ", q/s(last " + profiler.getBpsSpan() + ")=" + profiler.getBps(true);
     }
 
     private Record getRecordWithConnection(
@@ -2015,7 +2017,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (options.childRecursionDepth() == 0) {
             if (options.childDepth() > 1) {
                 log.debug("Skipping further expansion of child records for " + record + " as the maximum expansion "
-                          + "depth of " + options.childDepth() + " has been reached");
+                        + "depth of " + options.childDepth() + " has been reached");
             }
             return;
         }
@@ -2050,7 +2052,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (options.parentRecursionHeight() == 0) {
             if (options.parentHeight() > 1) {
                 log.debug("Skipping further expansion of parent records for " + record + " as the maximum expansion "
-                          + "height of " + options.parentHeight() + " has been reached");
+                        + "height of " + options.parentHeight() + " has been reached");
             }
             return;
         }
@@ -2243,7 +2245,7 @@ public abstract class DatabaseStorage extends StorageBase {
         } catch (SQLException e) {
             error = e.getMessage();
             throw new IOException(String.format("flushAll(%d records): Failed to flush %s: %s",
-                                                recs.size(), lastRecord, e.getMessage()), e);
+                    recs.size(), lastRecord, e.getMessage()), e);
         } finally {
             try {
                 if (error == null) {
@@ -2252,7 +2254,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     start = System.nanoTime();
                     conn.commit();
                     log.debug("Transaction of " + recs.size() + " records completed in "
-                              + (System.nanoTime() - start) / 1000000D + "ms");
+                            + (System.nanoTime() - start) / 1000000D + "ms");
                     if (isDebug) {
                         for (Record r : recs) {
                             // It may seem dull to iterate over all records
@@ -2263,7 +2265,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     }
                 } else {
                     log.warn(String.format("Not committing the last %d records because of error '%s'. The records was"
-                                           + " %s", recs.size(), error, Logs.expand(recs, 10)));
+                            + " %s", recs.size(), error, Logs.expand(recs, 10)));
                 }
             } catch (SQLException e) {
                 error = "Failed to commit the last " + recs.size() + " records: " + e.getMessage();
@@ -2313,7 +2315,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 updateRecordWithConnection(r, options, conn);
             } else {
                 throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
-                                                    + "failed to flush %s: %s", r.getId(), e.getMessage()), e);
+                        + "failed to flush %s: %s", r.getId(), e.getMessage()), e);
             }
         }
 
@@ -2557,7 +2559,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.trace("No relations for " + rec.getId());
             } else {
                 log.trace("Found relations for " + rec.getId() + ": Parents[" + Strings.join(parentIds, ",") + "] "
-                          + " Children[" + Strings.join(childIds, ",") + "]");
+                        + " Children[" + Strings.join(childIds, ",") + "]");
             }
         }
 
@@ -2621,7 +2623,7 @@ public abstract class DatabaseStorage extends StorageBase {
         final int _MTIME = 2;
         final int _DELETED = 3;
         String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? AND "
-                     + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
+                + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
         sql = getPagingStatement(sql, true);
 
         PreparedStatement stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
@@ -2651,7 +2653,7 @@ public abstract class DatabaseStorage extends StorageBase {
             // in one transaction
             while (pageCount >= pageSizeUpdate) {
                 log.debug(String.format("Preparing page for deletion on base '%s' for records "
-                                        + "in the range %s to %s", base, timestampGenerator.formatTimestamp
+                        + "in the range %s to %s", base, timestampGenerator.formatTimestamp
                         (lastMtimeTimestamp), timestampGenerator.formatTimestamp(startTimestamp)));
                 pageCount = 0;
                 stmt.setString(1, base);
@@ -2686,7 +2688,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Comitting (last)");
             stmt.getConnection().commit();
             log.info("Cleared base '" + base + "' in " + (System.currentTimeMillis() - start) + "ms. Marked "
-                     + totalCount + " records as deleted");
+                    + totalCount + " records as deleted");
         } catch (SQLException e) {
             String msg =
                     "Error clearing base '" + base + "' after " + totalCount + " records, last record id was '" + id
@@ -2725,7 +2727,7 @@ public abstract class DatabaseStorage extends StorageBase {
             jobName = options.meta(INTERNAL_JOB_NAME);
             if (jobName == null) {
                 throw new IllegalArgumentException("The QueryOptions.meta-property " + INTERNAL_JOB_NAME
-                                                   + " must be specified for internal jobs");
+                        + " must be specified for internal jobs");
             }
             log.info(String.format(
                     "Starting internal batch job: %s, Base: %s, Min mtime: %s, Max mtime: %s, Query options: %s",
@@ -2734,7 +2736,7 @@ public abstract class DatabaseStorage extends StorageBase {
             if ((result = handleInternalBatchJob(
                     jobName, base, minMtime, Math.min(maxMtime, System.currentTimeMillis()), options)) == null) {
                 log.info(String.format("Batch job %s completed in %ds",
-                                       jobName, (System.currentTimeMillis() - start) / 1000));
+                        jobName, (System.currentTimeMillis() - start) / 1000));
             } else {
                 log.error("Unknown internal batch job " + jobName + " ");
             }
@@ -2742,7 +2744,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         log.info(String.format("\n  Batch job: %s\n  Base: %s\n  Min mtime: %s\n  Max mtime: %s\n  Query options: %s",
-                               jobName, base, minMtime, maxMtime, options));
+                jobName, base, minMtime, maxMtime, options));
         Connection conn = null;
 
         try {
@@ -2799,7 +2801,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException if any error occur while closing SQL connection.
      */
     private String batchJobWithConnection(String jobName, String base, long minMtime, long maxMtime,
-                                          QueryOptions options, Connection conn) throws IOException, SQLException {
+            QueryOptions options, Connection conn) throws IOException, SQLException {
         maxMtime = Math.min(maxMtime, System.currentTimeMillis());
         // Make sure options is always != null to ease logic later
         options = options != null ? options : new QueryOptions();
@@ -2808,7 +2810,7 @@ public abstract class DatabaseStorage extends StorageBase {
         StatementHandle handle = statementHandler.getBatchJob(options, base);
         PreparedStatement stmt = conn.prepareStatement(
                 handle.getSql(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-/*        String sql = "SELECT " + allColumns
+        /*        String sql = "SELECT " + allColumns
                 + " FROM " + RECORDS
                 + " WHERE ( mtime<? AND mtime>? )";
 
@@ -2823,7 +2825,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         PreparedStatement stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-  */
+         */
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
@@ -2881,8 +2883,8 @@ public abstract class DatabaseStorage extends StorageBase {
                         Record record = scanRecord(cursor); // advances cursor
                         //System.out.println("Processing " + record);
                         if (previousRecord != null
-                            && applyJobtoRecord(job, previousRecord, previousRecordId, base, options,
-                                                totalCount == 0, false, conn)) {
+                                && applyJobtoRecord(job, previousRecord, previousRecordId, base, options,
+                                        totalCount == 0, false, conn)) {
                             totalCount++;
                             pageCount++;
                         }
@@ -3075,7 +3077,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // to the IN clause is of varying length
         // TODO: Push this to StatementHandler
         String sql = "UPDATE " + RECORDS + " SET " + HAS_RELATIONS_COLUMN + "=" + boolToInt(true) + " WHERE id IN ('"
-                     + Strings.join(childIds, "','") + "')";
+                + Strings.join(childIds, "','") + "')";
 
         Statement stmt = null;
         try {
@@ -3155,7 +3157,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException If error occur with SQL execution.
      */
     private void createNewRecordWithConnection(Record record, QueryOptions options,
-                                               Connection conn) throws IOException, SQLException {
+            Connection conn) throws IOException, SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Creating: " + record.getId());
         }
@@ -3251,6 +3253,76 @@ public abstract class DatabaseStorage extends StorageBase {
 
     /**
      * Update a record.
+     * Create a connection and delegate to updateRecordWithConnection(Record record, QueryOptions options, Connection conn) 
+     */
+
+    public void updateRecord(Record record, QueryOptions options) throws IOException, SQLException {
+        Connection conn = null;
+        try{
+            conn = getTransactionalConnection();
+            updateRecordWithConnection(record, options, conn);
+            conn.commit();
+        }
+        catch(Exception e){
+            log.error("Error updateRecord for record:"+record.getId());
+            throw e;
+        }        
+        finally {          
+            closeConnection(conn);
+        }
+
+    }
+
+    /*
+     * Touch all children records and delete relation
+     * 
+     */
+    private void clearChildrenWithConnection(String recordID, Connection conn) throws  SQLException, IOException{                
+        StatementHandle handle = statementHandler.getClearChildren();
+        PreparedStatement stmt =  conn.prepareStatement(handle.getSql());
+        try{
+                        
+            List<Record> children = getChildren(recordID, null, conn);
+            for (Record current: children){
+              touchRecord(current.getId(), conn);                
+            }                                           
+            stmt.setString(1, recordID);
+            int numberCleared = stmt.executeUpdate();
+            System.out.println("cleared children:"+numberCleared);                                  
+        }
+        catch (SQLException e) {
+            throw new SQLException("Exception in clearChildrenWithConnection for record:"+recordID,e);
+        } finally {
+            closeStatement(stmt);
+        }
+    }
+
+    /*
+     * Touch all parent records and delete relation
+     * 
+     */
+    private void clearParentsWithConnection(String recordID, Connection conn) throws  SQLException,IOException{                
+        StatementHandle handle = statementHandler.getClearParents();
+        PreparedStatement stmt =  conn.prepareStatement(handle.getSql());
+        try{
+            List<Record> parents= getParents(recordID, null, conn);
+            for (Record current: parents){
+                touchRecord(current.getId(), conn);                
+            }                              
+            
+            stmt.setString(1, recordID);
+            int numberCleared = stmt.executeUpdate();            
+            System.out.println("cleared parents:"+numberCleared);                                  
+        }
+        catch (Exception e) {
+            throw new SQLException("Exception in clearParentsWithConnection for record:"+recordID,e);
+        } finally {
+            closeStatement(stmt);
+        }
+    }
+
+    /**
+     * Update a record.
      * Note: that creationTime isn't touched
      *
      * @param record  The record to update, the record updated in storage is
@@ -3294,7 +3366,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             if (stmt.getUpdateCount() == 0) {
                 String msg = "The record with id '" + record.getId() + "' was marked as modified, but did not exist in"
-                             + " the database";
+                        + " the database";
                 log.warn(msg);
                 throw new IOException(msg);
             }
@@ -3302,6 +3374,32 @@ public abstract class DatabaseStorage extends StorageBase {
             closeStatement(stmt);
         }
 
+        //Clear parent/childs relations
+        RELATION clearRelation = this.relationsClear;         
+        switch (clearRelation){
+        case none:             
+            break;           
+        case child:           
+            clearChildrenWithConnection(record.getId(), conn);           
+            record.setChildIds(new ArrayList<String>());
+            record.setChildren(null);
+            break;
+        case parent:
+            clearParentsWithConnection(record.getId(), conn);
+            record.setParentIds(new ArrayList<String>());
+            record.setParents(null);
+            break;
+        case all:
+            clearChildrenWithConnection(record.getId(), conn);
+            clearParentsWithConnection(record.getId(), conn);
+            record.setChildIds(new ArrayList<String>());
+            record.setChildren(null);
+            record.setParentIds(new ArrayList<String>());
+            record.setParents(null);                        
+            break;
+        }
+
+        System.out.println(this.relationsClear);
         if (hasRelations) {
             createRelations(record, conn);
         } else {
@@ -3441,7 +3539,7 @@ public abstract class DatabaseStorage extends StorageBase {
             if (base == null) {
                 // TODO: Move this to StatementHandler
                 String sql = "SELECT " + MTIME_COLUMN + " FROM " + BASE_STATISTICS + " ORDER BY " + MTIME_COLUMN
-                             + " DESC LIMIT 1";
+                        + " DESC LIMIT 1";
                 stmt = conn.prepareStatement(sql);
                 stmt.execute();
                 long maxTime = 0;
@@ -3468,7 +3566,7 @@ public abstract class DatabaseStorage extends StorageBase {
                         log.warn("Unable to get modification time for base '" + base + "' from super. Assuming 0");
                     }
                     log.debug("No data for base, returning storage start time (" + getStorageStartTime()
-                              + ", should have been " + time + ")");
+                            + ", should have been " + time + ")");
                     return getStorageStartTime();
                 }
             }
@@ -3489,11 +3587,11 @@ public abstract class DatabaseStorage extends StorageBase {
     private void doCreateSummaBaseStatisticTable(Connection conn) throws SQLException {
         String createBaseStatisticQuery =
                 "CREATE TABLE IF NOT EXISTS " + BASE_STATISTICS + " (" + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), "
-                + MTIME_COLUMN + " BIGINT, " + DELETE_INDEXABLES_COLUMN + " BIGINT, " + NON_DELETED_INDEXABLES_COLUMN
-                + " BIGINT, " + DELETED_NON_INDEXABLES_COLUMN + " BIGINT, " + NON_DELETED_NON_INDEXABLES_COLUMN
-                + " BIGINT, " + VALID_COLUMN + " INTEGER)";
+                        + MTIME_COLUMN + " BIGINT, " + DELETE_INDEXABLES_COLUMN + " BIGINT, " + NON_DELETED_INDEXABLES_COLUMN
+                        + " BIGINT, " + DELETED_NON_INDEXABLES_COLUMN + " BIGINT, " + NON_DELETED_NON_INDEXABLES_COLUMN
+                        + " BIGINT, " + VALID_COLUMN + " INTEGER)";
         log.debug("Creating table " + BASE_STATISTICS + " if not already existing with query '"
-                  + createBaseStatisticQuery + "'");
+                + createBaseStatisticQuery + "'");
         Statement stmt = conn.createStatement();
         stmt.execute(createBaseStatisticQuery);
         stmt.close();
@@ -3504,7 +3602,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         String createRelationsQuery =
                 "CREATE TABLE IF NOT EXISTS " + RELATIONS + " (" + PARENT_ID_COLUMN + " VARCHAR(" + ID_LIMIT + "), "
-                + CHILD_ID_COLUMN + " VARCHAR(" + ID_LIMIT + ") )";
+                        + CHILD_ID_COLUMN + " VARCHAR(" + ID_LIMIT + ") )";
         log.debug("Creating table " + RELATIONS + " with query: '" + createRelationsQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRelationsQuery);
@@ -3540,10 +3638,10 @@ public abstract class DatabaseStorage extends StorageBase {
     private void doCreateSummaRecordsTable(Connection conn) throws SQLException {
         String createRecordsQuery =
                 "CREATE TABLE IF NOT EXISTS " + RECORDS + " (" + ID_COLUMN + " VARCHAR(" + ID_LIMIT + ") PRIMARY KEY, "
-                + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), " + DELETED_COLUMN + " INTEGER, " + INDEXABLE_COLUMN
-                + " INTEGER, " + HAS_RELATIONS_COLUMN + " INTEGER, " + DATA_COLUMN + " "
-                + getDataColumnDataDeclaration() + ", " + CTIME_COLUMN + " BIGINT, " // BIGINT is 64 bit
-                + MTIME_COLUMN + " BIGINT, " + META_COLUMN + " " + getMetaColumnDataDeclaration() + ")";
+                        + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), " + DELETED_COLUMN + " INTEGER, " + INDEXABLE_COLUMN
+                        + " INTEGER, " + HAS_RELATIONS_COLUMN + " INTEGER, " + DATA_COLUMN + " "
+                        + getDataColumnDataDeclaration() + ", " + CTIME_COLUMN + " BIGINT, " // BIGINT is 64 bit
+                        + MTIME_COLUMN + " BIGINT, " + META_COLUMN + " " + getMetaColumnDataDeclaration() + ")";
         log.debug("Creating table " + RECORDS + " with query: '" + createRecordsQuery + "'");
 
         Statement stmt = conn.createStatement();
@@ -3556,11 +3654,11 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt = conn.createStatement();
         stmt.execute(dropRecordsMBIndexQuery);
         stmt.close();
-               
-        
+
+
         /* RECORDS INDEXES */
         String createRecordsIdIndexQuery = "CREATE UNIQUE INDEX IF NOT EXISTS i ON " + RECORDS + "(" //TAKES 1.5 hour
-                                           + ID_COLUMN + ")";
+                + ID_COLUMN + ")";
         log.debug("Creating index 'i' on table " + RECORDS + " with query: '" + createRecordsIdIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsIdIndexQuery);
@@ -3574,14 +3672,14 @@ public abstract class DatabaseStorage extends StorageBase {
         // same performance and single index on MTime is already needed.
 
         String createRecordsBaseOnlyIndexQuery = "CREATE INDEX IF NOT EXISTS b ON " //Not UNIQUE , takes 1.5 hour
-                                                 + RECORDS + "(" + BASE_COLUMN + ")";
+                + RECORDS + "(" + BASE_COLUMN + ")";
         log.debug("Creating index 'b' on table " + RECORDS + " with query: '" + createRecordsBaseOnlyIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsBaseOnlyIndexQuery);
         stmt.close();
 
         String createRecordsMTimeOnlyIndexQuery = "CREATE UNIQUE INDEX IF NOT EXISTS m ON " // UNIQUE  takes 1.5 hour
-                                                  + RECORDS + "(" + MTIME_COLUMN + ")";
+                + RECORDS + "(" + MTIME_COLUMN + ")";
         log.debug("Creating index 'm' on table " + RECORDS + " with query: '" + createRecordsMTimeOnlyIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsMTimeOnlyIndexQuery);
@@ -3592,7 +3690,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // deleted- and indexable flags.
         String createRecordsBaseIndexQuery =
                 "CREATE INDEX IF NOT EXISTS bdi ON " + RECORDS + "(" + BASE_COLUMN + "," + DELETED_COLUMN + ","
-                + INDEXABLE_COLUMN + ")";
+                        + INDEXABLE_COLUMN + ")";
         log.debug("Creating index 'bdi' on table " + RECORDS + " with query: '" + createRecordsBaseIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsBaseIndexQuery);
@@ -3741,8 +3839,8 @@ public abstract class DatabaseStorage extends StorageBase {
         while ((hasNext = resultSet.next()) && id.equals(resultSet.getString(ID_KEY))) {
 
             /* If we log on debug we do sanity checking of the result set.
-            * Of course the parent and child columns should not be checked,
-            * since they are the ones changing */
+             * Of course the parent and child columns should not be checked,
+             * since they are the ones changing */
 
             if (log.isDebugEnabled() && false) { // TODO: Update the checker to match the getter
                 log.trace("Sanity checking record block for: " + id);
@@ -3799,7 +3897,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             if (log.isTraceEnabled()) {
                 log.trace("For record '" + id + "', collected children: " + childIds + ", collected parents: "
-                          + parentIds);
+                        + parentIds);
             }
         }
 
@@ -3819,12 +3917,12 @@ public abstract class DatabaseStorage extends StorageBase {
         /* Create a record with gzipped content. The content will be unzipped
          * lazily by the Record class upon access */
         Record rec = new Record(id, base, deleted, indexable, gzippedContent, ctime, mtime,
-                                Record.idStringToList(parentIds), Record.idStringToList(childIds),
-                                meta.length == 0 ?
-                                null :
-                                StringMap.fromFormal(meta), gzippedContent.length != 0);
+                Record.idStringToList(parentIds), Record.idStringToList(childIds),
+                meta.length == 0 ?
+                        null :
+                            StringMap.fromFormal(meta), gzippedContent.length != 0);
         rec.setHasRelations(hasRelations);
-        
+
         /* Only resolve relations if we have to, that is, if
          * "useRelations && hasRelations". Moreover some codepaths will have
          * queried the relations even though useLazyRelations==true so don't
@@ -4018,7 +4116,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 long deletedNonIndexables = results.getLong(5);
                 long nonDeletedNonIndexables = results.getLong(6);
                 stats.add(new BaseStats(baseName, lastModified, startTime, deletedIndexables, nonDeletedIndexables,
-                                        deletedNonIndexables, nonDeletedNonIndexables));
+                        deletedNonIndexables, nonDeletedNonIndexables));
             }
         } finally {
             if (results != null) {
@@ -4082,7 +4180,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
         // Return new base stats element 
         return new BaseStats(baseName, lastModified, generationTime, deletedIndexables, nonDeletedIndexables,
-                             deletedNonIndexables, nonDeletedNonIndexables);
+                deletedNonIndexables, nonDeletedNonIndexables);
     }
 
     /**
@@ -4097,7 +4195,7 @@ public abstract class DatabaseStorage extends StorageBase {
         long startTime = System.currentTimeMillis();
         List<BaseStats> stats = new LinkedList<>();
         final String query = "SELECT base, deleted, indexable, count(base) FROM summa_records "
-                             + "GROUP BY base,deleted,indexable";
+                + "GROUP BY base,deleted,indexable";
         final int baseKey = 1;
         final int deletedKey = 2;
         final int indexableKey = 3;
@@ -4160,7 +4258,7 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public String toString() {
         return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d,"
-                             + "pageSizeUpdate=%d)",
-                             iterators.size(), useLazyRelations, usePagingModel, pageSize, pageSizeUpdate);
+                + "pageSizeUpdate=%d)",
+                iterators.size(), useLazyRelations, usePagingModel, pageSize, pageSizeUpdate);
     }
 }
