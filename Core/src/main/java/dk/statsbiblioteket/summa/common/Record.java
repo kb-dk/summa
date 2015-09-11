@@ -542,7 +542,6 @@ public class Record implements Serializable, Comparable {
         if (parentIds == null) {
             this.parentIds = null;
         } else if (parentIds.isEmpty()) {
-            //noinspection DuplicateStringLiteralInspection
             log.warn("The non-existence of a parentId should be stated by null, not the empty list. Problematic Record "
                      + "with id '" + getId() + "' from base '" + getBase() + "'. Continuing creation");
             //noinspection AssignmentToNull

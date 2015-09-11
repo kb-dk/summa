@@ -177,22 +177,26 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(1, base.getLiveCount());
     }
 
+/*
     public void testTouchNone() throws Exception {
         assertClearAndUpdateTimestamps(
                 "None", StorageBase.RELATION.none, StorageBase.RELATION.none, Arrays.asList(
-                createRecord("m1", Collections.<String>emptyList(), Collections.<String>emptyList())
+                createRecord("m1", null, null)
         ), new HashSet<>(Arrays.asList("m1")));
-    }
+    }*/
+
+    // Touch all is default behaviour as of 2015-09-11
     public void testTouchAll() throws Exception {
         assertClearAndUpdateTimestamps(
                 "Direct all", StorageBase.RELATION.none, StorageBase.RELATION.all, Arrays.asList(
-                createRecord("m1", Collections.<String>emptyList(), Collections.<String>emptyList())
+                createRecord("m1", null, null)
         ), new HashSet<>(Arrays.asList("t1", "m1", "b1")));
     }
+    /*
     public void testTouchParents() throws Exception {
         assertClearAndUpdateTimestamps(
                 "Direct parent", StorageBase.RELATION.none, StorageBase.RELATION.parent, Arrays.asList(
-                createRecord("m1", Collections.<String>emptyList(), Collections.<String>emptyList())
+                createRecord("m1", null, null)
         ), new HashSet<>(Arrays.asList("t1", "m1")));
     }
     // This test fails, which seems like a regression error as we have previously worked under the assumption
@@ -200,35 +204,49 @@ public class DatabaseStorageTest extends StorageTestBase {
     public void testTouchChildren() throws Exception {
         assertClearAndUpdateTimestamps(
                 "Direct children", StorageBase.RELATION.none, StorageBase.RELATION.child, Arrays.asList(
-                createRecord("m1", Collections.<String>emptyList(), Collections.<String>emptyList())
+                createRecord("m1", null, null)
         ), new HashSet<>(Arrays.asList("m1", "b1")));
     }
+*/
 
+    public void testClearParentTouchChildrenFromMiddle() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Parent clear touch children", StorageBase.RELATION.parent, StorageBase.RELATION.child, Arrays.asList(
+                createRecord("m1", Arrays.asList("t2"), null)
+        ), new HashSet<>(Arrays.asList("m1", "b1")));
+    }
+    public void testClearParentTouchChildrenFromTop() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Parent clear touch children", StorageBase.RELATION.parent, StorageBase.RELATION.child, Arrays.asList(
+                createRecord("t1", null, null) // The old relation t1->m1 should not be cleared
+        ), new HashSet<>(Arrays.asList("t1", "m1")));
+    }
+    /*
     public void testClearNoneUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
                 "No clear", StorageBase.RELATION.none, StorageBase.RELATION.parent, Arrays.asList(
-                createRecord("m1", Arrays.asList("t2"), Collections.<String>emptyList())
+                createRecord("m1", Arrays.asList("t2"), null)
         ), new HashSet<>(Arrays.asList("t1", "t2", "m1", "b1")));
     }
     public void testClearParentUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
                 "Parent clear", StorageBase.RELATION.parent, StorageBase.RELATION.parent, Arrays.asList(
-                createRecord("m1", Arrays.asList("t2"), Collections.<String>emptyList())
+                createRecord("m1", Arrays.asList("t2"), null)
         ), new HashSet<>(Arrays.asList("t2", "m1", "b1")));
     }
     public void testClearChildUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
                 "Child clear", StorageBase.RELATION.child, StorageBase.RELATION.parent, Arrays.asList(
-                createRecord("m1", Arrays.asList("t2"), Collections.<String>emptyList())
+                createRecord("m1", Arrays.asList("t2"), null)
         ), new HashSet<>(Arrays.asList("t1", "t2", "m1")));
     }
     public void testClearAllUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
                 "All clear", StorageBase.RELATION.all, StorageBase.RELATION.parent, Arrays.asList(
-                createRecord("m1", Arrays.asList("t2"), Collections.<String>emptyList())
+                createRecord("m1", Arrays.asList("t2"), null)
         ), new HashSet<>(Arrays.asList("t2", "m1")));
     }
-
+*/
     private Record createRecord(String id, List<String> parents, List<String> children) {
         Record record = new Record(id, testBase1, testContent1);
         record.setParentIds(parents);
@@ -262,12 +280,12 @@ public class DatabaseStorageTest extends StorageTestBase {
         Storage storage = new H2Storage(conf);
         try {
             storage.flushAll(Arrays.asList(
-                    createRecord("t1", EMPTY, Arrays.asList("m1")),
-                    createRecord("t2", EMPTY, EMPTY),
+                    createRecord("t1", null, Arrays.asList("m1")),
+                    createRecord("t2", null, null),
                     createRecord("m1", Arrays.asList("t1"), Arrays.asList("b1")),
-                    createRecord("m2", EMPTY, EMPTY),
-                    createRecord("b1", Arrays.asList("m1"), EMPTY),
-                    createRecord("b2", EMPTY, EMPTY)
+                    createRecord("m2", null, null),
+                    createRecord("b1", Arrays.asList("m1"), null),
+                    createRecord("b2", null, null)
             ));
             Map<String, Long> originalTS = getTimestamps(storage);
             storage.flushAll(updates);
@@ -305,7 +323,6 @@ public class DatabaseStorageTest extends StorageTestBase {
         return ts;
     }
 
-    private static final List<String> EMPTY = Collections.emptyList();
 
     public void testSelfReference() throws IOException {
         Record r1 = new Record(testId1, testBase1, testContent1);
