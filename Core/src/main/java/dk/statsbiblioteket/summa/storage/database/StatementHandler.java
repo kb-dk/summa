@@ -283,6 +283,20 @@ public abstract class StatementHandler {
             + DatabaseStorage.BASE_STATISTICS + " WHERE " + DatabaseStorage.BASE_COLUMN + " = ?"
         );
     }
+    
+    public MiniConnectionPoolManager.StatementHandle getClearChildren() {
+        return generateStatementHandle(
+            "DELETE FROM " + DatabaseStorage.RELATIONS + " WHERE "  + DatabaseStorage.PARENT_ID_COLUMN +" = ?"
+        );
+    }
+    
+    public MiniConnectionPoolManager.StatementHandle getClearParents() {
+        return generateStatementHandle(
+            "DELETE FROM " + DatabaseStorage.RELATIONS + " WHERE " + DatabaseStorage.CHILD_ID_COLUMN +" = ?"
+        );
+    }
+    
+    
 
     public MiniConnectionPoolManager.StatementHandle getUpdateFullBaseStats() {
         return generateStatementHandle(
