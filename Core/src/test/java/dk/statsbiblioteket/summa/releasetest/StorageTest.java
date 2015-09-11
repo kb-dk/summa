@@ -20,12 +20,17 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -129,6 +134,43 @@ public class StorageTest extends NoExitTestCase {
             
     }
     
+    
+    
+    public void testClearParentChildWhenUpdate() throws Exception {
+        // Top node: Lademanns leksikon
+        // Children: Lademanns leksikon Bind x (x=1 to x= 20)
+        // Children-Children: Lademanns leksikon Bind x Del y (y=1 to y=3)
+        // I alt 1+20+60=81 records 
+       
+       final String STORAGE_NAME = "ClearParentChildWhenUpdate_storage";
+       
+       Configuration conf = ReleaseHelper.getStorageConfiguration(STORAGE_NAME);
+       conf.set(StorageBase.CONF_RELATION_CLEAR, StorageBase.RELATION.parent);
+       H2Storage storage = new H2Storage(conf);              
+       createLademansData(storage);              
+       
+       //has both parent and child
+       Record lademanns_middle = storage.getRecord("Lademanns leksikon Bind 1",null);     
+       long modifiedBefore = lademanns_middle.getModificationTime();
+       
+       storage.updateRecord(lademanns_middle ,null);       
+       
+       //Test it has no parent relation       
+       lademanns_middle = storage.getRecord("Lademanns leksikon Bind 1", null);
+       assertNull(lademanns_middle.getParentIds());
+       
+       //but still has children
+       assertEquals(3, lademanns_middle.getChildIds().size());                        
+       
+      //Check parent has been touched.
+       long modifiedAfter = lademanns_middle.getModificationTime();
+       assertTrue(modifiedAfter-modifiedBefore >0);
+                    
+   }
+
+    
+    
+    
     public void testNewGetRecordHierarchy() throws Exception {
          // Top node: Lademanns leksikon
     	 // Children: Lademanns leksikon Bind x (x=1 to x= 20)
@@ -139,28 +181,9 @@ public class StorageTest extends NoExitTestCase {
         Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
         
         
-        List<Record> records = new ArrayList<>(10);
-
-        Record lademands = new Record(LADEMANNS_LEKSIKON, "foo", new byte[0]);
-        records.add(lademands);
-        ArrayList<Record> childrenList = new ArrayList<>();
-        for (int i=1;i<=20;i++){
-        	Record bind =  new Record("Lademanns leksikon Bind "+i,  "foo", new byte[0]);	
-            bind.setParents(Arrays.asList(lademands));
-        	childrenList.add(bind);
+      
+        createLademansData(storage);
         
-         ArrayList<Record> childrenListNest1 = new ArrayList<>();
-          for (int j=1;j<=3;j++){
-        	 Record bindNest1 =  new Record("Lademanns leksikon Bind "+i+" Del "+j,  "foo", new byte[0]);	
-             bindNest1.setParents(Arrays.asList(bind));
-          	 childrenListNest1.add(bindNest1);          	  
-          }
-            bind.setChildren(childrenListNest1);
-          
-        }
-        lademands.setChildren(childrenList);
-  
-        storage.flushAll(records);
 
         long oldMethodTotal=0;
         long newMethodTotal=0;
@@ -459,6 +482,34 @@ public class StorageTest extends NoExitTestCase {
         assertEquals("The third reader should pump nothing", 0, thirdPumps);
 
         storage.close();
+    }
+    
+    private void createLademansData( Storage storage) throws Exception{
+           
+       
+        List<Record> records = new ArrayList<>(10);
+
+        Record lademands = new Record(LADEMANNS_LEKSIKON, "foo", new byte[0]);
+        records.add(lademands);
+        ArrayList<Record> childrenList = new ArrayList<>();
+        for (int i=1;i<=20;i++){
+            Record bind =  new Record("Lademanns leksikon Bind "+i,  "foo", new byte[0]);   
+            bind.setParents(Arrays.asList(lademands));
+            childrenList.add(bind);
+        
+         ArrayList<Record> childrenListNest1 = new ArrayList<>();
+          for (int j=1;j<=3;j++){
+             Record bindNest1 =  new Record("Lademanns leksikon Bind "+i+" Del "+j,  "foo", new byte[0]);   
+             bindNest1.setParents(Arrays.asList(bind));
+             childrenListNest1.add(bindNest1);                
+          }
+            bind.setChildren(childrenListNest1);
+          
+        }
+        lademands.setChildren(childrenList);
+
+        storage.flushAll(records);
+        
     }
 
 }
