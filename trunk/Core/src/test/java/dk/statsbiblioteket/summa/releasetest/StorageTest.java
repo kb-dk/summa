@@ -149,9 +149,11 @@ public class StorageTest extends NoExitTestCase {
        H2Storage storage = new H2Storage(conf);              
        createLademansData(storage);              
        
+       Record lademanns_top = storage.getRecord("Lademanns leksikon",null);
+       
        //has both parent and child
        Record lademanns_middle = storage.getRecord("Lademanns leksikon Bind 1",null);     
-       long modifiedBefore = lademanns_middle.getModificationTime();
+       long modifiedBefore = lademanns_top.getModificationTime();
        
        storage.updateRecord(lademanns_middle ,null);       
        
@@ -163,7 +165,8 @@ public class StorageTest extends NoExitTestCase {
        assertEquals(3, lademanns_middle.getChildIds().size());                        
        
       //Check parent has been touched.
-       long modifiedAfter = lademanns_middle.getModificationTime();
+       lademanns_top = storage.getRecord("Lademanns leksikon",null);
+       long modifiedAfter = lademanns_top.getModificationTime();
        assertTrue(modifiedAfter-modifiedBefore >0);
                     
    }
