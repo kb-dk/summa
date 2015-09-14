@@ -14,6 +14,18 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
@@ -27,11 +39,6 @@ import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * These test cases are meant to test functionality specifically requiring the
@@ -222,6 +229,7 @@ public class DatabaseStorageTest extends StorageTestBase {
                         ), new HashSet<>(Arrays.asList("t1", "m1","b1")));
     }
 
+    
     public void testClearNoneUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
                 "No clear", StorageBase.RELATION.none, StorageBase.RELATION.parent, Arrays.asList(
@@ -295,7 +303,7 @@ public class DatabaseStorageTest extends StorageTestBase {
                     createRecord("b2", null, null)
                     ));
             Map<String, Long> originalTS = getTimestamps(storage);
-
+System.out.println("test base created");
 
             storage.flushAll(updates);
             Map<String, Long> flushedTS = getTimestamps(storage);
