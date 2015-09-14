@@ -303,7 +303,6 @@ public class DatabaseStorageTest extends StorageTestBase {
                     createRecord("b2", null, null)
                     ));
             Map<String, Long> originalTS = getTimestamps(storage);
-System.out.println("test base created");
 
             storage.flushAll(updates);
             Map<String, Long> flushedTS = getTimestamps(storage);
