@@ -136,7 +136,7 @@ public class StorageTest extends NoExitTestCase {
     
     
     
-    public void testClearParentChildWhenUpdate() throws Exception {
+    public void testClearParentTouchChildrenWhenUpdate() throws Exception {
         // Top node: Lademanns leksikon
         // Children: Lademanns leksikon Bind x (x=1 to x= 20)
         // Children-Children: Lademanns leksikon Bind x Del y (y=1 to y=3)
@@ -146,29 +146,32 @@ public class StorageTest extends NoExitTestCase {
        
        Configuration conf = ReleaseHelper.getStorageConfiguration(STORAGE_NAME);
        conf.set(StorageBase.CONF_RELATION_CLEAR, StorageBase.RELATION.parent);
+       conf.set(StorageBase.CONF_RELATION_TOUCH, StorageBase.RELATION.child);
+       
        H2Storage storage = new H2Storage(conf);              
-       createLademansData(storage);              
+       createLademansData(storage);    
        
        Record lademanns_top = storage.getRecord("Lademanns leksikon",null);
        
-       //has both parent and child
+       //has both parent and child. Clear all relations
        Record lademanns_middle = storage.getRecord("Lademanns leksikon Bind 1",null);     
-       long modifiedBefore = lademanns_top.getModificationTime();
        
-       storage.updateRecord(lademanns_middle ,null);       
+       long modifiedBefore = lademanns_top.getModificationTime();              
+       lademanns_middle.setChildren( null);
+       lademanns_middle.setChildIds(new ArrayList<String>());
+       lademanns_middle.setParents( null);
+       lademanns_middle.setParentIds(new ArrayList<String>());
+       storage.flush(lademanns_middle);                                     
        
-       //Test it has no parent relation       
-       lademanns_middle = storage.getRecord("Lademanns leksikon Bind 1", null);
-       assertNull(lademanns_middle.getParentIds());
-       
-       //but still has children
-       assertEquals(3, lademanns_middle.getChildIds().size());                        
-       
-      //Check parent has been touched.
-       lademanns_top = storage.getRecord("Lademanns leksikon",null);
-       long modifiedAfter = lademanns_top.getModificationTime();
-       assertTrue(modifiedAfter-modifiedBefore >0);
+       //Check parents has been cleared
+       Record lademanns_middle_new = storage.getRecord("Lademanns leksikon Bind 1",null);
+       assertNull(lademanns_middle_new.getParentIds());
                     
+      //Check children has been touched,
+       lademanns_top = storage.getRecord("Lademanns leksikon",null);
+       assertNull(lademanns_top.getParentIds());
+       long modifiedAfter = lademanns_top.getModificationTime();
+       assertEquals(modifiedAfter,modifiedBefore );                    
    }
 
     
@@ -182,16 +185,11 @@ public class StorageTest extends NoExitTestCase {
     	
     	final String STORAGE_NAME = "Hierarchytest_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
-        
-        
-      
-        createLademansData(storage);
-        
+                    
+        createLademansData(storage);        
 
         long oldMethodTotal=0;
         long newMethodTotal=0;
-
-
 
         long startTime = System.currentTimeMillis();
                 
