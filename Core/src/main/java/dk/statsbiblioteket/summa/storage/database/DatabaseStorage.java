@@ -14,6 +14,32 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.TreeSet;
+
+import javax.script.ScriptException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -34,18 +60,6 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.script.ScriptException;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.sql.*;
-import java.util.*;
 
 /**
  * An abstract implementation of a SQL database driven extension
@@ -2160,7 +2174,6 @@ public abstract class DatabaseStorage extends StorageBase {
     public synchronized void flush(Record record, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
-
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
         String error = null;
@@ -2295,13 +2308,14 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException If error occur while executing SQL.
      */
     protected void flushWithConnection(
-            Record r, QueryOptions options, Connection conn) throws IOException, SQLException {
+            Record r, QueryOptions options, Connection conn) throws IOException, SQLException {      
         if (log.isTraceEnabled()) {
             log.trace("Flushing: " + r.toString(true));
         } else if (log.isDebugEnabled()) {
             log.debug("Flushing with connection: " + r.toString(false));
         }
-
+     
+        
         // Update the timestamp we check against in getRecordsModifiedAfter
         updateModificationTime(r.getBase());
         invalidateCachedStats();
@@ -2328,15 +2342,34 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
 
-        // Touch parents recursively upwards
-        // FIXME: The call to touchParents() might be pretty expensive... 
-        try {
-            touchParents(r.getId(), null, conn);
+        // Touch parents/children recursively upwards/downwards      
+        
+        RELATION relationsTouch= this.relationsTouch;        
+        
+        try {        
+            switch (relationsTouch){
+            case none:             
+                break;           
+            case child:           
+                touchChildren(r.getId(), null, conn);           
+                break;
+            case parent:
+              //throw new UnsupportedOperationException("RelationsTouch:parent not implemented");
+               touchParents(r.getId(), null, conn);
+               //break;
+            case all:
+                //throw new UnsupportedOperationException("RelationsTouch:all not implemented");               
+                touchParents(r.getId(), null, conn);                                   
+                touchChildren(r.getId(), null, conn);
+                //break;
+            }
         } catch (IOException e) {
             // Consider this non-fatal
             log.error("Failed to touch parents of '" + r.getId(), e);
         }
 
+
+        
         //Again - update the timestamp we check against in
         // getRecordsModifiedAfter. This is also done in the end of the flush()
         // because the operation is non-instantaneous
@@ -2344,6 +2377,11 @@ public abstract class DatabaseStorage extends StorageBase {
         invalidateCachedStats();
     }
 
+    
+    protected void touchParents(String id, QueryOptions options, Connection conn) throws IOException, SQLException {
+        touchParents(id, options, conn, new HashSet<String>());        
+    }
+    
     /**
      * Touch (that is, set the 'mtime' to now) the parents
      * of <code>id</code> recursively upwards.
@@ -2352,12 +2390,12 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param options any query options that may affect how the touching is
      *                handled.
      * @param conn    the SQL connection.
+     * @param parentsVisited  To avoid cycle detection
      * @throws IOException  if error is experienced when closing statement.
      * @throws SQLException if {@link Connection#prepareStatement} fails.
      */
-    protected void touchParents(String id, QueryOptions options, Connection conn) throws IOException, SQLException {
-        List<Record> parents = getParents(id, options, conn);
-
+    protected void touchParents(String id, QueryOptions options, Connection conn, HashSet<String> parentsVisited) throws IOException, SQLException {
+        List<Record> parents = getParents(id, options, conn);        
         if (parents == null || parents.isEmpty()) {
             if (log.isTraceEnabled()) {
                 log.trace("No parents to update for record " + id);
@@ -2396,7 +2434,80 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // Recurse upwards
         for (Record parent : parents) {
+            if (parentsVisited.contains(parent.getId())){
+                throw new SQLException("Parent/child cycle detected for id:"+parent.getId());
+              }
+            parentsVisited.add(parent.getId());     
             touchParents(parent.getId(), options, conn);
+        }
+    }
+    
+    
+    protected void touchChildren(String id, QueryOptions options, Connection conn) throws IOException, SQLException {
+        touchChildren(id, options, conn, new HashSet<String>());               
+    }
+    
+    /**
+     * Touch (that is, set the 'mtime' to now) the parents
+     * of <code>id</code> recursively upwards.
+     *
+     * @param id      the id of the records which parents to touch.
+     * @param options any query options that may affect how the touching is
+     *                handled.
+     * @param conn    the SQL connection.
+     * @param childrenVisited  To avoid cycle detection
+     * @throws IOException  if error is experienced when closing statement.
+     * @throws SQLException if {@link Connection#prepareStatement} fails.
+     */
+    protected void touchChildren(String id, QueryOptions options, Connection conn, HashSet<String> childrenVisited) throws IOException, SQLException {
+        List<Record> children = getChildren(id, options, conn);
+
+        if (children == null || children.isEmpty()) {
+            if (log.isTraceEnabled()) {
+                log.trace("No children to update for record " + id);
+            }
+            return;
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Touching " + children.size() + " children of " + id);            
+        }
+        
+        // Use handle directly
+        StatementHandle handle = statementHandler.getTouchRecord();
+        PreparedStatement stmt = conn.prepareStatement(handle.getSql());
+        try {
+            
+            for (Record r : children){
+                long nowStamp = timestampGenerator.next();            
+                stmt.setLong(1, nowStamp);
+                stmt.setString(2, r.getId());
+                stmt.executeUpdate();                
+            }                    
+
+            // It would be a tempting optimization to drop the getParents() call
+            // at the top and simply return here if stmt.getUpdateCount() == 0.
+            // This would avoid the creation of a ResultSet in getParents().
+            // We can't do this because there might be a ref to a non-existing
+            // parent which in turn might have a parent that actually exist.
+            // If we returned on zero updates we wouldn't touch the topmost
+            // parent
+
+        } catch (SQLException e) {
+            log.error("Failed to touch child of '" + id + "': " + e.getMessage(), e);
+            // Consider this non-fatal
+            return;
+        } finally {
+            closeStatement(stmt);
+        }
+
+        // Recursive downwards
+        for (Record child : children) {
+          if (childrenVisited.contains(child.getId())){
+            throw new SQLException("Parent/child cycle detected for id:"+child.getId());
+          }
+             childrenVisited.add(child.getId());                    
+            touchChildren(child.getId(), options, conn, childrenVisited);
         }
     }
 
@@ -3022,6 +3133,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
 
+
         if (rec.hasParents()) {
             List<String> parentIds = rec.getParentIds();
 
@@ -3281,11 +3393,7 @@ public abstract class DatabaseStorage extends StorageBase {
         StatementHandle handle = statementHandler.getClearChildren();
         PreparedStatement stmt =  conn.prepareStatement(handle.getSql());
         try{
-                        
-            List<Record> children = getChildren(recordID, null, conn);
-            for (Record current: children){
-              touchRecord(current.getId(), conn);                
-            }                                           
+                                                                               
             stmt.setString(1, recordID);
             int numberCleared = stmt.executeUpdate();
             System.out.println("cleared children:"+numberCleared);                                  
@@ -3304,12 +3412,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private void clearParentsWithConnection(String recordID, Connection conn) throws  SQLException,IOException{                
         StatementHandle handle = statementHandler.getClearParents();
         PreparedStatement stmt =  conn.prepareStatement(handle.getSql());
-        try{
-            List<Record> parents= getParents(recordID, null, conn);
-            for (Record current: parents){
-                touchRecord(current.getId(), conn);                
-            }                              
-            
+        try{            
             stmt.setString(1, recordID);
             int numberCleared = stmt.executeUpdate();            
             System.out.println("cleared parents:"+numberCleared);                                  
@@ -3381,7 +3484,6 @@ public abstract class DatabaseStorage extends StorageBase {
             break;           
         case child:           
             clearChildrenWithConnection(record.getId(), conn);           
-            break;
         case parent:
             clearParentsWithConnection(record.getId(), conn);
             break;
@@ -3391,7 +3493,6 @@ public abstract class DatabaseStorage extends StorageBase {
             break;
         }
 
-        System.out.println(this.relationsClear);
         if (hasRelations) {
             createRelations(record, conn);
         } else {
@@ -4083,7 +4184,7 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             conn = getConnection();
             Statement stmt = conn.createStatement();
-            stmt.execute(invalidateCachedStats);
+          //  stmt.execute(invalidateCachedStats); ///TODO must uncomment!
         } catch (SQLException e) {
             log.error("Error invalidating base statistic in database", e);
         } finally {
