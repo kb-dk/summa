@@ -221,7 +221,7 @@ public class DatabaseStorageTest extends StorageTestBase {
                         createRecord("t1", null, null) // The old relation t1->m1 should not be cleared
                         ), new HashSet<>(Arrays.asList("t1", "m1","b1")));
     }
-    /*
+
     public void testClearNoneUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
                 "No clear", StorageBase.RELATION.none, StorageBase.RELATION.parent, Arrays.asList(
@@ -234,11 +234,18 @@ public class DatabaseStorageTest extends StorageTestBase {
                 createRecord("m1", Arrays.asList("t2"), null)
         ), new HashSet<>(Arrays.asList("t2", "m1", "b1")));
     }
+    // Not used in any setup at Statsbiblioteket
     public void testClearChildUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
-                "Child clear", StorageBase.RELATION.child, StorageBase.RELATION.parent, Arrays.asList(
+                "Child clear, parent update", StorageBase.RELATION.child, StorageBase.RELATION.parent, Arrays.asList(
                 createRecord("m1", Arrays.asList("t2"), null)
         ), new HashSet<>(Arrays.asList("t1", "t2", "m1")));
+    }
+    public void testClearChildUpdateChild() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Child clear & update", StorageBase.RELATION.child, StorageBase.RELATION.child, Arrays.asList(
+                createRecord("m1", Arrays.asList("b2"), null)
+        ), new HashSet<>(Arrays.asList("m1", "b1", "b2")));
     }
     public void testClearAllUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
@@ -246,7 +253,7 @@ public class DatabaseStorageTest extends StorageTestBase {
                 createRecord("m1", Arrays.asList("t2"), null)
         ), new HashSet<>(Arrays.asList("t2", "m1")));
     }
-     */
+
     private Record createRecord(String id, List<String> parents, List<String> children) {
         Record record = new Record(id, testBase1, testContent1);
         record.setParentIds(parents);
@@ -362,6 +369,50 @@ public class DatabaseStorageTest extends StorageTestBase {
 
 
     }
+
+    /*
+    Creates thousands of Records with large content. When extracted as Records, they take up the full amount of bytes
+     on the heap. A touch of the parent to these Records is triggered, testing whether the child-touch is implemented
+      in a memory-efficient manner (read: Not loaded onto the heap).
+     */
+    public void testManyBytesTouch() throws Exception {
+        final int RECORDS = 1;
+        final byte[] CONTENT = new byte[1000];
+        new Random().nextBytes(CONTENT); // Not so packable now, eh?
+        final List<String> PARENTS = Arrays.asList("Parent_0");
+        final Record TOP = new Record("Parent_0", "dummy", new byte[10]);
+
+        Configuration conf = createConf();
+        conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
+        conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
+        Storage storage = new H2Storage(conf);
+
+        try {
+            storage.flush(TOP);
+            log.info(String.format("Ingesting %d records of size %dMB for a total of %dMB",
+                                   RECORDS, CONTENT.length / M, RECORDS * CONTENT.length / M));
+            for (int i = 0 ; i < RECORDS ; i++) {
+                Record r = new Record("Child_" + i, "dummy", CONTENT);
+                r.setParentIds(PARENTS);
+                storage.flush(r);
+                if (i % (RECORDS < 100 ? 1 : RECORDS/100) == 0) {
+                    System.out.print(".");
+                }
+            }
+            System.out.println("");
+            log.info(String.format("Finished ingesting of %dMB. Touching parent...",
+                                   RECORDS*CONTENT.length/M));
+
+            long oldChildMtime = storage.getRecord("Child_0", null).getLastModified();
+            storage.flush(TOP);
+            long newChildMtime = storage.getRecord("Child_0", null).getLastModified();
+            assertFalse("The MTime of Child_0 should be changed after parent touch", oldChildMtime == newChildMtime);
+        } finally {
+            storage.close();
+        }
+
+    }
+    private static final int M = 1048576;
 
     public void testTwoLevelCycleParent() throws IOException {
         Record r1 = new Record(testId1, testBase1, testContent1);
