@@ -3395,8 +3395,7 @@ public abstract class DatabaseStorage extends StorageBase {
         try{
                                                                                
             stmt.setString(1, recordID);
-            int numberCleared = stmt.executeUpdate();
-            System.out.println("cleared children:"+numberCleared);                                  
+            int numberCleared = stmt.executeUpdate();                                  
         }
         catch (SQLException e) {
             throw new SQLException("Exception in clearChildrenWithConnection for record:"+recordID,e);
@@ -3414,8 +3413,7 @@ public abstract class DatabaseStorage extends StorageBase {
         PreparedStatement stmt =  conn.prepareStatement(handle.getSql());
         try{            
             stmt.setString(1, recordID);
-            int numberCleared = stmt.executeUpdate();            
-            System.out.println("cleared parents:"+numberCleared);                                  
+            int numberCleared = stmt.executeUpdate();                                              
         }
         catch (Exception e) {
             throw new SQLException("Exception in clearParentsWithConnection for record:"+recordID,e);
