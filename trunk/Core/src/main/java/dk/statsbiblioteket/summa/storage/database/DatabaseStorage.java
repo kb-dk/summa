@@ -1704,14 +1704,14 @@ public abstract class DatabaseStorage extends StorageBase {
 
             HashSet<String> parents = new HashSet<>();//cycle detection
             while (mayHaveParent) {
-                StatementHandle handle = statementHandler.getParentIds();
+                StatementHandle handle = statementHandler.getParentIdsOnly();
                 // TODO: Use handle directly
                 PreparedStatement pstmtParentIdOnly = conn.prepareStatement(handle.getSql());
                 pstmtParentIdOnly.setString(1, parentId);
                 ResultSet parentRS = pstmtParentIdOnly.executeQuery();
                 mayHaveParent = parentRS.next();
                 if (mayHaveParent) {
-                    parentId = parentRS.getString("parentID"); //Set new Parent
+                    parentId = parentRS.getString("PARENTID"); //Set new Parent
                     if (parents.contains(parentId)){
                         Logging.logProcess(this.getClass().getName(), "Parent-child cycle detected for id",
                                 Logging.LogLevel.WARN, parentId);
@@ -2315,6 +2315,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Flushing with connection: " + r.toString(false));
         }
      
+        Record oldRecord = getRecord(r.getId(), options); //we have to load it to see the old parent/childs
         
         // Update the timestamp we check against in getRecordsModifiedAfter
         updateModificationTime(r.getBase());
@@ -2342,7 +2343,11 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
 
-        // Touch parents/children recursively upwards/downwards      
+        //Touch parents/children recursively upwards/downwards      
+        //Also touch old records if pointer has changed and these not will be touched when updating the new record
+       //test if record is null also 
+        //oldRecord.getChildIds().removeAll(r.getChildIds()); 
+       // oldRecord.getParentIds().removeAll(r.getParentIds()); 
         
         RELATION relationsTouch= this.relationsTouch;        
         
@@ -2354,11 +2359,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 touchChildren(r.getId(), null, conn);           
                 break;
             case parent:
-              //throw new UnsupportedOperationException("RelationsTouch:parent not implemented");
-               touchParents(r.getId(), null, conn);
+               touchParents(r.getId(), null, conn); 
                //break;
-            case all:
-                //throw new UnsupportedOperationException("RelationsTouch:all not implemented");               
+            case all:               
                 touchParents(r.getId(), null, conn);                                   
                 touchChildren(r.getId(), null, conn);
                 //break;
@@ -2395,7 +2398,9 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException if {@link Connection#prepareStatement} fails.
      */
     protected void touchParents(String id, QueryOptions options, Connection conn, HashSet<String> parentsVisited) throws IOException, SQLException {
-        List<Record> parents = getParents(id, options, conn);        
+        
+        List<String> parents= getParentsIdsOnly(id, conn);
+        
         if (parents == null || parents.isEmpty()) {
             if (log.isTraceEnabled()) {
                 log.trace("No parents to update for record " + id);
@@ -2433,12 +2438,12 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         // Recurse upwards
-        for (Record parent : parents) {
-            if (parentsVisited.contains(parent.getId())){
-                throw new SQLException("Parent/child cycle detected for id:"+parent.getId());
+        for (String parentId : parents) {
+            if (parentsVisited.contains(parentId)){
+                throw new SQLException("Parent/child cycle detected for id:"+parentId);
               }
-            parentsVisited.add(parent.getId());     
-            touchParents(parent.getId(), options, conn);
+            parentsVisited.add(parentId);     
+            touchParents(parentId, options, conn);
         }
     }
     
@@ -2460,8 +2465,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException if {@link Connection#prepareStatement} fails.
      */
     protected void touchChildren(String id, QueryOptions options, Connection conn, HashSet<String> childrenVisited) throws IOException, SQLException {
-        List<Record> children = getChildren(id, options, conn);
-
+        List<String> children = getChildIdsOnly(id, conn);
+        
         if (children == null || children.isEmpty()) {
             if (log.isTraceEnabled()) {
                 log.trace("No children to update for record " + id);
@@ -2478,10 +2483,10 @@ public abstract class DatabaseStorage extends StorageBase {
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
         try {
             
-            for (Record r : children){
+            for (String r : children){
                 long nowStamp = timestampGenerator.next();            
                 stmt.setLong(1, nowStamp);
-                stmt.setString(2, r.getId());
+                stmt.setString(2, r);
                 stmt.executeUpdate();                
             }                    
 
@@ -2502,12 +2507,12 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         // Recursive downwards
-        for (Record child : children) {
-          if (childrenVisited.contains(child.getId())){
-            throw new SQLException("Parent/child cycle detected for id:"+child.getId());
+        for (String childId : children) {
+          if (childrenVisited.contains(childId)){
+            throw new SQLException("Parent/child cycle detected for id:"+childId);
           }
-             childrenVisited.add(child.getId());                    
-            touchChildren(child.getId(), options, conn, childrenVisited);
+            childrenVisited.add(childId);                    
+            touchChildren(childId, options, conn, childrenVisited);
         }
     }
 
@@ -2563,7 +2568,62 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
     }
+    
+    
+    protected List<String> getParentsIdsOnly( String id,Connection conn) throws IOException, SQLException { 
+        StatementHandle handle = statementHandler.getParentIdsOnly();
+        PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
+        List<String> parentsIds = new ArrayList<String>();
+        
+
+        try {
+            stmt.setString(1, id);
+            stmt.executeQuery();
+
+            ResultSet results = stmt.getResultSet();
+         
+            while (results.next()) {
+                parentsIds.add(results.getString("PARENTID"));
+            }
+            return parentsIds;
+
+        } catch (SQLException e) {
+            throw new IOException("Failed to get  getParentsIdsOnly for record '" + id, e);
+        } finally {
+            if (stmt != null) {
+                closeStatement(stmt);
+            }
+        }
+    }
+
+    protected List<String> getChildIdsOnly( String id,Connection conn) throws IOException, SQLException { 
+        StatementHandle handle = statementHandler.getChildIdsOnly();
+        PreparedStatement stmt = conn.prepareStatement(handle.getSql());
+
+        List<String> parentsIds = new ArrayList<String>();
+        
+        try {
+            stmt.setString(1, id);
+            stmt.executeQuery();
+
+            ResultSet results = stmt.getResultSet();
+         
+            while (results.next()) {
+                parentsIds.add(results.getString("CHILDID"));
+            }
+            return parentsIds;
+
+        } catch (SQLException e) {
+            throw new IOException("Failed to get getChildIdsOnly for record '" + id, e);
+        } finally {
+            if (stmt != null) {
+                closeStatement(stmt);
+            }
+        }
+    }
+
+    
     /**
      * Returns a list of children.
      *
