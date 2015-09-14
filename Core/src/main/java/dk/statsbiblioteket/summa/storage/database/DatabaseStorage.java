@@ -2298,6 +2298,58 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /*
+     * When updating a record we still need to touch parent/childs that are no longer related to the record if they were before update
+     */
+
+    private void touchOldParentChildRelations(Record r, Connection conn) throws IOException, SQLException{
+        List<String> newChildIds = r.getChildIds();
+        List<String> newParentsIds = r.getChildIds();
+        if (newChildIds == null){
+            newChildIds= new ArrayList<String>();
+        }
+        if (newParentsIds == null){
+            newParentsIds= new ArrayList<String>();
+        }
+        List<String> oldParentsIds = new ArrayList<String>();
+        List<String> oldChildrenIds = new ArrayList<String>();
+        switch (relationsTouch){
+        
+        case none:             
+            break;           
+        case child:
+            oldChildrenIds=getChildIdsOnly(r.getId(), conn);
+            oldChildrenIds.removeAll(newChildIds);
+            
+            for (String c :  oldChildrenIds){ //touch children that are not children anymore
+                touchRecord(c, conn);
+                touchChildren(c,null,conn);
+            }
+            break;
+        case parent:                
+            oldParentsIds=getParentsIdsOnly(r.getId(), conn);                
+            oldParentsIds.removeAll(newParentsIds);
+            for (String p :  oldParentsIds){ //touch children that are not children anymore
+                touchRecord(p, conn);
+                touchParents(p,null,conn);
+            }
+            break;
+        case all:               
+            oldParentsIds.removeAll(newParentsIds);
+            for (String p :  oldParentsIds){ //touch parents that are not parents anymore
+                touchRecord(p,conn);
+                touchParents(p,null,conn);
+            }                
+            oldChildrenIds.removeAll(newChildIds);
+            for (String c :  oldChildrenIds){ //touch children that are not children anymore
+                touchRecord(c, conn);
+                touchChildren(c,null,conn);
+            }
+            break;
+        }        
+
+    }
+
     /**
      * Flush a record to the database.
      *
@@ -2314,26 +2366,8 @@ public abstract class DatabaseStorage extends StorageBase {
         } else if (log.isDebugEnabled()) {
             log.debug("Flushing with connection: " + r.toString(false));
         }
-
-        RELATION relationsTouch= this.relationsTouch;     
-        List<String> oldParentsIds = new ArrayList<String>();
-        List<String> oldChildrenIds = new ArrayList<String>();
-
-        switch (relationsTouch){
-        case none:             
-            break;           
-        case child:           
-            oldChildrenIds=getChildIdsOnly(r.getId(), conn);           
-            break;
-        case parent:
-            oldParentsIds=getParentsIdsOnly(r.getId(), conn); 
-            break;
-        case all:               
-            oldParentsIds=getParentsIdsOnly(r.getId(), conn);
-            oldChildrenIds=getChildIdsOnly(r.getId(), conn);
-            break;
-        }
-
+        
+        RELATION relationsTouch= this.relationsTouch;        
         // Update the timestamp we check against in getRecordsModifiedAfter
         updateModificationTime(r.getBase());
         invalidateCachedStats();
@@ -2343,7 +2377,8 @@ public abstract class DatabaseStorage extends StorageBase {
         } catch (SQLException e) {
             if (isIntegrityConstraintViolation(e)) {
                 // We already had the record stored, so fire an update instead
-                // Note that this will also handle deleted records
+                // Note that this will also handle deleted records                               
+                touchOldParentChildRelations(r, conn);
                 updateRecordWithConnection(r, options, conn);
             } else {
                 throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
@@ -2359,49 +2394,20 @@ public abstract class DatabaseStorage extends StorageBase {
                 flushWithConnection(child, options, conn);
             }
         }
-
-
-        List<String> newChildIds = r.getChildIds();
-        List<String> newParentIds = r.getChildIds();
-        if (newChildIds == null){
-            newChildIds= new ArrayList<String>();
-        }
-        if (newParentIds == null){
-            newParentIds= new ArrayList<String>();
-        }
-
-
+        
         try {        
             switch (relationsTouch){
             case none:             
                 break;           
-            case child:           
-                touchChildren(r.getId(), null, conn);           
-                oldChildrenIds.removeAll(newChildIds);
-                for (String c :  oldChildrenIds){ //touch children that are not children anymore
-                    touchChildren(c,null,conn);
-                }                
+            case child:        
+                touchChildren(r.getId(), null, conn);                                   
                 break;
             case parent:
-                touchParents(r.getId(), null, conn);                
-                oldParentsIds.removeAll(oldParentsIds);
-                for (String p :  oldParentsIds){ //touch children that are not children anymore
-                    touchParents(p,null,conn);
-                }
+                touchParents(r.getId(), null, conn);                           
                 break;
             case all:               
                 touchParents(r.getId(), null, conn);                                   
                 touchChildren(r.getId(), null, conn);
-
-                oldParentsIds.removeAll(oldParentsIds);
-                for (String p :  oldParentsIds){ //touch children that are not children anymore
-                    touchParents(p,null,conn);
-                }
-
-                oldChildrenIds.removeAll(newChildIds);
-                for (String c :  oldChildrenIds){ //touch children that are not children anymore
-                    touchChildren(c,null,conn);
-                }
                 break;
             }
         } catch (IOException e) {
@@ -2522,7 +2528,7 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
 
             for (String r : children){
-                long nowStamp = timestampGenerator.next();            
+                long nowStamp = timestampGenerator.next();
                 stmt.setLong(1, nowStamp);
                 stmt.setString(2, r);
                 stmt.executeUpdate();                
@@ -3535,7 +3541,6 @@ public abstract class DatabaseStorage extends StorageBase {
     private void updateRecordWithConnection(
             Record record, QueryOptions options, Connection conn) throws IOException, SQLException {
         log.debug("Updating: " + record.getId());
-
         // Respect the TRY_UPDATE meta flag. See docs for {@link QueryOptions}
         if (options != null && "true".equals(options.meta(TRY_UPDATE))) {
             Record old = getRecordWithConnection(record.getId(), options, conn);
@@ -3615,7 +3620,6 @@ public abstract class DatabaseStorage extends StorageBase {
         StatementHandle handle = statementHandler.getTouchRecord();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
         log.debug("Touching: " + id);
-
         invalidateCachedStats();
         Record r = null;
         try {
