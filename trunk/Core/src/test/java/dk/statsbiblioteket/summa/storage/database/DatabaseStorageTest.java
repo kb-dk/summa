@@ -226,13 +226,13 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertClearAndUpdateTimestamps(
                 "No clear", StorageBase.RELATION.none, StorageBase.RELATION.parent, Arrays.asList(
                 createRecord("m1", Arrays.asList("t2"), null)
-        ), new HashSet<>(Arrays.asList("t1", "t2", "m1", "b1")));
+        ), new HashSet<>(Arrays.asList("t1", "t2", "m1")));
     }
     public void testClearParentUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
                 "Parent clear", StorageBase.RELATION.parent, StorageBase.RELATION.parent, Arrays.asList(
                 createRecord("m1", Arrays.asList("t2"), null)
-        ), new HashSet<>(Arrays.asList("t2", "m1", "b1")));
+        ), new HashSet<>(Arrays.asList("t1", "t2", "m1", "b1")));
     }
     // Not used in any setup at Statsbiblioteket
     public void testClearChildUpdateParent() throws Exception {
@@ -378,7 +378,7 @@ public class DatabaseStorageTest extends StorageTestBase {
       Set Xmx to 300m before running this test for a proper memory trial
      */
     public void testManyBytesTouch() throws Exception {
-        final int RECORDS = 401000; // Set Xmx to 300
+        final int RECORDS = 100; // Set Xmx to 300
         final byte[] CONTENT = new byte[1000];
         new Random().nextBytes(CONTENT); // Not so packable now, eh?
         final List<String> PARENTS = Arrays.asList("Parent_0");
