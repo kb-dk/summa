@@ -206,18 +206,6 @@ public abstract class StatementHandler {
             + " ORDER BY " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN
         );
     }
-
-    public MiniConnectionPoolManager.StatementHandle getParentIds() {
-        return generateStatementHandle(
-            "SELECT " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + ", "
-            + DatabaseStorage.RELATIONS + "." + DatabaseStorage.PARENT_ID_COLUMN
-            + " FROM " + DatabaseStorage.RECORDS
-            + " JOIN " + DatabaseStorage.RELATIONS
-            + " ON " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "="
-            + DatabaseStorage.RELATIONS + "." + DatabaseStorage.CHILD_ID_COLUMN
-            + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
-        );
-    }
     
     public MiniConnectionPoolManager.StatementHandle getParentIdsOnly() {
         return generateStatementHandle(
