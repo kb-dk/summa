@@ -14,18 +14,6 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
@@ -39,6 +27,11 @@ import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * These test cases are meant to test functionality specifically requiring the
@@ -252,14 +245,14 @@ public class DatabaseStorageTest extends StorageTestBase {
     public void testClearChildUpdateChild() throws Exception {
         assertClearAndUpdateTimestamps(
                 "Child clear & update", StorageBase.RELATION.child, StorageBase.RELATION.child, Arrays.asList(
-                createRecord("m1", Arrays.asList("b2"), null)
+                createRecord("m1", null, Arrays.asList("b2"))
         ), new HashSet<>(Arrays.asList("m1", "b1", "b2")));
     }
     public void testClearAllUpdateParent() throws Exception {
         assertClearAndUpdateTimestamps(
                 "All clear", StorageBase.RELATION.all, StorageBase.RELATION.parent, Arrays.asList(
                 createRecord("m1", Arrays.asList("t2"), null)
-        ), new HashSet<>(Arrays.asList("t2", "m1")));
+        ), new HashSet<>(Arrays.asList("t1", "t2", "m1")));
     }
 
     private Record createRecord(String id, List<String> parents, List<String> children) {
