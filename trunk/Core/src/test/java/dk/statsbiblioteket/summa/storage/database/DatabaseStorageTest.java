@@ -374,9 +374,11 @@ public class DatabaseStorageTest extends StorageTestBase {
     Creates thousands of Records with large content. When extracted as Records, they take up the full amount of bytes
      on the heap. A touch of the parent to these Records is triggered, testing whether the child-touch is implemented
       in a memory-efficient manner (read: Not loaded onto the heap).
+
+      Set Xmx to 300m before running this test for a proper memory trial
      */
     public void testManyBytesTouch() throws Exception {
-        final int RECORDS = 1;
+        final int RECORDS = 401000; // Set Xmx to 300
         final byte[] CONTENT = new byte[1000];
         new Random().nextBytes(CONTENT); // Not so packable now, eh?
         final List<String> PARENTS = Arrays.asList("Parent_0");
@@ -400,11 +402,17 @@ public class DatabaseStorageTest extends StorageTestBase {
                 }
             }
             System.out.println("");
-            log.info(String.format("Finished ingesting of %dMB. Touching parent...",
+            log.info(String.format("Finished ingesting of %dMB. Getting child 0 mtime...",
                                    RECORDS*CONTENT.length/M));
 
-            long oldChildMtime = storage.getRecord("Child_0", null).getLastModified();
+            QueryOptions options = new QueryOptions();
+            options.setAttributes(QueryOptions.ATTRIBUTES_SANS_CONTENT_AND_META);
+            options.removeAttribute(QueryOptions.ATTRIBUTES.PARENTS);
+            long oldChildMtime = storage.getRecord("Child_0", options).getLastModified();
+            log.info("Got child 0 mtime. Touching parent...");
+            final long ttime = System.nanoTime();
             storage.flush(TOP);
+            log.info("Parent touched in " + (System.nanoTime()-ttime)/1000000 + "ms. Grtting child 0 mtime...");
             long newChildMtime = storage.getRecord("Child_0", null).getLastModified();
             assertFalse("The MTime of Child_0 should be changed after parent touch", oldChildMtime == newChildMtime);
         } finally {
