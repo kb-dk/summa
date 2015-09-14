@@ -177,13 +177,13 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(1, base.getLiveCount());
     }
 
-    /*
+
     public void testTouchNone() throws Exception {
         assertClearAndUpdateTimestamps(
                 "None", StorageBase.RELATION.none, StorageBase.RELATION.none, Arrays.asList(
                 createRecord("m1", null, null)
         ), new HashSet<>(Arrays.asList("m1")));
-    }*/
+    }
 
     // Touch all is default behaviour as of 2015-09-11
     public void testTouchAll() throws Exception {
@@ -192,7 +192,7 @@ public class DatabaseStorageTest extends StorageTestBase {
                         createRecord("m1", null, null)
                         ), new HashSet<>(Arrays.asList("t1", "m1", "b1")));
     }
-    /*
+
     public void testTouchParents() throws Exception {
         assertClearAndUpdateTimestamps(
                 "Direct parent", StorageBase.RELATION.none, StorageBase.RELATION.parent, Arrays.asList(
@@ -207,7 +207,7 @@ public class DatabaseStorageTest extends StorageTestBase {
                 createRecord("m1", null, null)
         ), new HashSet<>(Arrays.asList("m1", "b1")));
     }
-     */
+
 
     public void testClearParentTouchChildrenFromMiddle() throws Exception {
         assertClearAndUpdateTimestamps(
@@ -232,7 +232,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertClearAndUpdateTimestamps(
                 "Parent clear", StorageBase.RELATION.parent, StorageBase.RELATION.parent, Arrays.asList(
                 createRecord("m1", Arrays.asList("t2"), null)
-        ), new HashSet<>(Arrays.asList("t1", "t2", "m1", "b1")));
+        ), new HashSet<>(Arrays.asList("t1", "t2", "m1")));
     }
     // Not used in any setup at Statsbiblioteket
     public void testClearChildUpdateParent() throws Exception {
