@@ -218,7 +218,22 @@ public abstract class StatementHandler {
             + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
         );
     }
+    
+    public MiniConnectionPoolManager.StatementHandle getParentIdsOnly() {
+        return generateStatementHandle(
+            "SELECT "+DatabaseStorage.PARENT_ID_COLUMN+" FROM "+ DatabaseStorage.RELATIONS+
+            " WHERE "+DatabaseStorage.CHILD_ID_COLUMN +" = ?"                    
+        );
+    }
 
+    public MiniConnectionPoolManager.StatementHandle getChildIdsOnly() {
+        return generateStatementHandle(
+            "SELECT "+DatabaseStorage.CHILD_ID_COLUMN+" FROM "+ DatabaseStorage.RELATIONS+
+            " WHERE "+DatabaseStorage.PARENT_ID_COLUMN +" = ?"                    
+        );
+    }
+
+    
     // The obvious thing to do here was to use an OR instead of the UNION,
     // however some query optimizers have problems using the right indexes
     // when ORing (H2 for instance). Using a UNION is easier for the
