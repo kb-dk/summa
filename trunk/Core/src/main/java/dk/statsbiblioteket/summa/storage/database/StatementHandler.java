@@ -166,6 +166,20 @@ public abstract class StatementHandler {
             + " WHERE " + DatabaseStorage.CHILD_ID_COLUMN + "=? )"
         );
     }
+    
+    //This will cause modified_time violation and fail. Dont use
+    @Deprecated 
+    public MiniConnectionPoolManager.StatementHandle getTouchChildren() {
+        return generateStatementHandle(
+            "UPDATE " + DatabaseStorage.RECORDS
+            + " SET " + DatabaseStorage.MTIME_COLUMN + "=? "
+            + " WHERE " + DatabaseStorage.ID_COLUMN + " IN ("
+            + " SELECT " + DatabaseStorage.CHILD_ID_COLUMN
+            + " FROM " + DatabaseStorage.RELATIONS
+            + " WHERE " + DatabaseStorage.PARENT_ID_COLUMN + "=? )"
+        );
+    }
+
 
     public MiniConnectionPoolManager.StatementHandle getGetChildren(QueryOptions options) {
         return generateStatementHandle(
