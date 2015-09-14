@@ -23,14 +23,11 @@ import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -154,12 +151,12 @@ public class StorageTest extends NoExitTestCase {
        Record lademanns_top = storage.getRecord("Lademanns leksikon",null);
        
        //has both parent and child. Clear all relations
-       Record lademanns_middle = storage.getRecord("Lademanns leksikon Bind 1",null);     
+       Record lademanns_middle = storage.getRecord("Lademanns leksikon Bind 1", null);
        
        long modifiedBefore = lademanns_top.getModificationTime();              
        lademanns_middle.setChildren( null);
        lademanns_middle.setChildIds(new ArrayList<String>());
-       lademanns_middle.setParents( null);
+       lademanns_middle.setParents(null);
        lademanns_middle.setParentIds(new ArrayList<String>());
        storage.flush(lademanns_middle);                                     
        
@@ -434,7 +431,7 @@ public class StorageTest extends NoExitTestCase {
                 records, recordSize,
                 profiler.getSpendTime(), profiler.getBps(false)));
         storage.close();
-        ReleaseHelper.cleanup();
+        //ReleaseHelper.cleanup();
         log.info("Finished scale-test");
     }
 
