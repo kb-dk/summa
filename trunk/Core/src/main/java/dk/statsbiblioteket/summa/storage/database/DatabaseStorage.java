@@ -2380,14 +2380,15 @@ public abstract class DatabaseStorage extends StorageBase {
                 
                //Special case. The method below is extremely slow for yet unknown reasons for large object trees (10000+) and scales badly.
                 //avoid calling it for some settings where we know it is unnessecary. It can be improved by a different implementation
-                //by loading the full object tree(ID's only) from the old record and comparing.
-             
-                if (relationsTouch.equals(RELATION.parent)
-                    && clearRelation.equals(RELATION.child)
+                //by loading the full object tree(ID's only) from the old record and comparing.            
+                
+                
+                if (relationsTouch.equals(RELATION.child)
+                    && clearRelation.equals(RELATION.parent)
                     && (r.getParents() == null || r.getParents().size()==0) //Single object with no tree-changes     
                     && (r.getChildren() == null || r.getChildren().size()==0) //Single object with no tree-changes
-                    ){                    
-                  //do not update  old tree recursive
+                    ){                                        
+                    //do not update  old tree recursive
                 }
                 else{                  
                     touchOldParentChildRelations(r, conn);
