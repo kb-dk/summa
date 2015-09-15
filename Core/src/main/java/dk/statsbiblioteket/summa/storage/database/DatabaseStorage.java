@@ -2368,6 +2368,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
         
         RELATION relationsTouch= this.relationsTouch;        
+        RELATION clearRelation = this.relationsClear;   
         // Update the timestamp we check against in getRecordsModifiedAfter
         updateModificationTime(r.getBase());
         invalidateCachedStats();
@@ -2376,9 +2377,24 @@ public abstract class DatabaseStorage extends StorageBase {
             createNewRecordWithConnection(r, options, conn);
         } catch (SQLException e) {
             if (isIntegrityConstraintViolation(e)) {
-                // We already had the record stored, so fire an update instead
-                // Note that this will also handle deleted records                               
-                touchOldParentChildRelations(r, conn);
+                
+               //Special case. The method below is extremely slow for yet unknown reasons for large object trees (10000+) and scales badly.
+                //avoid calling it for some settings where we know it is unnessecary. It can be improved by a different implementation
+                //by loading the full object tree(ID's only) from the old record and comparing.
+             
+                if (relationsTouch.equals(RELATION.parent)
+                    && clearRelation.equals(RELATION.child)
+                    && (r.getParents() == null || r.getParents().size()==0) //Single object with no tree-changes     
+                    && (r.getChildren() == null || r.getChildren().size()==0) //Single object with no tree-changes
+                    ){                    
+                  //do not update  old tree recursive
+                }
+                else{                  
+                    touchOldParentChildRelations(r, conn);
+                }
+             
+               
+             // We already had the record stored, so fire an update instead
                 updateRecordWithConnection(r, options, conn);
             } else {
                 throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
