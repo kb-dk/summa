@@ -375,35 +375,49 @@ public class DatabaseStorageTest extends StorageTestBase {
      on the heap. A touch of the parent to these Records is triggered, testing whether the child-touch is implemented
       in a memory-efficient manner (read: Not loaded onto the heap).
 
-      Set Xmx to 300m before running this test for a proper memory trial
+      Set RECORDS to 400000 and Xmx to 300m before running this test for a proper memory trial
      */
     public void testManyBytesTouch() throws Exception {
-        final int RECORDS = 100; // Set Xmx to 300
-        final byte[] CONTENT = new byte[1000];
+        final int[] RECORDS = new int[]{100, 500, 1000, 5000, 10000, 15000, 20000, 25000, 30000, 40000};
+        final int CONTENT_SIZE = 1024;
+        long[] ms = new long[RECORDS.length];
+
+        for (int i = 0; i < RECORDS.length; i++) {
+            ms[i] = measureManyBytesTouch(RECORDS[i], CONTENT_SIZE);
+        }
+
+        for (int i = 0; i < RECORDS.length; i++) {
+            log.info(String.format("Records: %6d, children touched/sec: %4d",
+                                   RECORDS[i], RECORDS[i] * 60 / ms[i]));
+        }
+
+    }
+    public long measureManyBytesTouch(final int records, int contentSize) throws Exception {
+        final byte[] CONTENT = new byte[contentSize];
         new Random().nextBytes(CONTENT); // Not so packable now, eh?
         final List<String> PARENTS = Arrays.asList("Parent_0");
         final Record TOP = new Record("Parent_0", "dummy", new byte[10]);
 
         Configuration conf = createConf();
-        conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
         conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
+        conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
         Storage storage = new H2Storage(conf);
 
         try {
             storage.flush(TOP);
             log.info(String.format("Ingesting %d records of size %dMB for a total of %dMB",
-                                   RECORDS, CONTENT.length / M, RECORDS * CONTENT.length / M));
-            for (int i = 0 ; i < RECORDS ; i++) {
+                                   records, CONTENT.length / M, records * CONTENT.length / M));
+            for (int i = 0 ; i < records ; i++) {
                 Record r = new Record("Child_" + i, "dummy", CONTENT);
                 r.setParentIds(PARENTS);
                 storage.flush(r);
-                if (i % (RECORDS < 100 ? 1 : RECORDS/100) == 0) {
+                if (i % (records < 100 ? 1 : records/100) == 0) {
                     System.out.print(".");
                 }
             }
             System.out.println("");
             log.info(String.format("Finished ingesting of %dMB. Getting child 0 mtime...",
-                                   RECORDS*CONTENT.length/M));
+                                   records * CONTENT.length / M));
 
             QueryOptions options = new QueryOptions();
             options.setAttributes(QueryOptions.ATTRIBUTES_SANS_CONTENT_AND_META);
@@ -412,13 +426,15 @@ public class DatabaseStorageTest extends StorageTestBase {
             log.info("Got child 0 mtime. Touching parent...");
             final long ttime = System.nanoTime();
             storage.flush(TOP);
-            log.info("Parent touched in " + (System.nanoTime()-ttime)/1000000 + "ms. Grtting child 0 mtime...");
+            final long ms = (System.nanoTime()-ttime)/1000000;
+            log.info(String.format("Parent touched in %dms (%d child records/sec). Getting child 0 mtime...",
+                                   ms, records * 60 / ms));
             long newChildMtime = storage.getRecord("Child_0", null).getLastModified();
             assertFalse("The MTime of Child_0 should be changed after parent touch", oldChildMtime == newChildMtime);
+            return ms;
         } finally {
             storage.close();
         }
-
     }
     private static final int M = 1048576;
 
