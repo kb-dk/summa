@@ -208,18 +208,28 @@ public class DatabaseStorageTest extends StorageTestBase {
         ), new HashSet<>(Arrays.asList("m1", "b1")));
     }
 
-
+    // Used in Statsbiblioteket/aviser
     public void testClearParentTouchChildrenFromMiddle() throws Exception {
         assertClearAndUpdateTimestamps(
-                "Parent clear touch children", StorageBase.RELATION.parent, StorageBase.RELATION.child, Arrays.asList(
-                        createRecord("m1", Arrays.asList("t2"), null)
-                        ), new HashSet<>(Arrays.asList("m1", "b1")));
+                "Parent clear touch children from middle",
+                StorageBase.RELATION.parent, StorageBase.RELATION.child, Arrays.asList(
+                createRecord("m1", Arrays.asList("t2"), null)
+        ), new HashSet<>(Arrays.asList("m1", "b1")));
     }
+    public void testClearParentTouchChildrenFromBottom() throws Exception {
+        assertClearAndUpdateTimestamps(
+                "Parent clear touch children from bottom",
+                StorageBase.RELATION.parent, StorageBase.RELATION.child, Arrays.asList(
+                createRecord("b1", Arrays.asList("m1"), null)
+        ), new HashSet<>(Arrays.asList("b1")));
+    }
+    // Used in Statsbiblioteket/aviser
     public void testClearParentTouchChildrenFromTop() throws Exception {
         assertClearAndUpdateTimestamps(
-                "Parent clear touch children", StorageBase.RELATION.parent, StorageBase.RELATION.child, Arrays.asList(
-                        createRecord("t1", null, null) // The old relation t1->m1 should not be cleared
-                        ), new HashSet<>(Arrays.asList("t1", "m1","b1")));
+                "Parent clear touch children from top",
+                StorageBase.RELATION.parent, StorageBase.RELATION.child, Arrays.asList(
+                createRecord("t1", null, null) // The old relation t1->m1 should not be cleared
+        ), new HashSet<>(Arrays.asList("t1", "m1","b1")));
     }
 
     
@@ -392,6 +402,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
 
     }
+    // This mimics a rare but still occurring scenario at Statsbiblioteket/aviser
     public long measureManyBytesTouch(final int records, int contentSize) throws Exception {
         final byte[] CONTENT = new byte[contentSize];
         new Random().nextBytes(CONTENT); // Not so packable now, eh?
