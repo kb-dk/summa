@@ -107,8 +107,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is $0 (a direct copy of the match).
      */
-    public static final String CONF_ID_TEMPLATE =
-            "record.id.template";
+    public static final String CONF_ID_TEMPLATE = "record.id.template";
     public static final String DEFAULT_ID_TEMPLATE = "$0";
 
     /**
@@ -161,10 +160,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
      * </p><p>
      * Optional. Default is all.
      */
-    public static final String CONF_META_REQUIREMENT =
-        "record.meta.requirement";
-    public static final String DEFAULT_META_REQUIREMENT =
-        REQUIREMENT.all.toString();
+    public static final String CONF_META_REQUIREMENT = "record.meta.requirement";
+    public static final String DEFAULT_META_REQUIREMENT = REQUIREMENT.all.toString();
 
     public static enum REQUIREMENT {all, none, one}
 
@@ -238,6 +235,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     public static final String CONF_META_TEMPLATE = "record.meta.template";
     public static final String DEFAULT_META_TEMPLATE = "$0";
 
+    // TODO: Add option for multiple matches in meta (for child & parent IDs
+
     /**
      * If true. String key/value pairs from Payload meta data are copied to
      * Record meta data. This copying takes place before other manipulations.
@@ -251,6 +250,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     private Pair<Pattern, String> assignId;
     private Pair<Pattern, String> assignBase;
     private Pair<Pattern, String> assignContent;
+    private Pair<Pattern, String> assignChildIDs;
+    private Pair<Pattern, String> assignParentIDs;
     private boolean discardOnErrors = DEFAULT_DISCARD_ON_ERRORS;
     private String idHash = null;
     private String idHashPrefix = "";

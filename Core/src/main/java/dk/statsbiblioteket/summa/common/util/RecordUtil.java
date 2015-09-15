@@ -789,6 +789,8 @@ public class RecordUtil {
     public static final String PART_ID = "id";
     public static final String PART_BASE = "base";
     public static final String PART_CONTENT = "content";
+    public static final String PART_CHILDID = "childid";
+    public static final String PART_PARENTID = "parentid";
     public static final String PART_META_PREFIX = "meta.";
 
     /**
@@ -806,6 +808,10 @@ public class RecordUtil {
             return record.getId();
         } else if (PART_BASE.equals(source)) {
             return record.getBase();
+        } else if (PART_CHILDID.equals(source)) {
+            return record.getChildIds() == null ? null: Strings.join(record.getChildIds());
+        } else if (PART_PARENTID.equals(source)) {
+            return record.getParentIds() == null ? null: Strings.join(record.getParentIds());
         } else if (source.startsWith(PART_META_PREFIX)) {
             String key = source.substring(5, source.length());
             String content = record.getMeta(key);
@@ -977,6 +983,18 @@ public class RecordUtil {
             record.setId(value);
         } else if (PART_BASE.equals(destination)) {
             record.setBase(value);
+        } else if (PART_CHILDID.equals(destination)) {
+            if (record.getChildIds() == null) {
+                record.setChildIds(new ArrayList<>(Arrays.asList(value)));
+            } else {
+                record.getChildIds().add(value);
+            }
+        } else if (PART_PARENTID.equals(destination)) {
+            if (record.getParentIds() == null) {
+                record.setParentIds(new ArrayList<>(Arrays.asList(value)));
+            } else {
+                record.getParentIds().add(value);
+            }
         } else if (destination.startsWith(PART_META_PREFIX)) {
             String key = destination.substring(5, destination.length());
             record.getMeta().put(key, value);

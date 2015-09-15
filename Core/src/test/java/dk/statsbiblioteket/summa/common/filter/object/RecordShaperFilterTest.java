@@ -206,4 +206,37 @@ public class RecordShaperFilterTest extends TestCase {
                    shaper.next().getRecord().getMeta("result"));
 
     }
+
+    public void testChildIDs() throws IOException {
+        final String ID = "uuid:ff565ef7-ede7-4f25-8fb7-96bc9b4f04e0";
+
+        Configuration shaperConf = Configuration.newMemoryBased();
+        shaperConf.set(RecordShaperFilter.CONF_META_REQUIREMENT, "none");
+        shaperConf.set(RecordShaperFilter.CONF_COPY_META, true);
+        List<Configuration> metaConfs = shaperConf.createSubConfigurations(RecordShaperFilter.CONF_META, 1);
+
+        Configuration partConf = metaConfs.get(0);
+        partConf.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART_CONTENT);
+        partConf.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART_CHILDID);
+        partConf.set(RecordShaperFilter.CONF_META_REGEXP,
+                     "(?s).*<isPartOfNewspaper[^>]*rdf:resource=\"info:fedora/([^\"]+)\".*");
+        partConf.set(RecordShaperFilter.CONF_META_TEMPLATE, "doms_newspaperAuthority:$1");
+
+        Record small = new Record(
+            "small", "bar", (
+                "<alabast><isPartOfNewspaper xmlns=\"http://doms.statsbiblioteket.dk/relations/default/0/1/#\"" +
+                " rdf:resource=\"info:fedora/" + ID + "\"/>\n</alabast>").
+                getBytes("utf-8"));
+        ObjectFilter feeder = new PayloadFeederHelper(Arrays.asList(new Payload(small)));
+
+        ObjectFilter shaper = new RecordShaperFilter(shaperConf);
+        shaper.setSource(feeder);
+
+        Record first = shaper.next().getRecord();
+        assertNotNull("The first Payload should have childIDs assigned",
+                      first.getChildIds());
+        assertEquals("The child-ID should be as expected",
+                     "doms_newspaperAuthority:" + ID, first.getChildIds().get(0));
+
+    }
 }
