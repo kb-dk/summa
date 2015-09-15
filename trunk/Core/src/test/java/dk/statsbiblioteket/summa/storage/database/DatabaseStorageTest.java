@@ -429,7 +429,7 @@ public class DatabaseStorageTest extends StorageTestBase {
             final long ms = (System.nanoTime()-ttime)/1000000;
             log.info(String.format("Parent touched in %dms (%d child records/sec). Getting child 0 mtime...",
                                    ms, records * 60 / ms));
-            long newChildMtime = storage.getRecord("Child_0", null).getLastModified();
+            long newChildMtime = storage.getRecord("Child_0", options).getLastModified();
             assertFalse("The MTime of Child_0 should be changed after parent touch", oldChildMtime == newChildMtime);
             return ms;
         } finally {
