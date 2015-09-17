@@ -186,8 +186,7 @@ public class RecordUtilTest extends TestCase {
         String base = "<foo><bar /> <!-- comment <hello> --> aloha "
                       + "<![CDATA[ my&<>CDATA ]]> <empty></empty> </foo>";
         String in = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + base;
-        XMLStreamReader sr =
-                xmlInputFactory.createXMLStreamReader(new StringReader(in));
+        XMLStreamReader sr = xmlInputFactory.createXMLStreamReader(new StringReader(in));
         StringWriter out = new StringWriter(1000);
         XMLStreamWriter sw = xmlOutputFactory.createXMLStreamWriter(out);
         RecordUtil.copyContent(sr, sw, true, -1);

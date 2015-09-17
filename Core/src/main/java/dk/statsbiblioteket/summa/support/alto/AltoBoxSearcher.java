@@ -323,7 +323,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                 }
                 log.debug("Got " + record);
                 XMLStreamReader xml =
-                        xmlFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART_CONTENT));
+                        xmlFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART.content));
                 resolveBoxes(xml, recordID, boxResponse);
             } catch (IOException e) {
                 log.warn("Exception requesting record '" + recordID + "' from " + storage, e);

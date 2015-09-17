@@ -786,12 +786,20 @@ public class RecordUtil {
         return actual;
     }
 
-    public static final String PART_ID = "id";
+    public static enum PART {id, base, content, xmlfull, childid, parentid, meta;
+
+        @Override
+        public String toString() {
+            return this == meta ? "meta." : super.toString();
+        }
+    }
+/*    public static final String PART_ID = "id";
     public static final String PART_BASE = "base";
     public static final String PART_CONTENT = "content";
+    public static final String PART_XML_FULL = "xmlfull";
     public static final String PART_CHILDID = "childid";
     public static final String PART_PARENTID = "parentid";
-    public static final String PART_META_PREFIX = "meta.";
+    public static final String PART_META_PREFIX = "meta.";*/
 
     /**
      * Return a String from a Record's content, id, base of meta-field.
@@ -802,25 +810,39 @@ public class RecordUtil {
      * @return a String extracted from the Record.
      */
     public static String getString(Record record, String source) {
-        if (PART_CONTENT.equals(source)) {
-            return record.getContentAsUTF8();
-        } else if (PART_ID.equals(source)) {
-            return record.getId();
-        } else if (PART_BASE.equals(source)) {
-            return record.getBase();
-        } else if (PART_CHILDID.equals(source)) {
-            return record.getChildIds() == null ? null: Strings.join(record.getChildIds());
-        } else if (PART_PARENTID.equals(source)) {
-            return record.getParentIds() == null ? null: Strings.join(record.getParentIds());
-        } else if (source.startsWith(PART_META_PREFIX)) {
-            String key = source.substring(5, source.length());
+        if (source.startsWith(PART.meta.toString())) {
+            String key = source.substring(PART.meta.toString().length(), source.length());
             String content = record.getMeta(key);
             if (content == null) {
                 throw new IllegalArgumentException("No value for key '" + key + "' in " + record);
             }
             return content;
         }
-        throw new IllegalArgumentException("Unknown source '" + source + "'");
+        return getString(record, PART.valueOf(source));
+    }
+
+    /**
+     * Return a String from a Record. Note that this does not allow the use of {@link PART#meta}.
+     * @param record the String provider.
+     * @param source where to extract the String from.
+     * @return a String extracted from the Record.
+     */
+    public static String getString(Record record, PART source) {
+        switch (source) {
+            case id:       return record.getId();
+            case base:     return record.getBase();
+            case content:  return record.getContentAsUTF8();
+            case xmlfull:
+                try {
+                    return toXML(record);
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Unable to represent record " + record + " as XML", e);
+                }
+            case childid:  return record.getChildIds() == null  ? null: Strings.join(record.getChildIds());
+            case parentid: return record.getParentIds() == null ? null: Strings.join(record.getParentIds());
+            case meta: throw new UnsupportedOperationException("The part " + PART.meta + " cannot be used directly");
+            default: throw new IllegalArgumentException("Unknown source '" + source + "'");
+        }
     }
 
     /**
@@ -848,12 +870,36 @@ public class RecordUtil {
     }
 
     /**
+     * Wrapper for {@link #getString(Record, String)}. If the Payload
+     * encapsulates a Stream, the Stream is returned regardless of source.
+     * If not, the Record-based getString is called.
+     * </p><p>
+     * Warning: When the Payload is Stream-based, resolving to an in-memory
+     * String might require a lot of memory.
+     * @param payload the source of the String if the Payload does not contain
+     *        a Stream.
+     * @param source where to extract the String from if the Payload does not
+     *        contain a Stream.
+     * @return a String extracted from the Payload.
+     */
+    public static String getString(Payload payload, PART source) {
+        if (payload.getStream() == null) {
+            return getString(payload.getRecord(), source);
+        }
+        try {
+            return Strings.flush(payload.getStream());
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to flush the Stream in " + payload, e);
+        }
+    }
+
+    /**
      * Shorthand for getString(payload, "content").
      * @param payload see the JavaDoc for {@link #getString(Payload, String)}.
      * @return see the JavaDoc for {@link #getString(Payload, String)}.
      */
     public static String getString(Payload payload) {
-        return getString(payload, PART_CONTENT);
+        return getString(payload, PART.content);
     }
 
     /**
@@ -884,7 +930,7 @@ public class RecordUtil {
      * @return a stream constructed from the Record.
      */
     public static InputStream getStream(Record record, String source) {
-        if (PART_CONTENT.equals(source)) {
+        if (PART.content.toString().equals(source)) {
             return new ByteArrayInputStream(record.getContent());
         }
         return new ReaderInputStream(new StringReader(getString(record, source)), "utf-8");
@@ -913,7 +959,7 @@ public class RecordUtil {
      * @return see the JavaDoc for {@link #getStream(Payload, String)}.
      */
     public static InputStream getStream(Payload payload) {
-        return getStream(payload, PART_CONTENT);
+        return getStream(payload, PART.content.toString());
     }
 
     /**
@@ -925,7 +971,14 @@ public class RecordUtil {
      * @return a reader constructed from the Record.
      */
     public static Reader getReader(Record record, String source) {
-        if (PART_CONTENT.equals(source)) {
+        if (PART.content.toString().equals(source)) {
+            return new InputStreamReader(new ByteArrayInputStream(record.getContent()));
+        }
+        return new StringReader(getString(record, source));
+    }
+
+    public static Reader getReader(Record record, PART source) {
+        if (source == PART.content) {
             return new InputStreamReader(new ByteArrayInputStream(record.getContent()));
         }
         return new StringReader(getString(record, source));
@@ -958,7 +1011,7 @@ public class RecordUtil {
      * @return see the JavaDoc for {@link #getReader(Payload, String)}.
      */
     public static Reader getReader(Payload payload) {
-        return getReader(payload, PART_CONTENT);
+        return getReader(payload, PART.content.toString());
     }
 
     /**
@@ -971,34 +1024,50 @@ public class RecordUtil {
      *        fallback is to assign the value with the destination used directly
      *        as key.
      */
-    public static void setString(
-        Record record, String value, String destination) {
-        if (PART_CONTENT.equals(destination)) {
-            try {
-                record.setContent(value.getBytes("utf-8"), false);
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("Exception while converting content to UTF-8 bytes for " + record, e);
-            }
-        } else if (PART_ID.equals(destination)) {
-            record.setId(value);
-        } else if (PART_BASE.equals(destination)) {
-            record.setBase(value);
-        } else if (PART_CHILDID.equals(destination)) {
-            if (record.getChildIds() == null) {
-                record.setChildIds(new ArrayList<>(Arrays.asList(value)));
-            } else {
-                record.getChildIds().add(value);
-            }
-        } else if (PART_PARENTID.equals(destination)) {
-            if (record.getParentIds() == null) {
-                record.setParentIds(new ArrayList<>(Arrays.asList(value)));
-            } else {
-                record.getParentIds().add(value);
-            }
-        } else if (destination.startsWith(PART_META_PREFIX)) {
-            String key = destination.substring(5, destination.length());
+    public static void setString(Record record, String value, String destination) {
+        if (destination.startsWith(PART.meta.toString())) {
+            String key = destination.substring(PART.meta.toString().length(), destination.length());
             record.getMeta().put(key, value);
-        } else {
+            return;
+        }
+        try {
+            PART part = PART.valueOf(destination);
+            switch (part) {
+                case id:
+                    record.setId(value);
+                    break;
+                case base:
+                    record.setBase(value);
+                    break;
+                case content:
+                    try {
+                        record.setContent(value.getBytes("utf-8"), false);
+                    } catch (UnsupportedEncodingException e) {
+                        throw new RuntimeException(
+                                "Exception while converting content to UTF-8 bytes for " + record, e);
+                    }
+                    break;
+                case xmlfull: throw new IllegalArgumentException(
+                        "The part " + PART.xmlfull + " is unsupported as setting the full XMLTree does not make sense");
+                case childid:
+                    if (record.getChildIds() == null) {
+                        record.setChildIds(new ArrayList<>(Arrays.asList(value)));
+                    } else {
+                        record.getChildIds().add(value);
+                    }
+                    break;
+                case parentid:
+                    if (record.getParentIds() == null) {
+                        record.setParentIds(new ArrayList<>(Arrays.asList(value)));
+                    } else {
+                        record.getParentIds().add(value);
+                    }
+                    break;
+                case meta: throw new IllegalArgumentException(
+                        "The part " + PART.meta.toString() + " can only be used as prefix, not directly");
+                default: throw new UnsupportedOperationException("The part " + part + " is unknown");
+            }
+        } catch (IllegalArgumentException e) {
             record.getMeta().put(destination, value);
         }
     }
@@ -1013,9 +1082,8 @@ public class RecordUtil {
      *        fallback is to assign the value with the destination used directly
      *        as key.
      */
-    public static void setBytes(
-        Record record, byte[] value, String destination) {
-        if (PART_CONTENT.equals(destination)) {
+    public static void setBytes(Record record, byte[] value, String destination) {
+        if (PART.content.toString().equals(destination)) {
             record.setContent(value, false);
         }
         try {
@@ -1028,7 +1096,7 @@ public class RecordUtil {
     /**
      * Returns at most limit characters from the source in the given Record.
      * The implementation creates a temporary Reader and Writer if the source is
-     * {@link #PART_CONTENT}.
+     * {@link PART#content}.
      * @param record the String provider.
      * @param source where to extract the String from. Valid values are 'id',
      *        'base', 'content' and 'meta.key' where the key in meta.key is
@@ -1042,7 +1110,8 @@ public class RecordUtil {
             return getString(record, source);
         }
 
-        if (PART_ID.equals(source) || PART_BASE.equals(source) || source.startsWith(PART_META_PREFIX)) {
+        if (PART.id.toString().equals(source) || PART.base.toString().equals(source) ||
+            source.startsWith(PART.meta.toString())) {
             String full = getString(record, source);
             return full.length() <= limit ? full : full.substring(0, limit);
         }

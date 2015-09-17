@@ -226,32 +226,32 @@ public class RelationResolverTest extends TestCase {
         List<Configuration> metaConfs = shaperConf.createSubConfigurations(RecordShaperFilter.CONF_META, 5);
 
         Configuration conf10Content = metaConfs.get(0);
-        conf10Content.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART_CONTENT);
-        conf10Content.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART_META_PREFIX + "isbn10");
+        conf10Content.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART.content);
+        conf10Content.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART.meta.toString() + "isbn10");
         conf10Content.set(RecordShaperFilter.CONF_META_REGEXP, CONTENT10);
         conf10Content.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP10);
 
         Configuration conf13Content = metaConfs.get(1);
-        conf13Content.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART_CONTENT);
-        conf13Content.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART_META_PREFIX + "isbn13");
+        conf13Content.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART.content);
+        conf13Content.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART.meta.toString() + "isbn13");
         conf13Content.set(RecordShaperFilter.CONF_META_REGEXP, CONTENT13);
         conf13Content.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP13);
 
         Configuration conf10Origin = metaConfs.get(2);
-        conf10Origin.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART_META_PREFIX + Payload.ORIGIN);
-        conf10Origin.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART_META_PREFIX + "isbn10origin");
+        conf10Origin.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART.meta.toString() + Payload.ORIGIN);
+        conf10Origin.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART.meta.toString() + "isbn10origin");
         conf10Origin.set(RecordShaperFilter.CONF_META_REGEXP, ORIGIN10);
         conf10Origin.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP10);
 
         Configuration conf13Origin = metaConfs.get(3);
-        conf13Origin.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART_META_PREFIX + Payload.ORIGIN);
-        conf13Origin.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART_META_PREFIX + "isbn10origin");
+        conf13Origin.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART.meta.toString() + Payload.ORIGIN);
+        conf13Origin.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART.meta.toString() + "isbn10origin");
         conf13Origin.set(RecordShaperFilter.CONF_META_REGEXP, ORIGIN13);
         conf13Origin.set(RecordShaperFilter.CONF_META_TEMPLATE, GROUP13);
 
         Configuration confUnmatching = metaConfs.get(4);
-        confUnmatching.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART_META_PREFIX + Payload.ORIGIN);
-        confUnmatching.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART_META_PREFIX + "nonmatching");
+        confUnmatching.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART.meta.toString() + Payload.ORIGIN);
+        confUnmatching.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART.meta.toString() + "nonmatching");
         confUnmatching.set(RecordShaperFilter.CONF_META_REGEXP, "nomatch");
         confUnmatching.set(RecordShaperFilter.CONF_META_TEMPLATE, "$0");
 

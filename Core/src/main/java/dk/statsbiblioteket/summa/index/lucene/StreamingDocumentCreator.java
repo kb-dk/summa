@@ -125,7 +125,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
     public boolean processRecord(Record record, boolean origin, Document doc) throws PayloadException {
         XMLStreamReader reader;
         try {
-            reader = inputFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART_CONTENT));
+            reader = inputFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART.content));
         } catch (XMLStreamException e) {
             log.debug("Unable to make an XMLStream from " + record);
             if (origin) {

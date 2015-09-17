@@ -183,9 +183,9 @@ public class RecordShaperFilterTest extends TestCase {
 
         Configuration partConf = metaConfs.get(0);
         partConf.set(RecordShaperFilter.CONF_META_SOURCE,
-                     RecordUtil.PART_CONTENT);
+                     RecordUtil.PART.content);
         partConf.set(RecordShaperFilter.CONF_META_KEY,
-                     RecordUtil.PART_META_PREFIX + "result");
+                     RecordUtil.PART.meta.toString() + "result");
         partConf.set(RecordShaperFilter.CONF_META_LIMIT, 10);
         partConf.set(RecordShaperFilter.CONF_META_REGEXP, ".*(foo.).*");
         partConf.set(RecordShaperFilter.CONF_META_TEMPLATE, "$1");
@@ -216,8 +216,8 @@ public class RecordShaperFilterTest extends TestCase {
         List<Configuration> metaConfs = shaperConf.createSubConfigurations(RecordShaperFilter.CONF_META, 1);
 
         Configuration partConf = metaConfs.get(0);
-        partConf.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART_CONTENT);
-        partConf.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART_CHILDID);
+        partConf.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART.content);
+        partConf.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART.childid);
         partConf.set(RecordShaperFilter.CONF_META_REGEXP,
                      "(?s).*<isPartOfNewspaper[^>]*rdf:resource=\"info:fedora/([^\"]+)\".*");
         partConf.set(RecordShaperFilter.CONF_META_TEMPLATE, "doms_newspaperAuthority:$1");
