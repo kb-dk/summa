@@ -113,19 +113,19 @@ public class XMLTransformer extends GraphFilter<Object> {
      * The source for the transformation.
      * @see {@link RecordUtil#getString(dk.statsbiblioteket.summa.common.filter.Payload, String)}
      * </p><p>
-     * Optional. Default is "content" ({@link RecordUtil#PART_CONTENT}).
+     * Optional. Default is "content" ({@link RecordUtil.PART#content}).
      */
     public static final String CONF_SOURCE = "summa.xmltransformer.source";
-    public static final String DEFAULT_SOURCE = RecordUtil.PART_CONTENT;
+    public static final String DEFAULT_SOURCE = RecordUtil.PART.content.toString();
 
     /**
      * The destination for the transformation.
      * @see {@link RecordUtil#setString(dk.statsbiblioteket.summa.common.Record, String, String)}.
      * </p><p>
-     * Optional. Default is "content" ({@link RecordUtil#PART_CONTENT}).
+     * Optional. Default is "content" ({@link RecordUtil.PART#content}).
      */
     public static final String CONF_DESTINATION = "summa.xmltransformer.destination";
-    public static final String DEFAULT_DESTINATION = RecordUtil.PART_CONTENT;
+    public static final String DEFAULT_DESTINATION = RecordUtil.PART.content.toString();
 
     /**
      * If true, all namespaces in the XML is stripped prior to transformation.

@@ -135,5 +135,41 @@ public class DumpFilterTest extends TestCase {
                    foundStream);
     }
 
+    public void testParentChild() throws Exception {
+        Configuration conf = Configuration.newMemoryBased(
+                DumpFilter.CONF_OUTPUTFOLDER, OUT.getAbsolutePath(),
+                DumpFilter.CONF_DUMP_STREAMS, true,
+                DumpFilter.CONF_DUMP_XML, true,
+                DumpFilter.CONF_DUMP_XML, true);
+        Record origin = new Record("¤%&&:id-flam87:", "mybase", "<myxml>Origin</myxml>".getBytes("utf-8"));
+        Record parent = new Record("parentID", "mybase", "<myxml>Parent</myxml>".getBytes("utf-8"));
+        origin.setChildren(Arrays.asList(parent));
+        List<Payload> payloads = Arrays.asList(new Payload(origin));
+        ObjectFilter feeder = new PayloadFeederHelper(payloads);
+        ObjectFilter dumpFilter = new DumpFilter(conf);
+        dumpFilter.setSource(feeder);
+
+        int count = 0;
+        while (dumpFilter.hasNext()) {
+            log.debug("Pumped " + dumpFilter.pump());
+            count++;
+        }
+        assertEquals("The number of processed Payloads should match", 1, count);
+        assertEquals("The number of created files should match",
+                     3, OUT.listFiles().length);
+        File ec = new File(OUT, "_____id-flam87_.content");
+        File em = new File(OUT, "_____id-flam87_.meta");
+        File ex = new File(OUT, "_____id-flam87_.xml");
+        assertTrue("The expected content-file '" + ec + "' should be present",
+                   ec.exists());
+        assertTrue("The expected meta-file '" + em + "' should be present",
+                   em.exists());
+        assertTrue("The expected XML-file '" + ex + "' should be present",
+                   ex.exists());
+        final String xml = Files.loadString(ex);
+        assertTrue("The XML dump should contain '<content'\n" + xml, xml.contains("<content"));
+        assertTrue("The XML dump should contain '<children>'\n" + xml, xml.contains("<children>"));
+        log.info("Content of XML-dump:\n" + xml);
+    }
 }
 
