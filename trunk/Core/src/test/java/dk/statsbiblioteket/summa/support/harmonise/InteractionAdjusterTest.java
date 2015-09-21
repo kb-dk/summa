@@ -18,10 +18,7 @@ import junit.framework.TestSuite;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class InteractionAdjusterTest extends TestCase {
 
@@ -115,6 +112,87 @@ public class InteractionAdjusterTest extends TestCase {
             assertEquals("The rewritten quoted query with empty filter should be as expected",
                          "venner un:supported",
                          rewritten.getString(DocumentKeys.SEARCH_QUERY));
+        }
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "\"venner\" availability:\"none\"",
+                    DocumentKeys.SEARCH_FILTER, ""
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals("The rewritten quoted query with empty filter should be as expected",
+                         "venner un:supported",
+                         rewritten.getString(DocumentKeys.SEARCH_QUERY));
+        }
+    }
+
+    public void testUnsupportedFieldsFilterSingle() {
+        Configuration conf = createAdjusterConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_QUERY, "un:supported");
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_FIELDS, "availability");
+        InteractionAdjuster adjuster = new InteractionAdjuster(conf);
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "venner",
+                    DocumentKeys.SEARCH_FILTER, "availability:none"
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals("A single filter on an unsupported field should switch the filter to non-match",
+                         "un:supported",
+                         Strings.join(rewritten.getStrings(DocumentKeys.SEARCH_FILTER)));
+        }
+    }
+
+    public void testUnsupportedFieldsFilterMulti() {
+        Configuration conf = createAdjusterConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_QUERY, "un:supported");
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_FIELDS, "availability");
+        InteractionAdjuster adjuster = new InteractionAdjuster(conf);
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "venner",
+                    DocumentKeys.SEARCH_FILTER, new ArrayList<>(Arrays.asList("availability:none", "fine"))
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals("Multiple filters where one has an unsupported field should switch that filter to non-match",
+                         "un:supported",
+                         Strings.join(rewritten.getStrings(DocumentKeys.SEARCH_FILTER)));
+        }
+    }
+
+    public void testUnsupportedFieldsFilterSingleNot() {
+        Configuration conf = createAdjusterConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_QUERY, "un:supported");
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_FIELDS, "availability");
+        InteractionAdjuster adjuster = new InteractionAdjuster(conf);
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "venner",
+                    DocumentKeys.SEARCH_FILTER, "NOT availability:none"
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertFalse(
+                    "Single filters with NOT unsupported field should remove that filter from the chain, leaving null\n"
+                    + (rewritten.containsKey(DocumentKeys.SEARCH_FILTER) ?
+                            ("\"" + Strings.join(rewritten.getStrings(DocumentKeys.SEARCH_FILTER)) + "\"") : ""),
+                    rewritten.containsKey(DocumentKeys.SEARCH_FILTER));
+        }
+    }
+
+    public void testUnsupportedFieldsFilterMultiNot() {
+        Configuration conf = createAdjusterConfiguration();
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_QUERY, "un:supported");
+        conf.set(InteractionAdjuster.CONF_ADJUST_UNSUPPORTED_FIELDS, "availability");
+        InteractionAdjuster adjuster = new InteractionAdjuster(conf);
+        {
+            Request request = new Request(
+                    DocumentKeys.SEARCH_QUERY, "venner",
+                    DocumentKeys.SEARCH_FILTER, new ArrayList<>(Arrays.asList("NOT availability:none", "fine"))
+            );
+            Request rewritten = adjuster.rewrite(request);
+            assertEquals(
+                    "Multiple filters where one has a NOT unsupported field should remove that filter from the chain",
+                    "fine",
+                    Strings.join(rewritten.getStrings(DocumentKeys.SEARCH_FILTER)));
         }
     }
 

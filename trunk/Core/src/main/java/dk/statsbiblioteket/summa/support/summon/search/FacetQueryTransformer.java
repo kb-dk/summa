@@ -87,6 +87,7 @@ public class FacetQueryTransformer {
             return solrRequest;
         }
         for (String query: queries) {
+            //if (query == null || query.trim().isEmpty() || !convertQueryToFacet(qp.parse(query), solrRequest, false)) {
             if (!convertQueryToFacet(qp.parse(query), solrRequest, false)) {
                 return null; // Exit at first problem
             }
