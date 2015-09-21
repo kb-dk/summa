@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The template is to be used by RecordGenerator from the Ingest-module -->
+<fagref>
+    <navn>$WORD_LIST[1, 1, firstname] $WORD_LIST[1, 2, surname]</navn>
+    <navn_sort>$WORD_LIST[1, 1, firstname] $WORD_LIST[1, 2, surname]</navn_sort>
+    <stilling>Fagekspert i $WORD_LIST[1, 1, areaOfExpertise]</stilling>
+    <titel>$WORD_LIST[1, 1, areaOfExpertise]</titel>
+    <email>$RANDOM_CHARS[2, 6, true]@$RANDOM_CHARS[2, 15, true].com</email>
+    <emneLink>http://www.example.com/emneguide/science/$RANDOM_CHARS[2, 15, true]/</emneLink>
+    <emneLink>http://www.example.com/emneguide/science/$RANDOM_CHARS[2, 15, true]/</emneLink>
+    <emneLink>http://www.example.com/emneguide/science/$RANDOM_CHARS[2, 15, true]/</emneLink>
+    <beskrivelse>
+        $RANDOM_WORDS[10, 40, 5, 7, true].
+    </beskrivelse>
+    <emneord>$WORD_LIST[1, 1, areaOfExpertise]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+    <emneord>$RANDOM_WORDS[1, 4, 3, 10, true]</emneord>
+</fagref>
