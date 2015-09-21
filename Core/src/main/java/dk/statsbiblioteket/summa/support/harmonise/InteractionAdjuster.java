@@ -324,6 +324,7 @@ public class InteractionAdjuster implements Configurable {
     @SuppressWarnings({"unchecked"})
     private void rewriteQuery(Request request) throws ParseException {
         log.trace("rewriteQuery called");
+        final String unsupported = unsupportedQuery == null ? "null" : unsupportedQuery.toString();
         final ManyToManyMapper documentFieldMap = resolveMap(
                 request, defaultDocumentFields, SEARCH_ADJUST_DOCUMENT_FIELDS);
         final ManyToManyMapper facetFieldMap = resolveMap(
@@ -340,9 +341,20 @@ public class InteractionAdjuster implements Configurable {
         if (!oldFilters.isEmpty()) {
             final ArrayList<String> newFilters = new ArrayList<>(oldFilters.size());
             for (String oldFilter: oldFilters) {
-                newFilters.add(rewriteQuery(oldFilter, documentFieldMap, facetFieldMap));
+                final String rewrittenFilter = rewriteQuery(oldFilter, documentFieldMap, facetFieldMap);
+                if (unsupported.equals(rewrittenFilter)) { // Bail if a single unsupported is reached
+                    request.put(DocumentKeys.SEARCH_FILTER, new ArrayList(Arrays.asList(rewrittenFilter)));
+                    return;
+                }
+                if (!("-" + unsupported).equals(rewrittenFilter)) { // NOT nonexisting means nothing
+                    newFilters.add(rewriteQuery(oldFilter, documentFieldMap, facetFieldMap));
+                }
             }
-            request.put(DocumentKeys.SEARCH_FILTER, newFilters);
+            if (newFilters.isEmpty()) {
+                request.remove(DocumentKeys.SEARCH_FILTER);
+            } else {
+                request.put(DocumentKeys.SEARCH_FILTER, newFilters);
+            }
         }
         final String query = request.getString(DocumentKeys.SEARCH_QUERY, "");
         if (!"".equals(query)) {
