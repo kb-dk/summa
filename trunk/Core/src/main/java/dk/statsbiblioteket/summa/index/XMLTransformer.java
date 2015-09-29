@@ -149,6 +149,20 @@ public class XMLTransformer extends GraphFilter<Object> {
      */
     public static final String CONF_ENTITY_RESOLVER = "summa.xmltransformer.entityresolver";
 
+    /**
+     * XSLT processing is by nature recursive and it it hard to guard against recursion that blows the stack.
+     * Although the Java API states that Errors signifies that the JVM is in a bad state and should be terminated,
+     * this works poorly when working with dirty data and the Transformer (and all data are dirty).
+     * </p><p>
+     * If true, too-deep recursion in XSLT will be caught and an error will be logged, but the JVM will not exit.
+     * If false, the JVM will terminate if a too-deep recursion is encountered.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_CATCH_STACK_OVERFLOW = "summa.xmltransformer.stackoverflow.catch";
+    public static final boolean DEFAULT_CATCH_STACK_OVERFLOW = true;
+
+    private final boolean topLevelStackOverflowCatch;
     private List<Changeling> changelings = new ArrayList<>();
 
     /**
@@ -158,6 +172,7 @@ public class XMLTransformer extends GraphFilter<Object> {
      */
     public XMLTransformer(Configuration conf) {
         super(conf);
+        topLevelStackOverflowCatch = conf.getBoolean(CONF_CATCH_STACK_OVERFLOW, DEFAULT_CATCH_STACK_OVERFLOW);
         Changeling base = new Changeling(conf, false);
         if (base.isValid()) {
             changelings.add(base);
@@ -240,6 +255,7 @@ public class XMLTransformer extends GraphFilter<Object> {
         private final PayloadMatcher matcher;
         private final String source;
         private final String destination;
+        private final boolean stackOverflowCatch;
 
         public Changeling(Configuration conf, boolean failOnMissing) {
             String xsltLocationString = conf.getString(CONF_XSLT, null);
@@ -263,6 +279,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             source = conf.getString(CONF_SOURCE, DEFAULT_SOURCE);
             destination = conf.getString(CONF_DESTINATION, DEFAULT_DESTINATION);
             stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES, DEFAULT_STRIP_XML_NAMESPACES);
+            stackOverflowCatch = conf.getBoolean(CONF_CATCH_STACK_OVERFLOW, DEFAULT_CATCH_STACK_OVERFLOW);
             if (xsltLocation != null) {
                 initTransformer(conf);
             }
@@ -348,6 +365,38 @@ public class XMLTransformer extends GraphFilter<Object> {
             if (log.isTraceEnabled()) {
                 log.trace(getName() + " calling transformer for " + getName() + " for " + record);
             }
+            if (stackOverflowCatch) {
+                catchTransform(record, source, result);
+            } else {
+                nonCatchTransform(record, source, result);
+            }
+            RecordUtil.setBytes(record, out.toByteArray(), destination);
+            if (log.isTraceEnabled()) {
+                log.trace(getName() + " finished transforming " + record);
+            }
+        }
+
+        // Don't init cause with the StackOverflowError as it is by nature excessive and not very telling
+        @SuppressWarnings("ThrowInsideCatchBlockWhichIgnoresCaughtException")
+        private void catchTransform(Record record, Source source, Result result) throws PayloadException {
+            try {
+                transformer.setParameter(IndexUtils.RECORD_FIELD, record.getId());
+                transformer.setParameter("recordBase", record.getBase());
+                transformer.transform(source, result);
+            } catch (StackOverflowError e) {
+                String error = e.getMessage();
+                error = error == null ? "N/A" : error;
+                error = error.length() > 1000 ? error.substring(0, 1000) : error;
+                log.error("Stack overflow when processing " + record.getId() + ": " + error);
+                throw new PayloadException(
+                        "Unable to transform content for '" + record + "' due to stack overflow: " + error);
+            } catch (TransformerException e) {
+                log.debug("Transformation failed for " + record, e);
+                throw new PayloadException("Unable to transform content for '" + record + "'", e);
+            }
+        }
+
+        private void nonCatchTransform(Record record, Source source, Result result) throws PayloadException {
             try {
                 transformer.setParameter(IndexUtils.RECORD_FIELD, record.getId());
                 transformer.setParameter("recordBase", record.getBase());
@@ -355,10 +404,6 @@ public class XMLTransformer extends GraphFilter<Object> {
             } catch (TransformerException e) {
                 log.debug("Transformation failed for " + record, e);
                 throw new PayloadException("Unable to transform content for '" + record + "'", e);
-            }
-            RecordUtil.setBytes(record, out.toByteArray(), destination);
-            if (log.isTraceEnabled()) {
-                log.trace(getName() + " finished transforming " + record);
             }
         }
     }

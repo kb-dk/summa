@@ -22,15 +22,14 @@ import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.xml.XHTMLEntityResolver;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -84,6 +83,58 @@ public class XMLTransformerTest extends TestCase {
             fail("The URL 'foo.bar' should not be valid");
         } catch (MalformedURLException e) {
             // Expected
+        }
+    }
+
+    /*
+    Iterating comma separated values in XSLT is done with recursion. Too many values brows the stack with a
+    StackOverflowError, which previously meant a shutdown of the JVM. As this is hard to guard against and
+    disrupts the processing flow, the shutdown was made optional.
+     */
+    public void testStackOverflowHandling() throws Exception {
+        final String SAMPLE = "index/stackoverflow/authors.xml";
+
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(XMLTransformer.CONF_XSLT, "index/stackoverflow/iterate.xslt");
+        OpenTransformer transformer = new OpenTransformer(conf);
+
+        String content = Streams.getUTF8Resource(SAMPLE);
+        Record record = new Record("4K", "xml", content.getBytes("utf-8"));
+        Payload payload = new Payload(record);
+
+        try  {
+            transformer.process(payload);
+            fail("Transformation of " + SAMPLE + " should always fail, but produced\n"
+                 + payload.getRecord().getContentAsUTF8());
+        } catch (StackOverflowError e) {
+            fail("Default XMLTransformer stack overflow Throwable should be a PayloadException."
+                 + " Got StackOverflowError");
+        } catch (PayloadException e) {
+            // Expected
+        }
+    }
+
+    public void testStackOverflowNonHandling() throws Exception {
+        final String SAMPLE = "index/stackoverflow/authors.xml";
+
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(XMLTransformer.CONF_XSLT, "index/stackoverflow/iterate.xslt");
+        conf.set(XMLTransformer.CONF_CATCH_STACK_OVERFLOW, false);
+        OpenTransformer transformer = new OpenTransformer(conf);
+
+        String content = Streams.getUTF8Resource(SAMPLE);
+        Record record = new Record("4K", "xml", content.getBytes("utf-8"));
+        Payload payload = new Payload(record);
+
+        try  {
+            transformer.process(payload);
+            fail("Transformation of " + SAMPLE + " should always fail, but produced\n"
+                 + payload.getRecord().getContentAsUTF8());
+        } catch (StackOverflowError e) {
+            // Expected
+        } catch (PayloadException e) {
+            fail("XMLTransformer stack overflow Throwable should be a StackOverflowError when "
+                 + XMLTransformer.CONF_CATCH_STACK_OVERFLOW + " is false");
         }
     }
 
