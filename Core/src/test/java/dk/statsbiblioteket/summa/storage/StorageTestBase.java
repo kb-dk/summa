@@ -70,7 +70,8 @@ public class StorageTestBase extends TestCase {
         // H2 Config
         return Configuration.newMemoryBased(
                 Storage.CONF_CLASS, H2Storage.class,
-                DatabaseStorage.CONF_LOCATION, lastStorageLocation
+                DatabaseStorage.CONF_LOCATION, lastStorageLocation,
+                H2Storage.CONF_H2_SERVER_PORT, 8078
         );
 
         // Derby Config
