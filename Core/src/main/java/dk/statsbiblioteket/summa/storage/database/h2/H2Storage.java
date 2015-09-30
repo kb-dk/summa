@@ -175,7 +175,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                   + "', createNew: " + createNew + ", forceNew: " + forceNew);
         init(conf);
         initExternalServer(conf);
-        log.trace("Construction completed");
+        log.info("Started " + this);
     }
 
     private void initExternalServer(Configuration conf) {
@@ -588,4 +588,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "H2Storage(location='" + location + "', external_port=" + (serverPort == null ? "N/A" : serverPort)
+               + ", " + super.toString() + ")";
+    }
 }
