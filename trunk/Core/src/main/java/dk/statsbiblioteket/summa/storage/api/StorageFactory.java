@@ -98,7 +98,7 @@ public final class StorageFactory {
             return Configuration.create(storageClass, conf);
         } catch (Exception e) {
             throw new IOException(
-                    "Failed to instantiate storage class: " + e.getMessage() + ".\nRemember: The setting '"
+                    "Failed to instantiate storage class: " + e.getMessage() + ".\nRemember: The settings for '"
                     + Storage.CONF_CLASS + "' should be well defined.", e);
         }
     }

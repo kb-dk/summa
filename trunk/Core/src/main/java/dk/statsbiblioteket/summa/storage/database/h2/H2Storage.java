@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.Files;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.h2.jdbcx.JdbcDataSource;
+import org.h2.tools.Server;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +45,16 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
     public static final String JOB_BACKUP = "backup"; // Back up the full database
     public static final String JOB_BACKUP_DESTINATION = "destination"; // Required by backup
+
+    /**
+     * If specified, an externally accessible H2 Server service is started with the given port.
+     * </p><p>
+     * Important: Only one external H2 Server service can be active at a time. If multiple servers are started,
+     * the last one takes precedence.
+     * </p><p>
+     * Optional.
+     */
+    public static final String CONF_H2_SERVER_PORT = "h2.server.port";
 
     /**
      * DB file.
@@ -110,6 +121,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      */
     public static final boolean DEFAULT_L2CACHE = false;
 
+    private Integer serverPort = null;
+    private static Server h2Server = null;
+
     /**
      * Creates a H2 database storage, given the configuration.
      *
@@ -160,7 +174,31 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                   + (password == null ? "[undefined]" : "[defined]") + ", location: '" + location
                   + "', createNew: " + createNew + ", forceNew: " + forceNew);
         init(conf);
+        initExternalServer(conf);
         log.trace("Construction completed");
+    }
+
+    private void initExternalServer(Configuration conf) {
+        if (conf.containsKey(CONF_H2_SERVER_PORT)) {
+            if (h2Server != null) {
+                log.warn("Externally accessible H2 Server requested, with existing Server already running. "
+                         + "Shutting down old Server");
+                h2Server.shutdown();
+                h2Server = null;
+            }
+            serverPort = conf.getInt(CONF_H2_SERVER_PORT);
+            try {
+                h2Server = Server.createTcpServer("-tcpPort", serverPort.toString(), "-tcpAllowOthers");
+            } catch (SQLException e) {
+                throw new ConfigurationException("Unable to create H2 external Server at port " + serverPort, e);
+            }
+            try {
+                h2Server.start();
+            } catch (SQLException e) {
+                throw new ConfigurationException("Unable to start H2 external Server at port " + serverPort, e);
+            }
+            log.info("Started externally accessible H2 Server at port " + serverPort);
+        }
     }
 
     /**
@@ -178,7 +216,13 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             log.warn(error);
             throw new IOException(error, e);
         }
-        log.info("H2 Storage closed.");
+        if (h2Server != null) {
+            log.debug("Shutting down external H2 Server on port " + serverPort);
+            h2Server.stop();
+            h2Server = null;
+            log.info("Shutdown of external H2 Server on port " + serverPort + " completed");
+        }
+        log.info("H2 Storage closed");
     }
 
     @Override
@@ -270,8 +314,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             log.debug("Enabling H2 L2 cache");
             l2cache = ";CACHE_TYPE=SOFT_LRU";
         }
+        String autoServer = ";AUTO_SERVER=TRUE";
 
-        dataSource.setURL("jdbc:h2:" + location.getAbsolutePath() + File.separator + DB_FILE + l2cache);
+        dataSource.setURL("jdbc:h2:" + location.getAbsolutePath() + File.separator + DB_FILE + l2cache + autoServer);
 
         if (username != null) {
             dataSource.setUser(username);
