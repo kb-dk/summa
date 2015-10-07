@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://lucene.apache.org/exposed/facet/response/1.0"
+            elementFormDefault="qualified"
+            xmlns:exposed="http://lucene.apache.org/exposed/facet/response/1.0">
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+      XML Schema for Lucene exposed (LUCENE-2369) facet responses.
+    </xsd:documentation>
+  </xsd:annotation>
+
+  <xsd:element name="facetresponse"   type="exposed:responseType"/>
+
+  <xsd:complexType name="responseType">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        query:   The unmodified query used for the Lucene search to
+        provide faceting for.
+        hits:    The number of documents used for the current result.
+        countms: The number of milliseconds used for counting all
+        possible tags for the given query.
+        countcached: boolean. If true, the counts for the given query
+        was already in the cache and was re-used. In that case,
+        countms states the amount of milliseconds used in the
+        first run.
+        countcached: If true, the counting part of the facet generation
+        was skipped as the cache contained the counts.
+        totalms: The total number of milliseconds from receival of the
+        request to full response generation, minus XML
+        generation. This includes counting.
+        Note that totalms can be lower than countms id the
+        counting structure was found in the cache.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="facet"  type="facetType" minOccurs="1" maxOccurs="unbounded"/>
+      <xsd:any namespace="##any" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="query"    type="xsd:string" use="required"/>
+    <xsd:attribute name="hits"     type="xsd:int"    use="optional"/>
+    <xsd:attribute name="countms"  type="xsd:int"    use="optional"/>
+    <xsd:attribute name="countcached" type="xsd:boolean" use="optional"/>
+    <xsd:attribute name="totalms"  type="xsd:int"    use="optional"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="facetType">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        name:   The name of this facet.
+        fields: The fields used for this facet.
+        order:  count =  the tags are sorted by occurrences.
+        Highest number comes first.
+        index =  the tags sorted by index order.
+        locale = the tags are sorted by the locale given in the
+        attribute "locale".
+        The default order is count.
+        locale: If sort is specified to "locale", this locale is used.
+        maxtags: The maximum number of tags to return for a facet.
+        -1 is unlimited and _not_ recommended.
+        The default is 20.
+        mincount: The minimum number of occurrences in order for a tag
+        to be part of the result.
+        The default is 0.
+        offset: Where to start extracting tags in the sorted list of
+        tags. Used for pagination.
+        The default is 0.
+        Note: This can be negative when used with "prefix" and
+        order != count.
+        prefix: The extraction starts at (the first tag that matches the
+        prefix) + offset. This cannot be used with count order.
+        The default is "", meaning the beginning of the sorted
+        tag list.
+
+        hierarchical: If true, the structure is hierarchical.
+        levels: The maximum number of levels requested.
+        delimiter: The delimiter used for splitting tags in levels.
+
+        extractionms:   The number of milliseconds spend on extracting
+        the tags for the facet. This includes sliding
+        window sorting and tagID to Term resolving.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="subtags"  type="subTagType" minOccurs="0" maxOccurs="1"/>
+      <xsd:any namespace="##any" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="name"     type="xsd:string" use="required"/>
+    <xsd:attribute name="fields"   type="xsd:string" use="required"/>
+    <xsd:attribute name="order"    type="sortType"   use="optional"/>
+    <xsd:attribute name="locale"   type="xsd:string" use="optional"/>
+    <xsd:attribute name="offset"   type="xsd:int"    use="optional"/>
+    <xsd:attribute name="prefix"   type="xsd:string" use="optional"/>
+    <xsd:attribute name="maxtags"  type="xsd:int"    use="optional"/>
+    <xsd:attribute name="mincount" type="xsd:int"    use="optional"/>
+
+    <xsd:attribute name="hierarchical" type="xsd:boolean" use="optional"/>
+    <xsd:attribute name="levels"       type="xsd:int"    use="optional"/>
+    <xsd:attribute name="delimiter"    type="xsd:string" use="optional"/>
+
+    <xsd:attribute name="extractionms" type="xsd:int"    use="optional"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="tagType" >
+    <xsd:sequence>
+      <xsd:element name="subtags" type="subTagType" minOccurs="0" maxOccurs="1"/>
+      <xsd:any namespace="##any" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="count"    type="xsd:int"    use="required"/>
+    <xsd:attribute name="term"     type="xsd:string" use="required"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="subTagType" >
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        potentialtags:  The number of tags in this facet for a query that
+                        matches all documents.
+        totaltags:      The number of tags with at least mincount occurrences
+                        for the documents matching the given query.
+        count:          The total number of references from documents matching
+                        the given query to tags at the current level.
+        totalcount:     The total number of references from documents matching
+                        the given query to tags at current and sub levels.
+
+        maxtags:        The maxtags from the query.
+        mincount:       The mincount from the query.
+        mintotalcount:  The mintotalcount from the query.
+        suborder:       The suborder from the query.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="tag" type="tagType" minOccurs="1" maxOccurs="unbounded"/>
+      <xsd:any namespace="##any" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+
+    <xsd:attribute name="maxtags"        type="xsd:int"    use="optional"/>
+    <xsd:attribute name="mincount"       type="xsd:int"    use="optional"/>
+    <xsd:attribute name="mintotalcount"  type="xsd:int"    use="optional"/>
+    <xsd:attribute name="suborder"       type="subOrderType" use="optional"/>
+
+    <xsd:attribute name="potentialtags"  type="xsd:int"    use="optional"/>
+    <xsd:attribute name="totaltags"      type="xsd:int"    use="optional"/>
+    <xsd:attribute name="count"          type="xsd:int"    use="optional"/>
+  </xsd:complexType>
+
+  <xsd:simpleType name="sortType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="count"/>
+      <xsd:enumeration value="index"/>
+      <xsd:enumeration value="locale"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="subOrderType">
+      <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="count"/>
+          <xsd:enumeration value="base"/>
+      </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>
