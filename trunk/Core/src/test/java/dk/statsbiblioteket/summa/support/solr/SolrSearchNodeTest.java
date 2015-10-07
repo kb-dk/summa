@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
+import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
@@ -534,6 +535,62 @@ public class SolrSearchNodeTest extends TestCase {
         } finally {
             searcher.close();
         }
+    }
+
+    public void testDocIDLimit() throws Exception {
+        performBasicIngest();
+
+        testIDLimits("Default", Configuration.newMemoryBased(
+                SolrSearchNode.CONF_ID, "foosearch"
+        ), 2, false);
+
+        testIDLimits("Limit 3", Configuration.newMemoryBased(
+                SolrSearchNode.CONF_ID, "foosearch",
+                SearchNodeImpl.CONF_DOCUMENT_IDS_MAX, 3
+        ), 2, false);
+
+        testIDLimits("Limit 2", Configuration.newMemoryBased(
+                SolrSearchNode.CONF_ID, "foosearch",
+                SearchNodeImpl.CONF_DOCUMENT_IDS_MAX, 2
+        ), 2, false);
+
+        testIDLimits("Limit 1 fail", Configuration.newMemoryBased(
+                SolrSearchNode.CONF_ID, "foosearch",
+                SearchNodeImpl.CONF_DOCUMENT_IDS_MAX, 1
+        ), 2, true);
+
+        testIDLimits("Limit 1 trim", Configuration.newMemoryBased(
+                SolrSearchNode.CONF_ID, "foosearch",
+                SearchNodeImpl.CONF_DOCUMENT_IDS_MAX, 1,
+                SearchNodeImpl.CONF_DOCUMENT_IDS_ACTION, SearchNodeImpl.MAX_ACTION.trim
+        ), 1, false);
+
+        testIDLimits("Limit 1 skip", Configuration.newMemoryBased(
+                SolrSearchNode.CONF_ID, "foosearch",
+                SearchNodeImpl.CONF_DOCUMENT_IDS_MAX, 1,
+                SearchNodeImpl.CONF_DOCUMENT_IDS_ACTION, SearchNodeImpl.MAX_ACTION.skip
+        ), 0, false);
+
+    }
+
+    private void testIDLimits(String message, Configuration conf, int expectedIDs, boolean expectException)
+            throws RemoteException {
+        SolrSearchNode searcher = new SolrSearchNode(conf);
+        try {
+            assertEquals(message + ": There should be the right number of hits",
+                         expectedIDs, getHits(searcher, DocumentKeys.SEARCH_IDS, "doc1, doc2"));
+            if (expectException) {
+                fail(message + ": Expected exception but got " + expectedIDs + " documents instead");
+            }
+        } catch (UnsupportedOperationException e) {
+            if (expectException) {
+                return;
+            }
+            fail(message + ": Unexpected Exception throw while expecting " + expectedIDs + " documents");
+        } finally {
+            searcher.close();
+        }
+
     }
 
     public void testFilterFacetsNoHits() throws Exception {
