@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -99,6 +100,23 @@ public abstract class SearchNodeImpl implements SearchNode {
     public static final String CONF_ID = "summa.search.id";
 
     /**
+     * The maximum number of documents that can be requested with {@link DocumentKeys#SEARCH_IDS}.
+     * See {@link #CONF_DOCUMENT_IDS_ACTION}.
+     */
+    public static final String CONF_DOCUMENT_IDS_MAX = "search.document.ids.max";
+    public static final int DEFAULT_DOCUMENT_IDS_MAX = 1000000; // 1 million
+
+    /**
+     * The reaction to {@link DocumentKeys#SEARCH_IDS} exceeding {@link #CONF_DOCUMENT_IDS_MAX}.
+     * </p><p>
+     * Optional. Possible values are trim (trim down to max), fail (throw an exception) and
+     * skip (ignore the request fully). Default is fail.
+     */
+    public static final String CONF_DOCUMENT_IDS_ACTION = "search.document.ids.max.action";
+    public static final MAX_ACTION DEFAULT_DOCUMENT_IDS_ACTION = MAX_ACTION.fail;
+    public enum MAX_ACTION {trim, fail, skip}
+
+    /**
      * The size in bytes of the buffer used when retrieving warmup-data.
      */
     private static final int BUFFER_SIZE = 8192;
@@ -114,6 +132,8 @@ public abstract class SearchNodeImpl implements SearchNode {
     private ChangingSemaphore slots = new ChangingSemaphore(0);
     private String id;
     private boolean explicitID = false;
+    private int idsMax;
+    private MAX_ACTION idsAction;
 
     public SearchNodeImpl(Configuration conf) {
         log.trace("Constructing SearchNodeImpl");
@@ -123,11 +143,15 @@ public abstract class SearchNodeImpl implements SearchNode {
         searchWhileOpening = conf.getBoolean(CONF_SEARCH_WHILE_OPENING, searchWhileOpening);
         searcherAvailabilityTimeout = conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT, searcherAvailabilityTimeout);
         explicitID = conf.valueExists(CONF_ID);
-        id = conf.getString(CONF_ID,  this.getClass().getSimpleName());
+        id = conf.getString(CONF_ID, this.getClass().getSimpleName());
+        idsMax = conf.getInt(CONF_DOCUMENT_IDS_MAX, DEFAULT_DOCUMENT_IDS_MAX);
+        idsAction = MAX_ACTION.valueOf(
+                conf.getString(CONF_DOCUMENT_IDS_ACTION, DEFAULT_DOCUMENT_IDS_ACTION.toString()));
         log.info(String.format(
                 "Constructed SearchNodeImpl(" + this.getClass().getSimpleName() + ") with concurrentSearches %d, "
-                + "warmupData length '%s', warmupMaxTime %d, searchWhileOpening %s",
-                concurrentSearches, warmupData == null ? 0 : warmupData.length(), warmupMaxTime, searchWhileOpening));
+                + "warmupData length '%s', warmupMaxTime %d, searchWhileOpening %s, idsMax=%d, idsAction=%s)",
+                concurrentSearches, warmupData == null ? 0 : warmupData.length(), warmupMaxTime, searchWhileOpening,
+                idsMax, idsAction));
     }
 
     /**
@@ -341,6 +365,10 @@ public abstract class SearchNodeImpl implements SearchNode {
             throw new RemoteException("Interrupted while waiting for free slot for search");
         }
         try {
+            if (!checkIDRequestLimit(request)) {
+                log.debug("checkIDRequestLimit returned false. Skipping search");
+                return;
+            }
             if (!adjustRequest(request)) {
                 log.debug("adjustRequest returned false. Skipping search");
                 return;
@@ -359,9 +387,39 @@ public abstract class SearchNodeImpl implements SearchNode {
     }
 
     /**
+     * If the request contains {@link DocumentKeys#SEARCH_IDS}, the request is checked against
+     * {@link #CONF_DOCUMENT_IDS_MAX} and {@link #CONF_DOCUMENT_IDS_ACTION}.
+     * @param request the original and unmodified request.
+     */
+    protected boolean checkIDRequestLimit(Request request) {
+        if (!request.containsKey(DocumentKeys.SEARCH_IDS)) {
+            return true;
+        }
+        List<String> ids = request.getStrings(DocumentKeys.SEARCH_IDS);
+        if (ids.size() <= idsMax) {
+            return true;
+        }
+        switch (idsAction) {
+            case fail: throw new UnsupportedOperationException(
+                    "Requested document lookup for " + ids.size() + " with max=" + idsMax);
+            case trim:
+                log.debug("Reducing document lookup for " + ids.size() + " with max=" + idsMax + " down to max");
+                ids = ids.subList(0, idsMax);
+                request.put(DocumentKeys.SEARCH_IDS,
+                            ids instanceof ArrayList? (ArrayList<String>) ids : new ArrayList<>(ids));
+                return true;
+            case skip:
+                log.debug("Requested document lookup for " + ids.size() + " exceeds max=" + idsMax
+                          + ". Skipping request fully");
+                return false;
+            default: throw new UnsupportedOperationException("No code path for unknown action '" + idsAction + "'");
+        }
+    }
+
+    /**
      * Optional adjustment of the request before search is called. Default behaviour is to rewrite
      * {@link DocumentKeys#SEARCH_IDS} by callink {@link #rewriteIDRequestToLuceneQuery}.
-     * @param request the original and unmodified request;
+     * @param request the user-issued request.
      * @return true if search should commence. Else false.
      */
     protected boolean adjustRequest(Request request) {
