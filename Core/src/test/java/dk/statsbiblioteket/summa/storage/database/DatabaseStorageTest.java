@@ -177,6 +177,32 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals(1, base.getLiveCount());
     }
 
+    public void testGetChild() throws Exception {
+        Record r1 = new Record(testId1, testBase1, testContent1);
+        Record r2 = new Record(testId2, testBase1, testContent1);
+        r2.setParentIds(Arrays.asList(r1.getId()));
+        storage.flushAll(Arrays.asList(r1, r2));
+
+        try {
+            storage.getRecord(r2.getId(), null);
+        } catch (Exception e) {
+            fail("Exception while requesting a child record with an existing parent: " + e.getMessage());
+        }
+    }
+
+    /* Requesting an orphaned child should result in a warning in the log, not an exception */
+    public void testGetOrphanChild() throws Exception {
+        Record r2 = new Record(testId2, testBase1, testContent1);
+        r2.setParentIds(Arrays.asList("NonExisting"));
+        storage.flushAll(Arrays.asList(r2));
+
+        try {
+            storage.getRecord(r2.getId(), null);
+        } catch (Exception e) {
+            fail("Exception while requesting a record with a parent-ID, but no existing parent: " + e.getMessage());
+        }
+    }
+
 
     public void testTouchNone() throws Exception {
         assertClearAndUpdateTimestamps(
