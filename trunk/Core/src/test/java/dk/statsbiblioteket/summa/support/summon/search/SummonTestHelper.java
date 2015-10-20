@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.search.PagingSearchNode;
 import dk.statsbiblioteket.summa.search.SearchNode;
+import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,6 +51,7 @@ public class SummonTestHelper {
         try {
             Configuration conf = getDefaultSummonConfiguration();
             conf.set(SummonResponseBuilder.CONF_SHORT_DATE, useShortDate);
+            conf.set(SolrSearchNode.CONF_RECORD_CACHE, SolrSearchNode.CACHE_TYPE.wildcard.toString());
 
             summon = new SummonSearchNode(conf);
         } catch (IOException e) {
