@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Used by DynamicFieldTest -->
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+
+    <fields>
+        <field name="author" parent="text" indexed="true" stored="true" multiValued="true" indexBoost="2.0" queryBoost="1.5" sortLocale="da" inFreeText="true" required="true"/>
+        <field name="title" parent="text"/>
+        <field name="joker*" parent="text"/>
+    </fields>
+
+    <defaultLanguage>da</defaultLanguage>
+    
+    <defaultSearchFields>
+        <field ref="freetext"/>
+        <field ref="title"/>
+    </defaultSearchFields>
+
+    <QueryParser defaultOperator="AND"/>
+
+    <!-- Lucene-specific elements -->
+</IndexDescriptor>
+
+
