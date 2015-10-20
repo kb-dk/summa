@@ -475,7 +475,8 @@ public class SummonSearchNode extends SolrSearchNode {
             request.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
             return true;
         }
-
+        final long oMatches = cacheMatches;
+        final long oMisses = cacheMisses;
         // Fresh request for documents based on ID
         List<String> summonIDs = extractSummonIDs(lookupIDs);
         if (summonIDs.isEmpty()) {
@@ -488,6 +489,8 @@ public class SummonSearchNode extends SolrSearchNode {
         }
         //if (summonIDs.size() > SUMMON_MAX_IDS) {
         handleDocIDsPaged(summonIDs, request, responses);
+        responses.addTiming("summon.idlookup.cached=" + (cacheMatches-oMatches));
+        responses.addTiming("summon.idlookup.noncached=" + (cacheMisses-oMisses));
         return false;
     }
 
@@ -497,6 +500,9 @@ public class SummonSearchNode extends SolrSearchNode {
         List<ResponseCollection> rawResponses = new ArrayList<>(summonIDs.size()/SUMMON_MAX_IDS+1);
         ArrayList<String> notProcessed = new ArrayList<>(summonIDs);
         Set<String> nonResolved = new HashSet<>(summonIDs.size()); // Failed first class resolve
+
+        int cacheHits = resolveRecordsFromCache(request, notProcessed, responses);
+
         // We do this iteratively so we do not overwhelm summon
         while (!notProcessed.isEmpty()) {
             ArrayList<String> sub;
@@ -507,13 +513,13 @@ public class SummonSearchNode extends SolrSearchNode {
                 sub = notProcessed;
             }
             ResponseCollection subResponses = new ResponseCollection();
-            Request subRequess = new Request();
-            subRequess.put(LEAF_ID_REQUEST, true);
-            subRequess.putAll(request);
-            subRequess.put(DocumentKeys.SEARCH_IDS, sub);
-            subRequess.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
-            subRequess.put(DocumentKeys.ROWS, SUMMON_MAX_IDS);
-            barrierSearch(subRequess, subResponses);
+            Request subRequest = new Request();
+            subRequest.put(LEAF_ID_REQUEST, true);
+            subRequest.putAll(request);
+            subRequest.put(DocumentKeys.SEARCH_IDS, sub);
+            subRequest.put(DocumentKeys.SEARCH_MAX_RECORDS, SUMMON_MAX_IDS);
+            subRequest.put(DocumentKeys.ROWS, SUMMON_MAX_IDS);
+            barrierSearch(subRequest, subResponses);
             cleanupDocIDResponse(sub, subResponses, nonResolved);
             rawResponses.add(subResponses);
             if (sub != notProcessed) { // More to come
@@ -563,7 +569,31 @@ public class SummonSearchNode extends SolrSearchNode {
         }
         log.info(summonIDs.size() + " documents requested. chunks_size=" + SUMMON_MAX_IDS + ", single_lookups="
                   + singleLookups + ", unresolved=" + missing.size() +
-                  (missing.isEmpty() ? "" : "(" + Strings.join(missing, 3) + ")"));
+                  (missing.isEmpty() ? "" : "(" + Strings.join(missing, 3) + ")") + ", cached=" + cacheHits);
+    }
+
+    private int resolveRecordsFromCache(Request request, ArrayList<String> recordIDs, ResponseCollection responses) {
+        if (cacheType != CACHE_TYPE.field && cacheType != CACHE_TYPE.wildcard) {
+            return 0;
+        }
+        int localMatches = 0;
+        String cacheKeyPostfix = cacheKeyPostfix(request);
+        DocumentResponse cachedResponse = responseBuilder.createBasicDocumentResponse(request);
+        for (int i = recordIDs.size()-1 ; i >= 0 ; i--) {
+            DocumentResponse.Record record = recordCache.get(recordIDs.get(i) + cacheKeyPostfix);
+            if (record != null) {
+                localMatches++;
+                cacheMatches++;
+                cachedResponse.addRecord(record);
+                recordIDs.remove(i);
+            } else {
+                cacheMisses++;
+            }
+        }
+        if (cachedResponse.size() != 0) {
+            responses.add(cachedResponse);
+        }
+        return localMatches;
     }
 
     /**

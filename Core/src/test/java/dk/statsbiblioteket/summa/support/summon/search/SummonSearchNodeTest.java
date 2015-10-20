@@ -143,6 +143,76 @@ public class SummonSearchNodeTest extends TestCase {
         log.info("Query: 'foo', IDs: [" + Strings.join(idsFromLookup).replace("summon_", "") + "]");
     }
 
+    public void testDocRequestCaching() throws RemoteException {
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+
+        List<String> ids = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, "foo",
+                DocumentKeys.SEARCH_MAX_RECORDS, 25
+        ), "id", false);
+        assertEquals("The must be the correct number of hits to generate a list of test-IDs for lookup",
+                     25, ids.size());
+        String statsOuter = summon.getRecordCacheStats();
+        assertTrue("The record cache should contain 25 entries after plain search: " + statsOuter,
+                   statsOuter.contains("inserts=25"));
+
+        List<String> reduced = new ArrayList<>(ids.subList(2, 20));
+        {
+            List<String> idsFromLookup = getAttributes(summon, new Request(
+                    DocumentKeys.SEARCH_IDS, Strings.join(reduced)
+            ), "id", false);
+            assertEquals("There should be the right number of returned documents from reduced ID lookup. " +
+                         "Returned IDs were\n" + Strings.join(idsFromLookup),
+                         18, idsFromLookup.size());
+            String stats = summon.getRecordCacheStats();
+            assertTrue("The record cache should report 18 matches after lookup for 18 records: " + stats,
+                       stats.contains("matches=18"));
+        }
+        summon.clearRecordCache();
+        {
+            List<String> idsFromLookup = getAttributes(summon, new Request(
+                    DocumentKeys.SEARCH_IDS, Strings.join(reduced)
+            ), "id", false);
+            assertEquals("There should be the right number of returned documents from reduced ID lookup after cache "
+                         + "clear. Returned IDs were\n" + Strings.join(idsFromLookup),
+                         18, idsFromLookup.size());
+            String stats = summon.getRecordCacheStats();
+            assertTrue("The record cache should report 18 inserts after lookup for 18 records post-cache-clear: "
+                       + stats,
+                       stats.contains("inserts=18"));
+            assertTrue("The record cache should report 18 misses after lookup for 18 records post-cache-clear: "
+                       + stats,
+                       stats.contains("misses=18"));
+        }
+
+        {
+            List<String> idsFromLookup = getAttributes(summon, new Request(
+                    DocumentKeys.SEARCH_IDS, Strings.join(ids)
+            ), "id", false);
+            assertEquals("Mixed cached and non-cached lookups should yield the full amount of responses. " +
+                         "Returned IDs were\n" + Strings.join(idsFromLookup),
+                         25, idsFromLookup.size());
+            String stats = summon.getRecordCacheStats();
+            assertTrue("After mixed cached and non-cache lookup, the number of matches should be 18: " + stats,
+                       stats.contains("matches=18"));
+            assertTrue("After mixed cached and non-cache lookup, the number of misses should be 18+7: " + stats,
+                       stats.contains("misses=25"));
+        }
+
+        {
+            List<String> idsFromLookup = getAttributes(summon, new Request(
+                    DocumentKeys.SEARCH_IDS, Strings.join(ids)
+            ), "id", false);
+            assertEquals("Repeating the ID-lookup-request should yield the same number of responses. " +
+                         "Returned IDs were\n" + Strings.join(idsFromLookup),
+                         25, idsFromLookup.size());
+            String stats = summon.getRecordCacheStats();
+            assertTrue("After repeated mixed cached and non-cache lookup, the number of matches should be 18+25: "
+                       + stats,
+                       stats.contains("matches=43"));
+        }
+    }
+
     public void disabledtestChangedDocIDRequest() throws RemoteException {
         // Returned as summon_FETCH-LOGICAL-c611-6aa4a4e310c8434ecaf0289c01a569c2b03cf40b9ea8913fd9bc487fb3db1caa1
         final String ID = "summon_FETCH-eric_primary_EJ5633011";

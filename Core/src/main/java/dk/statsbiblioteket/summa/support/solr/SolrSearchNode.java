@@ -20,14 +20,17 @@ import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.summon.search.FacetQueryTransformer;
 import dk.statsbiblioteket.summa.support.summon.search.SolrFacetRequest;
 import dk.statsbiblioteket.summa.support.summon.search.SolrResponseBuilder;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.caching.TimeSensitiveCache;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -225,6 +228,38 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public static final String CONF_MLT_ENABLED = "solr.mlt.enabled";
     public static final boolean DEFAULT_MLT_ENABLED = true;
 
+    /**
+     * Cache of records aka Solr documents. Collected by standard searches as well as {@link DocumentKeys#SEARCH_IDS}
+     * requests. Used when doing {@link DocumentKeys#SEARCH_IDS} requests.
+     * </p><p>
+     * Optional. See {@link CACHE_TYPE} for detaild. Default is off.
+     */
+    public static final String CONF_RECORD_CACHE = "solr.recordcache";
+    public static final CACHE_TYPE DEFAULT_RECORD_CACHE = CACHE_TYPE.off;
+    /**
+     * off:      The cache is disabled.<br/>
+     * field:    Records are stored with requested fields as part of their key.<br/>
+     * wildcard: Records are stored with only their recordID as key.
+     */
+    public static enum CACHE_TYPE {off, field, wildcard}
+
+    /**
+     * If {@link #CONF_RECORD_CACHE} is not off, the given timeout controls how many milliseconds a Record will be
+     * stored before being removed from the cache.
+     * </p><p>
+     * Optional. Default is 600,000 (10 minutes).
+     */
+    public static final String CONF_RECORD_CACHE_TIMEOUT = "solr.recordcache.timeoutms";
+    public static final long DEFAULT_RECORD_CACHE_TIMEOUT = 10*60*1000; // 10 min
+
+    /**
+     * If {@link #CONF_RECORD_CACHE} is not off, the limit controls how many Records the cache will hold at any time.
+     * </p><p>
+     * Optional. Default is 1000.
+     */
+    public static final String CONF_RECORD_CACHE_LIMIT = "solr.recordcache.limit";
+    public static final int DEFAULT_RECORD_CACHE_LIMIT = 1000;
+
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     protected SolrResponseBuilder responseBuilder;
@@ -248,9 +283,15 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final boolean emptyFilterNoSearch;
     protected final boolean mltEnabled;
 
+    protected final CACHE_TYPE cacheType;
+    protected final TimeSensitiveCache<String, DocumentResponse.Record> recordCache;
+
     // Debug & feedback
     protected long lastConnectTime = -1;
     protected long lastDataTime = -1;
+    protected long cacheInsertions = 0;
+    protected long cacheMatches = 0;
+    protected long cacheMisses = 0;
 
     public SolrSearchNode(Configuration conf) throws RemoteException {
         super(conf);
@@ -282,9 +323,23 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         emptyQueryNoSearch = conf.getBoolean(CONF_EMPTY_QUERY_NO_SEARCH, DEFAULT_EMPTY_QUERY_NO_SEARCH);
         emptyFilterNoSearch = conf.getBoolean(CONF_EMPTY_FILTER_NO_SEARCH, DEFAULT_EMPTY_FILTER_NO_SEARCH);
         mltEnabled = conf.getBoolean(CONF_MLT_ENABLED, DEFAULT_MLT_ENABLED);
+
+        cacheType = CACHE_TYPE.valueOf(conf.getString(CONF_RECORD_CACHE, DEFAULT_RECORD_CACHE.toString()));
+        switch (cacheType) {
+            case field:
+            case wildcard:
+                recordCache = new TimeSensitiveCache<>(
+                        conf.getLong(CONF_RECORD_CACHE_TIMEOUT, DEFAULT_RECORD_CACHE_TIMEOUT),
+                        true,
+                        conf.getInt(CONF_RECORD_CACHE_LIMIT, DEFAULT_RECORD_CACHE_LIMIT));
+                break;
+            case off:
+            default:
+                recordCache = null;
+        }
+
         readyWithoutOpen();
-        log.info("Created SolrSearchNode(" + getID() + ")");
-        // TODO: Add proper toString;
+        log.info("Created " + this);
     }
 
     /**
@@ -519,7 +574,41 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                       + buildResponseTime + " ms for converting to Summa response)");
         }
         responses.addTiming(getID() + ".search.buildresponses", buildResponseTime);
+        cacheRecords(request, responses);
         responses.addTiming(getID() + ".search.total", System.currentTimeMillis() - startTime);
+    }
+
+    /**
+     * If record caching is specified (see {@link #CONF_RECORD_CACHE}), the Records in the responses are located
+     * and stored in the cache.
+     * @param request   the original request.
+     * @param responses a collection of responses to the request.
+     */
+    private void cacheRecords(Request request, ResponseCollection responses) {
+        String cacheKeyPostfix = cacheKeyPostfix(request);
+        if (cacheKeyPostfix == null) {
+            return;
+        }
+
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                List<DocumentResponse.Record> records = ((DocumentResponse)response).getRecords();
+                for (DocumentResponse.Record record: records) {
+                    log.trace("Adding record " + record.getId() + " to cache");
+                    recordCache.put(record.getId() + cacheKeyPostfix, record);
+                    cacheInsertions++;
+                }
+            }
+        }
+    }
+
+    protected String cacheKeyPostfix(Request request) {
+        switch (cacheType) {
+            case off: return null;
+            case wildcard: return "_all";
+            case field: return request.getString(DocumentKeys.SEARCH_RESULT_FIELDS, "_all");
+            default: throw new UnsupportedOperationException("Unknown cache type: '" + cacheType + "'");
+        }
     }
 
     /**
@@ -984,6 +1073,24 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     }
 
     /**
+     * Clears the record cache (if present), including all record cache statistics.
+     */
+    public void clearRecordCache() {
+        if (recordCache == null) {
+            return;
+        }
+        recordCache.clear();
+        cacheInsertions = 0;
+        cacheMatches = 0;
+        cacheMisses = 0;
+    }
+
+    public String getRecordCacheStats() {
+        return "type=" + cacheType + ", inserts=" + cacheInsertions + ", matches=" + cacheMatches
+               + ", misses=" + cacheMisses;
+    }
+
+    /**
      * @return the number of milliseconds used for establishing the last connection.
      */
     public long getLastConnectTime() {
@@ -995,5 +1102,10 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
      */
     public long getLastDataTime() {
         return lastDataTime;
+    }
+
+    // TODO: Extend this
+    public String toString() {
+        return "SolrSearchNode(id=" + getID() + ", recordCache=" + cacheType + ")";
     }
 }
