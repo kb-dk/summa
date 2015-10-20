@@ -36,6 +36,7 @@ import dk.statsbiblioteket.summa.support.harmonise.HarmoniseTestHelper;
 import dk.statsbiblioteket.summa.support.harmonise.InteractionAdjuster;
 import dk.statsbiblioteket.summa.support.solr.SolrSearchNode;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.caching.TimeSensitiveCache;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.util.xml.XMLStepper;
@@ -141,6 +142,20 @@ public class SummonSearchNodeTest extends TestCase {
                      "Returned IDs were\n" + Strings.join(idsFromLookup),
                      25, idsFromLookup.size());
         log.info("Query: 'foo', IDs: [" + Strings.join(idsFromLookup).replace("summon_", "") + "]");
+    }
+
+    // Should really be in sbutil, but I was feeling paranoid and wanted to be sure - te@
+    public void testCacheImplementation() throws InterruptedException {
+        TimeSensitiveCache<Integer, Integer> cache = new TimeSensitiveCache<>(400, true, 10);
+        for (int i = 0 ; i < 100 ; i++) {
+            cache.put(i, i);
+        }
+        assertEquals("After 100 insertions into a cache of size 10, there should be the right amount of entries",
+                     10, cache.size());
+        Thread.sleep(500);
+        cache.put(1234, 5678);
+        assertEquals("After sleeping longer than timeout and adding a single entry, the cache size should be correct",
+                     1, cache.size());
     }
 
     public void testDocRequestCaching() throws RemoteException {
