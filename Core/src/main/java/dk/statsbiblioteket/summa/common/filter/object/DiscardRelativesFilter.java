@@ -39,6 +39,8 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
      * If true, all Records with one or more parents are discarded.
      * </p><p>
      * Optional. Default is false;
+     * </p><p>
+     * @deprecated use {@link #CONF_DISCARD_PARENT} instead.
      */
     public static final String CONF_DISCARD_HASPARENT = "summa.relativesfilter.discard.hasparent";
     public static final boolean DEFAULT_DISCARD_HASPARENT = false;
@@ -47,20 +49,78 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
      * If true, all Records with one or more children are discarded.
      * </p><p>
      * Optional. Default is false;
+     * </p><p>
+     * @deprecated use {@link #CONF_DISCARD_CHILDREN} instead.
      */
     public static final String CONF_DISCARD_HASCHILDREN = "summa.relativesfilter.discard.haschildren";
     public static final boolean DEFAULT_DISCARD_HASCHILDREN = false;
 
-    private boolean discardHasParent = DEFAULT_DISCARD_HASPARENT;
-    private boolean discardHasChildren = DEFAULT_DISCARD_HASCHILDREN;
+    /**
+     * The {@link RELATION} from the current Record to its parent must be satisfied for the record to be accepted.
+     * </p><p>
+     * Sample: If {@code summa.relativesfilter.parent=require} and the current Record has no parent, the current
+     * Record is discarded.
+     * </p><p>
+     * Optional. Default is ignore.
+     * </p><p>
+     * @see {@link #CONF_EXISTENCE_TYPE}.
+     */
+    public static final String CONF_DISCARD_PARENT = "summa.relativesfilter.parent";
+    public static final RELATION DEFAULT_DISCARD_PARENT = RELATION.ignore;
 
+    /**
+     * The {@link RELATION} from the current Record to its children must be satisfied for the record to be accepted.
+     * </p><p>
+     * Sample: If {@code summa.relativesfilter.children=disallow} and the current Record has one or more children,
+     * the current Record is discarded.
+     * </p><p>
+     * Optional. Default is ignore.
+     * </p><p>
+     * @see {@link #CONF_EXISTENCE_TYPE}.
+     */
+    public static final String CONF_DISCARD_CHILDREN = "summa.relativesfilter.children";
+    public static final RELATION DEFAULT_DISCARD_CHILDREN = RELATION.ignore;
+
+    /**
+     * When checking relation for parent or child, this property controls what constitutes an existing relation.
+     * </p><p>
+     * id: There exists at least 1 ID in the corresponding ID-list.<br/>
+     * object: There exists at least 1 Record object in the corresponding Record-list.<br/>
+     * any_id_and_object: There exists at least 1 ID and 1 Record object in the corresponding ID and Record-lists.<br/>
+     * all_id_and_object: There exists at least 1 ID and 1 Record object in the corresponding ID and Record-lists and
+     * for each ID there is a corresponding Record and vice versa.<br/>
+     * </p><p>
+     * Optional. Default is object.
+     */
+    public static final String CONF_EXISTENCE_TYPE = "summa.relativesfilter.existence";
+    public static final EXISTENCE DEFAULT_EXISTENCE_TYPE = EXISTENCE.object;
+
+    public enum RELATION {ignore, require, disallow}
+    public enum EXISTENCE {id, object, any_id_and_object, all_id_and_object}
+
+    public final RELATION parentCheck;
+    public final RELATION childrenCheck;
+    public final EXISTENCE existence;
+
+    @SuppressWarnings("deprecation")
     public DiscardRelativesFilter(Configuration conf) {
         super(conf);
         feedback = false;
-        discardHasParent = conf.getBoolean(CONF_DISCARD_HASPARENT, discardHasParent);
-        discardHasChildren = conf.getBoolean(CONF_DISCARD_HASCHILDREN, discardHasChildren);
-        log.debug("Created relativesFilter with discardHasParent=" + discardHasParent
-                  + " and discardHasChildren=" + discardHasChildren);
+        if (!conf.containsKey(CONF_DISCARD_PARENT)) {
+            parentCheck = conf.getBoolean(CONF_DISCARD_HASPARENT, DEFAULT_DISCARD_HASPARENT) ?
+                    RELATION.disallow : RELATION.ignore;
+        } else {
+            parentCheck = RELATION.valueOf(conf.getString(CONF_DISCARD_PARENT, DEFAULT_DISCARD_PARENT.toString()));
+        }
+        if (!conf.containsKey(CONF_DISCARD_CHILDREN)) {
+            childrenCheck = conf.getBoolean(CONF_DISCARD_HASCHILDREN, DEFAULT_DISCARD_HASCHILDREN) ?
+                    RELATION.disallow : RELATION.ignore;
+        } else {
+            childrenCheck =
+                    RELATION.valueOf(conf.getString(CONF_DISCARD_CHILDREN, DEFAULT_DISCARD_CHILDREN.toString()));
+        }
+        existence = EXISTENCE.valueOf(conf.getString(CONF_EXISTENCE_TYPE, DEFAULT_EXISTENCE_TYPE.toString()));
+        log.debug("Created " + this);
     }
 
     @Override
@@ -72,28 +132,103 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
         if (payload.getRecord() == null) {
             return false;
         }
-        log.trace("Checking for parents");
-        List<Record> parents = payload.getRecord().getParents();
-        if (discardHasParent && parents != null && !parents.isEmpty()) {
-            Logging.logProcess(
-                    getName() + "#" + this.getClass().getSimpleName(),
-                    "Discarding due to parent existence",
-                    Logging.LogLevel.DEBUG, payload);
-            //noinspection DuplicateStringLiteralInspection
-            log.debug("Discarding " + payload + " due to parent existence");
-            return true;
+        if (parentCheck != RELATION.ignore) {
+            log.trace("Checking for parents");
+            if (checkDiscard("parents", payload.getRecord().getParentIds(), payload.getRecord().getParents(),
+                             parentCheck, payload)) {
+                return true;
+            }
         }
-        log.trace("Checking for children");
-        List<Record> children = payload.getRecord().getChildren();
-        if (discardHasChildren && children != null && !children.isEmpty()) {
-            Logging.logProcess(
-                    getName() + "#" + this.getClass().getSimpleName(),
-                    "Discarding due to children existence",
-                    Logging.LogLevel.DEBUG, payload);
-            //noinspection DuplicateStringLiteralInspection
-            log.debug("Discarding " + payload + " due to children existence");
-            return true;
+        if (childrenCheck != RELATION.ignore) {
+            log.trace("Checking for children");
+            if (checkDiscard("children", payload.getRecord().getChildIds(), payload.getRecord().getChildren(),
+                             childrenCheck, payload)) {
+                return true;
+            }
         }
         return false;
+    }
+
+    private boolean checkDiscard(
+            String designation, List<String> ids, List<Record> records, RELATION relation, Payload payload) {
+        switch (relation) {
+            case ignore:
+                return false;
+            case disallow:
+                switch (existence) {
+                    case id: return checkDiscardLog(
+                            ids != null && !ids.isEmpty(),
+                            "Discarding due to " + designation + " ID existence when none allowed", payload);
+                    case any_id_and_object:
+                    case all_id_and_object: return checkDiscardLog(
+                            (ids != null && !ids.isEmpty()) || (records != null && !records.isEmpty()),
+                            "Discarding due to " + designation + " ID or Record existence when none allowed", payload);
+                    case object: return checkDiscardLog(
+                            records != null && !records.isEmpty(),
+                            "Discarding due to " + designation + " Record existence when none allowed", payload);
+                    default: throw new UnsupportedOperationException("Unknown existence: " + existence);
+                }
+            case require:
+                switch (existence) {
+                    case id: return checkDiscardLog(
+                            ids == null || ids.isEmpty(),
+                            "Discarding due to missing " + designation + " IDs", payload);
+                    case any_id_and_object:
+                        return checkDiscardLog(
+                                (ids == null || ids.isEmpty()) && (records == null || records.isEmpty()),
+                                "Discarding due to missing " + designation + " IDs or Records", payload);
+                    case all_id_and_object:
+                        if (checkDiscardLog(
+                                ids == null || ids.isEmpty() || records == null || records.isEmpty(),
+                                "Discarding due to missing " + designation + " IDs or Records", payload)) {
+                            return true;
+                        }
+                        if (ids == null || records == null) {
+                            return true; // Should not be needed, but the compiler complains below
+                        }
+                        id:
+                        for (String id: ids) {
+                            for (Record record: records) {
+                                if (id.equals(record.getId())) {
+                                    continue id;
+                                }
+                            }
+                            return checkDiscardLog(
+                                    true,
+                                    "Discarding due to non-matching " + designation + " IDs and Records", payload);
+                        }
+                        record:
+                        for (Record record: records) {
+                            for (String id: ids) {
+                                if (id.equals(record.getId())) {
+                                    continue record;
+                                }
+                            }
+                            return checkDiscardLog(
+                                    true,
+                                    "Discarding due to non-matching " + designation + " IDs and Records", payload);
+                        }
+                        return false;
+                    case object: return checkDiscardLog(
+                            records == null || records.isEmpty(),
+                            "Discarding due to missing " + designation + " Records", payload);
+                    default: throw new UnsupportedOperationException("Unknown existence: " + existence);
+                }
+            default: throw new UnsupportedOperationException("Unknown relation: " + relation);
+        }
+    }
+
+    private boolean checkDiscardLog(boolean discard, String message, Payload payload) {
+        if (discard) {
+            Logging.logProcess(getName() + "#" + this.getClass().getSimpleName(), message,
+                               Logging.LogLevel.DEBUG, payload);
+        }
+        return discard;
+    }
+
+    @Override
+    public String toString() {
+        return "DiscardRelativesFilter(parentCheck=" + parentCheck + ", childrenCheck=" + childrenCheck
+               + ", existence=" + existence + ')';
     }
 }

@@ -59,17 +59,15 @@ public class DiscardRelativesFilterTest extends TestCase {
         Record middleRecord = new Record("Middle", "dummy", new byte[0]);
         Record childRecord =  new Record("Child",  "dummy", new byte[0]);
         parentRecord.setChildren(Arrays.asList(middleRecord));
-        middleRecord.setChildren(Arrays.asList(childRecord));
         middleRecord.setParents(Arrays.asList(parentRecord));
+        middleRecord.setChildren(Arrays.asList(childRecord));
         childRecord.setParents(Arrays.asList(middleRecord));
         payloads.add(new Payload(parentRecord));
         payloads.add(new Payload(middleRecord));
         payloads.add(new Payload(childRecord));
 
-        payloads.add(new Payload(new Record(
-                "NoRelatives", "dummy", new byte[0])));
-        payloads.add(new Payload(new Record(
-                "StillNoRelatives", "dummy", new byte[0])));
+        payloads.add(new Payload(new Record("NoRelatives", "dummy", new byte[0])));
+        payloads.add(new Payload(new Record("StillNoRelatives", "dummy", new byte[0])));
         return payloads;
     }
 
@@ -84,36 +82,40 @@ public class DiscardRelativesFilterTest extends TestCase {
     }
 
     public void testDiscardHasParents() throws Exception {
-        DiscardRelativesFilter discarder =
-                new DiscardRelativesFilter(Configuration.newMemoryBased(
-                        DiscardRelativesFilter.CONF_DISCARD_HASPARENT, true));
+        DiscardRelativesFilter discarder = new DiscardRelativesFilter(Configuration.newMemoryBased(
+                DiscardRelativesFilter.CONF_DISCARD_HASPARENT, true));
         List<Payload> passed = suck(discarder);
         assertEquals("Only Payloads with no parent should pass",
                      3, passed.size());
     }
 
     public void testDiscardHasChildren() throws Exception {
-        DiscardRelativesFilter discarder =
-                new DiscardRelativesFilter(Configuration.newMemoryBased(
-                        DiscardRelativesFilter.CONF_DISCARD_HASCHILDREN, true));
+        DiscardRelativesFilter discarder = new DiscardRelativesFilter(Configuration.newMemoryBased(
+                DiscardRelativesFilter.CONF_DISCARD_HASCHILDREN, true));
         List<Payload> passed = suck(discarder);
         assertEquals("Only Payloads with no children should pass",
                      3, passed.size());
     }
 
+    public void testChildrenRequired() throws Exception {
+        DiscardRelativesFilter discarder = new DiscardRelativesFilter(Configuration.newMemoryBased(
+                DiscardRelativesFilter.CONF_DISCARD_CHILDREN, DiscardRelativesFilter.RELATION.require));
+        List<Payload> passed = suck(discarder);
+        assertEquals("Only Payloads with children should pass",
+                     2, passed.size());
+    }
+
     public void testDiscardHasParentOrHasChildren() throws Exception {
-        DiscardRelativesFilter discarder =
-                new DiscardRelativesFilter(Configuration.newMemoryBased(
-                        DiscardRelativesFilter.CONF_DISCARD_HASPARENT, true,
-                        DiscardRelativesFilter.CONF_DISCARD_HASCHILDREN, true));
+        DiscardRelativesFilter discarder = new DiscardRelativesFilter(Configuration.newMemoryBased(
+                DiscardRelativesFilter.CONF_DISCARD_HASPARENT, true,
+                DiscardRelativesFilter.CONF_DISCARD_HASCHILDREN, true));
         List<Payload> passed = suck(discarder);
         assertEquals("Only Payloads with no relatives should pass",
                      2, passed.size());
     }
 
     public void testDiscardNone() throws Exception {
-        DiscardRelativesFilter discarder =
-                new DiscardRelativesFilter(Configuration.newMemoryBased());
+        DiscardRelativesFilter discarder = new DiscardRelativesFilter(Configuration.newMemoryBased());
         List<Payload> passed = suck(discarder);
         assertEquals("All Payloads should pass",
                      5, passed.size());
