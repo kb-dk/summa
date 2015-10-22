@@ -68,6 +68,9 @@ public class DiscardRelativesFilterTest extends TestCase {
 
         payloads.add(new Payload(new Record("NoRelatives", "dummy", new byte[0])));
         payloads.add(new Payload(new Record("StillNoRelatives", "dummy", new byte[0])));
+        Record faker = new Record("NoRealRelatives", "dummy", new byte[0]);
+        faker.setChildIds(Arrays.asList("ChildIDButNoRecord"));
+        payloads.add(new Payload(faker));
         return payloads;
     }
 
@@ -99,10 +102,31 @@ public class DiscardRelativesFilterTest extends TestCase {
 
     public void testChildrenRequired() throws Exception {
         DiscardRelativesFilter discarder = new DiscardRelativesFilter(Configuration.newMemoryBased(
-                DiscardRelativesFilter.CONF_DISCARD_CHILDREN, DiscardRelativesFilter.RELATION.require));
+                DiscardRelativesFilter.CONF_CHILDREN, DiscardRelativesFilter.RELATION.require));
         List<Payload> passed = suck(discarder);
         assertEquals("Only Payloads with children should pass",
                      2, passed.size());
+    }
+
+    public void testExistenseType() throws Exception {
+        {
+            DiscardRelativesFilter discarder = new DiscardRelativesFilter(Configuration.newMemoryBased(
+                    DiscardRelativesFilter.CONF_CHILDREN, DiscardRelativesFilter.RELATION.require,
+                    DiscardRelativesFilter.CONF_EXISTENCE_TYPE, DiscardRelativesFilter.EXISTENCE.any_id_and_object
+            ));
+            List<Payload> passed = suck(discarder);
+            assertEquals("Only Payloads with either ID or Record children should pass",
+                         3, passed.size());
+        }
+        {
+            DiscardRelativesFilter discarder = new DiscardRelativesFilter(Configuration.newMemoryBased(
+                    DiscardRelativesFilter.CONF_CHILDREN, DiscardRelativesFilter.RELATION.require,
+                    DiscardRelativesFilter.CONF_EXISTENCE_TYPE, DiscardRelativesFilter.EXISTENCE.all_id_and_object
+            ));
+            List<Payload> passed = suck(discarder);
+            assertEquals("Only Payloads with ID + Record children should pass",
+                         2, passed.size());
+        }
     }
 
     public void testDiscardHasParentOrHasChildren() throws Exception {

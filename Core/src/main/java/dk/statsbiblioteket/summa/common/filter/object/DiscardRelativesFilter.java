@@ -40,7 +40,7 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
      * </p><p>
      * Optional. Default is false;
      * </p><p>
-     * @deprecated use {@link #CONF_DISCARD_PARENT} instead.
+     * @deprecated use {@link #CONF_PARENT} instead.
      */
     public static final String CONF_DISCARD_HASPARENT = "summa.relativesfilter.discard.hasparent";
     public static final boolean DEFAULT_DISCARD_HASPARENT = false;
@@ -50,7 +50,7 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
      * </p><p>
      * Optional. Default is false;
      * </p><p>
-     * @deprecated use {@link #CONF_DISCARD_CHILDREN} instead.
+     * @deprecated use {@link #CONF_CHILDREN} instead.
      */
     public static final String CONF_DISCARD_HASCHILDREN = "summa.relativesfilter.discard.haschildren";
     public static final boolean DEFAULT_DISCARD_HASCHILDREN = false;
@@ -65,8 +65,8 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
      * </p><p>
      * @see {@link #CONF_EXISTENCE_TYPE}.
      */
-    public static final String CONF_DISCARD_PARENT = "summa.relativesfilter.parent";
-    public static final RELATION DEFAULT_DISCARD_PARENT = RELATION.ignore;
+    public static final String CONF_PARENT = "summa.relativesfilter.parent";
+    public static final RELATION DEFAULT_PARENT = RELATION.ignore;
 
     /**
      * The {@link RELATION} from the current Record to its children must be satisfied for the record to be accepted.
@@ -78,8 +78,8 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
      * </p><p>
      * @see {@link #CONF_EXISTENCE_TYPE}.
      */
-    public static final String CONF_DISCARD_CHILDREN = "summa.relativesfilter.children";
-    public static final RELATION DEFAULT_DISCARD_CHILDREN = RELATION.ignore;
+    public static final String CONF_CHILDREN = "summa.relativesfilter.children";
+    public static final RELATION DEFAULT_CHILDREN = RELATION.ignore;
 
     /**
      * When checking relation for parent or child, this property controls what constitutes an existing relation.
@@ -106,18 +106,18 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
     public DiscardRelativesFilter(Configuration conf) {
         super(conf);
         feedback = false;
-        if (!conf.containsKey(CONF_DISCARD_PARENT)) {
+        if (!conf.containsKey(CONF_PARENT)) {
             parentCheck = conf.getBoolean(CONF_DISCARD_HASPARENT, DEFAULT_DISCARD_HASPARENT) ?
                     RELATION.disallow : RELATION.ignore;
         } else {
-            parentCheck = RELATION.valueOf(conf.getString(CONF_DISCARD_PARENT, DEFAULT_DISCARD_PARENT.toString()));
+            parentCheck = RELATION.valueOf(conf.getString(CONF_PARENT, DEFAULT_PARENT.toString()));
         }
-        if (!conf.containsKey(CONF_DISCARD_CHILDREN)) {
+        if (!conf.containsKey(CONF_CHILDREN)) {
             childrenCheck = conf.getBoolean(CONF_DISCARD_HASCHILDREN, DEFAULT_DISCARD_HASCHILDREN) ?
                     RELATION.disallow : RELATION.ignore;
         } else {
             childrenCheck =
-                    RELATION.valueOf(conf.getString(CONF_DISCARD_CHILDREN, DEFAULT_DISCARD_CHILDREN.toString()));
+                    RELATION.valueOf(conf.getString(CONF_CHILDREN, DEFAULT_CHILDREN.toString()));
         }
         existence = EXISTENCE.valueOf(conf.getString(CONF_EXISTENCE_TYPE, DEFAULT_EXISTENCE_TYPE.toString()));
         log.debug("Created " + this);
