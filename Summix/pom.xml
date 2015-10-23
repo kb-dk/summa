@@ -77,10 +77,10 @@
             <groupId>fastutil</groupId>
             <artifactId>fastutil</artifactId>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.archive</groupId>
             <artifactId>heritrix</artifactId>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
