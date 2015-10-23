@@ -26,19 +26,31 @@
     <name>Summa</name>
 
 
-    <distributionManagement>
-        <repository>
-            <id>sbforge-nexus</id>
-            <name>SBForgeb Nexus Repo manager</name>
-            <url>https://sbforge.org/nexus/content/repositories/releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>sbforge-nexus</id>
-            <name>SBForgeb Nexus Repo manager</name>
-            <url>https://sbforge.org/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
-      </distributionManagement>
-
+  <repositories>
+    <repository>
+      <id>sbprojects-nexus</id>
+      <url>https://sbprojects.statsbiblioteket.dk/nexus/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>sbprojects-nexus</id>
+      <url>https://sbprojects.statsbiblioteket.dk/nexus/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+  
     <!-- Summa modules -->
     <modules>
         <module>SBSolr</module>
