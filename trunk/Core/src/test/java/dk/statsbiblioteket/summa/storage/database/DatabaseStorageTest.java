@@ -321,6 +321,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         Configuration conf = createConf(); // ReleaseHelper.getStorageConfiguration("RelationsTest");
         conf.set(DatabaseStorage.CONF_RELATION_TOUCH, touch);
         conf.set(DatabaseStorage.CONF_RELATION_CLEAR, clear);
+        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079);
         Storage storage = new H2Storage(conf);
         try {
             storage.flushAll(Arrays.asList(
