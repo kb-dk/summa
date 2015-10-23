@@ -197,9 +197,11 @@ public class DatabaseStorageTest extends StorageTestBase {
         storage.flushAll(Arrays.asList(r2));
 
         try {
-            storage.getRecord(r2.getId(), null);
+            Record record = storage.getRecord(r2.getId(), null);                        
+            assertEquals(testId2,record.getId());
         } catch (Exception e) {
             fail("Exception while requesting a record with a parent-ID, but no existing parent: " + e.getMessage());
+          log.warn("fail",e);
         }
     }
 
@@ -414,6 +416,7 @@ public class DatabaseStorageTest extends StorageTestBase {
 
       Set RECORDS to 400000 and Xmx to 300m before running this test for a proper memory trial
      */
+    /*
     public void testManyBytesTouch() throws Exception {
         final int[] RECORDS = new int[]{100, 500, 1000, 5000, 10000, 15000, 20000, 25000, 30000, 40000};
         final int CONTENT_SIZE = 1024;
@@ -429,6 +432,8 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
 
     }
+    */
+    
     // This mimics a rare but still occurring scenario at Statsbiblioteket/aviser
     public long measureManyBytesTouch(final int records, int contentSize) throws Exception {
         final byte[] CONTENT = new byte[contentSize];
