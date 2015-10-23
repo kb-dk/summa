@@ -145,10 +145,10 @@
             <groupId>de.schlichtherle.truezip</groupId>
             <artifactId>truezip-driver-tar</artifactId>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.archive</groupId>
             <artifactId>heritrix</artifactId>
-        </dependency>
+        </dependency>-->
         <!-- Used when testing heritrix ARCReader -->
         <!--<dependency>
             <groupId>fastutil</groupId>
