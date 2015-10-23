@@ -1743,13 +1743,14 @@ public abstract class DatabaseStorage extends StorageBase {
             if (!resultSet.next() && parentId != recordId) { 
                 String  msg="Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"+ parentId + " .Only children are loaded. Original recordId in query:"+orgRecordId;
                 log.warn(msg);           
-                throw new RuntimeException(msg);
+            //    throw new RuntimeException(msg);
+                parentId=orgRecordId; //Use this as parent
             }
-            else if (parentId == recordId){ // No parent from. Using recordid as top-parent
+            if (parentId == recordId){ // No parent found. Using recordid as top-parent
                 stmt.setString(1, recordId);//using the record requested as top-parent
                 resultSet = stmt.executeQuery();
                 boolean next = resultSet.next();                                                
-
+                
                 if(!next){
                     log.warn(String.format("RecordId '%s' not found" , recordId));                     
                     return null;
@@ -1758,6 +1759,7 @@ public abstract class DatabaseStorage extends StorageBase {
             iterateTime += System.nanoTime();
 
             long childTime = -System.nanoTime();
+
             Record topParentRecord = constructRecordFromRSNoRelationsSet(resultSet);
             if (!topParentRecord.isHasRelations()) {
                 //Sanity check. Can probably be removed after some time if this never happens.
@@ -1782,6 +1784,7 @@ public abstract class DatabaseStorage extends StorageBase {
             long postOrderTime = -System.nanoTime();
             //Find the recordId in the object tree and return this. Minimal performance overhead here.
             //Post-order transversal algorithm
+
             Record recordNode = findRecordIdPostOrderTransversal(recordId, topParentRecord);
             postOrderTime += System.nanoTime();
             if (log.isDebugEnabled()) {
