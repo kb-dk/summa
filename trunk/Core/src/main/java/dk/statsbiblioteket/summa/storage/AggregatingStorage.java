@@ -14,11 +14,13 @@
  */
 package dk.statsbiblioteket.summa.storage;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.util.Logs;
@@ -95,6 +97,16 @@ public class AggregatingStorage extends StorageBase {
      * sub configuration.
      */
     public static final String CONF_SUB_STORAGE_CONFIG = "summa.storage.substorage.config";
+
+    /**
+     * If true, any OutOfMemoryError detected, including those thrown by RMI-accessed services, will result in a
+     * complete shutdown of the current JVM.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_SHUTDOWN_ON_OOM = "summa.oom.shutdown";
+    public static final boolean DEFAULT_SHUTDOWN_ON_OOM = true;
+
     /**
      * ID for unknown base keys.
      */
@@ -129,6 +141,7 @@ public class AggregatingStorage extends StorageBase {
      */
     private Log log;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
+    private final boolean oomShutdown;
 
     /**
      * Merging context class.
@@ -544,6 +557,7 @@ public class AggregatingStorage extends StorageBase {
         writers = new HashMap<>();
         iterators = new HashMap<>();
         toClose = new ArrayList<>();
+        oomShutdown = conf.getBoolean(CONF_SHUTDOWN_ON_OOM, DEFAULT_SHUTDOWN_ON_OOM);
 
         reaper = new IteratorContextReaper(iterators);
         reaper.runInThread();
@@ -690,6 +704,20 @@ public class AggregatingStorage extends StorageBase {
      */
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
+        try {
+            return getRecordsGuarded(ids, options);
+        } catch (Throwable t) {
+            if (oomShutdown && DeferredSystemExit.containsOOM(t)) {
+                String message = "Inner OutOfMemoryError detected while performing aggregate getRecords("
+                                 + Strings.join(ids, ", ", 5) + " " + options + ")";
+                Logging.fatal(log, "AggregatingStorage", message);
+                new DeferredSystemExit(5, 5000);
+                throw new IOException(message, t);
+            }
+            throw new IOException("Exception in getRecords(" + Strings.join(ids, ", ", 5) + " " + options + ")", t);
+        }
+    }
+    private List<Record> getRecordsGuarded(List<String> ids, QueryOptions options) throws IOException {
         final int logExpands = 5;
         long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
@@ -775,6 +803,20 @@ public class AggregatingStorage extends StorageBase {
      */
     @Override
     public Record getRecord(String id, QueryOptions options) throws IOException {
+        try {
+            return getRecordGuarded(id, options);
+        } catch (Throwable t) {
+            if (oomShutdown && DeferredSystemExit.containsOOM(t)) {
+                String message = "Inner OutOfMemoryError detected while performing aggregate getRecord("
+                                 + id + " " + options + ")";
+                Logging.fatal(log, "AggregatingStorage", message);
+                new DeferredSystemExit(5, 5000);
+                throw new IOException(message, t);
+            }
+            throw new IOException("Exception in getRecord(" + id + " " + options + ")", t);
+        }
+    }
+    private Record getRecordGuarded(String id, QueryOptions options) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("getRecord('" + id + "', " + options + ")");
         }
@@ -861,6 +903,20 @@ public class AggregatingStorage extends StorageBase {
      */
     @Override
     public void flush(Record record, QueryOptions options) throws IOException {
+        try {
+            flushGuarded(record, options);
+        } catch (Throwable t) {
+            if (oomShutdown && DeferredSystemExit.containsOOM(t)) {
+                String message = "Inner OutOfMemoryError detected while performing aggregate flush("
+                                 + record + " " + options + ")";
+                Logging.fatal(log, "AggregatingStorage", message);
+                new DeferredSystemExit(5, 5000);
+                throw new IOException(message, t);
+            }
+            throw new IOException("Exception in flush(" + record + " " + options + ")", t);
+        }
+    }
+    private void flushGuarded(Record record, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
             log.trace("flush(" + record + ")");
