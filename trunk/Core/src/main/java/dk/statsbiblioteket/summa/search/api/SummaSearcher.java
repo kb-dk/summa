@@ -63,7 +63,3 @@ public interface SummaSearcher extends Configurable, Closeable {
     public ResponseCollection search(Request request) throws IOException;
 
 }
-
-
-
-
