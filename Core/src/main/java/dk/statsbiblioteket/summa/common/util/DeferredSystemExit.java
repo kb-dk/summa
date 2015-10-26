@@ -60,6 +60,7 @@ public class DeferredSystemExit implements Runnable {
     /**
      * Do not call the method externally. It is only meant to be internally called by {@code DefferedSystemExit}.
      */
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     @Override
     public void run() {
         try {
@@ -84,5 +85,19 @@ public class DeferredSystemExit implements Runnable {
         // Allow the JVM to exit even though thread is active
         thread.setDaemon(true);
         thread.start();
+    }
+
+    /***
+     * @param t a Throwable.
+     * @return true if the caused-by chain contains an OutOfMemoryError, else false.
+     */
+    public static boolean containsOOM(Throwable t) {
+        while (t != null) {
+            if (t instanceof OutOfMemoryError) {
+                return true;
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 }

@@ -14,8 +14,10 @@
  */
 package dk.statsbiblioteket.summa.search;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.api.*;
@@ -87,11 +89,21 @@ public class SummaSearcherAggregator implements SummaSearcher {
      */
     public static final String SEARCH_NOT_ACTIVE = "search.aggregator.notactive";
 
+    /**
+     * If true, any OutOfMemoryError detected, including those thrown by RMI-accessed services, will result in a
+     * complete shutdown of the current JVM.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_SHUTDOWN_ON_OOM = "summa.oom.shutdown";
+    public static final boolean DEFAULT_SHUTDOWN_ON_OOM = true;
+
     private List<Pair<String, SearchClient>> searchers;
     private ExecutorService executor;
     private final List<String> defaultSearchers;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
     private final MachineStats machineStats;
+    private final boolean oomShutdown;
 
     public SummaSearcherAggregator(Configuration conf) {
         preConstruction(conf);
@@ -118,6 +130,7 @@ public class SummaSearcherAggregator implements SummaSearcher {
         if (conf.valueExists(CONF_SEARCHER_THREADS)) {
             threadCount = conf.getInt(CONF_SEARCHER_THREADS);
         }
+        oomShutdown = conf.getBoolean(CONF_SHUTDOWN_ON_OOM, DEFAULT_SHUTDOWN_ON_OOM);
         //noinspection DuplicateStringLiteralInspection
         log.debug("Creating Executor with " + threadCount + " threads");
         executor = Executors.newFixedThreadPool(threadCount);
@@ -207,11 +220,11 @@ public class SummaSearcherAggregator implements SummaSearcher {
             if (notActives != null) {
                 selected.removeAll(notActives);
             }
-            if (request.containsKey(DocumentKeys.SEARCH_MAX_RECORDS)) {
+//            if (request.containsKey(DocumentKeys.SEARCH_MAX_RECORDS)) {
                 // Ask for a bit more to guard against semi-random order for records with same score
 //                request.put(DocumentKeys.SEARCH_MAX_RECORDS,
 //                            request.getInt(DocumentKeys.SEARCH_MAX_RECORDS) + selected.size() * 2);
-            }
+//            }
             List<Pair<String, Future<ResponseCollection>>> searchFutures = new ArrayList<>(selected.size());
             for (Pair<String, SearchClient> searcher: searchers) {
                 if (selected.contains(searcher.getKey())) {
@@ -247,9 +260,18 @@ public class SummaSearcherAggregator implements SummaSearcher {
             success = true;
             return merged;
         } catch (Exception e) {
-            String message = "Encountered Exception while performing aggregate search for " + request.toString(true);
-            log.warn(message, e);
-            throw new IOException(message, e);
+            if (oomShutdown && DeferredSystemExit.containsOOM(e)) {
+                String message = "Inner OutOfMemoryError detected while performing aggregate search for "
+                                 + request.toString(true) + ". Shutting down this JVM in 5 seconds";
+                Logging.fatal(log, "SummaSearcherAggregator", message);
+                new DeferredSystemExit(5, 5000);
+                throw new IOException(message, e);
+            } else {
+                String message = "Encountered Exception while performing aggregate search for "
+                                 + request.toString(true);
+                log.warn(message, e);
+                throw new IOException(message, e);
+            }
         } finally {
             profiler.beat();
             if (merged == null) {
@@ -404,6 +426,6 @@ public class SummaSearcherAggregator implements SummaSearcher {
             s+= searcher.getKey();
         }
         return "SummaSearcherAggregator(searchers=[" + s + "], defaultSearchers=[" + Strings.join(defaultSearchers)
-               + "], " + getStats() + ")";
+               + "], shutdownOnOOM=" + oomShutdown + ", " + getStats() + ")";
     }
 }
