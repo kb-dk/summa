@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+
+   Sets up a searcher for Serial Solutions Summon, wrapped in an adjuster
+   that maps field names, facet names and facet-tags to SummaRise/sb equivalents.
+
+   Intended to be used by a SB/Summon-aggregating searcher but can also be used
+   standalone.
+-->
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.searcher.port</key>
+            <value class="string">55511</value>
+        </entry>
+
+        <entry>
+            <key>summa.searcher.rmi.registry.port</key>
+            <value class="string">55500</value>
+        </entry>
+
+        <entry>
+            <key>summa.searcher.rmi.name</key>
+            <value class="string">summon-searcher</value>
+        </entry>
+
+        <!--
+            Implementation classes
+        -->
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>control.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.control.service.SearchService</value>
+        </entry>
+
+        <!-- Core class to use for the search engine -->
+        <entry>
+            <key>summa.searcher.class</key>
+            <value class="string">dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy</value>
+        </entry>
+
+        <!-- What backend class to support the RMI proxy-->
+        <entry>
+            <key>summa.searcher.rmi.backend</key>
+            <value class="string">dk.statsbiblioteket.summa.search.SummaSearcherImpl</value>
+        </entry>
+
+        <entry>
+            <key>summa.search.uselocalindex</key>
+            <value class="boolean">false</value>
+        </entry>
+
+        <!-- The internal search node used by the SummaSearcherImpl -->
+        <entry>
+            <key>summa.search.node.class</key>
+            <value class="string">dk.statsbiblioteket.summa.search.QueryRewritingSearchNode</value>
+        </entry>
+        <entry>
+            <key>rewriter.designation</key>
+            <value class="string">summon</value>
+        </entry>
+        <entry>
+            <key>rewriter.phrasequeries</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>queryphraser.slop</key>
+            <value class="int">4</value> <!-- 2 = Two terms can be switched or have a third term in between -->
+        </entry>
+
+        <entry>
+            <key>queryrewriter.inner.searchnode</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.search.node.class</key>
+                    <value class="string">dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode</value>
+                </entry>
+
+                <!-- The internal search node used by the SummaSearcherImpl -->
+                <!--<entry>
+                    <key>summa.search.node.class</key>
+                    <value class="string">dk.statsbiblioteket.summa.support.harmonise.AdjustingSearchNode</value>
+                </entry>-->
+
+                <!-- Adjuster properties here -->
+                <entry>
+                    <key>adjuster.id</key>
+                    <value class="string">summon</value>
+                </entry>
+
+                <entry>
+                    <key>adjuster.response.fields.enabled</key>
+                    <value class="string">false</value>
+                </entry>
+
+                <!-- Okay, this is stupid: Fields are defined with the local representation on the left and the
+                     remote specification on the right. For tags this order is reversed! -->
+
+                <entry>
+                    <key>adjuster.document.unsupported.fields</key>
+                    <value class="list">
+                        <value class="string">dk</value>
+                        <value class="string">inst</value>
+                        <value class="string">kl</value>
+                        <value class="string">nlm_kw</value>
+                        <value class="string">author_main</value>
+                        <value class="string">po</value>
+                        <value class="string">au_other</value>
+                        <value class="string">fo_andet</value>
+                        <value class="string">lma</value>
+                        <value class="string">ma</value>
+                        <value class="string">ma_short</value>
+                        <value class="string">ma_kort</value>
+                    </value>
+                </entry>
+
+                <entry>
+                    <key>adjuster.document.unsupported.query</key>
+                    <value class="string">Language:abcde32542f</value>
+                </entry>
+
+                <entry>
+                    <key>adjuster.document.fields</key>
+                    <value class="list">
+                        <value class="string">recordID - ID</value>
+                        <value class="string">ti - TitleCombined</value>
+                    </value>
+                </entry>
+                <entry>
+                    <key>adjuster.facet.fields</key>
+                    <value class="list">
+                        <value class="string">author_normalised - Author</value>
+                        <value class="string">lma_long - ContentType</value>
+                        <value class="string">llang - Language</value>
+                        <value class="string">lsubject - SubjectTerms</value>
+                    </value>
+                </entry>
+
+                <entry>
+                    <key>adjuster.facet.tags</key>
+                    <value class="list">
+                        <xproperties>
+                            <entry>
+                                <key>tagadjuster.facet.name</key>
+                                <value class="string">lma_long</value>
+                            </entry>
+                            <entry>
+                                <key>tagadjuster.tags</key>
+                                <value class="list">
+                                    <value class="string">Album - 09</value>
+                                    <value class="string">Architectural Drawing - 09</value>
+                                    <value class="string">Archival Material - 21</value>
+                                </value>
+                            </entry>
+                        </xproperties>
+
+                        <xproperties>
+                            <entry>
+                                <key>tagadjuster.facet.name</key>
+                                <value class="string">llang, lang, lsp, sp</value>
+                            </entry>
+                            <entry>
+                                <key>tagadjuster.tags</key>
+                                <!-- ISO 639-2 -->
+                                <value class="string">Afar - aar, Abkhazian - abk, Achinese - ace, Acoli - ach, Adangme - ada, Adyghe - ady, Adygei - ady, Afro Asiatic languages - afa, Afrihili - afh, Afrikaans - afr, Ainu - ain, Akan - aka, Akkadian - akk, Albanian - alb, Aleut - ale, Algonquian languages - alg, Southern Altai - alt, Amharic - amh, English Old - ang, Angika - anp, Apache languages - apa, Arabic - ara, Official Aramaic - arc, Imperial Aramaic - arc, Aragonese - arg, Armenian - arm, Mapudungun - arn, Mapuche - arn, Arapaho - arp, Artificial languages - art, Arawak - arw, Assamese - asm, Asturian - ast, Bable - ast, Leonese - ast, Asturleonese - ast, Athapascan languages - ath, Australian languages - aus, Avaric - ava, Avestan - ave, Awadhi - awa, Aymara - aym, Azerbaijani - aze, Banda languages - bad, Bamileke languages - bai, Bashkir - bak, Baluchi - bal, Bambara - bam, Balinese - ban, Basque - baq, Basa - bas, Baltic languages - bat, Beja - bej, Bedawiyet - bej, Belarusian - bel, Bemba - bem, Bengali - ben, Berber languages - ber, Bhojpuri - bho, Bihari languages - bih, Bikol - bik, Bini - bin, Edo - bin, Bislama - bis, Siksika - bla, Bantu languages - bnt, Tibetan - tib, Bosnian - bos, Braj - bra, Breton - bre, Batak languages - btk, Buriat - bua, Buginese - bug, Bulgarian - bul, Burmese - bur, Blin - byn, Bilin - byn, Caddo - cad, Central American Indian languages - cai, Galibi Carib - car, Catalan - cat, Valencian - cat, Caucasian languages - cau, Cebuano - ceb, Celtic languages - cel, Czech - cze, Chamorro - cha, Chibcha - chb, Chechen - che, Chagatai - chg, Chinese - chi, Chuukese - chk, Mari - chm, Chinook jargon - chn, Choctaw - cho, Chipewyan - chp, Dene Suline - chp, Cherokee - chr, Church Slavic - chu, Old Slavonic - chu, Church Slavonic - chu, Old Bulgarian - chu, Old Church Slavonic - chu, Chuvash - chv, Cheyenne - chy, Chamic languages - cmc, Coptic - cop, Cornish - cor, Corsican - cos, Creoles and pidgins English based - cpe, Creoles and pidgins French based - cpf, Creoles and pidgins Portuguese based - cpp, Cree - cre, Crimean Tatar - crh, Crimean Turkish - crh, Creoles and pidgins - crp, Kashubian - csb, Cushitic languages - cus, Welsh - wel, Czech - cze, Dakota - dak, Danish - dan, Dargwa - dar, Land Dayak languages - day, Delaware - del, Slave - den, German - ger, Dogrib - dgr, Dinka - din, Divehi - div, Dhivehi - div, Maldivian - div, Dogri - doi, Dravidian languages - dra, Lower Sorbian - dsb, Duala - dua, Dutch Middle - dum, Dutch - dut, Flemish - dut, Dyula - dyu, Dzongkha - dzo, Efik - efi, Egyptian - egy, Ekajuk - eka, Greek Modern - gre, Elamite - elx, English - eng, English Middle - enm, Esperanto - epo, Estonian - est, Basque - baq, Ewe - ewe, Ewondo - ewo, Fang - fan, Faroese - fao, Persian - per, Fanti - fat, Fijian - fij, Filipino - fil, Pilipino - fil, Finnish - fin, Finno Ugrian languages - fiu, Fon - fon, French - fre, French - fre, French Middle - frm, French Old - fro, Northern Frisian - frr, Eastern Frisian - frs, Western Frisian - fry, Fulah - ful, Friulian - fur, Ga - gaa, Gayo - gay, Gbaya - gba, Germanic languages - gem, Georgian - geo, German - ger, Geez - gez, Gilbertese - gil, Gaelic - gla, Scottish Gaelic - gla, Irish - gle, Galician - glg, Manx - glv, German Middle High - gmh, German Old High - goh, Gondi - gon, Gorontalo - gor, Gothic - got, Grebo - grb, Greek Ancient - grc, Greek Modern - gre, Guarani - grn, Swiss German - gsw, Alemannic - gsw, Alsatian - gsw, Gujarati - guj, Gwich'in - gwi, Haida - hai, Haitian - hat, Haitian Creole - hat, Hausa - hau, Hawaiian - haw, Hebrew - heb, Herero - her, Hiligaynon - hil, Himachali languages - him, Western Pahari languages - him, Hindi - hin, Hittite - hit, Hmong - hmn, Mong - hmn, Hiri Motu - hmo, Croatian - scr, Upper Sorbian - hsb, Hungarian - hun, Hupa - hup, Armenian - arm, Iban - iba, Igbo - ibo, Icelandic - ice, Ido - ido, Sichuan Yi - iii, Nuosu - iii, Ijo languages - ijo, Inuktitut - iku, Interlingue - ile, Occidental - ile, Iloko - ilo, Interlingua - ina, Indic languages - inc, Indonesian - ind, Indo European languages - ine, Ingush - inh, Inupiaq - ipk, Iranian languages - ira, Iroquoian languages - iro, Icelandic - ice, Italian - ita, Javanese - jav, Lojban - jbo, Japanese - jpn, Judeo Persian - jpr, Judeo Arabic - jrb, Kara Kalpak - kaa, Kabyle - kab, Kachin - kac, Jingpho - kac, Kalaallisut - kal, Greenlandic - kal, Kamba - kam, Kannada - kan, Karen languages - kar, Kashmiri - kas, Georgian - geo, Kanuri - kau, Kawi - kaw, Kazakh - kaz, Kabardian - kbd, Khasi - kha, Khoisan languages - khi, Central Khmer - khm, Khotanese - kho, Sakan - kho, Kikuyu - kik, Gikuyu - kik, Kinyarwanda - kin, Kirghiz - kir, Kyrgyz - kir, Kimbundu - kmb, Konkani - kok, Komi - kom, Kongo - kon, Korean - kor, Kosraean - kos, Kpelle - kpe, Karachay Balkar - krc, Karelian - krl, Kru languages - kro, Kurukh - kru, Kuanyama - kua, Kwanyama - kua, Kumyk - kum, Kurdish - kur, Kutenai - kut, Ladino - lad, Lahnda - lah, Lamba - lam, Lao - lao, Latin - lat, Latvian - lav, Lezghian - lez, Limburgan - lim, Limburger - lim, Limburgish - lim, Lingala - lin, Lithuanian - lit, Mongo - lol, Lozi - loz, Luxembourgish - ltz, Letzeburgesch - ltz, Luba Lulua - lua, Luba Katanga - lub, Ganda - lug, Luiseno - lui, Lunda - lun, Luo - luo, Lushai - lus, Macedonian - mac, Madurese - mad, Magahi - mag, Marshallese - mah, Maithili - mai, Makasar - mak, Malayalam - mal, Mandingo - man, Maori - mao, Austronesian languages - map, Marathi - mar, Masai - mas, Malay - may, Moksha - mdf, Mandar - mdr, Mende - men, Irish Middle - mga, Mi'kmaq - mic, Micmac - mic, Minangkabau - min, Uncoded languages - mis, Macedonian - mac, Mon Khmer languages - mkh, Malagasy - mlg, Maltese - mlt, Manchu - mnc, Manipuri - mni, Manobo languages - mno, Mohawk - moh, Mongolian - mon, Mossi - mos, Maori - mao, Malay - may, Multiple languages - mul, Munda languages - mun, Creek - mus, Mirandese - mwl, Marwari - mwr, Burmese - bur, Mayan languages - myn, Erzya - myv, Nahuatl languages - nah, North American Indian languages - nai, Neapolitan - nap, Nauru - nau, Navajo - nav, Navaho - nav, Ndebele South - nbl, South Ndebele - nbl, Ndebele North - nde, North Ndebele - nde, Ndonga - ndo, Low German - nds, Low Saxon - nds, German Low - nds, Saxon Low - nds, Nepali - nep, Nepal Bhasa - new, Newari - new, Nias - nia, Niger Kordofanian languages - nic, Niuean - niu, Dutch - dut, Flemish - dut, Norwegian Nynorsk - nno, Nynorsk Norwegian - nno, Bokmål Norwegian - nob, Norwegian Bokmål - nob, Nogai - nog, Norse Old - non, Norwegian - nor, N'Ko - nqo, Pedi - nso, Sepedi - nso, Northern Sotho - nso, Nubian languages - nub, Classical Newari - nwc, Old Newari - nwc, Classical Nepal Bhasa - nwc, Chichewa - nya, Chewa - nya, Nyanja - nya, Nyamwezi - nym, Nyankole - nyn, Nyoro - nyo, Nzima - nzi, Occitan - oci, Ojibwa - oji, Oriya - ori, Oromo - orm, Osage - osa, Ossetian - oss, Ossetic - oss, Turkish Ottoman - ota, Otomian languages - oto, Papuan languages - paa, Pangasinan - pag, Pahlavi - pal, Pampanga - pam, Kapampangan - pam, Panjabi - pan, Punjabi - pan, Papiamento - pap, Palauan - pau, Persian Old - peo, Persian - per, Philippine languages - phi, Phoenician - phn, Pali - pli, Polish - pol, Pohnpeian - pon, Portuguese - por, Prakrit languages - pra, Provençal Old - pro, Occitan Old - pro, Pushto - pus, Pashto - pus, Quechua - que, Rajasthani - raj, Rapanui - rap, Rarotongan - rar, Cook Islands Maori - rar, Romance languages - roa, Romansh - roh, Romany - rom, Romanian - rum, Moldavian - rum, Moldovan - rum, Romanian - rum, Moldavian - rum, Moldovan - rum, Rundi - run, Aromanian - rup, Arumanian - rup, Macedo Romanian - rup, Russian - rus, Sandawe - sad, Sango - sag, Yakut - sah, South American Indian languages - sai, Salishan languages - sal, Samaritan Aramaic - sam, Sanskrit - san, Sasak - sas, Santali - sat, Sicilian - scn, Scots - sco, Selkup - sel, Semitic languages - sem, Irish Old - sga, Sign Languages - sgn, Shan - shn, Sidamo - sid, Sinhala - sin, Sinhalese - sin, Siouan languages - sio, Sino Tibetan languages - sit, Slavic languages - sla, Slovak - slo, Slovak - slo, Slovenian - slv, Southern Sami - sma, Northern Sami - sme, Sami languages - smi, Lule Sami - smj, Inari Sami - smn, Samoan - smo, Skolt Sami - sms, Shona - sna, Sindhi - snd, Soninke - snk, Sogdian - sog, Somali - som, Songhai languages - son, Sotho Southern - sot, Spanish - spa, Castilian - spa, Albanian - alb, Sardinian - srd, Sranan Tongo - srn, Serbian - scc, Serer - srr, Nilo Saharan languages - ssa, Swati - ssw, Sukuma - suk, Sundanese - sun, Susu - sus, Sumerian - sux, Swahili - swa, Swedish - swe, Classical Syriac - syc, Syriac - syr, Tahitian - tah, Tai languages - tai, Tamil - tam, Tatar - tat, Telugu - tel, Timne - tem, Tereno - ter, Tetum - tet, Tajik - tgk, Tagalog - tgl, Thai - tha, Tibetan - tib, Tigre - tig, Tigrinya - tir, Tiv - tiv, Tokelau - tkl, Klingon - tlh, tlhIngan Hol - tlh, Tlingit - tli, Tamashek - tmh, Tonga - tog, Tonga - ton, Tok Pisin - tpi, Tsimshian - tsi, Tswana - tsn, Tsonga - tso, Turkmen - tuk, Tumbuka - tum, Tupi languages - tup, Turkish - tur, Altaic languages - tut, Tuvalu - tvl, Twi - twi, Tuvinian - tyv, Udmurt - udm, Ugaritic - uga, Uighur - uig, Uyghur - uig, Ukrainian - ukr, Umbundu - umb, Undetermined - und, Urdu - urd, Uzbek - uzb, Vai - vai, Venda - ven, Vietnamese - vie, Volapük - vol, Votic - vot, Wakashan languages - wak, Wolaitta - wal, Wolaytta - wal, Waray - war, Washo - was, Welsh - wel, Sorbian languages - wen, Walloon - wln, Wolof - wol, Kalmyk - xal, Oirat - xal, Xhosa - xho, Yao - yao, Yapese - yap, Yiddish - yid, Yoruba - yor, Yupik languages - ypk, Zapotec - zap, Blissymbols - zbl, Blissymbolics - zbl, Bliss - zbl, Zenaga - zen, Zhuang - zha, Chuang - zha, Chinese - chi, Zande languages - znd, Zulu - zul, Zuni - zun, No linguistic content - zxx, Not applicable - zxx, Zaza - zza, Dimili - zza, Dimli - zza, Kirdki - zza, Kirmanjki - zza, Zazaki - zza</value>
+                            </entry>
+                        </xproperties>
+                    </value>
+                </entry>
+
+                <!-- Inner searcher properties here -->
+                <entry>
+                    <key>adjuster.inner.searchnode</key>
+                    <value class="xproperties">
+
+                        <entry> <!-- Only used for reducing the query -->
+                            <key>summa.search.node.class</key>
+                            <value class="string">dk.statsbiblioteket.summa.search.QueryRewritingSearchNode</value>
+                        </entry>
+                        <entry>
+                            <key>rewriter.reduce</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>reducer.targets</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>reducertarget.matchnones</key>
+                                    <value class="list">
+                                        <value class="string">Language:abcde32542f</value>
+                                        <value class="string">recordBase:</value>
+                                    </value>
+                                </entry>
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>rewriter.sanitize.normalize</key>
+                            <value class="boolean">false</value>
+                        </entry>
+
+                        <entry>
+                            <key>queryrewriter.inner.searchnode</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.search.node.class</key>
+                                    <value class="string">dk.statsbiblioteket.summa.search.PagingSearchNode</value>
+                                </entry>
+                                <entry>
+                                    <key>pager.sequential</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                                <entry>
+                                    <key>pager.maxpagesize</key>
+                                    <value class="int">50</value>
+                                </entry>
+                                <entry>
+                                    <key>pager.guipagesize</key>
+                                    <value class="int">20</value>
+                                </entry>
+
+                                <!-- Inner searcher properties here -->
+                                <entry>
+                                    <key>pager.subsearcher</key>
+                                    <value class="xproperties">
+                                        <entry>
+                                            <key>summa.search.node.class</key>
+                                            <value class="string">dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode</value>
+                                        </entry>
+                                        <!-- False turns off DisMax for all queries in summon -->
+                                        <!--                <entry>
+                                                  <key>queryrewriter.output.terse</key>
+                                                  <value class="boolean">false</value>
+                                                </entry>-->
+                                        <entry>
+                                            <key>summon.dismax.sabotage</key>
+                                            <value class="boolean">true</value>
+                                        </entry>
+                                        <!-- '/2.0.0/search' is API 2.0.0, '/search' is API 1 -->
+                                        <entry>
+                                            <key>solr.restcall</key>
+                                            <value class="string">/2.0.0/search</value>
+                                        </entry>
+                                        <entry>
+                                            <key>summa.search.numberofconcurrentsearches</key>
+                                            <value class="int">20</value>
+                                        </entry>
+                                        <entry>
+                                            <key>summon.accessid</key>
+                                            <value class="string">statsbiblioteket</value>
+                                        </entry>
+                                        <!-- Note: The key is confidential and not to be distributed outside of Statsbiblioteket.
+                    However, as the resource it gives access to is strictly read-only and since it
+                    can easily be revoked, its prescense in SB-Subversion is classified as low-risk. -->
+                                        <entry>
+                                            <key>summon.accesskey</key>
+                                            <value class="string">LwqE4pGh6qRWHdDDfo2QlJ+Guq</value>
+                                        </entry>
+
+
+                                        <entry>
+                                            <key>summon.host</key>
+                                            <value class="string">api.summon.serialssolutions.com</value>
+                                        </entry>
+                                        <entry>
+                                            <key>summon.restcall</key>
+                                            <value class="string">/search</value>
+                                        </entry>
+                                        <entry>
+                                            <key>summon.id.prefix</key>
+                                            <value class="string">summon_</value>
+                                        </entry>
+                                        <entry>
+                                            <key>summon.defaultpagesize</key>
+                                            <value class="int">20</value>
+                                        </entry>
+                                        <entry>
+                                            <key>solr.read.timeout</key>
+                                            <value class="int">20000</value>
+                                        </entry>
+                                        <entry>
+                                            <!-- As the default setup at this level is not passed through the
+                                         InteractionAdjuster, we need to use Summon-names.-->
+                                            <key>solr.facets</key>
+
+                                            <!--  gl. liste  <value class="string">SubjectTerms, TemporalSubjectTerms, Author, ContentType, Genre, Language, IsScholarly, IsFullText, </value>
+                                  -->
+                                            <value class="string">SubjectTerms, Author, ContentType(75 ALPHA),  Language, IsScholarly, IsFullText</value>
+
+                                        </entry>
+                                        <entry>
+                                            <key>summon.facets.defaultpagesize</key>
+                                            <value class="string">15</value>
+                                        </entry>
+                                        <entry>
+                                            <key>summon.facets.combinemode</key>
+                                            <value class="string">and</value>
+                                        </entry>-
+                                        <entry>
+                                            <!-- Not implemented yet, so don't set this to true! -->
+                                            <key>summon.resolvelinks</key>
+                                            <value class="boolean">false</value>
+                                        </entry>
+                                        <entry>
+                                            <!-- Ensure that embedded XML is properly returned.
+                                                 The fields PublicationDate_xml and Author_xml are transformed.
+                                                 Set this to full to pass all _xml-fields unmodified. -->
+                                            <key>summonresponsebuilder.xmlhandling</key>
+                                            <value class="string">mixed</value>
+                                        </entry>
+                                    </value>
+                                </entry>
+                            </value>
+                        </entry>
+                    </value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+        

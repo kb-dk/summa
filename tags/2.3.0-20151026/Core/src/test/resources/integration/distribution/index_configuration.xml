@@ -1,0 +1,44 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>filter.name</key>
+            <value class="string">IndexUpdate</value>
+        </entry>
+        <entry>
+            <key>summa.filter.sequence.filterclass</key>
+            <value class="string">dk.statsbiblioteket.summa.index.IndexControllerImpl</value>
+        </entry>
+        <entry>
+            <key>summa.index.createnewindex</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>summa.index.indexrootlocation</key>
+            <value class="string">index</value>
+        </entry>
+        <entry>
+            <key>summa.index.consolidateonclose</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>summa.index.descriptorsetup</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.common.indexdescriptor.absolutelocation</key>
+                    <value class="string">[indexdescriptor]</value>
+                </entry>
+            </value>
+        </entry>
+        <entry>
+            <key>summa.index.manipulators</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>summa.index.manipulatorclass</key>
+                        <value class="string">dk.statsbiblioteket.summa.index.lucene.LuceneManipulator</value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
