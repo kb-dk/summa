@@ -190,6 +190,39 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
+    public void testGetChildWithParent() throws Exception {
+        Record r1 = new Record(testId1, testBase1, testContent1);
+        Record r2 = new Record(testId2, testBase1, testContent1);
+        r2.setParentIds(Arrays.asList(r1.getId()));
+        storage.flushAll(Arrays.asList(r1, r2));
+
+        try {
+            Record extracted = storage.getRecord(r2.getId(), new QueryOptions(
+                    false, false, 1, 1, null, new QueryOptions.ATTRIBUTES[]{
+                    QueryOptions.ATTRIBUTES.PARENTS,
+                    QueryOptions.ATTRIBUTES.BASE,
+                    QueryOptions.ATTRIBUTES.CONTENT,
+                    QueryOptions.ATTRIBUTES.CREATIONTIME,
+                    QueryOptions.ATTRIBUTES.DELETED,
+                    QueryOptions.ATTRIBUTES.HAS_RELATIONS,
+                    QueryOptions.ATTRIBUTES.ID,
+                    QueryOptions.ATTRIBUTES.INDEXABLE,
+                    QueryOptions.ATTRIBUTES.META,
+                    QueryOptions.ATTRIBUTES.MODIFICATIONTIME
+            }));
+            assertNotNull("The extracted record should have a parent ID",
+                         extracted.getParentIds());
+            assertEquals("The extracted record should have the right parent ID",
+                         testId1, extracted.getParentIds().get(0));
+            assertNotNull("The extracted record should have a parent",
+                          extracted.getParents());
+            assertEquals("The extracted record should have the right parent",
+                         testId1, extracted.getParents().get(0).getId());
+        } catch (Exception e) {
+            fail("Exception while requesting a child record with an existing parent: " + e.getMessage());
+        }
+    }
+
     /* Requesting an orphaned child should result in a warning in the log, not an exception */
     public void testGetOrphanChild() throws Exception {
         Record r2 = new Record(testId2, testBase1, testContent1);
