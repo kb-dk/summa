@@ -19,9 +19,12 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.storage.FakeStorage;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -91,6 +94,85 @@ public class RecordReaderTest extends TestCase {
         assertEquals("With partial deliveries, all Records should be returned", RECORDS, countRecords(true));
 
         rmiStorage.close();
+    }
+
+    public void testParentInclusion() throws Exception {
+        Record orphan = new Record("orphan", "dummy", new byte[0]);
+        Record parent = new Record("parent", "dummy", new byte[0]);
+        Record child = new Record("child", "dummy", new byte[0]);
+        child.setParentIds(Arrays.asList("parent"));
+
+        Storage storage = new H2Storage(DatabaseStorageTest.createConf());
+        storage.flushAll(Arrays.asList(orphan, parent, child));
+        RMIStorageProxy rmiStorage = new RMIStorageProxy(Configuration.newMemoryBased(
+                RMIStorageProxy.CONF_SERVICE_NAME, "Faker",
+                RMIStorageProxy.CONF_SERVICE_PORT, 28000
+        ), storage);
+        { // Direct lookup with parent resolving
+            Record extracted = rmiStorage.getRecord("child", new QueryOptions(
+                    false, false, 1, 1, null, new QueryOptions.ATTRIBUTES[]{
+                    QueryOptions.ATTRIBUTES.PARENTS,
+                    QueryOptions.ATTRIBUTES.BASE,
+                    QueryOptions.ATTRIBUTES.CONTENT,
+                    QueryOptions.ATTRIBUTES.CREATIONTIME,
+                    QueryOptions.ATTRIBUTES.DELETED,
+                    QueryOptions.ATTRIBUTES.HAS_RELATIONS,
+                    QueryOptions.ATTRIBUTES.ID,
+                    QueryOptions.ATTRIBUTES.INDEXABLE,
+                    QueryOptions.ATTRIBUTES.META,
+                    QueryOptions.ATTRIBUTES.MODIFICATIONTIME
+            }));
+            assertNotNull("The RMI call should extract a Record",
+                         extracted);
+            assertNotNull("The RMI extracted record should have a parent ID",
+                         extracted.getParentIds());
+            assertEquals("The RMI extracted record should have the right parent ID",
+                         "parent", extracted.getParentIds().get(0));
+            assertNotNull("The RMI extracted record should have a parent",
+                          extracted.getParents());
+            assertEquals("The RMI extracted record should have the right parent",
+                         "parent", extracted.getParents().get(0).getId());
+        }
+
+        { // Resolve parents
+            List<Record> extracted = empty(Configuration.newMemoryBased(
+                    RecordReader.CONF_ALLOW_PARTIAL_DELIVERIES, true,
+                    RecordReader.CONF_START_FROM_SCRATCH, true,
+                    RecordReader.CONF_EXPAND_CHILDREN, false,
+                    RecordReader.CONF_EXPAND_PARENTS, true,
+                    ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/Faker"
+            ));
+            for (Record record: extracted) {
+                if ("child".equals(record.getId())) {
+                    assertNotNull("RecordReader child should have a parent ID", child.getParentIds());
+                    assertEquals("RecordReader child should have the correct parent ID", "parent",
+                                 child.getParentIds().get(0));
+                    assertNotNull("RecordReader child should have a parent Record", child.getParents());
+                    assertEquals("RecordReader child should have the correct parent", "parent",
+                                 child.getParents().get(0).getId());
+                }
+            }
+        }
+
+        { // Do not resolve parents
+            List<Record> extracted = empty(Configuration.newMemoryBased(
+                    RecordReader.CONF_ALLOW_PARTIAL_DELIVERIES, true,
+                    RecordReader.CONF_START_FROM_SCRATCH, true,
+                    RecordReader.CONF_EXPAND_CHILDREN, false,
+                    RecordReader.CONF_EXPAND_PARENTS, false,
+                    ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/Faker"
+            ));
+            for (Record record: extracted) {
+                if ("child".equals(record.getId())) {
+                    assertNotNull("Non-resolving child should have a parent ID", child.getParentIds());
+                    assertEquals("Non-resolving child should have the correct parent ID", "parent",
+                                 child.getParentIds().get(0));
+                    assertNull("Non-resolving child should not have a parent Record", child.getParents());
+                }
+            }
+        }
+        rmiStorage.close();
+
     }
 
     private int countRecords(boolean allowPartialDeliveries) throws IOException {
