@@ -190,7 +190,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
-    public void testGetChildWithParent() throws Exception {
+    public void testGetChildWithParentDirect() throws Exception {
         Record r1 = new Record(testId1, testBase1, testContent1);
         Record r2 = new Record(testId2, testBase1, testContent1);
         r2.setParentIds(Arrays.asList(r1.getId()));
@@ -221,6 +221,68 @@ public class DatabaseStorageTest extends StorageTestBase {
         } catch (Exception e) {
             fail("Exception while requesting a child record with an existing parent: " + e.getMessage());
         }
+    }
+
+    public void testGetChildWithParentIterator() throws Exception {
+        {
+            Record r1 = new Record(testId1, testBase1, testContent1);
+            Record r2 = new Record(testId2, testBase1, testContent1);
+            r2.setParentIds(Arrays.asList(r1.getId()));
+            storage.flushAll(Arrays.asList(r1, r2));
+        }
+        QueryOptions inclParent = new QueryOptions(
+                            false, false, 1, 1, null, new QueryOptions.ATTRIBUTES[]{
+                            QueryOptions.ATTRIBUTES.PARENTS,
+                            QueryOptions.ATTRIBUTES.BASE,
+                            QueryOptions.ATTRIBUTES.CONTENT,
+                            QueryOptions.ATTRIBUTES.CREATIONTIME,
+                            QueryOptions.ATTRIBUTES.DELETED,
+                            QueryOptions.ATTRIBUTES.HAS_RELATIONS,
+                            QueryOptions.ATTRIBUTES.ID,
+                            QueryOptions.ATTRIBUTES.INDEXABLE,
+                            QueryOptions.ATTRIBUTES.META,
+                            QueryOptions.ATTRIBUTES.MODIFICATIONTIME
+                    });
+        try {
+            long iteratorKey = storage.getRecordsModifiedAfter(0L, testBase1, null);
+            List<Record> records = storage.next(iteratorKey, 10000); // We should get them all in one go
+            Record extracted = null;
+            for (Record record: records) {
+                if (testId2.equals(record.getId())) {
+                    extracted = record;
+                    break;
+                }
+            }
+            assertNotNull("A record with id '" + testId2 + "' should be delivered by the iterator sans options",
+                          extracted);
+        } catch (Exception e) {
+                    fail("Exception while iteratively searching for a child record: " + e.getMessage());
+        }
+
+        // TODO: Add test for excl parent
+        try {
+            long iteratorKey = storage.getRecordsModifiedAfter(0L, testBase1, inclParent);
+            List<Record> records = storage.next(iteratorKey, 10000); // We should get them all in one go
+            Record extracted = null;
+            for (Record record: records) {
+                if (testId2.equals(record.getId())) {
+                    extracted = record;
+                    break;
+                }
+            }
+            assertNotNull("A record with id '" + testId2 + "' should be delivered by the iterator", extracted);
+            assertNotNull("The extracted record should have a parent ID",
+                         extracted.getParentIds());
+            assertEquals("The extracted record should have the right parent ID",
+                         testId1, extracted.getParentIds().get(0));
+            assertNotNull("The extracted record should have a parent",
+                          extracted.getParents());
+            assertEquals("The extracted record should have the right parent",
+                         testId1, extracted.getParents().get(0).getId());
+        } catch (Exception e) {
+            fail("Exception while iteratively searching for a child record with an existing parent: " + e.getMessage());
+        }
+        storage.close();
     }
 
     /* Requesting an orphaned child should result in a warning in the log, not an exception */
