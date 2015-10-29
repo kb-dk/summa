@@ -1162,17 +1162,17 @@ public class RecordUtil {
             for (Record childRecord: record.getChildren()) {
                 newChildren.add(clone(childRecord, referenceContent));
             }
-            record.setChildren(newChildren);
+            newRecord.setChildren(newChildren);
         }
         if (record.getParentIds() != null) {
             newRecord.setParentIds(new ArrayList<>(record.getParentIds()));
         }
         if (record.getParents() != null) {
             List<Record> newParents = new ArrayList<>(record.getParents().size());
-            for (Record childRecord: record.getParents()) {
-                newParents.add(clone(childRecord, referenceContent));
+            for (Record parentRecord: record.getParents()) {
+                newParents.add(clone(parentRecord, referenceContent));
             }
-            record.setParents(newParents);
+            newRecord.setParents(newParents);
         }
         if (record.hasMeta()) {
             for (Map.Entry<String, String> entry: record.getMeta().entrySet()) {

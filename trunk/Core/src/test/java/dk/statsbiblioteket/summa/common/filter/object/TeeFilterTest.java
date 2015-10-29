@@ -36,7 +36,9 @@ public class TeeFilterTest extends TestCase {
         PayloadFeederHelper feeder = getFeeder();
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
                 TeeFilter.CONF_NEW_BASES, "baseA, baseB",
-                TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_"
+                TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_",
+                TeeFilter.CONF_MATCH_MODE, TeeFilter.MATCHER.whitelist_pass,
+                PayloadMatcher.CONF_ID_REGEX, "original.*"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 8);
         for (String prefix: Arrays.asList("prefixA_", "prefixB_")) {
@@ -52,7 +54,9 @@ public class TeeFilterTest extends TestCase {
     public void testID() {
         PayloadFeederHelper feeder = getFeeder();
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
-                TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_"
+                TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_",
+                TeeFilter.CONF_MATCH_MODE, TeeFilter.MATCHER.whitelist_pass,
+                PayloadMatcher.CONF_ID_REGEX, "original.*"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 4);
         for (String prefix: Arrays.asList("prefixA_", "prefixB_")) {
@@ -66,13 +70,40 @@ public class TeeFilterTest extends TestCase {
     public void testBase() {
         PayloadFeederHelper feeder = getFeeder();
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
-                TeeFilter.CONF_NEW_BASES, "baseA, baseB"
+                TeeFilter.CONF_NEW_BASES, "baseA, baseB",
+                TeeFilter.CONF_MATCH_MODE, TeeFilter.MATCHER.whitelist_pass,
+                PayloadMatcher.CONF_ID_REGEX, "original.*"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 4);
         for (String id: Arrays.asList("original1", "original2")) {
             for (String base: Arrays.asList("baseA", "baseB")) {
                 assertContains(id, base, generated);
             }
+        }
+    }
+
+    public void testParent() {
+        PayloadFeederHelper feeder;
+        Record parent = new Record("originalParent", "originalBase", "content".getBytes());
+        Record childWithParent = new Record("originalChild", "originalBase", "content".getBytes());
+        childWithParent.setParents(Arrays.asList(parent));
+        feeder = new PayloadFeederHelper(Arrays.asList(new Payload(childWithParent)));
+
+        ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
+                TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_",
+                TeeFilter.CONF_MATCH_MODE, TeeFilter.MATCHER.whitelist_pass,
+                PayloadMatcher.CONF_ID_REGEX, "original.*"
+        ));
+        List<Payload> generated = extractRecords(feeder, tee, 2);
+
+        for (String id: Arrays.asList("prefixA_originalChild", "prefixB_originalChild")) {
+            for (String base: Arrays.asList("originalBase")) {
+                assertContains(id, base, generated);
+            }
+        }
+        for (Payload payload: generated) {
+            assertNotNull("Each Payload should have a Record with a parent. Failed for " + payload,
+                          payload.getRecord().getParents());
         }
     }
 
