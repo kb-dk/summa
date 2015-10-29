@@ -120,6 +120,14 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     public static final String CONF_HYPHENATION = "altoparser.hyphenation";
     public static final String DEFAULT_HYPHENATION = Alto.HYPHEN_MODE.join.toString();
 
+    /**
+     * If true, relatives (parent Records and child Records) are preserved when producing segment Records.
+     * </p><p>
+     * Optional boolean. Default is true.
+     */
+    public static final String CONF_KEEPRELATIVES = "altoparser.keeprelatives";
+    public static final boolean DEFAULT_KEEPRELATIVES = true;
+
     public static final String NOALTO = "_noalto_";
 
     final private int minBlocks;
@@ -129,6 +137,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     final private boolean acceptALTOLess;
     final private String base;
     private final Alto.HYPHEN_MODE hyphenMode;
+    private final boolean keepRelatives;
     private final NumberFormat spatial = NumberFormat.getInstance(Locale.ENGLISH);
     {
         spatial.setGroupingUsed(false);
@@ -143,6 +152,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
         acceptALTOLess = conf.getBoolean(CONF_ACCEPT_ALTOLESS, DEFAULT_ACCEPT_ALTOLESS);
         hyphenMode = Alto.HYPHEN_MODE.valueOf(conf.getString(CONF_HYPHENATION, DEFAULT_HYPHENATION));
+        keepRelatives = conf.getBoolean(CONF_KEEPRELATIVES, DEFAULT_KEEPRELATIVES);
         log.info("Created " + this);
     }
 
@@ -163,7 +173,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
             Logging.logProcess("DOMSNewspaperParser", "Unable to locate ALTO. Passing content unmodified",
                                Logging.LogLevel.INFO, source);
             try {
-                addToQueue(new Record(source.getId() + NOALTO, base, content.getBytes("utf-8")));
+                addToQueue(source, new Record(source.getId() + NOALTO, base, content.getBytes("utf-8")));
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("utf-8 not supported", e);
             }
@@ -253,12 +263,22 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
 
             String concatID = payload.getId() + "-" + group.getKey();
             try {
-                addToQueue(new Record(concatID, base, (pre + sw + post).getBytes("utf-8")));
+                addToQueue(payload, new Record(concatID, base, (pre + sw + post).getBytes("utf-8")));
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("utf-8 not supported", e);
             }
         }
     }
+
+    // Special processing: If the origin has parents or children, add those to the articleRecord before queuing
+    private void addToQueue(Payload origin, Record articleRecord) {
+        if (keepRelatives && origin.getRecord() != null) {
+            articleRecord.setParents(origin.getRecord().getParents());
+            articleRecord.setChildren(origin.getRecord().getChildren());
+        }
+        addToQueue(articleRecord);
+    }
+
     private String padDouble(Double val) {
         return val == null ? null : Double.toString(val + 100000).substring(1);
     }
@@ -315,8 +335,8 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     @Override
     public String toString() {
         return String.format(
-                "DOMSNewspaperSplitter(minBlocks=%d, minWords=%d, hyphenMode=%s)",
-                minBlocks, minWords, hyphenMode);
+                "DOMSNewspaperSplitter(minBlocks=%d, minWords=%d, hyphenMode=%s, keepRelatives=%b)",
+                minBlocks, minWords, hyphenMode, keepRelatives);
     }
 
     // This did not work due to buffering of the ByteArrayInputStream, making the position unreliable
