@@ -97,13 +97,15 @@ public class RecordReaderTest extends TestCase {
     }
 
     public void testParentInclusion() throws Exception {
-        Record orphan = new Record("orphan", "dummy", new byte[0]);
-        Record parent = new Record("parent", "dummy", new byte[0]);
-        Record child = new Record("child", "dummy", new byte[0]);
-        child.setParentIds(Arrays.asList("parent"));
-
         Storage storage = new H2Storage(DatabaseStorageTest.createConf());
-        storage.flushAll(Arrays.asList(orphan, parent, child));
+        {
+            Record orphan = new Record("orphan", "dummy", new byte[0]);
+            Record parent = new Record("parent", "dummy", new byte[0]);
+            Record child = new Record("child", "dummy", new byte[0]);
+            child.setParentIds(Arrays.asList("parent"));
+
+            storage.flushAll(Arrays.asList(orphan, parent, child));
+        }
         RMIStorageProxy rmiStorage = new RMIStorageProxy(Configuration.newMemoryBased(
                 RMIStorageProxy.CONF_SERVICE_NAME, "Faker",
                 RMIStorageProxy.CONF_SERVICE_PORT, 28000
@@ -144,12 +146,12 @@ public class RecordReaderTest extends TestCase {
             ));
             for (Record record: extracted) {
                 if ("child".equals(record.getId())) {
-                    assertNotNull("RecordReader child should have a parent ID", child.getParentIds());
+                    assertNotNull("RecordReader child should have a parent ID", record.getParentIds());
                     assertEquals("RecordReader child should have the correct parent ID", "parent",
-                                 child.getParentIds().get(0));
-                    assertNotNull("RecordReader child should have a parent Record", child.getParents());
-                    assertEquals("RecordReader child should have the correct parent", "parent",
-                                 child.getParents().get(0).getId());
+                                 record.getParentIds().get(0));
+                    assertNotNull("RecordReader record should have a parent Record", record.getParents());
+                    assertEquals("RecordReader record should have the correct parent", "parent",
+                                 record.getParents().get(0).getId());
                 }
             }
         }
@@ -163,11 +165,11 @@ public class RecordReaderTest extends TestCase {
                     ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28000/Faker"
             ));
             for (Record record: extracted) {
-                if ("child".equals(record.getId())) {
-                    assertNotNull("Non-resolving child should have a parent ID", child.getParentIds());
-                    assertEquals("Non-resolving child should have the correct parent ID", "parent",
-                                 child.getParentIds().get(0));
-                    assertNull("Non-resolving child should not have a parent Record", child.getParents());
+                if ("record".equals(record.getId())) {
+                    assertNotNull("Non-resolving record should have a parent ID", record.getParentIds());
+                    assertEquals("Non-resolving record should have the correct parent ID", "parent",
+                                 record.getParentIds().get(0));
+                    assertNull("Non-resolving record should not have a parent Record", record.getParents());
                 }
             }
         }
