@@ -223,67 +223,78 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
-    public void testGetChildWithParentIterator() throws Exception {
+    public void testGetChildWithParentIteratorAll() throws Exception {
+        final QueryOptions parents = new QueryOptions(false, false, 1, 1, null, QueryOptions.ATTRIBUTES_ALL);
+        parents.addAttribute(QueryOptions.ATTRIBUTES.PARENTS);
+        checkRelationsHelper(parents);
+    }
+
+    public void testGetChildWithParentIteratorParents() throws Exception {
+        final QueryOptions all = new QueryOptions(false, false, 1, 1, null, QueryOptions.ATTRIBUTES_ALL);
+        checkRelationsHelper(all);
+    }
+
+    public void testGetChildWithParentIteratorChildren() throws Exception {
+        final QueryOptions children = new QueryOptions(false, false, 1, 1, null, QueryOptions.ATTRIBUTES_ALL);
+        children.addAttribute(QueryOptions.ATTRIBUTES.CHILDREN);
+        checkRelationsHelper(children);
+    }
+
+    public void testGetChildWithParentIteratorNone() throws Exception {
+        final QueryOptions none = new QueryOptions(false, false, 0, 0, null, QueryOptions.ATTRIBUTES_ALL);
+        none.removeAttribute(QueryOptions.ATTRIBUTES.CHILDREN);
+        none.removeAttribute(QueryOptions.ATTRIBUTES.PARENTS);
+
+        checkRelationsHelper(none);
+    }
+
+    private void checkRelationsHelper(QueryOptions qo) throws Exception {
+        List<Record> records = getAllRecordsFromIteratedSample(qo);
+        for (Record record: records) {
+            if (testId1.equals(record.getId())) { // Parent
+                if (hasAttribute(qo, QueryOptions.ATTRIBUTES.CHILDREN) && record.getChildren() == null) {
+                    fail("Children were requested but parent did not have any " + qo);
+                }
+                if (!hasAttribute(qo, QueryOptions.ATTRIBUTES.CHILDREN) && record.getChildren() != null) {
+                    fail("Children were not requested but parent did have some " + qo);
+                }
+            } else if (testId2.equals(record.getId())) { // Child
+                if (hasAttribute(qo, QueryOptions.ATTRIBUTES.PARENTS) && record.getParents() == null) {
+                    fail("Parents were requested but child did not have any " + qo);
+                }
+                if (!hasAttribute(qo, QueryOptions.ATTRIBUTES.PARENTS) && record.getParents() != null) {
+                    fail("Parents were not requested but child did have some " + qo);
+                }
+            } else {
+                fail("Encountered unexpected record with ID '" + record.getId() + "'");
+            }
+        }
+    }
+
+    private boolean hasAttribute(QueryOptions qo, QueryOptions.ATTRIBUTES wanted) {
+        for (QueryOptions.ATTRIBUTES candidate: qo.getAttributes()) {
+            if (wanted == candidate) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<Record> getAllRecordsFromIteratedSample(QueryOptions queryOptions) throws Exception {
         {
             Record r1 = new Record(testId1, testBase1, testContent1);
             Record r2 = new Record(testId2, testBase1, testContent1);
             r2.setParentIds(Arrays.asList(r1.getId()));
             storage.flushAll(Arrays.asList(r1, r2));
         }
-        QueryOptions inclParent = new QueryOptions(
-                            false, false, 1, 1, null, new QueryOptions.ATTRIBUTES[]{
-                            QueryOptions.ATTRIBUTES.PARENTS,
-                            QueryOptions.ATTRIBUTES.BASE,
-                            QueryOptions.ATTRIBUTES.CONTENT,
-                            QueryOptions.ATTRIBUTES.CREATIONTIME,
-                            QueryOptions.ATTRIBUTES.DELETED,
-                            QueryOptions.ATTRIBUTES.HAS_RELATIONS,
-                            QueryOptions.ATTRIBUTES.ID,
-                            QueryOptions.ATTRIBUTES.INDEXABLE,
-                            QueryOptions.ATTRIBUTES.META,
-                            QueryOptions.ATTRIBUTES.MODIFICATIONTIME
-                    });
         try {
-            long iteratorKey = storage.getRecordsModifiedAfter(0L, testBase1, null);
-            List<Record> records = storage.next(iteratorKey, 10000); // We should get them all in one go
-            Record extracted = null;
-            for (Record record: records) {
-                if (testId2.equals(record.getId())) {
-                    extracted = record;
-                    break;
-                }
-            }
-            assertNotNull("A record with id '" + testId2 + "' should be delivered by the iterator sans options",
-                          extracted);
-        } catch (Exception e) {
-                    fail("Exception while iteratively searching for a child record: " + e.getMessage());
+            long iteratorKey = storage.getRecordsModifiedAfter(0L, testBase1, queryOptions);
+            return storage.next(iteratorKey, 10000); // We should get them all in one go
+        } finally {
+            storage.clearBase(testBase1);
         }
-
-        // TODO: Add test for excl parent
-        try {
-            long iteratorKey = storage.getRecordsModifiedAfter(0L, testBase1, inclParent);
-            List<Record> records = storage.next(iteratorKey, 10000); // We should get them all in one go
-            Record extracted = null;
-            for (Record record: records) {
-                if (testId2.equals(record.getId())) {
-                    extracted = record;
-                    break;
-                }
-            }
-            assertNotNull("A record with id '" + testId2 + "' should be delivered by the iterator", extracted);
-            assertNotNull("The extracted record should have a parent ID",
-                         extracted.getParentIds());
-            assertEquals("The extracted record should have the right parent ID",
-                         testId1, extracted.getParentIds().get(0));
-            assertNotNull("The extracted record should have a parent",
-                          extracted.getParents());
-            assertEquals("The extracted record should have the right parent",
-                         testId1, extracted.getParents().get(0).getId());
-        } catch (Exception e) {
-            fail("Exception while iteratively searching for a child record with an existing parent: " + e.getMessage());
-        }
-        storage.close();
     }
+
 
     /* Requesting an orphaned child should result in a warning in the log, not an exception */
     public void testGetOrphanChild() throws Exception {
