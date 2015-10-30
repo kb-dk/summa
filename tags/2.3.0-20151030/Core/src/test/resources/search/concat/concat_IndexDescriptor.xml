@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+
+    <fields>
+        <field name="id" parent="keyword" stored="true"/>
+        <field name="plain" parent="keyword" stored="true">
+            <alias name="almindelig"/>
+        </field>
+        <field name="sort" parent="collatedSummaStandard" sortLocale="da"/>
+        <field name="concat" parent="collatedSummaStandard" sortLocale="da" stored="true"/>
+    </fields>
+
+    <defaultSearchFields>
+        <field ref="id"/>
+    </defaultSearchFields>
+
+    <facets xmlns="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+        <facet ref="plain"/>
+        <facet ref="concat"/>
+    </facets>
+</IndexDescriptor>

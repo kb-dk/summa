@@ -1,0 +1,3291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response version="2.0.0" sessionId="e2b50fcf-3c3f-4b62-a2f6-f37cdbabb592" elapsedQueryTime="238" queryTime="229"
+          totalRequestTime="384" pageCount="7491" recordCount="149805">
+    <query queryString="s.ho=t&amp;s.rff=PublicationDate%2C2013%3A%2C2012%3A2012%2C2011%3A2011%2C2010%3A2010%2C2009%3A2009%2C2008%3A2008%2C2007%3A2007%2C2006%3A2006%2C2005%3A2005%2C2004%3A2004%2C2003%3A2003%2C2002%3A2002%2C2001%3A2001%2C2000%3A2000%2C1999%3A1999%2C%3A1998&amp;s.ps=20&amp;s.ff=Author%2Cand%2C1%2C15&amp;s.ff=IsFullText%2Cand%2C1%2C15&amp;s.ff=Language%2Cand%2C1%2C15&amp;s.ff=IsScholarly%2Cand%2C1%2C15&amp;s.ff=SubjectTerms%2Cand%2C1%2C15&amp;s.ff=ContentType%2Cand%2C1%2C15&amp;s.q=%22foo%22&amp;s.dym=t&amp;s.pn=1"
+           pageNumber="1" pageSize="20" isDidYouMeanEnabled="true" isHoldingsOnlyEnabled="true">
+        <textQueries>
+            <textQuery textQuery="&quot;foo&quot;" removeCommand="removeTextQuery(&quot;foo&quot;)"/>
+        </textQueries>
+        <searchTerms/>
+        <textFilters/>
+        <rangeFilters/>
+        <facetValueFilters/>
+        <inclusiveFacetValueFilters/>
+        <facetValueGroupFilters/>
+        <facetFields>
+            <facetField fieldName="Author" combineMode="and" pageNumber="1" pageSize="15"
+                        removeCommand="removeFacetField(Author)"/>
+            <facetField fieldName="IsFullText" combineMode="and" pageNumber="1" pageSize="15"
+                        removeCommand="removeFacetField(IsFullText)"/>
+            <facetField fieldName="Language" combineMode="and" pageNumber="1" pageSize="15"
+                        removeCommand="removeFacetField(Language)"/>
+            <facetField fieldName="IsScholarly" combineMode="and" pageNumber="1" pageSize="15"
+                        removeCommand="removeFacetField(IsScholarly)"/>
+            <facetField fieldName="SubjectTerms" combineMode="and" pageNumber="1" pageSize="15"
+                        removeCommand="removeFacetField(SubjectTerms)"/>
+            <facetField fieldName="ContentType" combineMode="and" pageNumber="1" pageSize="15"
+                        removeCommand="removeFacetField(ContentType)"/>
+        </facetFields>
+        <rangeFacetFields>
+            <rangeFacetField fieldName="PublicationDate" removeCommand="removeFacetField(PublicationDate)">
+                <range minValue="2013" maxValue=""/>
+                <range minValue="2012" maxValue="2012"/>
+                <range minValue="2011" maxValue="2011"/>
+                <range minValue="2010" maxValue="2010"/>
+                <range minValue="2009" maxValue="2009"/>
+                <range minValue="2008" maxValue="2008"/>
+                <range minValue="2007" maxValue="2007"/>
+                <range minValue="2006" maxValue="2006"/>
+                <range minValue="2005" maxValue="2005"/>
+                <range minValue="2004" maxValue="2004"/>
+                <range minValue="2003" maxValue="2003"/>
+                <range minValue="2002" maxValue="2002"/>
+                <range minValue="2001" maxValue="2001"/>
+                <range minValue="2000" maxValue="2000"/>
+                <range minValue="1999" maxValue="1999"/>
+                <range minValue="" maxValue="1998"/>
+            </rangeFacetField>
+        </rangeFacetFields>
+        <sort/>
+    </query>
+    <facetFields>
+        <facetField fieldName="Language_s" displayName="Language" combineMode="and" pageNumber="1" pageSize="15"
+                    hasLimitingValue="true" hasAppliedValue="false" removeCommand="removeFacetField(Language)"
+                    listValuesCommand="listFacetValues(Language,and)"
+                    removeValueFiltersCommand="removeFacetValueFilter(Language)">
+            <facetCount value="English" count="148110" isApplied="false" isNegated="false" isFurtherLimiting="true"
+                        applyCommand="addFacetValueFilters(Language,English)"
+                        applyNegatedCommand="addFacetValueFilters(Language,English:t)"/>
+        </facetField>
+        <facetField fieldName="SubjectTerms_mfacet" displayName="SubjectTerms" combineMode="and" pageNumber="1"
+                    pageSize="15" hasLimitingValue="true" hasAppliedValue="false"
+                    removeCommand="removeFacetField(SubjectTerms)" listValuesCommand="listFacetValues(SubjectTerms,and)"
+                    removeValueFiltersCommand="removeFacetValueFilter(SubjectTerms)">
+            <facetCount value="musicians &amp; conductors" count="3970" isApplied="false" isNegated="false"
+                        isFurtherLimiting="true"
+                        applyCommand="addFacetValueFilters(SubjectTerms,musicians &amp; conductors)"
+                        applyNegatedCommand="addFacetValueFilters(SubjectTerms,musicians &amp; conductors:t)"/>
+            <facetCount value="article" count="3937" isApplied="false" isNegated="false" isFurtherLimiting="true"
+                        applyCommand="addFacetValueFilters(SubjectTerms,article)"
+                        applyNegatedCommand="addFacetValueFilters(SubjectTerms,article:t)"/>
+            <facetCount value="musical recordings" count="2435" isApplied="false" isNegated="false"
+                        isFurtherLimiting="true" applyCommand="addFacetValueFilters(SubjectTerms,musical recordings)"
+                        applyNegatedCommand="addFacetValueFilters(SubjectTerms,musical recordings:t)"/>
+            <facetCount value="radiology, nuclear medicine &amp; medical imaging" count="960" isApplied="false"
+                        isNegated="false" isFurtherLimiting="true"
+                        applyCommand="addFacetValueFilters(SubjectTerms,radiology\, nuclear medicine &amp; medical imaging)"
+                        applyNegatedCommand="addFacetValueFilters(SubjectTerms,radiology\, nuclear medicine &amp; medical imaging:t)"/>
+        </facetField>
+        <facetField fieldName="ContentType_mfacet" displayName="ContentType" combineMode="and" pageNumber="1"
+                    pageSize="15" hasLimitingValue="true" hasAppliedValue="false"
+                    removeCommand="removeFacetField(ContentType)" listValuesCommand="listFacetValues(ContentType,and)"
+                    removeValueFiltersCommand="removeFacetValueFilter(ContentType)">
+            <facetCount value="Newspaper Article" count="99061" isApplied="false" isNegated="false"
+                        isFurtherLimiting="true" applyCommand="addFacetValueFilters(ContentType,Newspaper Article)"
+                        applyNegatedCommand="addFacetValueFilters(ContentType,Newspaper Article:t)"/>
+            <facetCount value="Journal Article" count="41945" isApplied="false" isNegated="false"
+                        isFurtherLimiting="true" applyCommand="addFacetValueFilters(ContentType,Journal Article)"
+                        applyNegatedCommand="addFacetValueFilters(ContentType,Journal Article:t)"/>
+            <facetCount value="Book / eBook" count="856" isApplied="false" isNegated="false" isFurtherLimiting="true"
+                        applyCommand="addFacetValueFilters(ContentType,Book / eBook)"
+                        applyNegatedCommand="addFacetValueFilters(ContentType,Book / eBook:t)"/>
+        </facetField>
+        <facetField fieldName="IsScholarly_b" displayName="IsScholarly" combineMode="and" pageNumber="1" pageSize="15"
+                    hasLimitingValue="true" hasAppliedValue="false" removeCommand="removeFacetField(IsScholarly)"
+                    listValuesCommand="listFacetValues(IsScholarly,and)"
+                    removeValueFiltersCommand="removeFacetValueFilter(IsScholarly)">
+            <facetCount value="false" count="113442" isApplied="false" isNegated="false" isFurtherLimiting="true"
+                        applyCommand="addFacetValueFilters(IsScholarly,false)"
+                        applyNegatedCommand="addFacetValueFilters(IsScholarly,false:t)"/>
+            <facetCount value="true" count="36363" isApplied="false" isNegated="false" isFurtherLimiting="true"
+                        applyCommand="addFacetValueFilters(IsScholarly,true)"
+                        applyNegatedCommand="addFacetValueFilters(IsScholarly,true:t)"/>
+        </facetField>
+        <facetField fieldName="IsFullText" displayName="IsFullText" combineMode="or" pageNumber="1" pageSize="1"
+                    hasLimitingValue="false" hasAppliedValue="false" removeCommand="removeFacetField(IsFullText)"
+                    removeValueFiltersCommand="removeFacetValueFilter(IsFullText)">
+            <facetCount value="true" count="149805" isApplied="false" isNegated="false" isFurtherLimiting="false"
+                        applyCommand="addFacetValueFilters(IsFullText,true)"/>
+        </facetField>
+    </facetFields>
+    <rangeFacetFields>
+        <rangeFacetField fieldName="PubDayNumAll_i" displayName="PublicationDate"
+                         removeCommand="removeFacetField(PublicationDate)">
+            <rangeFacetCount count="4958" isApplied="false" applyCommand="addRangeFilter(PublicationDate,2013:)">
+                <range minValue="2013" maxValue=""/>
+            </rangeFacetCount>
+            <rangeFacetCount count="7403" isApplied="false" applyCommand="addRangeFilter(PublicationDate,2012:2012)">
+                <range minValue="2012" maxValue="2012"/>
+            </rangeFacetCount>
+            <rangeFacetCount count="4468" isApplied="false" applyCommand="addRangeFilter(PublicationDate,1999:1999)">
+                <range minValue="1999" maxValue="1999"/>
+            </rangeFacetCount>
+            <rangeFacetCount count="63051" isApplied="false" applyCommand="addRangeFilter(PublicationDate,:1998)">
+                <range minValue="" maxValue="1998"/>
+            </rangeFacetCount>
+        </rangeFacetField>
+    </rangeFacetFields>
+    <didYouMeanSuggestions/>
+    <recommendationLists/>
+    <documents>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=FOO&amp;rft.jtitle=The+Advertiser&amp;rft.date=2006-10-31&amp;rft.pub=News+Digital+Media&amp;rft.issn=1039-4192&amp;rft.eissn=1039-4192&amp;rft.spage=96&amp;rft.externalDocID=11314293281"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/secret_real_link_removed">
+            <field name="DatabaseTitle">
+                <value>ANZ Newsstand</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Adelaide, S. Aust</value>
+            </field>
+            <field name="Score">
+                <value>18.57603</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright News Limited Oct 31, 2006</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>7RP</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20061031" month="10" year="2006" day="31"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20061031</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright News Limited Oct 31, 2006"/>
+            </field>
+            <field name="Publisher">
+                <value>News Digital Media</value>
+            </field>
+            <field name="AbstractList">
+                <value>FOO</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="News Digital Media"/>
+            </field>
+            <field name="DocumentTitleAlternate">
+                <value>FOO : 1 State Edition</value>
+            </field>
+            <field name="Snippet">
+                <value>&lt;h&gt;FOO&lt;/h&gt;</value>
+            </field>
+            <field name="NewspaperSection">
+                <value>Sport</value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/355145321</value>
+            </field>
+            <field name="PQPubID">
+                <value>42765</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_11531932811</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>The Advertiser</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2006</value>
+            </field>
+            <field name="Genre">
+                <value>News</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Adelaide, S. Aust"/>
+            </field>
+            <field name="PQID">
+                <value>355145321</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>ANZ Newsstand</value>
+            </field>
+            <field name="EISSN">
+                <value>1039-4192</value>
+            </field>
+            <field name="Abstract">
+                <value>FOO</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_11531932811</value>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Newspaper Article</value>
+            </field>
+            <field name="Title">
+                <value>&lt;h&gt;FOO&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>1153193281</value>
+            </field>
+            <field name="ISSN">
+                <value>1039-4192</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0024212</value>
+            </field>
+            <field name="StartPage">
+                <value>96</value>
+            </field>
+            <field name="Subtitle">
+                <value>1 State Edition</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=1039-4192&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=1039-4192&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=1039-4192&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=foo%27%3Ai%27&amp;rft.jtitle=New+York+Times+%281923-Current+file%29&amp;rft.date=1999-01-17&amp;rft.issn=0362-4331&amp;rft.eissn=1542-667X&amp;rft.spage=TV48&amp;rft.externalDocID=117089158"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTuZBFFBuogyybq4hzh66sJIxPiUnB3QktYGFpaGphaE4A2saMGJSxUGFpThQozgDR4RleKhFpLcfhCsE4-oVgzcu6RWWiAPLZnC86hrrGQAANFInBQ">
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>New York, N.Y</value>
+            </field>
+            <field name="Score">
+                <value>18.067863</value>
+            </field>
+            <field name="PageCount">
+                <value>1</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright New York Times Company Jan 17, 1999</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="PublicationDate">
+                <value>19990117</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="19990117" month="01" year="1999" day="17"/>
+            </field>
+            <field name="PublicationCentury">
+                <value>1900</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright New York Times Company Jan 17, 1999"/>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="NewspaperSection">
+                <value>Television</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_1170891581</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>New York Times (1923-Current file)</value>
+            </field>
+            <field name="PCID">
+                <value>1661950</value>
+            </field>
+            <field name="PublicationYear">
+                <value>1999</value>
+            </field>
+            <field name="Genre">
+                <value>HISTORICAL NEWSPAPER</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="New York, N.Y"/>
+            </field>
+            <field name="PQID">
+                <value>110010543</value>
+            </field>
+            <field name="EISSN">
+                <value>1542-667X</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_1170891581</value>
+            </field>
+            <field name="PublicationDecade">
+                <value>1990</value>
+            </field>
+            <field name="ContentType">
+                <value>Newspaper Article</value>
+            </field>
+            <field name="Title">
+                <value>&lt;h&gt;foo&lt;/h&gt;&apos;:i&apos;</value>
+            </field>
+            <field name="ISSN">
+                <value>0362-4331</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>117089158</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0000164</value>
+            </field>
+            <field name="StartPage">
+                <value>TV48</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0362-4331&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0362-4331&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0362-4331&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=LITTLE+BUNNY+FOO+FOO&amp;rft.jtitle=Kirkus+Reviews&amp;rft.date=2011-12-01&amp;rft.pub=Kirkus+Media+LLC&amp;rft.issn=1948-7428&amp;rft.volume=LXXIX&amp;rft.issue=23&amp;rft.externalDocID=2551943481"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTuZBFFRuogxybq4hzh66sJIxPiUnJx7Y8DUEnWRmYWgozsCaBoyZVHFQaSkO1CnOwBFhGR5qEentB-EKwbh6xeCdS3qFJeLAwhkcsbrGegYAWcAnOQ">
+            <field name="Volume">
+                <value>LXXIX</value>
+            </field>
+            <field name="DatabaseTitle">
+                <value>Library Science</value>
+                <value>Political Science</value>
+                <value>Central (Professional Edition)</value>
+                <value>Social Science Journals</value>
+                <value>ProQuest Central</value>
+                <value>Discovery</value>
+                <value>Social Science Journals (Alumni Edition)</value>
+                <value>ProQuest Research Library</value>
+                <value>Central (Alumni)</value>
+                <value>Research Library (Alumni Edition)</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Austin</value>
+            </field>
+            <field name="Score">
+                <value>12.954638</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright 2011, Kirkus Reviews. All rights reserved.</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>8FX</value>
+                <value>M2O</value>
+                <value>88J</value>
+                <value>M1O</value>
+                <value>M2R</value>
+                <value>7XB</value>
+                <value>8FK</value>
+                <value>8FU</value>
+                <value>M2L</value>
+                <value>8G5</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20111201" month="12" year="2011" day="01"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20111201</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright 2011, Kirkus Reviews. All rights reserved."/>
+            </field>
+            <field name="Publisher">
+                <value>Kirkus Media LLC</value>
+            </field>
+            <field name="AbstractList">
+                <value>Ever a guilty pleasure anyway, the popular but violent preschool hand rhyme takes a gothic turn
+                    in this startling iteration. Doerrfeld concocts an oh-so-sweet visual story line for the lyric,
+                    setting a snub-nosed, big-eyed bunny baker off in pursuit of ...
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Kirkus Media LLC"/>
+            </field>
+            <field name="DocumentTitleAlternate">
+                <value>LITTLE BUNNY FOO FOO : The Real Story</value>
+            </field>
+            <field name="Snippet">
+                <value>... birds and squirrels, continue to snatch bites, &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&apos;s&lt;/h&gt;
+                    mild annoyance intensifies to such outright rage that the climactic transformation definitely turns
+                    out...
+                </value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/913390706</value>
+            </field>
+            <field name="PQPubID">
+                <value>756406</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_25519434811</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Kirkus Reviews</value>
+            </field>
+            <field name="Issue">
+                <value>23</value>
+            </field>
+            <field name="Discipline">
+                <value>Education</value>
+                <value>Social Welfare &amp; Social Work</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2011</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Austin"/>
+            </field>
+            <field name="PQID">
+                <value>913390706</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>Library Science</value>
+            </field>
+            <field name="Abstract">
+                <value>Ever a guilty pleasure anyway, the popular but violent preschool hand rhyme takes a gothic turn
+                    in this startling iteration. Doerrfeld concocts an oh-so-sweet visual story line for the lyric,
+                    setting a snub-nosed, big-eyed bunny baker off in pursuit of ...
+                </value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Childrens picture books</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_25519434811</value>
+            </field>
+            <field name="PublicationDecade">
+                <value>2010</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>LITTLE BUNNY &lt;h&gt;FOO&lt;/h&gt; &lt;h&gt;FOO&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>2551943481</value>
+            </field>
+            <field name="ISSN">
+                <value>1948-7428</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0005050</value>
+            </field>
+            <field name="Subtitle">
+                <value>The Real Story</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=1948-7428&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=1948-7428&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=1948-7428&amp;client=aarhush</value>
+            </field>
+            <field name="Database_xml">
+                <database sequence="1" name="ProQuest Research Library" dbid="M2O"
+                          url="http://ez.statsbiblioteket.dk:2048/login?url=http://search.proquest.com/pqrl/advanced?accountid=14468">
+                    <sourceTypes>
+                        <sourceType>Aggregation Database</sourceType>
+                    </sourceTypes>
+                </database>
+            </field>
+            <field name="LinkModel">
+                <value>DirectLink</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=LITTLE+PUN+FOO-FOO&amp;rft.jtitle=Muse&amp;rft.au=Anonymous&amp;rft.date=2006-05-01&amp;rft.pub=Carus+Publishing+Company%2C+d%2Fb%2Fa+ePals+Media&amp;rft.issn=1090-0381&amp;rft.volume=10&amp;rft.issue=5&amp;rft.spage=36&amp;rft.externalDocID=1037598171"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTuZBFFhuogxybq4hzh66sJIxPiUnJx60m83U0sLQ3NBQnIE1DRgzqeKg0lIcqFOcgSPCMjzUItLbD8IVgnH1isE7l_QKS8SBhTM4YnWN9QwAWhUnOg">
+            <field name="Volume">
+                <value>10</value>
+            </field>
+            <field name="DatabaseTitle">
+                <value>Central (Professional Edition)</value>
+                <value>Education Journals (Alumni Edition)</value>
+                <value>Education Journals</value>
+                <value>Discovery</value>
+                <value>ProQuest Central</value>
+                <value>ProQuest Research Library</value>
+                <value>Central (Alumni)</value>
+                <value>Research Library (Alumni Edition)</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Anonymous</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Peterborough</value>
+            </field>
+            <field name="Score">
+                <value>12.924733</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright Carus Publishing Company May/Jun 2006</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20060501" month="05" year="2006" day="01"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20060501</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright Carus Publishing Company May/Jun 2006"/>
+            </field>
+            <field name="Publisher">
+                <value>Carus Publishing Company, d/b/a ePals Media</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Carus Publishing Company, d/b/a ePals Media"/>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/211477246</value>
+            </field>
+            <field name="PQPubID">
+                <value>43306</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_10375981711</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Muse</value>
+            </field>
+            <field name="Issue">
+                <value>5</value>
+            </field>
+            <field name="Discipline">
+                <value>Sciences (General)</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2006</value>
+            </field>
+            <field name="Genre">
+                <value>General Information</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Peterborough"/>
+            </field>
+            <field name="PQID">
+                <value>211477246</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_10375981711</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Anonymous"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Magazine Article</value>
+            </field>
+            <field name="Title">
+                <value>LITTLE PUN &lt;h&gt;FOO&lt;/h&gt;-&lt;h&gt;FOO&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>1037598171</value>
+            </field>
+            <field name="ISSN">
+                <value>1090-0381</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0026989</value>
+            </field>
+            <field name="StartPage">
+                <value>36</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=1090-0381&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=1090-0381&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=1090-0381&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Lady+Miss+Foo+Foo&amp;rft.jtitle=The+Times&amp;rft.au=Tina+Gaudoin&amp;rft.date=2005-04-16&amp;rft.issn=0140-0460&amp;rft.spage=17&amp;rft.externalDBID=TOFL&amp;rft.externalDocID=824185061"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTuZBFFxuogyybq4hzh66sJIxPiUnJ97CCHTICrDuMRRnYE0DRkyqOKiwFAdqFGfgiLAMD7WI9PaDcIVgXL1i8MYlvcIScWDZDI5XXWM9AwA0WCcD">
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Tina Gaudoin</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>London (UK)</value>
+            </field>
+            <field name="Score">
+                <value>12.907206</value>
+            </field>
+            <field name="PageCount">
+                <value>0</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright (c) Times Newspapers Limited 2005</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20050416" month="04" year="2005" day="16"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20050416</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright (c) Times Newspapers Limited 2005"/>
+            </field>
+            <field name="AbstractList">
+                <value>Still sounding wishy-washy? Well, consider the charitable aspects: LMFF (the name comes from
+                    [Caroline] and her husband&apos;s nickname for their young daughter, Isabella) was inspired to help
+                    the children in the favelas after her husband returned from Rio with tales of hardship and horror.
+                    &quot;When we saw how beautiful the ethnic jewellery was we thought we could help them to trade in a
+                    beneficial way. People love the stuff.&quot; LMFF wants to expand her business - thereby expanding
+                    the horizons of street kids in Rio. If that isn&apos;t good karma, then I don&apos;t know what is.
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="DocumentTitleAlternate">
+                <value>Lady Miss Foo Foo : Final Edition</value>
+            </field>
+            <field name="Snippet">
+                <value>Still sounding wishy-washy? Well, consider the charitable aspects: LMFF (the name comes from
+                    [Caroline] and her husband&apos;s nickname for their young daughter,...
+                </value>
+            </field>
+            <field name="NewspaperSection">
+                <value>Features</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_8241850611</value>
+            </field>
+            <field name="DLL_JC">
+                <value>TOFL</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>The Times</value>
+            </field>
+            <field name="PCID">
+                <value>15155671</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2005</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="London (UK)"/>
+            </field>
+            <field name="PQID">
+                <value>319283334</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value></value>
+            </field>
+            <field name="Abstract">
+                <value>Still sounding wishy-washy? Well, consider the charitable aspects: LMFF (the name comes from
+                    [Caroline] and her husband&apos;s nickname for their young daughter, Isabella) was inspired to help
+                    the children in the favelas after her husband returned from Rio with tales of hardship and horror.
+                    &quot;When we saw how beautiful the ethnic jewellery was we thought we could help them to trade in a
+                    beneficial way. People love the stuff.&quot; LMFF wants to expand her business - thereby expanding
+                    the horizons of street kids in Rio. If that isn&apos;t good karma, then I don&apos;t know what is.
+                </value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_8241850611</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Tina Gaudoin"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Newspaper Article</value>
+            </field>
+            <field name="Title">
+                <value>Lady Miss &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt;</value>
+            </field>
+            <field name="ISSN">
+                <value>0140-0460</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>824185061</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0014105</value>
+            </field>
+            <field name="StartPage">
+                <value>17</value>
+            </field>
+            <field name="Subtitle">
+                <value>Final Edition</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0140-0460&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0140-0460&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0140-0460&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Oodles+of+Foo-Foo&amp;rft.jtitle=National+Post&amp;rft.au=Desmond+Brown&amp;rft.date=1999-01-25&amp;rft.pub=Infomart%2C+a+division+of+Postmedia+Network+Inc&amp;rft.issn=1486-8008&amp;rft.spage=A.15&amp;rft.externalDocID=248788151"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTuZBFGBuogyybq4hzh66sJIxPiUnJ94I2K62sADWTobiDKxpwIhJFQcVluJAjeIMHBGW4aEWkd5-EK4QjKtXDN64pFdYIg4sm8HxqmusZwAAN0EnDQ">
+            <field name="DatabaseTitle">
+                <value>International Newsstand</value>
+                <value>Newsstand</value>
+                <value>Canadian Newsstand Major Dailies</value>
+                <value>Canadian Newsstand Complete</value>
+                <value>National Post</value>
+                <value>Newsstand - w/o Columbus</value>
+                <value>Central (Professional Edition)</value>
+                <value>Banking Information Source</value>
+                <value>Canadian Newsstand Ontario</value>
+                <value>Banking Information Source (Alumni Edition)</value>
+                <value>Canadian Newsstand Core</value>
+                <value>ProQuest Central</value>
+                <value>Central (Alumni)</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Desmond Brown</value>
+            </field>
+            <field name="NewspaperColumn">
+                <value>On the Market</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Don Mills, Ont</value>
+            </field>
+            <field name="Score">
+                <value>12.888532</value>
+            </field>
+            <field name="RelatedPersons_xml">
+                <contributor fullname="Close, Corrigan"/>
+                <contributor fullname="Emery, John"/>
+                <contributor fullname="Warren, James"/>
+            </field>
+            <field name="Copyright">
+                <value>Copyright National Post 1999</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>8FX</value>
+                <value>8BE</value>
+                <value>M2H</value>
+                <value>7XB</value>
+                <value>M2G</value>
+                <value>7XA</value>
+                <value>M2F</value>
+                <value>8FK</value>
+                <value>M1F</value>
+                <value>81J</value>
+                <value>7XH</value>
+                <value>885</value>
+                <value>M6D</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="19990125" month="01" year="1999" day="25"/>
+            </field>
+            <field name="PublicationDate">
+                <value>19990125</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>1900</value>
+            </field>
+            <field name="RelatedPersons">
+                <value>Close, Corrigan</value>
+                <value>Emery, John</value>
+                <value>Warren, James</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright National Post 1999"/>
+            </field>
+            <field name="Publisher">
+                <value>Infomart, a division of Postmedia Network Inc</value>
+            </field>
+            <field name="AbstractList">
+                <value>[Corrigan Close] is a new private cobblestone mews developed by John Emery of Fairmont Properties
+                    Corporation. The address was formerly 40 South Drive, a 120-by-210-foot lot with a 10,000-square-
+                    foot mansion that was built in 1910 by Fred Corrigan, chairman of General Steel Wares. Mr. Emery has
+                    divided the abode into three freehold Georgian-style units and added two detached homes to the lot.
+                    While haggling with the city for zoning to allow for the subdivision, Mr. Emery rented portions of
+                    the house to opera singer Maureen Forrester and television personality Dini Petty.
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Infomart, a division of Postmedia Network Inc"/>
+            </field>
+            <field name="DocumentTitleAlternate">
+                <value>Oodles of Foo-Foo : Toronto Edition</value>
+            </field>
+            <field name="Snippet">
+                <value>[Corrigan Close] is a new private cobblestone mews developed by John Emery of Fairmont Properties
+                    Corporation. The address was formerly 40 South Drive, a...
+                </value>
+            </field>
+            <field name="NewspaperSection">
+                <value>Toronto</value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/329302658</value>
+            </field>
+            <field name="PQPubID">
+                <value>45458</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_2487881511</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>National Post</value>
+            </field>
+            <field name="PublicationYear">
+                <value>1999</value>
+            </field>
+            <field name="Genre">
+                <value>News</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Don Mills, Ont"/>
+            </field>
+            <field name="PQID">
+                <value>329302658</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>International Newsstand</value>
+            </field>
+            <field name="Abstract">
+                <value>[Corrigan Close] is a new private cobblestone mews developed by John Emery of Fairmont Properties
+                    Corporation. The address was formerly 40 South Drive, a 120-by-210-foot lot with a 10,000-square-
+                    foot mansion that was built in 1910 by Fred Corrigan, chairman of General Steel Wares. Mr. Emery has
+                    divided the abode into three freehold Georgian-style units and added two detached homes to the lot.
+                    While haggling with the city for zoning to allow for the subdivision, Mr. Emery rented portions of
+                    the house to opera singer Maureen Forrester and television personality Dini Petty.
+                </value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_2487881511</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Desmond Brown"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>1990</value>
+            </field>
+            <field name="ContentType">
+                <value>Newspaper Article</value>
+            </field>
+            <field name="Title">
+                <value>Oodles of &lt;h&gt;Foo&lt;/h&gt;-&lt;h&gt;Foo&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>248788151</value>
+            </field>
+            <field name="ISSN">
+                <value>1486-8008</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0010591</value>
+            </field>
+            <field name="StartPage">
+                <value>A.15</value>
+            </field>
+            <field name="Subtitle">
+                <value>Toronto Edition</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=1486-8008&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=1486-8008&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=1486-8008&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Little+Bunny+Foo+Foo&amp;rft.jtitle=Bulletin+of+the+Center+for+Children%27s+Books&amp;rft.au=Janice+M+Del+Negro&amp;rft.date=2004-03-01&amp;rft.pub=Johns+Hopkins+University+Press&amp;rft.issn=0008-9036&amp;rft.eissn=1558-6766&amp;rft.volume=57&amp;rft.issue=7&amp;rft.spage=281&amp;rft.externalDocID=580865411"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTuZBFGRuogyybq4hzh66sJIxPiUnJ97UAtj0NjUBZkxxBtY0YMSkioMKS3GgRnEGjgjL8FCLSG8_CFcIxtUrBm9c0issEQeWzeB41TXWMwAANgonCA">
+            <field name="DatabaseTitle">
+                <value>Library Science</value>
+                <value>Professional Collection: Science &amp; Technology</value>
+                <value>Professional Collection: The Arts</value>
+                <value>Platinum: Social Sciences</value>
+                <value>Professional Collection: Health</value>
+                <value>Professional Collection: Business</value>
+                <value>Education Journals</value>
+                <value>Education Periodicals</value>
+                <value>Discovery</value>
+                <value>Professional Collection</value>
+                <value>ProQuest Research Library</value>
+                <value>Platinum: History</value>
+                <value>Platinum: Literature &amp; Language</value>
+                <value>Platinum: The Arts</value>
+                <value>Platinum: Business</value>
+                <value>Central (Professional Edition)</value>
+                <value>Platinum: Health &amp; Medicine</value>
+                <value>Professional Collection: Social Sciences</value>
+                <value>Platinum: Science &amp; Technology</value>
+                <value>Platinum</value>
+                <value>ProQuest Central</value>
+                <value>Professional Collection: History</value>
+                <value>Professional Collection: Literature &amp; Language</value>
+            </field>
+            <field name="Volume">
+                <value>57</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Janice M Del Negro</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Baltimore</value>
+            </field>
+            <field name="Score">
+                <value>12.8641205</value>
+            </field>
+            <field name="RelatedPersons_xml">
+                <contributor fullname="Johnson, Paul (writer)"/>
+            </field>
+            <field name="Copyright">
+                <value>Copyright University of Illinois at Urbana-Champaign, Graduate School of Library &amp;
+                    Information Science, Publications Office Mar 2004
+                </value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>M2O</value>
+                <value>8FX</value>
+                <value>M0P</value>
+                <value>M1O</value>
+                <value>O2G</value>
+                <value>O2H</value>
+                <value>O2I</value>
+                <value>O2J</value>
+                <value>8FZ</value>
+                <value>O2K</value>
+                <value>7XB</value>
+                <value>O2L</value>
+                <value>O2M</value>
+                <value>7RW</value>
+                <value>8FU</value>
+                <value>O33</value>
+                <value>O34</value>
+                <value>O37</value>
+                <value>O36</value>
+                <value>O39</value>
+                <value>O38</value>
+                <value>8A4</value>
+                <value>O3A</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20040301" month="03" year="2004" day="01"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20040301</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="RelatedPersons">
+                <value>Johnson, Paul (writer)</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright
+                        notice="Copyright University of Illinois at Urbana-Champaign, Graduate School of Library &amp; Information Science, Publications Office Mar 2004"/>
+            </field>
+            <field name="Publisher">
+                <value>Johns Hopkins University Press</value>
+            </field>
+            <field name="AbstractList">
+                <value>Del Negro reviews Little Bunny Foo Foo illustrated by Paul Brett Johnson.</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Johns Hopkins University Press"/>
+            </field>
+            <field name="Snippet">
+                <value>Del Negro reviews Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt; illustrated by Paul
+                    Brett Johnson.
+                </value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/223731946</value>
+            </field>
+            <field name="PQPubID">
+                <value>25283</value>
+            </field>
+            <field name="IsScholarly">
+                <value>true</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_5808654111</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Bulletin of the Center for Children&apos;s Books</value>
+            </field>
+            <field name="Issue">
+                <value>7</value>
+            </field>
+            <field name="Discipline">
+                <value>Social Welfare &amp; Social Work</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2004</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Baltimore"/>
+            </field>
+            <field name="PQID">
+                <value>223731946</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>Library Science</value>
+            </field>
+            <field name="EISSN">
+                <value>1558-6766</value>
+            </field>
+            <field name="Abstract">
+                <value>Del Negro reviews Little Bunny Foo Foo illustrated by Paul Brett Johnson.</value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Childrens picture books</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_5808654111</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Janice M Del Negro"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>580865411</value>
+            </field>
+            <field name="ISSN">
+                <value>0008-9036</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0000506</value>
+            </field>
+            <field name="StartPage">
+                <value>281</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0008-9036&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0008-9036&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0008-9036&amp;client=aarhush</value>
+            </field>
+            <field name="Database_xml">
+                <database sequence="1" name="ProQuest Education Journals" dbid="M0P"
+                          url="http://ez.statsbiblioteket.dk:2048/login?url=http://search.proquest.com/education/advanced?accountid=14468">
+                    <sourceTypes>
+                        <sourceType>Aggregation Database</sourceType>
+                    </sourceTypes>
+                </database>
+            </field>
+            <field name="LinkModel">
+                <value>DirectLink</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Little+Bunny+Foo+Foo&amp;rft.jtitle=Book+Links&amp;rft.au=Sue+McCleaf+Nespeca&amp;rft.date=2005-07-01&amp;rft.pub=Booklist+Publications&amp;rft.issn=1055-4742&amp;rft.eissn=2163-5269&amp;rft.volume=14&amp;rft.issue=6&amp;rft.spage=19&amp;rft.externalDocID=869758721"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTuZBFGhuogyybq4hzh66sJIxPiUnJ97CzBLYsAX1VsQZWNOAEZMqDiosxYEaxRk4IizDQy0ivf0gXCEYV68YvHFJr7BEHFg2g-NV11jPAAA6tCcY">
+            <field name="DatabaseTitle">
+                <value>Professional Collection: Science &amp; Technology</value>
+                <value>Professional Collection: The Arts</value>
+                <value>KidQuest Magazines</value>
+                <value>Professional Collection: Health</value>
+                <value>Professional Collection: Business</value>
+                <value>Education Journals</value>
+                <value>Education Periodicals</value>
+                <value>Discovery</value>
+                <value>Professional Collection</value>
+                <value>ProQuest Research Library</value>
+                <value>Central (Professional Edition)</value>
+                <value>Professional Collection: Social Sciences</value>
+                <value>Education Journals (Alumni Edition)</value>
+                <value>ProQuest Central</value>
+                <value>Professional Collection: History</value>
+                <value>Visual Literacy</value>
+                <value>Central (Alumni)</value>
+                <value>Research Library (Alumni Edition)</value>
+                <value>Professional Collection: Literature &amp; Language</value>
+            </field>
+            <field name="Volume">
+                <value>14</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Sue McCleaf Nespeca</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Chicago</value>
+            </field>
+            <field name="Score">
+                <value>12.84508</value>
+            </field>
+            <field name="RelatedPersons_xml">
+                <contributor fullname="Johnson, Paul (writer)"/>
+            </field>
+            <field name="Copyright">
+                <value>Copyright Booklist Publications Jul 2005</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>M2O</value>
+                <value>8FX</value>
+                <value>M0P</value>
+                <value>M6I</value>
+                <value>O2G</value>
+                <value>O2H</value>
+                <value>O2I</value>
+                <value>O2J</value>
+                <value>8FZ</value>
+                <value>O2K</value>
+                <value>7XB</value>
+                <value>O2L</value>
+                <value>88B</value>
+                <value>8FK</value>
+                <value>O2M</value>
+                <value>8FU</value>
+                <value>8G5</value>
+                <value>8A4</value>
+                <value>8AJ</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20050701" month="07" year="2005" day="01"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20050701</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="RelatedPersons">
+                <value>Johnson, Paul (writer)</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright Booklist Publications Jul 2005"/>
+            </field>
+            <field name="Publisher">
+                <value>Booklist Publications</value>
+            </field>
+            <field name="AbstractList">
+                <value>Johnson, Paul Brett. Little Bunny Foo Foo. 2004. 32p. Scholastic, $15.95 (0-439-37301-8).</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Booklist Publications"/>
+            </field>
+            <field name="Snippet">
+                <value>Johnson, Paul Brett. Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt;. 2004. 32p.
+                    Scholastic, $15.95 (0-439-37301-8).
+                </value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/197196419</value>
+            </field>
+            <field name="PQPubID">
+                <value>31915</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_8697587211</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Book Links</value>
+            </field>
+            <field name="Issue">
+                <value>6</value>
+            </field>
+            <field name="Discipline">
+                <value>Social Welfare &amp; Social Work</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2005</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Chicago"/>
+            </field>
+            <field name="PQID">
+                <value>197196419</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>Professional Collection: Science &amp; Technology</value>
+            </field>
+            <field name="EISSN">
+                <value>2163-5269</value>
+            </field>
+            <field name="Abstract">
+                <value>Johnson, Paul Brett. Little Bunny Foo Foo. 2004. 32p. Scholastic, $15.95 (0-439-37301-8).</value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Childrens picture books</value>
+                <value>Book reviews</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_8697587211</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Sue McCleaf Nespeca"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>869758721</value>
+            </field>
+            <field name="ISSN">
+                <value>1055-4742</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0012502</value>
+            </field>
+            <field name="StartPage">
+                <value>19</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=1055-4742&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=1055-4742&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=1055-4742&amp;client=aarhush</value>
+            </field>
+            <field name="Database_xml">
+                <database sequence="1" name="ProQuest Education Journals" dbid="M0P"
+                          url="http://ez.statsbiblioteket.dk:2048/login?url=http://search.proquest.com/education/advanced?accountid=14468">
+                    <sourceTypes>
+                        <sourceType>Aggregation Database</sourceType>
+                    </sourceTypes>
+                </database>
+            </field>
+            <field name="LinkModel">
+                <value>DirectLink</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Little+Bunny+Foo+Foo&amp;rft.jtitle=The+Booklist&amp;rft.au=Jennifer+Mattson&amp;rft.date=2004-01-01&amp;rft.pub=Booklist+Publications&amp;rft.issn=0006-7385&amp;rft.volume=100&amp;rft.issue=9/10&amp;rft.spage=876&amp;rft.externalDocID=527700631"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTuZBFGxuogyybq4hzh66sJIxPiUnJ97UyNwcVJsaGoozsKYBIyZVHFRYigM1ijNwRFiGh1pEevtBuEIwrl4xeOOSXmGJOLBsBserrrGeAQA01icD">
+            <field name="DatabaseTitle">
+                <value>Library Science</value>
+                <value>Professional Collection: Business</value>
+                <value>Education Journals</value>
+                <value>Education Periodicals</value>
+                <value>Discovery</value>
+                <value>Professional Collection</value>
+                <value>Teachers Journals</value>
+                <value>ProQuest Research Library</value>
+                <value>Resource One: Business</value>
+                <value>Platinum: Literature &amp; Language</value>
+                <value>Platinum: Business</value>
+                <value>Central (Professional Edition)</value>
+                <value>Resource One</value>
+                <value>Platinum</value>
+                <value>Resource One: Literature &amp; Language</value>
+                <value>Gold</value>
+                <value>Education Journals (Alumni Edition)</value>
+                <value>ProQuest Central</value>
+                <value>Gold: Literature &amp; Language</value>
+                <value>Central (Alumni)</value>
+                <value>Research Library (Alumni Edition)</value>
+                <value>Gold: Business</value>
+                <value>Professional Collection: Literature &amp; Language</value>
+            </field>
+            <field name="Volume">
+                <value>100</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Jennifer Mattson</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Chicago</value>
+            </field>
+            <field name="Score">
+                <value>12.841734</value>
+            </field>
+            <field name="RelatedPersons_xml">
+                <contributor fullname="Johnson, Paul Brett"/>
+            </field>
+            <field name="Copyright">
+                <value>Copyright Booklist Publications Jan 1-Jan 15, 2004</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>8FY</value>
+                <value>7XI</value>
+                <value>M2O</value>
+                <value>8FX</value>
+                <value>M0P</value>
+                <value>M1O</value>
+                <value>O2G</value>
+                <value>O2J</value>
+                <value>8FZ</value>
+                <value>7XB</value>
+                <value>8G2</value>
+                <value>88B</value>
+                <value>8FK</value>
+                <value>7RW</value>
+                <value>8FU</value>
+                <value>8G5</value>
+                <value>O33</value>
+                <value>O37</value>
+                <value>O2V</value>
+                <value>8A4</value>
+                <value>O2Y</value>
+                <value>O3I</value>
+                <value>O3D</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20040101" month="01" year="2004" day="01"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20040101</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="RelatedPersons">
+                <value>Johnson, Paul Brett</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright Booklist Publications Jan 1-Jan 15, 2004"/>
+            </field>
+            <field name="Publisher">
+                <value>Booklist Publications</value>
+            </field>
+            <field name="AbstractList">
+                <value>Johnson, Paul Brett. Little Bunny Foo Foo. Feb. 2004. 32p. illus. Scholastic, $15.95
+                    (0-439-37301-8).
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Booklist Publications"/>
+            </field>
+            <field name="Snippet">
+                <value>Johnson, Paul Brett. Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt;. Feb. 2004. 32p.
+                    illus. Scholastic, $15.95 (0-439-37301-8).
+                </value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/235504337</value>
+            </field>
+            <field name="PQPubID">
+                <value>41729</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_5277006311</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>The Booklist</value>
+            </field>
+            <field name="Issue">
+                <value>9/10</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2004</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Chicago"/>
+            </field>
+            <field name="PQID">
+                <value>235504337</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>Library Science</value>
+            </field>
+            <field name="Abstract">
+                <value>Johnson, Paul Brett. Little Bunny Foo Foo. Feb. 2004. 32p. illus. Scholastic, $15.95
+                    (0-439-37301-8).
+                </value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Childrens picture books</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_5277006311</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Jennifer Mattson"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt;</value>
+            </field>
+            <field name="CODEN">
+                <value>BKLSAM</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>527700631</value>
+            </field>
+            <field name="ISSN">
+                <value>0006-7385</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0000166</value>
+            </field>
+            <field name="StartPage">
+                <value>876</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0006-7385&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0006-7385&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0006-7385&amp;client=aarhush</value>
+            </field>
+            <field name="Database_xml">
+                <database sequence="1" name="ProQuest Education Journals" dbid="M0P"
+                          url="http://ez.statsbiblioteket.dk:2048/login?url=http://search.proquest.com/education/advanced?accountid=14468">
+                    <sourceTypes>
+                        <sourceType>Aggregation Database</sourceType>
+                    </sourceTypes>
+                </database>
+            </field>
+            <field name="LinkModel">
+                <value>DirectLink</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=LITTLE+BUNNY+FOO+FOO&amp;rft.jtitle=Publishers+Weekly&amp;rft.au=Diane+Roback&amp;rft.au=Jennifer+M+Brown&amp;rft.au=Joy+Bean&amp;rft.date=2004-02-02&amp;rft.issn=0000-0019&amp;rft.eissn=2150-4008&amp;rft.volume=251&amp;rft.issue=5&amp;rft.spage=75&amp;rft.externalDocID=541509441"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTkYu_NxEGWTdXEOcPXRhRWN8Sk5OvCmwogH2REwMDcUZWNOAMZMqDtIgDtQpzsARYRkeahHp7QfhCsG4esXgnUt6hSXiwMIZHLG6xnoGAFOpJy4">
+            <field name="Volume">
+                <value>251</value>
+            </field>
+            <field name="DatabaseTitle">
+                <value>Professional Collection: Science &amp; Technology</value>
+                <value>Discovery</value>
+                <value>Professional Collection</value>
+                <value>ProQuest Research Library</value>
+                <value>Platinum: Literature &amp; Language</value>
+                <value>Central (Professional Edition)</value>
+                <value>ABI/INFORM Research</value>
+                <value>Platinum</value>
+                <value>ABI/INFORM Global</value>
+                <value>Gold</value>
+                <value>ProQuest Central</value>
+                <value>Gold: Business</value>
+                <value>Research Library (Alumni Edition)</value>
+                <value>Library Science</value>
+                <value>ABI/INFORM Research (Alumni Edition)</value>
+                <value>ABI/INFORM Global (Alumni Edition)</value>
+                <value>Professional Collection: Business</value>
+                <value>Arts &amp; Humanities Full Text</value>
+                <value>Platinum: Business</value>
+                <value>ABI/INFORM Complete - Professional Edition</value>
+                <value>Gold: Science &amp; Technology</value>
+                <value>ABI/INFORM Complete (Alumni Edition)</value>
+                <value>Platinum: Science &amp; Technology</value>
+                <value>ABI/INFORM Trade &amp; Industry (Alumni Edition)</value>
+                <value>Gold: Literature &amp; Language</value>
+                <value>ABI/INFORM Complete</value>
+                <value>ABI/INFORM Trade &amp; Industry</value>
+                <value>Central (Alumni)</value>
+                <value>Professional Collection: Literature &amp; Language</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Joy Bean</value>
+                <value>Diane Roback</value>
+                <value>Jennifer M Brown</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>New York</value>
+            </field>
+            <field name="Score">
+                <value>12.836515</value>
+            </field>
+            <field name="RelatedPersons_xml">
+                <contributor fullname="Johnson, Paul (writer)"/>
+            </field>
+            <field name="Copyright">
+                <value>Copyright Reed Business Information, a division of Reed Elsevier, Inc. Feb 2, 2004</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>8FY</value>
+                <value>M2O</value>
+                <value>8FX</value>
+                <value>O2G</value>
+                <value>O2J</value>
+                <value>8FZ</value>
+                <value>7XB</value>
+                <value>O2K</value>
+                <value>7RW</value>
+                <value>8FU</value>
+                <value>M0F</value>
+                <value>8G5</value>
+                <value>M0D</value>
+                <value>O33</value>
+                <value>M0C</value>
+                <value>O37</value>
+                <value>O2V</value>
+                <value>O38</value>
+                <value>O2Z</value>
+                <value>87Z</value>
+                <value>O2Y</value>
+                <value>881</value>
+                <value>883</value>
+                <value>M1O</value>
+                <value>88M</value>
+                <value>8FL</value>
+                <value>M1D</value>
+                <value>8FK</value>
+                <value>7WZ</value>
+                <value>7WY</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20040202" month="02" year="2004" day="02"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20040202</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="RelatedPersons">
+                <value>Johnson, Paul (writer)</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright Reed Business Information, a division of Reed Elsevier, Inc. Feb 2, 2004"/>
+            </field>
+            <field name="AbstractList">
+                <value>Children&apos;s Books Picture Books LITTLE BUNNY FOO FOO PAUL BRETT JOHNSON. Scholastic, $15.95
+                    (32p) ISBN 0-439-37301-8
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Snippet">
+                <value>Children&apos;s Books Picture Books LITTLE BUNNY &lt;h&gt;FOO&lt;/h&gt; &lt;h&gt;FOO&lt;/h&gt;
+                    PAUL BRETT JOHNSON. Scholastic, $15.95 (32p) ISBN 0-439-37301-8
+                </value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/197097731</value>
+            </field>
+            <field name="PQPubID">
+                <value>41480</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_5415094411</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Publishers Weekly</value>
+            </field>
+            <field name="Issue">
+                <value>5</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2004</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="New York"/>
+            </field>
+            <field name="PQID">
+                <value>197097731</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>Professional Collection: Science &amp; Technology</value>
+            </field>
+            <field name="EISSN">
+                <value>2150-4008</value>
+            </field>
+            <field name="Abstract">
+                <value>Children&apos;s Books Picture Books LITTLE BUNNY FOO FOO PAUL BRETT JOHNSON. Scholastic, $15.95
+                    (32p) ISBN 0-439-37301-8
+                </value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Childrens picture books</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_5415094411</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Diane Roback"/>
+                <contributor sequence="2" fullname="Jennifer M Brown"/>
+                <contributor sequence="3" fullname="Joy Bean"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>LITTLE BUNNY &lt;h&gt;FOO&lt;/h&gt; &lt;h&gt;FOO&lt;/h&gt;</value>
+            </field>
+            <field name="CODEN">
+                <value>PWEEAD</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>541509441</value>
+            </field>
+            <field name="ISSN">
+                <value>0000-0019</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0000180</value>
+            </field>
+            <field name="StartPage">
+                <value>75</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0000-0019&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0000-0019&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0000-0019&amp;client=aarhush</value>
+            </field>
+            <field name="Database_xml">
+                <database sequence="1" name="ABI/INFORM Global" dbid="M0C"
+                          url="http://ez.statsbiblioteket.dk:2048/login?url=http://search.proquest.com/abiglobal/advanced?accountid=14468">
+                    <sourceTypes>
+                        <sourceType>Aggregation Database</sourceType>
+                    </sourceTypes>
+                </database>
+            </field>
+            <field name="LinkModel">
+                <value>DirectLink</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Little+Bunny+Foo+Foo&amp;rft.jtitle=School+Library+Journal&amp;rft.au=Shawn+Brommer&amp;rft.date=2004-04-01&amp;rft.pub=Media+Source&amp;rft.issn=0362-8930&amp;rft.volume=50&amp;rft.issue=4&amp;rft.spage=114&amp;rft.externalDocID=621441781"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwTV09C8JADL1FcBbk_oBrSnufvVksguBUUcdL7jIr-v8xrYqObwgJJCQvhEeU2lSDvmVisGQZHAYD2XAAtpEKZkQ_q_h_4uR_mcywVuOwG7d7-DwDgJuXjbew80SJ0PVMvZD6mLocQzXFBqxWQqmUaboRpiIzryIajkIWUKxycabTasGS0KqnJqvFoVbLSzqf-uvh-IarL2wes-CpuT-19PS5HsA27Qu6mDYo">
+            <field name="DatabaseTitle">
+                <value>Professional Collection: Science &amp; Technology</value>
+                <value>Professional Collection: The Arts</value>
+                <value>Professional Collection: Health</value>
+                <value>Resource One: Social Sciences</value>
+                <value>Advanced Technologies Database with Aerospace</value>
+                <value>Platinum: The Arts</value>
+                <value>Gold: Health &amp; Medicine</value>
+                <value>Resource One: Science &amp; Technology</value>
+                <value>Gold</value>
+                <value>Professional Collection: History</value>
+                <value>Research Library (Alumni Edition)</value>
+                <value>Gold: Business</value>
+                <value>Gold: Social Sciences</value>
+                <value>ABI/INFORM Global (Alumni Edition)</value>
+                <value>Education Journals</value>
+                <value>Gold: Science &amp; Technology</value>
+                <value>Resource One: History</value>
+                <value>Resource One: Literature &amp; Language</value>
+                <value>Education Journals (Alumni Edition)</value>
+                <value>Resource One: The Arts</value>
+                <value>ABI/INFORM Complete</value>
+                <value>Central (Alumni)</value>
+                <value>Professional Collection: Literature &amp; Language</value>
+                <value>Gold: History</value>
+                <value>Platinum: Social Sciences</value>
+                <value>Professional Collection</value>
+                <value>Discovery</value>
+                <value>ProQuest Research Library</value>
+                <value>Teachers Journals</value>
+                <value>Resource One: Business</value>
+                <value>Platinum: Literature &amp; Language</value>
+                <value>Central (Professional Edition)</value>
+                <value>Technology Collection</value>
+                <value>Platinum: Health &amp; Medicine</value>
+                <value>Resource One</value>
+                <value>Platinum</value>
+                <value>ABI/INFORM Global</value>
+                <value>ProQuest Central</value>
+                <value>Library Science</value>
+                <value>Gold: The Arts</value>
+                <value>Resource One: Health &amp; Medicine</value>
+                <value>Professional Collection: Business</value>
+                <value>Education Periodicals</value>
+                <value>Platinum: History</value>
+                <value>Platinum: Business</value>
+                <value>ABI/INFORM Complete - Professional Edition</value>
+                <value>ABI/INFORM Complete (Alumni Edition)</value>
+                <value>Professional Collection: Social Sciences</value>
+                <value>Platinum: Science &amp; Technology</value>
+                <value>SciTech Collection</value>
+                <value>Gold: Literature &amp; Language</value>
+            </field>
+            <field name="Volume">
+                <value>50</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Shawn Brommer</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>New York</value>
+            </field>
+            <field name="Score">
+                <value>12.823176</value>
+            </field>
+            <field name="RelatedPersons_xml">
+                <contributor fullname="Johnson, Paul (writer)"/>
+            </field>
+            <field name="Copyright">
+                <value>Copyright Reed Business Information, a division of Reed Elsevier, Inc. Apr 2004</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>8FY</value>
+                <value>8FX</value>
+                <value>M0P</value>
+                <value>8FZ</value>
+                <value>8G2</value>
+                <value>7RW</value>
+                <value>8FU</value>
+                <value>8G5</value>
+                <value>M0C</value>
+                <value>87Z</value>
+                <value>O3M</value>
+                <value>O3L</value>
+                <value>O3I</value>
+                <value>O3K</value>
+                <value>O3E</value>
+                <value>O3D</value>
+                <value>O3G</value>
+                <value>M2O</value>
+                <value>7XI</value>
+                <value>O2G</value>
+                <value>O2H</value>
+                <value>O2I</value>
+                <value>O2J</value>
+                <value>P62</value>
+                <value>7XB</value>
+                <value>O2K</value>
+                <value>O2L</value>
+                <value>O2M</value>
+                <value>O31</value>
+                <value>O32</value>
+                <value>O33</value>
+                <value>O34</value>
+                <value>O37</value>
+                <value>O2V</value>
+                <value>O36</value>
+                <value>O39</value>
+                <value>O2X</value>
+                <value>O38</value>
+                <value>O2W</value>
+                <value>8A4</value>
+                <value>O2Z</value>
+                <value>O2Y</value>
+                <value>O3A</value>
+                <value>8FE</value>
+                <value>M1O</value>
+                <value>88M</value>
+                <value>88B</value>
+                <value>8FL</value>
+                <value>8FK</value>
+                <value>8FG</value>
+                <value>7WZ</value>
+                <value>7WY</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20040401" month="04" year="2004" day="01"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20040401</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="RelatedPersons">
+                <value>Johnson, Paul (writer)</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright Reed Business Information, a division of Reed Elsevier, Inc. Apr 2004"/>
+            </field>
+            <field name="Publisher">
+                <value>Media Source</value>
+            </field>
+            <field name="AbstractList">
+                <value>  JOHNSON, Paul Brett, adapt. Little Bunny Foo Foo. illus. by adapt. unpaged. score. CIP.
+                    Scholastic Press. 2004. RTE $15.95. ISBN 0-439-37301-8. LC 2003005081.
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Media Source"/>
+            </field>
+            <field name="Snippet">
+                <value>  JOHNSON, Paul Brett, adapt. Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt;. illus.
+                    by adapt. unpaged. score. CIP. Scholastic Press. 2004. RTE $15.95. ISBN 0-439-37301-8. LC
+                    2003005081.
+                </value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/211740488</value>
+            </field>
+            <field name="PQPubID">
+                <value>37051</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-LOGICAL-p501-df45cc9cb48fc8956791a76e2d36be3ebeecac65929d822ebb2f7324b5ccad421
+                </value>
+            </field>
+            <field name="PublicationTitle">
+                <value>School Library Journal</value>
+            </field>
+            <field name="Issue">
+                <value>4</value>
+            </field>
+            <field name="Discipline">
+                <value>Education</value>
+                <value>Library &amp; Information Science</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2004</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="New York"/>
+            </field>
+            <field name="PQID">
+                <value>211740488</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>Professional Collection: Science &amp; Technology</value>
+            </field>
+            <field name="Abstract">
+                <value>  JOHNSON, Paul Brett, adapt. Little Bunny Foo Foo. illus. by adapt. unpaged. score. CIP.
+                    Scholastic Press. 2004. RTE $15.95. ISBN 0-439-37301-8. LC 2003005081.
+                </value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Childrens picture books</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-LOGICAL-p501-df45cc9cb48fc8956791a76e2d36be3ebeecac65929d822ebb2f7324b5ccad421
+                </value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Shawn Brommer"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>621441781</value>
+            </field>
+            <field name="ISSN">
+                <value>0362-8930</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0001012</value>
+            </field>
+            <field name="StartPage">
+                <value>114</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0362-8930&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0362-8930&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0362-8930&amp;client=aarhush</value>
+            </field>
+            <field name="Database_xml">
+                <database sequence="1" name="ProQuest Research Library" dbid="M2O"
+                          url="http://ez.statsbiblioteket.dk:2048/login?url=http://search.proquest.com/pqrl/advanced?accountid=14468">
+                    <sourceTypes>
+                        <sourceType>Aggregation Database</sourceType>
+                    </sourceTypes>
+                </database>
+            </field>
+            <field name="LinkModel">
+                <value>DirectLink</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=LITTLE+BUNNY+FOO+FOO&amp;rft.jtitle=Kirkus+Reviews&amp;rft.date=2003-12-15&amp;rft.pub=Kirkus+Media+LLC&amp;rft.issn=1948-7428&amp;rft.issue=24&amp;rft.externalDocID=2566883691"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTkbeFOImyiDn5hri7KELKxrjU3Jy4oE1s5mFhbEZMG-KM7CmAaMmVRxUXIoDtYozcERYhodaRHr7QbhCMK5eMXjrkl5hiTiwdAbHrK6xngEAfuEndg">
+            <field name="DatabaseTitle">
+                <value>Library Science</value>
+                <value>Political Science</value>
+                <value>Central (Professional Edition)</value>
+                <value>Social Science Journals</value>
+                <value>ProQuest Central</value>
+                <value>Discovery</value>
+                <value>Social Science Journals (Alumni Edition)</value>
+                <value>ProQuest Research Library</value>
+                <value>Central (Alumni)</value>
+                <value>Research Library (Alumni Edition)</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Austin</value>
+            </field>
+            <field name="Score">
+                <value>12.81295</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright 2012, Kirkus Reviews. All rights reserved.</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>8FX</value>
+                <value>M2O</value>
+                <value>88J</value>
+                <value>M1O</value>
+                <value>M2R</value>
+                <value>7XB</value>
+                <value>8FK</value>
+                <value>8FU</value>
+                <value>M2L</value>
+                <value>8G5</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20031215" month="12" year="2003" day="15"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20031215</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright 2012, Kirkus Reviews. All rights reserved."/>
+            </field>
+            <field name="Publisher">
+                <value>Kirkus Media LLC</value>
+            </field>
+            <field name="AbstractList">
+                <value>The Good Fairy doesn&apos;t like tomfoolery. Little Bunny Foo Foo&apos;s not a bad bunny, but he
+                    has mischief on his mind and a bunch of mud pies in his possession. He bops a group of field mice on
+                    the head ...
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Kirkus Media LLC"/>
+            </field>
+            <field name="Snippet">
+                <value>The Good Fairy doesn&apos;t like tomfoolery. Little Bunny &lt;h&gt;Foo&lt;/h&gt; &lt;h&gt;Foo&apos;s&lt;/h&gt;
+                    not a bad bunny, but he has mischief on his mind and a bunch of mud pies in his possession...
+                </value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/917132216</value>
+            </field>
+            <field name="PQPubID">
+                <value>756406</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_25668836911</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Kirkus Reviews</value>
+            </field>
+            <field name="Issue">
+                <value>24</value>
+            </field>
+            <field name="Discipline">
+                <value>Education</value>
+                <value>Social Welfare &amp; Social Work</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2003</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Austin"/>
+            </field>
+            <field name="PQID">
+                <value>917132216</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>Library Science</value>
+            </field>
+            <field name="Abstract">
+                <value>The Good Fairy doesn&apos;t like tomfoolery. Little Bunny Foo Foo&apos;s not a bad bunny, but he
+                    has mischief on his mind and a bunch of mud pies in his possession. He bops a group of field mice on
+                    the head ...
+                </value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Childrens picture books</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_25668836911</value>
+            </field>
+            <field name="PublicationDecade">
+                <value>2000</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>LITTLE BUNNY &lt;h&gt;FOO&lt;/h&gt; &lt;h&gt;FOO&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>2566883691</value>
+            </field>
+            <field name="ISSN">
+                <value>1948-7428</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0005050</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=1948-7428&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=1948-7428&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=1948-7428&amp;client=aarhush</value>
+            </field>
+            <field name="Database_xml">
+                <database sequence="1" name="ProQuest Research Library" dbid="M2O"
+                          url="http://ez.statsbiblioteket.dk:2048/login?url=http://search.proquest.com/pqrl/advanced?accountid=14468">
+                    <sourceTypes>
+                        <sourceType>Aggregation Database</sourceType>
+                    </sourceTypes>
+                </database>
+            </field>
+            <field name="LinkModel">
+                <value>DirectLink</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Foo+Fighters+Foo+Fighters&amp;rft.jtitle=The+Globe+and+Mail&amp;rft.au=Chris+Dafoe&amp;rft.date=1995-07-08&amp;rft.issn=0319-0714&amp;rft.spage=C.9&amp;rft.externalDBID=GBML&amp;rft.externalDocID=1119697061"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTkZeeewmyiDn5hri7KELKxrjU3JyQA1VSzNLc2DtYyjOwJoGjJpUcVBxKQ7UKs7AEWEZHmoR6e0H4QrBuHrF4K1LeoUl4sDSGRyzusZ6BgB7kidq">
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Chris Dafoe</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Toronto, Ont</value>
+            </field>
+            <field name="Score">
+                <value>12.785633</value>
+            </field>
+            <field name="PageCount">
+                <value>0</value>
+            </field>
+            <field name="Copyright">
+                <value>All material copyright Bell Globemedia Publishing Inc. or its licensors. All rights reserved.
+                </value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="PublicationDate">
+                <value>19950708</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="19950708" month="07" year="1995" day="08"/>
+            </field>
+            <field name="PublicationCentury">
+                <value>1900</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright
+                        notice="All material copyright Bell Globemedia Publishing Inc. or its licensors. All rights reserved."/>
+            </field>
+            <field name="AbstractList">
+                <value>(Rosswell/Capitol) Reviewed by [Chris Dafoe] I know it&apos;s pointless to berate the music
+                    industry for its tireless necrophilia, but I doubt my local HMV would have front-racked a couple of
+                    hundred copies of this album if Kurt Cobain hadn&apos;t blown his head off a year ago.
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Snippet">
+                <value>...&lt;h&gt;Foo&lt;/h&gt; Fighters &lt;h&gt;Foo&lt;/h&gt; Fighters Saturday, July 08, 1995 Chris
+                    Dafoe (Rosswell/Capitol) Reviewed by Chris Dafoe I know it&apos;s pointless to berate the music
+                    industry...
+                </value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_11196970611</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>The Globe and Mail</value>
+            </field>
+            <field name="DLL_JC">
+                <value>GBML</value>
+            </field>
+            <field name="PCID">
+                <value>33177261</value>
+            </field>
+            <field name="PublicationYear">
+                <value>1995</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Toronto, Ont"/>
+            </field>
+            <field name="PQID">
+                <value>384992770</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value></value>
+            </field>
+            <field name="Abstract">
+                <value>(Rosswell/Capitol) Reviewed by [Chris Dafoe] I know it&apos;s pointless to berate the music
+                    industry for its tireless necrophilia, but I doubt my local HMV would have front-racked a couple of
+                    hundred copies of this album if Kurt Cobain hadn&apos;t blown his head off a year ago.
+                </value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_11196970611</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Chris Dafoe"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>1990</value>
+            </field>
+            <field name="ContentType">
+                <value>Newspaper Article</value>
+            </field>
+            <field name="Title">
+                <value>&lt;h&gt;Foo&lt;/h&gt; Fighters &lt;h&gt;Foo&lt;/h&gt; Fighters</value>
+            </field>
+            <field name="ISSN">
+                <value>0319-0714</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>1119697061</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0016546</value>
+            </field>
+            <field name="StartPage">
+                <value>C.9</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0319-0714&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0319-0714&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0319-0714&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Foo+Fighters.+Foo+Fighters&amp;rft.jtitle=Rolling+Stone&amp;rft.date=1995-12-28&amp;rft.pub=Rolling+Stone+LLC&amp;rft.issn=0035-791X&amp;rft.issue=724-725&amp;rft.spage=120&amp;rft.externalDocID=630940291"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsToYVfqASy02UQdbNNcTZQxdWNMan5OTEmxmDDnozAmZNcQbWNGDMpIqDSktxoE5xBo4Iy_BQi0hvPwhXCMbVKwbvXNIrLBEHFs7giNU11jMAAFWOJzM">
+            <field name="DatabaseTitle">
+                <value>Gold: The Arts</value>
+                <value>CBCA Complete (Alumni Edition)</value>
+                <value>Discovery</value>
+                <value>CBCA Complete</value>
+                <value>ProQuest Research Library</value>
+                <value>CBCA Current Events</value>
+                <value>CBCA Reference (Alumni Edition)</value>
+                <value>Platinum: The Arts</value>
+                <value>Alt-PressWatch (Alumni Edition)</value>
+                <value>Central (Professional Edition)</value>
+                <value>Resource One</value>
+                <value>Alt-PressWatch</value>
+                <value>Platinum</value>
+                <value>Resource One: The Arts</value>
+                <value>Gold</value>
+                <value>ProQuest Central</value>
+                <value>Central (Alumni)</value>
+                <value>Research Library (Alumni Edition)</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>New York</value>
+            </field>
+            <field name="Score">
+                <value>12.766891</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright Straight Arrow Publishers, Inc. Dec 28, 1995</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="PublicationDate">
+                <value>19951228</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="19951228" month="12" year="1995" day="28"/>
+            </field>
+            <field name="PublicationCentury">
+                <value>1900</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright Straight Arrow Publishers, Inc. Dec 28, 1995"/>
+            </field>
+            <field name="Publisher">
+                <value>Rolling Stone LLC</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Rolling Stone LLC"/>
+            </field>
+            <field name="PQPubID">
+                <value>47797</value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/220146165</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_6309402911</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Rolling Stone</value>
+            </field>
+            <field name="Issue">
+                <value>724-725</value>
+            </field>
+            <field name="Discipline">
+                <value>Music</value>
+            </field>
+            <field name="PublicationYear">
+                <value>1995</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="New York"/>
+            </field>
+            <field name="PQID">
+                <value>220146165</value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Sound recording reviews Popular</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_6309402911</value>
+            </field>
+            <field name="PublicationDecade">
+                <value>1990</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>&lt;h&gt;Foo&lt;/h&gt; Fighters. &lt;h&gt;Foo&lt;/h&gt; Fighters</value>
+            </field>
+            <field name="ISSN">
+                <value>0035-791X</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>630940291</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0000120</value>
+            </field>
+            <field name="StartPage">
+                <value>120</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0035-791X&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0035-791X&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0035-791X&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Foo+Fighters.+Foo+Fighters&amp;rft.jtitle=Rolling+Stone&amp;rft.date=1995-08-10&amp;rft.pub=Rolling+Stone+LLC&amp;rft.issn=0035-791X&amp;rft.issue=714&amp;rft.spage=56&amp;rft.externalDocID=630942111"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTkZeA-gmyiDr5hri7KELKxrjU3Jy4s2Mgf0QI1D-FmdgTQPGTKo4qLQUB-oUZ-CIsAwPtYj09oNwhWBcvWLwziW9whJxYOEMjlhdYz0DAFQVJy0">
+            <field name="DatabaseTitle">
+                <value>Gold: The Arts</value>
+                <value>CBCA Complete (Alumni Edition)</value>
+                <value>Discovery</value>
+                <value>CBCA Complete</value>
+                <value>ProQuest Research Library</value>
+                <value>CBCA Current Events</value>
+                <value>CBCA Reference (Alumni Edition)</value>
+                <value>Platinum: The Arts</value>
+                <value>Alt-PressWatch (Alumni Edition)</value>
+                <value>Central (Professional Edition)</value>
+                <value>Resource One</value>
+                <value>Alt-PressWatch</value>
+                <value>Platinum</value>
+                <value>Resource One: The Arts</value>
+                <value>Gold</value>
+                <value>ProQuest Central</value>
+                <value>Central (Alumni)</value>
+                <value>Research Library (Alumni Edition)</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>New York</value>
+            </field>
+            <field name="Score">
+                <value>12.766812</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright Straight Arrow Publishers, Inc. Aug 10, 1995</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="PublicationDate">
+                <value>19950810</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="19950810" month="08" year="1995" day="10"/>
+            </field>
+            <field name="PublicationCentury">
+                <value>1900</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright Straight Arrow Publishers, Inc. Aug 10, 1995"/>
+            </field>
+            <field name="Publisher">
+                <value>Rolling Stone LLC</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Rolling Stone LLC"/>
+            </field>
+            <field name="PQPubID">
+                <value>47797</value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/220149186</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_6309421111</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Rolling Stone</value>
+            </field>
+            <field name="Issue">
+                <value>714</value>
+            </field>
+            <field name="Discipline">
+                <value>Music</value>
+            </field>
+            <field name="PublicationYear">
+                <value>1995</value>
+            </field>
+            <field name="Genre">
+                <value>Review</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="New York"/>
+            </field>
+            <field name="PQID">
+                <value>220149186</value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Sound recording reviews Popular</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_6309421111</value>
+            </field>
+            <field name="PublicationDecade">
+                <value>1990</value>
+            </field>
+            <field name="ContentType">
+                <value>Book Review</value>
+            </field>
+            <field name="Title">
+                <value>&lt;h&gt;Foo&lt;/h&gt; Fighters. &lt;h&gt;Foo&lt;/h&gt; Fighters</value>
+            </field>
+            <field name="ISSN">
+                <value>0035-791X</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>630942111</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0000120</value>
+            </field>
+            <field name="StartPage">
+                <value>56</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=0035-791X&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=0035-791X&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=0035-791X&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Medical+Foo&amp;rft.jtitle=33+Charts+%5B33+Charts+-+BLOG%5D&amp;rft.date=2013-08-13&amp;rft.pub=Newstex&amp;rft.externalDocID=3043220421"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTkZePuUmyiDn5hri7KELKxrjU3Jy4o1BR8cZAVOYoaE4A2saMGpSxUHFpThQqzgDR4RleKhFpLcfhCsE4-oVg7cu6RWWiANLZ3DM6hrrGQAAdzQnWQ">
+            <field name="DatabaseTitle">
+                <value>Central (Professional Edition)</value>
+                <value>ProQuest Central</value>
+                <value>Discovery</value>
+                <value>ProQuest Research Library</value>
+                <value>Central (Alumni)</value>
+                <value>Research Library (Alumni Edition)</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Chatham</value>
+            </field>
+            <field name="Score">
+                <value>12.709585</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright Newstex Aug 13, 2013</value>
+            </field>
+            <field name="DBID">
+                <value>8FX</value>
+                <value>M2O</value>
+                <value>7XB</value>
+                <value>8FK</value>
+                <value>8FU</value>
+                <value>8G5</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="PublicationDate">
+                <value>20130813</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20130813" month="08" year="2013" day="13"/>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright Newstex Aug 13, 2013"/>
+            </field>
+            <field name="Publisher">
+                <value>Newstex</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Newstex"/>
+            </field>
+            <field name="Snippet">
+                <value>...  Last year I was fortunate enough to be at Health &lt;h&gt;Foo&lt;/h&gt;, an intimate powwow
+                    of some amazing folks (&lt;h&gt;Foo&lt;/h&gt; stands for friends of O&apos;Reilly). Structured...
+                </value>
+            </field>
+            <field name="GeographicLocations">
+                <value>Aug 13, 2013</value>
+            </field>
+            <field name="PQPubID">
+                <value>50833</value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/1419819681</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_30432204211</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>33 Charts [33 Charts - BLOG]</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2013</value>
+            </field>
+            <field name="Genre">
+                <value>Blog</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Chatham"/>
+            </field>
+            <field name="PQID">
+                <value>1419819681</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_30432204211</value>
+            </field>
+            <field name="PublicationDecade">
+                <value>2010</value>
+            </field>
+            <field name="ContentType">
+                <value>Web Resource</value>
+            </field>
+            <field name="Title">
+                <value>Medical &lt;h&gt;Foo&lt;/h&gt;</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>3043220421</value>
+            </field>
+            <field name="Database_xml">
+                <database sequence="1" name="ProQuest Research Library" dbid="M2O"
+                          url="http://ez.statsbiblioteket.dk:2048/login?url=http://search.proquest.com/pqrl/advanced?accountid=14468">
+                    <sourceTypes>
+                        <sourceType>Aggregation Database</sourceType>
+                    </sourceTypes>
+                </database>
+            </field>
+            <field name="LinkModel">
+                <value>DirectLink</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Christina+Foo&amp;rft.jtitle=In+the+Black&amp;rft.au=Keong%2C+Low+Weng&amp;rft.date=2011-02-01&amp;rft.pub=Hardie+Grant+Magazines&amp;rft.issn=1832-0899&amp;rft.spage=21&amp;rft.externalDBID=n%2Fa&amp;rft.externalDocID=264400552"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTkae73QTZZB1cw1x9tAFlZDxBZAzF-JB9TbovCgjQ3EG1jRgzKSKg0pLcaBOcQaOCMvwUItIbz8IVwjG1SsG71zSKywRBxbO4IjVNdYzAABIzicO">
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Keong, Low Weng</value>
+            </field>
+            <field name="Score">
+                <value>12.026426</value>
+            </field>
+            <field name="PageCount">
+                <value>1</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="PublicationDate">
+                <value>Feb 2011</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="Feb 2011" month="02" year="2011"/>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Publisher">
+                <value>Hardie Grant Magazines</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Hardie Grant Magazines"/>
+            </field>
+            <field name="GeographicLocations">
+                <value>Australia</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-gale_primary_2644005521</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>In the Black</value>
+            </field>
+            <field name="GeographicLocations_xml">
+                <location name="Australia"/>
+            </field>
+            <field name="Discipline">
+                <value>Business</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2011</value>
+            </field>
+            <field name="Audience">
+                <value>Trade</value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Accountants</value>
+                <value>Biography</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-gale_primary_2644005521</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Keong, Low Weng"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2010</value>
+            </field>
+            <field name="ContentType">
+                <value>Magazine Article</value>
+            </field>
+            <field name="Title">
+                <value>Christina &lt;h&gt;Foo&lt;/h&gt;</value>
+            </field>
+            <field name="ISSN">
+                <value>1832-0899</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>264400552</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0035556</value>
+            </field>
+            <field name="StartPage">
+                <value>21</value>
+            </field>
+            <field name="thumbnail_l">
+                <value>http://www.syndetics.com/index.aspx?isbn=/lc.gif&amp;issn=1832-0899&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_m">
+                <value>http://www.syndetics.com/index.aspx?isbn=/mc.gif&amp;issn=1832-0899&amp;client=aarhush</value>
+            </field>
+            <field name="thumbnail_s">
+                <value>http://www.syndetics.com/index.aspx?isbn=/sc.gif&amp;issn=1832-0899&amp;client=aarhush</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Foo+Fighters&amp;rft.jtitle=Hull+Daily+Mail&amp;rft.date=2012-11-09&amp;rft.pub=Northcliffe+Electronic+Publishing&amp;rft.spage=34&amp;rft.externalDocID=2811748191"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsToYVfqASzU2UQc7NNcTZQxdWNMan5OTEG4E2RJqAeheG4gysacCoSRUHFZfiQK3iDBwRluGhFpHefhCuEIyrVwzeuqRXWCIOLJ3BMatrrGcAAH3oJ3A">
+            <field name="DatabaseTitle">
+                <value>Newsstand - w/o Columbus</value>
+                <value>European Newsstand</value>
+                <value>Central (Professional Edition)</value>
+                <value>International Newsstand</value>
+                <value>International Newsstand (CDN)</value>
+                <value>Newsstand (CDN)</value>
+                <value>Newsstand</value>
+                <value>Newsstand (CDN) (Alumni)</value>
+                <value>ProQuest Central</value>
+                <value>UK Newsstand</value>
+                <value>Central (Alumni)</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Hull (UK)</value>
+            </field>
+            <field name="Score">
+                <value>11.707591</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright (c) Northcliffe Newspapers Group Limited 2012</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>8FX</value>
+                <value>8A8</value>
+                <value>8CL</value>
+                <value>8A7</value>
+                <value>8BE</value>
+                <value>8B3</value>
+                <value>7XB</value>
+                <value>8FK</value>
+                <value>M6D</value>
+                <value>7XH</value>
+                <value>M4P</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20121109" month="11" year="2012" day="09"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20121109</value>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright (c) Northcliffe Newspapers Group Limited 2012"/>
+            </field>
+            <field name="Publisher">
+                <value>Northcliffe Electronic Publishing</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Northcliffe Electronic Publishing"/>
+            </field>
+            <field name="DocumentTitleAlternate">
+                <value>Foo Fighters : Pick of the Day</value>
+            </field>
+            <field name="Snippet">
+                <value>...  UK &lt;h&gt;Foo&lt;/h&gt; Fighters perform a tribute to their idols covering a host of hit
+                    singles from their platinum-selling albums. Expect to hear This Is A Call, Monkey...
+                </value>
+            </field>
+            <field name="NewspaperSection">
+                <value>News</value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/1146122433</value>
+            </field>
+            <field name="PQPubID">
+                <value>25523</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_28117481911</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Hull Daily Mail</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2012</value>
+            </field>
+            <field name="Genre">
+                <value>News</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Hull (UK)"/>
+            </field>
+            <field name="PQID">
+                <value>1146122433</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_28117481911</value>
+            </field>
+            <field name="PublicationDecade">
+                <value>2010</value>
+            </field>
+            <field name="ContentType">
+                <value>Newspaper Article</value>
+            </field>
+            <field name="Title">
+                <value>&lt;h&gt;Foo&lt;/h&gt; Fighters</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>2811748191</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0024464</value>
+            </field>
+            <field name="StartPage">
+                <value>34</value>
+            </field>
+            <field name="Subtitle">
+                <value>Pick of the Day</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=Foo+rush+in&amp;rft.jtitle=The+Straits+Times&amp;rft.au=Eddino+Abdul+Hadi&amp;rft.au=Melissa+Kok&amp;rft.date=2012-01-13&amp;rft.pub=Singapore+Press+Holdings+Limited&amp;rft.externalDocID=2559725811"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsToYVfqCSzU2UQc7NNcTZQxdWNMan5OTEg1u-RqYWwKwpzsCaBoyaVHFQcSkO1CrOwBFhGR5qEentB-EKwbh6xeCtS3qFJeLA0hkcs7rGegYAf0UndA">
+            <field name="DatabaseTitle">
+                <value>International Newsstand</value>
+                <value>Alaska Newspaper Database</value>
+                <value>Newsstand (CDN)</value>
+                <value>International Newsstand (CDN)</value>
+                <value>Newsstand</value>
+                <value>Asia Newsstand</value>
+                <value>International Newspapers</value>
+                <value>Newsstand - w/o Columbus</value>
+                <value>Central (Professional Edition)</value>
+                <value>Newspaper Collection</value>
+                <value>Newsstand (CDN) (Alumni)</value>
+                <value>ProQuest Central</value>
+                <value>Central (Alumni)</value>
+            </field>
+            <field name="RelatedCompanies">
+                <value>Foo Fighters</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Eddino Abdul Hadi</value>
+                <value>Melissa Kok</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Singapore</value>
+            </field>
+            <field name="Score">
+                <value>11.692445</value>
+            </field>
+            <field name="Copyright">
+                <value>Copyright 2012 Singapore Press Holdings</value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>8FX</value>
+                <value>8BE</value>
+                <value>H9V</value>
+                <value>7XB</value>
+                <value>8FK</value>
+                <value>7XH</value>
+                <value>7RT</value>
+                <value>8A8</value>
+                <value>8AV</value>
+                <value>8A7</value>
+                <value>8CL</value>
+                <value>8B2</value>
+                <value>M6D</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20120113" month="01" year="2012" day="13"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20120113</value>
+            </field>
+            <field name="RelatedCompanies_xml">
+                <organization name="Foo Fighters"/>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright notice="Copyright 2012 Singapore Press Holdings"/>
+            </field>
+            <field name="Publisher">
+                <value>Singapore Press Holdings Limited</value>
+            </field>
+            <field name="AbstractList">
+                <value>More than 70 local, regional and international acts are staging shows at the major live music
+                    venues, with more acts expected to be announced in the coming months. Since frontman Dave Grohl
+                    started the band in 1994, they have won the Grammy Award for Best Rock Album three times:
+                </value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Singapore Press Holdings Limited"/>
+            </field>
+            <field name="DocumentTitleAlternate">
+                <value>Foo rush in : Star act Foo Fighters are the main attraction in a packed concert calendar</value>
+            </field>
+            <field name="Snippet">
+                <value>...&lt;h&gt;Foo&lt;/h&gt; Fighters, one of the most popular rock bands in the world now, are
+                    coming to Singapore to headline their own concert here for the first time. The American...
+                </value>
+            </field>
+            <field name="NewspaperSection">
+                <value>Life</value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/915661529</value>
+            </field>
+            <field name="PQPubID">
+                <value>33108</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_25597258111</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>The Straits Times</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2012</value>
+            </field>
+            <field name="Genre">
+                <value>News</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Singapore"/>
+            </field>
+            <field name="PQID">
+                <value>915661529</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>International Newsstand</value>
+            </field>
+            <field name="Abstract">
+                <value>More than 70 local, regional and international acts are staging shows at the major live music
+                    venues, with more acts expected to be announced in the coming months. Since frontman Dave Grohl
+                    started the band in 1994, they have won the Grammy Award for Best Rock Album three times:
+                </value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Heavy metal music</value>
+                <value>Musical performances</value>
+                <value>Grammy awards</value>
+                <value>Nominations</value>
+                <value>Awards &amp; honors</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_25597258111</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Eddino Abdul Hadi"/>
+                <contributor sequence="2" fullname="Melissa Kok"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2010</value>
+            </field>
+            <field name="ContentType">
+                <value>Newspaper Article</value>
+            </field>
+            <field name="Title">
+                <value>&lt;h&gt;Foo&lt;/h&gt; rush in</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>2559725811</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0028926</value>
+            </field>
+            <field name="Subtitle">
+                <value>Star act &lt;h&gt;Foo&lt;/h&gt; Fighters are the main attraction in a packed concert calendar
+                </value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+        <document hasFullText="true" isFullTextHit="false" inHoldings="true"
+                  openUrl="ctx_ver=Z39.88-2004&amp;ctx_enc=info%3Aofi%2Fenc%3AUTF-8&amp;rfr_id=info:sid/summon.serialssolutions.com&amp;rft_val_fmt=info:ofi/fmt:kev:mtx:journal&amp;rft.genre=article&amp;rft.atitle=FOO+FIGHTERS&amp;rft.jtitle=Sydney+Morning+Herald&amp;rft.au=Craig+Mathieson&amp;rft.date=2011-04-09&amp;rft.pub=Fairfax+Digital&amp;rft.spage=14&amp;rft.externalDocID=2342003061"
+                  link="http://statsbiblioteket.summon.serialssolutions.com/2.0.0/link/0/eLvHCXMwY2BQSTVKMjVIS07TNU42TtM1STIz0k00SjPTTTM2T05JSkxKMgXv4kdsTkaeenQTZZBzcw1x9tCFFY3xKTk58UbGJkbg9q2hoTgDaxowalLFQcWlOFCrOANHhGV4qEWktx-EKwTj6hWDty7pFZaIA0tncMzqGusZAAB1KSdU">
+            <field name="DatabaseTitle">
+                <value>ANZ Newsstand</value>
+            </field>
+            <field name="RelatedCompanies">
+                <value>Foo Fighters</value>
+            </field>
+            <field name="Language">
+                <value>English</value>
+            </field>
+            <field name="Author">
+                <value>Craig Mathieson</value>
+            </field>
+            <field name="PublicationPlace">
+                <value>Sydney, N.S.W</value>
+            </field>
+            <field name="Score">
+                <value>11.684212</value>
+            </field>
+            <field name="Copyright">
+                <value>(c) 2011 John Fairfax Publications Pty Limited. www.smh.com.au. Not available for
+                    re-distribution
+                </value>
+            </field>
+            <field name="IsPeerReviewed">
+                <value>false</value>
+            </field>
+            <field name="DBID">
+                <value>7RP</value>
+            </field>
+            <field name="PublicationDate_xml">
+                <datetime text="20110409" month="04" year="2011" day="09"/>
+            </field>
+            <field name="PublicationDate">
+                <value>20110409</value>
+            </field>
+            <field name="RelatedCompanies_xml">
+                <organization name="Foo Fighters"/>
+            </field>
+            <field name="PublicationCentury">
+                <value>2000</value>
+            </field>
+            <field name="Copyright_xml">
+                <copyright
+                        notice="(c) 2011 John Fairfax Publications Pty Limited. www.smh.com.au. Not available for re-distribution"/>
+            </field>
+            <field name="Publisher">
+                <value>Fairfax Digital</value>
+            </field>
+            <field name="AbstractList">
+                <value>FOO FIGHTERS Wasting Light (Sony) RATING: 3/5</value>
+            </field>
+            <field name="SourceType">
+                <value>Aggregation Database</value>
+            </field>
+            <field name="Publisher_xml">
+                <organization name="Fairfax Digital"/>
+            </field>
+            <field name="DocumentTitleAlternate">
+                <value>FOO FIGHTERS : Rock CD REVIEWS</value>
+            </field>
+            <field name="Snippet">
+                <value>&lt;h&gt;FOO&lt;/h&gt; FIGHTERS Wasting Light (Sony) RATING: 3/5</value>
+            </field>
+            <field name="NewspaperSection">
+                <value>Culture</value>
+            </field>
+            <field name="URI">
+                <value>http://search.proquest.com/docview/865641524</value>
+            </field>
+            <field name="PQPubID">
+                <value>44841</value>
+            </field>
+            <field name="IsScholarly">
+                <value>false</value>
+            </field>
+            <field name="ID">
+                <value>summon_FETCH-proquest_dll_23420030611</value>
+            </field>
+            <field name="PublicationTitle">
+                <value>Sydney Morning Herald</value>
+            </field>
+            <field name="PublicationYear">
+                <value>2011</value>
+            </field>
+            <field name="Genre">
+                <value>News</value>
+            </field>
+            <field name="PublicationPlace_xml">
+                <location name="Sydney, N.S.W"/>
+            </field>
+            <field name="PQID">
+                <value>865641524</value>
+            </field>
+            <field name="DatabaseTitleList">
+                <value>ANZ Newsstand</value>
+            </field>
+            <field name="Abstract">
+                <value>FOO FIGHTERS Wasting Light (Sony) RATING: 3/5</value>
+            </field>
+            <field name="SubjectTerms">
+                <value>Musical recordings</value>
+            </field>
+            <field name="MergedId">
+                <value>FETCHMERGED-proquest_dll_23420030611</value>
+            </field>
+            <field name="Author_xml">
+                <contributor sequence="1" fullname="Craig Mathieson"/>
+            </field>
+            <field name="PublicationDecade">
+                <value>2010</value>
+            </field>
+            <field name="ContentType">
+                <value>Newspaper Article</value>
+            </field>
+            <field name="Title">
+                <value>&lt;h&gt;FOO&lt;/h&gt; FIGHTERS</value>
+            </field>
+            <field name="ExternalDocumentID">
+                <value>2342003061</value>
+            </field>
+            <field name="SSID">
+                <value>ssj0023152</value>
+            </field>
+            <field name="StartPage">
+                <value>14</value>
+            </field>
+            <field name="Subtitle">
+                <value>Rock CD REVIEWS</value>
+            </field>
+            <field name="LinkModel">
+                <value>OpenURL</value>
+            </field>
+        </document>
+    </documents>
+    <rollups>
+        <image/>
+        <reference/>
+        <newspaper/>
+    </rollups>
+</response>
