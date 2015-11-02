@@ -235,8 +235,8 @@ public class RecordWriter extends ObjectFilterImpl {
                 storage.flushAll(records, qOptions);
                 log.info(String.format(
                         "Committed %s in %sms. Total commits: %d. Last commit was %sms ago",
-                        stats, (System.nanoTime() - start)/1000000D,
-                        totalCommits, (System.nanoTime() - lastCommit)/1000000D));
+                        stats, (System.nanoTime() - start) / 1000000D,
+                        totalCommits, (System.nanoTime() - lastCommit) / 1000000D));
                 lastCommit = System.nanoTime();
             } catch (NoRouteToHostException e) {
                 Logging.fatal(log, "RecordWriter.forceCommit",
@@ -348,22 +348,30 @@ public class RecordWriter extends ObjectFilterImpl {
     }
 
     /**
-     * Flushes Records to Storage.
+     * Flushes Records to the batch queue.
      * @param payload the Payload containing the Record to flush.
      */
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         Record record = payload.getRecord();
-
         if (record == null) {
             throw new PayloadException("null received in Payload in next(). This should not happen");
         }
 
+        processRecord(record);
+        return true;
+    }
+
+    /**
+     * Flushes Records to the batch queue.
+     * @param record the Record to flush.
+     */
+    public void processRecord(Record record) {
         batcher.add(record);
         profiler.beat();
         log.trace("Record '" + record.getId() + "' ok through RecordWriter.");
-        return true;
     }
+
 
     @Override
     public boolean hasNext() {
@@ -372,6 +380,13 @@ public class RecordWriter extends ObjectFilterImpl {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Explicit flush of queued Records to Storage.
+     */
+    public void flush() {
+        batcher.forceCommit();
     }
 
     @Override
@@ -400,6 +415,3 @@ public class RecordWriter extends ObjectFilterImpl {
         }
     }
 }
-
-
-
