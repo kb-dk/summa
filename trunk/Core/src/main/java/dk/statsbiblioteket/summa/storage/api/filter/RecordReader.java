@@ -77,9 +77,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * If no base is defined, the default value is "progress.xml".
      */
     public static final String CONF_PROGRESS_FILE = "summa.storage.recordreader.progressfile";
-    /**
-     * Default value for {@link #CONF_PROGRESS_FILE}.
-     */
     public static final String DEFAULT_PROGRESS_FILE_POSTFIX = "progress.xml";
 
     /**
@@ -93,9 +90,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * This property is optional. Default is true.
      */
     public static final String CONF_USE_PERSISTENCE = "summa.storage.recordreader.usepersistence";
-    /**
-     * Default value for {@link #CONF_USE_PERSISTENCE}.
-     */
     public static final boolean DEFAULT_USE_PERSISTENCE = true;
 
     /**
@@ -104,10 +98,19 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * This property is optional. Default is false.
      */
     public static final String CONF_START_FROM_SCRATCH = "summa.storage.recordreader.startfromscratch";
-    /**
-     * Default value for {@link #CONF_START_FROM_SCRATCH}.
-     */
     public static final boolean DEFAULT_START_FROM_SCRATCH = false;
+
+    /**
+     * When the RecordReader picks up from a previously persisted point in time, this amount of
+     * milliseconds is added to the time. If set, this will normally be a negative value, to lower
+     * the chance of missed index data due to crashes.
+     * </p><p>
+     * The calculated start time will never go below 0.
+     * </p><p>
+     * Optional. Default is 0.
+     */
+    public static final String CONF_CONTINUE_OFFSET = "summa.storage.recordreader.continue.offset";
+    public static final long DEFAULT_CONTINUE_OFFSET = 0;
 
     /**
      * The maximum number of Records to read before signaling EOF onwards in the filter chain.
@@ -116,9 +119,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_MAX_READ_RECORDS = "summa.storage.recordreader.maxread.records";
-    /**
-     * Default value for {@link #CONF_MAX_READ_RECORDS}.
-     */
     public static final int DEFAULT_MAX_READ_RECORDS = -1;
 
     /**
@@ -128,9 +128,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_MAX_READ_SECONDS = "summa.storage.recordreader.maxread.seconds";
-    /**
-     * Default value for {@link #CONF_MAX_READ_SECONDS}.
-     */
     public static final int DEFAULT_MAX_READ_SECONDS = -1;
 
     /**
@@ -140,9 +137,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * This property is optional. Default is "" (all records).
      */
     public static final String CONF_BASE = "summa.storage.recordreader.base";
-    /**
-     * Default value for {@link #CONF_BASE}.
-     */
     public static final String DEFAULT_BASE = "";
 
     /**
@@ -156,9 +150,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * Default is {@link #DEFAULT_PROGRESS_BATCH_SIZE}
      */
     public static final String CONF_PROGRESS_BATCH_SIZE = "summa.storage.recordreader.progress.batchsize";
-    /**
-     * Default value for {@link #CONF_PROGRESS_BATCH_SIZE}.
-     */
     public static final long DEFAULT_PROGRESS_BATCH_SIZE = 500;
 
     /**
@@ -171,9 +162,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * Default is {@link #DEFAULT_PROGRESS_GRACETIME}
      */
     public static final String CONF_PROGRESS_GRACETIME = "summa.storage.recordreader.progress.gracetime";
-    /**
-     * Default value for {@link #CONF_PROGRESS_GRACETIME}.
-     */
     public static final long DEFAULT_PROGRESS_GRACETIME = 5000;
 
     /**
@@ -185,9 +173,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * This property is optional. Default is false.
      */
     public static final String CONF_STAY_ALIVE = "summa.storage.recordreader.stayalive";
-    /**
-     * Default value for {@link #CONF_STAY_ALIVE}.
-     */
     public static final boolean DEFAULT_STAY_ALIVE = false;
 
     /**
@@ -195,9 +180,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * The default value is {@code false}.
      */
     public static final String CONF_EXPAND_CHILDREN = "summa.storage.recordreader.expandchildren";
-    /**
-     * Default value for {@link #CONF_EXPAND_CHILDREN}.
-     */
     public static final boolean DEFAULT_EXPAND_CHILDREN = false;
 
     /**
@@ -206,9 +188,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * Optional. Default is 100. -1 means no limit (not recommended due to the possibility of endless recursion).
      */
     public static final String CONF_EXPANSION_DEPTH = "summa.storage.recordreader.expansiondepth";
-    /**
-     * Default value for {@link #CONF_EXPANSION_DEPTH}.
-     */
     public static final int DEFAULT_EXPANSION_DEPTH = 100;
 
     /**
@@ -216,9 +195,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * The default value is {@code false}.
      */
     public static final String CONF_EXPAND_PARENTS = "summa.storage.recordreader.expandparents";
-    /**
-     * Default value for {@link #CONF_EXPAND_PARENTS}.
-     */
     public static final boolean DEFAULT_EXPAND_PARENTS = false;
 
     /**
@@ -227,9 +203,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * Optional. Default is 100. -1 means no limit (not recommended due to the possibility of endless recursion).
      */
     public static final String CONF_EXPANSION_HEIGHT = "summa.storage.recordreader.expansionheight";
-    /**
-     * Default value for {@link #CONF_EXPANSION_HEIGHT}.
-     */
     public static final int DEFAULT_EXPANSION_HEIGHT = 100;
 
 
@@ -238,9 +211,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * Ingest method will be much faster if data are not loaded. But for indexing, data are needed of course.
      */
     public static final String CONF_LOAD_DATA_COLUMN = "summa.storage.recordreader.load.data.column";
-    /**
-     * Default value for {@link #CONF_LOAD_DATA_COLUMN}.
-     */
     public static final boolean DEFAULT_LOAD_DATA_COLUMN = true;
 
     /**
@@ -305,6 +275,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private final boolean allowPartialDeliveries;
     private long firstRecordReceivedTime = -1; // -1 means no records received
     private final int everyStatus;
+    private final long continueOffset;
 
     /**
      * The storage watcher used to check for changes.
@@ -375,6 +346,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
         usePersistence = conf.getBoolean(CONF_USE_PERSISTENCE, DEFAULT_USE_PERSISTENCE);
         startFromScratch = conf.getBoolean(CONF_START_FROM_SCRATCH, DEFAULT_START_FROM_SCRATCH);
+        continueOffset = conf.getLong(CONF_CONTINUE_OFFSET, DEFAULT_CONTINUE_OFFSET);
         expandChildren = conf.getBoolean(CONF_EXPAND_CHILDREN, DEFAULT_EXPAND_CHILDREN);
         maxExpansionDepth = conf.getInt(CONF_EXPANSION_DEPTH, maxExpansionDepth);
         expandParents = conf.getBoolean(CONF_EXPAND_PARENTS, DEFAULT_EXPAND_PARENTS);
@@ -428,9 +400,13 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
 
         if (progressTracker != null) {
-            progressTracker.loadProgress();
+            progressTracker.loadProgress(continueOffset);
+            long startTime = progressTracker.getLastUpdate();
+            if (startTime < 0) {
+                startTime = 0;
+            }
             log.info("Resuming for base '" + base + "' from " + progressTracker.getLastUpdateStr());
-            return progressTracker.getLastUpdate();
+            return startTime;
         } else {
             log.info("No progress tracker defined. Starting base '" + base + "'from time 0");
             return 0;
@@ -748,10 +724,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         return String.format(
                 "RecordReader(startFromScratch=%b, storage=%s, bases=%s, startMTime=%s, progress=%s, "
                 + "maxRecords=%d, maxSeconds=%d, batchSize=%d, loadDate=%b, stayAlive=%b, "
-                + "stopOnNewer=%b, allowPartialDeliveries=%b, readRecords=%d) started",
+                + "stopOnNewer=%b, allowPartialDeliveries=%b, readRecords=%d, continueOffset=%dms) started",
                 startFromScratch, storage, base == null || "".equals(base) ? "*" : base,
                 String.format(ProgressTracker.ISO_TIME, lastRecordTimestamp), progressTracker,
                 maxReadRecords, maxReadSeconds, batchSize, loadData, storageWatcher != null,
-                stopOnNewer, allowPartialDeliveries, recordCounter);
+                stopOnNewer, allowPartialDeliveries, recordCounter, continueOffset);
     }
 }
