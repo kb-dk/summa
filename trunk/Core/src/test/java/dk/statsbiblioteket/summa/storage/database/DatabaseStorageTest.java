@@ -70,53 +70,24 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertTrue(stats.isEmpty());
     }
 
-    /*
-    Test-run on an i7 machine with SSD gave (truncated):
-        final int RECORDS = 1000000;
-        final int PARENT_EVERY = 10;
-        final int LOG_EVERY = RECORDS/1000;
-        final int BATCH_SIZE= 15; // Mimicks aviser
-    INFO  [main] [2015-11-02 11:07:49,874] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   1000. Current / overall speed: 239.82 / 246.67 records/sec
-    INFO  [main] [2015-11-02 11:07:51,623] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   2000. Current / overall speed: 337.84 / 571.51 records/sec
-    INFO  [main] [2015-11-02 11:07:53,371] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   3000. Current / overall speed: 391.21 / 571.84 records/sec
-    INFO  [main] [2015-11-02 11:07:55,182] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   4000. Current / overall speed: 421.96 / 551.93 records/sec
-    INFO  [main] [2015-11-02 11:07:57,716] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   5000. Current / overall speed: 416.20 / 394.55 records/sec
-    INFO  [main] [2015-11-02 11:07:59,727] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   6000. Current / overall speed: 427.82 / 497.01 records/sec
-    INFO  [main] [2015-11-02 11:08:01,671] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   7000. Current / overall speed: 438.36 / 514.15 records/sec
-    INFO  [main] [2015-11-02 11:08:04,010] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   8000. Current / overall speed: 436.97 / 427.29 records/sec
-    INFO  [main] [2015-11-02 11:08:07,045] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record   9000. Current / overall speed: 421.69 / 329.27 records/sec
-    INFO  [main] [2015-11-02 11:08:49,728] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record  20000. Current / overall speed: 312.38 / 201.13 records/sec
-    INFO  [main] [2015-11-02 11:09:54,916] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record  30000. Current / overall speed: 232.18 / 125.87 records/sec
-    INFO  [main] [2015-11-02 11:11:25,690] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record  40000. Current / overall speed: 181.83 / 112.93 records/sec
-    INFO  [main] [2015-11-02 11:13:09,657] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record  50000. Current / overall speed: 154.34 /  86.61 records/sec
-    INFO  [main] [2015-11-02 11:15:26,247] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record  60000. Current / overall speed: 130.28 /  73.33 records/sec
-    INFO  [main] [2015-11-02 11:17:51,671] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record  70000. Current / overall speed: 115.52 /  62.57 records/sec
-    INFO  [main] [2015-11-02 11:21:11,094] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record  80000. Current / overall speed:  99.33 /  44.80 records/sec
-    INFO  [main] [2015-11-02 11:25:30,236] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record  90000. Current / overall speed:  84.54 /  35.50 records/sec
-    INFO  [main] [2015-11-02 11:30:57,485] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 100000. Current / overall speed:  71.85 /  27.77 records/sec
-    INFO  [main] [2015-11-02 11:37:54,018] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 110000. Current / overall speed:  60.83 /  22.18 records/sec
-    INFO  [main] [2015-11-02 11:46:15,669] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 120000. Current / overall speed:  51.95 /  18.66 records/sec
-    INFO  [main] [2015-11-02 11:56:11,145] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 130000. Current / overall speed:  44.74 /  14.51 records/sec
-    INFO  [main] [2015-11-02 12:05:43,770] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 140000. Current / overall speed:  40.25 /  16.86 records/sec
-    INFO  [main] [2015-11-02 12:16:34,248] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 150000. Current / overall speed:  36.33 /  15.27 records/sec
-    INFO  [main] [2015-11-02 12:28:52,280] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 160000. Current / overall speed:  32.88 /  12.88 records/sec
-    INFO  [main] [2015-11-02 12:42:50,566] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 170000. Current / overall speed:  29.80 /  10.83 records/sec
-    INFO  [main] [2015-11-02 12:58:27,338] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 180000. Current / overall speed:  27.10 /  10.92 records/sec
-    INFO  [main] [2015-11-02 13:14:10,510] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 190000. Current / overall speed:  25.05 /  11.74 records/sec
-    INFO  [main] [2015-11-02 13:44:43,509] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 209000. Current / overall speed:  22.19 /   9.10 records/sec
-    INFO  [main] [2015-11-02 15:21:53,840] [dk.statsbiblioteket.summa.storage.database.DatabaseStorageTest] Record 254000. Current / overall speed:  16.66 /   5.28 records/sec
-     */
     /**
      * Performance test for relation-heavy Records.
      */
-    public void testRelativesScaling() throws IOException {
+    public void testRelativesScaling() throws Exception {
         final int RECORDS = 1000000;
-        final int PARENT_EVERY = 10;
+        final int PARENT_EVERY = 1000;
         final int LOG_EVERY = RECORDS/1000;
-        final int BATCH_SIZE= 15; // Mimicks aviser
+        final int BATCH_SIZE= 100; // Way above aviser's 15
 
         final byte[] EMPTY = new byte[0];
         final Profiler profiler = new Profiler(1000, 1000);
+
+        Configuration conf = createConf(); // ReleaseHelper.getStorageConfiguration("RelationsTest");
+        // Extremely important (factor 1000) for performance
+        conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
+        conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
+        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079);
+        DatabaseStorage storage = new H2Storage(conf);
 
         storage.clearBase(testBase1);
         final RecordWriter writer = new RecordWriter(storage, BATCH_SIZE, 1000);

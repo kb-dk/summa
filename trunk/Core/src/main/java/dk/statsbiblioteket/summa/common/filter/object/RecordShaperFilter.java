@@ -422,7 +422,9 @@ public class RecordShaperFilter extends ObjectFilterImpl {
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
+        long startTime = System.nanoTime();
         String content = payload.getRecord().getContentAsUTF8();
+        log.trace("processPayload(" + payload.getId() + ") called with " + content.length() + " content chars");
         if (copyMeta && payload.getRecord() != null && payload.hasData()) {
             for (Map.Entry entry: payload.getData().entrySet()) {
                 if (entry.getKey() instanceof String && entry.getValue() instanceof String) {
@@ -490,6 +492,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             }
             log.trace("Hashed id '" + oldID + "' to " + payload.getId());
         }
+        log.trace("processPayload(" + payload.getId() + ") finished with " + content.length() + " content chars in "
+                  + ((System.nanoTime()-startTime)/1000000) + "ms");
         return true;
     }
 
