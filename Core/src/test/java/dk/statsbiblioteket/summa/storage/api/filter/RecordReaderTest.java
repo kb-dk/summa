@@ -357,6 +357,66 @@ public class RecordReaderTest extends TestCase {
         }
     }
 
+    public void testUpdateContinueOffset() throws Exception {
+        Storage sto = createStorage();
+        Configuration clear = Configuration.newMemoryBased(
+                RecordReader.CONF_PROGRESS_FILE, "delete_progress.xml",
+                RecordReader.CONF_START_FROM_SCRATCH, true
+        );
+        Configuration none = Configuration.newMemoryBased(
+                RecordReader.CONF_PROGRESS_FILE, "delete_progress.xml"
+        );
+        Configuration back = Configuration.newMemoryBased(
+                RecordReader.CONF_PROGRESS_FILE, "delete_progress.xml",
+                RecordReader.CONF_CONTINUE_OFFSET, -900L
+        );
+
+        try {
+            Record orig1 = new Record("test1", "base", "Hello".getBytes());
+            Record orig2 = new Record("test2", "base", "Hello".getBytes());
+            Record orig3 = new Record("test3", "base", "Hello".getBytes());
+
+            sto.flush(orig1);
+            Thread.sleep(500);
+            sto.flush(orig2);
+            Thread.sleep(500);
+            { // Implicit initial
+                assertEquals("Initial iteration", Arrays.asList(orig1, orig2), empty(clear));
+            }
+            
+            { // Update without content
+                assertEquals("No update since initial iteration", new ArrayList<Record>(), empty(none));
+            }
+
+            sto.flush(orig3);
+            { // Update with content
+                assertEquals("First update", Collections.singletonList(orig3), empty(none));
+            }
+
+            { // Update without content
+                assertEquals("No update since last empty", new ArrayList<Record>(), empty(none));
+            }
+
+            { // Update with negative origo
+                assertEquals("Checking back in time 1", Arrays.asList(orig2, orig3), empty(back));
+            }
+
+            { // Update with negative origo
+                assertEquals("Checking back in time 2", Arrays.asList(orig2, orig3), empty(back));
+            }
+
+            {
+                assertEquals("Checking back in time, no offset", Collections.emptyList(), empty(none));
+            }
+            { // Update with negative origo
+                assertEquals("Checking back in time with offset",
+                             Arrays.asList(orig2, orig3), empty(back));
+            }
+        } finally {
+            sto.close();
+        }
+    }
+
     public void testNoUpdates() throws Exception {
         Storage sto = createStorage();
         Configuration readerConf = Configuration.newMemoryBased();

@@ -138,17 +138,30 @@ public class ProgressTracker {
      * Read the last modification time in from the progress file
      */
     public void loadProgress () {
-        log.debug("Attempting to get previous progress stored in file " + progressFile);
+        loadProgress(0);
+    }
+
+    /**
+     * Read the last modification time in from the progress file with an offset
+     * @param offset offset in milliseconda. Can be negative.
+     */
+    public void loadProgress (final long offset) {
+        log.debug("Attempting to get previous progress stored in file " + progressFile + " with offset " + offset);
 
         if (progressFile.exists() && progressFile.isFile() && progressFile.canRead()) {
             log.trace("getStartTime has persistence file");
             try {
                 long startTime = getTimestamp(progressFile, Files.loadString(progressFile));
                 try {
-                    log.info(String.format("Extracted timestamp " + ISO_TIME + " from '%2$s'", startTime,
-                                           progressFile));
+                    log.info(String.format(
+                            "Extracted timestamp " + ISO_TIME + " from '%2$s'. This will be adjusted with %3$dms",
+                            startTime, progressFile, offset));
                 } catch (Exception e) {
                     log.warn("Could not output properly formatted timestamp for " + startTime + " ms");
+                }
+                startTime += offset;
+                if (startTime < 0) {
+                    startTime = 0;
                 }
                 lastExternalUpdate = startTime;
                 lastInternalUpdate = System.currentTimeMillis();
