@@ -70,11 +70,12 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertTrue(stats.isEmpty());
     }
 
+    private final int M = 1000000;
     /**
      * Performance test for relation-heavy Records.
      */
     public void testRelativesScaling() throws Exception {
-        final int RECORDS = 1000000;
+        final int RECORDS = M;
         final int PARENT_EVERY = 1000;
         final int LOG_EVERY = RECORDS/1000;
         final int BATCH_SIZE= 100; // Way above aviser's 15
@@ -653,7 +654,6 @@ public class DatabaseStorageTest extends StorageTestBase {
             storage.close();
         }
     }
-    private static final int M = 1048576;
 
     public void testTwoLevelCycleParent() throws IOException {
         Record r1 = new Record(testId1, testBase1, testContent1);
