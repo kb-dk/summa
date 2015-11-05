@@ -44,10 +44,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -163,6 +160,12 @@ public class XMLTransformer extends GraphFilter<Object> {
     public static final boolean DEFAULT_CATCH_STACK_OVERFLOW = true;
 
     private final boolean topLevelStackOverflowCatch;
+
+    /**
+     * Set with {@link RecordUtil#CONF_ESCAPE_CONTENT}. Can be overwritten inside Changelings.
+     */
+    private final boolean defaultEscapeContentOnXmlFull;
+
     private List<Changeling> changelings = new ArrayList<>();
 
     /**
@@ -173,6 +176,8 @@ public class XMLTransformer extends GraphFilter<Object> {
     public XMLTransformer(Configuration conf) {
         super(conf);
         topLevelStackOverflowCatch = conf.getBoolean(CONF_CATCH_STACK_OVERFLOW, DEFAULT_CATCH_STACK_OVERFLOW);
+        defaultEscapeContentOnXmlFull = conf.getBoolean(
+                RecordUtil.CONF_ESCAPE_CONTENT, RecordUtil.DEFAULT_ESCAPE_CONTENT);
         Changeling base = new Changeling(conf, false);
         if (base.isValid()) {
             changelings.add(base);
@@ -256,6 +261,7 @@ public class XMLTransformer extends GraphFilter<Object> {
         private final String source;
         private final String destination;
         private final boolean stackOverflowCatch;
+        private final boolean escapeContentOnXmlFull;
 
         public Changeling(Configuration conf, boolean failOnMissing) {
             String xsltLocationString = conf.getString(CONF_XSLT, null);
@@ -280,11 +286,11 @@ public class XMLTransformer extends GraphFilter<Object> {
             destination = conf.getString(CONF_DESTINATION, DEFAULT_DESTINATION);
             stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES, DEFAULT_STRIP_XML_NAMESPACES);
             stackOverflowCatch = conf.getBoolean(CONF_CATCH_STACK_OVERFLOW, DEFAULT_CATCH_STACK_OVERFLOW);
+            escapeContentOnXmlFull = conf.getBoolean(RecordUtil.CONF_ESCAPE_CONTENT, defaultEscapeContentOnXmlFull);
             if (xsltLocation != null) {
                 initTransformer(conf);
             }
-            log.info("initialized Changeling for xsltLocation '" + xsltLocation + "'. Namespaces will "
-                     + (stripXMLNamespaces ? "" : "not ") + "be stripped from input before transformation");
+            log.info("Created " + this);
         }
 
         private void initTransformer(Configuration conf) throws ConfigurationException {
@@ -337,10 +343,14 @@ public class XMLTransformer extends GraphFilter<Object> {
 
         private synchronized void innerTransform(Record record) throws PayloadException {
             Reader inner;
-            try {
-                inner = new InputStreamReader(RecordUtil.getStream(record, source), "utf-8");
+            try { // Special processing as RecordUtil.getStream does not support controlling content escaping
+                inner = RecordUtil.PART.xmlfull.toString().equals(source) && !escapeContentOnXmlFull ?
+                        new StringReader(RecordUtil.toXML(record, false)) :
+                        new InputStreamReader(RecordUtil.getStream(record, source), "utf-8");
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalStateException("utf-8 should be supported", e);
+            } catch (IOException e) {
+                throw new PayloadException("IOException while XML-serializing content", e);
             }
             Reader reader = stripXMLNamespaces ? new NamespaceRemover(inner) : inner;
 
@@ -354,7 +364,7 @@ public class XMLTransformer extends GraphFilter<Object> {
                 xml.setEntityResolver(entityResolver);
             }
             if (out == null) {
-                out = new ByteArrayOutputStream(1000);
+                out = new ByteArrayOutputStream(5000);
             }
 
             out.reset();
@@ -405,6 +415,19 @@ public class XMLTransformer extends GraphFilter<Object> {
                 log.debug("Transformation failed for " + record, e);
                 throw new PayloadException("Unable to transform content for '" + record + "'", e);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "Changeling(" +
+                   "xslt=" + xsltLocation +
+                   ", stripXMLNamespaces=" + stripXMLNamespaces +
+                   ", matcher=" + matcher +
+                   ", source='" + source + '\'' +
+                   ", escapeContent='" + escapeContentOnXmlFull + '\'' +
+                   ", destination='" + destination + '\'' +
+                   ", stackOverflowCatch=" + stackOverflowCatch +
+                   ')';
         }
     }
 }
