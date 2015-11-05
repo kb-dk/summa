@@ -19,13 +19,16 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.xml.XHTMLEntityResolver;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -114,6 +117,24 @@ public class XMLTransformerTest extends TestCase {
         }
     }
 
+    // Temporary test. Delete at will
+    public void testMissingOutput() throws Exception {
+        final String SAMPLE = "/home/te/tmp/sumfresh/sites/aviser/dump/index_3_pre_xslt_aviser/doms_newspaperCollection_uuid_1bc1069b-01de-433d-a8a5-abee5c800b00-segment_33.xml";
+        final String XSLT = "/home/te/tmp/sumfresh/sites/aviser/xslt/index/aviser/doms_aviser.xsl";
+
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(XMLTransformer.CONF_XSLT, XSLT);
+        conf.set(XMLTransformer.CONF_STRIP_XML_NAMESPACES, false);
+        OpenTransformer transformer = new OpenTransformer(conf);
+
+        String content = Files.loadString(new File(SAMPLE));
+        Record record = new Record("empty", "xml", content.getBytes("utf-8"));
+        Payload payload = new Payload(record);
+
+        transformer.process(payload);
+        System.out.println("Transformed output:\n" + payload.getRecord().getContentAsUTF8());
+    }
+
     public void testStackOverflowNonHandling() throws Exception {
         final String SAMPLE = "index/stackoverflow/authors.xml";
 
@@ -149,6 +170,24 @@ public class XMLTransformerTest extends TestCase {
         Payload payload = new Payload(record);
         transformer.process(payload);
         String transformed = payload.getRecord().getContentAsUTF8();
+        String expected = "Rødgrød med fløde → mæthed";
+        assertTrue("The transformed content '" + transformed + "' should contain '" + expected + "'",
+                   transformed.contains(expected));
+    }
+
+    public void testSourceXML() throws Exception {
+        Configuration conf = Configuration.newMemoryBased(
+                XMLTransformer.CONF_XSLT, "index/identity.xslt",
+                XMLTransformer.CONF_ENTITY_RESOLVER, XHTMLEntityResolver.class,
+                XMLTransformer.CONF_SOURCE, RecordUtil.PART.xmlfull.toString());
+        OpenTransformer transformer = new OpenTransformer(conf);
+
+        String content = Streams.getUTF8Resource("index/webpage_xhtml-1.0-strict.xml");
+        Record record = new Record("validwebpage", "xhtml", content.getBytes("utf-8"));
+        Payload payload = new Payload(record);
+        transformer.process(payload);
+        String transformed = payload.getRecord().getContentAsUTF8();
+        System.out.println(transformed);
         String expected = "Rødgrød med fløde → mæthed";
         assertTrue("The transformed content '" + transformed + "' should contain '" + expected + "'",
                    transformed.contains(expected));
