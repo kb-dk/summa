@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -160,6 +161,28 @@ public class RecordShaperFilterTest extends TestCase {
         assigner.setSource(new PayloadFeederHelper(payloads));
         Record record = assigner.next().getRecord();
         assertEquals("The ID should match", "21", record.getId());
+    }
+
+    public void testPartialMeta() throws IOException {
+        final String CONTENT = "<hello>\n<isPartOfNewspaper\n  foo:bar rdf:resource=\"info:fedora/plumbum\"";
+
+        Configuration conf = Configuration.newMemoryBased();
+        Configuration metaConf = conf.createSubConfigurations(RecordShaperFilter.CONF_META, 1).get(0);
+        metaConf.set(RecordShaperFilter.CONF_META_SOURCE, RecordUtil.PART.content);
+        metaConf.set(RecordShaperFilter.CONF_META_KEY, RecordUtil.PART.parentid);
+        metaConf.set(RecordShaperFilter.CONF_META_REGEXP, "(?s)<isPartOfNewspaper[^>]*rdf:resource=\"info:fedora/([^\"]+)\"");
+        metaConf.set(RecordShaperFilter.CONF_META_TEMPLATE, "id:$1");
+
+        ObjectFilter feeder = new PayloadFeederHelper(Collections.singletonList(
+                new Payload(new Record("only", "dummy", CONTENT.getBytes("utf-8")))));
+        ObjectFilter shaper = new RecordShaperFilter(conf);
+        shaper.setSource(feeder);
+        Record record = shaper.next().getRecord();
+
+        System.out.println(record);
+
+        assertEquals("The first Payload should have the result assigned to parentid",
+                      "id:plumbum", record.getParentIds().get(0));
     }
 
     /**
