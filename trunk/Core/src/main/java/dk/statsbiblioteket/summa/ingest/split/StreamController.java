@@ -69,7 +69,7 @@ public class StreamController implements ObjectFilter {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
         Class<? extends StreamParser> parserClass = Configuration.getClass(
                 CONF_PARSER, StreamParser.class, getDefaultStreamParserClass(), conf);
-        log.info("Creating StreamParser '" + getName() + "'");
+        log.info("Creating StreamParser '" + getName() + "' with class " + parserClass.getSimpleName());
         parser = Configuration.create(parserClass, conf);
     }
 
