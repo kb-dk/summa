@@ -1794,6 +1794,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
     public static final double M = 1000000.0;
+    public static final long MI = 1000000;
 
     //Post-order traversal is most obvious here as this traverses nodes in same order they appear in childrenlist.
     //Traverses the tree left to right and return the record matching recordId.
@@ -2109,12 +2110,16 @@ public abstract class DatabaseStorage extends StorageBase {
             Record expanded = expandRelations(r, cursor.getQueryOptions());
             expand += System.nanoTime();
             nextCalls++;
+            contentRawSize += expanded.getContent(false).length;
             current += System.nanoTime();
 
             if (System.currentTimeMillis() >= logNextMS) {
                 log.debug("next(" + iteratorKey + ") in " + current/M + "ms, totalCalls=" + nextCalls
+                          + ", totalRawSize=" + contentRawSize/1048576 + "MB, " + (contentRawSize/1024/nextCalls)
+                          + " KB/Record avg"
                           + ", cursorGet=" + stat(cursorGet, nextCalls) + ", cursorNext=" + stat(cursorNext, nextCalls)
-                          + ", expandRelations=" + stat(expand, nextCalls));
+                          + ", expandRelations=" + stat(expand, nextCalls) + " id=" + expanded.getId() + ", parents=" +
+                count(expanded.getParents()) + ", children=" + count(expanded.getChildren()));
                 logNextMS = System.currentTimeMillis() + logEveryMS;
             }
             return expanded;
@@ -2124,11 +2129,15 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    private int count(List<Record> records) {
+        return records == null ? 0 : records.size();
+    }
     private String stat(long ns, long calls) {
         if (calls == 0) {
             return "N/A";
         }
-        return "[" + ns/M + "ms, " + (ns/calls) + "ns/call, " + calls*M/ns + "calls/ns" + "]";
+        return String.format("[total=%.2fms, %.2f ms/call, %.2f calls/ms]",
+                             ns/M, ns/M/calls, calls*M/ns);
     }
 
     private final long logEveryMS = 10000;
@@ -2137,8 +2146,12 @@ public abstract class DatabaseStorage extends StorageBase {
     private long cursorGet = 0;
     private long cursorNext = 0;
     private long expand = 0;
+    private long contentRawSize = 0;
 
     private Record expandRelations(Record r, QueryOptions options) throws IOException, SQLException {
+        if (options == null) { // No need for opening a connection as expansion is disabled
+            return r;
+        }
 
         Connection conn = getTransactionalConnection();
         try {
