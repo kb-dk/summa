@@ -148,10 +148,20 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
             log.debug("Flushing " + queue.size() + " records with a total size of " + queue.byteSize() / 1024
                       + " KB. Last flush was " + (System.currentTimeMillis() - lastAction) + " ms ago");
         }
-        flushTime -= System.currentTimeMillis();
+
+        int oldQueueSize = queue.size();
+        long localFlushTime = -System.currentTimeMillis();
         flush(queue);
-        flushTime += System.currentTimeMillis();
+        localFlushTime += System.currentTimeMillis();
+
+        flushTime += localFlushTime;
         lastAction = System.currentTimeMillis();
+
+        if (log.isDebugEnabled()) {
+            log.debug("Finished flushing " + oldQueueSize + " records in " + localFlushTime + "ms: "
+                      + (localFlushTime/oldQueueSize) + "ms/record.");
+        }
+
         if (!queue.isEmpty()) {
             throw new IllegalStateException(
                 "Queue must be empty after flush, but contained " + queue.size() + " Payloads");
