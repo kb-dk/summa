@@ -144,12 +144,13 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
             log.trace("performFlush() called on empty queue");
             return;
         }
-        if (log.isDebugEnabled()) {
-            log.debug("Flushing " + queue.size() + " records with a total size of " + queue.byteSize() / 1024
+        int oldQueueSize = queue.size();
+        long oldQueueByteSizeKB = queue.byteSize()/1024;
+        if (log.isTraceEnabled()) {
+            log.trace("Flushing " + oldQueueSize + " records with a total size of " + oldQueueByteSizeKB
                       + " KB. Last flush was " + (System.currentTimeMillis() - lastAction) + " ms ago");
         }
 
-        int oldQueueSize = queue.size();
         long localFlushTime = -System.currentTimeMillis();
         flush(queue);
         localFlushTime += System.currentTimeMillis();
@@ -158,8 +159,8 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
         lastAction = System.currentTimeMillis();
 
         if (log.isDebugEnabled()) {
-            log.debug("Finished flushing " + oldQueueSize + " records in " + localFlushTime + "ms: "
-                      + (localFlushTime/oldQueueSize) + "ms/record.");
+            log.debug("Finished flushing " + oldQueueSize + " records with a total size of " + oldQueueByteSizeKB
+                      + " KB in " + localFlushTime + "ms: " + (localFlushTime/oldQueueSize) + "ms/record.");
         }
 
         if (!queue.isEmpty()) {
