@@ -34,6 +34,11 @@ public class IdentityParser extends ThreadedStreamParser {
     }
 
     @Override
+    protected boolean acceptStreamlessPayloads() {
+        return true;
+    }
+
+    @Override
     protected void protectedRun(Payload source) throws Exception {
         Logging.logProcess("IdentityParser", "Passing Payload unmodified", Logging.LogLevel.TRACE, source);
         addToQueue(source);
