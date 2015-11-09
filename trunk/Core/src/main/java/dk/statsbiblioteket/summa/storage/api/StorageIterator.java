@@ -145,8 +145,10 @@ public class StorageIterator implements Iterator<Record>, Serializable {
                 long startTime = System.currentTimeMillis();
                 List<Record> recs = iteratorHolder.next(key, maxQueueSize);
                 totalReceived += recs.size();
+                final long receiveTime = System.currentTimeMillis()-startTime;
                 log.debug("Received " + recs.size() + " Records (" + maxQueueSize + " requested, "+ totalReceived
-                          + " received in total) in " + (System.currentTimeMillis()-startTime) + "ms");
+                          + " received in total) in " + receiveTime + "ms: "
+                          + (recs.isEmpty() ? "N/A" : receiveTime / recs.size() + "ms/Record"));
                 if (!recs.isEmpty() && recs.size() < maxQueueSize) {
                     if (allowPartialDeliveries) {
                         log.debug("checkRecords: Received only " + recs.size() + "/" + maxQueueSize + " records. " +
