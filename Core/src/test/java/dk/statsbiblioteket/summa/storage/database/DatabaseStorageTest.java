@@ -70,6 +70,29 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertTrue(stats.isEmpty());
     }
 
+    public void testRelativesExpansion() throws Exception {
+        Record parent = new Record("Parent", "dummy", new byte[0]);
+        Record child1 = new Record("Child1", "dummy", new byte[0]);
+        child1.setParentIds(Collections.singletonList("Parent"));
+        Record child2 = new Record("Child2", "dummy", new byte[0]);
+        child2.setParentIds(Collections.singletonList("Parent"));
+
+        Configuration conf = createConf();
+        conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
+        conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
+        conf.set(DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, false);
+        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079);
+        DatabaseStorage storage = new H2Storage(conf);
+
+        try {
+            storage.flushAll(Arrays.asList(parent, child1, child2));
+
+
+        } finally {
+            storage.close();
+        }
+    }
+
     private final int M = 1000000;
     /**
      * Performance test for relation-heavy Records.

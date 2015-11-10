@@ -152,7 +152,9 @@ public class PagingCursor implements Cursor {
         pageRecords = 0;
 
         try {
-            page = db.getRecordsModifiedAfterCursor(lastMtimeTimestamp, getBase(), getQueryOptions());
+            // Casting is a hack. It only works because we happen to know the inner details of DatabaseStorage
+            page = (ResultSetCursor) db.getRecordsModifiedAfterCursor(
+                    lastMtimeTimestamp, getBase(), getQueryOptions()).getInnerCursor();
 
             if (page == null){
                log.info("No futher pages, unclear why this happens");

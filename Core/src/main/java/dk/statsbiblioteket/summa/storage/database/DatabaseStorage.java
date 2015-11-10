@@ -25,10 +25,7 @@ import dk.statsbiblioteket.summa.storage.BatchJob;
 import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
-import dk.statsbiblioteket.summa.storage.database.cursors.Cursor;
-import dk.statsbiblioteket.summa.storage.database.cursors.CursorReaper;
-import dk.statsbiblioteket.summa.storage.database.cursors.PagingCursor;
-import dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor;
+import dk.statsbiblioteket.summa.storage.database.cursors.*;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
@@ -400,6 +397,15 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private static final long EMPTY_ITERATOR_KEY = -1;
 
+    /**
+     * If true, the parentIDs and childIDs of requested Records are enriched with all relations from the
+     * relations table. If false, only the explicitely in-Record stored IDs are returned.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_EXPAND_RELATIVES_ID_LIST = "databasestorage.relatives.expandidlist";
+    public static final boolean DEFAULT_EXPAND_RELATIVES_ID_LIST = false;
+
     /*
     private StatementHandle stmtGetModifiedAfter;
     private StatementHandle stmtGetModifiedAfterAll;
@@ -438,7 +444,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * Iterator keys.
      */
-    private Map<Long, Cursor> iterators = new HashMap<>(10);
+    private Map<Long, ConnectionCursor> iterators = new HashMap<>(10);
 
     private CursorReaper iteratorReaper;
     /**
@@ -461,6 +467,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private boolean usePagingModel;
     private int pageSize;
     private int pageSizeUpdate;
+    private final boolean expandRelativesLists;
 
     private StatementHandler statementHandler;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
@@ -620,7 +627,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 return myself.prepareStatement(sql);
             }
         };
-
+        expandRelativesLists = conf.getBoolean(CONF_EXPAND_RELATIVES_ID_LIST, DEFAULT_EXPAND_RELATIVES_ID_LIST);
         timestampGenerator = new UniqueTimestampGenerator();
         iteratorReaper = new CursorReaper(iterators, conf.getLong(CONF_ITERATOR_TIMEOUT, DEFAULT_ITERATOR_TIMEOUT));
 
@@ -1356,7 +1363,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // Convert time to the internal binary format used by DatabaseStorage
         long mtimeTimestamp = timestampGenerator.baseTimestamp(mtime);
 
-        Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
+        ConnectionCursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
         //        Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
 
         if (iter == null) {
@@ -1364,11 +1371,11 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         if (usePagingModel) {
-            iter = new PagingCursor(this, (ResultSetCursor) iter);
+            iter = new ConnectionCursor(
+                    new PagingCursor(this, (ResultSetCursor) iter.getInnerCursor()), iter.getConnection());
         }
         return registerCursor(iter);
     }
-
 
     /**
      * Same as getRecordsModifiedAfter, but does load data column.
@@ -1429,7 +1436,7 @@ public abstract class DatabaseStorage extends StorageBase {
      *         caller to avoid leaking connections and locking up the storage.
      * @throws IOException if prepared SQL statement is invalid.
      */
-    public ResultSetCursor getRecordsModifiedAfterCursor(
+    public ConnectionCursor getRecordsModifiedAfterCursor(
             long mtime, String base, QueryOptions options) throws IOException {
 
 
@@ -1455,14 +1462,19 @@ public abstract class DatabaseStorage extends StorageBase {
                 stmt = getManagedStatement(stmtGetModifiedAfterNoData);
             }*/
 
-                    log.debug("getRecordsModifiedAfterCursor statement: " + handle.getSql());
-                    stmt = getManagedStatement(handle);
+            log.debug("getRecordsModifiedAfterCursor statement: " + handle.getSql());
+            stmt = getManagedStatement(handle);
         } catch (SQLException e) {
             throw new IOException("Failed to manage prepared statement for base '" + base + "'. SQL: 'N/A'", e);
         }
         // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
         // be closed together with that iterator
-        return doGetRecordsModifiedAfterCursor(mtime, base, options, stmt);
+        try {
+            return new ConnectionCursor(
+                    doGetRecordsModifiedAfterCursor(mtime, base, options, stmt), stmt.getConnection());
+        } catch (SQLException e) {
+            throw new IllegalStateException("Unable to get connection from statement", e);
+        }
     }
 
     protected boolean hasMTime(QueryOptions options) {
@@ -1939,14 +1951,17 @@ public abstract class DatabaseStorage extends StorageBase {
             }
             return getPrivateRecord(id);
         }
-
+//        long statement = System.nanoTime();
         // TODO: Use the handle directly
         StatementHandle handle = statementHandler.getGetRecord(options);
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
+//        log.debug("getRecordWithConnection***: Prepared statement in " + (System.nanoTime()-statement)/M + "ms");
         Record record = null;
         try {
+//            long exe = System.nanoTime();
             stmt.setString(1, id);
             ResultSet resultSet = stmt.executeQuery();
+//            log.debug("getRecordWithConnection***: Executed query for " + id + " in " + (System.nanoTime()-exe)/M + "ms");
 
             if (!resultSet.next()) {
                 log.debug("No such record '" + id + "'");
@@ -1954,7 +1969,9 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             try {
+  //              long scan = System.nanoTime();
                 record = scanRecord(resultSet);
+//                log.debug("getRecordWithConnection***: ScanRecord in " + (System.nanoTime()-scan)/M + "ms");
 
                 /* Sanity checks if we log on debug */
                 if (log.isDebugEnabled()) {
@@ -1974,17 +1991,24 @@ public abstract class DatabaseStorage extends StorageBase {
                     }
                     return null;
                 }
-
+  //              long expand = System.nanoTime();
                 expandRelationsWithConnection(record, options, conn);
+//                log.debug("getRecordWithConnection***: Expand in " + (System.nanoTime()-expand)/M + "ms");
 
             } finally {
+//                long close = System.nanoTime();
                 resultSet.close();
+//                log.debug("getRecordWithConnection***: Close in " + (System.nanoTime()-close)/M + "ms");
+
             }
 
         } catch (SQLException e) {
             throw new IOException("Error getting record " + id, e);
         } finally {
+//            long closeS = System.nanoTime();
             closeStatement(stmt);
+//            log.debug("getRecordWithConnection***: CloseStatement in " + (System.nanoTime()-closeS)/M + "ms");
+
         }
 
         return record;
@@ -2071,7 +2095,10 @@ public abstract class DatabaseStorage extends StorageBase {
             // expansion ping-pong
             options = RecursionQueryOptions.asParentsOnlyOptions(options);
 
+//            long start = System.nanoTime();
             List<Record> parents = getRecordsWithConnection(parentIds, options.decParentRecursionHeight(), conn);
+//            log.debug("expandParentRecords*** called deprecated getRecordsWithConnection in "
+//                      + (System.nanoTime()-start) / M + "ms");
 
             if (parents.isEmpty()) {
                 record.setParents(null);
@@ -2089,7 +2116,7 @@ public abstract class DatabaseStorage extends StorageBase {
         long current = -System.nanoTime();
 
         cursorGet -= System.nanoTime();
-        Cursor cursor = iterators.get(iteratorKey);
+        ConnectionCursor cursor = iterators.get(iteratorKey);
         cursorGet += System.nanoTime();
 
         if (cursor == null) {
@@ -2107,7 +2134,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
         try {
             expand -= System.nanoTime();
-            Record expanded = expandRelations(r, cursor.getQueryOptions());
+            Record expanded = expandRelationsWithConnection(r, cursor.getQueryOptions(), cursor.getConnection());
+            //Record expanded = expandRelations(r, cursor.getQueryOptions());
             expand += System.nanoTime();
             nextCalls++;
             contentRawSize += expanded.getContent(false).length;
@@ -2115,15 +2143,15 @@ public abstract class DatabaseStorage extends StorageBase {
 
             if (System.currentTimeMillis() >= logNextMS) {
                 log.debug("next(" + iteratorKey + ") in " + current/M + "ms, totalCalls=" + nextCalls
-                          + ", totalRawSize=" + contentRawSize/1048576 + "MB, " + (contentRawSize/1024/nextCalls)
-                          + " KB/Record avg"
+                          + ", totalRawSize=" + contentRawSize/1048576 + "MB, "
+                          + (contentRawSize/1024/nextCalls) + " KB/Record avg"
                           + ", cursorGet=" + stat(cursorGet, nextCalls) + ", cursorNext=" + stat(cursorNext, nextCalls)
                           + ", expandRelations=" + stat(expand, nextCalls) + " id=" + expanded.getId() + ", parents=" +
                 count(expanded.getParents()) + ", children=" + count(expanded.getChildren()));
                 logNextMS = System.currentTimeMillis() + logEveryMS;
             }
             return expanded;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.warn("Failed to expand relations for '" + r.getId() + "'", e);
             return r;
         }
@@ -4017,27 +4045,22 @@ public abstract class DatabaseStorage extends StorageBase {
     private long dummyBase = 0;
 
     /**
-     * Extract elements from a SQL result set and create a Record from these
-     * elements.
+     * Extract elements from a SQL result set and create a Record from these elements.
      * <p/>
-     * This method will position the result set at the beginning of the next
-     * record.
+     * This method will position the result set at the beginning of the next record.
      *
-     * @param resultSet a SQL result set. The result set will be stepped
-     *                  to the beginning of the following record
-     * @param iter      a result iterator on which to update record
-     *                  availability via
-     *                  {@link ResultSetCursor#setResultSetHasNext}
+     * @param resultSet a SQL result set. The result set will be stepped to the beginning of the following record.
+     * @param iter      a result iterator on which to update record availability via
+     *                  {@link ResultSetCursor#setResultSetHasNext}.
      * @return a Record based on the result set.
-     * @throws SQLException if there was a problem extracting values from the
-     *                      SQL result set.
-     * @throws IOException  If the data (content) could not be uncompressed
-     *                      with gunzip.
+     * @throws SQLException if there was a problem extracting values from the SQL result set.
+     * @throws IOException  If the data (content) could not be uncompressed with gunzip.
      */
     public Record scanRecord(ResultSet resultSet, ResultSetCursor iter) throws SQLException, IOException {
         boolean hasNext;
-
+//        long start = System.nanoTime();
         String id = resultSet.getString(ID_KEY);
+
         if ("".equals(id)) {
             id = "dummy" + dummyID++;
             log.debug("No ID found in scanRecord, substituting with dummy value '" + id + "'");
@@ -4051,12 +4074,16 @@ public abstract class DatabaseStorage extends StorageBase {
         boolean deleted = getIntBool(resultSet, DELETED_FLAG_KEY, false);
         boolean indexable = getIntBool(resultSet, INDEXABLE_FLAG_KEY, true);
         boolean hasRelations = getIntBool(resultSet, HAS_RELATIONS_FLAG_KEY, false);
+//        log.debug("DatabaseStorage***: Booleans " + (System.nanoTime()-start)/M);
         byte[] gzippedContent = resultSet.getBytes(GZIPPED_CONTENT_FLAG_KEY);
+//        log.debug("DatabaseStorage***: content " + (System.nanoTime()-start)/M);
         long ctime = getLong(resultSet, CTIME_KEY, 0);
         long mtime = getLong(resultSet, MTIME_KEY, 0);
         byte[] meta = resultSet.getBytes(META_KEY);
+//        log.debug("DatabaseStorage***: meta" + (System.nanoTime()-start)/M);
         String parentIds = resultSet.getString(PARENT_IDS_KEY);
         String childIds = resultSet.getString(CHILD_IDS_KEY);
+//        log.debug("DatabaseStorage***: parent/child ids" + (System.nanoTime()-start)/M + " parents=" + parentIds + ", childIDs=" + childIds);
 
         if (log.isTraceEnabled()) {
             log.trace("Scanning record: " + id);
@@ -4072,12 +4099,16 @@ public abstract class DatabaseStorage extends StorageBase {
         if (id.equals(childIds) || "".equals(childIds)) {
             childIds = null;
         }
-
+        int nextCount = 1;
         /* The way the result is returned from the DB is several identical rows
          * with different parent and child column values. We need to iterate
          * through all rows with the same id and collect the different parents
          * and children listed */
         while ((hasNext = resultSet.next()) && id.equals(resultSet.getString(ID_KEY))) {
+            if (!expandRelativesLists) { // TODO: Check if we can skip ahead or maybe limit the results to 1
+                continue;
+            }
+//            log.debug("DatabaseStorage***: next#" + nextCount++ + " " + (System.nanoTime()-start)/M);
 
             /* If we log on debug we do sanity checking of the result set.
              * Of course the parent and child columns should not be checked,
@@ -4115,14 +4146,17 @@ public abstract class DatabaseStorage extends StorageBase {
             /* Pick up parent and child IDs */
             String newParent = resultSet.getString(PARENT_IDS_KEY);
             String newChild = resultSet.getString(CHILD_IDS_KEY);
+  //          log.debug("DatabaseStorage***: nextrelations " + (System.nanoTime()-start)/M + " parentLength=" + newParent.length() + ", childrenLength=" + newChild.length());
 
             /* If the record is listed as parent or child of something this
              * will appear in the parent/child columns, so ignore these cases
              */
             if (id.equals(newParent)) {
+//                log.debug("DatabaseStorage***: removing newParent(" + newParent + ") due to id equality " + (System.nanoTime()-start)/M);
                 newParent = null;
             }
             if (id.equals(newChild)) {
+//                log.debug("DatabaseStorage***: removing newChild(" + newChild + ") due to id equality " + (System.nanoTime()-start)/M);
                 newChild = null;
             }
 
@@ -4140,12 +4174,14 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.trace("For record '" + id + "', collected children: " + childIds + ", collected parents: "
                         + parentIds);
             }
+//            log.debug("DatabaseStorage***: nextRelations assigned " + (System.nanoTime()-start)/M);
         }
 
         if (iter != null) {
             iter.setResultSetHasNext(hasNext);
             iter.setRecordMtimeTimestamp(mtime);
         }
+//        log.debug("DatabaseStorage***: readyfornext " + (System.nanoTime()-start)/M);
 
         // We use salted unique timestamps generated by a
         // UniqueTimestampGenerator so we have to extract the system time from
@@ -4163,6 +4199,7 @@ public abstract class DatabaseStorage extends StorageBase {
                         null :
                             StringMap.fromFormal(meta), gzippedContent.length != 0);
         rec.setHasRelations(hasRelations);
+//        log.debug("DatabaseStorage***: produced record " + (System.nanoTime()-start)/M);
 
         /* Only resolve relations if we have to, that is, if
          * "useRelations && hasRelations". Moreover some codepaths will have
@@ -4172,6 +4209,8 @@ public abstract class DatabaseStorage extends StorageBase {
         if (useLazyRelations && hasRelations && parentIds == null && childIds == null) {
             resolveRelatedIds(rec, resultSet.getStatement().getConnection());
         }
+//        log.debug("DatabaseStorage***: ResolvedRelatedID " + (System.nanoTime()-start)/M);
+
         return rec;
     }
 
@@ -4191,24 +4230,20 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * As {@link #scanRecord(ResultSet, ResultSetCursor)} with {@code resultSet = null}.
      *
-     * @param resultSet a SQL result set. The result set will be stepped to the
-     *                  beginning of the following record
+     * @param resultSet a SQL result set. The result set will be stepped to the beginning of the following record.
      * @return a Record based on the result set.
-     * @throws SQLException if there was a problem extracting values from the
-     *                      SQL result set.
-     * @throws IOException  If the data (content) could not be uncompressed
-     *                      with gunzip.
+     * @throws SQLException if there was a problem extracting values from the SQL result set.
+     * @throws IOException  If the data (content) could not be uncompressed with gunzip.
      */
     public Record scanRecord(ResultSet resultSet) throws SQLException, IOException {
         return scanRecord(resultSet, null);
     }
 
     /**
-     * Given a query, execute this query and transform the {@link ResultSet}
-     * to a {@link ResultSetCursor}.
+     * Given a query, execute this query and transform the {@link ResultSet} to a {@link ResultSetCursor}.
      *
      * @param stmt    The statement to execute.
-     * @param base    The base we are iterating over
+     * @param base    The base we are iterating over.
      * @param options Query options.
      * @return a RecordIterator of the result.
      * @throws IOException - also on no getConnection() and SQLExceptions.
@@ -4248,7 +4283,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return a key to access the iterator remotely via the {@link #next}
      *         methods
      */
-    private long registerCursor(Cursor iter) {
+    private long registerCursor(ConnectionCursor iter) {
         log.trace("registerCursor: Got iter " + iter.getKey() + " adding to iterator list");
         iterators.put(iter.getKey(), iter);
 
@@ -4288,8 +4323,7 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * Returns the statistic of the used storage. This class holds a cached
-     * copy of the statistic and don't update.
+     * Returns the statistic of the used storage. This class holds a cached copy of the statistic and don't update.
      *
      * @return List of storage statistic.
      * @throws IOException If error occur while communicating storage.
@@ -4369,20 +4403,16 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * Updates the base statistic table, if no row exists for this table a new
-     * row is inserted into the database.
+     * Updates the base statistic table, if no row exists for this table a new row is inserted into the database.
      * Note: This method returns a new instantiated {@link BaseStats} object.
      *
      * @param baseName                The base name.
      * @param lastModified            Last modification time for the base.
      * @param generationTime          The generation time of the base statistic object.
      * @param deletedIndexables       The number of deleted and indexable records.
-     * @param nonDeletedIndexables    The number of non deleted and indexable
-     *                                records.
-     * @param deletedNonIndexables    The number of deleted and non indexable
-     *                                records.
-     * @param nonDeletedNonIndexables the number of non deleted and non
-     *                                indexable records.
+     * @param nonDeletedIndexables    The number of non deleted and indexable records.
+     * @param deletedNonIndexables    The number of deleted and non indexable records.
+     * @param nonDeletedNonIndexables the number of non deleted and non indexable records.
      * @param conn                    The database connection.
      * @return
      */
@@ -4499,7 +4529,8 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public String toString() {
         return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d,"
-                + "pageSizeUpdate=%d)",
-                iterators.size(), useLazyRelations, usePagingModel, pageSize, pageSizeUpdate);
+                             + "pageSizeUpdate=%d, expandRelativesList=%b)",
+                             iterators.size(), useLazyRelations, usePagingModel, pageSize,
+                             pageSizeUpdate, expandRelativesLists);
     }
 }
