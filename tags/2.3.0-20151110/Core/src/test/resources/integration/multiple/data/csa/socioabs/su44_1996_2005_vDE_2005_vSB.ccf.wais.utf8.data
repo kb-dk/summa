@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<records>
+
+<rec id="1" status="1" type="Conference Paper (acp)" jdf="">
+<ti>Summa,- This is not a demo</ti>
+<auths><au>Olsen, Peter</au></auths>
+<af>Holstebro Universitet [Tel: 42127856]</af>
+<so>Important projects, 1996</so>
+<ab>This is not a demo &amp; why it is not</ab>
+<la>English</la>
+<py>1996</py>
+<pt>Conference Paper (acp)</pt>
+<gn>proceeding</gn>
+<de><term>*Library</term><term>*Search</term></de>
+<id><term>record, index, term</term></id>
+<cl>0450 mass phenomena; popular culture</cl>
+<ud>199612</ud>
+<an>96S31970</an>
+<f1>,,,,1996</f1>
+<xx>1</xx>
+<a1>20041231</a1>
+<pd>19960000</pd>
+</rec>
+
+
+<rec id="2" status="1" type="Conference Paper (acp)" jdf="">
+<ti>The Summa Team.</ti>
+<auths><au>Nielsen, Tom</au></auths>
+<af>Ulstrup Open University</af>
+<so>Society of Free Librarians, 1996</so>
+<ab>How to create a Team</ab>
+<la>English</la>
+<py>1996</py>
+<pt>Conference Paper (acp)</pt>
+<gn>proceeding</gn>
+<de><term>*Folklore</term><term>African Cultural Groups</term><term>Folk Culture</term><term>Racism</term></de>
+<id><term>musical contribution</term></id>
+<cl>1331 sociology of language and the arts; sociology of art (creative &amp; performing)</cl>
+<ud>199612</ud>
+<an>96S31971</an>
+<f1>,,,,1996</f1>
+<xx>1</xx>
+<a1>20041231</a1>
+<pd>19960000</pd>
+</rec>
+
+
+</records>

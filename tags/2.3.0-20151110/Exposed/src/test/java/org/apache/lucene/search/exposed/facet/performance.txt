@@ -1,0 +1,446 @@
+Some results from TestExposedFacets.testScale on a Dell M6500 laptop:
+i7 processor @1.7GHz, PC1333 RAM, SSD.
+
+********************************************************************************
+
+Index = /home/te/projects/index1M (1000000 documents)
+used heap after loading index and performing a simple search: 5 MB
+Maximum possible memory (Runtime.getRuntime().maxMemory()): 88 MB
+
+First natural order sorted search for "even:true" with 500000 hits: 2473 ms
+Subsequent 5 sorted searches average response time: 23 ms
+Hit #0 was doc #494892 with field b b_      d 6K102KM Æ494892
+Hit #1 was doc #995058 with field b b_    0y995058
+Hit #2 was doc #520388 with field b b_    520388
+Hit #3 was doc #538316 with field b b_    538316
+Hit #4 was doc #732952 with field b b_    7 æ 1 732952
+
+Facet pool acquisition for for "even:true" with structure groups(group(name=sorted, order=locale, locale=da, fields(a)), group(name=count, order=count, locale=null, fields(a)), group(name=multi, order=count, locale=null, fields(facet))): 1:20 minutes
+First faceting for even:true: 128 ms
+Subsequent 4 faceting calls (count caching disabled) response times: 75 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="even:true" hits="500000" countms="46" countcached="false" totalms="71">
+  <facet name="sorted" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="0" potentialtags="999999" extractionms="0">
+    <tag count="1">a_ 000J6iWC743074</tag>
+    <tag count="0">a_00 0nWARnepn NC0zeR509161</tag>
+    <tag count="1">a_000wkNk4f wx9 åd879060</tag>
+    <tag count="0">a_001N Ad1kT5Yldo8GFiO464913</tag>
+    <tag count="0">a_001zX4ÅmWtØy3TnvbQnX867119</tag>
+  </facet>
+  <facet name="count" fields="a" order="count" maxtags="5" mincount="1" offset="0" potentialtags="999999" usedreferences="500000" validtags="500000" extractionms="25">
+    <tag count="1">a_000wkNk4f wx9 åd879060</tag>
+    <tag count="1">a_00201542</tag>
+    <tag count="1">a_00281650</tag>
+    <tag count="1">a_002ylvz 841932</tag>
+    <tag count="1">a_å ååØLcmoJNæ7KrBzX320280</tag>
+  </facet>
+  <facet name="multi" fields="facet" order="count" maxtags="5" mincount="0" offset="0" potentialtags="25" usedreferences="1183710" validtags="25" extractionms="0">
+    <tag count="47757">A</tag>
+    <tag count="47723">G</tag>
+    <tag count="47626">E</tag>
+    <tag count="47559">Y</tag>
+    <tag count="47528">L</tag>
+  </facet>
+</facetresponse>
+
+Initial lookup pool request (might result in structure building): 0:33 minutes
+First index lookup for "even:true": 56 ms
+Subsequent 91 index lookups average response times: 0 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="even:true" hits="500000" countms="50" countcached="true" totalms="1">
+  <facet name="custom" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="50000" prefix="a_W" potentialtags="999999" extractionms="0">
+    <tag count="1">a_xsRLgqPP1T åRisÆbS626748</tag>
+    <tag count="0">a_xSRR82205</tag>
+    <tag count="0">a_xsRRarvwT3m311451</tag>
+    <tag count="0">a_XsRs704893</tag>
+    <tag count="0">a_ xs  ruln SRæEgåw709857</tag>
+  </facet>
+</facetresponse>
+
+First natural order sorted search for "multi:A" with 95222 hits: 6 ms
+Subsequent 5 sorted searches average response time: 5 ms
+Hit #0 was doc #264004 with field b b_    VJbLxZ 264004
+Hit #1 was doc #709779 with field b b_    sYdDc CAe709779
+Hit #2 was doc #403611 with field b b_   0403611
+Hit #3 was doc #938299 with field b b_   0Å 2PloF938299
+Hit #4 was doc #714795 with field b b_   1gHK714795
+
+Facet pool acquisition for for "multi:A" with structure groups(group(name=sorted, order=locale, locale=da, fields(a)), group(name=count, order=count, locale=null, fields(a)), group(name=multi, order=count, locale=null, fields(facet))): 0 ms
+First faceting for multi:A: 23 ms
+Subsequent 4 faceting calls (count caching disabled) response times: 23 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="multi:A" hits="95222" countms="15" countcached="false" totalms="24">
+  <facet name="sorted" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="0" potentialtags="999999" extractionms="0">
+    <tag count="0">a_ 000J6iWC743074</tag>
+    <tag count="0">a_00 0nWARnepn NC0zeR509161</tag>
+    <tag count="1">a_000wkNk4f wx9 åd879060</tag>
+    <tag count="0">a_001N Ad1kT5Yldo8GFiO464913</tag>
+    <tag count="0">a_001zX4ÅmWtØy3TnvbQnX867119</tag>
+  </facet>
+  <facet name="count" fields="a" order="count" maxtags="5" mincount="1" offset="0" potentialtags="999999" usedreferences="95222" validtags="95222" extractionms="9">
+    <tag count="1">a_002iu283037</tag>
+    <tag count="1">a_009 jot 6959344</tag>
+    <tag count="1">a_00b9KwdoWx 94R185619</tag>
+    <tag count="1">a_ 00BP973393</tag>
+    <tag count="1">a_åÅÅP HCDM159646</tag>
+  </facet>
+  <facet name="multi" fields="facet" order="count" maxtags="5" mincount="0" offset="0" potentialtags="25" usedreferences="330066" validtags="25" extractionms="0">
+    <tag count="95222">A</tag>
+    <tag count="9978">E</tag>
+    <tag count="9965">V</tag>
+    <tag count="9927">D</tag>
+    <tag count="9903">L</tag>
+  </facet>
+</facetresponse>
+
+Initial lookup pool request (might result in structure building): 0 ms
+First index lookup for "multi:A": 42 ms
+Subsequent 91 index lookups average response times: 0 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="multi:A" hits="95222" countms="41" countcached="true" totalms="1">
+  <facet name="custom" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="50000" prefix="a_W" potentialtags="999999" extractionms="1">
+    <tag count="0">a_xsRLgqPP1T åRisÆbS626748</tag>
+    <tag count="0">a_xSRR82205</tag>
+    <tag count="0">a_xsRRarvwT3m311451</tag>
+    <tag count="0">a_XsRs704893</tag>
+    <tag count="0">a_ xs  ruln SRæEgåw709857</tag>
+  </facet>
+</facetresponse>
+
+
+Used memory with sort, facet and index lookup structures intact: 68 MB
+Total test time: 1:57 minutes
+
+********************************************************************************
+
+Index = /home/te/projects/index10M (10000000 documents)
+used heap after loading index and performing a simple search: 25 MB
+Maximum possible memory (Runtime.getRuntime().maxMemory()): 910 MB
+
+First natural order sorted search for "even:true" with 5000000 hits: 0:21 minutes
+Subsequent 5 sorted searches average response time: 227 ms
+Hit #0 was doc #494892 with field b b_      d 6K102KM Æ494892
+Hit #1 was doc #4618566 with field b b_     43ÅvMN4618566
+Hit #2 was doc #9336724 with field b b_     6xoc9336724
+Hit #3 was doc #7145374 with field b b_     7145374
+Hit #4 was doc #8788920 with field b b_     8788920
+
+Facet pool acquisition for for "even:true" with structure groups(group(name=sorted, order=locale, locale=da, fields(a)), group(name=count, order=count, locale=null, fields(a)), group(name=multi, order=count, locale=null, fields(facet))): 10:08 minutes
+First faceting for even:true: 934 ms
+Subsequent 4 faceting calls (count caching disabled) response times: 897 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="even:true" hits="5000000" countms="610" countcached="false" totalms="882">
+  <facet name="sorted" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="0" potentialtags="9999995" extractionms="0">
+    <tag count="1">a_0000lcwbWX å 4684894</tag>
+    <tag count="0">a_0002nUXFCÆBWG37fx8464891</tag>
+    <tag count="0">a_0003867599</tag>
+    <tag count="1">a_0003bPt lj7vQE8594334</tag>
+    <tag count="0">a_0006øBK9290537</tag>
+  </facet>
+  <facet name="count" fields="a" order="count" maxtags="5" mincount="1" offset="0" potentialtags="9999995" usedreferences="5000000" validtags="4999996" extractionms="272">
+    <tag count="2">a_S8252004</tag>
+    <tag count="2">a_T1678792</tag>
+    <tag count="2">a_E1319214</tag>
+    <tag count="2">a_G2886318</tag>
+    <tag count="1">a_åååÅ ø jG8104444</tag>
+  </facet>
+  <facet name="multi" fields="facet" order="count" maxtags="5" mincount="0" offset="0" potentialtags="25" usedreferences="11844460" validtags="25" extractionms="0">
+    <tag count="475303">E</tag>
+    <tag count="474599">S</tag>
+    <tag count="474585">V</tag>
+    <tag count="474479">Q</tag>
+    <tag count="474364">G</tag>
+  </facet>
+</facetresponse>
+
+Initial lookup pool request (might result in structure building): 3:21 minutes
+First index lookup for "even:true": 348 ms
+Subsequent 91 index lookups average response times: 2 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="even:true" hits="5000000" countms="331" countcached="true" totalms="3">
+  <facet name="custom" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="500000" prefix="a_W" potentialtags="9999995" extractionms="3">
+    <tag count="0">a_X sNQBjHT5010537</tag>
+    <tag count="1">a_XSNqC20 iååg545448</tag>
+    <tag count="0">a_XsnQDroguT 8387531</tag>
+    <tag count="1">a_xsNQsOMqv6496008</tag>
+    <tag count="1">a_xsNqYj9405590</tag>
+  </facet>
+</facetresponse>
+
+First natural order sorted search for "multi:A" with 947218 hits: 99 ms
+Subsequent 5 sorted searches average response time: 45 ms
+Hit #0 was doc #9748747 with field b b_     JhåDx6IJuT9748747
+Hit #1 was doc #4041747 with field b b_     VHjwP4041747
+Hit #2 was doc #2125062 with field b b_     WSpWmbøs kSY2125062
+Hit #3 was doc #6734767 with field b b_    0XxYØ 6734767
+Hit #4 was doc #9085678 with field b b_    1yXUZ0RS2øC k f9085678
+
+Facet pool acquisition for for "multi:A" with structure groups(group(name=sorted, order=locale, locale=da, fields(a)), group(name=count, order=count, locale=null, fields(a)), group(name=multi, order=count, locale=null, fields(facet))): 0 ms
+First faceting for multi:A: 267 ms
+Subsequent 4 faceting calls (count caching disabled) response times: 233 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="multi:A" hits="947218" countms="153" countcached="false" totalms="227">
+  <facet name="sorted" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="0" potentialtags="9999995" extractionms="0">
+    <tag count="0">a_0000lcwbWX å 4684894</tag>
+    <tag count="1">a_0002nUXFCÆBWG37fx8464891</tag>
+    <tag count="0">a_0003867599</tag>
+    <tag count="0">a_0003bPt lj7vQE8594334</tag>
+    <tag count="0">a_0006øBK9290537</tag>
+  </facet>
+  <facet name="count" fields="a" order="count" maxtags="5" mincount="1" offset="0" potentialtags="9999995" usedreferences="947218" validtags="947218" extractionms="74">
+    <tag count="1">a_000I 5346125</tag>
+    <tag count="1">a_000wkNk4f wx9 åd879060</tag>
+    <tag count="1">a_000ÆZqiUOÅ59BWx47633391</tag>
+    <tag count="1">a_001019122</tag>
+    <tag count="1">a_åååÆiYyBGzt2jLLXV4931245</tag>
+  </facet>
+  <facet name="multi" fields="facet" order="count" maxtags="5" mincount="0" offset="0" potentialtags="25" usedreferences="3283027" validtags="25" extractionms="0">
+    <tag count="947218">A</tag>
+    <tag count="97760">U</tag>
+    <tag count="97643">E</tag>
+    <tag count="97636">V</tag>
+    <tag count="97601">Y</tag>
+  </facet>
+</facetresponse>
+
+Initial lookup pool request (might result in structure building): 0 ms
+First index lookup for "multi:A": 99 ms
+Subsequent 91 index lookups average response times: 2 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="multi:A" hits="947218" countms="94" countcached="true" totalms="2">
+  <facet name="custom" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="500000" prefix="a_W" potentialtags="9999995" extractionms="2">
+    <tag count="1">a_X sNQBjHT5010537</tag>
+    <tag count="0">a_XSNqC20 iååg545448</tag>
+    <tag count="0">a_XsnQDroguT 8387531</tag>
+    <tag count="0">a_xsNQsOMqv6496008</tag>
+    <tag count="0">a_xsNqYj9405590</tag>
+  </facet>
+</facetresponse>
+
+
+Used memory with sort, facet and index lookup structures intact: 685 MB
+Total test time: 14:00 minutes
+
+********************************************************************************
+
+Index = /home/te/projects/index1M (1000000 documents)
+used heap after loading index and performing a simple search: 6 MB
+Maximum possible memory (Runtime.getRuntime().maxMemory()): 88 MB
+
+First natural order sorted search for "even:true" with 500000 hits: 2586 ms
+Subsequent 5 sorted searches average response time: 23 ms
+Hit #0 was doc #494892 with field b b_      d 6K102KM Æ494892
+Hit #1 was doc #995058 with field b b_    0y995058
+Hit #2 was doc #520388 with field b b_    520388
+Hit #3 was doc #538316 with field b b_    538316
+Hit #4 was doc #732952 with field b b_    7 æ 1 732952
+
+Facet pool acquisition for for "even:true" with structure groups(group(name=sorted, order=index, locale=da, fields(a)), group(name=count, order=count, locale=null, fields(a)), group(name=multi, order=count, locale=null, fields(facet))): 0:44 minutes
+First faceting for even:true: 120 ms
+Subsequent 4 faceting calls (count caching disabled) response times: 66 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="even:true" hits="500000" countms="37" countcached="false" totalms="66">
+  <facet name="sorted" fields="a" order="index" locale="da" maxtags="5" mincount="0" offset="0" potentialtags="1000000" extractionms="1">
+    <tag count="1">a_    24q937966</tag>
+    <tag count="0">a_    7GY4XFvBjyvef966757</tag>
+    <tag count="0">a_   0XjÆ 964647</tag>
+    <tag count="0">a_   4PylI0Aj88S975575</tag>
+    <tag count="1">a_    7  O826038</tag>
+  </facet>
+  <facet name="count" fields="a" order="count" maxtags="5" mincount="1" offset="0" potentialtags="1000000" usedreferences="500000" validtags="500000" extractionms="27">
+    <tag count="1">a_    7  O826038</tag>
+    <tag count="1">a_   984110</tag>
+    <tag count="1">a_     dmo øKåyikbje585780</tag>
+    <tag count="1">a_   LuÅhAøObæ2gy968592</tag>
+    <tag count="1">a_øøå MnKcÆ7670310</tag>
+  </facet>
+  <facet name="multi" fields="facet" order="count" maxtags="5" mincount="0" offset="0" potentialtags="25" usedreferences="1183710" validtags="25" extractionms="0">
+    <tag count="47757">A</tag>
+    <tag count="47723">G</tag>
+    <tag count="47626">E</tag>
+    <tag count="47559">Y</tag>
+    <tag count="47528">L</tag>
+  </facet>
+</facetresponse>
+
+Initial lookup pool request (might result in structure building): 0:15 minutes
+First index lookup for "even:true": 26 ms
+Subsequent 91 index lookups average response times: 0 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="even:true" hits="500000" countms="22" countcached="true" totalms="1">
+  <facet name="custom" fields="a" order="index" locale="da" maxtags="5" mincount="0" offset="50000" prefix="a_W" potentialtags="1000000" extractionms="1">
+    <tag count="0">a_ÆÅnyF474489</tag>
+    <tag count="0">a_ÆÅoHx4IxSezWtPØq7110803</tag>
+    <tag count="0">a_ÆÅpQTpFzQnR204607</tag>
+    <tag count="1">a_ÆÅqY 2IF2cI488588</tag>
+    <tag count="0">a_ÆÅqg2OrD202359</tag>
+  </facet>
+</facetresponse>
+
+First natural order sorted search for "multi:A" with 95222 hits: 6 ms
+Subsequent 5 sorted searches average response time: 4 ms
+Hit #0 was doc #264004 with field b b_    VJbLxZ 264004
+Hit #1 was doc #709779 with field b b_    sYdDc CAe709779
+Hit #2 was doc #403611 with field b b_   0403611
+Hit #3 was doc #938299 with field b b_   0Å 2PloF938299
+Hit #4 was doc #714795 with field b b_   1gHK714795
+
+Facet pool acquisition for for "multi:A" with structure groups(group(name=sorted, order=index, locale=da, fields(a)), group(name=count, order=count, locale=null, fields(a)), group(name=multi, order=count, locale=null, fields(facet))): 0 ms
+First faceting for multi:A: 22 ms
+Subsequent 4 faceting calls (count caching disabled) response times: 20 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="multi:A" hits="95222" countms="12" countcached="false" totalms="20">
+  <facet name="sorted" fields="a" order="index" locale="da" maxtags="5" mincount="0" offset="0" potentialtags="1000000" extractionms="0">
+    <tag count="0">a_    24q937966</tag>
+    <tag count="0">a_    7GY4XFvBjyvef966757</tag>
+    <tag count="0">a_   0XjÆ 964647</tag>
+    <tag count="0">a_   4PylI0Aj88S975575</tag>
+    <tag count="0">a_    7  O826038</tag>
+  </facet>
+  <facet name="count" fields="a" order="count" maxtags="5" mincount="1" offset="0" potentialtags="1000000" usedreferences="95222" validtags="95222" extractionms="7">
+    <tag count="1">a_   D7HNademsP2Mvws749426</tag>
+    <tag count="1">a_   E3ØæcYx3fD751117</tag>
+    <tag count="1">a_   MRØZ   fH747008</tag>
+    <tag count="1">a_   UBxL911779</tag>
+    <tag count="1">a_øø7hh oØn642043</tag>
+  </facet>
+  <facet name="multi" fields="facet" order="count" maxtags="5" mincount="0" offset="0" potentialtags="25" usedreferences="330066" validtags="25" extractionms="0">
+    <tag count="95222">A</tag>
+    <tag count="9978">E</tag>
+    <tag count="9965">V</tag>
+    <tag count="9927">D</tag>
+    <tag count="9903">L</tag>
+  </facet>
+</facetresponse>
+
+Initial lookup pool request (might result in structure building): 0 ms
+First index lookup for "multi:A": 7 ms
+Subsequent 91 index lookups average response times: 0 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="multi:A" hits="95222" countms="6" countcached="true" totalms="1">
+  <facet name="custom" fields="a" order="index" locale="da" maxtags="5" mincount="0" offset="50000" prefix="a_W" potentialtags="1000000" extractionms="0">
+    <tag count="0">a_ÆÅnyF474489</tag>
+    <tag count="0">a_ÆÅoHx4IxSezWtPØq7110803</tag>
+    <tag count="0">a_ÆÅpQTpFzQnR204607</tag>
+    <tag count="0">a_ÆÅqY 2IF2cI488588</tag>
+    <tag count="0">a_ÆÅqg2OrD202359</tag>
+  </facet>
+</facetresponse>
+
+
+Used memory with sort, facet and index lookup structures intact: 66 MB
+Total test time: 1:03 minutes
+
+********************************************************************************
+
+Index = /home/te/projects/index10M (10000000 documents)
+used heap after loading index and performing a simple search: 25 MB
+Maximum possible memory (Runtime.getRuntime().maxMemory()): 910 MB
+
+First natural order sorted search for "even:true" with 5000000 hits: 0:22 minutes
+Subsequent 5 sorted searches average response time: 229 ms
+Hit #0 was doc #494892 with field b b_      d 6K102KM Æ494892
+Hit #1 was doc #4618566 with field b b_     43ÅvMN4618566
+Hit #2 was doc #9336724 with field b b_     6xoc9336724
+Hit #3 was doc #7145374 with field b b_     7145374
+Hit #4 was doc #8788920 with field b b_     8788920
+
+Facet pool acquisition for for "even:true" with structure groups(group(name=sorted, order=index, locale=da, fields(a)), group(name=count, order=count, locale=null, fields(a)), group(name=multi, order=count, locale=null, fields(facet))): 4:46 minutes
+First faceting for even:true: 865 ms
+Subsequent 4 faceting calls (count caching disabled) response times: 788 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="even:true" hits="5000000" countms="475" countcached="false" totalms="723">
+  <facet name="sorted" fields="a" order="index" locale="da" maxtags="5" mincount="0" offset="0" potentialtags="9999996" extractionms="0">
+    <tag count="1">a_    09619514</tag>
+    <tag count="0">a_   0mXWfE vI 9uPm9544033</tag>
+    <tag count="1">a_    15w 8sMY d3ææØfD7075330</tag>
+    <tag count="1">a_   19497740</tag>
+    <tag count="1">a_   1Mb589885332</tag>
+  </facet>
+  <facet name="count" fields="a" order="count" maxtags="5" mincount="1" offset="0" potentialtags="9999996" usedreferences="5000000" validtags="4999997" extractionms="248">
+    <tag count="2">a_T1678792</tag>
+    <tag count="2">a_G2886318</tag>
+    <tag count="2">a_E1319214</tag>
+    <tag count="1">a_   19497740</tag>
+    <tag count="1">a_øøæCq  Ep40rYØc96 7860482</tag>
+  </facet>
+  <facet name="multi" fields="facet" order="count" maxtags="5" mincount="0" offset="0" potentialtags="25" usedreferences="11844460" validtags="25" extractionms="0">
+    <tag count="475303">E</tag>
+    <tag count="474599">S</tag>
+    <tag count="474585">V</tag>
+    <tag count="474479">Q</tag>
+    <tag count="474364">G</tag>
+  </facet>
+</facetresponse>
+
+Initial lookup pool request (might result in structure building): 1:41 minutes
+First index lookup for "even:true": 318 ms
+Subsequent 91 index lookups average response times: 2 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="even:true" hits="5000000" countms="305" countcached="true" totalms="1">
+  <facet name="custom" fields="a" order="index" locale="da" maxtags="5" mincount="0" offset="500000" prefix="a_W" potentialtags="9999996" extractionms="1">
+    <tag count="0">a_8åzåå eBDÆYVg5LÆokKx9224801</tag>
+    <tag count="0">a_8åÅ5HZpj58819757</tag>
+    <tag count="0">a_8åÅ8858061</tag>
+    <tag count="1">a_8åÅmLJJ7W8977610</tag>
+    <tag count="0">a_8åÆ8d XJ QøVsypF0D8905889</tag>
+  </facet>
+</facetresponse>
+
+First natural order sorted search for "multi:A" with 947218 hits: 101 ms
+Subsequent 5 sorted searches average response time: 51 ms
+Hit #0 was doc #9748747 with field b b_     JhåDx6IJuT9748747
+Hit #1 was doc #4041747 with field b b_     VHjwP4041747
+Hit #2 was doc #2125062 with field b b_     WSpWmbøs kSY2125062
+Hit #3 was doc #6734767 with field b b_    0XxYØ 6734767
+Hit #4 was doc #9085678 with field b b_    1yXUZ0RS2øC k f9085678
+
+Facet pool acquisition for for "multi:A" with structure groups(group(name=sorted, order=index, locale=da, fields(a)), group(name=count, order=count, locale=null, fields(a)), group(name=multi, order=count, locale=null, fields(facet))): 0 ms
+First faceting for multi:A: 220 ms
+Subsequent 4 faceting calls (count caching disabled) response times: 220 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="multi:A" hits="947218" countms="137" countcached="false" totalms="225">
+  <facet name="sorted" fields="a" order="index" locale="da" maxtags="5" mincount="0" offset="0" potentialtags="9999996" extractionms="0">
+    <tag count="0">a_    09619514</tag>
+    <tag count="0">a_   0mXWfE vI 9uPm9544033</tag>
+    <tag count="0">a_    15w 8sMY d3ææØfD7075330</tag>
+    <tag count="0">a_   19497740</tag>
+    <tag count="0">a_   1Mb589885332</tag>
+  </facet>
+  <facet name="count" fields="a" order="count" maxtags="5" mincount="1" offset="0" potentialtags="9999996" usedreferences="947218" validtags="947218" extractionms="87">
+    <tag count="1">a_   9k4sBvbfBO9554703</tag>
+    <tag count="1">a_   Ce VøjRI3R9532980</tag>
+    <tag count="1">a_   Lq  x T 9675445</tag>
+    <tag count="1">a_   3Å4ØQØxibSgØmÅ9980036</tag>
+    <tag count="1">a_øøø7827179</tag>
+  </facet>
+  <facet name="multi" fields="facet" order="count" maxtags="5" mincount="0" offset="0" potentialtags="25" usedreferences="3283027" validtags="25" extractionms="0">
+    <tag count="947218">A</tag>
+    <tag count="97760">U</tag>
+    <tag count="97643">E</tag>
+    <tag count="97636">V</tag>
+    <tag count="97601">Y</tag>
+  </facet>
+</facetresponse>
+
+Initial lookup pool request (might result in structure building): 0 ms
+First index lookup for "multi:A": 92 ms
+Subsequent 91 index lookups average response times: 2 ms
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="multi:A" hits="947218" countms="90" countcached="true" totalms="1">
+  <facet name="custom" fields="a" order="index" locale="da" maxtags="5" mincount="0" offset="500000" prefix="a_W" potentialtags="9999996" extractionms="1">
+    <tag count="0">a_8åzåå eBDÆYVg5LÆokKx9224801</tag>
+    <tag count="0">a_8åÅ5HZpj58819757</tag>
+    <tag count="0">a_8åÅ8858061</tag>
+    <tag count="0">a_8åÅmLJJ7W8977610</tag>
+    <tag count="0">a_8åÆ8d XJ QøVsypF0D8905889</tag>
+  </facet>
+</facetresponse>
+
+
+Used memory with sort, facet and index lookup structures intact: 648 MB
+Total test time: 6:58 minutes
+
+********************************************************************************
+********************************************************************************
+********************************************************************************
