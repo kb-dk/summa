@@ -32,12 +32,12 @@ public class CursorReaper implements Runnable {
 
     private static final Log log = LogFactory.getLog(CursorReaper.class);
 
-    private Map<Long, Cursor> iterators;
+    private Map<Long, ? extends Cursor> iterators;
     private Thread t;
     private boolean mayRun;
     private long graceTimeMinutes;
 
-    public CursorReaper(Map<Long, Cursor> iterators, long graceTimeMinutes) {
+    public CursorReaper(Map<Long, ? extends Cursor> iterators, long graceTimeMinutes) {
         this.iterators = iterators;
         this.graceTimeMinutes = graceTimeMinutes;
         mayRun = true;
