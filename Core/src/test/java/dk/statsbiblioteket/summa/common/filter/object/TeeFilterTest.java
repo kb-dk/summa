@@ -102,8 +102,10 @@ public class TeeFilterTest extends TestCase {
             }
         }
         for (Payload payload: generated) {
-            assertNotNull("Each Payload should have a Record with a parent. Failed for " + payload,
+            assertNotNull("Each Payload should have a Record with parents. Failed for " + payload,
                           payload.getRecord().getParents());
+            assertEquals("Each Payload should have the correct number of parents. Failed for " + payload,
+                          1, payload.getRecord().getParents().size());
         }
     }
 
