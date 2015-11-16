@@ -174,13 +174,25 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
                             ids == null || ids.isEmpty(),
                             "Discarding due to missing " + designation + " IDs", payload);
                     case any_id_and_object:
-                        return checkDiscardLog(
-                                (ids == null || ids.isEmpty()) && (records == null || records.isEmpty()),
-                                "Discarding due to missing " + designation + " IDs or Records", payload);
+                        if (checkDiscardLog(
+                                records == null || records.isEmpty(),
+                                "Discarding due to no " + designation + " Records", payload)) {
+                            return true;
+                        }
+                        if (checkDiscardLog(
+                                ids == null || ids.isEmpty(),
+                                "Discarding due to no " + designation + " IDs", payload)) {
+                            return true;
+                        }
                     case all_id_and_object:
                         if (checkDiscardLog(
-                                ids == null || ids.isEmpty() || records == null || records.isEmpty(),
-                                "Discarding due to missing " + designation + " IDs or Records", payload)) {
+                                records == null || records.isEmpty(),
+                                "Discarding due to missing " + designation + " Records", payload)) {
+                            return true;
+                        }
+                        if (checkDiscardLog(
+                                ids == null || ids.isEmpty(),
+                                "Discarding due to missing " + designation + " IDs", payload)) {
                             return true;
                         }
                         if (ids == null || records == null) {
