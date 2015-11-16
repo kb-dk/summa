@@ -1893,7 +1893,7 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public Record getRecord(String id, QueryOptions options) throws IOException {
         //Call new optimized DB method to extract complete object tree
-        if (options == null) {
+         if (options == null) {
             return getRecordWithFullObjectTree(id);
         }
 

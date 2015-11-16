@@ -70,6 +70,8 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertTrue(stats.isEmpty());
     }
 
+    // For performance reasons the authoritative Records in the Statsbiblioteket aviser project should
+    // not have theit childrenIDs enriched from the relations table
     public void testRelativesExpansion() throws Exception {
         Record parent = new Record("Parent", "dummy", new byte[0]);
         Record child1 = new Record("Child1", "dummy", new byte[0]);
@@ -80,6 +82,8 @@ public class DatabaseStorageTest extends StorageTestBase {
         Configuration conf = createConf();
         conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
         conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
+
+        // We only want the IDs stored directly in the Record
         conf.set(DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, false);
         conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079);
         DatabaseStorage storage = new H2Storage(conf);
@@ -87,7 +91,28 @@ public class DatabaseStorageTest extends StorageTestBase {
         try {
             storage.flushAll(Arrays.asList(parent, child1, child2));
 
-
+            List<Record> extracted = getRecords(storage, "dummy");
+            assertEquals("There should be the right number of Records in the database", 3, extracted.size());
+            for (Record record: extracted) {
+                if ("Child1".equals(record.getId()) || "Child2".equals(record.getId())) {
+                    assertEquals("The parentIDs for " + record.getId() + " should have the right number of entries",
+                                 1, record.getParentIds().size());
+                    assertEquals("The parentID for " + record.getId() + " should be as expected",
+                                 "Parent", record.getParentIds().get(0));
+                } else if ("Parent".equals(record.getId())) {
+                    // This is the important part: The childIDs are not stored directly in the parent, but are
+                    // extracted from the relations table. We don't need them in the aviser project and extracting
+                    // them takes 2-300 ms, which is done each time a Record is resolved.
+                    // conf.set(DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, false);
+                    // in the Storage setup signals that this expansion should not take place.
+                    // The relevant part in DatabaseStorage seems to be DatabaseStorage#scanRecord
+                    assertTrue("The childIDs for " + record.getId() + " should be empty but was "
+                               + record.getChildIds().size(),
+                               record.getChildIds().isEmpty());
+                } else {
+                    fail("Unexpected record " + record.getId());
+                }
+            }
         } finally {
             storage.close();
         }
@@ -139,6 +164,26 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertEquals("There should be the right amount of Records in storage at the end",
                      RECORDS, count(storage, testBase1));
         storage.clearBase(testBase1);
+    }
+
+    private List<Record> getRecords(DatabaseStorage storage, String base) throws IOException {
+        List<Record> records = new ArrayList<>();
+
+        final QueryOptions options = new QueryOptions();
+        options.setAttributes(QueryOptions.ATTRIBUTES_ALL);
+        options.removeAttribute(QueryOptions.ATTRIBUTES.CHILDREN);
+        options.removeAttribute(QueryOptions.ATTRIBUTES.PARENTS);
+        final long iteratorKey = storage.getRecordsModifiedAfter(0, base, options);
+
+        Record record;
+        try {
+            while ((record = storage.next(iteratorKey)) != null) {
+                records.add(record);
+            }
+        } catch (NoSuchElementException e) {
+            // Expected (yes, it is a horrible signal mechanism)
+        }
+        return records;
     }
 
     private int count(DatabaseStorage storage, String base) throws IOException {
