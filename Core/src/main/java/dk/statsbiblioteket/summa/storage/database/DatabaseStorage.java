@@ -43,8 +43,7 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * An abstract implementation of a SQL database driven extension
- * of {@link StorageBase}.
+ * An abstract implementation of a SQL database driven extension of {@link StorageBase}.
  */
 @SuppressWarnings("DuplicateStringLiteralInspection")
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -471,6 +470,10 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private StatementHandler statementHandler;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
+    /**
+     * Used by {@link #getRecord(String, QueryOptions)} and {@link #getRecords(List, QueryOptions)}.
+     */
+    private final QueryOptions defaultGetOptions;
 
     /**
      * A variation of {@link QueryOptions} used to keep track of recursion
@@ -658,6 +661,7 @@ public abstract class DatabaseStorage extends StorageBase {
         } else {
             log.info("Disabling relationships tracking on: " + Strings.join(disabledRelationsTracking, ", "));
         }
+        defaultGetOptions = QueryOptions.getOptions(conf);
         log.info("Constructed " + this);
     }
 
@@ -1489,6 +1493,18 @@ public abstract class DatabaseStorage extends StorageBase {
         return false;
     }
 
+    protected boolean hasAttribute(QueryOptions options, QueryOptions.ATTRIBUTES wanted) {
+        if (options == null || options.getAttributes() == null) {
+            return true; // null means everything
+        }
+        for (QueryOptions.ATTRIBUTES attribute : options.getAttributes()) {
+            if (attribute == wanted) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Same as getRecordsModifiedAfterCursor, except data column is  loaded.
@@ -1624,8 +1640,10 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
         long startTime = System.currentTimeMillis();
-
-        List<Record> result= new  ArrayList<>();
+        if (options == null) {
+            options = defaultGetOptions;
+        }
+        List<Record> result = new  ArrayList<>();
 
         profiler.beat();
 
@@ -1666,7 +1684,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
             } catch (SQLException e) {
                 log.error("Failed to get record '" + id + "' for batch request", e);
-                result.add(null);
+//                result.add(null);
             }
         }
         return result;
@@ -1892,6 +1910,9 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public Record getRecord(String id, QueryOptions options) throws IOException {
+        if (options == null) {
+            options = defaultGetOptions;
+        }
         //Call new optimized DB method to extract complete object tree
          if (options == null) {
             return getRecordWithFullObjectTree(id);
@@ -1970,7 +1991,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             try {
   //              long scan = System.nanoTime();
-                record = scanRecord(resultSet);
+                record = scanRecord(resultSet, options);
 //                log.debug("getRecordWithConnection***: ScanRecord in " + (System.nanoTime()-scan)/M + "ms");
 
                 /* Sanity checks if we log on debug */
@@ -1980,7 +2001,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     }
 
                     while (resultSet.next()) {
-                        Record tmpRec = scanRecord(resultSet);
+                        Record tmpRec = scanRecord(resultSet, options);
                         log.warn("Bogus record in result set: " + tmpRec);
                     }
                 }
@@ -2721,7 +2742,7 @@ public abstract class DatabaseStorage extends StorageBase {
         StatementHandle handle = statementHandler.getChildIdsOnly();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
-        List<String> parentsIds = new ArrayList<String>();
+        List<String> childrenIds = new ArrayList<>();
 
         try {
             stmt.setString(1, id);
@@ -2730,9 +2751,9 @@ public abstract class DatabaseStorage extends StorageBase {
             ResultSet results = stmt.getResultSet();
 
             while (results.next()) {
-                parentsIds.add(results.getString("CHILDID"));
+                childrenIds.add(results.getString("CHILDID"));
             }
-            return parentsIds;
+            return childrenIds;
 
         } catch (SQLException e) {
             throw new IOException("Failed to get getChildIdsOnly for record '" + id, e);
@@ -2802,11 +2823,30 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param conn the SQL connection to use for the lookups
      * @throws SQLException if stuff is bad
      */
-    protected void resolveRelatedIds(Record rec, Connection conn) throws SQLException {
-        if (log.isTraceEnabled()) {
-            log.trace("Preparing to resolve relations for " + rec.getId());
+    protected void resolveRelatedIds(Record rec, Connection conn, QueryOptions options)
+            throws SQLException, IOException {
+        boolean resolveParents = hasAttribute(options, QueryOptions.ATTRIBUTES.PARENTS);
+        boolean resolveChildren = hasAttribute(options, QueryOptions.ATTRIBUTES.CHILDREN);
+        if (expandRelativesLists || (resolveParents && resolveChildren)) {
+            resolveRelatedParentsAndChildrenIDs(rec, conn);
+        } else if (!resolveParents && resolveChildren) {
+            List<String> cIDs = getChildIdsOnly(rec.getId(), conn);
+            if (!cIDs.isEmpty()) {
+                rec.setChildIds(cIDs);
+            }
+        } else if (resolveParents) {
+            List<String> pIDs = getParentsIdsOnly(rec.getId(), conn);
+            if (!pIDs.isEmpty()) {
+                rec.setParentIds(pIDs);
+            }
         }
+        // Do nothing if none are to be resolved
+    }
 
+    protected void resolveRelatedParentsAndChildrenIDs(Record rec, Connection conn) throws SQLException {
+            if (log.isTraceEnabled()) {
+                log.trace("Preparing to resolve parent and child relations for " + rec.getId());
+            }
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getRelatedIds();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
@@ -3171,7 +3211,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     // if it's changed (we must purge the old one).
                     while (!cursor.isAfterLast()) {
                         minTimestamp = cursor.getLong(MTIME_COLUMN);
-                        Record record = scanRecord(cursor); // advances cursor
+                        Record record = scanRecord(cursor, options); // advances cursor
                         //System.out.println("Processing " + record);
                         if (previousRecord != null
                                 && applyJobtoRecord(job, previousRecord, previousRecordId, base, options,
@@ -4056,7 +4096,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException if there was a problem extracting values from the SQL result set.
      * @throws IOException  If the data (content) could not be uncompressed with gunzip.
      */
-    public Record scanRecord(ResultSet resultSet, ResultSetCursor iter) throws SQLException, IOException {
+    public Record scanRecord(ResultSet resultSet, ResultSetCursor iter, QueryOptions options)
+            throws SQLException, IOException {
         boolean hasNext;
 //        long start = System.nanoTime();
         String id = resultSet.getString(ID_KEY);
@@ -4207,7 +4248,7 @@ public abstract class DatabaseStorage extends StorageBase {
          * resolve the relations in that case
          */
         if (useLazyRelations && hasRelations && parentIds == null && childIds == null) {
-            resolveRelatedIds(rec, resultSet.getStatement().getConnection());
+            resolveRelatedIds(rec, resultSet.getStatement().getConnection(), options);
         }
 //        log.debug("DatabaseStorage***: ResolvedRelatedID " + (System.nanoTime()-start)/M);
 
@@ -4228,15 +4269,15 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * As {@link #scanRecord(ResultSet, ResultSetCursor)} with {@code resultSet = null}.
+     * As {@link #scanRecord(ResultSet, ResultSetCursor, QueryOptions)} with {@code resultSet = null}.
      *
      * @param resultSet a SQL result set. The result set will be stepped to the beginning of the following record.
      * @return a Record based on the result set.
      * @throws SQLException if there was a problem extracting values from the SQL result set.
      * @throws IOException  If the data (content) could not be uncompressed with gunzip.
      */
-    public Record scanRecord(ResultSet resultSet) throws SQLException, IOException {
-        return scanRecord(resultSet, null);
+    public Record scanRecord(ResultSet resultSet, QueryOptions options) throws SQLException, IOException {
+        return scanRecord(resultSet, null, options);
     }
 
     /**
@@ -4529,8 +4570,8 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public String toString() {
         return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d,"
-                             + "pageSizeUpdate=%d, expandRelativesList=%b)",
+                             + "pageSizeUpdate=%d, expandRelativesList=%b, defaultGetOptions=%s)",
                              iterators.size(), useLazyRelations, usePagingModel, pageSize,
-                             pageSizeUpdate, expandRelativesLists);
+                             pageSizeUpdate, expandRelativesLists, defaultGetOptions);
     }
 }
