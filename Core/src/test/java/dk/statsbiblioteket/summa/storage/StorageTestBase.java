@@ -66,12 +66,12 @@ public class StorageTestBase extends TestCase {
     public static Configuration createConf() throws Exception {
 
         lastStorageLocation =
-                testDBRoot + File.separator + dbPrefix + (storageCounter++);
+                testDBRoot + File.separator + dbPrefix + storageCounter++;
         // H2 Config
         return Configuration.newMemoryBased(
                 Storage.CONF_CLASS, H2Storage.class,
                 DatabaseStorage.CONF_LOCATION, lastStorageLocation,
-                H2Storage.CONF_H2_SERVER_PORT, 8078
+                H2Storage.CONF_H2_SERVER_PORT, 8078+storageCounter
         );
 
         // Derby Config
