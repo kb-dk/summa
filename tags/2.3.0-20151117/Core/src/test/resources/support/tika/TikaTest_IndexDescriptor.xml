@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+
+    <!--
+    <groups>
+        <group name="ti">
+            <field ref="ht"/>
+            <field ref="se"/>
+            <field ref="titel"/>
+        </group>
+    </groups>
+        -->
+    <fields>
+
+        <field name="arcname" parent="storedVerbatim" multiValued="false" inFreeText="false"/>
+        <field name="arcoffset" parent="storedVerbatim" multiValued="false" indexed="false" inFreeText="false"/>
+        <field name="contentLength" parent="storedVerbatim" multiValued="false" indexed="false" inFreeText="false"/>
+
+        <!-- Name clash
+        <field name="date" parent="storedVerbatim" multiValued="false" indexed="true" inFreeText="false"/>
+        -->
+        <field name="digest" parent="storedVerbatim" multiValued="false" indexed="false" inFreeText="false"/>
+        <field name="primaryType" parent="storedKeyword" multiValued="false" indexed="true" inFreeText="false"/>
+        <field name="title" parent="text" stored="true" multiValued="true" indexed="true" inFreeText="false"/>
+        <field name="tstamp" parent="storedKeyword" multiValued="false" indexed="true" inFreeText="false"/>
+        <field name="url" parent="storedKeyword" multiValued="false" indexed="true" inFreeText="true"/>
+        <field name="shortformat" parent="stored" inFreeText="false"/>
+
+    </fields>
+
+    <defaultLanguage>da</defaultLanguage>
+
+    <defaultSearchFields>
+        <!-- Groups -->
+        <field ref="freetext"/>
+        <field ref="title"/>
+        <field ref="primaryType"/>
+    </defaultSearchFields>
+
+    <QueryParser defaultOperator="AND"/>
+
+    <!-- Used by MoreLikeThis in LuceneSearchNode -->
+    <lu:moreLikethisFields xmlns:lu="http://statsbiblioteket.dk/summa/2009/LuceneIndexDescriptor">
+        <field ref="freetext"/>
+        <field ref="title"/>
+        <field ref="primaryType"/>
+        <field ref="url"/>
+     </lu:moreLikethisFields>
+
+    <facets xmlns="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+        <facet ref="primaryType"/>
+        <facet ref="arcname"/>
+        <facet ref="digest"/>
+    </facets>
+
+</IndexDescriptor>

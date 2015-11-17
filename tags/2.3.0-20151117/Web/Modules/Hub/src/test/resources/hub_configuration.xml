@@ -1,0 +1,48 @@
+<xproperties>
+    <xproperties>
+        <!-- Test setup for a hub that connects to two Solr instances. Used by HubWSTest.
+             The hub connect to Solr instances at localhost:8983 and localhost:8984.
+        -->
+        <entry>
+            <key>hubfactory.componentclass</key>
+            <value class="string">dk.statsbiblioteket.summa.support.harmonise.hub.TermStatAggregator</value>
+        </entry>
+
+        <entry>
+            <key>hubfactory.subcomponents</key>
+            <value class="list">
+
+                <xproperties>
+                    <entry>
+                        <key>hubfactory.componentclass</key>
+                        <value class="string">dk.statsbiblioteket.summa.support.harmonise.hub.SolrLeaf</value>
+                    </entry>
+                    <entry>
+                        <key>node.id</key>
+                        <value class="string">solr1</value>
+                    </entry>
+                    <entry>
+                        <key>solr.url</key>
+                        <value class="string">http://localhost:8983/solr</value>
+                    </entry>
+                </xproperties>
+
+                <xproperties>
+                    <entry>
+                        <key>hubfactory.componentclass</key>
+                        <value class="string">dk.statsbiblioteket.summa.support.harmonise.hub.SolrLeaf</value>
+                    </entry>
+                    <entry>
+                        <key>node.id</key>
+                        <value class="string">solr2</value>
+                    </entry>
+                    <entry>
+                        <key>solr.url</key>
+                        <value class="string">http://localhost:8984/solr</value>
+                    </entry>
+                </xproperties>
+
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>

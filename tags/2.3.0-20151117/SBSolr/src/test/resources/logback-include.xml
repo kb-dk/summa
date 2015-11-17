@@ -1,0 +1,38 @@
+<included>
+  <contextName>summa-sbsolr</contextName>
+
+  <if condition='isNull("catalina.base")'>
+    <if condition='isNull("jetty.home")'>
+      <then>
+        <property name="logFile" value="./${CONTEXT_NAME}.log"/>
+      </then>
+      <else>
+        <property name="logFile" value="${jetty.home}/${CONTEXT_NAME}.log"/>
+      </else>
+    </if>
+    <else>
+      <property name="logFile" value="${catalina.base}/logs/${CONTEXT_NAME}.log"/>
+    </else>
+  </if>
+
+  <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <File>${logFile}</File>
+
+    <encoder>
+      <pattern>%d [%t] %-5p %c - %m%n</pattern>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      <maxIndex>10</maxIndex>
+      <FileNamePattern>${logFile}.%i</FileNamePattern>
+    </rollingPolicy>
+
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <MaxFileSize>32MB</MaxFileSize>
+    </triggeringPolicy>
+  </appender>
+
+  <root level="info">
+    <appender-ref ref="R"/>
+  </root>
+</included>

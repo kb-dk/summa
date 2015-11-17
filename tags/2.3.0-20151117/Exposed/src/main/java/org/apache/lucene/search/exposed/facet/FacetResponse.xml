@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<facetresponse xmlns="http://lucene.apache.org/exposed/facet/response/1.0" query="all" hits="4911501" totalms="1284" countms="999">
+  <!-- Sample facet response -->
+  <facet name="id" fields="id" order="count" maxtags="5" mincount="0" offset="0" prefix="" extractionms="266">
+    <subtags potentialtags="10000000" totaltags="10000000" count="4911501">
+      <tag count="1" term="00000006"/>
+      <tag count="1" term="00000002"/>
+      <tag count="1" term="00000000"/>
+      <tag count="1" term="00000004"/>
+      <tag count="1" term="09999998"/>
+    </subtags>
+  </facet>
+  <facet name="custom" fields="a" order="locale" locale="da" maxtags="5" mincount="0" offset="0" prefix="a_foo" extractionms="1">
+    <subtags potentialtags="-1" totaltags="-1" count="2311453">
+      <tag count="0" term="a_ fOO01991201"/>
+      <tag count="0" term="a_FOO0qVi Pljvjbæ9v5578717"/>
+      <tag count="0" term="a_FoO1725831"/>
+      <tag count="1" term="a_ foo18a01AøoCf 4518220"/>
+      <tag count="1" term="a_FOO1hzW5450992"/>
+    </subtags>
+  </facet>
+  <facet name="random" fields="evennull" order="locale" locale="da" maxtags="5" mincount="1" offset="0" prefix="" extractionms="18">
+  </facet>
+  <facet name="multi" fields="facet" order="index" maxtags="5" mincount="0" offset="-2" prefix="F" extractionms="0">
+    <subtags potentialtags="-1" totaltags="-1" count="12345678">
+      <tag count="465820" term="D"/>
+      <tag count="467009" term="E"/>
+      <tag count="465194" term="F"/>
+      <tag count="465960" term="G"/>
+      <tag count="464783" term="H"/>
+    </subtags>
+  </facet>
+  <facet name="depth" fields="classification" order="index" maxtags="5" mincount="0" hierarchical="true" levels="5" delimiter="/" extractionms="0">
+    <subtags mincount="0" mintotalcount="10" suborder="count" potentialtags="-1" totaltags="-1" count="20345654">
+      <tag count="465820" term="D"/>
+      <tag count="467009" term="E"/>
+      <tag count="465194" term="F"/>
+      <tag count="465960" term="G">
+        <subtags suborder="base" maxtags="5" totaltags="1" count="460">
+          <tag count="460" term="K"/>
+        </subtags>
+      </tag>
+      <tag count="464783" term="H"/>
+    </subtags>
+  </facet>
+</facetresponse>

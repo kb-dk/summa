@@ -1,0 +1,20 @@
+# Summa character transliteration
+# Transliteration rules for relaxed replace
+  
+# Syntax:
+#   "source" => "target"
+#     "source".length() > 0 (source cannot be empty.)
+#     "target".length() >= 0 (target can be empty.)
+
+# example:
+#   "À" => "A"
+#   "\u00C0" => "A"
+#   "\u00C0" => "\u0041"
+#   "ß" => "ss"
+#   "\t" => " "
+#   "\n" => ""
+
+" og " => " & "
+" and " => " & "
+" und " => " & "
+# Spansk: + "y" => "&"

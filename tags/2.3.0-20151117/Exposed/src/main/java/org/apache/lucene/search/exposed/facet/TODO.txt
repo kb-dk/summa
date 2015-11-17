@@ -1,0 +1,6 @@
+BUG: Reopen must reset docIDBase for FieldTermProviders
+
+FEATURE: Presentation tags coupled with sorting tags (1:1 mapping for any given document)
+FEATURE: Optimize faceting for all documents (initial navigation point) and for no documents (index lookup)
+FEATURE: Speedup by adding bulk reads to PackedInts
+
