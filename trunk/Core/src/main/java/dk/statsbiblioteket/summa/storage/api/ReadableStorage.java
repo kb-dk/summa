@@ -14,13 +14,13 @@
  */
 package dk.statsbiblioteket.summa.storage.api;
 
-import java.util.List;
-import java.util.Iterator;
-import java.io.IOException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * One of the two interfaces comprising the core {@link Storage} interface in
@@ -54,7 +54,7 @@ public interface ReadableStorage extends Configurable {
      * {@link StorageIterator} on the returned iterator key.
      *
      * @param time A timestamp in milliseconds. The time from the machine with
-     * the srotage is used in all cases, so no synchronization with universal
+     * the storage is used in all cases, so no synchronization with universal
      * time is needed.
      * @param base The name of the original record base or null if all bases are
      *             to be used.
