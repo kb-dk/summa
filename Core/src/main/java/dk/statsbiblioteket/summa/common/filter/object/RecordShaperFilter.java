@@ -163,7 +163,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     public static final String CONF_META_REQUIREMENT = "record.meta.requirement";
     public static final String DEFAULT_META_REQUIREMENT = REQUIREMENT.all.toString();
 
-    public static enum REQUIREMENT {all, none, one}
+    public enum REQUIREMENT {all, none, one}
 
 
     /**
