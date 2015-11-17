@@ -67,7 +67,7 @@ public class PagingCursor implements Cursor {
         pageRecords = 0;
         totalRecords = 0;
 
-        nextRecord = page.hasNext() ? page.next() : null;
+    //    nextRecord = page.hasNext() ? page.next() : null;
 
         log.debug("Created " + this + " for storage " + db + ", and result set " + firstPage);
     }
@@ -95,7 +95,7 @@ public class PagingCursor implements Cursor {
     @Override
     public boolean hasNext() {
         lastAccess = System.currentTimeMillis();
-        return nextRecord != null;
+        return nextRecord != null || ((nextRecord = nextValidRecord()) != null);
     }
 
     /**
@@ -118,8 +118,9 @@ public class PagingCursor implements Cursor {
         Record rec = nextRecord;
         lastMtimeTimestamp = page.currentMtimeTimestamp();
 
+        nextRecord = null;
         // update next record.
-        nextRecord = nextValidRecord();
+//        nextRecord = nextValidRecord();
         
         pageRecords++;
         totalRecords++;
