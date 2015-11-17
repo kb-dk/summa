@@ -15,11 +15,15 @@
 package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * {@code QueryFilter} is an immutable filter that is passed into the methods
@@ -53,7 +57,7 @@ import java.io.Serializable;
  *
  * <h3>Null Options</h3>
  * If the whole {@code QueryOptions} object or any one of the options on it
- * is {@code null} it indicates a fully permisive option.
+ * is {@code null} it indicates a fully permissive option.
  * A {@code QueryOptions} set to {@code null} will allow all records and do no
  * expansion of children or parents.
  *
@@ -80,8 +84,51 @@ import java.io.Serializable;
 public class QueryOptions implements Serializable {
     private static final long serialVersionUID = 196855L;
 
+    /**
+     * Either a list of {@link ATTRIBUTES} or a special keyword 'null', 'all' or 'none'.
+     * </p><p>
+     * Optional. Default is 'null'.
+     */
+    public static final String CONF_ATTRIBUTES = "queryoptions.attributes";
+    public static final String DEFAULT_ATTRIBUTES = "null";
+
+    /**
+     * Whether or not deleted records should be fetched when iterating.
+     * </p><p>
+     * Optional. Valid values are 'true' (only deleted), 'false' (only non-deleted) and 'null' (pass-through).
+     * Default is 'null'
+     */
+    public static final String CONF_FILTER_DELETED = "queryoptions.filter.deleted";
+    public static final String DEFAULT_FILTER_DELETED = "null";
+
+    /**
+     * Whether or not indexable records should be fetched when iterating.
+     * </p><p>
+     * Optional. Valid values are 'true' (only indexable), 'false' (only non-indexable) and 'null' (pass-through).
+     * Default is 'null'
+     */
+    public static final String CONF_FILTER_INDEXABLE = "queryoptions.filter.indexable";
+    public static final String DEFAULT_FILTER_INDEXABLE = "null";
+
+    /**
+     * If > 0, child records are expanded.
+     * </p></p>
+     * Optional. Default is 3.
+     */
+    public static final String CONF_CHILD_DEPTH = "queryoptions.child.depth";
+    public static final int DEFAULT_CHILD_DEPTH = 3;
+
+    /**
+     * If > 0, parent records are expanded.
+     * </p></p>
+     * Optional. Default is 3.
+     */
+    public static final String CONF_PARENT_DEPTH = "queryoptions.parent.depth";
+    public static final int DEFAULT_PARENT_DEPTH = 3;
+
+
     /* The order of these are significant as they are used by StatementHandler to generate SQL queries */
-    public static enum ATTRIBUTES {
+    public enum ATTRIBUTES {
         ID,
         BASE,
         DELETED,
@@ -159,6 +206,65 @@ public class QueryOptions implements Serializable {
     protected StringMap meta;
 
     /**
+     * If a single QueryOptions parameter is given in the configuration, a QueryOption will be created.
+     * @param conf configuration.
+     * @return a QueryOption from the given parameters or null if no QueryOptions-parameters are given.
+     */
+    public static QueryOptions getOptions(Configuration conf) {
+        boolean hasQueryOption = false;
+        for (Map.Entry<String, Serializable> entry : conf) {
+            if (entry.getKey().startsWith("queryoptions.")) {
+                hasQueryOption = true;
+                break;
+            }
+        }
+        if (!hasQueryOption) {
+            return null;
+        }
+
+
+        Boolean deletedFilter = getBool(conf, CONF_FILTER_DELETED, DEFAULT_FILTER_DELETED);
+        Boolean indexableFilter = getBool(conf, CONF_FILTER_INDEXABLE, DEFAULT_FILTER_INDEXABLE);
+        int childDepth = conf.getInt(CONF_CHILD_DEPTH, DEFAULT_CHILD_DEPTH);
+        int parentDepth = conf.getInt(CONF_PARENT_DEPTH, DEFAULT_PARENT_DEPTH);
+
+        List<String> rawAttributes = conf.getStrings(CONF_ATTRIBUTES, Collections.singletonList(DEFAULT_ATTRIBUTES));
+        ATTRIBUTES[] attributes;
+        if (rawAttributes.size() == 1 && "null".equals(rawAttributes.get(0))) {
+            attributes = null;
+        } else if (rawAttributes.size() == 1 && "all".equals(rawAttributes.get(0))) {
+            attributes = ATTRIBUTES_ALL;
+            if (childDepth <= 0) {
+                attributes = removeAttribute(attributes, ATTRIBUTES.CHILDREN);
+            }
+            if (parentDepth <= 0) {
+                attributes = removeAttribute(attributes, ATTRIBUTES.PARENTS);
+            }
+        } else if (rawAttributes.size() == 1 && "none".equals(rawAttributes.get(0))) {
+            attributes = new ATTRIBUTES[0];
+            if (childDepth > 0) {
+                attributes = addAttribute(attributes, ATTRIBUTES.CHILDREN);
+            }
+            if (parentDepth > 0) {
+                attributes = addAttribute(attributes, ATTRIBUTES.PARENTS);
+            }
+        } else {
+            attributes = new ATTRIBUTES[rawAttributes.size()];
+            for (int i = 0 ; i < rawAttributes.size() ; i++) {
+                attributes[i] = ATTRIBUTES.valueOf(rawAttributes.get(i));
+            }
+        }
+        QueryOptions options = new QueryOptions(deletedFilter, indexableFilter, childDepth, parentDepth);
+        options.setAttributes(attributes);
+        return options;
+    }
+
+    private static Boolean getBool(Configuration conf, String key, String defaultValue) {
+        String val = conf.getString(key, defaultValue);
+        return "null".equals(val) ? null : Boolean.parseBoolean(val);
+    }
+
+    /**
      * Constructor for an immutable filter that can be passed to
      * {@link ReadableStorage}, for further constraints on which records to
      * fetch. This constructor makes it possible to define attributes from
@@ -226,7 +332,7 @@ public class QueryOptions implements Serializable {
      */
     public QueryOptions() {
         this(null, null, 0, 0, null);
-    }    
+    }
 
     /**
      * Create a clone of {@code original}.
@@ -440,31 +546,46 @@ public class QueryOptions implements Serializable {
     }
 
     public synchronized void addAttribute(ATTRIBUTES addition) {
+        attributes = addAttribute(attributes, addition);
+    }
+    public static ATTRIBUTES[] addAttribute(ATTRIBUTES[] attributes, ATTRIBUTES addition) {
         if (attributes == null) {
             attributes = new ATTRIBUTES[1];
             attributes[0] = addition;
-                return;
+                return attributes;
         }
         for (ATTRIBUTES a: attributes) {
             if (addition == a) {
-                return;
+                return attributes;
             }
         }
         ATTRIBUTES[] newAttributes = new ATTRIBUTES[attributes.length + 1];
         System.arraycopy(attributes, 0, newAttributes, 0, attributes.length);
         newAttributes[newAttributes.length-1] = addition;
-        attributes = newAttributes;
+        return newAttributes;
+    }
+
+    public synchronized boolean hasAttribute(ATTRIBUTES attribute) {
+        for (ATTRIBUTES current: attributes) {
+            if (attribute == current) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public synchronized void removeAttribute(ATTRIBUTES remover) {
+        attributes = removeAttribute(attributes, remover);
+    }
+    public static ATTRIBUTES[] removeAttribute(ATTRIBUTES[] attributes, ATTRIBUTES remover) {
         if (attributes == null) {
-            return;
+            return null;
         }
         if (attributes.length == 1) {
             if (attributes[0] == remover) {
                 attributes = null;
             }
-            return;
+            return attributes;
         }
         int pos = 0;
         for (ATTRIBUTES existing : attributes) {
@@ -477,6 +598,7 @@ public class QueryOptions implements Serializable {
             System.arraycopy(attributes, 0, newAttributes, 0, attributes.length-1);
             attributes = newAttributes;
         }
+        return attributes;
     }
 
     @Override
