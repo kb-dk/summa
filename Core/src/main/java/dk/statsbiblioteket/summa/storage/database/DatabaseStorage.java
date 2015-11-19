@@ -1754,13 +1754,14 @@ public abstract class DatabaseStorage extends StorageBase {
             executeTime += System.nanoTime();
 
             long iterateTime = -System.nanoTime();
-            if (!resultSet.next() && parentId != recordId) { 
-                String  msg="Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"+ parentId + " .Only children are loaded. Original recordId in query:"+orgRecordId;
+            if (!resultSet.next() && parentId != null && !Objects.equals(parentId, recordId)) {
+                String  msg="Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"
+                            + parentId + " .Only children are loaded. Original recordId in query:" + orgRecordId;
                 log.warn(msg);           
             //    throw new RuntimeException(msg);
                 parentId=orgRecordId; //Use this as parent
             }
-            if (parentId == recordId){ // No parent found. Using recordid as top-parent
+            if (parentId != null && Objects.equals(parentId, recordId)){ // No parent found. Using recordid as top-parent
                 stmt.setString(1, recordId);//using the record requested as top-parent
                 resultSet = stmt.executeQuery();
                 boolean next = resultSet.next();                                                
@@ -2134,7 +2135,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (iteratorKey == EMPTY_ITERATOR_KEY) {
             throw new NoSuchElementException("Empty cursor");
         }
-        long current = -System.nanoTime();
+        lastNextTimeNS = -System.nanoTime();
 
         cursorGet -= System.nanoTime();
         ConnectionCursor cursor = iterators.get(iteratorKey);
@@ -2155,29 +2156,36 @@ public abstract class DatabaseStorage extends StorageBase {
 
         try {
             expand -= System.nanoTime();
-            Record expanded = expandRelationsWithConnection(r, cursor.getQueryOptions(), cursor.getConnection());
+            lastIterated = expandRelationsWithConnection(r, cursor.getQueryOptions(), cursor.getConnection());
             //Record expanded = expandRelations(r, cursor.getQueryOptions());
             expand += System.nanoTime();
             nextCalls++;
-            contentRawSize += expanded.getContent(false).length;
-            current += System.nanoTime();
+            contentRawSize += lastIterated.getContent(false).length;
+            lastNextTimeNS += System.nanoTime();
 
             if (System.currentTimeMillis() >= logNextMS) {
-                log.debug("next(" + iteratorKey + ") in " + current/M + "ms, totalCalls=" + nextCalls
-                          + ", totalRawSize=" + contentRawSize/1048576 + "MB, "
-                          + (contentRawSize/1024/nextCalls) + " KB/Record avg"
-                          + ", cursorGet=" + stat(cursorGet, nextCalls) + ", cursorNext=" + stat(cursorNext, nextCalls)
-                          + ", expandRelations=" + stat(expand, nextCalls) + " id=" + expanded.getId() + ", parents=" +
-                count(expanded.getParents()) + ", children=" + count(expanded.getChildren()));
+                log.info(getIterationStats());
                 logNextMS = System.currentTimeMillis() + logEveryMS;
             }
-            return expanded;
+            return lastIterated;
         } catch (Exception e) {
             log.warn("Failed to expand relations for '" + r.getId() + "'", e);
             return r;
         }
     }
 
+    private String getIterationStats() {
+        if (lastIterated == null) {
+            return "iteration(N/A)";
+        }
+        return "iteration(lastRecord in " + lastNextTimeNS/M + "ms, totalCalls=" + nextCalls
+               + ", totalRawSize=" + contentRawSize/1048576 + "MB, "
+               + (contentRawSize/1024/nextCalls) + " KB/Record avg"
+               + ", cursorGet=" + stat(cursorGet, nextCalls) + ", cursorNext=" + stat(cursorNext, nextCalls)
+               + ", expandRelations=" + stat(expand, nextCalls) + " id=" + lastIterated.getId() + ", parents=" +
+               count(lastIterated.getParents()) + ", children=" + count(lastIterated.getChildren()) + ")";
+    }
+    private Record lastIterated = null;
     private int count(List<Record> records) {
         return records == null ? 0 : records.size();
     }
@@ -2189,8 +2197,9 @@ public abstract class DatabaseStorage extends StorageBase {
                              ns/M, ns/M/calls, calls*M/ns);
     }
 
-    private final long logEveryMS = 10000;
+    private final long logEveryMS = 60000;
     private long logNextMS = System.currentTimeMillis() + logEveryMS;
+    private long lastNextTimeNS = 0;
     private long nextCalls = 0;
     private long cursorGet = 0;
     private long cursorNext = 0;
@@ -4360,7 +4369,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public void close() throws IOException {
         log.info("Closing DatabaseStorage");
         iteratorReaper.stop();
-        log.info("DatabaseStorage closed");
+        log.info("DatabaseStorage closed: " + getIterationStats());
     }
 
     /**
@@ -4570,8 +4579,8 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public String toString() {
         return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d,"
-                             + "pageSizeUpdate=%d, expandRelativesList=%b, defaultGetOptions=%s)",
+                             + "pageSizeUpdate=%d, expandRelativesList=%b, defaultGetOptions=%s) %s",
                              iterators.size(), useLazyRelations, usePagingModel, pageSize,
-                             pageSizeUpdate, expandRelativesLists, defaultGetOptions);
+                             pageSizeUpdate, expandRelativesLists, defaultGetOptions, getIterationStats());
     }
 }
