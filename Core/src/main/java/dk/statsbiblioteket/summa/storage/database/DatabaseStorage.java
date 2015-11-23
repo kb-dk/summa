@@ -50,8 +50,8 @@ import java.util.*;
 state = QAInfo.State.IN_DEVELOPMENT,
 author = "te, teg, mke")
 public abstract class DatabaseStorage extends StorageBase {
-    private static Log recordlog = LogFactory.getLog("storagequeries");
-    private static Log log = LogFactory.getLog(DatabaseStorage.class);
+    private static final Log recordlog = LogFactory.getLog("storagequeries");
+    private static final Log log = LogFactory.getLog(DatabaseStorage.class);
 
     /**
      * Internal batch jobs are basically a hack. If {@link #batchJob} is called with INTERNAL_BATCH_JOB as job name,
@@ -1935,7 +1935,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
         try {
             if (log.isDebugEnabled()) {
-                log.debug("getRecord(" + id + ", ...) with meta " + options.meta().toFormal());
+                log.debug("getRecord(" + id + ", ...) with meta "
+                          + (options.meta() == null ? "N/A" : options.meta().toFormal()));
             }
             Record record = getRecordWithConnection(id, options, conn);
             profiler.beat();
