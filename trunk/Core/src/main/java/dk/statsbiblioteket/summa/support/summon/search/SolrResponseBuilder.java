@@ -514,7 +514,7 @@ public class SolrResponseBuilder implements Configurable {
     // <lst name="crawl_date">
     private void parseFacetRanges(XMLStreamReader xml, final Request request, ResponseCollection responses)
             throws XMLStreamException {
-        log.info("Parsing facet_ranges");
+        log.trace("Parsing facet_ranges");
         long startTime = System.currentTimeMillis();
         final FacetRangeResponse facetRangeResponse = new FacetRangeResponse();
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
