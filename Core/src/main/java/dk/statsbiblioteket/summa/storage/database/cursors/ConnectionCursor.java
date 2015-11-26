@@ -14,8 +14,6 @@
  */
 package dk.statsbiblioteket.summa.storage.database.cursors;
 
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.sql.Connection;
@@ -27,62 +25,6 @@ import java.sql.Connection;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 
-public class ConnectionCursor implements Cursor {
-    private final Cursor inner;
-    private final Connection connection;
-
-    public ConnectionCursor(Cursor inner, Connection connection) {
-        this.inner = inner;
-        this.connection = connection;
-    }
-
-    public Connection getConnection() {
-        return connection;
-    }
-
-    public Cursor getInnerCursor() {
-        return inner;
-    }
-
-    /* Delegates below */
-
-    @Override
-    public void close() {
-        inner.close();
-    }
-
-    @Override
-    public long getKey() {
-        return inner.getKey();
-    }
-
-    @Override
-    public long getLastAccess() {
-        return inner.getLastAccess();
-    }
-
-    @Override
-    public QueryOptions getQueryOptions() {
-        return inner.getQueryOptions();
-    }
-
-    @Override
-    public String getBase() {
-        return inner.getBase();
-    }
-
-    @Override
-    public boolean hasNext() {
-        return inner.hasNext();
-    }
-
-    @Override
-    public Record next() {
-        return inner.next();
-    }
-
-    @Override
-    public void remove() {
-        inner.remove();
-    }
+public interface ConnectionCursor extends Cursor {
+    Connection getConnection();
 }
