@@ -21,6 +21,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.NoSuchElementException;
 
 /**
@@ -33,7 +34,7 @@ import java.util.NoSuchElementException;
  * and also speed up the database in general because the database never
  * needs to create temporary tables or hold locks for long periods of time.  
  */
-public class PagingCursor implements Cursor {
+public class PagingCursor implements ConnectionCursor {
 
     private static final Log log = LogFactory.getLog(PagingCursor.class);
 
@@ -70,6 +71,11 @@ public class PagingCursor implements Cursor {
     //    nextRecord = page.hasNext() ? page.next() : null;
 
         log.debug("Created " + this + " for storage " + db + ", and result set " + firstPage);
+    }
+
+    @Override
+    public Connection getConnection() {
+        return page.getConnection();
     }
 
     @Override
@@ -155,7 +161,7 @@ public class PagingCursor implements Cursor {
         try {
             // Casting is a hack. It only works because we happen to know the inner details of DatabaseStorage
             page = (ResultSetCursor) db.getRecordsModifiedAfterCursor(
-                    lastMtimeTimestamp, getBase(), getQueryOptions()).getInnerCursor();
+                    lastMtimeTimestamp, getBase(), getQueryOptions());
 
             if (page == null){
                log.info("No futher pages, unclear why this happens");

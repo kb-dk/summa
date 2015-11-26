@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,8 +36,8 @@ import java.util.NoSuchElementException;
         state = QAInfo.State.QA_NEEDED,
         author = "mke",
         reviewers = "hbk")
-public class ResultSetCursor implements Cursor {
-    private Log log = LogFactory.getLog(ResultSetCursor.class);
+public class ResultSetCursor implements ConnectionCursor {
+    private static final Log log = LogFactory.getLog(ResultSetCursor.class);
 
     private long firstAccess;
     private long lastAccess;
@@ -148,6 +149,15 @@ public class ResultSetCursor implements Cursor {
         } else {
             log.trace("Constructed with initial hasNext: " + resultSetHasNext + ", nextValidRecord: '" + nextRecord
                       + "', on base " + base);
+        }
+    }
+
+    @Override
+    public Connection getConnection() {
+        try {
+            return stmt.getConnection();
+        } catch (SQLException e) {
+            throw new IllegalStateException("There should be an open connection for the inner statement", e);
         }
     }
 

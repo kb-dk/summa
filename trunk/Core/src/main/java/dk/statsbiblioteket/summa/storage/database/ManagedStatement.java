@@ -14,6 +14,9 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -30,6 +33,7 @@ import java.util.Calendar;
  * {@link javax.sql.StatementEventListener}s.
  */
 public class ManagedStatement implements PreparedStatement {
+    private static final Log log = LogFactory.getLog(ManagedStatement.class);
 
     private PreparedStatement stmt;
 
@@ -338,7 +342,9 @@ public class ManagedStatement implements PreparedStatement {
     @Override
     public void close() throws SQLException {
         try {
-            stmt.getConnection().close();
+            if (!stmt.getConnection().isClosed()) {
+                stmt.getConnection().close();
+            }
         } finally {
             stmt.close();
         }

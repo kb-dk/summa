@@ -1375,8 +1375,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         if (usePagingModel) {
-            iter = new ConnectionCursor(
-                    new PagingCursor(this, (ResultSetCursor) iter.getInnerCursor()), iter.getConnection());
+            iter = new PagingCursor(this, (ResultSetCursor)iter);
         }
         return registerCursor(iter);
     }
@@ -1473,12 +1472,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
         // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
         // be closed together with that iterator
-        try {
-            return new ConnectionCursor(
-                    doGetRecordsModifiedAfterCursor(mtime, base, options, stmt), stmt.getConnection());
-        } catch (SQLException e) {
-            throw new IllegalStateException("Unable to get connection from statement", e);
-        }
+        return doGetRecordsModifiedAfterCursor(mtime, base, options, stmt);
     }
 
     protected boolean hasMTime(QueryOptions options) {
