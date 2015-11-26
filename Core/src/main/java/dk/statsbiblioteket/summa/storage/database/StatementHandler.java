@@ -44,10 +44,18 @@ public abstract class StatementHandler {
     public abstract String getPagingStatement(String sql, boolean readOnly);
     public abstract MiniConnectionPoolManager.StatementHandle prepareStatement(String sql) throws SQLException;
 
-    private static final String RELATIONS_CLAUSE=
+    private static final String RELATIONS_CLAUSE_BOTH =
         DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "="
         + DatabaseStorage.RELATIONS + "." + DatabaseStorage.PARENT_ID_COLUMN
         + " OR " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "="
+        + DatabaseStorage.RELATIONS + "." + DatabaseStorage.CHILD_ID_COLUMN;
+
+    private static final String RELATIONS_CLAUSE_ONLY_CHILDREN =
+        DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "="
+        + DatabaseStorage.RELATIONS + "." + DatabaseStorage.PARENT_ID_COLUMN;
+
+    private static final String RELATIONS_CLAUSE_ONLY_PARENTS =
+        DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "="
         + DatabaseStorage.RELATIONS + "." + DatabaseStorage.CHILD_ID_COLUMN;
 
     /**
@@ -64,13 +72,13 @@ public abstract class StatementHandler {
             + " AND " + DatabaseStorage.MTIME_COLUMN + ">?"
             + " ORDER BY " + DatabaseStorage.MTIME_COLUMN
                  :
-            "SELECT " + getColumns(options, false)
-            + " FROM " + DatabaseStorage.RECORDS
-            + " LEFT JOIN " + DatabaseStorage.RELATIONS
-            + " ON " + RELATIONS_CLAUSE
-            + " WHERE " + DatabaseStorage.BASE_COLUMN + "=?"
-            + " AND " + DatabaseStorage.MTIME_COLUMN + ">?"
-            + " ORDER BY " + DatabaseStorage.MTIME_COLUMN,
+                    "SELECT " + getColumns(options, false)
+                    + " FROM " + DatabaseStorage.RECORDS
+                    + " LEFT JOIN " + DatabaseStorage.RELATIONS
+                    + " ON " + RELATIONS_CLAUSE_BOTH
+                    + " WHERE " + DatabaseStorage.BASE_COLUMN + "=?"
+                    + " AND " + DatabaseStorage.MTIME_COLUMN + ">?"
+                    + " ORDER BY " + DatabaseStorage.MTIME_COLUMN,
             true
         ));
     }
@@ -88,25 +96,54 @@ public abstract class StatementHandler {
             + " WHERE " + DatabaseStorage.MTIME_COLUMN + ">?"
             + " ORDER BY " + DatabaseStorage.MTIME_COLUMN
                  :
-            "SELECT " + getColumns(options, false)
-            + " FROM " + DatabaseStorage.RECORDS
-            + " LEFT JOIN " + DatabaseStorage.RELATIONS
-            + " ON " + RELATIONS_CLAUSE
-            + " WHERE " + DatabaseStorage.MTIME_COLUMN + ">?"
-            + " ORDER BY " + DatabaseStorage.MTIME_COLUMN,
+                    "SELECT " + getColumns(options, false)
+                    + " FROM " + DatabaseStorage.RECORDS
+                    + " LEFT JOIN " + DatabaseStorage.RELATIONS
+                    + " ON " + RELATIONS_CLAUSE_BOTH
+                    + " WHERE " + DatabaseStorage.MTIME_COLUMN + ">?"
+                    + " ORDER BY " + DatabaseStorage.MTIME_COLUMN,
             true
         ));
     }
 
     public MiniConnectionPoolManager.StatementHandle getGetRecord(QueryOptions options) {
+        if (options.hasAttribute(QueryOptions.ATTRIBUTES.PARENTS)
+            && !options.hasAttribute(QueryOptions.ATTRIBUTES.CHILDREN)) {
+            return generateStatementHandle(
+                    "SELECT " + getColumns(options, false)
+                    + " FROM " + DatabaseStorage.RECORDS
+                    + " LEFT JOIN " + DatabaseStorage.RELATIONS
+                    + " ON " + RELATIONS_CLAUSE_ONLY_PARENTS
+                    + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
+            );
+        }
+        if (!options.hasAttribute(QueryOptions.ATTRIBUTES.PARENTS)
+            && options.hasAttribute(QueryOptions.ATTRIBUTES.CHILDREN)) {
+            return generateStatementHandle(
+                    "SELECT " + getColumns(options, false)
+                    + " FROM " + DatabaseStorage.RECORDS
+                    + " LEFT JOIN " + DatabaseStorage.RELATIONS
+                    + " ON " + RELATIONS_CLAUSE_ONLY_CHILDREN
+                    + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
+            );
+        }
+        if (!options.hasAttribute(QueryOptions.ATTRIBUTES.PARENTS)
+            && !options.hasAttribute(QueryOptions.ATTRIBUTES.CHILDREN)) {
+            return generateStatementHandle(
+                    "SELECT " + getColumns(options, false)
+                    + " FROM " + DatabaseStorage.RECORDS
+                    + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
+            );
+        }
         return generateStatementHandle(
-            "SELECT " + getColumns(options, false)
-            + " FROM " + DatabaseStorage.RECORDS
-            + " LEFT JOIN " + DatabaseStorage.RELATIONS
-            + " ON " + RELATIONS_CLAUSE
-            + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
+                "SELECT " + getColumns(options, false)
+                + " FROM " + DatabaseStorage.RECORDS
+                + " LEFT JOIN " + DatabaseStorage.RELATIONS
+                + " ON " + RELATIONS_CLAUSE_BOTH
+                + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.ID_COLUMN + "=?"
         );
-    }
+
+        }
     
     public MiniConnectionPoolManager.StatementHandle getGetRecordFullObjectTree() {
         return generateStatementHandle(

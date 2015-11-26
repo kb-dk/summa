@@ -36,7 +36,7 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode">
+    <logger name="dk.statsbiblioteket.summa.storage.database">
         <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </logger>

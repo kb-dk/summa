@@ -1934,8 +1934,8 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("getRecord(" + id + ", ...) with meta "
+            if (log.isTraceEnabled()) {
+                log.trace("Calling getRecord(" + id + ", ...) with meta "
                           + (options.meta() == null ? "N/A" : options.meta().toFormal()));
             }
             Record record = getRecordWithConnection(id, options, conn);
@@ -1974,11 +1974,12 @@ public abstract class DatabaseStorage extends StorageBase {
             }
             return getPrivateRecord(id);
         }
-//        long statement = System.nanoTime();
+        long fullStart = System.nanoTime();
+        //long statement = System.nanoTime();
         // TODO: Use the handle directly
         StatementHandle handle = statementHandler.getGetRecord(options);
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
-//        log.debug("getRecordWithConnection***: Prepared statement in " + (System.nanoTime()-statement)/M + "ms");
+        //log.debug("getRecordWithConnection***: Prepared statement in " + (System.nanoTime()-statement)/M + "ms");
         Record record = null;
         try {
 //            long exe = System.nanoTime();
@@ -1992,7 +1993,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             try {
-  //              long scan = System.nanoTime();
+//                long scan = System.nanoTime();
                 record = scanRecord(resultSet, options);
 //                log.debug("getRecordWithConnection***: ScanRecord in " + (System.nanoTime()-scan)/M + "ms");
 
@@ -2014,7 +2015,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     }
                     return null;
                 }
-  //              long expand = System.nanoTime();
+//                long expand = System.nanoTime();
                 expandRelationsWithConnection(record, options, conn);
 //                log.debug("getRecordWithConnection***: Expand in " + (System.nanoTime()-expand)/M + "ms");
 
@@ -2031,7 +2032,7 @@ public abstract class DatabaseStorage extends StorageBase {
 //            long closeS = System.nanoTime();
             closeStatement(stmt);
 //            log.debug("getRecordWithConnection***: CloseStatement in " + (System.nanoTime()-closeS)/M + "ms");
-
+//            log.debug("Full getRecordWithConnection***: " + (System.nanoTime()-fullStart)/MI + "ms");
         }
 
         return record;
@@ -2098,6 +2099,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * are any parents to expand.
      */
     private void expandParentRecords(Record record, RecursionQueryOptions options, Connection conn) throws IOException {
+//        log.debug("expandParentRecords*** id=" + record.getId());
         if (options.parentRecursionHeight() == 0) {
             if (options.parentHeight() > 1) {
                 log.debug("Skipping further expansion of parent records for " + record + " as the maximum expansion "
@@ -2107,6 +2109,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         List<String> parentIds = record.getParentIds();
+//        log.debug("expandParentRecords*** got parentIDs=" + (parentIds == null ? "null" : parentIds.size() == 1 ? parentIds.get(0) : parentIds.size() + " parents"));
 
         if (parentIds != null && !parentIds.isEmpty()) {
 
@@ -2239,12 +2242,14 @@ public abstract class DatabaseStorage extends StorageBase {
         if (options.childDepth() != 0) {
             //opts = RecursionQueryOptions.wrap(options);
             opts = RecursionQueryOptions.asChildOnlyOptions(options);
+//            log.debug("*** Expanding child records");
             expandChildRecords(r, opts, conn);
         }
 
         if (options.parentHeight() != 0) {
             //opts = RecursionQueryOptions.wrap(options);
             opts = RecursionQueryOptions.asParentsOnlyOptions(options);
+            //log.debug("*** Expanding parent records");
             expandParentRecords(r, opts, conn);
         }
         return r;
@@ -4109,7 +4114,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public Record scanRecord(ResultSet resultSet, ResultSetCursor iter, QueryOptions options)
             throws SQLException, IOException {
         boolean hasNext;
-//        long start = System.nanoTime();
+        long start = System.nanoTime();
         String id = resultSet.getString(ID_KEY);
 
         if ("".equals(id)) {
@@ -4125,13 +4130,13 @@ public abstract class DatabaseStorage extends StorageBase {
         boolean deleted = getIntBool(resultSet, DELETED_FLAG_KEY, false);
         boolean indexable = getIntBool(resultSet, INDEXABLE_FLAG_KEY, true);
         boolean hasRelations = getIntBool(resultSet, HAS_RELATIONS_FLAG_KEY, false);
-//        log.debug("DatabaseStorage***: Booleans " + (System.nanoTime()-start)/M);
+//        log.debug("scanRecord***: Booleans " + (System.nanoTime()-start)/M);
         byte[] gzippedContent = resultSet.getBytes(GZIPPED_CONTENT_FLAG_KEY);
-//        log.debug("DatabaseStorage***: content " + (System.nanoTime()-start)/M);
+//        log.debug("scanRecord***: content " + (System.nanoTime()-start)/M);
         long ctime = getLong(resultSet, CTIME_KEY, 0);
         long mtime = getLong(resultSet, MTIME_KEY, 0);
         byte[] meta = resultSet.getBytes(META_KEY);
-//        log.debug("DatabaseStorage***: meta" + (System.nanoTime()-start)/M);
+//        log.debug("scanRecord***: meta" + (System.nanoTime()-start)/M);
         String parentIds = resultSet.getString(PARENT_IDS_KEY);
         String childIds = resultSet.getString(CHILD_IDS_KEY);
 //        log.debug("DatabaseStorage***: parent/child ids" + (System.nanoTime()-start)/M + " parents=" + parentIds + ", childIDs=" + childIds);
@@ -4155,7 +4160,9 @@ public abstract class DatabaseStorage extends StorageBase {
          * with different parent and child column values. We need to iterate
          * through all rows with the same id and collect the different parents
          * and children listed */
+        int relativesCount = 0;
         while ((hasNext = resultSet.next()) && id.equals(resultSet.getString(ID_KEY))) {
+            relativesCount++;
             if (!expandRelativesLists) { // TODO: Check if we can skip ahead or maybe limit the results to 1
                 continue;
             }
@@ -4232,7 +4239,7 @@ public abstract class DatabaseStorage extends StorageBase {
             iter.setResultSetHasNext(hasNext);
             iter.setRecordMtimeTimestamp(mtime);
         }
-//        log.debug("DatabaseStorage***: readyfornext " + (System.nanoTime()-start)/M);
+//        log.debug("scanRecord***: readyfornext " + (System.nanoTime()-start)/M + " with " + relativesCount + " relatives count");
 
         // We use salted unique timestamps generated by a
         // UniqueTimestampGenerator so we have to extract the system time from
