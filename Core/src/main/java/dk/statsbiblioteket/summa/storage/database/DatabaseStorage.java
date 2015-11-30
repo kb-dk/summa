@@ -3752,9 +3752,11 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setString(2, id);
             stmt.executeUpdate();
             r = getRecordWithConnection(id, null, conn);
-            updateLastModficationTimeForBase(r.getBase(), conn);
+            if (r != null) {
+                updateLastModficationTimeForBase(r.getBase(), conn);
+            }
         } catch (NullPointerException e) {
-            throw new NullPointerException("The retrieved record for id '" + id + "' was " + r);
+            log.warn("touch(" + id + ") failed as the retrieved Record was " + r);
         } finally {
             closeStatement(stmt);
         }
