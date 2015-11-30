@@ -1,0 +1,724 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sample document for the Stable Summa Search Descriptor format.
+     This should not be used for anything else than understanding of
+     the legacy format. -->
+<IndexDescriptor indexPath="/home/summa/persistentFiles/index_new/full">
+<singleFields>
+<field hasSuggest="false" isInFreetext="false" isRepeated="false" name="cluster">
+<resolver/>
+<alias xml:lang="da">klynge</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="lso">
+<resolver/>
+<alias xml:lang="da">lvp</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="author_descr">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">fb</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="barcode">
+<resolver>horizon</resolver>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="barcode_normalised">
+<resolver>horizon</resolver>
+<alias xml:lang="da">l_stregkode</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="call">
+<resolver>horizon</resolver>
+<alias xml:lang="da">opst</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>4.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="false" isRepeated="true" name="collection">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">samling</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="collection_normalised">
+<resolver>horizon</resolver>
+<alias xml:lang="da">l_samling</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="country">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ul</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="itype">
+<resolver>horizon</resolver>
+<alias xml:lang="da">matkat</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>4.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="l_call">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lop</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="false" isRepeated="true" name="location">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">lokation</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="location_normalised">
+<resolver>horizon</resolver>
+<alias xml:lang="da">l_lokation</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="ma_long">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ma_lang</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="false" isRepeated="true" name="op">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">op</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="original_language">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ou</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="other">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">andet</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="place">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">pu</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="series_normalised">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lse</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="ww">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ww</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="ip">
+<resolver>http:www.statsbiblioteket.dk/etss</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ip</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>4.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="lip">
+<resolver>http:www.statsbiblioteket.dk/etss</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">lip</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="commercials_subject">
+<resolver>https://sedna.statsbiblioteket.dk:8280/urn/</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">reklamefilm_subj</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>6.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="author_normalised">
+<resolver>oai</resolver>
+<alias xml:lang="da">lfo</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="format">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">format</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="lang">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">sp</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="llang">
+<resolver>oai</resolver>
+<alias xml:lang="da">lsp</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="no">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">no</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="false" isRepeated="false" name="openUrl">
+<resolver>oai</resolver>
+<alias xml:lang="da">openUrl</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>stored</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="pu">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">fl</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="py">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">år</alias>
+<alias xml:lang="da">?r</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="rt">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">rt</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="false" isRepeated="false" name="shortformat">
+<resolver>oai</resolver>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>stored</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="sort_title" sortLocale="da">
+<resolver>oai</resolver>
+<alias xml:lang="da">sort_titel</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>6.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="sort_year_asc">
+<resolver>oai</resolver>
+<alias xml:lang="da">sort_år_asc</alias>
+<alias xml:lang="da">sort_?r_asc</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="sort_year_desc">
+<resolver>oai</resolver>
+<alias xml:lang="da">sort_år_desc</alias>
+<alias xml:lang="da">sort_?r_desc</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="year">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">year</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer</analyzer>
+<type>number</type>
+<boost>2.0</boost>
+</field>
+</singleFields>
+<groups>
+<group name="ti">
+<alias xml:lang="da">ti</alias>
+<fields>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="title">
+<resolver>doms</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">titel</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="se">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">se</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>8.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="main_titel">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ht</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>6.0</boost>
+</field>
+</fields>
+</group>
+<group name="cl">
+<alias xml:lang="da">cl</alias>
+<fields>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="class_other">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">klassif</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>5.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="ddc_kw">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ddc_kw</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="dk">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">dk</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="inst">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">inst</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="kl">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">kl</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="lcc_kw">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">lcc_kw</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>5.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="nlm_kw">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">nlm_kw</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>8.0</boost>
+</field>
+</fields>
+</group>
+<group name="au">
+<alias xml:lang="da">fo</alias>
+<fields>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="author_main">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">po</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="author_person">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">pe</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="au_other">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">fo_andet</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>6.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="author_corporation">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ko</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+</fields>
+</group>
+<group name="lma">
+<alias xml:lang="da">lma</alias>
+<fields>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="lma_long">
+<resolver>oai</resolver>
+<alias xml:lang="da">lma_lang</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>1.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="false" isRepeated="false" name="ltarget">
+<resolver>oai</resolver>
+<alias xml:lang="da">datakilde</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>1.0</boost>
+</field>
+</fields>
+</group>
+<group name="ma">
+<alias xml:lang="da">ma</alias>
+<fields>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="ma_short">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ma_kort</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>4.0</boost>
+</field>
+</fields>
+</group>
+<group name="numbers">
+<alias xml:lang="da">nr</alias>
+<fields>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="isbn_other">
+<resolver>aleph</resolver>
+<alias xml:lang="da">ib</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer</analyzer>
+<type>number</type>
+<boost>6.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="issn_other">
+<resolver>aleph</resolver>
+<alias xml:lang="da">is</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer</analyzer>
+<type>number</type>
+<boost>6.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="isbn">
+<resolver>horizon</resolver>
+<alias xml:lang="da">ib</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer</analyzer>
+<type>number</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="issn">
+<resolver>horizon</resolver>
+<alias xml:lang="da">is</alias>
+<alias xml:lang="da">in</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer</analyzer>
+<type>number</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="number">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">nummer</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer</analyzer>
+<type>number</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="false" name="standard_number">
+<resolver>horizon</resolver>
+<alias xml:lang="da">is</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer</analyzer>
+<type>number</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="id">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">id</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer</analyzer>
+<type>number</type>
+<boost>8.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="ww">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ww</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>1.0</boost>
+</field>
+</fields>
+</group>
+<group name="lsubj">
+<alias xml:lang="da">lem</alias>
+<fields>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="mesh">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lms</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="su_corp">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lek</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="su_lc">
+<resolver>horizon</resolver>
+<alias xml:lang="da">llcm</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="su_pe">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lep</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lsu_ser_sol">
+<resolver>http:www.statsbiblioteket.dk/etss</resolver>
+<alias xml:lang="da">lsu_ser_sol</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lsu_ulrichs">
+<resolver>http:www.statsbiblioteket.dk/etss</resolver>
+<alias xml:lang="da">lsu_ulrichs_1</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lsu_ulrichs_hier">
+<resolver>http:www.statsbiblioteket.dk/etss</resolver>
+<alias xml:lang="da">lsu_ulrichs_hier</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="su_dk">
+<resolver>https://sedna.statsbiblioteket.dk:8280/urn/</resolver>
+<alias xml:lang="da">ldb</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lsu_oai">
+<resolver>oai</resolver>
+<alias xml:lang="da">lsu_oai</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lsubject">
+<resolver>oai</resolver>
+<alias xml:lang="da">lsubject</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>2.0</boost>
+</field>
+</fields>
+</group>
+<group name="su">
+<alias xml:lang="da">em</alias>
+<fields>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="subject_dk5">
+<resolver>horizon</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">au</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="subject_serial_solutions">
+<resolver>http:www.statsbiblioteket.dk/etss</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">uk_ser_sol</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="subject_ulrichs">
+<resolver>http:www.statsbiblioteket.dk/etss</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">uk_ulrichs</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>2.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="true" name="subject_controlled">
+<resolver>https://sedna.statsbiblioteket.dk:8280/urn/</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">ke</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>6.0</boost>
+</field>
+<field hasSuggest="false" isInFreetext="true" isRepeated="true" name="subject_other">
+<resolver>oai</resolver>
+<repeatSuffix/>
+<alias xml:lang="da">uk</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>
+<type>text</type>
+<boost>2.0</boost>
+</field>
+</fields>
+</group>
+<group name="lcl">
+<alias xml:lang="da">lcl</alias>
+<fields>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lcl_csa">
+<resolver/>
+<alias xml:lang="da">lcl_csa</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="ldcc">
+<resolver>aleph</resolver>
+<alias xml:lang="da">lddc</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lcl_all">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lcl_all</alias>
+<alias xml:lang="da">lddc</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="ldbk">
+<resolver>horizon</resolver>
+<alias xml:lang="da">ldbk</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lddc">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lddc</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="ldk5">
+<resolver>horizon</resolver>
+<alias xml:lang="da">ldk5</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lfn">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lfn</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="linst">
+<resolver>horizon</resolver>
+<alias xml:lang="da">linst</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lkl">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lkl</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="llcc">
+<resolver>horizon</resolver>
+<alias xml:lang="da">llcc</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="lnlm">
+<resolver>horizon</resolver>
+<alias xml:lang="da">lnlm</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+<field hasSuggest="true" isInFreetext="true" isRepeated="false" name="ludk">
+<resolver>horizon</resolver>
+<alias xml:lang="da">ludk</alias>
+<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer</analyzer>
+<type>keyword</type>
+<boost>10.0</boost>
+</field>
+</fields>
+</group>
+</groups>
+</IndexDescriptor>
