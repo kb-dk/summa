@@ -1,0 +1,13 @@
+Index: build.xml
+===================================================================
+--- build.xml	(revision 1579889)
++++ build.xml	(working copy)
+@@ -54,6 +54,8 @@
+       <lib dir="${common-solr.dir}/solrj/lib" excludes="${exclude.from.war},${common.classpath.excludes}"/>
+       <lib dir="${lucene-libs}" excludes="${exclude.from.war},${common.classpath.excludes}" />
+       <lib dir="${dist}" excludes="${exclude.from.war},${common.classpath.excludes}">
++        <!-- We insert exposed here for easy access, as this is just a Proof Of Concept -->
++        <include name="solr-exposed-${version}.jar" />
+         <include name="solr-solrj-${version}.jar" />
+         <include name="solr-core-${version}.jar" />
+       </lib>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+
+    <!-- Index Descriptor for DistributedTermStatsTest.
+         The descriptor is optimized towards exploration of term stat
+         behaviour and should not be seen as an example of a real world
+         index descriptor. -->
+
+    <fields>
+        <field name="multi_token" parent="token" multiValued="true"/>
+        <field name="single_token" parent="token" multiValued="false"/>
+        <field name="multi_verbatim" parent="" multiValued="true"/>
+        <field name="single_verbatim" parent="" multiValued="false"/>
+    </fields>
+
+    <defaultSearchFields>
+        <field ref="multi_token"/>
+        <field ref="single_token"/>
+        <field ref="multi_verbatim"/>
+        <field ref="single_verbatim"/>
+    </defaultSearchFields>
+
+</IndexDescriptor>
+
+
