@@ -242,11 +242,17 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                     // TODO: We can do this a lot faster with a delete job that takes a list of IDs
                     for (String id: ids) { // TODO: We could do this in bulk but beware of OOM
                         Record tmp = readableStorage.getRecord(id, null);
-                        tmp.setDeleted(true);
-                        tmp.setIndexable(false);
-                        Logging.logProcess("UpdateFromFulldumpFilter", "Marking as deleted and not idexable",
-                                           Logging.LogLevel.DEBUG, id);
-                        writableStorage.flush(tmp);
+                        if (tmp != null) {
+                            tmp.setDeleted(true);
+                            tmp.setIndexable(false);
+                            Logging.logProcess("UpdateFromFulldumpFilter", "Marking as deleted and not idexable",
+                                               Logging.LogLevel.DEBUG, id);
+                            writableStorage.flush(tmp);
+                        } else {
+                            Logging.logProcess("UpdateFromFulldumpFilter",
+                                               "Attempted marking as deleted, but the Record did not exist",
+                                               Logging.LogLevel.DEBUG, id);
+                        }
                     }
                     log.info("Marked " + ids.size() + " records as deleted and not indexable from base " + base
                              + " in " + profiler.getSpendTime());
