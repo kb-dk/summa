@@ -1774,7 +1774,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 //Sanity check. Can probably be removed after some time if this never happens.
                 if (!topParentRecord.getId().equals(recordId)) {
                     throw new RuntimeException(
-                            "Database inconsistency hasRelations for id" + topParentRecord.getId() + " and "
+                            "Database inconsistency hasRelations for id " + topParentRecord.getId() + " and "
                                     + recordId +" Original recordId in query:"+orgRecordId);
                 }
                 if (log.isDebugEnabled()) {
@@ -2590,7 +2590,10 @@ public abstract class DatabaseStorage extends StorageBase {
         // Recurse upwards
         for (String parentId : parents) {
             if (parentsVisited.contains(parentId)){
-                throw new SQLException("Parent/child cycle detected for id:"+parentId);
+                Logging.logProcess("DatabaseStorage#touchParents", "Parent/child cycle detected",
+                                   Logging.LogLevel.WARN, parentId);
+                break;
+//                throw new SQLException("Parent/child cycle detected for id:"+parentId);
             }
             parentsVisited.add(parentId);     
             touchParents(parentId, options, conn);
@@ -2659,7 +2662,10 @@ public abstract class DatabaseStorage extends StorageBase {
         // Recursive downwards
         for (String childId : children) {
             if (childrenVisited.contains(childId)){
-                throw new SQLException("Parent/child cycle detected for id:"+childId);
+                Logging.logProcess("DatabaseStorage#touchChildren", "Parent/child cycle detected",
+                                   Logging.LogLevel.WARN, childId);
+                break;
+                //throw new SQLException("Parent/child cycle detected for id:"+childId);
             }
             childrenVisited.add(childId);                    
             touchChildren(childId, options, conn, childrenVisited);
@@ -2709,6 +2715,8 @@ public abstract class DatabaseStorage extends StorageBase {
             return parents;
 
         } catch (SQLException e) {
+//            Logging.logProcess("DatabaseStorage#getParents", "Failed to get parents. Returning empty list",
+//                               Logging.LogLevel.WARN, id, e);
             throw new IOException("Failed to get parents for record '" + id, e);
         } finally {
             if (iter != null) {
@@ -2739,7 +2747,9 @@ public abstract class DatabaseStorage extends StorageBase {
             return parentsIds;
 
         } catch (SQLException e) {
-            throw new IOException("Failed to get  getParentsIdsOnly for record '" + id, e);
+//            Logging.logProcess("DatabaseStorage#getParentsIdsOnly", "Failed to get parents. Returning empty list",
+//                               Logging.LogLevel.WARN, id, e);
+            throw new IOException("Failed to get getParentsIdsOnly for record '" + id, e);
         } finally {
             if (stmt != null) {
                 closeStatement(stmt);
@@ -2765,7 +2775,10 @@ public abstract class DatabaseStorage extends StorageBase {
             return childrenIds;
 
         } catch (SQLException e) {
-            throw new IOException("Failed to get getChildIdsOnly for record '" + id, e);
+            Logging.logProcess("DatabaseStorage#getChildIdsOnly", "Failed to get children IDs. Returning empty list",
+                               Logging.LogLevel.WARN, id, e);
+            return childrenIds;
+//            throw new IOException("Failed to get getChildIdsOnly for record '" + id, e);
         } finally {
             if (stmt != null) {
                 closeStatement(stmt);
