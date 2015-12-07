@@ -111,7 +111,11 @@ public class RemoteHelper {
      * @throws IOException If error occur while unexporting service.
      */
     public synchronized static void unExportRemoteInterface(String serviceName, int registryPort) throws IOException {
-        log.trace("Preparing to unexport '" + serviceName + "' with registry on port " + registryPort);
+        try {
+            log.trace("Preparing to unexport '" + serviceName + "' with registry on port " + registryPort);
+        } catch (NullPointerException e) {
+            // Ignore as that was just a trace and we are shutting down
+        }
         Registry reg;
 
         /* We should not try and create the registry when we want to
@@ -126,16 +130,24 @@ public class RemoteHelper {
             return;
         }
 
-        log.debug("Found registry localhost:" + registryPort + " with services " + Strings.join(reg.list()));
+        try {
+            log.debug("Found registry localhost:" + registryPort + " with services " + Strings.join(reg.list()));
+        } catch (NullPointerException e) {
+            // Ignore as that was just a debug and we are shutting down
+        }
 
         try {
             reg.unbind(serviceName);
             shutdownHook.unregisterService(registryPort, serviceName);
-            log.info("Unexported service '" + serviceName + "' on port " + registryPort);
         } catch (NotBoundException e) {
             log.warn(String.format("Service '%s' not bound in registry on port %d", serviceName, registryPort), e);
         } catch (Exception e) {
             log.warn(String.format("Unable to unbind service '%s' on port %d", serviceName, registryPort), e);
+        }
+        try {
+            log.info("Unexported service '" + serviceName + "' on port " + registryPort);
+        } catch (NullPointerException e) {
+            // Quite a shame to ignore, but Operations strongly dislike system out and it is not an error
         }
     }
 
