@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>2.3.0-20151201-SNAPSHOT</version>
+        <version>2.3.0-20151207-SNAPSHOT</version>
     </parent>
 
     <artifactId>summa-sbsolr</artifactId>
@@ -22,9 +22,11 @@
                          -->
 
         <dependency> <!-- We want sparse support -->
-          <groupId>dk.statsbiblioteket.solr.sparse</groupId>
-          <artifactId>solr-5894</artifactId>
-          <version>4.8-SOLR-5894-20140901-1135</version>
+            <groupId>dk.statsbiblioteket.solr.sparse</groupId>
+            <artifactId>solr-5894</artifactId>
+            <version>solr-4.10-heuristic-SOLR-5894-20151201-1326.war</version>
+
+          <!--<version>4.8-SOLR-5894-20140901-1135</version>-->
           <type>war</type>
         </dependency>
 
