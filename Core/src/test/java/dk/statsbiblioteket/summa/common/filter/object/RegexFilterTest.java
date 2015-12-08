@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Test cases for {@link RegexFilter}
@@ -62,6 +63,51 @@ public class RegexFilterTest extends TestCase {
         regex.setSource(feeder);
         assertTrue("There should be a Payload available", regex.hasNext());
         assertTrue("The Payload should be marked as deleted", regex.next().getRecord().isDeleted());
+    }
+
+    public static final String CONTENT_SAMPLE =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<record xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+            "xmlns=\"http://www.openarchives.org/OAI/2.0/\"><header>" +
+            "<identifier>oai:cds.cern.ch:2013456</identifier>" +
+            "<datestamp>2015-04-29T21:55:23Z</datestamp>" +
+            "<setSpec>cerncds:FULLTEXT</setSpec>" +
+            "</header><metadata><oai_dc:dc xmlns:dc=\"http://purl.org/dc/elements/1.1/\" " +
+            "xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" " +
+            "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+            "xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ " +
+            "http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">" +
+            "<dc:identifier>http://cds.cern.ch/record/2012345</dc:identifier><dc:language>eng</dc:language>" +
+            "<dc:creator>International Organization for Standardization. Geneva</dc:creator>" +
+            "<dc:title>Sunfire Academy: Part 132: guide for the holding of fireants and sampling</dc:title>" +
+            "<dc:subject>Engineering</dc:subject><dc:publisher>ISO</dc:publisher>" +
+            "<dc:identifier>oai:cds.cern.ch:2012345</dc:identifier>" +
+            "<dc:date>2015</dc:date></oai_dc:dc></metadata></record>";
+
+    public void testIDAndContentMatcher() throws IOException {
+        Configuration conf = Configuration.newMemoryBased(
+                PayloadMatcher.CONF_ID_REGEX, new ArrayList<>(Arrays.asList(
+                        "nonmatching_id1", "nonmatching_id2")),
+                PayloadMatcher.CONF_CONTENT_REGEX, new ArrayList<>(Collections.singletonList(
+                        "<dc.publisher>ISO<.dc.publisher>")),
+                PayloadMatcher.CONF_MATCH_METHOD, PayloadMatcher.MATCH_METHOD.partial
+        );
+
+        RegexFilter matcher = new RegexFilter(conf);
+        Payload noMatch = new Payload(new Record(
+                "noMatch", "dummy", new byte[10]));
+        Payload recordMatchPayload = new Payload(new Record(
+                "recordMatch", "dummy", CONTENT_SAMPLE.getBytes("utf-8")));
+        PayloadBufferFilter buf = prepareFilterChain(
+                matcher,
+                noMatch, recordMatchPayload);
+
+        // Flush the filter chain
+        while (buf.pump()){}
+
+        assertEquals(1, buf.size());
+        assertEquals("noMatch", buf.get(0).getRecord().getId());
+//        assertEquals("recordMatch", buf.get(1).getRecord().getId());
     }
 
     public PayloadBufferFilter prepareFilterChain(ObjectFilter filter,
