@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<Records xmlns="http://statsbiblioteket.dk/summa/2009/Records" querytime="626">
+    <record id="id1" base="base1" deleted="false" indexable="true" ctime="2010-03-31T09:54:53.395" mtime="2010-03-31T09:54:53.395">
+        <content>data</content>
+    </record>
+    <record id="id2" base="base1" deleted="false" indexable="true" ctime="2010-03-31T09:54:53.437" mtime="2010-03-31T09:54:53.437">
+        <content>data</content>
+    </record>
+</Records>
