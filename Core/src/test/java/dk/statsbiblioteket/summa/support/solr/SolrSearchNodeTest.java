@@ -128,8 +128,6 @@ public class SolrSearchNodeTest extends TestCase {
                    requestTime > 5000);
     }
 
-
-
     public void testGrouping() throws Exception {
         performBasicIngest();
         ResponseCollection responses = search(new Request(
