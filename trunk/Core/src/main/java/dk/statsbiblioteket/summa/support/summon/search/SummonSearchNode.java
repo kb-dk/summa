@@ -889,6 +889,9 @@ public class SummonSearchNode extends SolrSearchNode {
             String result;
             try {
                 result = getData("http://" + host, restCall + "?" + queryString, date, sumID, null,responses);
+///                System.out.println("********");
+///                System.out.println(result);
+///                System.out.println("********");
             } catch (Exception e) {
                 throw new RemoteException("SummonSearchNode: Unable to perform remote call to "  + host + restCall
                                           + " with argument '" + queryString, e);

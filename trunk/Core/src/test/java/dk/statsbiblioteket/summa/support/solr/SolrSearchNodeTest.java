@@ -109,6 +109,25 @@ public class SolrSearchNodeTest extends TestCase {
         assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
     }
 
+    public void testSleep() throws Exception {
+        performBasicIngest();
+        long requestTime = -System.currentTimeMillis();
+        ResponseCollection responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "fulltext:first",
+                DocumentKeys.SLEEP, 5001,
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordId score title_org fulltext"
+        ));
+        requestTime += System.currentTimeMillis();
+        assertTrue("There should be a response", responses.iterator().hasNext());
+        assertEquals("There should be the right number of hits. Response was\n" + responses.toXML(),
+                     1, ((DocumentResponse)responses.iterator().next()).getHitCount());
+
+        String PHRASE = "Solr sample document";
+        assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+        assertTrue("The request should take more than 5 seconds, but took only " + requestTime + "ms",
+                   requestTime > 5000);
+    }
+
 
 
     public void testGrouping() throws Exception {
