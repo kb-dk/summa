@@ -218,4 +218,10 @@ public interface DocumentKeys {
      * If present and with the value 'true', the searcher is free to return immediately with empty result set.
      */
     public static final String PING = "ping";
+
+    /**
+     * Is present and > 0, a sleep is called with the given value in milliseconds before processing the request.
+     * Primarily used for testing timeouts.
+     */
+    public static final String SLEEP = "sleep";
 }

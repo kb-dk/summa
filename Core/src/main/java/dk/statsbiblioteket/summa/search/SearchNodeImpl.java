@@ -355,6 +355,19 @@ public abstract class SearchNodeImpl implements SearchNode {
             log.debug("Ping requested, returning immediately");
             return;
         }
+        if (request.containsKey(DocumentKeys.SLEEP)) {
+            long sleepMS = request.getLong(DocumentKeys.SLEEP, -1L);
+            if (sleepMS > 0) {
+                log.info("Sleeping for " + sleepMS + "ms before processing request, because "
+                         + DocumentKeys.SLEEP + " was specified");
+                try {
+                    TimeUnit.MILLISECONDS.sleep(sleepMS);
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted while attempting to sleep for " + sleepMS
+                             + "ms. Continuing standard processing");
+                }
+            }
+        }
         try {
             // TODO: Consider timeout for slot acquirement
             if (!slots.tryAcquire(1, searcherAvailabilityTimeout, TimeUnit.MILLISECONDS)) {

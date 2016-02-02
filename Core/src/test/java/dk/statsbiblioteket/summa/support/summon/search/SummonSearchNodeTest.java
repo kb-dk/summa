@@ -99,6 +99,17 @@ public class SummonSearchNodeTest extends TestCase {
         System.out.println(searcher.search(new Request(DocumentKeys.SEARCH_QUERY, "foo")));
         searcher.close();
     }
+// summon_FETCH-LOGICAL-c2900-af812442b587e68894c61a9785d45a5ead438156d637cf77c5443275a054be473
+
+    public void testSpecificSearch() throws RemoteException {
+        //final String QUERY = "roberto constantini";
+        final String QUERY = "id:FETCH-LOGICAL-c2900-af812442b587e68894c61a9785d45a5ead438156d637cf77c5443275a054be473";
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, QUERY), responses);
+        System.out.println(responses.toXML());
+}
 
     public void testSpecificProblemSearch() throws RemoteException {
         //final String QUERY = "roberto constantini";
