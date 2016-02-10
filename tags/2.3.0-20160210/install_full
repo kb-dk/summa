@@ -1,0 +1,4 @@
+mvn clean
+# Change to deploy when credentials are updated
+mvn -DskipTests -Dmaven.javadoc.skip=true install
+md5sum Summix/target/summix-*.zip

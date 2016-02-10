@@ -1,0 +1,44 @@
+/*
+ * Copyright State and University Library of Denmark 2009
+ *
+ * Used for formatting the output of summa-doc-tool's HTML formatter
+ */
+
+p.property {
+    width: 90%;
+    border:none;
+    padding:10;
+    clear:left;
+}
+
+td {
+    padding: 5;
+}
+
+td.propkey {    
+    background-color: lightgray;
+    color: black;
+    width: 15%;
+    text-align:right;
+    vertical-align:top;
+    font-weight:normal;
+}
+
+td.propvalue {
+    background-color: white;
+    color: black;
+    vertical-align:top;
+}
+
+tr.propname {
+    font-weight:bold;
+}
+
+h3 {
+    float:left;
+}
+
+p.classlink {
+    float:left;
+    padding:5;
+}
