@@ -257,7 +257,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         // Extremely important (factor 1000) for performance
         conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
         conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
-        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079);
+        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8099);
         DatabaseStorage storage = new H2Storage(conf);
 
         storage.clearBase(testBase1);
