@@ -187,7 +187,7 @@ public class StorageTest extends NoExitTestCase {
         String child1= "Lademanns leksikon Bind 1";
         ArrayList<Record> childrenList = new ArrayList<>();
         for (int i=1;i<=NUMBER_CHILDREN;i++){
-            Record bind =  new Record("Lademanns leksikon Bind "+i,  "foo", new byte[0]);
+            Record bind =  new Record("Lademanns leksikon Bind " + i,  "foo", new byte[0]);
             bind.setParentIds(Arrays.asList(lademands.getId()));
             childrenList.add(bind);
         }
@@ -205,12 +205,13 @@ public class StorageTest extends NoExitTestCase {
         //Touch parent
         lademands.touch();
         lademands.setChildren(null);
-        long start=System.currentTimeMillis();
 
 
         StorageThread thread = new StorageThread(storage1, "Lademanns leksikon Bind");
         thread.start();
 
+        long start = System.currentTimeMillis();
+        log.info("Starting touch...");
         storage1.flush(lademands);
         long end = System.currentTimeMillis();
         thread.stopThread();
@@ -575,10 +576,16 @@ public class StorageTest extends NoExitTestCase {
         public void run() {
             log.info("Storage thread started");
             int i = 1;
+            // It is important we do not expand the full graph as that means child->parent->all_children
+            QueryOptions options = new QueryOptions(null, null, 0, 1, null, QueryOptions.ATTRIBUTES_ALL);
             try{
                 while (run) {
-                    Record record = storage.getRecord(recordId+" "+i++, null);
-                    log.info("Get record:"+record.getId());
+                    String id = recordId+" "+i++;
+//                    log.info("Storage thread getting record with ID=" + id);
+                    long startTime = System.nanoTime();
+                    Record record = storage.getRecord(id, options);
+                    log.info("Got record with ID " + record.getId()
+                             + " in " + (System.nanoTime()-startTime)/1000000 + "ms");
                     sleep(10L);
                 }
             }
