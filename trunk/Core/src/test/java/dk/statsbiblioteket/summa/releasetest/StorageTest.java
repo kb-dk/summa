@@ -173,6 +173,64 @@ public class StorageTest extends NoExitTestCase {
    }
 
     
+    public void testUncomittedRead() throws Exception {
+              
+       final String STORAGE_NAME = "testUncomittedRead_storage";
+       int NUMBER_CHILDREN=10000;
+       Configuration conf = ReleaseHelper.getStorageConfiguration(STORAGE_NAME);
+       conf.set(StorageBase.CONF_RELATION_CLEAR, StorageBase.RELATION.parent);
+       conf.set(StorageBase.CONF_RELATION_TOUCH, StorageBase.RELATION.child);
+       
+       H2Storage storage1 = new H2Storage(conf);                     
+       H2Storage storage2 = new H2Storage(conf);
+       
+       Record lademands = new Record(LADEMANNS_LEKSIKON, "foo", new byte[0]);
+            
+       String child1= "Lademanns leksikon Bind 1";
+       ArrayList<Record> childrenList = new ArrayList<>();
+       for (int i=1;i<=NUMBER_CHILDREN;i++){
+           Record bind =  new Record("Lademanns leksikon Bind "+i,  "foo", new byte[0]);   
+           bind.setParents(Arrays.asList(lademands));
+           childrenList.add(bind);                                  
+            storage1.flush(bind);
+       }
+       
+       lademands.setChildren(childrenList);
+       storage1.flush(lademands);
+              
+                
+       //parent with 1000 children now created
+       
+       //Modified time child1
+       long mod1 = storage1.getRecord(child1, null).getModificationTime();       
+      
+       //Touch parent
+       lademands.touch();
+       lademands.setChildren(null);
+       long start=System.currentTimeMillis();
+       
+       
+       StorageThread thread = new StorageThread(storage2, "Lademanns leksikon Bind");
+       thread.start();
+       
+       storage1.flush(lademands);
+       long end = System.currentTimeMillis();
+       log.info("Touch time in millis:"+(end-start));              
+       
+       long mod2 = storage1.getRecord(child1, null).getModificationTime();       
+       assertNotSame(mod1, mod2);
+
+        
+        
+              
+       
+       
+       
+       
+   }
+
+    
+    
     
     
     public void testNewGetRecordHierarchy() throws Exception {
@@ -511,4 +569,34 @@ public class StorageTest extends NoExitTestCase {
         
     }
 
+    class StorageThread extends Thread {
+
+        String recordId;
+        H2Storage storage;
+        public StorageThread(H2Storage storage,String recordId){
+            this.storage=storage;
+            this.recordId=recordId;
+        }
+        
+        
+      public void run() {
+       log.info("Storage thread started");
+          try{
+            for (int i =1;i<100;i++){
+                sleep(10L);
+                Record record = storage.getRecord(recordId+" "+i, null);
+                log.info("Get record:"+record.getId());
+                
+            }
+       }
+       catch(Exception e){
+           log.error(e);
+       }
+            
+        }
+
+        
+
+    }
+    
 }
