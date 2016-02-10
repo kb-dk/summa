@@ -315,7 +315,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             l2cache = ";CACHE_TYPE=SOFT_LRU";
         }
         final String autoServer = ";AUTO_SERVER=TRUE";
-        final String dirtyReads = ";LOCK_MODE=0";
+        // http://www.h2database.com/html/advanced.html#mvcc
+        final String dirtyReads = ";MVCC=FALSE;LOCK_MODE=0";
 
         dataSource.setURL("jdbc:h2:" + location.getAbsolutePath() + File.separator + DB_FILE
                           + l2cache + autoServer + dirtyReads);
@@ -344,21 +345,24 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                      + " seconds");
         }
         setMaxMemoryRows();
+        enableDirtyReads();
     }
 
-    /**
-     * Optimizes the tables.
-     */
-    private void optimizeTables() {
+    //  http://h2database.com/html/grammar.html#set_lock_mode
+    private void enableDirtyReads() {
+        executeSQLDirect("SET LOCK_MODE 0");
+    }
+
+    public void executeSQLDirect(String sql) {
         Connection conn = getConnection();
         Statement stmt = null;
         try {
             // Rebuild the table selectivity indexes used by the query optimizer
-            log.info("Optimizing table selectivity");
+            log.info("Executing '" + sql + "'");
             stmt = conn.createStatement();
-            stmt.execute("ANALYZE");
+            stmt.execute(sql);
         } catch (SQLException e) {
-            log.warn("Failed to optimize table selectivity", e);
+            log.warn("Failed to execute '" + sql + "'", e);
         } finally {
             try {
                 conn.close();
@@ -369,6 +373,14 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                 log.warn("Failed to close connection: " + e.getMessage(), e);
             }
         }
+
+    }
+
+    /**
+     * Optimizes the tables.
+     */
+    private void optimizeTables() {
+        executeSQLDirect("ANALYZE");
     }
 
     /**
