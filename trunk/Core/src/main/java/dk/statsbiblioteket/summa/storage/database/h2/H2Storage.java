@@ -314,9 +314,11 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             log.debug("Enabling H2 L2 cache");
             l2cache = ";CACHE_TYPE=SOFT_LRU";
         }
-        String autoServer = ";AUTO_SERVER=TRUE";
+        final String autoServer = ";AUTO_SERVER=TRUE";
+        final String dirtyReads = ";LOCK_MODE=0";
 
-        dataSource.setURL("jdbc:h2:" + location.getAbsolutePath() + File.separator + DB_FILE + l2cache + autoServer);
+        dataSource.setURL("jdbc:h2:" + location.getAbsolutePath() + File.separator + DB_FILE
+                          + l2cache + autoServer + dirtyReads);
 
         if (username != null) {
             dataSource.setUser(username);
