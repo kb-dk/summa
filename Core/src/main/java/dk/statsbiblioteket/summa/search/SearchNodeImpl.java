@@ -360,6 +360,7 @@ public abstract class SearchNodeImpl implements SearchNode {
             if (sleepMS > 0) {
                 log.info("Sleeping for " + sleepMS + "ms before processing request, because "
                          + DocumentKeys.SLEEP + " was specified");
+                responses.addTiming(getID() + ".sleep=" + sleepMS);
                 try {
                     TimeUnit.MILLISECONDS.sleep(sleepMS);
                 } catch (InterruptedException e) {
