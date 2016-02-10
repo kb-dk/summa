@@ -29,9 +29,6 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")

@@ -958,6 +958,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         int startPage = Math.max(0, startIndex); // Solr pages exactly as Lucene
         //int startPage = Math.max(0, maxRecords == 0 ? 0 : (startIndex-1) / maxRecords);
         Map<String, List<String>> queryMap = new HashMap<>();
+        // TODO: Handle solr fl key case
         if (request.containsKey(DocumentKeys.SEARCH_RESULT_FIELDS)) {
             Set<String> fl = new HashSet<>(request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS));
             if (sortKey != null) {
