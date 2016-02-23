@@ -175,7 +175,7 @@ public class StorageTest extends NoExitTestCase {
     public void testUncomittedRead() throws Exception {
 
         final String STORAGE_NAME = "testUncomittedRead_storage";
-        int NUMBER_CHILDREN = 10000;
+        int NUMBER_CHILDREN = 1000;
         Configuration conf = ReleaseHelper.getStorageConfiguration(STORAGE_NAME);
         conf.set(StorageBase.CONF_RELATION_CLEAR, StorageBase.RELATION.parent);
         conf.set(StorageBase.CONF_RELATION_TOUCH, StorageBase.RELATION.child);
@@ -196,7 +196,7 @@ public class StorageTest extends NoExitTestCase {
 //       lademands.setChildren(childrenList);
         storage1.flush(lademands);
 
-
+  
         //parent with 1000 children now created
 
         //Modified time child1
@@ -204,8 +204,7 @@ public class StorageTest extends NoExitTestCase {
 
         //Touch parent
         lademands.touch();
-        lademands.setChildren(null);
-
+        lademands.setChildren(null);        
 
         StorageThread thread = new StorageThread(storage1, "Lademanns leksikon Bind");
         thread.start();
