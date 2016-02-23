@@ -204,8 +204,7 @@ public abstract class StatementHandler {
         );
     }
     
-    //This will cause modified_time violation and fail. Dont use
-    @Deprecated 
+    //This will cause modified_time violation and fail.  
     public MiniConnectionPoolManager.StatementHandle getTouchChildren() {
         return generateStatementHandle(
             "UPDATE " + DatabaseStorage.RECORDS
