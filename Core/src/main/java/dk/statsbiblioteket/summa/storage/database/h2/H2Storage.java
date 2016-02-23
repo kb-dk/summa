@@ -67,6 +67,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      */
     public static final int OPTIMIZE_INDEX_THRESHOLD = 100000;
 
+
     /**
      * The DB username.
      */

@@ -240,11 +240,18 @@ public class DatabaseStorageTest extends StorageTestBase {
         return storage;
     }
 
+    public void testRelativesScalingContract() throws Exception {
+        testRelativesScaling(true);
+    }
+    public void testRelativesScalingNoContract() throws Exception {
+        testRelativesScaling(false);
+    }
+
     private final int M = 1000000;
     /**
      * Performance test for relation-heavy Records.
      */
-    public void testRelativesScaling() throws Exception {
+    private void testRelativesScaling(boolean obeyTimestampContract) throws Exception {
         final int RECORDS = 10000;
         final int PARENT_EVERY = 1000;
         final int LOG_EVERY = RECORDS/1000;
@@ -257,6 +264,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         // Extremely important (factor 1000) for performance
         conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
         conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
+        conf.set(DatabaseStorage.CONF_OBEY_TIMESTAMP_CONTRACT, obeyTimestampContract);
         conf.set(H2Storage.CONF_H2_SERVER_PORT, 8099);
         DatabaseStorage storage = new H2Storage(conf);
 
