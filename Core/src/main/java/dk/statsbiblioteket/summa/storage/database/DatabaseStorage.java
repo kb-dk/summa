@@ -2632,16 +2632,34 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         // Use handle directly
-        StatementHandle handle = statementHandler.getTouchRecord();
+
+        //Single touch
+        //StatementHandle handle = statementHandler.getTouchRecord();
+        //PreparedStatement stmt = conn.prepareStatement(handle.getSql());
+        
+        StatementHandle handle = statementHandler.getTouchChildren();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
         try {
 
+          //Single touch, unique modified time
+          /*
             for (String r : children){
                 long nowStamp = timestampGenerator.next();
                 stmt.setLong(1, nowStamp);
                 stmt.setString(2, r);
                 stmt.executeUpdate();                
-            }                    
+            }
+       */
+            
+            
+            //Instead multitouch children, not unique modified time
+            long nowStamp = timestampGenerator.next();
+            stmt.setLong(1, nowStamp);
+            stmt.setString(2, id);
+            int updated = stmt.executeUpdate();
+            log.info("Multitouched #children:"+updated);
+            
+            
 
             // It would be a tempting optimization to drop the getParents() call
             // at the top and simply return here if stmt.getUpdateCount() == 0.
@@ -4011,7 +4029,8 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt.execute(createRecordsBaseOnlyIndexQuery);
         stmt.close();
 
-        String createRecordsMTimeOnlyIndexQuery = "CREATE UNIQUE INDEX IF NOT EXISTS m ON " // UNIQUE  takes 1.5 hour
+        //TODO drop unique
+        String createRecordsMTimeOnlyIndexQuery = "CREATE INDEX IF NOT EXISTS m ON " // NOT UNIQUE  takes 1.5 hour
                 + RECORDS + "(" + MTIME_COLUMN + ")";
         log.debug("Creating index 'm' on table " + RECORDS + " with query: '" + createRecordsMTimeOnlyIndexQuery + "'");
         stmt = conn.createStatement();
