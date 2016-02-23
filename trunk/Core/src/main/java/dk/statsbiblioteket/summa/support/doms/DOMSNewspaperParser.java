@@ -240,16 +240,78 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                 writeIfDefined(segmentXML, "characterErrorRatio_sort", padDouble(alto.getCharacterErrorRatio()));
                 segmentXML.writeStartElement("content");
                 segmentXML.writeCharacters("\n");
+                long blockCount = 0;
+                long wordCount = 0;
+                long charCount = 0;
+                long lowerCount = 0;
+                long upperCount = 0;
+                long letterCount = 0;
+                long digitCount = 0;
+                long stopCharCount = 0; // .!?
+                long commaCharCount = 0;
                 for (Alto.TextBlock block: group.getValue()) {
+                    blockCount++;
+                    final String allText = block.getAllText();
+                    charCount += allText.length();
+                    char prevC = ' '; // Whitespace
+                    if (!allText.isEmpty()) {
+                        wordCount++; // Technically this is wrong as it could all be whitespace
+                        for (int i = 0; i < allText.length(); i++) {
+                            final char c = allText.charAt(i);
+                            if (Character.isWhitespace(c)) {
+                                prevC = c;
+                                continue;
+                            }
+                            if (Character.isWhitespace(prevC)) { // Beginning of word
+                                wordCount++;
+                            }
+                            if (Character.isLetter(c)) {
+                                letterCount++;
+                                if (Character.isLowerCase(c)) {
+                                    lowerCount++;
+                                }
+                                if (Character.isUpperCase(c)) {
+                                    upperCount++;
+                                }
+                            } else if (Character.isDigit(c)) {
+                                digitCount++;
+                            }
+                            switch (c) {
+                                case ',':
+                                    commaCharCount++;
+                                    break;
+                                case '.':
+                                case '!':
+                                case '?':
+                                    stopCharCount++;
+                                    break;
+                            }
+                            prevC = c;
+                        }
+                    }
+
                     segmentXML.writeStartElement("textblock");
                     segmentXML.writeAttribute("x", spatial.format(block.getHposFraction()));
                     segmentXML.writeAttribute("y", spatial.format(block.getVposFraction()));
                     segmentXML.writeAttribute("width", spatial.format(block.getWidthFraction()));
                     segmentXML.writeAttribute("height", spatial.format(block.getHeightFraction()));
-                    segmentXML.writeCharacters(block.getAllText());
+                    segmentXML.writeCharacters(allText);
                     segmentXML.writeEndElement();
                     segmentXML.writeCharacters("\n");
                 }
+                segmentXML.writeStartElement("statistics");
+                segmentXML.writeAttribute("blocks", Long.toString(blockCount));
+                segmentXML.writeAttribute("words", Long.toString(wordCount));
+                segmentXML.writeAttribute("chars", Long.toString(charCount));
+                segmentXML.writeAttribute("lowercase", Long.toString(lowerCount));
+                segmentXML.writeAttribute("uppercase", Long.toString(upperCount));
+                segmentXML.writeAttribute("letters", Long.toString(letterCount));
+                segmentXML.writeAttribute("digits", Long.toString(digitCount));
+                segmentXML.writeAttribute("stopchars", Long.toString(stopCharCount));
+                segmentXML.writeAttribute("commas", Long.toString(commaCharCount));
+                segmentXML.writeEndElement(); // statistics
+                segmentXML.writeCharacters("\n");
+
                 segmentXML.writeEndElement(); // content
                 segmentXML.writeCharacters("\n");
 
