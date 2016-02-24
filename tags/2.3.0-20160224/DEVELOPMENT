@@ -1,0 +1,57 @@
+DEVELOPER NOTES FOR SUMMA
+
+
+Build Policies:
+--------------------------
+  * Don't move or delete the compiled java classes. Other modules
+    might depend upon them. Only copy. Disk space is cheap.
+
+  * Any module should be able to build by running "mvn" inside
+    its main directory. Ie. it should resolve any depenancies itself.
+  
+  * Jar files do not have a build in classpath. The classpath is given
+    solely on the command line.
+
+  * Before commiting non-trivial changes (read: something that might screw
+    up the build system), run "mvn release" from the Summa/ root dir.
+    If you are a good boy/girl you even make sure unit tests still pass
+    - but that also depends on how close we are to a release.
+
+
+Release Structure
+-----------------
+The layout of a module compiled by its "release" target must be as follows:
+
+    summa-<module>-VERSION/
+        lib/
+            <all 3rd party libs here>
+        bin/
+            <all scripts and binaries here>
+        doc/
+            <module javadoc goes here>
+        config/
+            <all config files - fx log4j.xml>
+            
+        summa-<module>-VERSION.jar
+        summa-<module>-api-VERSION.jar (optional)
+        README
+
+Webservice Releases
+-------------------
+A release of a webservice .war must use the naming pattern
+summa-<module>[-servicename].war and place the file
+in <module>/summa.dist.dir.
+
+The .war must bundle the build.properties file in META-INF/ for
+identification purposes (version numbering the war file will
+give us headaches).
+
+
+Notes:
+----------------
+  * Modules can ensure that global dependencies are indeed available by
+    running <ant inheritall="false" dir=".." target="depends"/>.
+    Modules that doesn't have global dependencies, are free not to do this.
+  
+  * Summa/Common/scripts/template.sh is a template you can use to autogenerate
+    scripts to launch your applications.
