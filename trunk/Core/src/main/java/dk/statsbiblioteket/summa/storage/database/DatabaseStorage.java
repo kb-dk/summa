@@ -31,10 +31,12 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.script.ScriptException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -722,13 +724,7 @@ public abstract class DatabaseStorage extends StorageBase {
     protected void init(Configuration conf) throws IOException {
         log.trace("init called");
         connectToDatabase(conf);
-
-        try {
-            prepareStatements();
-        } catch (SQLException e) {
-            throw new IOException("init(): Failed to prepare SQL statements", e);
-        }
-
+        
         iteratorReaper.runInThread();
 
         log.debug("Initialization finished");
@@ -766,12 +762,11 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return a pooled connection.
      * @throws SQLException if unable to set write access or auto commit.
      */
-    private Connection getDefaultConnection() throws SQLException {
-        Connection conn = getConnection();
-
+    public Connection getDefaultConnection() throws SQLException {
+        Connection conn = getConnection();        
         conn.setReadOnly(false);
-        conn.setAutoCommit(true);
-
+        conn.setAutoCommit(false);        
+        conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
         return conn;
     }
 
@@ -782,16 +777,18 @@ public abstract class DatabaseStorage extends StorageBase {
      *
      * @return database connection from connection pool.
      */
-    private Connection getTransactionalConnection() {
+    private Connection getTransactionalConnection()   {
+ 
+        try{
         Connection conn = getConnection();
-        try {
-            conn.setAutoCommit(false);
-            conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-        } catch (SQLException e) {
-            // This is non fatal so simply log a warning
-            log.warn("Failed to optimize new connection for transaction mode", e);
-        }
+    
         return conn;
+        }
+        catch(Exception e){
+           System.out.println(e);
+            throw new RuntimeException("Error with database connection properties"); 
+        }
+        
     }
 
     /**
@@ -1337,7 +1334,7 @@ public abstract class DatabaseStorage extends StorageBase {
      *
      * @param conn the connection to close
      */
-    private void closeConnection(Connection conn) {
+    public void closeConnection(Connection conn) {
         if (conn == null) {
             return;
         }
@@ -1599,9 +1596,9 @@ public abstract class DatabaseStorage extends StorageBase {
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
         try {
-            //stmt.getConnection().setAutoCommit(false);
-            stmt.getConnection().setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-            stmt.getConnection().setReadOnly(true);
+            stmt.getConnection().setAutoCommit(false);
+          
+            stmt.getConnection().setReadOnly(false);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
             assignFetchSize(stmt, true);
@@ -1720,7 +1717,6 @@ public abstract class DatabaseStorage extends StorageBase {
         ResultSet resultSet = null;
         try {
             long parentIDTime = -System.nanoTime();
-            conn.setReadOnly(true);
 
             Boolean mayHaveParent = true;
             String parentId = recordId; // For each parent found, this value will be overwritten
@@ -1935,13 +1931,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
-
-        try {
-            conn.setReadOnly(true);
-        } catch (SQLException e) {
-            throw new IOException("Failed to get prepared connection", e);
-        }
-
+      
         try {
             if (log.isTraceEnabled()) {
                 log.trace("Calling getRecord(" + id + ", ...) with meta "
@@ -2225,13 +2215,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         Connection conn = getTransactionalConnection();
-        try {
-            conn.setReadOnly(true);
-        } catch (SQLException e) {
-            // This is not fatal to the operation so try an proceed
-            // past the exception
-            log.warn("Failed to optimize connection for read only access", e);
-        }
+        
 
         try {
             return expandRelationsWithConnection(r, options, conn);
@@ -2282,7 +2266,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // want to leak them pooled connections!
         String error = null;
         try {
-            conn.setReadOnly(false);
+           
             flushWithConnection(record, options, conn);
             // Update last modification time.
             updateLastModficationTimeForBase(record.getBase(), conn);
@@ -2329,16 +2313,8 @@ public abstract class DatabaseStorage extends StorageBase {
     // TODO: Race conditions in FacetTest indicates that flush is guaranteed to have written everything before returning
     public synchronized void flushAll(List<Record> recs, QueryOptions options) throws IOException {
         Connection conn = getTransactionalConnection();
-        try {
-            conn.setReadOnly(false);
-        } catch (SQLException e) {
-            log.error("Failed to set connection in write mode: " + e.getMessage(), e);
-            closeConnection(conn);
-            // We can not throw the SQLException over RPC as the receiver
-            // probably does not have the relevant exception class
-            throw new IOException("Can not prepare database for write mode: " + e.getMessage());
-        }
-
+      
+        
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
         String error = null;
@@ -2470,41 +2446,48 @@ public abstract class DatabaseStorage extends StorageBase {
         } else if (log.isDebugEnabled()) {
             log.debug("Flushing with connection: " + r.toString(false));
         }
-
+        
+        
         RELATION relationsTouch= this.relationsTouch;
         RELATION clearRelation = this.relationsClear;
         // Update the timestamp we check against in getRecordsModifiedAfter
         updateModificationTime(r.getBase());
         invalidateCachedStats();
 
+        boolean recordExist = recordExist(conn, r.getId());
+        
         try {
-            createNewRecordWithConnection(r, options, conn);
+           if(!recordExist){
+              createNewRecordWithConnection(r, options, conn);
+           }
+           else{
+               //Special case. The method below is extremely slow for yet unknown reasons for large object trees (10000+) and scales badly.
+               //avoid calling it for some settings where we know it is unnessecary. It can be improved by a different implementation
+               //by loading the full object tree(ID's only) from the old record and comparing.            
+
+
+               if (relationsTouch.equals(RELATION.child)
+                   && clearRelation.equals(RELATION.parent)
+                   && (r.getParents() == null || r.getParents().size()==0) //Single object with no tree-changes     
+                   && (r.getChildren() == null || r.getChildren().size()==0) //Single object with no tree-changes
+                       ){
+                   //do not update  old tree recursive
+               }
+               else{
+                   touchOldParentChildRelations(r, conn);
+               }
+
+
+               // We already had the record stored, so fire an update instead
+               updateRecordWithConnection(r, options, conn);    
+           }
+           
+           
         } catch (SQLException e) {
-            if (isIntegrityConstraintViolation(e)) {
-
-                //Special case. The method below is extremely slow for yet unknown reasons for large object trees (10000+) and scales badly.
-                //avoid calling it for some settings where we know it is unnessecary. It can be improved by a different implementation
-                //by loading the full object tree(ID's only) from the old record and comparing.            
-
-
-                if (relationsTouch.equals(RELATION.child)
-                    && clearRelation.equals(RELATION.parent)
-                    && (r.getParents() == null || r.getParents().size()==0) //Single object with no tree-changes     
-                    && (r.getChildren() == null || r.getChildren().size()==0) //Single object with no tree-changes
-                        ){
-                    //do not update  old tree recursive
-                }
-                else{
-                    touchOldParentChildRelations(r, conn);
-                }
-
-
-                // We already had the record stored, so fire an update instead
-                updateRecordWithConnection(r, options, conn);
-            } else {
-                throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
+           
+      throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
                                                     + "failed to flush %s: %s", r.getId(), e.getMessage()), e);
-            }
+           
         }
 
         // Recursively add child records
@@ -2650,7 +2633,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         PreparedStatement stmt = null;
         try {
-            if (obeyTimestampContract) {
+
                 //Single touch
                 StatementHandle handle = statementHandler.getTouchRecord();
                 stmt = conn.prepareStatement(handle.getSql());
@@ -2662,7 +2645,8 @@ public abstract class DatabaseStorage extends StorageBase {
                     stmt.setString(2, r);
                     stmt.executeUpdate();
                 }
-            } else {
+                        
+                /* Multitouch code, not used
                 StatementHandle handle = statementHandler.getTouchChildren();
                 stmt = conn.prepareStatement(handle.getSql());
 
@@ -2672,6 +2656,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 stmt.setString(2, id);
                 int updated = stmt.executeUpdate();
                 log.info("Multitouched #children:"+updated);
+                 */
 
 
                 // It would be a tempting optimization to drop the getParents() call
@@ -2681,7 +2666,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 // parent which in turn might have a parent that actually exist.
                 // If we returned on zero updates we wouldn't touch the topmost
                 // parent
-            }
+            
         } catch (SQLException e) {
             log.error("Failed to touch child of '" + id + "': " + e.getMessage(), e);
             // Consider this non-fatal
@@ -3366,6 +3351,35 @@ public abstract class DatabaseStorage extends StorageBase {
         return true;
     }
 
+    
+    private boolean relationExist(Connection conn, String parentId,String childId)  throws SQLException{
+        
+        StatementHandle handleCheckPC = statementHandler.getParentAndChildCount();
+        PreparedStatement stmtCheckPC = conn.prepareStatement(handleCheckPC.getSql());
+        stmtCheckPC.setString(1, parentId);
+        stmtCheckPC.setString(2, childId);
+ 
+        ResultSet rs = stmtCheckPC.executeQuery();        
+        rs.next();        
+        int number = rs.getInt(1);        
+        return number>0;
+    }
+    
+    
+    
+    private boolean recordExist(Connection conn, String id)  throws SQLException{
+        
+        StatementHandle handleCheckExists = statementHandler.getRecordExist();
+        PreparedStatement stmtCheckExists = conn.prepareStatement(handleCheckExists.getSql());
+        stmtCheckExists.setString(1, id);
+ 
+        ResultSet rs = stmtCheckExists.executeQuery();        
+        rs.next();        
+        int number = rs.getInt(1);        
+        log.info("Record already exist:"+id);
+        return number>0;
+    }
+    
     /**
      * Create parent/child and child/parent relations for the given record.
      *
@@ -3376,7 +3390,6 @@ public abstract class DatabaseStorage extends StorageBase {
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getCreateRelation();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
-
         if (rec.hasChildren()) {
             List<String> childIds = rec.getChildIds();
 
@@ -3384,21 +3397,22 @@ public abstract class DatabaseStorage extends StorageBase {
                 if (log.isDebugEnabled()) {
                     log.debug("Creating relation: " + rec.getId() + " -> " + childId);
                 }
+                boolean exist = relationExist(conn, rec.getId(), childId);
+
+                
                 stmt.setString(1, rec.getId());
                 stmt.setString(2, childId);
 
-                try {
-                    stmt.executeUpdate();
-                } catch (SQLException e) {
-                    if (isIntegrityConstraintViolation(e)) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Relation " + rec.getId() + " -> " + childId + ", already known");
-                        }
-                    } else {
-                        closeStatement(stmt);
-                        throw new SQLException(String.format("Error creating child relations for %s", rec.getId()), e);
-                    }
-                }
+                try {                                
+                   if (!exist){
+                      stmt.executeUpdate();
+                   }
+                    
+                } catch (SQLException e) {                                
+                    closeStatement(stmt);
+                    throw new SQLException(String.format("Error creating child relations for %s", rec.getId()), e);
+                
+                }               
             }
 
             // Make sure that all children are tagged as having relations,
@@ -3416,20 +3430,19 @@ public abstract class DatabaseStorage extends StorageBase {
                 if (log.isDebugEnabled()) {
                     log.debug("Creating relation: " + parentId + " -> " + rec.getId());
                 }
+                boolean exist = relationExist(conn, parentId,rec.getId());
+
+                
                 stmt.setString(1, parentId);
                 stmt.setString(2, rec.getId());
 
                 try {
+                 if (!exist){
                     stmt.executeUpdate();
+                 }
                 } catch (SQLException e) {
-                    if (isIntegrityConstraintViolation(e)) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Relation " + parentId + " -> " + rec.getId() + ", already known");
-                        }
-                    } else {
                         closeStatement(stmt);
-                        throw new SQLException("Error creating parent relations for " + rec.getId(), e);
-                    }
+                        throw new SQLException("Error creating parent relations for " + rec.getId(), e);                    
                 }
             }
 
@@ -3812,58 +3825,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    /**
-     * Creates the tables {@link #RECORDS} and {@link #RELATIONS} and relevant
-     * indexes on the database.
-     *
-     * @throws IOException If the database could not be created.
-     */
-    protected void createSchema() throws IOException {
-        log.debug("Creating database schema");
-        try {
-            doCreateSchema();
-        } catch (Exception e) {
-            Logging.fatal(log, "DatabaseStorage.createSchema", "Error creating or checking database tables", e);
-            throw new IOException("Error creating or checking database tables", e);
-        }
-    }
-
-    /**
-     * Create the tables for the database.
-     *
-     * @throws SQLException If the database could not be created.
-     */
-    private void doCreateSchema() throws SQLException {
-
-        Connection conn = null;
-        try {
-            conn = getDefaultConnection();
-
-            // RECORDS
-            try {
-                doCreateSummaRecordsTable(conn);
-            } catch (SQLException e) {
-                log.info("Failed to create table for record data", e);
-            }
-
-            // RELATIONS
-            try {
-                doCreateSummaRelationsTable(conn);
-            } catch (SQLException e) {
-                log.info("Failed to create table for record relations", e);
-            }
-
-            // BASE STATISTIC
-            try {
-                doCreateSummaBaseStatisticTable(conn);
-            } catch (SQLException e) {
-                log.info("Failed to create table for base statistic", e);
-            }
-        } finally {
-            closeConnection(conn);
-        }
-    }
-
+   
     /**
      * Return the last modification time for a base or the storage, if no
      * changes to a base has happened yet. This is drawn from the database.
@@ -3941,206 +3903,6 @@ public abstract class DatabaseStorage extends StorageBase {
                 resultSet.close();
             }
             closeStatement(stmt);
-        }
-    }
-
-    /**
-     * Create a table for holding statistic for each base.
-     *
-     * @param conn The database connection.
-     * @throws SQLException If there is an error while executing the SQL.
-     */
-    private void doCreateSummaBaseStatisticTable(Connection conn) throws SQLException {
-        String createBaseStatisticQuery =
-                "CREATE TABLE IF NOT EXISTS " + BASE_STATISTICS + " (" + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), "
-                + MTIME_COLUMN + " BIGINT, " + DELETE_INDEXABLES_COLUMN + " BIGINT, " + NON_DELETED_INDEXABLES_COLUMN
-                + " BIGINT, " + DELETED_NON_INDEXABLES_COLUMN + " BIGINT, " + NON_DELETED_NON_INDEXABLES_COLUMN
-                + " BIGINT, " + VALID_COLUMN + " INTEGER)";
-        log.debug("Creating table " + BASE_STATISTICS + " if not already existing with query '"
-                  + createBaseStatisticQuery + "'");
-        Statement stmt = conn.createStatement();
-        stmt.execute(createBaseStatisticQuery);
-        stmt.close();
-    }
-
-    private void doCreateSummaRelationsTable(Connection conn) throws SQLException {
-        Statement stmt;
-
-        String createRelationsQuery =
-                "CREATE TABLE IF NOT EXISTS " + RELATIONS + " (" + PARENT_ID_COLUMN + " VARCHAR(" + ID_LIMIT + "), "
-                + CHILD_ID_COLUMN + " VARCHAR(" + ID_LIMIT + ") )";
-        log.debug("Creating table " + RELATIONS + " with query: '" + createRelationsQuery + "'");
-        stmt = conn.createStatement();
-        stmt.execute(createRelationsQuery);
-        stmt.close();
-
-        /* RELATIONS INDEXES */
-        String createRelationsPCIndexQuery =
-                "CREATE UNIQUE INDEX IF NOT EXISTS pc ON " + RELATIONS + "(" + PARENT_ID_COLUMN + "," + CHILD_ID_COLUMN
-                + ")";
-        log.debug("Creating index 'pc' on table " + RELATIONS + " with query: '" + createRelationsPCIndexQuery + "'");
-        stmt = conn.createStatement();
-        stmt.execute(createRelationsPCIndexQuery);
-        stmt.close();
-
-        String createRelationsCIndexQuery =
-                "CREATE INDEX IF NOT EXISTS c ON " + RELATIONS + "(" + CHILD_ID_COLUMN + ")";
-        log.debug("Creating index 'c' on table " + RELATIONS + " with query: '" + createRelationsCIndexQuery + "'");
-        stmt = conn.createStatement();
-        stmt.execute(createRelationsCIndexQuery);
-        stmt.close();
-
-
-        String createRelationsPIndexQuery =
-                "CREATE INDEX IF NOT EXISTS p ON " + RELATIONS + "(" + PARENT_ID_COLUMN + ")";
-        log.debug("Creating index 'p' on table " + RELATIONS + " with query: '" + createRelationsPIndexQuery + "'");
-        stmt = conn.createStatement();
-        stmt.execute(createRelationsPIndexQuery);
-        stmt.close();
-
-
-    }
-
-    private void doCreateSummaRecordsTable(Connection conn) throws SQLException {
-        String createRecordsQuery =
-                "CREATE TABLE IF NOT EXISTS " + RECORDS + " (" + ID_COLUMN + " VARCHAR(" + ID_LIMIT + ") PRIMARY KEY, "
-                + BASE_COLUMN + " VARCHAR(" + BASE_LIMIT + "), " + DELETED_COLUMN + " INTEGER, " + INDEXABLE_COLUMN
-                + " INTEGER, " + HAS_RELATIONS_COLUMN + " INTEGER, " + DATA_COLUMN + " "
-                + getDataColumnDataDeclaration() + ", " + CTIME_COLUMN + " BIGINT, " // BIGINT is 64 bit
-                + MTIME_COLUMN + " BIGINT, " + META_COLUMN + " " + getMetaColumnDataDeclaration() + ")";
-        log.debug("Creating table " + RECORDS + " with query: '" + createRecordsQuery + "'");
-
-        Statement stmt = conn.createStatement();
-        stmt.execute(createRecordsQuery);
-        stmt.close();
-
-        //This code can be removed later when index has been removed. TAKES 45 minutes
-        String dropRecordsMBIndexQuery = "DROP INDEX IF EXISTS mb"; //Notice table is not mentioned
-        log.debug("Dropping index 'mb' on table " + RECORDS + " with query: '" + dropRecordsMBIndexQuery + "'");
-        stmt = conn.createStatement();
-        stmt.execute(dropRecordsMBIndexQuery);
-        stmt.close();
-
-
-        /* RECORDS INDEXES */
-        String createRecordsIdIndexQuery = "CREATE UNIQUE INDEX IF NOT EXISTS i ON " + RECORDS + "(" //TAKES 1.5 hour
-                                           + ID_COLUMN + ")";
-        log.debug("Creating index 'i' on table " + RECORDS + " with query: '" + createRecordsIdIndexQuery + "'");
-        stmt = conn.createStatement();
-        stmt.execute(createRecordsIdIndexQuery);
-        stmt.close();
-
-        // Because we use a UniqueTimestampGenerator we can apply the UNIQUE
-        // to the 'mtime' column. This is paramount to getting paginated result
-        // sets for getRecordsModifiedAfter. And index on (BASE,MTIME) - notice order important!
-        // seems useful and standard for SQL used for FULL INGEST. BUT testing( on H2Database) shows making two
-        // indexes gives
-        // same performance and single index on MTime is already needed.
-
-        String createRecordsBaseOnlyIndexQuery = "CREATE INDEX IF NOT EXISTS b ON " //Not UNIQUE , takes 1.5 hour
-                                                 + RECORDS + "(" + BASE_COLUMN + ")";
-        log.debug("Creating index 'b' on table " + RECORDS + " with query: '" + createRecordsBaseOnlyIndexQuery + "'");
-        stmt = conn.createStatement();
-        stmt.execute(createRecordsBaseOnlyIndexQuery);
-        stmt.close();
-
-        //TODO drop unique
-        String createRecordsMTimeOnlyIndexQuery;
-        if (obeyTimestampContract) {
-            createRecordsMTimeOnlyIndexQuery = "CREATE UNIQUE INDEX IF NOT EXISTS m ON "
-                                               + RECORDS + "(" + MTIME_COLUMN + ")";
-            log.debug("Creating unique index 'm' on table " + RECORDS + " with query: '"
-                      + createRecordsMTimeOnlyIndexQuery + "'");
-        } else {
-            createRecordsMTimeOnlyIndexQuery = "CREATE INDEX IF NOT EXISTS m ON " // NOT UNIQUE  takes 1.5 hour
-                                                      + RECORDS + "(" + MTIME_COLUMN + ")";
-            log.debug("Creating index 'm' on table " + RECORDS + " with query: '"
-                      + createRecordsMTimeOnlyIndexQuery + "'");
-        }
-        stmt = conn.createStatement();
-        stmt.execute(createRecordsMTimeOnlyIndexQuery);
-        stmt.close();
-
-
-        // This index is used to speed up record counts segregated by base,
-        // deleted- and indexable flags.
-        String createRecordsBaseIndexQuery =
-                "CREATE INDEX IF NOT EXISTS bdi ON " + RECORDS + "(" + BASE_COLUMN + "," + DELETED_COLUMN + ","
-                + INDEXABLE_COLUMN + ")";
-        log.debug("Creating index 'bdi' on table " + RECORDS + " with query: '" + createRecordsBaseIndexQuery + "'");
-        stmt = conn.createStatement();
-        stmt.execute(createRecordsBaseIndexQuery);
-        stmt.close();
-    }
-
-    protected void checkTableConsistency() {
-        boolean createNew = false;
-        Connection conn = getConnection();
-        try {
-            String query = "SELECT " + NON_DELETED_NON_INDEXABLES_COLUMN + " FROM " + BASE_STATISTICS;
-            Statement stmt = conn.createStatement();
-            stmt.execute(query);
-        } catch (SQLException e) {
-            log.info("Deleting old base statistic table");
-            destroyBaseStatistic();
-            createNew = true;
-            log.info("Creating new base statistic table");
-        }
-
-        try {
-            if (createNew) {
-                doCreateSummaBaseStatisticTable(conn);
-            }
-        } catch (SQLException e) {
-            log.info("Error creating table " + DatabaseStorage.BASE_STATISTICS, e);
-        }
-        closeConnection(conn);
-    }
-
-    /**
-     * WARNING: <i>This will remove all data from the storage!</i>.
-     * Destroys and removes all table definitions from the underlying database.
-     * Caveat emptor.
-     *
-     * @throws SQLException if there are problems executing the required SQL
-     *                      statements
-     */
-    public void destroyDatabase() throws SQLException {
-        log.warn("Preparing to destroy database. All data will be lost");
-        Connection conn = getDefaultConnection();
-        try {
-            log.warn("Destroying all record data");
-            Statement stmt = conn.createStatement();
-            stmt.execute("DROP TABLE " + RECORDS);
-            stmt.close();
-
-            log.warn("Destroying all relations");
-            stmt = conn.createStatement();
-            stmt.execute("DROP TABLE " + RELATIONS);
-            stmt.close();
-
-            destroyBaseStatistic();
-        } finally {
-            closeConnection(conn);
-        }
-        log.info("All Summa data wiped from database");
-    }
-
-    /**
-     * Destroy the base statistic table.
-     */
-    protected void destroyBaseStatistic() {
-        Connection conn = null;
-        try {
-            conn = getDefaultConnection();
-            log.warn("Destryoing all statistic");
-            Statement stmt = conn.createStatement();
-            stmt.execute("DROP TABLE " + BASE_STATISTICS);
-            stmt.close();
-        } catch (SQLException e) {
-            log.info("Base statistic table not deleted reason: " + e.getCause() + "'", e);
-        } finally {
-            closeConnection(conn);
         }
     }
 
