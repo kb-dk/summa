@@ -25,9 +25,12 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
+import dk.statsbiblioteket.summa.storage.database.postgresql.PostGreSQLStorage;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,7 +56,7 @@ public class StorageTest extends NoExitTestCase {
 
     @Override
     public void tearDown() throws Exception {
-        super.tearDown();
+       super.tearDown();
     }
 
 /*    public void testReopen() throws Exception {
@@ -222,10 +225,90 @@ public class StorageTest extends NoExitTestCase {
     }
 
 
+/*
+    public void testUncomittedReadPostGres() throws Exception {
+        int NUMBER_CHILDREN = 1000;
+     
+        
+        final String STORAGE_NAME = "testUncomittedRead_storage_postgresql";
+        Configuration conf = ReleaseHelper.getStorageConfiguration(STORAGE_NAME);
+        conf.set(DatabaseStorage.CONF_USERNAME , "elba");
+        conf.set(DatabaseStorage.CONF_PASSWORD , "Vx:0CS;RK#");
+        PostGreSQLStorage storage1 = new PostGreSQLStorage(conf);
+        
+        Record lademands = new Record(LADEMANNS_LEKSIKON, "foo", new byte[0]);
+
+        String child1= "Lademanns leksikon Bind 1";
+        ArrayList<Record> childrenList = new ArrayList<>();
+        for (int i=1;i<=NUMBER_CHILDREN;i++){
+            Record bind =  new Record("Lademanns leksikon Bind " + i,  "foo", new byte[0]);
+            bind.setParentIds(Arrays.asList(lademands.getId()));
+            childrenList.add(bind);
+        }
+        storage1.flushAll(childrenList);
+        
+       lademands.setChildren(childrenList);
+        storage1.flush(lademands);
+
+  
+        //parent with 1000 children now created
+
+        //Modified time child1
+        long mod1 = storage1.getRecord(child1, null).getModificationTime();
+
+        //Touch parent
+        lademands.touch();
+        lademands.setChildren(null);        
+
+        StorageThreadPostgress thread = new StorageThreadPostgress(storage1, "Lademanns leksikon Bind");
+        thread.start();
+
+        long start = System.currentTimeMillis();
+        log.info("Starting touch...");
+        storage1.flush(lademands);
+        long end = System.currentTimeMillis();
+        thread.stopThread();
+        log.info("Touch time in millis:"+(end-start));
+
+        long mod2 = storage1.getRecord(child1, null).getModificationTime();
+        assertNotSame(mod1, mod2);
+
+    }
+*/
+
+    
+/*
+    public void testSimplePostgreSQLDevel06() throws Exception {
+        // Top node: Lademanns leksikon
+        // Children: Lademanns leksikon Bind x (x=1 to x= 3)
+        // 
+        // I alt 4 records
 
 
+        
+        final String STORAGE_NAME = "postgresql_test";
+        Configuration conf = ReleaseHelper.getStorageConfiguration(STORAGE_NAME);
+        conf.set(DatabaseStorage.CONF_USERNAME , "elba");
+        conf.set(DatabaseStorage.CONF_PASSWORD , "Vx:0CS;RK#");
+        DatabaseStorage storage = new PostGreSQLStorage(conf);
+         
+        createLademansDataSimple(storage);
+  
+        long startTime = System.currentTimeMillis();
 
-    public void testNewGetRecordHierarchy() throws Exception {
+
+        Record lademanns = storage.getRecord("Lademanns leksikon",null);
+      List<Record> list = new ArrayList<Record>();
+      list.add(lademanns);      
+        storage.flushAll(list );      
+        storage.flush(lademanns);           
+    }
+    
+*/
+
+    
+    
+    public void  testLademannsHierarchy()  throws Exception {
         // Top node: Lademanns leksikon
         // Children: Lademanns leksikon Bind x (x=1 to x= 20)
         // Children-Children: Lademanns leksikon Bind x Del y (y=1 to y=3)
@@ -241,20 +324,17 @@ public class StorageTest extends NoExitTestCase {
 
         long startTime = System.currentTimeMillis();
 
-        System.out.println("Fetching record new method");
         Record lademanns_new = storage.getRecord("Lademanns leksikon",null);
         newMethodTotal +=System.currentTimeMillis()-startTime;
-        System.out.println("MetodTime new getRecords:"+(System.currentTimeMillis()-startTime));
+
         checkLademansHierarchy(lademanns_new);
 
 
         startTime = System.currentTimeMillis();
-        System.out.println("Fetching record old method");
         QueryOptions options = new QueryOptions(null,null,-1,-1);
         Record lademanns_old= storage.getRecord("Lademanns leksikon",options);
         oldMethodTotal +=System.currentTimeMillis()-startTime;
-        System.out.println("MetodTime old getRecords:"+(System.currentTimeMillis()-startTime));
-        //checkLademansHierarchy(lademanns_old); // Not working because of parent-child reference bug
+        checkLademansHierarchy(lademanns_old); // Not working because of parent-child reference bug
 
         System.out.println("total time oldmethod:"+oldMethodTotal);
         System.out.println("total time newmethod:"+newMethodTotal);
@@ -269,7 +349,9 @@ public class StorageTest extends NoExitTestCase {
         assertEquals("Lademanns leksikon Bind 11 Del 2",lademanns11Del2.getId());
         assertNull(lademanns11Del2.getChildren());
         assertEquals(lademanns11Del2.getParents().size(),1);
+
     }
+    
 
     private void checkLademansHierarchy(Record lademanns) {
         assertEquals(LADEMANNS_LEKSIKON,lademanns.getId());
@@ -561,12 +643,72 @@ public class StorageTest extends NoExitTestCase {
 
     }
 
+    private void createLademansDataSimple( Storage storage) throws Exception{
+
+
+        List<Record> records = new ArrayList<>(10);
+
+        Record lademands = new Record(LADEMANNS_LEKSIKON, "foo", new byte[0]);
+        records.add(lademands);
+        ArrayList<Record> childrenList = new ArrayList<>();
+        for (int i=1;i<=3;i++){
+            Record bind =  new Record("Lademanns leksikon Bind "+i,  "foo", new byte[0]);
+            bind.setParents(Arrays.asList(lademands));
+            childrenList.add(bind);            
+        }
+        lademands.setChildren(childrenList);
+
+        storage.flushAll(records);
+
+    }
+
+    
     class StorageThread extends Thread {
 
         String recordId;
         H2Storage storage;
         boolean run = true;
         public StorageThread(H2Storage storage,String recordId){
+            this.storage=storage;
+            this.recordId=recordId;
+        }
+
+
+        public void run() {
+            log.info("Storage thread started");
+            int i = 1;
+            // It is important we do not expand the full graph as that means child->parent->all_children
+            QueryOptions options = new QueryOptions(null, null, 0, 1, null, QueryOptions.ATTRIBUTES_ALL);
+            try{
+                while (run) {
+                    String id = recordId+" "+i++;
+//                    log.info("Storage thread getting record with ID=" + id);
+                    long startTime = System.nanoTime();
+                    Record record = storage.getRecord(id, options);
+                    log.info("Got record with ID " + record.getId()
+                             + " in " + (System.nanoTime()-startTime)/1000000 + "ms");
+                    sleep(10L);
+                }
+            }
+            catch(Exception e){
+                log.error(e);
+            }
+
+        }
+
+        public void stopThread() {
+            run = false;
+        }
+
+    }
+    
+
+    class StorageThreadPostgress extends Thread {
+
+        String recordId;
+        PostGreSQLStorage storage;
+        boolean run = true;
+        public StorageThreadPostgress(PostGreSQLStorage storage,String recordId){
             this.storage=storage;
             this.recordId=recordId;
         }
