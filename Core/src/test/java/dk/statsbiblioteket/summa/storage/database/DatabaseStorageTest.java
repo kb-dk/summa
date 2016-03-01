@@ -971,8 +971,7 @@ public class DatabaseStorageTest extends StorageTestBase {
     public void testStatsOnExistingStorage() throws Exception {
         Configuration conf = createConf();
         storage = (DatabaseStorage) StorageFactory.createStorage(conf);
-        long start = storage.getModificationTime(testBase1);
-        storage.destroyBaseStatistic();
+        long start = storage.getModificationTime(testBase1);        
         storage.close();
         // Start storage on a old database file
         storage = (DatabaseStorage) StorageFactory.createStorage(conf);
