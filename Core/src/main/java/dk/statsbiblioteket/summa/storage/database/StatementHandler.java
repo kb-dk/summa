@@ -192,6 +192,15 @@ public abstract class StatementHandler {
             + "WHERE " + DatabaseStorage.ID_COLUMN + "=?"
         );
     }
+    
+    public MiniConnectionPoolManager.StatementHandle getRecordExist() {
+        return generateStatementHandle(
+                "SELECT COUNT(*) FROM " + DatabaseStorage.RECORDS+           
+                " WHERE " + DatabaseStorage.ID_COLUMN +" = ?"
+        );
+    }
+    
+
 
     public MiniConnectionPoolManager.StatementHandle getTouchParents() {
         return generateStatementHandle(
@@ -250,6 +259,14 @@ public abstract class StatementHandler {
         );
     }
 
+    public MiniConnectionPoolManager.StatementHandle getParentAndChildCount() {
+        return generateStatementHandle(
+            "SELECT COUNT(*) FROM " + DatabaseStorage.RELATIONS+           
+             " WHERE " + DatabaseStorage.PARENT_ID_COLUMN +" = ? AND " + DatabaseStorage.CHILD_ID_COLUMN+" = ?"
+        );
+    }
+    
+    
     public MiniConnectionPoolManager.StatementHandle getChildIdsOnly() {
         return generateStatementHandle(
             "SELECT "+DatabaseStorage.CHILD_ID_COLUMN+" FROM "+ DatabaseStorage.RELATIONS+
