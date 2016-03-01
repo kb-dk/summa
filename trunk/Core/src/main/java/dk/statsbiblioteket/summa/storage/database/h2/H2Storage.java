@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.storage.database.h2;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -23,13 +24,16 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.util.Files;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.h2.jdbcx.JdbcDataSource;
 import org.h2.tools.Server;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.rmi.RemoteException;
 import java.sql.*;
 import java.util.HashSet;
@@ -328,12 +332,6 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         if (createNew) {
             log.info("Creating new table for '" + location + "'");
             createSchema();
-        } else {
-            log.info("Checking database table consistency");
-            long startTime = System.currentTimeMillis();
-            checkTableConsistency();
-
-            log.info("Finished checking database table consistency in " + (System.currentTimeMillis() - startTime) / 1000 + " seconds");
         }
         setMaxMemoryRows();
         enableDirtyReads();
@@ -598,4 +596,75 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     public String toString() {
         return "H2Storage(location='" + location + "', external_port=" + (serverPort == null ? "N/A" : serverPort) + ", " + super.toString() + ")";
     }
+    
+    
+    /**
+     * Creates the tables {@link #RECORDS} and {@link #RELATIONS} and relevant
+     * indexes on the database.
+     *
+     * @throws IOException If the database could not be created.
+     */
+    protected void createSchema() throws IOException {
+        log.debug("Creating database schema");
+        try {
+            doCreateSchema();
+        } catch (Exception e) {
+          e.printStackTrace();
+            Logging.fatal(log, "DatabaseStorage.createSchema", "Error creating or checking database tables", e);
+            throw new IOException("Error creating or checking database tables", e);
+        }
+    }
+
+    /**
+     * Create the tables for the database.
+     *
+     * @throws SQLException If the database could not be created.
+     */
+    private void doCreateSchema() throws Exception {
+
+        Connection conn = null;
+        try {
+            conn = getDefaultConnection();       
+            String CREATE_TABLES_DDL_FILE="storage/database/h2/create_summa_database_h2.ddl";
+            File file = getFile(CREATE_TABLES_DDL_FILE);
+            log.info("Running DDL script:" + file.getAbsolutePath());
+
+            if (!file.exists()) {
+                log.error("DDL script not found:" + file.getAbsolutePath());
+                throw new RuntimeException("DDLscript file not found:" + file.getAbsolutePath());
+            }
+
+            String scriptStatement = "RUNSCRIPT FROM '" + file.getAbsolutePath() + "'";
+            conn.prepareStatement(scriptStatement).execute();            
+           conn.commit();
+            
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    
+    /**
+     * Multi protocol resource loader. Primary attempt is direct file, secondary is classpath resolved to File.
+     *
+     * @param resource
+     *            a generic resource.
+     * @return a File pointing to the resource.
+     */
+    private static File getFile(String resource) throws IOException {
+        File directFile = new File(resource);
+        if (directFile.exists()) {
+            return directFile;
+        }
+        URL classLoader = Thread.currentThread().getContextClassLoader().getResource(resource);
+        if (classLoader == null) {
+            throw new FileNotFoundException("Unable to locate '" + resource + "' as direct File or on classpath");
+        }
+        String fromURL = classLoader.getFile();
+        if (fromURL == null || fromURL.isEmpty()) {
+            throw new FileNotFoundException("Unable to convert URL '" + fromURL + "' to File");
+        }
+        return new File(fromURL);
+    }
+
 }
