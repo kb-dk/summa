@@ -172,10 +172,23 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             forceNew = conf.getBoolean(CONF_FORCENEW);
         }
 
-        log.debug("H2Storage extracted properties username: " + username + ", password: " + (password == null ? "[undefined]" : "[defined]") + ", location: '" + location + "', createNew: "
+        log.info("H2Storage creating storage with properties username: " + username + ", password: "
+                 + (password == null ? "[undefined]" : "[defined]") + ", location: '" + location + "', createNew: "
                 + createNew + ", forceNew: " + forceNew);
-        init(conf);
-        initExternalServer(conf);
+        try {
+            init(conf);
+        } catch (Exception e) {
+            String error = "Error initializing storage";
+            Logging.fatal(log, "H2Storage", error, e);
+            throw new ConfigurationException(error, e);
+        }
+        try {
+            initExternalServer(conf);
+        } catch (Exception e) {
+            String error = "Error initializing external server for H2Storage";
+            log.error(error, e);
+            throw new ConfigurationException(error, e);
+        }
         log.info("Started " + this);
     }
 
@@ -267,7 +280,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
     @Override
     protected void connectToDatabase(Configuration configuration) throws IOException {
-        log.info("Establishing connection to H2 with  username '" + username + "', password " + (password == null || "".equals(password) ? "[undefined]" : "[defined]") + ", location '" + location
+        log.info("Establishing connection to H2 with username '" + username + "', password "
+                 + (password == null || "".equals(password) ? "[undefined]" : "[defined]") + ", location '" + location
                 + "', createNew " + createNew + " and forceNew " + forceNew);
 
         if (new File(location, DB_FILE + ".h2.db").isFile() || new File(location, DB_FILE + ".data.db").isFile()) {
