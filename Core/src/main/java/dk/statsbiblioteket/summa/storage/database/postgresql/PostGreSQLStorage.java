@@ -1,6 +1,17 @@
 package dk.statsbiblioteket.summa.storage.database.postgresql;
 
 
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
+import org.apache.commons.dbcp2.cpdsadapter.DriverAdapterCPDS;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,23 +20,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.dbcp2.cpdsadapter.DriverAdapterCPDS;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
-import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
-
 
 public class PostGreSQLStorage  extends DatabaseStorage implements Configurable {
 
     private static Log log = LogFactory.getLog(PostGreSQLStorage.class);
-  
+
+    /**
+     * The driver for the storage. This is rarely changed.
+     * </p><p>
+     * Optional. Default is org.postgresql.Driver.
+     */
+    public static final String CONF_DRIVER = "database.driver";
+    public static final String DEFAULT_DRIVER = "org.postgresql.Driver";
+
+    /**
+     * URL to the database.
+     * </p><p>
+     * Mandatory. Sample: jdbc:postgresql://devel06:5432/elba-devel
+     */
+    public static final String CONF_DRIVER_URL = "database.driver.url";
+
     /**
      * The DB username.
      */
@@ -68,9 +82,9 @@ public class PostGreSQLStorage  extends DatabaseStorage implements Configurable 
         password = conf.getString(CONF_PASSWORD, "");
 
         maxConnections = conf.getInt(CONF_MAX_CONNECTIONS, maxConnections);
-        //driver = conf.getString(CONF_DRIVER, ""); TODO
-        driverUrl = "jdbc:postgresql://devel06:5432/elba-devel";
-        driver = "org.postgresql.Driver";
+
+        driverUrl = conf.getString(CONF_DRIVER_URL); //"jdbc:postgresql://devel06:5432/elba-devel";
+        driver = conf.getString(CONF_DRIVER, DEFAULT_DRIVER);;
         
         log.debug("PostGreSqlStorage extracted properties username: " + username + ", password: " + (password == null ? "[undefined]" : "[defined]") + ",0 driver: '" + driver + "', createNew: ");
         init(conf);
