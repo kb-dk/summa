@@ -4397,6 +4397,29 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug(String.format("Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
         return stats;
     }
+    
+    public void destroyDatabase() throws SQLException {
+        log.warn("Preparing to destroy database. All data will be lost");
+
+        Connection conn = getDefaultConnection();
+
+        try {
+            log.warn("Destroying all record data");
+            Statement stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + RECORDS);
+            stmt.close();
+
+            log.warn("Destroying all relations");
+            stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + RELATIONS);
+            stmt.close();
+        } finally {
+            closeConnection(conn);
+        }
+
+        log.info("All Summa data wiped from database");
+    }       
+
 
     @Override
     public String toString() {
