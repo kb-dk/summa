@@ -765,7 +765,8 @@ public abstract class DatabaseStorage extends StorageBase {
     public Connection getDefaultConnection() throws SQLException {
         Connection conn = getConnection();        
         conn.setReadOnly(false);
-        conn.setAutoCommit(false);        
+        conn.setAutoCommit(false);
+        
         conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
         return conn;
     }
@@ -3905,6 +3906,54 @@ public abstract class DatabaseStorage extends StorageBase {
             closeStatement(stmt);
         }
     }
+    
+    /**
+     * WARNING: <i>This will remove all data from the storage!</i>.
+     * Destroys and removes all table definitions from the underlying database.
+     * Caveat emptor.
+     *
+     * @throws SQLException if there are problems executing the required SQL
+     *                      statements
+     */
+    public void destroyDatabase() throws SQLException {
+        log.warn("Preparing to destroy database. All data will be lost");
+        Connection conn = getDefaultConnection();
+        try {
+            log.warn("Destroying all record data");
+            Statement stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + RECORDS);
+            stmt.close();
+
+            log.warn("Destroying all relations");
+            stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + RELATIONS);
+            stmt.close();
+
+            destroyBaseStatistic();
+        } finally {
+            closeConnection(conn);
+        }
+        log.info("All Summa data wiped from database");
+    }
+
+    /**
+     * Destroy the base statistic table.
+     */
+    protected void destroyBaseStatistic() {
+        Connection conn = null;
+        try {
+            conn = getDefaultConnection();
+            log.warn("Destryoing all statistic");
+            Statement stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + BASE_STATISTICS);
+            stmt.close();
+        } catch (SQLException e) {
+            log.info("Base statistic table not deleted reason: " + e.getCause() + "'", e);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
 
     protected abstract String getMetaColumnDataDeclaration();
 
@@ -4397,29 +4446,6 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug(String.format("Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
         return stats;
     }
-    
-    public void destroyDatabase() throws SQLException {
-        log.warn("Preparing to destroy database. All data will be lost");
-
-        Connection conn = getDefaultConnection();
-
-        try {
-            log.warn("Destroying all record data");
-            Statement stmt = conn.createStatement();
-            stmt.execute("DROP TABLE " + RECORDS);
-            stmt.close();
-
-            log.warn("Destroying all relations");
-            stmt = conn.createStatement();
-            stmt.execute("DROP TABLE " + RELATIONS);
-            stmt.close();
-        } finally {
-            closeConnection(conn);
-        }
-
-        log.info("All Summa data wiped from database");
-    }       
-
 
     @Override
     public String toString() {
