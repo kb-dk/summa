@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.storage.rmi;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
@@ -163,13 +164,17 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
         }
 
         log.trace("Creating storage backend");
-        backend = StorageFactory.createStorage(backendConf);
+        try {
+            backend = StorageFactory.createStorage(backendConf);
+        } catch (Exception e) {
+            String error = "Error creating storage backend";
+            Logging.fatal(log, "RMIStorageProxy", error, e);
+            throw new ConfigurationException(error, e);
+        }
         log.trace("Created storage: " + backend.getClass().getName());
 
         serviceName = conf.getString(CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
         registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
-
-        RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
 
         try {
             RemoteHelper.exportMBean (this);

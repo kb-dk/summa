@@ -81,7 +81,7 @@ public final class StorageFactory {
      * @throws IOException if the storage could not be created.
      */
     public static Storage createStorage(Configuration conf, String classProp) throws IOException {
-        log.trace("createStorage(conf,prop) called");
+        log.trace("createStorage(conf, classProp=" + classProp + ") called");
 
         Class<? extends Storage> storageClass;
         try {
