@@ -20,13 +20,12 @@ import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
-
-import java.io.File;
-import java.io.IOException;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Tests {@link RMIStorageProxy}.
@@ -67,6 +66,7 @@ public class RMIStorageProxyTest extends TestCase {
         return new TestSuite(RMIStorageProxyTest.class);
     }
 
+
     /**
      * Returns a RMI storage.
      * @return A RMI Storage.
@@ -99,8 +99,7 @@ public class RMIStorageProxyTest extends TestCase {
     public final void testDirectClear() {
         try {
             Configuration conf = Configuration.newMemoryBased(
-                    DatabaseStorage.CONF_LOCATION,
-                    testRoot.toString());
+                    DatabaseStorage.CONF_LOCATION, testRoot.toString());
             Storage storage = StorageFactory.createStorage(conf);
             testClearBase(storage);
         } catch (IOException e) {
@@ -137,4 +136,6 @@ public class RMIStorageProxyTest extends TestCase {
             fail("Not expected here");
         }
     }
+
+
 }

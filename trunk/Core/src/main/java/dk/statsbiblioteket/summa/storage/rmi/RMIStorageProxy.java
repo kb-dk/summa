@@ -133,6 +133,7 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
      */
     public RMIStorageProxy(Configuration conf) throws IOException {
         super(getServicePort(conf));
+        log.info("Creating RMIStorageProxy");
         flattenExceptions = conf.getBoolean(CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
 
         /* Create configuration for the backend, based on our own,

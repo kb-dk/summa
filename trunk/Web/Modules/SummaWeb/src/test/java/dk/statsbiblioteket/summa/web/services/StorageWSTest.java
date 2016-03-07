@@ -13,13 +13,19 @@
  */
 package dk.statsbiblioteket.summa.web.services;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+import java.io.IOException;
 
 /* Not really a test, more of a debug tool */
 
@@ -27,6 +33,7 @@ import java.io.File;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class StorageWSTest extends TestCase {
+    private static Log log = LogFactory.getLog(StorageWSTest.class);
 
     public StorageWSTest(String name) {
         super(name);
@@ -40,6 +47,31 @@ public class StorageWSTest extends TestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
+    }
+
+    public void testInnerRMIWrappedH2() throws InterruptedException, IOException {
+        // Create a Storage inside of the StorageWS
+        {
+            File storageConf = Resolver.getFile("storagews_rmi_h2.xml");
+            assertNotNull("There should be a storage configuration file", storageConf);
+            assertTrue("The storage configuration file '" + storageConf + "' should exist", storageConf.exists());
+            StorageWS.conf = Configuration.load(storageConf.getAbsolutePath());
+            StorageWS storageWS = new StorageWS();
+        }
+
+        log.info("Created StorageWS, attempting to connect using StorageReaderClient...");
+        Thread.sleep(100);
+
+        {
+            // Connect to the storage from the outside
+            StorageReaderClient storageReader = new StorageReaderClient(Configuration.newMemoryBased(
+                    ConnectionConsumer.CONF_RPC_TARGET, "//localhost:51700/aviser-storage"
+            ));
+            log.info("StorageReaderClient connected successfully");
+
+            Record outRecord = storageReader.getRecord("foo", null);
+            assertNull("No record should be returned", outRecord);
+        }
     }
 
     public void testGetRecord() {
