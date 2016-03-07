@@ -70,7 +70,7 @@ public class RemoteHelper {
      */
     public synchronized static void exportRemoteInterface(
             Object obj, int registryPort, String serviceName) throws IOException {
-        log.trace("Preparing to export remote interfaces of " + obj + "as '" + serviceName + "' with registry on port "
+        log.debug("Preparing to export remote interfaces of " + obj + "as '" + serviceName + "' with registry on port "
                   + registryPort);
 
         Security.checkSecurityManager();

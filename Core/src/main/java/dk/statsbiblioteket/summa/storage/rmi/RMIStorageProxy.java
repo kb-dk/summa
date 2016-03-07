@@ -133,7 +133,7 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
      */
     public RMIStorageProxy(Configuration conf) throws IOException {
         super(getServicePort(conf));
-        log.info("Creating RMIStorageProxy");
+        log.info("Creating RMIStorageProxy from configuration only");
         flattenExceptions = conf.getBoolean(CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
 
         /* Create configuration for the backend, based on our own,
@@ -177,6 +177,7 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
         serviceName = conf.getString(CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
         registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
 
+        RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
         try {
             RemoteHelper.exportMBean (this);
             mbeanExported = true;
@@ -209,6 +210,7 @@ public class RMIStorageProxy extends UnicastRemoteObject implements RemoteStorag
      */
     public RMIStorageProxy(Configuration conf, Storage backend) throws IOException {
         super(getServicePort(conf));
+        log.info("Creating RMIStorageProxy from configuration and backing Storage " + backend);
         this.backend = backend;
         flattenExceptions = conf.getBoolean(CONF_FLATTEN_EXCEPTIONS, DEFAULT_FLATTEN_EXCEPTIONS);
 
