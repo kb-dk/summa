@@ -55,17 +55,17 @@
         </layout>
     </appender>
 
-     <logger name="dk.statsbiblioteket.summa.web.services.StorageWS">
+<!--     <logger name="dk.statsbiblioteket.summa.web.services.StorageWS">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+    -->
 
     <!-- all loggers inherit the root logger - so don't include the root appenders
     in the other loggers (will duplicate log entries in the log file) -->
     <root>
-        <level value="INFO" />
-        <appender-ref ref="FILE" />
+        <level value="debug" />
+        <appender-ref ref="CONSOLE" />
     </root>
 
 </log4j:configuration>

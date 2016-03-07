@@ -91,7 +91,7 @@ public final class StorageFactory {
                     "Could not get storage class from property " + Storage.CONF_CLASS + ": " + e.getMessage(), e);
         }
         //noinspection DuplicateStringLiteralInspection
-        log.info("Instantiating storage class " + storageClass);
+        log.info("Instantiating storage " + storageClass);
 
         try {
             // FIXME: This forces a RMI call when packing as a service. Not good
