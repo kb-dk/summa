@@ -57,9 +57,11 @@ public class StorageWSTest extends TestCase {
             assertTrue("The storage configuration file '" + storageConf + "' should exist", storageConf.exists());
             StorageWS.conf = Configuration.load(storageConf.getAbsolutePath());
             StorageWS storageWS = new StorageWS();
+            log.info("Created StorageWS. Priming inner storage by requesting dummy record");
+            storageWS.getRecord("nonexisting");
         }
 
-        log.info("Created StorageWS, attempting to connect using StorageReaderClient...");
+        log.info("Attempting to connect from the outside using StorageReaderClient...");
         Thread.sleep(100);
 
         {
