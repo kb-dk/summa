@@ -212,7 +212,7 @@ public class PostGreSQLStorage  extends DatabaseStorage implements Configurable 
         connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
         }
         catch(Exception e){
-            
+            log.warn("Still a problem changing connection properties on existing connection.");
         }
         return connection;
     }
