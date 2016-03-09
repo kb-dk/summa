@@ -8,6 +8,7 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
+
 import org.apache.commons.dbcp2.cpdsadapter.DriverAdapterCPDS;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -202,7 +203,11 @@ public class PostGreSQLStorage  extends DatabaseStorage implements Configurable 
 
     }
 
-
+    @Override
+    public boolean usePagingResultSets() {
+        return true;
+    }
+    
     @Override
     protected Connection getConnection() {
         Connection connection = pool.getConnection();
