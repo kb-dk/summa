@@ -763,11 +763,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException if unable to set write access or auto commit.
      */
     public Connection getDefaultConnection() throws SQLException {
-        Connection conn = getConnection();        
-        conn.setReadOnly(false);
-        conn.setAutoCommit(false);
-        
-        conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+        Connection conn = getConnection();             
         return conn;
     }
 
