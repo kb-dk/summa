@@ -1591,13 +1591,11 @@ public abstract class DatabaseStorage extends StorageBase {
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
         try {
-            stmt.getConnection().setAutoCommit(false);
-          
-            stmt.getConnection().setReadOnly(false);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
             assignFetchSize(stmt, true);
         } catch (SQLException e) {
+           log.warn("Error preparering fetchDirection and size");
             throw new IOException("Error preparing connection for cursoring", e);
         }
 
@@ -2997,13 +2995,11 @@ public abstract class DatabaseStorage extends StorageBase {
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
         try {
-            conn.setAutoCommit(false);
-            conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-            conn.setReadOnly(false);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
             assignFetchSize(stmt, false);
         } catch (SQLException e) {
+            log.error("Error setting fetchdirection and size");
             closeStatement(stmt);
             throw new IOException("Error preparing connection for clearing base '" + base + "': " + e.getMessage(), e);
         }
@@ -3196,13 +3192,11 @@ public abstract class DatabaseStorage extends StorageBase {
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
         try {
-            conn.setAutoCommit(false);
-            conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-            conn.setReadOnly(false);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
             assignFetchSize(stmt, false);
         } catch (SQLException e) {
+            log.error("Error setting fetch size/direction");
             closeStatement(stmt);
             throw new IOException("Error preparing connection for batch job", e);
         }
