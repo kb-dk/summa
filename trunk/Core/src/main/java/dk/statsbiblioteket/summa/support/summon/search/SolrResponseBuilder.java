@@ -1040,7 +1040,10 @@ public class SolrResponseBuilder implements Configurable {
             @Override
             public void end() {
                 if (id == null) {
-                    log.warn("No ID field '" + idField + "' found in document from query " + response.getQuery());
+                    if (noIDWarnCount++ < 10) {
+                        log.warn("No ID field '" + idField + "' found in document from query " + response.getQuery()
+                                 + ". This warning will only be showed 10 times in total until next service restart");
+                    }
                     id = "not_defined_in_" + idField;
                 }
                 if (!IndexUtils.RECORD_FIELD.equals(idField)) {
@@ -1078,6 +1081,7 @@ public class SolrResponseBuilder implements Configurable {
         });
         return records.isEmpty() ? null : records.get(0);
     }
+    int noIDWarnCount = 0;
 
     public String getRecordBase() {
         return recordBase;
