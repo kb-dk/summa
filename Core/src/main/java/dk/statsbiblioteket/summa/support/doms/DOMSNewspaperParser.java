@@ -191,6 +191,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         } catch (XMLStreamException e) {
             throw new PayloadException("Unable to parse ALTO for substring " + altoStart + ", " + altoEnd, e, payload);
         }
+        List<Alto.Illustration> illustrations = alto.getIllustrations(); // Not coupled to textBlockGroups
         Map<String, List<Alto.TextBlock>> groups = alto.getTextBlockGroups(minBlocks, minWords);
         if (groups.isEmpty()) {
             Logging.logProcess("DOMSNewspaperParser",
@@ -314,6 +315,23 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
 
                 segmentXML.writeEndElement(); // content
                 segmentXML.writeCharacters("\n");
+
+                segmentXML.writeStartElement("illustrations");
+                segmentXML.writeComment("Shared among all segments on the same page");
+                segmentXML.writeCharacters("\n");
+                for (Alto.Illustration illustration: alto.getIllustrations()) {
+                    segmentXML.writeStartElement("illustration");
+                    segmentXML.writeAttribute("id", illustration.getID());
+                    segmentXML.writeAttribute("x", spatial.format(illustration.getHposFraction()));
+                    segmentXML.writeAttribute("y", spatial.format(illustration.getVposFraction()));
+                    segmentXML.writeAttribute("width", spatial.format(illustration.getWidthFraction()));
+                    segmentXML.writeAttribute("height", spatial.format(illustration.getHeightFraction()));
+                    segmentXML.writeEndElement();
+                    segmentXML.writeCharacters("\n");
+                }
+                segmentXML.writeEndElement(); // illustrations
+                segmentXML.writeCharacters("\n");
+
 
                 segmentXML.writeEndElement(); // altosegment
                 segmentXML.writeCharacters("\n");

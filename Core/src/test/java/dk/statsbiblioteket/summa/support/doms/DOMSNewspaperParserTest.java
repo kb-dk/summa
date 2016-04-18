@@ -101,6 +101,24 @@ public class DOMSNewspaperParserTest extends TestCase {
         }
     }
 
+    public void testIllustrations() throws IOException {
+        if (!DOMS_ALTO.exists()) {
+            log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
+            return;
+        }
+        final int MAX_HEADLINE_WORDS = 2;
+
+        ObjectFilter splitter = getSplitter(MAX_HEADLINE_WORDS);
+        assertTrue("There should be a Record available", splitter.hasNext());
+        while (splitter.hasNext()) {
+            Payload payload = splitter.next();
+            log.info("Extracted " + payload.getId());
+            System.out.println(RecordUtil.getString(payload));
+            assertTrue("There should be at least 1 illustration\n" + RecordUtil.getString(payload),
+                       RecordUtil.getString(payload).contains("<illustration"));
+        }
+    }
+
     public void testOCR() throws IOException {
         if (!DOMS_ALTO.exists()) {
             log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
@@ -154,7 +172,7 @@ public class DOMSNewspaperParserTest extends TestCase {
         while (transformer.hasNext()) {
             Payload payload = transformer.next();
             log.info("Extracted " + payload.getId());
-            assertTrue("The transformed record should contain the field 'fulltext'",
+            assertTrue("The transformed record should contain the field 'fulltext'\n" + RecordUtil.getString(payload),
                        RecordUtil.getString(payload).contains("fulltext"));
             System.out.println(RecordUtil.getString(payload));
             counter++;

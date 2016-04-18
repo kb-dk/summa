@@ -29,9 +29,13 @@ import java.io.FileNotFoundException;
 public class AltoTest extends TestCase {
 //    private static Log log = LogFactory.getLog(AltoTest.class);
 
-    // TODO: We do not have license to publish these files. Generate obfuscated test files from them
+    // Newspapers > 100 years old has been cleared for free distribution
     public static final String alto1795 = "support/alto/as2/sample_2_2/B400022028241-RT2/400022028241-14/1795-06-13-01/"
                                           + "AdresseContoirsEfterretninger-1795-06-13-01-0006.alto.xml";
+    //public static final String ALTO1909 = "suppport/alto/nationaltidende-1909-11-14-02-0281B.alto.xml";
+    // FIXME: Why does the classpath version not work?
+    public static final String ALTO1909 = "/home/te/projects/summa-trunk/Core/src/test/resources/support/alto/" +
+                                          "nationaltidende-1909-11-14-02-0281B.alto.xml";
 
     public AltoTest(String name) {
         super(name);
@@ -49,6 +53,12 @@ public class AltoTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(AltoTest.class);
+    }
+
+    public void testIllustrations() throws FileNotFoundException, XMLStreamException {
+        assertNotNull("The file " + ALTO1909 + " should be available", Resolver.getFile(ALTO1909));
+        Alto alto = new Alto(Resolver.getFile(ALTO1909));
+
     }
 
     public void testBasicParse() throws XMLStreamException, FileNotFoundException {
