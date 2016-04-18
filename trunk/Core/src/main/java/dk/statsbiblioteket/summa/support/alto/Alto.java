@@ -250,6 +250,11 @@ public class Alto {
         return texts;
     }
 
+    public List<Illustration> getIllustrations() {
+        return getLayout() == null || getLayout().isEmpty() ? Collections.<Illustration>emptyList() :
+                getLayout().get(0).getIllustrations();
+    }
+
     private Map<String, Map<String, List<TextBlock>>> minGroups = new HashMap<>();
     /**
      * Works like {@link #getTextBlockGroups()} with the differences that groups containing less than minWords are
@@ -327,22 +332,41 @@ public class Alto {
     //     <TextBlock ID="TB_0001" HPOS="192" VPOS="158" WIDTH="480" HEIGHT="128">
     public final class Page extends PositionedElement {
         private List<TextBlock> printSpace = new ArrayList<>();
+        private List<Illustration> illustrations = new ArrayList<>();
 
         public Page(XMLStreamReader xml) throws XMLStreamException {
             super(xml);
             xml.next();
-            XMLStepper.iterateElements(xml, "Page", "TextBlock", new XMLStepper.XMLCallback() {
+            XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
+                @Override
+                public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
+                    if ("TextBlock".equals(current)) {
+                        TextBlock textBlock = new TextBlock(xml);
+                        printSpace.add(textBlock);
+                        return true;
+                    } else if ("Illustration".equals(current)) {
+                        illustrations.add(new Illustration(xml));
+                        return true;
+                    }
+                    return false;
+                }
+            });
+            /*XMLStepper.iterateElements(xml, "Page", "TextBlock", new XMLStepper.XMLCallback() {
                 @Override
                 public void execute(XMLStreamReader xml) throws XMLStreamException {
                     TextBlock textBlock = new TextBlock(xml);
                     printSpace.add(textBlock);
                 }
-            });
+            });*/
             log.trace("Parsed Page " + getID() + " with " + printSpace.size() + " TextBlocks");
         }
 
         public List<TextBlock> getPrintSpace() {
             return printSpace;
+        }
+
+        public List<Illustration> getIllustrations() {
+            return illustrations;
         }
 
         @Override
@@ -352,6 +376,26 @@ public class Alto {
                 result.addAll(pe.getAllTexts());
             }
             return result;
+        }
+    }
+
+    public final class Illustration extends PositionedElement {
+        private List<TextLine> lines = new ArrayList<>();
+
+        public Illustration(XMLStreamReader xml) throws XMLStreamException {
+            super(xml);
+            xml.next();
+            log.trace("Parsed " + this);
+        }
+
+        @Override
+        public List<String> getAllTexts() {
+            return Collections.emptyList();
+        }
+
+        public String toString() {
+            return "Illustration(" + getID() + ", size " + getWidth() + "x" + getHeight() + " at "
+                   + getHpos() + ", " + getVpos() + ")";
         }
     }
 
