@@ -203,6 +203,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         final String pre = content.substring(0, altoStart);
         final String post = content.substring(altoEnd);
 
+        int segmentCount = 1;
         for (Map.Entry<String, List<Alto.TextBlock>> group: groups.entrySet()) {
             StringWriter sw = new StringWriter();
             try {
@@ -221,6 +222,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                 segmentXML.writeStartElement("altosegment");
                 segmentXML.writeAttribute("altoid", payload.getId());
                 segmentXML.writeAttribute("segmentid", group.getKey());
+                segmentXML.writeAttribute("segmentCount", Integer.toString(segmentCount++));
                 if (Alto.NOGROUP.equals(group.getKey())) {
                     segmentXML.writeAttribute("connected", "false");
                 } else {
