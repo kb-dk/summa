@@ -234,7 +234,10 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                 writeIfDefined(segmentXML, "filename", alto.getFilename());
                 writeIfDefined(segmentXML, "origin", alto.getOrigin());
                 writeIfDefined(segmentXML, "processingStepSettings", alto.getProcessingStepSettings());
-                writeIfDefined(segmentXML, "measurementUnit", alto.getMeasurementUnit().toString());
+                writeIfDefined(segmentXML, "measurementUnit", alto.getMeasurementUnit());
+                writeIfDefined(segmentXML, "pageWidth", alto.getWidth());
+                writeIfDefined(segmentXML, "pageHeight", alto.getHeight());
+                writeIfDefined(segmentXML, "pagePixels", alto.getPixels());
                 writeIfDefined(segmentXML, "predictedWordAccuracy", alto.getPredictedWordAccuracy());
                 writeIfDefined(segmentXML, "predictedWordAccuracy_sort", padDouble(alto.getPredictedWordAccuracy()));
                 writeIfDefined(segmentXML, "characterErrorRatio", alto.getCharacterErrorRatio());

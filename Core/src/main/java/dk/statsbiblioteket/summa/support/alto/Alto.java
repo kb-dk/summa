@@ -166,11 +166,24 @@ public class Alto {
     }
     private final static Pattern PWA = Pattern.compile("Predicted Word Accuracy:([0-9]+.[0-9]+)", Pattern.DOTALL);
     private final static Pattern CER = Pattern.compile("Character Error Ratio:([0-9]+.[0-9]+)", Pattern.DOTALL);
+    private final static Pattern WIDTH = Pattern.compile("width:([0-9]+)", Pattern.DOTALL);
+    private final static Pattern HEIGHT = Pattern.compile("height:([0-9]+)", Pattern.DOTALL);
     public Double getPredictedWordAccuracy() {
         return getDouble(PWA);
     }
     public Double getCharacterErrorRatio() {
         return getDouble(CER);
+    }
+    public Long getWidth() {
+        return getLong(WIDTH);
+    }
+    public Long getHeight() {
+        return getLong(HEIGHT);
+    }
+    public Long getPixels() {
+        Long width;
+        Long height;
+        return (width = getWidth()) != null && (height = getHeight()) != null ? width*height : null;
     }
     private Double getDouble(Pattern pattern) {
         Matcher matcher;
@@ -179,6 +192,18 @@ public class Alto {
         }
         try {
             return Double.parseDouble(matcher.group(1));
+        } catch (NumberFormatException e) {
+            log.warn("Unable to parse '" + matcher.group(1) + "' as a double from pattern " + pattern.pattern());
+        }
+        return null;
+    }
+    private Long getLong(Pattern pattern) {
+        Matcher matcher;
+        if (processingStepSettings == null || !(matcher = pattern.matcher(processingStepSettings)).find()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(matcher.group(1));
         } catch (NumberFormatException e) {
             log.warn("Unable to parse '" + matcher.group(1) + "' as a double from pattern " + pattern.pattern());
         }
