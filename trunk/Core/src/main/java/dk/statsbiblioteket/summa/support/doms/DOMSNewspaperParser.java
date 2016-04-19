@@ -222,7 +222,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                 segmentXML.writeStartElement("altosegment");
                 segmentXML.writeAttribute("altoid", payload.getId());
                 segmentXML.writeAttribute("segmentid", group.getKey());
-                segmentXML.writeAttribute("segmentCount", Integer.toString(segmentCount++));
+                segmentXML.writeAttribute("segmentIndex", Integer.toString(segmentCount++));
                 if (Alto.NOGROUP.equals(group.getKey())) {
                     segmentXML.writeAttribute("connected", "false");
                 } else {
