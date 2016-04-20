@@ -4291,8 +4291,8 @@ public abstract class DatabaseStorage extends StorageBase {
         Statement stmt = conn.createStatement();
         ResultSet results = stmt.executeQuery(query);
 
-        try {
-            for (results.first(); !results.isAfterLast(); results.next()) {
+        try {                       
+            while(results.next()){                
                 String baseName = results.getString(1);
                 long lastModified = results.getLong(2);
                 long deletedIndexables = results.getLong(3);
