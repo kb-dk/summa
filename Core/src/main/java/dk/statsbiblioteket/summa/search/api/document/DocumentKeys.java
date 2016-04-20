@@ -224,4 +224,10 @@ public interface DocumentKeys {
      * Primarily used for testing timeouts.
      */
     public static final String SLEEP = "sleep";
+
+    /**
+     * If true, implementations should add custom {@link dk.statsbiblioteket.summa.support.api.DebugResponse}
+     * entries to the response collection.
+     */
+    public static final String DEBUG = "debug";
 }

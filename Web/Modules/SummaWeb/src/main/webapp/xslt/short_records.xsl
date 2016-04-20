@@ -10,7 +10,10 @@
     <xsl:param name="per_page"/>
     <xsl:param name="current_page"/>
 
-    <xsl:template match="/responsecollection/response/documentresult">
+    <xsl:template match="/">
+
+<xsl:for-each select="/responsecollection/response/documentresult">
+
         <xsl:choose>
             <xsl:when test="@hitCount=0">
                 No hits
@@ -59,12 +62,12 @@
                 </div>
 
 
-                <xsl:for-each select="record">
-                    <xsl:for-each select="field[@name='shortformat']">
+               <xsl:for-each select="record">
+                <xsl:for-each select="field[@name='shortformat']">
                         <xsl:for-each select="shortrecord/RDF/Description">
                             <xsl:call-template name="showfields-classic" />
                         </xsl:for-each>
-                    </xsl:for-each>
+                    </xsl:for-each> 
 
                     <xsl:for-each select="field[@name='summa:explain']">
                         <xsl:call-template name="explain" />
@@ -72,6 +75,7 @@
                 </xsl:for-each>
             </xsl:otherwise>
         </xsl:choose>
+        </xsl:for-each>
     </xsl:template>
 
     <xsl:template name="explain">

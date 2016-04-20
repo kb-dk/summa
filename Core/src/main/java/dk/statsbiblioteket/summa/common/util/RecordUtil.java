@@ -1181,4 +1181,17 @@ public class RecordUtil {
         }
         return newRecord;
     }
+
+    /**
+     * Poor man's prettify of non-parsed XML.
+     * Takes a String that is expected to be XML and inserts newlines after all end-tags, except the last one.
+     * If there are already a newline after an end tag, no new newline is inserted.
+     * @param xml needs not be valid as no real parsing is taking place.
+     * @return the XML with newlines after end-tags.
+     */
+    public static String prettifyXML(String xml) {
+        return NEWLINER.matcher(xml).replaceAll("$1\n$2");
+    }
+    private final static Pattern NEWLINER = Pattern.compile("(</[^>]+>)([^\n])", Pattern.DOTALL);
+
 }

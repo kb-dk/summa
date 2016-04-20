@@ -21,12 +21,14 @@ package dk.statsbiblioteket.summa.support.summon.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.support.api.DebugResponse;
 import dk.statsbiblioteket.summa.support.summon.search.api.RecommendationResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLStepper;
@@ -157,7 +159,10 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         //System.out.println(solrResponse.replace(">", ">\n"));
         long startTime = System.currentTimeMillis();
         if (request.getBoolean(SEARCH_DUMP_RAW, false)) {
-            log.info("Raw summon result:\n" + solrResponse.replace(">", ">\n"));
+            log.info("Raw summon result:\n" + RecordUtil.prettifyXML(solrResponse));
+        }
+        if (request.getBoolean(DocumentKeys.DEBUG, false)) {
+            responses.add(new DebugResponse("Summon", "raw", RecordUtil.prettifyXML(solrResponse)));
         }
         final boolean facetingEnabled = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         final XML_MODE xmlMode = XML_MODE.valueOf(
