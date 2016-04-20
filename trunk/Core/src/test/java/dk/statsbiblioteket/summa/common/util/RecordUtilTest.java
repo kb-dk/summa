@@ -267,5 +267,16 @@ public class RecordUtilTest extends TestCase {
     public MarcMultiVolumeMerger getMerger() {
         return new MarcMultiVolumeMerger(Configuration.newMemoryBased());
     }
+
+    public void testPrettifyXML() {
+        for (String[] test: new String[][]{
+                {"<foo>bar</foo>", "<foo>bar</foo>"},
+                {"<foo>bar</foo><zoo></zoo>boom", "<foo>bar</foo>\n<zoo></zoo>\nboom"},
+                {"<foo>bar</foo><zoo></zoo>", "<foo>bar</foo>\n<zoo></zoo>"}
+        }) {
+            assertEquals("The input '" + test[0] + " should be prettified as expected",
+                         test[1], RecordUtil.prettifyXML(test[0]));
+        }
+    }
 }
 

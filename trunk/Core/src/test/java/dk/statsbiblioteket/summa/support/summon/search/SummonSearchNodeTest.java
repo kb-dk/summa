@@ -111,6 +111,18 @@ public class SummonSearchNodeTest extends TestCase {
         System.out.println(responses.toXML());
 }
 
+    public void testDebug() throws RemoteException {
+        //final String QUERY = "roberto constantini";
+        final String QUERY = "hest";
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, QUERY, DocumentKeys.DEBUG, "true"), responses);
+        String xml = responses.toXML();
+        assertTrue("The response should contain a DebugResponse\n" + xml, xml.contains("DebugResponse"));
+        System.out.println(responses.toXML());
+}
+
     public void testSpecificProblemSearch() throws RemoteException {
         //final String QUERY = "roberto constantini";
         final String QUERY = "foo";

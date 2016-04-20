@@ -116,9 +116,11 @@
         if (json != null) {
             xml_search_result = (String)services.execute("directjson", json);
         } else {
-            xml_search_result = (String)services.execute(
+            String localJSON = "{search.document.query:\"" + (query == null ? "" : query) + "\", search.document.filter:\"" + (filter == null ? "" : filter) + "\", search.document.startindex:\"" + (current_page * per_page) + "\", search.document.maxrecords:\"" + per_page + "\", search.document.sortkey:\"" + (sort == null ? "" : sort) + "\", search.document.reversesort:\"" + reverseSort + "\", search.document.collectdocids:\"true\", debug:\"true\"}";
+            xml_search_result = (String)services.execute("directjson", localJSON);
+/*            xml_search_result = (String)services.execute(
                     "summafiltersearchsorted", filter, query,
-                    per_page, current_page * per_page, sort, reverseSort);
+                    per_page, current_page * per_page, sort, reverseSort);*/
         }
         searchCall += System.currentTimeMillis();
 
