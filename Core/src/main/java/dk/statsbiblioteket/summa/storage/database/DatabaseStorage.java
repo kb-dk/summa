@@ -4250,8 +4250,8 @@ public abstract class DatabaseStorage extends StorageBase {
             Statement available = conn.createStatement();
             boolean resultSetAva = available.execute(isBastStatsAva);
 
-            boolean resultSet = stmt.execute(isBaseStatsInvalid);
-            if (resultSet && stmt.getResultSet().first() || resultSetAva && !available.getResultSet().first()) {
+            boolean valid= stmt.execute(isBaseStatsInvalid);
+            if (valid && stmt.getResultSet().next() || resultSetAva && !available.getResultSet().next()) {
                 log.debug("Return slow statistic");
                 return getHeavyStatsWithConnection(conn);
             } else {
