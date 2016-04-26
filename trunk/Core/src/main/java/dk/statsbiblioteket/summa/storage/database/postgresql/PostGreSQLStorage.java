@@ -8,7 +8,6 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
-
 import org.apache.commons.dbcp2.cpdsadapter.DriverAdapterCPDS;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -212,16 +211,21 @@ public class PostGreSQLStorage  extends DatabaseStorage implements Configurable 
     protected Connection getConnection() {
         Connection connection = pool.getConnection();
         try{
+            // TODO: Remove these 3 lines and check that everything still works properly
         connection.setAutoCommit(false);
         connection.setReadOnly(false);
         connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
         }
         catch(Exception e){
-            log.warn("Still a problem changing connection properties on existing connection.");
+            if (connectionProblems++ % 1000 == 0) {
+                log.warn("Still a problem changing connection properties on existing connection (only every 1000" +
+                         " warning is logged. This is warning " + connectionProblems +").");
+            }
         }
         return connection;
     }
-   
+    private int connectionProblems = 0;
+
     /**
      * Return a prepared statement, from the statement handler.
      *
