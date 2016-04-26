@@ -566,7 +566,7 @@ public class QueryOptions implements Serializable {
     }
 
     public synchronized boolean hasAttribute(ATTRIBUTES attribute) {
-        if (attribute == null) {
+        if (attribute == null | attributes == null) {
             return true;
         }
         for (ATTRIBUTES current: attributes) {
