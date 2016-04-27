@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/         http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2008-09-23T10:17:54Z</responseDate>
+  <request verb="ListRecords" from="2008-09-17" until="2008-09-22" metadataPrefix="oai_dc">http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/</request>
+  <ListRecords>
+    <record>
+      <header>
+        <identifier>oai:sta:mtp:eln/300159</identifier>
+        <datestamp>2008-09-19</datestamp>
+      </header>
+      <metadata>
+        <mtp_dc:mdc xmlns:mtp_dc="http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/" xmlns:mdc="http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/          http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/mtp_b_dc.xsd">
+          <mdc:title>What we dream of</mdc:title>
+          <mdc:identifier>http://www.example.com/library/?len=314159267</mdc:identifier>
+          <mdc:editor>Henrik henriksen</mdc:editor>
+          <mdc:editor>Ole Olsen</mdc:editor>
+          <mdc:editor>Søren Sørensen</mdc:editor>
+          <mdc:subject>Honest Politicians</mdc:subject>
+          <mdc:subject>Military Intelligence</mdc:subject>
+          <mdc:subject>Bugfree Code</mdc:subject>
+          <mdc:subject>Fairies</mdc:subject>
+          <mdc:series_title>Dreams</mdc:series_title>
+          <mdc:volume>705</mdc:volume>
+          <mdc:issue/>
+          <mdc:isbn>999-88-777-6666-5</mdc:isbn>
+          <mdc:issn>4444-3333</mdc:issn>
+          <mdc:year_of_publ>2008</mdc:year_of_publ>
+          <mdc:journal>The Dream Journal</mdc:journal>
+          <mdc:pages>365</mdc:pages>
+          <mdc:format>pdf</mdc:format>
+          <mdc:filesize>1234 Kbyte</mdc:filesize>
+          <mdc:frontpage>http://www.example.com/314159.jpg</mdc:frontpage>
+          <mdc:description>        </mdc:description>
+          <mdc:contents>Henrik Henriksen: What we dream of when we're working<mdc:br/>Ole Olsen: More things to dream about.</mdc:contents>
+          <mdc:part>
+            <mdc:partnr>1</mdc:partnr>
+            <mdc:title>What we dream of when we're working</mdc:title>
+            <mdc:isbn>111-22-333-4444-5</mdc:isbn>
+            <mdc:author>Henrik Henriksen</mdc:author>
+            <mdc:startpage>6</mdc:startpage>
+            <mdc:endpage>13</mdc:endpage>
+            <mdc:identifier>http://www.example.com/?len=314159268</mdc:identifier>
+          </mdc:part>
+          <mdc:part>
+            <mdc:partnr>2</mdc:partnr>
+            <mdc:title>More things to dream about</mdc:title>
+            <mdc:isbn>111-22-333-4444-6</mdc:isbn>
+            <mdc:author>Ole Olsen</mdc:author>
+            <mdc:startpage>7</mdc:startpage>
+            <mdc:endpage>14</mdc:endpage>
+            <mdc:identifier>http://www.example.com/?len=314159269</mdc:identifier>
+          </mdc:part>
+        </mtp_dc:mdc>
+      </metadata>
+    </record>
+  </ListRecords>
+</OAI-PMH>

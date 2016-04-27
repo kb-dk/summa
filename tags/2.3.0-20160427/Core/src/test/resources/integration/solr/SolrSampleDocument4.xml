@@ -1,0 +1,6 @@
+<doc>
+    <field name="recordID">doc4</field>
+    <field name="recordBase">fake</field>
+    <field name="title_org">Common Title</field>
+    <field name="fulltext">The fourth Solr sample document with the same title as the third.</field>
+</doc>

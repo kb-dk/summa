@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- Modified slightly from the 'aviser' site that proved to be problematic -->
+<properties>
+    <entry key="summa.control.service.registry.port">51700</entry>
+    <entry key="summa.control.service.port">51722</entry>
+    <entry key="summa.storage.rmi.service.name">aviser-storage</entry>
+    <entry key="summa.storage.rmi.registry.port">51700</entry>
+    <entry key="summa.storage.service.port">51712</entry>
+    <entry key="control.launcher.service.class">dk.statsbiblioteket.summa.control.service.StorageService</entry>
+
+    <entry key="summa.storage.class">dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy</entry>
+    <entry key="summa.storage.rmi.service.name">aviser-storage</entry>
+
+    <entry key="summa.storage.rmi.backend">dk.statsbiblioteket.summa.storage.database.h2.H2Storage</entry>
+    <entry key="summa.storage.database.createnew">true</entry>
+    <entry key="summa.storage.database.forcenew">false</entry>
+    <entry key="summa.storage.database.location">storage/aviser</entry>
+    <entry key="storage.relations.touch">child</entry>
+    <entry key="storage.relations.clear">parent</entry>
+    <entry key="databasestorage.relatives.expandidlist">false</entry>
+
+    <entry key="queryoptions.filter.deleted">null</entry>
+    <entry key="queryoptions.filter.indexable">null</entry>
+    <entry key="queryoptions.child.depth">0</entry>
+    <entry key="queryoptions.parent.depth">3</entry>
+    <entry key="queryoptions.attributes">ID, BASE, DELETED, INDEXABLE, HAS_RELATIONS, CONTENT, CREATIONTIME, MODIFICATIONTIME, PARENTS</entry>
+
+</properties>
+
