@@ -2619,9 +2619,11 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Touching " + children.size() + " children of " + id);
+            log.info("Touching " + children.size() + " children of " + id);
         }
 
+         int touched = 0;
+        
         // Use handle directly
 
         PreparedStatement stmt = null;
@@ -2637,6 +2639,13 @@ public abstract class DatabaseStorage extends StorageBase {
                     stmt.setLong(1, nowStamp);
                     stmt.setString(2, r);
                     stmt.executeUpdate();
+                    
+                    if (touched % 10000==0){
+                     log.info("Total touched so far:"+touched);    
+                        
+                    }
+                    touched++;
+                    
                 }
                         
                 /* Multitouch code, not used
