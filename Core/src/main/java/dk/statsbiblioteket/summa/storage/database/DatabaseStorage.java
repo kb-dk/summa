@@ -2640,7 +2640,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     stmt.setString(2, r);
                     stmt.executeUpdate();
                     
-                    if (touched % 10000==0){
+                    if (touched % 100000==0){
                      log.info("Total touched so far:"+touched);    
                         
                     }
