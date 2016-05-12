@@ -3373,8 +3373,10 @@ public abstract class DatabaseStorage extends StorageBase {
  
         ResultSet rs = stmtCheckExists.executeQuery();        
         rs.next();        
-        int number = rs.getInt(1);        
-        log.info("Record already exist:"+id);
+        int number = rs.getInt(1);
+        if (number>0) {
+            log.debug("Record already exist:" + id);
+        }
         return number>0;
     }
     
