@@ -388,6 +388,22 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertBaseCount(BASE, records);
     }
 
+    public void testGetRecordsModifiedAfterPartial() throws Exception {
+        final String BASE = "baseAfter";
+        final byte[] DATA = "data".getBytes("utf-8");
+
+        storage.clearBase(BASE);
+        storage.flush(new Record("id0", BASE, DATA));
+        Thread.sleep(500);
+        storage.flush(new Record("id1", BASE, DATA));
+
+        Record first = storage.getRecord("id0", null);
+        long firstMTime = first.getModificationTime();
+
+        assertBaseCount("baseAfter", 1, firstMTime);
+
+    }
+
     /**
      * Tests statistic on storage with to records in two different bases.
      * @throws Exception If error.

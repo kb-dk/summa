@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 
 /**
@@ -175,7 +176,11 @@ public class StorageTestBase extends TestCase {
     }
 
     public void assertBaseCount(String base, long expected) throws Exception {
-        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
+        assertBaseCount(base, expected, 0);
+    }
+
+    public void assertBaseCount(String base, long expected, long mtime) throws IOException {
+        long iterKey = storage.getRecordsModifiedAfter(mtime, base, null);
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
         long actual = 0;
         while (iter.hasNext()) {
