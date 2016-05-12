@@ -389,18 +389,28 @@ public class DatabaseStorageTest extends StorageTestBase {
     }
 
     public void testGetRecordsModifiedAfterPartial() throws Exception {
+        final int BULK_SIZE = 1000;
+
         final String BASE = "baseAfter";
         final byte[] DATA = "data".getBytes("utf-8");
 
         storage.clearBase(BASE);
-        storage.flush(new Record("id0", BASE, DATA));
+
+        for (int i = 0 ; i < BULK_SIZE ; i++) {
+            storage.flush(new Record("id_first_" + i, BASE, DATA));
+        }
         Thread.sleep(500);
-        storage.flush(new Record("id1", BASE, DATA));
+        storage.flush(new Record("id_middle", BASE, DATA));
+        Thread.sleep(500);
+        for (int i = 0 ; i < BULK_SIZE ; i++) {
+            storage.flush(new Record("id_last_" + i, BASE, DATA));
+        }
 
-        Record first = storage.getRecord("id0", null);
-        long firstMTime = first.getModificationTime();
+        Record middle = storage.getRecord("id_middle", null);
+        long middleMTime = middle.getModificationTime();
 
-        assertBaseCount("baseAfter", 1, firstMTime);
+        assertBaseCount("baseAfter", BULK_SIZE+1, middleMTime-1);
+        assertBaseCount("baseAfter", BULK_SIZE, middleMTime);
 
     }
 
