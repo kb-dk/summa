@@ -156,6 +156,11 @@ public class PagingCursor implements ConnectionCursor {
 
         // page is depleted
         page.close();
+
+        if (pageRecords == 0) { // No results in page means no subsequent pages
+            logDepletedStats();
+            return null;
+        }
         pageRecords = 0;
 
         try {
