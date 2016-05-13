@@ -1600,6 +1600,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
 
+/*      Removed because the check was unreliable
         if (timestampGenerator.systemTime(mtimeTimestamp) > getModificationTime(base)) {
             log.info("Storage not flushed after " + mtimeTimestamp + " for base '" + base
                      + ". Returning empty iterator");
@@ -1610,7 +1611,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
             return null;
         }
-
+  */
         // Prepared stmt for all bases
         if (base == null) {
             try {
