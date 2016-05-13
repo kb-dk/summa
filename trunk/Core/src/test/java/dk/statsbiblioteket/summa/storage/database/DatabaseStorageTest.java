@@ -389,7 +389,7 @@ public class DatabaseStorageTest extends StorageTestBase {
     }
 
     public void testGetRecordsModifiedAfterPartial() throws Exception {
-        final int BULK_SIZE = 1000;
+        final int BULK_SIZE = 20000;
 
         final String BASE = "baseAfter";
         final byte[] DATA = "data".getBytes("utf-8");
@@ -411,7 +411,28 @@ public class DatabaseStorageTest extends StorageTestBase {
 
         assertBaseCount("baseAfter", BULK_SIZE+1, middleMTime-1);
         assertBaseCount("baseAfter", BULK_SIZE, middleMTime);
+    }
 
+    public void testGetRecordsModifiedAfterEdge() throws Exception {
+
+        final String BASE = "baseAfter";
+        final byte[] DATA = "data".getBytes("utf-8");
+
+        storage.clearBase(BASE);
+        storage.flush(new Record("id_A", BASE, DATA));
+        Thread.sleep(10);
+        storage.flush(new Record("id_B", BASE, DATA));
+        Thread.sleep(10);
+        storage.flush(new Record("id_C", BASE, DATA));
+
+        long timeA = storage.getRecord("id_A", null).getModificationTime();
+        long timeB = storage.getRecord("id_B", null).getModificationTime();
+        long timeC = storage.getRecord("id_C", null).getModificationTime();
+
+        assertBaseCount("baseAfter", 3, 0);
+        assertBaseCount("baseAfter", 2, timeA);
+        assertBaseCount("baseAfter", 1, timeB);
+        assertBaseCount("baseAfter", 0, timeC);
     }
 
     /**
