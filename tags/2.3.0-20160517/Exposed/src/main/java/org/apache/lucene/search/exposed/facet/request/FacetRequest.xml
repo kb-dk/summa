@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Sample facet request.
+-->
+<facetrequest xmlns="http://lucene.apache.org/exposed/facet/request/1.0" maxtags="30" mincount="1">
+  <query>freetext:"foo &lt;&gt; bar &amp; zoo"</query>
+  <groups>
+    <group name="title" order="locale" locale="da">
+      <fields>
+        <field name="title"/>
+        <field name="subtitle"/>
+      </fields>
+    </group>
+    <group name="author" order="index">
+      <fields>
+        <field name="name"/>
+      </fields>
+    </group>
+    <group name="material" order="count" mincount="0" maxtags="-1">
+      <fields>
+        <field name="materialetype"/>
+        <field name="type"/>
+      </fields>
+    </group>
+    <group name="place">
+      <fields>
+        <field name="position"/>
+      </fields>
+    </group>
+    <!-- A hierarchical group where tags on the first level are sorted by
+             count while tags on subsequent levels are sorted by index order.
+
+        -->
+    <group name="depth" mincount="0" order="index" maxtags="5" hierarchical="true" levels="5" delimiter="/">
+      <fields>
+        <field name="classification"/>
+      </fields>
+      <subtags suborder="count" maxtags="10" mintotalcount="1">
+        <subtags suborder="base" maxtags="5"/>
+      </subtags>
+    </group>
+  </groups>
+</facetrequest>
