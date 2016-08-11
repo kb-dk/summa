@@ -361,7 +361,10 @@
 
 <h5>Raw</h5>
 <pre>
-<%= xml_search_result.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") %>
+<%=
+   xml_search_result == null ? "Not available due to Exception" :
+   xml_search_result.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+%>
 </pre>
 </body>
 </html>
