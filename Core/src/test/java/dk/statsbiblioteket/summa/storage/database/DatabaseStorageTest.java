@@ -71,7 +71,7 @@ public class DatabaseStorageTest extends StorageTestBase {
     }
 
     // For performance reasons the authoritative Records in the Statsbiblioteket aviser project should
-    // not have theit childrenIDs enriched from the relations table
+    // not have their childrenIDs enriched from the relations table
     public void testRelativesExpansion() throws Exception {
         DatabaseStorage storage = createStorageWithParentChild();
         try {
@@ -211,6 +211,46 @@ public class DatabaseStorageTest extends StorageTestBase {
             }*/
         } finally {
             storage.close();
+        }
+    }
+
+    /**
+     * Tests that requesting a Record with children that was previously connected but with severed connections
+     * does not return the children as part of the Record tree.
+     */
+    public void testRelativesNoLongerRelated() throws Exception {
+        DatabaseStorage storage = createStorageWithParentChild();
+        try {
+            {
+                QueryOptions qo = new QueryOptions(null, null, 10, 10);
+                qo.setAttributes(QueryOptions.ATTRIBUTES_ALL);
+                Record fullTree = storage.getRecord("Parent", qo);
+                assertNotNull("There should be a Record with the ID 'Parent'", fullTree);
+                assertNotNull("The record Parent should have child-records", fullTree.getChildren());
+                assertEquals("The record Parent should have 2 child-records", 2, fullTree.getChildren().size());
+
+                assertNotNull("There should be a list of child-IDs", fullTree.getChildIds());
+                assertEquals("There should be 2 child-IDs", 2, fullTree.getChildIds().size());
+
+                fullTree.setChildIds(Collections.<String>emptyList());
+                for (Record child: fullTree.getChildren()) {
+                    if ("Child1".equals(child.getId())) {
+                        child.setParentIds(Collections.<String>emptyList());
+                    }
+                }
+                storage.flush(fullTree);
+            }
+
+            {
+                Record pruned = storage.getRecord("Parent", null);
+                assertNotNull("Record with the ID 'Parent' should still be available", pruned);
+                assertFalse("The record Parent still have a  child-record",
+                           pruned.getChildren() == null || pruned.getChildren().isEmpty());
+                assertEquals("The Record Parent should now only have 1 child", 1, pruned.getChildren().size());
+            }
+        } finally {
+            storage.close();
+            Thread.sleep(200); // Wait for freeing of resources
         }
     }
 

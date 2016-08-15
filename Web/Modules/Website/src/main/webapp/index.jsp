@@ -27,6 +27,7 @@
     boolean reverseSort = false;
     String searchTiming = "";
     String facetTiming = "";
+    String xml_search_request = "";
     String xml_search_result = "";
 
     long searchCall = 0;
@@ -114,9 +115,18 @@
         xml_search_result = null;
 
         if (json != null) {
+            xml_search_request = "Verbatim JSON: " + json;
             xml_search_result = (String)services.execute("directjson", json);
         } else {
-            String localJSON = "{search.document.query:\"" + (query == null ? "" : query) + "\", search.document.filter:\"" + (filter == null ? "" : filter) + "\", search.document.startindex:\"" + (current_page * per_page) + "\", search.document.maxrecords:\"" + per_page + "\", search.document.sortkey:\"" + (sort == null ? "" : sort) + "\", search.document.reversesort:\"" + reverseSort + "\", search.document.collectdocids:\"true\", debug:\"true\"}";
+            String localJSON = "{search.document.query:\"" + (query == null ? "" : query.replace("\"", "\\\"")) + "\", " +
+                               "search.document.filter:\"" + (filter == null ? "" : filter.replace("\"", "\\\"")) + "\", " +
+                               "search.document.startindex:\"" + (current_page * per_page) + "\", " +
+                               "search.document.maxrecords:\"" + per_page + "\", " +
+                               "search.document.sortkey:\"" + (sort == null ? "" : sort) + "\", " +
+                               "search.document.reversesort:\"" + reverseSort + "\", " +
+                               "search.document.collectdocids:\"true\", " +
+                               "debug:\"true\"}";
+            xml_search_request = "Generated JSON: " + localJSON;
             xml_search_result = (String)services.execute("directjson", localJSON);
 /*            xml_search_result = (String)services.execute(
                     "summafiltersearchsorted", filter, query,
@@ -330,13 +340,15 @@
     </div>
 </div>
 
-
 <div class="clusterLeft" style="clear: both;">
     <%= search_html %>
 </div>
 <div class="clusterRight">
     <%= facet_html %>
 </div>
+
+<h3 style="clear: left">Search request</h3>
+<p><%= xml_search_request %></p>
 
         <h3 style="clear: left">Detailed timing from sub system (full stack incl. website: <%= totalTime %> ms)</h3>
 <h4>Search</h4>

@@ -61,6 +61,7 @@ public class RecordUtil {
 
     private static XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     private static XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+
     static {
         xmlInputFactory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
         xmlInputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, Boolean.TRUE);
@@ -1194,4 +1195,24 @@ public class RecordUtil {
     }
     private final static Pattern NEWLINER = Pattern.compile("(</[^>]+>)([^\n])", Pattern.DOTALL);
 
+    /**
+     * Replaces invalid Unicode characters with ❔ (x2754;).
+     * Note: Only hexadecimal representations are checked, so {@code &#5;} will not be filtered although it is invalid.
+     * @param xml String-representation of XML.
+     * @return the input without invalid Unicodes.
+     */
+    public static String replaceInvalidUnicode(String xml) {
+        return INVALID_UNICODE_RANGE.matcher(xml).replaceAll("&#x2754;");
+    }
+
+    // Char	   ::=   	#x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+    private static final Pattern INVALID_UNICODE_RANGE = Pattern.compile(
+            "(?s)&#x0*(" +
+            "[0-8BCEFcef]" + "|" +                 // x0-x8, xB, xE, xF
+            "1[0-9A-Fa-f]" + "|" +                 // x10-x1F
+            "[Dd][89A-Fa-f][0-9A-Fa-f]{2}" + "|" + // D800-DFFF
+            "[Ff]{3}[EeFf]" + "|" +                // FFFE-FFFF
+            "1[1-9][0-9A-Fa-f]{4}" +               // 110000-1FFFFF
+            ");"
+            );
 }

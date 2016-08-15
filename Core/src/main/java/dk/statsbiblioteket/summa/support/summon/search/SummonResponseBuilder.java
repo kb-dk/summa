@@ -107,6 +107,17 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     public static final String DEFAULT_XML_FIELD_HANDLING = XML_MODE.selected.toString();
 
     /**
+     * If true, the raw response from summon is filtered so that
+     * <a href="https://www.w3.org/TR/xml/#charsets"></a>invalid Unicode references</a> are converted to a valid
+     * placeholder.
+     * Note: This imposes an overhead as the while input needs to be iterated.
+     * </p><p>
+     * Optional. Default is false (invalid code points is rarely a problem).
+     */
+    public static final String CONF_XML_FIX_INVALID_UNICODE = "summonresponsebuilder.xml.fixinvalidunicode";
+    public static final boolean DEFAULT_XML_FIX_INVALID_UNICODE = false;
+
+    /**
      * How to handle "fieldname_xml"-fields.<br/>
      * skip: Skip all _xml fields<br/>
      * selected: Explicit handling of date and author XML fields, skip of other _xml fields.<br/>
@@ -119,6 +130,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
     private final boolean xmlOverrides;
     private final String defaultXmlHandling;
     private final boolean collapseMultiValue;
+    private final boolean fixInvalidUnicode;
 
     // TODO: isFullTextHit, boolean in document -> field
 
@@ -129,6 +141,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         collapseMultiValue = conf.getBoolean(CONF_COLLAPSE_MULTI_FIELDS, DEFAULT_COLLAPSE_MULTI_FIELDS);
         defaultXmlHandling = XML_MODE.valueOf( // To enum and back to fail early
                                                conf.getString(CONF_XML_FIELD_HANDLING, DEFAULT_XML_FIELD_HANDLING)).toString();
+        fixInvalidUnicode = conf.getBoolean(CONF_XML_FIX_INVALID_UNICODE, DEFAULT_XML_FIX_INVALID_UNICODE);
         log.info("Created " + this);
     }
 
@@ -163,6 +176,9 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         }
         if (request.getBoolean(DocumentKeys.DEBUG, false)) {
             responses.add(new DebugResponse("Summon", "raw", RecordUtil.prettifyXML(solrResponse)));
+        }
+        if (fixInvalidUnicode) {
+            solrResponse = RecordUtil.replaceInvalidUnicode(solrResponse);
         }
         final boolean facetingEnabled = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         final XML_MODE xmlMode = XML_MODE.valueOf(

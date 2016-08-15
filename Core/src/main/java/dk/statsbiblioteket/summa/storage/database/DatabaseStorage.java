@@ -406,6 +406,14 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final boolean DEFAULT_EXPAND_RELATIVES_ID_LIST = false;
 
     /**
+     * If true, expanded Record trees are pruned of relatives not it any ID-list before delivery.
+     * </p><p>
+     * Optional. Default is true;
+     */
+    private static final String CONF_PRUNE_RELATIVES_ON_GET = "databasestorage.relatives.pruneonget";
+    private static final boolean DEFAULT_PRUNE_RELATIVES_ON_GET = true;
+
+    /**
      * The timestamp contract states that all mtime timestamps are unique. This ensures consistent ordering and
      * allows for single-Record granularity for {@link #getRecordsModifiedAfter(long, String, QueryOptions)}.
      * </p><p>
@@ -479,6 +487,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private int pageSize;
     private int pageSizeUpdate;
     private final boolean expandRelativesLists;
+    private final boolean pruneRelativesOnGet;
 
     private StatementHandler statementHandler;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
@@ -648,6 +657,7 @@ public abstract class DatabaseStorage extends StorageBase {
         expandRelativesLists = conf.getBoolean(CONF_EXPAND_RELATIVES_ID_LIST, DEFAULT_EXPAND_RELATIVES_ID_LIST);
         timestampGenerator = new UniqueTimestampGenerator();
         iteratorReaper = new CursorReaper(iterators, conf.getLong(CONF_ITERATOR_TIMEOUT, DEFAULT_ITERATOR_TIMEOUT));
+        pruneRelativesOnGet = conf.getBoolean(CONF_PRUNE_RELATIVES_ON_GET, DEFAULT_PRUNE_RELATIVES_ON_GET);
 
         usePagingModel = usePagingResultSets();
         useLazyRelations = useLazyRelationLookups();
@@ -1915,12 +1925,12 @@ public abstract class DatabaseStorage extends StorageBase {
         }
         //Call new optimized DB method to extract complete object tree
         if (options == null) {
-            return getRecordWithFullObjectTree(id);
+            return pruneRelatives(getRecordWithFullObjectTree(id));
         }
 
         if (options.parentHeight() == -1 && options.childDepth() == -1 &&
             (options.meta() == null || options.meta().isEmpty())) {
-            return getRecordWithFullObjectTree(id);
+            return pruneRelatives(getRecordWithFullObjectTree(id));
         }
 
         long startTime = System.currentTimeMillis();
@@ -1937,7 +1947,7 @@ public abstract class DatabaseStorage extends StorageBase {
                        + " result in " + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(m);
             recordlog.info(m);
-            return record;
+            return pruneRelatives(record);
         } catch (SQLException e) {
             String m = "Failed getRecord(" + id + ", ...) in " + (System.currentTimeMillis() - startTime)
                        + "ms. " + getRequestStats();
@@ -1947,7 +1957,53 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             closeConnection(conn);
         }
+    }
 
+    /**
+     * Traverses a tree of Records, starting from the given record, pruning parents or children where there is no
+     * ID-match in either the parent's childIDs or the childrens parentID.
+     * Note: This deadlocks if there are cycles.
+     * Note: This is only active if {@link #CONF_PRUNE_RELATIVES_ON_GET} is specified to true.
+     * @param record a tree of Records (can be just a single Record).
+     * @return the pruned Record tree.
+     */
+    public Record pruneRelatives(Record record) {
+        if (!pruneRelativesOnGet) {
+            return record;
+        }
+        log.trace("Pruning deceased relatives from " + record.getId());
+        pruneRelatives(null, record);
+        return record;
+    }
+
+    private void pruneRelatives(Record previous, Record origo) {
+        if (origo.getParents() != null && !origo.getParents().isEmpty()) {
+            ArrayList<Record> parents = new ArrayList<>(origo.getParents());
+            for (int i = parents.size()-1 ; i >= 0; i--) {
+                Record parent = parents.get(i);
+                if ((origo.getParentIds() == null || !origo.getParentIds().contains(parent.getId())) &&
+                    (parent.getChildIds() == null || !parent.getChildIds().contains(origo.getId()))) {
+                    parents.remove(i);
+                } else if (previous != parent) {
+                    pruneRelatives(origo, parent);
+                }
+            }
+            origo.setParents(parents);
+        }
+
+        if (origo.getChildren() != null && !origo.getChildren().isEmpty()) {
+            ArrayList<Record> children = new ArrayList<>(origo.getChildren());
+            for (int i = children.size()-1 ; i >= 0; i--) {
+                Record child = children.get(i);
+                if ((origo.getChildIds() == null || !origo.getChildIds().contains(child.getId())) &&
+                    (child.getParentIds() == null || !child.getParentIds().contains(origo.getId()))) {
+                    children.remove(i);
+                } else if (previous != child) {
+                    pruneRelatives(origo, child);
+                }
+            }
+            origo.setChildren(children);
+        }
     }
 
     private String getRequestStats() {

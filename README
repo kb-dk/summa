@@ -5,13 +5,13 @@ Summa is an open source search engine developed by the
 State and University Library of Denmark. It is released
 under the Apache License, Version 2.0.
 
-Homepage: http://wiki.statsbiblioteket.dk/summa
-SVN:https://summa.svn.sourceforge.net/svnroot/summa
+This project is developed for internal use at State and University Library.
+While it is certainly possible to use it elsewhere, it is not very
+polished and documentation is lacking.
 
-Contact:
-For getting involved with Summa development er asking general questions about
-Summa please go to: http://sourceforge.net/mail/?group_id=265356 and sign
-up for the 'summa-devel' mailing list.
+Homepage: http://wiki.statsbiblioteket.dk/summa
+Git: https://github.com/statsbiblioteket/summa
+
 
 Running maven:
 Insert the following XML into the Maven2 settings file (under linux this i found

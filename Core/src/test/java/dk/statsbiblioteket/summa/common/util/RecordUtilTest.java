@@ -177,10 +177,8 @@ public class RecordUtilTest extends TestCase {
 
     // TODO: Test BOM
 
-    private static XMLOutputFactory xmlOutputFactory =
-            XMLOutputFactory.newInstance();
-    private static XMLInputFactory xmlInputFactory =
-            XMLInputFactory.newInstance();
+    private static XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+    private static XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     
     public void testCopyContent() throws Exception {
         String base = "<foo><bar /> <!-- comment <hello> --> aloha "
@@ -264,6 +262,14 @@ public class RecordUtilTest extends TestCase {
             + " records/sec");
     }
 
+    public void testReplaceInvalidUnicode() {
+        String INPUT = " K such that for all &#xD835;&#xDC9C;&#x2208; K, &#xD835;&#xDC9C;&#x22A8;&#x3C6;* \n" +
+                       "iff &#x3A6;(&#xD835;&#xDC9C;)&#x22A8;&#x3C6;, and &#x3C6;* has the same";
+        String EXPECTED = " K such that for all &#x2754;&#x2754;&#x2208; K, &#x2754;&#x2754;&#x22A8;&#x3C6;* \n" +
+                       "iff &#x3A6;(&#x2754;&#x2754;)&#x22A8;&#x3C6;, and &#x3C6;* has the same";
+        assertEquals(EXPECTED, RecordUtil.replaceInvalidUnicode(INPUT));
+    }
+
     public MarcMultiVolumeMerger getMerger() {
         return new MarcMultiVolumeMerger(Configuration.newMemoryBased());
     }
@@ -278,5 +284,6 @@ public class RecordUtilTest extends TestCase {
                          test[1], RecordUtil.prettifyXML(test[0]));
         }
     }
+
 }
 
