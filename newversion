@@ -4,7 +4,7 @@
 mvn -N versions:update-child-modules
 VERSION=`cat pom.xml | grep -A 1 "<artifactId>summa" | tr '\n' ' ' | sed 's/.*<version>\([^>]\+\)<\/version>.*/\1/'`
 echo "*** Proposed actions (not performed automatically):"
-echo "svn commit -m \"Bumped to $VERSION\""
+echo "git commit -m \"Bumped to $VERSION\" pom.xml */pom.xml */*/pom.xml"
 
 if [ "." != ".`echo $VERSION | grep SNAPSHOT`" ]; then
     exit
