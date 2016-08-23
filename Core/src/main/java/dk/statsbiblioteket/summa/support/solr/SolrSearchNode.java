@@ -1107,6 +1107,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
 
     // TODO: Extend this
     public String toString() {
-        return "SolrSearchNode(id=" + getID() + ", recordCache=" + cacheType + ")";
+
+        return String.format("SolrSearchNode(id=%s, recordCache=%s, host=%s, rest=%s)",
+                             getID(), cacheType, host, restCall);
     }
 }
