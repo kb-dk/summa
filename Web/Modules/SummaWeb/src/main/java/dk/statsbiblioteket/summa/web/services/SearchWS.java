@@ -1049,7 +1049,7 @@ public class SearchWS implements ServletContextListener {
         Environment.checkJavaVersion();
         getSearcher();  // We need to start it here to get RMI activated
         getSuggester();
-        log.info("SearchWS context initialized");
+        log.info("SearchWS context initialized for Modules/Search/.../SearchWS");
     }
     @Override
     public void contextDestroyed(ServletContextEvent sce) {

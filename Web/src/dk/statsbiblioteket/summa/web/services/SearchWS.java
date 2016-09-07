@@ -69,8 +69,7 @@ public class SearchWS {
                                                  XMLOutputFactory.newInstance();
 
     /** Did-You-Mean XML namespace. */
-    public static final String NAMESPACE =
-                            "http://statsbiblioteket.dk/summa/2009/SearchError";
+    public static final String NAMESPACE = "http://statsbiblioteket.dk/summa/2009/SearchError";
     /** XML tag for search error response. */
     public static final String SEARCH_ERROR_RESPONSE = "searcherror";
     /** XML name tag. */

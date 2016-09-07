@@ -59,7 +59,7 @@
 
 
     <root>
-        <level value="INFO" />
+        <level value="info" />
         <appender-ref ref="CONSOLE" />
     </root>
 

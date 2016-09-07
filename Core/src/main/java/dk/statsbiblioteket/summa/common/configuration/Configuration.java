@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.common.configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.*;
 import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.summa.common.util.Security;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -336,11 +337,14 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
     public String getString(String key, String defaultValue) throws ConfigurationStorageException {
         Object val = get(key);
         if (val == null) {
-            log.debug("Unable to find property '" + key + "', using default " + defaultValue);
+            log.debug("Unable to find property for " + key + ", using default value \"" + defaultValue + "\"");
             return Environment.escapeSystemProperties(defaultValue);
         }
-        log.debug("Found property for '" + key + "' using '" + val.toString().trim() + "'");
-        return Environment.escapeSystemProperties(val.toString().trim());
+        String expanded = Environment.escapeSystemProperties(val.toString().trim());
+        log.debug(val.toString().equals(expanded) ?
+                          ("Resolved " + key + "=\"" + val + "\" (no expansions)") :
+                          ("Resolved " + key + "=\"" + expanded + "\", expanded from \"" + val + "\""));
+        return expanded;
     }
 
     /**

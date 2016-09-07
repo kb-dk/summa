@@ -17,7 +17,9 @@ package dk.statsbiblioteket.summa.common.configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -37,16 +39,13 @@ import java.util.Map;
 @SuppressWarnings("DuplicateStringLiteralInspection")
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke")
+        author = "te, mke")
 public class ConfigurationTest extends TestCase {
     /** Configurations XML. */
-    private static final String CONFIGURATIONXML =
-        "common/configurationFiles/configuration.xml";
+    private static final String CONFIGURATIONXML = "common/configurationFiles/configuration.xml";
     /** Simple storage XML. */
-    private static final String SIMPLEXSTORAGEXML =
-        "common/configurationFiles/simple_xstorage.xml";
-    private static final String STRINGSXML =
-        "common/configurationFiles/string_list_xstorage.xml";
+    private static final String SIMPLEXSTORAGEXML = "common/configurationFiles/simple_xstorage.xml";
+    private static final String STRINGSXML = "common/configurationFiles/string_list_xstorage.xml";
     /** TMP path. */
     private static final String TMP = "target/tmp";
 
@@ -60,6 +59,7 @@ public class ConfigurationTest extends TestCase {
         if (!new File(TMP).exists() && !new File(TMP).mkdirs()) {
             fail("Error creating '" + TMP + "'");
         }
+        Environment.sysProps = null; // Emulate new JVM with regards to environment variables
     }
 
     @Override
@@ -251,8 +251,7 @@ public class ConfigurationTest extends TestCase {
         Configuration originalConf = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
 
-        assertEquals("Loading via getSystemConfiguration and directly should "
-                     + "result in identical configurations",
+        assertEquals("Loading via getSystemConfiguration and directly should result in identical configurations",
                      conf, originalConf);
 
         System.clearProperty(Configuration.CONF_CONFIGURATION_PROPERTY);
@@ -271,8 +270,7 @@ public class ConfigurationTest extends TestCase {
         Configuration originalConf = new Configuration(new FileStorage(
                 CONFIGURATIONXML));
 
-        assertEquals("Loading via getSystemConfiguration and directly should "
-                     + "result in identical configurations",
+        assertEquals("Loading via getSystemConfiguration and directly should result in identical configurations",
                      testConf, originalConf);
 
         System.clearProperty(Configuration.CONF_CONFIGURATION_PROPERTY);
@@ -377,8 +375,7 @@ public class ConfigurationTest extends TestCase {
     }
 
     public void testGetSystemConfigAuto() throws Exception {
-        Configuration conf =
-                      Configuration.getSystemConfiguration("summa.snafu", true);
+        Configuration conf = Configuration.getSystemConfiguration("summa.snafu", true);
 
         int count = 0;
         //noinspection UnusedDeclaration
@@ -387,34 +384,33 @@ public class ConfigurationTest extends TestCase {
         }
 
         if (count == 0) {
-            fail("Got empty system config. Expected non-empty config to " +
-                  "be found");
+            fail("Got empty system config. Expected non-empty config to be found");
         }
 
     }
 
-    public void testExpandedSysProp() throws Exception {
-        Configuration conf = Configuration.newMemoryBased("foo.bar",
-                                                          "${user.home}");
+    public void testListSystemProperties() {
+        String props = Strings.join(System.getProperties().entrySet());
+        assertFalse("The System properties should not be empty", "".equals(props));
+        System.out.println("System properties: " + props);
+    }
 
-        assertEquals(System.getProperty("user.home"),
-                     conf.getString("foo.bar"));
+    public void testExpandedSysProp() throws Exception {
+        Configuration conf = Configuration.newMemoryBased(
+                "foo.bar", "${user.home}");
+
+        assertEquals(System.getProperty("user.home"), conf.getString("foo.bar"));
 
         // Also test that we expand the default value
-        assertEquals(System.getProperty("user.home"),
-                     conf.getString("b0rk", "${user.home}"));
+        assertEquals(System.getProperty("user.home"), conf.getString("b0rk", "${user.home}"));
     }
 
     public void testExpandedSysPropList() throws Exception {
-        ArrayList<String> val = new ArrayList<>(
-                                           Arrays.asList("${user.dir}", "bar"));
-        Configuration conf = Configuration.newMemoryBased("foo.bar",
-                                                          val);
+        ArrayList<String> val = new ArrayList<>(Arrays.asList("${user.dir}", "bar"));
+        Configuration conf = Configuration.newMemoryBased("foo.bar", val);
 
-        List<String> expected = Arrays.asList(System.getProperty("user.dir"),
-                                              "bar");
-        assertEquals(expected,
-                     conf.getStrings("foo.bar"));
+        List<String> expected = Arrays.asList(System.getProperty("user.dir"), "bar");
+        assertEquals(expected, conf.getStrings("foo.bar"));
 
         // Also test that we expand the default value
         assertEquals(expected,
@@ -424,31 +420,25 @@ public class ConfigurationTest extends TestCase {
     public void testExpandedSysPropIntValues () throws Exception {
         System.setProperty("intprop", "27");
         String val = "a(1), b(${intprop}), ${os.name}";
-        Configuration conf = Configuration.newMemoryBased("foo.bar",
-                                                          val);
+        Configuration conf = Configuration.newMemoryBased( "foo.bar", val);
 
 /*        Arrays.asList(
                 new Configuration.Pair<String, Integer>("a", 1),
                 new Configuration.Pair<String, Integer>("b", 2)
         );*/
         // TODO check expected
-        List<Configuration.Pair<String, Integer>> result =
-                                             conf.getIntValues("foo.bar", 3);
+        List<Configuration.Pair<String, Integer>> result = conf.getIntValues("foo.bar", 3);
 
         // Clear the sys prop before the test has a chance of failing
         System.clearProperty("intprop");
 
         assertEquals(3, result.size());
 
-        assertEquals(new Configuration.Pair<>("a", 1),
-                     result.get(0));
+        assertEquals(new Configuration.Pair<>("a", 1), result.get(0));
 
-        assertEquals(new Configuration.Pair<>("b", 27),
-                     result.get(1));
+        assertEquals(new Configuration.Pair<>("b", 27), result.get(1));
 
-        assertEquals(new Configuration.Pair<>(
-                                              System.getProperty("os.name"), 3),
-                     result.get(2));
+        assertEquals(new Configuration.Pair<>(System.getProperty("os.name"), 3), result.get(2));
     }
 
     public void testExpandSysPropSimpleValues() throws Exception {
@@ -456,12 +446,10 @@ public class ConfigurationTest extends TestCase {
         System.setProperty("boolprop", "true");
         System.setProperty("longprop", "270");
 
-        Configuration conf = Configuration.newMemoryBased("intprop",
-                                                          "${intprop}",
-                                                          "boolprop",
-                                                          "${boolprop}",
-                                                          "longprop",
-                                                          "${longprop}");
+        Configuration conf = Configuration.newMemoryBased(
+                "intprop", "${intprop}",
+                "boolprop", "${boolprop}",
+                "longprop", "${longprop}");
 
         int intprop = conf.getInt("intprop");
         boolean boolprop = conf.getBoolean("boolprop");

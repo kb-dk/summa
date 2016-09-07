@@ -15,12 +15,14 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.summa.common.SummaConstants;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -37,8 +39,7 @@ public class Environment {
             "([0-9]+)\\.([0-9]+)\\.([0-9]+)\\_([0-9]+)\\-b([0-9]+)");
 
     /**
-     * Escape any system properties references in Ant-like syntax, eg. the
-     * string<br/>
+     * Escape any system properties references in Ant-like syntax, eg. the string<br/>
      * <pre>
      *   "Your home dir is ${user.home}"
      * </pre>
@@ -46,35 +47,60 @@ public class Environment {
      * <pre>
      *    "Your home dir is /home/username"
      * </pre>
-     *
-     * @param s the string to escape, if {@code s} is {@code null} this method
-     *          also returns {@code null}
-     * @return the string with any system property references replaces by their
-     *         actual values, or {@code null} if the input string is
-     *         {@code null}
+     * @param s the string to escape, if {@code s} is {@code null} this method also returns {@code null}.
+     * @return the string with any system property references replaces by their actual values, or {@code null} if the
+     *         input string is {@code null}.
      */
     public static String escapeSystemProperties(String s) {
-        if (s == null) {
-            return null;
-        }
-
-        String result = s;
-
-        // Micro optimization to not escape anything if there are no refs in s
-        if (!s.contains("${")) {
+        if (s == null || s.isEmpty()) {
             return s;
         }
 
-        // This is ridiculously inefficient, but it gets the job done...
-        for (Map.Entry entry : System.getProperties().entrySet()) {
-            String pattern = "${" + entry.getKey().toString() + "}";
-            String newVal = entry.getValue().toString();
-
-            result = result.replace(pattern, newVal);
+        StringBuffer expanded = new StringBuffer();
+        Matcher matcher = EXPAND.matcher(s);
+        while (matcher.find()) {
+            String expVal = getSystemProperties().get(matcher.group(1));
+            if (expVal == null) {
+                log.warn("Unable to expand environment variable \"" + matcher.group(1) + "\"");
+                System.out.println("Group " + matcher.group(1) + " input " + s);
+                matcher.appendReplacement(expanded, "");
+                expanded.append("${").append(matcher.group(1)).append("}");
+            } else {
+                matcher.appendReplacement(expanded, expVal);
+            }
         }
-
-        return result;
+        matcher.appendTail(expanded);
+        return expanded.toString();
     }
+    private static final Pattern EXPAND = Pattern.compile("[$][{]([^}]+)[}]");
+
+    // Second-guesses nested String properties like
+    // sun.java.command=org.apache.catalina.startup.Bootstrap -Dsite.id=aviser -Dsite.version=1.0
+    // where "org.apache.catalina.startup.Bootstrap -Dsite.id=aviser -Dsite.version=1.0" is technically a single String,
+    // but in reality a lot of key-values
+    private static synchronized Map<String, String> getSystemProperties() {
+        if (sysProps == null) {
+            sysProps = new HashMap<>();
+
+            // Nested properties first as the "real" properties should override those
+            for (Map.Entry entry : System.getProperties().entrySet()) {
+                String value = entry.getValue().toString();
+                Matcher matcher = NESTED.matcher(value);
+                while (matcher.find()) {
+                    sysProps.put(matcher.group(1), matcher.group(2));
+                }
+            }
+            // Directly specified properties
+            for (Map.Entry entry : System.getProperties().entrySet()) {
+                sysProps.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+            log.info("Resolved and cached JVM environment variables: " +
+                     Strings.join(sysProps.entrySet()).replace("\n", "\\n"));
+        }
+        return sysProps;
+    }
+    private static final Pattern NESTED = Pattern.compile(" -D([^=]+)=([^ ]+)");
+    public static Map<String, String> sysProps = null;
 
     /**
      * Attempts to resolve the machine name with fallback to IP address. This is not authoritative, but "best effort"
