@@ -432,12 +432,20 @@ public class SolrManipulator implements IndexManipulator {
                 designation, updateCommand, trim(command, 100), getResponse(response));
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
             throw new IOException(message);
+        } else if (code == 404) {
+            String message = String.format(
+                "Fatal error, JVM will be shut down: HTTP error 404 when sending '%s' to Solr %s from %s",
+                designation, updateCommand, this);
+            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.FATAL, designation);
+            Logging.fatal(log, "SolrManipulator.send", message);
+            new DeferredSystemExit(1);
+            throw new IOException(message);
         } else if (code != 200) {
             String message = String.format(
                 "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s from %s. Error code %d. "
                 + "Trimmed request:\n%s\nResponse:\n%s",
                 designation, updateCommand, this, code, trim(command, 100), getResponse(response));
-            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.ERROR, designation);
+            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.FATAL, designation);
             Logging.fatal(log, "SolrManipulator.send", message);
             new DeferredSystemExit(1);
             throw new IOException(message);
