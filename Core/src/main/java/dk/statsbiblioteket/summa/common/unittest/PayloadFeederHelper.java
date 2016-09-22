@@ -23,7 +23,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +67,11 @@ public class PayloadFeederHelper implements ObjectFilter {
         log.debug("Creating feeder from " + inputFiles.length + " input files");
         payloads = new ArrayList<>(inputFiles.length);
         for (String inputFile: inputFiles) {
-            payloads.add(new Payload(Resolver.getURL(inputFile).openStream(), inputFile));
+            URL url = Resolver.getURL(inputFile);
+            if (url == null) {
+                throw new FileNotFoundException("Unable to locate resource '" + inputFile + "'");
+            }
+            payloads.add(new Payload(url.openStream(), inputFile));
         }
     }
 

@@ -62,7 +62,7 @@ public class Environment {
             String expVal = getSystemProperties().get(matcher.group(1));
             if (expVal == null) {
                 log.warn("Unable to expand environment variable \"" + matcher.group(1) + "\"");
-                System.out.println("Group " + matcher.group(1) + " input " + s);
+//                System.out.println("Group " + matcher.group(1) + " input " + s);
                 matcher.appendReplacement(expanded, "");
                 expanded.append("${").append(matcher.group(1)).append("}");
             } else {
