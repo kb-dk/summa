@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
 
@@ -32,40 +33,63 @@ import static org.junit.Assert.*;
 public class EnrichWithLocationsFilterTest {
 
     @Test
-    public void TestBasicEnrichment() throws IOException {
+    public void testBasicEnrichment() throws IOException {
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
                 EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat"
         ));
-        String enriched = getEnrichedSample(enricher);
-        {
-            String expected = "<field name=\"location_name\">Westminster</field>";
-            assertTrue("The produced content should contain the String '" + expected + "'\n" + enriched,
-                        enriched.contains(expected));
-        }
-        {
-            String expected = "<field name=\"location_name\">London Westminster</field>";
-            assertTrue("The produced content should contain the String '" + expected + "'\n" + enriched,
-                       enriched.contains(expected));
-        }
+        assertEnriched(enricher, "Westminster", "London Westminster");
     }
 
     @Test
-    public void TestLongestEnrichment() throws IOException {
+    public void testLongestEnrichment() throws IOException {
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
                 EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
                 EnrichWithLocationsFilter.CONF_MATCH_MODE, "longest"
         ));
+        assertNotEnriched(enricher, "Westminster");
+        assertEnriched(enricher, "London Westminster", "Somewhere");
+    }
+
+    @Test
+    public void testIsolation() throws IOException {
+        ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
+                EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
+                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
+                EnrichWithLocationsFilter.CONF_MATCH_SPACE_POSTFIX, true
+        ));
+        assertNotEnriched(enricher, "Somewhere");
+    }
+
+    @Test
+    public void testCleanAndIsolate() throws IOException {
+        Pattern clean = Pattern.compile("[^\\p{IsAlphabetic}]+");
+        ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
+                EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
+                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
+                EnrichWithLocationsFilter.CONF_INPUT_CLEAN_REGEXP, clean.pattern(),
+                EnrichWithLocationsFilter.CONF_MATCH_SPACE_POSTFIX, true
+        ));
+        assertEnriched(enricher, "Westminster");
+        assertEnriched(enricher, "Somewhere");
+        assertEnriched(enricher, "Ærø");
+    }
+
+    private void assertEnriched(ObjectFilter enricher, String... fieldContents) throws IOException {
         String enriched = getEnrichedSample(enricher);
-        {
-            String expected = "<field name=\"location_name\">Westminster</field>";
-            assertFalse("The produced content should not contain the String '" + expected + "'\n" + enriched,
-                        enriched.contains(expected));
+        for (String content: fieldContents) {
+            String expected = "<field name=\"location_name\">" + content + "</field>";
+            assertTrue("The produced content should contain a field with '" + content + "'\n" + enriched,
+                       enriched.contains(expected));
         }
-        {
-            String expected = "<field name=\"location_name\">London Westminster</field>";
-            assertTrue("The produced content should contain the String '" + expected + "'\n" + enriched,
+    }
+
+    private void assertNotEnriched(ObjectFilter enricher, String... fieldContents) throws IOException {
+        String enriched = getEnrichedSample(enricher);
+        for (String content: fieldContents) {
+            String expected = "<field name=\"location_name\">" + content + "</field>";
+            assertFalse("The produced content should not contain a field '" + content + "'\n" + enriched,
                        enriched.contains(expected));
         }
     }

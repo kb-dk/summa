@@ -106,17 +106,59 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
     public static final String CONF_MATCH_MODE = "enrich.matcher.mode";
     public static final VerbatimMatcher.MATCH_MODE DEFAULT_MATCH_MODE = VerbatimMatcher.MATCH_MODE.all;
 
+    /**
+     * If true, the effect will be the same as prefixing all verbatims with a space (0x20).
+     * It is recommended to also specify {@link #CONF_INPUT_CLEAN_REGEXP} is this property is true.
+     * If true, the overall input will be prefixed with a space.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_MATCH_SPACE_PREFIX = "enrich.matcher.space.prefix";
+    public static final boolean DEFAULT_MATCH_SPACE_PREFIX = false;
+
+    /**
+     * If true, the effect will be the same as postfixing all verbatims with a space (0x20).
+     * It is recommended to also specify {@link #CONF_INPUT_CLEAN_REGEXP} is this property is true.
+     * If true, the overall input will be postfixed with a space.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_MATCH_SPACE_POSTFIX = "enrich.matcher.space.postfix";
+    public static final boolean DEFAULT_MATCH_SPACE_POSTFIX = false;
+
+    /**
+     * If specified, a replaceAll with this regexp and {@link #CONF_INPUT_CLEAN_REPLACEMENT} as replacement will be
+     * performed on all input.
+     * </p><p>
+     * </p><p>
+     * Optional. Default is "" (no cleanup).
+     */
+    public static final String CONF_INPUT_CLEAN_REGEXP = "enrich.input.clean.regexp";
+    public static final String DEFAULT_INPUT_CLEAN_REGEXP = "";
+
+    /**
+     * If {@link #CONF_INPUT_CLEAN_REGEXP} is defined, this property holds the replacement.
+     * </p><p>
+     * Optional. Default is " " (space).
+     */
+    public static final String CONF_INPUT_CLEAN_REPLACEMENT = "enrich.input.clean.replacement";
+    public static final String DEFAULT_INPUT_CLEAN_REPLACEMENT = " ";
+
     private final String designationField;
     private final String coordinatesField;
     private final String combinedField;
 
     private final String inputField;
+    private final Pattern inputRegexp;
+    private final String inputReplacement;
 
     private final String source;
     private final String sourceDelimiter;
 
     private final LocationMatcher matcher;
     private final VerbatimMatcher.MATCH_MODE matchMode;
+    private final boolean matcherSpacePrefix;
+    private final boolean matcherSpacePostfix;
 
     public EnrichWithLocationsFilter(Configuration conf) {
         super(conf);
@@ -132,20 +174,35 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
         }
         source = conf.getString(CONF_LOCATIONS_SOURCE);
         sourceDelimiter = conf.getString(CONF_LOCATIONS_DELIMITER, DEFAULT_LOCATIONS_DELIMITER);
+
         matcher = new LocationMatcher();
-        matchMode = VerbatimMatcher.MATCH_MODE.valueOf(conf.getString(CONF_MATCH_MODE, DEFAULT_MATCH_MODE.toString()));
-        matcher.setMatchMode(matchMode);
+        if (matcherSpacePrefix = conf.getBoolean(CONF_MATCH_SPACE_PREFIX, DEFAULT_MATCH_SPACE_PREFIX)) {
+            matcher.setLeading(' ');
+        }
+        if (matcherSpacePostfix = conf.getBoolean(CONF_MATCH_SPACE_POSTFIX, DEFAULT_MATCH_SPACE_POSTFIX)) {
+            matcher.setFollowing(' ');
+        }
+        ;
+        matcher.setMatchMode(matchMode = VerbatimMatcher.MATCH_MODE.valueOf(
+                conf.getString(CONF_MATCH_MODE, DEFAULT_MATCH_MODE.toString())));
         if (matchMode != VerbatimMatcher.MATCH_MODE.all) {
             matcher.setSkipMatching(true);
         }
+        String inputRegexpStr = conf.getString(CONF_INPUT_CLEAN_REGEXP, DEFAULT_INPUT_CLEAN_REGEXP);
+        inputRegexp = inputRegexpStr == null || inputRegexpStr.isEmpty() ? null : Pattern.compile(inputRegexpStr);
+        inputReplacement = conf.getString(CONF_INPUT_CLEAN_REPLACEMENT, DEFAULT_INPUT_CLEAN_REPLACEMENT);
         loadMatcherRules();
+        // TODO: Proper toString
         log.info("Created " + this);
     }
 
     @Override
     public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) throws XMLStreamException {
-        if (current.equals(FIELD) && XMLStepper.getAttribute(xml, NAME, null) != inputField) {
-            matcher.findMatches(xml.getElementText());
+        if (current.equals(FIELD) && inputField.equals(XMLStepper.getAttribute(xml, NAME, null))) {
+            String input = inputRegexp == null ?
+                    xml.getElementText() :
+                    inputRegexp.matcher(xml.getElementText()).replaceAll(inputReplacement);
+            matcher.findMatches(input);
             return true;
         }
         return false;
@@ -242,4 +299,5 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
 
         }
     }
+
 }
