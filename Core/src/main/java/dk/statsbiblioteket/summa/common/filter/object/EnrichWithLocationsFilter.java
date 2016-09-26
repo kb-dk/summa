@@ -96,6 +96,15 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
     public static final String DEFAULT_LOCATIONS_DELIMITER = ",";
 
     /**
+     * If true, Danish genitive is added to the locations:
+     * Bogense -> [Bogense, Bogenses], Aarhus -> [Aarhus']
+     * The location names extracted from the input will be without genitives.
+     */
+    public static final String CONF_INPUT_DANISH_GENITIVE = "enrich.locations.adddanishgenitive";
+    public static final boolean DEFAULT_INPUT_DANISH_GENITIVE = false;
+
+
+    /**
      * How multiple matches from the same starting point in the input text should be treated.
      * </p><p>
      * Optional. Default is "all". Possible values are:
@@ -154,6 +163,7 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
 
     private final String source;
     private final String sourceDelimiter;
+    private final boolean addDanishGenitive;
 
     private final LocationMatcher matcher;
     private final VerbatimMatcher.MATCH_MODE matchMode;
@@ -174,6 +184,7 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
         }
         source = conf.getString(CONF_LOCATIONS_SOURCE);
         sourceDelimiter = conf.getString(CONF_LOCATIONS_DELIMITER, DEFAULT_LOCATIONS_DELIMITER);
+        addDanishGenitive = conf.getBoolean(CONF_INPUT_DANISH_GENITIVE, DEFAULT_INPUT_DANISH_GENITIVE);
 
         matcher = new LocationMatcher();
         if (matcherSpacePrefix = conf.getBoolean(CONF_MATCH_SPACE_PREFIX, DEFAULT_MATCH_SPACE_PREFIX)) {
@@ -261,9 +272,9 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
                     log.warn("Skipping line '" + line + "' in " + url + " as it does not have 3 tokens, delimited by '"
                              + sourceDelimiter + "'");
                 }
+                log.trace("Adding " + tokens[0] + ": " + tokens[1] + "," + tokens[2]);
                 matcher.extend(tokens[0], tokens[1] + "," + tokens[2]);
             }
-
 
         } catch (IOException e) {
             throw new ConfigurationException("Unable to read coordinates from " + url, e);
@@ -271,32 +282,51 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
     }
 
     // Collects matched locations. Should be reset between each source Payload.
-    private class LocationMatcher extends VerbatimMatcher<Set<String>> {
-        // designation, coordinates
-        private final Map<String, Set<String>> locations = new HashMap<>();
+    private class LocationMatcher extends VerbatimMatcher<String> {
+        // "designation:coordinates[:coordinates]*"
+        private final Set<String> locations = new HashSet<>();
 
         @Override
-        public void callback(String match, Set<String> payload) {
-            locations.put(match, payload);
+        public void callback(String match, String payload) {
+            locations.add(payload);
         }
 
         public Map<String, Set<String>> getLocations() {
-            return locations;
+            Map<String, Set<String>> expanded = new HashMap<>(locations.size());
+            for (String location: locations) {
+                // "designation:coordinates[:coordinates]*"
+                String[] base = location.split(":", 2);
+                expanded.put(base[0], new HashSet<>(Arrays.asList(base[1].split(":"))));
+            }
+            return expanded;
         }
         public void reset() {
             locations.clear();
         }
 
         public void extend(String designation, String coordinates) {
+            if (designation.contains(":")) {
+                throw new IllegalArgumentException(
+                        "This implementations does not accept the character ':' in the designation \"" +
+                        designation + "\"");
+            }
             log.trace("Adding " + designation + " ; " + coordinates);
+
             LocationMatcher.Node entry = matcher.getNode(designation);
             if (entry == null) {
-                matcher.addRule(designation, new HashSet<>(Collections.singleton(coordinates)));
+                matcher.addRule(designation, designation + ":" + coordinates);
             } else {
-                // TODO: Handle too many instances for a destination (very common names)
-                entry.getPayload().add(coordinates);
+                entry.setPayload(entry.getPayload() + ":" + coordinates);
             }
 
+            if (addDanishGenitive && !designation.endsWith("s")) {
+                entry = matcher.getNode(designation + "s");
+                if (entry == null) {
+                    matcher.addRule(designation + "s", designation + ":" + coordinates);
+                } else {
+                    entry.setPayload(entry.getPayload() + ":" + coordinates);
+                }
+            }
         }
     }
 

@@ -1,4 +1,5 @@
 <doc>
     <field name="id">fake_document_1</field>
     <field name="fulltext">The road to Nowhere leads to Somewhere, not just Anywhere but here. Also it leads to London Westminster and Ærø!</field>
+    <field name="fulltext">Aarhus Ø har haver, mens Københavns Have er en have</field>
 </doc>
