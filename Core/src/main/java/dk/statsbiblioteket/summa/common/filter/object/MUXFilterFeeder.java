@@ -156,7 +156,7 @@ public class MUXFilterFeeder implements Runnable {
         Thread t = new Thread(this, filterName + "-" + this.hashCode() + " daemon");
         t.setDaemon(true);
         t.start();
-        log.debug("Constructed and activated " + this);
+        log.info("Constructed and activated " + this);
     }
 
     private ObjectFilter createFilter(Configuration configuration) {
@@ -276,5 +276,8 @@ public class MUXFilterFeeder implements Runnable {
         }
     }
 
+    public void close(boolean success) {
+        filter.close(success);
+        log.info("Closed feeder " + this);
+    }
 }
-

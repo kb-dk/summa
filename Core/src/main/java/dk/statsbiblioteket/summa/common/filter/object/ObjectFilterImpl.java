@@ -213,7 +213,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.debug(String.format("Closing down '%s'. %s", this, getProcessStats()));
+        log.info(String.format("Closing down '%s'. %s", this, getProcessStats()));
         checkSource();
         source.close(success);
     }

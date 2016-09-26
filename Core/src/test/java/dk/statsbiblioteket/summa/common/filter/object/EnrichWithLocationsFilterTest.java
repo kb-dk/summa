@@ -101,7 +101,11 @@ public class EnrichWithLocationsFilterTest {
         ));
         toContent.setSource(feeder);
         enricher.setSource(toContent);
-        return enricher.next().getRecord().getContentAsUTF8();
+        try {
+            return enricher.next().getRecord().getContentAsUTF8();
+        } finally {
+            enricher.close(true);
+        }
     }
 
 }

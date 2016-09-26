@@ -341,8 +341,17 @@ public class MUXFilter implements ObjectFilter, Runnable {
 
     @Override
     public void close(boolean success) {
-        // No closing for feeders as they are push-oriented and EOF is signalled
-        // when an EOF is received from the source.
+        log.info("Closing down " + this);
+        // Feeders are push-oriented, so in theory they should be when an EOF is received from the source.
+        // However, this does not seem to work so...
+        for (MUXFilterFeeder feeder : feeders) {
+            try {
+                feeder.close(success);
+            } catch (Exception e) {
+                log.warn("Exception calling close on feeder " + feeder);
+            }
+        }
+
         source.close(success);
     }
 
