@@ -511,7 +511,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             return false;
         }
         try {
-            return XMLStepper.getFirstElementText(response, "password") != null;
+            String password = XMLStepper.getFirstElementText(response, "password");
+            String username = XMLStepper.getFirstElementText(response, "username");
+            return (password == null || "".equals(password)) && (username == null || "".equals(username));
         } catch (XMLStreamException e) {
             Logging.logProcess("ETSSStatusFilter.needsPassword",
                                "XMLException while extracting element 'password' from XML '"
