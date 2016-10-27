@@ -16,6 +16,8 @@ package dk.statsbiblioteket.summa.common.util;
 
 import junit.framework.TestCase;
 
+import java.util.regex.Pattern;
+
 /**
  * Unit tests for the {@link Environment} class
  */
@@ -46,6 +48,16 @@ public class EnvironmentTest extends TestCase {
         String source = " ${user.home}  ${java.io.tmpdir} ";
 
         assertEquals(" " + home + "  " + ioTmpdir + " ", Environment.escapeSystemProperties(source));
+    }
+
+    // Values containing $ is a problem as they are seen as a group
+    public void testReplacementQuoting() {
+        String KEY = "mykey";
+        String PROPERTIES = "${" + KEY + "}";
+        String VALUE = "$MYVALUE";
+        System.setProperty(KEY, VALUE);
+        assertEquals("Escaping full value with String containing '$' should work",
+                     PROPERTIES.replace("${" + KEY + "}", VALUE), Environment.escapeSystemProperties(PROPERTIES));
     }
 
     /**

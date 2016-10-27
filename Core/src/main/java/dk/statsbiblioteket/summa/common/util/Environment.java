@@ -55,7 +55,6 @@ public class Environment {
         if (s == null || s.isEmpty()) {
             return s;
         }
-
         StringBuffer expanded = new StringBuffer();
         Matcher matcher = EXPAND.matcher(s);
         while (matcher.find()) {
@@ -66,7 +65,13 @@ public class Environment {
                 matcher.appendReplacement(expanded, "");
                 expanded.append("${").append(matcher.group(1)).append("}");
             } else {
-                matcher.appendReplacement(expanded, expVal);
+                try {
+                    matcher.appendReplacement(expanded, Matcher.quoteReplacement(expVal));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException(String.format(
+                            "Exception appending replacement '%s' at pos %d in input String '%s'",
+                            expVal, matcher.regionStart(), s));
+                }
             }
         }
         matcher.appendTail(expanded);

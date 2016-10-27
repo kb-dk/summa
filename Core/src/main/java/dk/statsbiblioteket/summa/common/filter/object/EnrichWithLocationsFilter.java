@@ -273,7 +273,13 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
                              + sourceDelimiter + "'");
                 }
                 log.trace("Adding " + tokens[0] + ": " + tokens[1] + "," + tokens[2]);
-                matcher.extend(tokens[0], tokens[1] + "," + tokens[2]);
+                try {
+                    matcher.extend(tokens[0], tokens[1] + "," + tokens[2]);
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Exception adding '" + tokens[0] + " with coordinates [" +
+                            tokens[1] + "," + tokens[2] + "]", e);
+                }
             }
 
         } catch (IOException e) {
