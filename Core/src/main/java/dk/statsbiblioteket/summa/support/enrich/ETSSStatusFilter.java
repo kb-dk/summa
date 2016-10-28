@@ -40,8 +40,10 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /**
  * Highly specific filter that takes Records with MARC21Slim XML, performs an external lookup for whether a password
@@ -115,6 +117,25 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     public static final String CONF_DISCARD_DELETED = "etss.discarddeleted";
     public static final boolean DEFAULT_DISCARD_DELETED = false;
 
+    /**
+     * Fields to probe for resource ID. The syntax is {@code field*subfield} or {@code field*subfield f}, where the
+     * trailing {@code f} means that the content must be processed by {@link #flatten(String)}.
+     * </p><p>
+     * Optional.
+     */
+    public static final String CONF_ID_FIELDS = "etss.id.fields";
+    public static final List<String> DEFAULT_ID_FIELDS = Arrays.asList("022*a", "022*l", "022*x", "245*a f");
+
+    public static final String CONF_URL_FIELD = "etss.url.field";
+    public static final String DEFAULT_URL_FIELD = "856";
+
+    public static final String CONF_PROVIDER_FIELD = "etss.provider.field";
+    public static final String DEFAULT_PROVIDER_FIELD = "980*g";
+    public static final String CONF_PROVIDER_REGEXP = "etss.provider.regexp";
+    public static final String DEFAULT_PROVIDER_REGEXP = "(.*)";
+    public static final String CONF_PROVIDER_REPLACEMENT = "etss.provider.replacement";
+    public static final String DEFAULT_PROVIDER_REPLACEMENT = "$1";
+
     public static final String PASSWORD_SUBFIELD = "k"; // In 856
     public static final String PASSWORD_CONTENT = "password required";
     public static final String PROVIDER_SPECIFIC_ID = "w"; // Record Control Number in 856
@@ -139,6 +160,13 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     protected final String rest;
     protected final RETURN_PACKAGING_FORMAT packaging;
 
+    protected final List<String> idFields;
+    protected final String urlField;
+    protected final String providerField;
+    protected final String providerSubField;
+    protected final Pattern providerPattern;
+    protected final String providerReplacement;
+
     public ETSSStatusFilter(Configuration conf) {
         super(conf);
         feedback = false;
@@ -153,6 +181,19 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         discardUnchanged = conf.getBoolean(CONF_DISCARD_UNCHANGED, DEFAULT_DISCARD_UNCHANGED);
         discardDeleted = conf.getBoolean(CONF_DISCARD_DELETED, DEFAULT_DISCARD_DELETED);
         packaging = RETURN_PACKAGING_FORMAT.valueOf(conf.getString(CONF_RETURN_PACKAGING, DEFAULT_RETURN_PACKAGING));
+        idFields = conf.getStrings(CONF_ID_FIELDS, DEFAULT_ID_FIELDS);
+        urlField = conf.getString(CONF_URL_FIELD, DEFAULT_URL_FIELD);
+        String[] pros = conf.getString(CONF_PROVIDER_FIELD, DEFAULT_PROVIDER_FIELD).split("[*]");
+        if (pros.length != 2) {
+            throw new ConfigurationException(String.format(
+                    "The value '%s' from %s must be field*tag, for example %s",
+                    conf.getString(CONF_PROVIDER_FIELD, DEFAULT_PROVIDER_FIELD),
+                    CONF_PROVIDER_FIELD, DEFAULT_PROVIDER_FIELD));
+        }
+        providerField = pros[0];
+        providerSubField = pros[1];
+        providerPattern = Pattern.compile(conf.getString(CONF_PROVIDER_REGEXP, DEFAULT_PROVIDER_REGEXP));
+        providerReplacement = conf.getString(CONF_PROVIDER_REPLACEMENT, DEFAULT_PROVIDER_REPLACEMENT);
         log.info("Constructed " + this);
     }
 
@@ -182,17 +223,17 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         if (recordID == null) {
             Logging.logProcess(
                 "ETSSStatusFilter",
-                "Unable to extract ID from fields 022*a, 022*l, 022*x or 245*a. No adjustment performed",
+                "Unable to extract ID from fields " + Strings.join(idFields) + ". No adjustment performed",
                 Logging.LogLevel.WARN, payload);
             return marc;
         }
-        List<MARCObject.DataField> urls = marc.getDataFields("856");
-        List<MARCObject.DataField> providers = marc.getDataFields("980");
+        List<MARCObject.DataField> urls = marc.getDataFields(urlField);
+        List<MARCObject.DataField> providers = marc.getDataFields(providerField);
         if (urls.size() != providers.size()) {
             Logging.logProcess(
                 "ETSSStatusFilter",
-                "There were " + urls.size() + " fields with tag 856 and " + providers.size()
-                + " fields with tag 980. There should be the same number. The status is left unadjusted",
+                "There were " + urls.size() + " fields with tag " + urlField + " and " + providers.size() + " fields " +
+                "with tag " + providerField + ". There should be the same number. The status is left unadjusted",
                 Logging.LogLevel.WARN, payload);
             return marc;
         }
@@ -282,7 +323,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
 
     // Cleans all previous password enrichments
     private void clean(MARCObject marc) {
-        for (MARCObject.DataField urls: marc.getDataFields("856")) {
+        for (MARCObject.DataField urls: marc.getDataFields(urlField)) {
             for (int i = urls.getSubFields().size()-1 ; i >= 0 ; i--) {
                 String code = urls.getSubFields().get(i).getCode();
                 if (PASSWORD_SUBFIELD.equals(code)
@@ -357,27 +398,28 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         if (response == null) {
             return null;
         }
-        return unwrap(response, recordID);
+        return unwrap(lookupURI, response, recordID);
     }
 
     //    [{"key":"genericderby.access_etss_0011-5477_sciencntercentersandsonlinepublishermedicaljournals",
     //      "value":"<info><username>1234</username><password>abcdefg</password><group></group><comment></comment></info>",
     //      "modified":1434527979547,"expire":9999999999999,"expired":false}]
 
-    private String unwrap(String response, String recordID) {
+    private String unwrap(String request, String response, String recordID) {
         switch (packaging) {
-            case soap: return unwrapSOAP(response, recordID);
-            case json: return unwrapJSON(response, recordID);
+            case soap: return unwrapSOAP(request, response, recordID);
+            case json: return unwrapJSON(request, response, recordID);
             default: throw new UnsupportedOperationException(
                     "The return packaging format '" + packaging + "' is unknown");
         }
     }
 
-    private String unwrapJSON(String response, String recordID) {
+    private String unwrapJSON(String request, String response, String recordID) {
         if (!(response.startsWith("[") && response.endsWith("]"))) {
-            Logging.logProcess("ETSSStatusFilter.unwrapJSON",
-                               "Expected a response starting with '[' and ending with ']': '"
-                               + Logging.getSnippet(response) + "'", Logging.LogLevel.WARN, recordID);
+            Logging.logProcess(
+                    "ETSSStatusFilter.unwrapJSON",
+                    "Expected a response starting with '[' and ending with ']' from request'" + request + "': '"
+                    + Logging.getSnippet(response) + "'", Logging.LogLevel.WARN, recordID);
             return null;
         }
         response = "{\"list\":" + response + "}"; // Yes, ugly, but the input format is not valid JSON
@@ -441,14 +483,15 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         */
     }
 
-    private String unwrapSOAP(String response, String recordID) {
+    private String unwrapSOAP(String request, String response, String recordID) {
         try {
             return XMLStepper.getFirstElementText(response, "getFromDBReturn");
         } catch (XMLStreamException e) {
-            Logging.logProcess("ETSSStatusFilter.lookup",
-                               "Unable to extract content from SOAP 'getFromDBReturn' from XML '" +
-                               Logging.getSnippet(response) + "'",
-                               Logging.LogLevel.WARN, recordID, e);
+            Logging.logProcess(
+                    "ETSSStatusFilter.lookup",
+                    "Unable to extract content from XML SOAP 'getFromDBReturn' with request '" + request + "' from '" +
+                    Logging.getSnippet(response) + "'",
+                    Logging.LogLevel.WARN, recordID, e);
             return null;
         }
     }
@@ -459,7 +502,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     // http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals
     protected String getLookupURI(String recordID, String providerPlusID) {
         if (providerPlusID == null) {
-            Logging.logProcess("ETSSStatusFilter.getETTSURI", "Unable to resolve id from dataField)",
+            Logging.logProcess("ETSSStatusFilter.getLookupURI", "Unable to resolve id from dataField)",
                                Logging.LogLevel.WARN, recordID);
             return null;
         }
@@ -467,7 +510,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     }
 
     private String getProviderPlusId(String id, MARCObject.DataField dataField) {
-        MARCObject.SubField subField = dataField.getFirstSubField("g");
+        MARCObject.SubField subField = dataField.getFirstSubField(providerSubField);
         if (subField == null) {
             return null;
         }
@@ -476,15 +519,25 @@ public class ETSSStatusFilter extends MARCObjectFilter {
 
     // Priority: 022*a, 022*l, 022*x, 245*a, null
     private String getID(MARCObject marc) {
-        final String[] SUBS = new String[]{"a", "l", "x"};
-        for (String sub: SUBS) {
-            MARCObject.SubField subField = marc.getFirstSubField("022", sub);
+        for (String idField: idFields) {
+            String[] tokens = idField.split("[*]");
+            if (tokens.length != 2) {
+                String message = String.format("ID-fields in property %s must be field*subfield, such as 022*a, " +
+                                               "but '%s' from the list '%s' was encountered",
+                                               CONF_ID_FIELDS, idField, Strings.join(idFields));
+                log.error(message);
+                throw new IllegalArgumentException(message);
+            }
+            String[] sub = tokens[1].split(" ");
+            MARCObject.SubField subField = marc.getFirstSubField(tokens[0], sub[0]);
             if (subField != null) {
-                return subField.getContent();
+                // Original code did not flatten 022*a, 022*l or 022*x, only 245*a
+                return sub.length > 1 && "f".equals(sub[1]) ? flatten(subField.getContent()) : subField.getContent();
             }
         }
-        MARCObject.SubField subField = marc.getFirstSubField("245", "a");
-        return subField == null ? null : flatten(subField.getContent());
+        return null;
+//        MARCObject.SubField subField = marc.getFirstSubField("245", "a");
+//        return subField == null ? null : flatten(subField.getContent());
     }
 
     // Retrodigitized Journals -> retrodigitizedjournals
@@ -500,7 +553,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
 
     // Retrodigitized Journals -> retrodigitizedjournals
     String normaliseProvider(String content) {
-        return flatten(content);
+        return flatten(providerPattern.matcher(content).replaceAll(providerReplacement));
     }
 
     /*

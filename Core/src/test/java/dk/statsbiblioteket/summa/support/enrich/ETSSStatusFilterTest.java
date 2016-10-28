@@ -43,7 +43,8 @@ public class ETSSStatusFilterTest extends TestCase {
             //"http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals";
             "http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_$ID_AND_PROVIDER";
     private static final String HYPERION =
-            "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER";
+            //"http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER";
+            "http://hyperion:9561/attributestore/services/json/store/genericderby.access_etss_$ID_AND_PROVIDER";
 
     public ETSSStatusFilterTest(String name) {
         super(name);
@@ -232,17 +233,35 @@ public class ETSSStatusFilterTest extends TestCase {
         testNormaliseID("common/marc/normalisetest_245a.xml", "sometitle_theologischeliteraturzeitung");
     }
 
+    public void testNormaliseIDebog() throws IOException, XMLStreamException, ParseException {
+        testNormaliseID(
+                "common/marc/ebog_mimick.xml", "ssj12345_someexternalresource",
+                new ETSSStatusFilter(Configuration.newMemoryBased(
+                        ETSSStatusFilter.CONF_REST, HYPERION,
+                        ETSSStatusFilter.CONF_PROVIDER_FIELD, "856*z",
+                        // "Full text available from Foo Bar" => "Foo Bar"
+                        ETSSStatusFilter.CONF_PROVIDER_REGEXP, "Full text available from (.*)",
+                        ETSSStatusFilter.CONF_ID_FIELDS, "001*a",
+                        ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json.toString()
+                )));
+    }
+
     public void testExtractID() throws IOException, XMLStreamException, ParseException {
         testNormaliseID("common/marc/existing_022a.xml", "0040-5671_theologischeliteraturzeitung");
     }
 
     public void testNormaliseID(String marcFile, String expected)
         throws IOException, XMLStreamException, ParseException {
+        testNormaliseID(marcFile, expected, new ETSSStatusFilter(Configuration.newMemoryBased(
+            ETSSStatusFilter.CONF_REST, HYPERION,
+            ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json.toString()
+        )));
+    }
+
+    public void testNormaliseID(String marcFile, String expected, ETSSStatusFilter statusFilter)
+        throws IOException, XMLStreamException, ParseException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
             new Payload(new FileInputStream(Resolver.getFile(marcFile)), marcFile)
-        ));
-        ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST, HYPERION
         ));
         statusFilter.setSource(feeder);
         Payload processed = statusFilter.next();
@@ -263,7 +282,8 @@ public class ETSSStatusFilterTest extends TestCase {
 
     private void assertStatusFromID(String id, boolean hasPassword) throws IOException {
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST, HYPERION
+            ETSSStatusFilter.CONF_REST, HYPERION,
+            ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json.toString()
         ));
         assertEquals("The password status for " + id + " should be correct",
                      hasPassword,
@@ -296,8 +316,8 @@ public class ETSSStatusFilterTest extends TestCase {
 
     private void assertCommentID(String id, String comment) throws IOException {
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST,
-            HYPERION
+            ETSSStatusFilter.CONF_REST, HYPERION,
+            ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json.toString()
         ));
         assertEquals("The comment for " + id + " should be correct",
                      comment, statusFilter.getComment(
@@ -310,7 +330,8 @@ public class ETSSStatusFilterTest extends TestCase {
             new Payload(new FileInputStream(Resolver.getFile(marcFile)), marcFile)
         ));
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST, HYPERION
+            ETSSStatusFilter.CONF_REST, HYPERION,
+            ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json.toString()
         ));
         statusFilter.setSource(feeder);
         assertTrue("There should be at least one Payload", statusFilter.hasNext());
