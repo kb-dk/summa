@@ -39,9 +39,11 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ETSSStatusFilterTest extends TestCase {
-    private static final String JSON_ENDPOINT =
+    private static final String DEVEL =
             //"http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals";
             "http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_$ID_AND_PROVIDER";
+    private static final String EBOG =
+            "http://devel06:9561/attributestore/services/json/store/genericderby.ebook_pass_$ID_AND_PROVIDER";
     private static final String HYPERION =
             //"http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER";
             "http://hyperion:9561/attributestore/services/json/store/genericderby.access_etss_$ID_AND_PROVIDER";
@@ -234,16 +236,27 @@ public class ETSSStatusFilterTest extends TestCase {
     }
 
     public void testNormaliseIDebog() throws IOException, XMLStreamException, ParseException {
-        testNormaliseID(
-                "common/marc/ebog_mimick.xml", "ssj12345_someexternalresource",
-                new ETSSStatusFilter(Configuration.newMemoryBased(
-                        ETSSStatusFilter.CONF_REST, HYPERION,
-                        ETSSStatusFilter.CONF_PROVIDER_FIELD, "856*z",
-                        // "Full text available from Foo Bar" => "Foo Bar"
-                        ETSSStatusFilter.CONF_PROVIDER_REGEXP, "Full text available from (.*)",
-                        ETSSStatusFilter.CONF_ID_FIELDS, "001*a",
-                        ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json.toString()
-                )));
+        testNormaliseID("common/marc/ebog_mimick.xml", "12345_someexternalresource", getEbogFilter());
+    }
+
+    private ETSSStatusFilter getEbogFilter() {
+        return new ETSSStatusFilter(Configuration.newMemoryBased(
+                ETSSStatusFilter.CONF_REST, EBOG,
+                ETSSStatusFilter.CONF_ID_FIELDS, "001*a",
+                ETSSStatusFilter.CONF_ID_REGEXP, "[^0-9]*([-0-9]*)",
+                ETSSStatusFilter.CONF_PROVIDER_FIELD, "856*z",
+                // "Full text available from Foo Bar" => "Foo Bar"
+                ETSSStatusFilter.CONF_PROVIDER_REGEXP, "Full text available from (.*)",
+                ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json.toString()
+        ));
+    }
+
+    public void testEbogWithPasswork() throws IOException {
+        final String ID = "005763273_projectruneberg";
+        ETSSStatusFilter statusFilter = getEbogFilter();
+        assertEquals("The password status for " + ID + " should be correct",
+                     true,
+                     statusFilter.needsPassword(statusFilter.lookup(ID, statusFilter.getLookupURI(ID, ID), false)));
     }
 
     public void testExtractID() throws IOException, XMLStreamException, ParseException {
@@ -292,8 +305,8 @@ public class ETSSStatusFilterTest extends TestCase {
 
     private void assertStatusFromIDJSON(String id, boolean hasPassword) throws IOException {
         ETSSStatusFilter statusFilter = new ETSSStatusFilter(Configuration.newMemoryBased(
-            ETSSStatusFilter.CONF_REST, JSON_ENDPOINT,
-            ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json
+                ETSSStatusFilter.CONF_REST, DEVEL,
+                ETSSStatusFilter.CONF_RETURN_PACKAGING, ETSSStatusFilter.RETURN_PACKAGING_FORMAT.json
         ));
         String lookupURI = statusFilter.getLookupURI(id, id);
         String lookup = statusFilter.lookup(id, lookupURI, true);
