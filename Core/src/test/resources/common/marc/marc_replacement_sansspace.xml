@@ -1,0 +1,17 @@
+<record>
+  <leader>.....nope 12.....7  45432</leader>
+  <datafield tag="001" ind1="0" ind2="0">
+    <subfield code="a">ssib004555195</subfield>
+    <subfield code="b">820020</subfield>
+    <subfield code="f">a</subfield>
+  </datafield>
+  <datafield tag="002" ind1="0" ind2="0">
+    <subfield code="a">ssib00456267</subfield>
+    <subfield code="b">ssib00456268</subfield>
+    <subfield code="d">ssib0 04 56 26</subfield>
+  </datafield>
+  <datafield tag="004" ind1="0" ind2="0">
+    <subfield code="r">n 34 65</subfield>
+    <subfield code="a">e</subfield>
+  </datafield>
+</record>
