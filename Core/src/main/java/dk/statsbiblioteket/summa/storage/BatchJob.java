@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -22,6 +23,7 @@ import org.apache.commons.logging.Log;
 
 import javax.script.*;
 import java.io.*;
+import java.net.URL;
 
 /**
  * Encapsulation of a scripted batch job run on a subset of the storage.
@@ -111,7 +113,12 @@ public class BatchJob {
         engine.put("out", outWriter);
         engine.put("commit", new StringBuilder());
 
-        InputStream _script = ClassLoader.getSystemResourceAsStream(jobName);
+        //InputStream _script = ClassLoader.getSystemResourceAsStream(jobName);
+        URL scriptURL = Resolver.getURL(jobName);
+        if (scriptURL == null) {
+            throw new FileNotFoundException("Unable to resolve '" + jobName + "' to URL");
+        }
+        InputStream _script = scriptURL.openStream();
         if (_script == null) {
             throw new FileNotFoundException(jobName);
         }

@@ -1764,8 +1764,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
             long iterateTime = -System.nanoTime();
             if (!resultSet.next() && parentId != null && !Objects.equals(parentId, recordId)) {
-                String  msg="Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"
-                            + parentId + " .Only children are loaded. Original recordId in query:" + orgRecordId;
+                String  msg= "Parent/child relation error, record:" + recordId + " can not load an ancestor with id:"
+                             + parentId + " .Only children are loaded. Original recordId in query:" + orgRecordId;
                 log.warn(msg);
                 //    throw new RuntimeException(msg);
                 parentId=orgRecordId; //Use this as parent
@@ -1794,10 +1794,10 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
                 if (log.isDebugEnabled()) {
                     log.debug(String.format(
-                            "Finished getRecordWithFullObjectTree(%s) in %dms total (%.1f connect, %.1f parentID, " +
-                            "%.1f prepareStatement, %.1f execute, %.1f iterate)",
-                            recordId, System.currentTimeMillis() - startTime, connectTime/M, parentIDTime/M,
-                            statementTime/M, executeTime/M, iterateTime/M));
+                            "Finished getRecordWithFullObjectTree(%s) expanded with %s in %dms total (%.1f connect, " +
+                            "%.1f parentID, %.1f prepareStatement, %.1f execute, %.1f iterate)",
+                            recordId, parentChildStats(topParentRecord), System.currentTimeMillis() - startTime,
+                            connectTime/M, parentIDTime/M, statementTime/M, executeTime/M, iterateTime/M));
                 }
                 return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests
             }
@@ -1813,10 +1813,11 @@ public abstract class DatabaseStorage extends StorageBase {
             postOrderTime += System.nanoTime();
             if (log.isDebugEnabled()) {
                 log.debug(String.format(
-                        "Finished getRecordWithFullObjectTree(%s) in %dms total (%.1f connect, %.1f parentID, " +
-                        "%.1f prepareStatement, %.1f execute, %.1f iterate, %.1f child, %.1f postOrder)",
-                        recordId, System.currentTimeMillis() - startTime, connectTime/M, parentIDTime/M,
-                        statementTime/M, executeTime/M, iterateTime/M, childTime/M, postOrderTime/M));
+                        "Finished getRecordWithFullObjectTree(%s) expanded with %s in %dms total (%.1f connect, " +
+                        "%.1f parentID, %.1f prepareStatement, %.1f execute, %.1f iterate, %.1f child, %.1f postOrder)",
+                        recordId, parentChildStats(recordNode), System.currentTimeMillis() - startTime,
+                        connectTime/M, parentIDTime/M, statementTime/M, executeTime/M, iterateTime/M, childTime/M,
+                        postOrderTime/M));
             }
             return recordNode;
 
@@ -1833,6 +1834,16 @@ public abstract class DatabaseStorage extends StorageBase {
             closeConnection(conn);
         }
     }
+
+    private Object parentChildStats(Record record) {
+        if (record == null) {
+            return "N/A";
+        }
+        return String.format("%d parents and %d children",
+                             record.getParents() == null ? 0 : record.getParents().size(),
+                             record.getChildren() == null ? 0 : record.getChildren().size());
+    }
+
     public static final double M = 1000000.0;
     public static final long MI = 1000000;
 
