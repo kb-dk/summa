@@ -41,12 +41,12 @@ import java.util.List;
 public class ETSSStatusFilterTest extends TestCase {
     private static final String DEVEL =
             //"http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_0001-5547_scienceprintersandpublishersonlinemedicaljournals";
-            "http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_$ID_AND_PROVIDER";
+            "http://devel06:9561/attributestore/services/json/store/genericderby.access_etss_¤ID_AND_PROVIDER";
     private static final String EBOG =
-            "http://devel06:9561/attributestore/services/json/store/genericderby.ebook_pass_$ID_AND_PROVIDER";
+            "http://devel06:9561/attributestore/services/json/store/genericderby.ebook_pass_¤ID_AND_PROVIDER";
     private static final String HYPERION =
             //"http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER";
-            "http://hyperion:9561/attributestore/services/json/store/genericderby.access_etss_$ID_AND_PROVIDER";
+            "http://hyperion:9561/attributestore/services/json/store/genericderby.access_etss_¤ID_AND_PROVIDER";
 
     public ETSSStatusFilterTest(String name) {
         super(name);
@@ -209,6 +209,20 @@ public class ETSSStatusFilterTest extends TestCase {
         return pumped;
     }
 
+    public void testEnrichEbookWithPassword() throws IOException {
+        final String REQUIRED = "<subfield code=\"k\">password required</subfield>";
+        String[] existing = new String[] {
+            "common/marc/ebog_mimick2.xml"
+        };
+        PayloadFeederHelper feeder = new PayloadFeederHelper(existing);
+        ETSSStatusFilter ebog = getEbogFilter();
+        ebog.setSource(feeder);
+        List<Payload> pumped = pump(ebog);
+        assertEquals("There should be " + existing.length + " enriched Payloads",
+                     existing.length, pumped.size());
+        String enriched = RecordUtil.getString(pumped.get(0));
+        assertTrue("The result should contain " + REQUIRED + "\n" + enriched, enriched.contains(REQUIRED));
+    }
 
     public void testNonExisting() throws IOException, XMLStreamException, ParseException {
         assertStatus("common/marc/single_marc.xml", false);

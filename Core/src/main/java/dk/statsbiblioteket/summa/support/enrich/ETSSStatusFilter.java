@@ -66,8 +66,8 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     public static final boolean DEFAULT_HALT_ON_EXTERNAL_ERROR = false;
 
     /**
-     * The REST call to perform. In the call, $ID_AND_PROVIDER will be replaced by the ID of the MARC record merged with
-     * the provider, both normalised.
+     * The REST call to perform. In the call, {@code $ID_AND_PROVIDER} and {@code ¤ID_AND_PROVIDER} will be replaced by
+     * the ID of the MARC record merged with the provider, both normalised.
      * </p><p>
      * Mandatory. Example:
      * "http://hyperion:8642/genericDerby/services/GenericDBWS?method=getFromDB&arg0=access_etss_$ID_AND_PROVIDER".
@@ -516,7 +516,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                                Logging.LogLevel.WARN, recordID);
             return null;
         }
-        return rest.replace("$ID_AND_PROVIDER", providerPlusID);
+        return rest.replace("$ID_AND_PROVIDER", providerPlusID).replace("¤ID_AND_PROVIDER", providerPlusID);
     }
 
     private String getProviderPlusId(String id, MARCObject.DataField dataField) {

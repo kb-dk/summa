@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record xmlns="http://www.loc.gov/MARC21/slim">
+  <leader>.....name 22.....8 45032</leader>
+  <datafield tag="001" ind1="0" ind2="0">
+    <subfield code="a">ssj005763273</subfield>
+  </datafield>
+  <datafield tag="004" ind1="0" ind2="0">
+    <subfield code="r">n</subfield>
+    <subfield code="a">e</subfield>
+  </datafield>
+  <datafield tag="856" ind1="0" ind2="0">
+    <subfield code="z">Full text available from Project Runeberg</subfield>
+    <subfield code="u">http://ez.example.com:2048/login?url=https://www.example.com/dura/browse/bookChapter/3-s2.0-C20123424233</subfield>
+    <subfield code="x">http://ez.example.com:2048/login?url</subfield>
+  </datafield>
+</record>
