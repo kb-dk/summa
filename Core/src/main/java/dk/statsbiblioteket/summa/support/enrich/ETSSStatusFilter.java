@@ -125,6 +125,10 @@ public class ETSSStatusFilter extends MARCObjectFilter {
      */
     public static final String CONF_ID_FIELDS = "etss.id.fields";
     public static final List<String> DEFAULT_ID_FIELDS = Arrays.asList("022*a", "022*l", "022*x", "245*a f");
+    public static final String CONF_ID_REGEXP = "etss.id.regexp";
+    public static final String DEFAULT_ID_REGEXP = "(.*)";
+    public static final String CONF_ID_REPLACEMENT = "etss.id.replacement";
+    public static final String DEFAULT_ID_REPLACEMENT = "$1";
 
     public static final String CONF_URL_FIELD = "etss.url.field";
     public static final String DEFAULT_URL_FIELD = "856";
@@ -161,6 +165,8 @@ public class ETSSStatusFilter extends MARCObjectFilter {
     protected final RETURN_PACKAGING_FORMAT packaging;
 
     protected final List<String> idFields;
+    protected final Pattern idPattern;
+    protected final String idReplacement;
     protected final String urlField;
     protected final String providerField;
     protected final String providerSubField;
@@ -181,7 +187,11 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         discardUnchanged = conf.getBoolean(CONF_DISCARD_UNCHANGED, DEFAULT_DISCARD_UNCHANGED);
         discardDeleted = conf.getBoolean(CONF_DISCARD_DELETED, DEFAULT_DISCARD_DELETED);
         packaging = RETURN_PACKAGING_FORMAT.valueOf(conf.getString(CONF_RETURN_PACKAGING, DEFAULT_RETURN_PACKAGING));
+
         idFields = conf.getStrings(CONF_ID_FIELDS, DEFAULT_ID_FIELDS);
+        idPattern = Pattern.compile(conf.getString(CONF_ID_REGEXP, DEFAULT_ID_REGEXP));
+        idReplacement = conf.getString(CONF_ID_REPLACEMENT, DEFAULT_ID_REPLACEMENT);
+
         urlField = conf.getString(CONF_URL_FIELD, DEFAULT_URL_FIELD);
         String[] pros = conf.getString(CONF_PROVIDER_FIELD, DEFAULT_PROVIDER_FIELD).split("[*]");
         if (pros.length != 2) {
@@ -532,7 +542,13 @@ public class ETSSStatusFilter extends MARCObjectFilter {
             MARCObject.SubField subField = marc.getFirstSubField(tokens[0], sub[0]);
             if (subField != null) {
                 // Original code did not flatten 022*a, 022*l or 022*x, only 245*a
-                return sub.length > 1 && "f".equals(sub[1]) ? flatten(subField.getContent()) : subField.getContent();
+                String raw = sub.length > 1 && "f".equals(sub[1]) ?
+                        flatten(subField.getContent()) :
+                        subField.getContent();
+//                log.info(String.format("*** replaceAll on '%s' with '%s' using regexp '%s' yields '%s'",
+//                                       raw, idReplacement, idPattern.pattern(),
+//                                       idPattern.matcher(raw).replaceAll(idReplacement)));
+                return idPattern.matcher(raw).replaceAll(idReplacement);
             }
         }
         return null;
@@ -553,6 +569,9 @@ public class ETSSStatusFilter extends MARCObjectFilter {
 
     // Retrodigitized Journals -> retrodigitizedjournals
     String normaliseProvider(String content) {
+//        log.info(String.format("normalizing '%s' with a replaceAll(%s) using regexp '%s' with result '%s'",
+//                               content, providerReplacement, providerPattern.pattern(),
+//                               providerPattern.matcher(content).replaceAll(providerReplacement)));
         return flatten(providerPattern.matcher(content).replaceAll(providerReplacement));
     }
 
@@ -566,7 +585,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         try {
             String password = XMLStepper.getFirstElementText(response, "password");
             String username = XMLStepper.getFirstElementText(response, "username");
-            return (password == null || "".equals(password)) && (username == null || "".equals(username));
+            return !((password == null || "".equals(password)) && (username == null || "".equals(username)));
         } catch (XMLStreamException e) {
             Logging.logProcess("ETSSStatusFilter.needsPassword",
                                "XMLException while extracting element 'password' from XML '"
