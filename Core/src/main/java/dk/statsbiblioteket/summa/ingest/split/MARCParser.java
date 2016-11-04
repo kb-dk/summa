@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.ingest.split;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -148,7 +149,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
     @Override
     protected void protectedRun(Payload source) throws Exception {
         this.source = source;
-        XMLStreamReader reader = inputFactory.createXMLStreamReader(source.getStream(), "utf-8");
+        XMLStreamReader reader = inputFactory.createXMLStreamReader(RecordUtil.getStream(source), "utf-8");
         // Positioned at startDocument
         int eventType = reader.getEventType();
         if (eventType != XMLEvent.START_DOCUMENT) {
