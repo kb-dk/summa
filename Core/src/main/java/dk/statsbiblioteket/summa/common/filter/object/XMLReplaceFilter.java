@@ -25,6 +25,7 @@ import org.apache.tools.ant.filters.StringInputStream;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -88,15 +89,29 @@ public class XMLReplaceFilter extends ObjectFilterImpl {
             idFields.put(field, subs);
         }
         replacer = new XMLStepper.ContentReplaceCallback() {
+            long startTime = System.nanoTime();
+            long checked = 0 ;
+            long matched = 0;
+
             String inDataField = null;
 
             @Override
+            protected void setOut(XMLStreamWriter out) {
+                super.setOut(out);
+                startTime = System.nanoTime();
+                checked = 0;
+                matched = 0;
+            }
+
+            @Override
             protected String replace(List<String> tags, String current, String originalText) {
+                matched++;
                 return pattern.matcher(originalText).replaceAll(replacement);
             }
 
             @Override
             protected boolean match(XMLStreamReader xml, List<String> tags, String current) {
+                checked++;
                 // <datafield tag="001" ind1="0" ind2="0">
                 if ("datafield".equals(current)) {
                     inDataField = XMLStepper.getAttribute(xml, "tag", "N/A");
@@ -117,12 +132,28 @@ public class XMLReplaceFilter extends ObjectFilterImpl {
                     inDataField = null;
                 }
             }
+
+            @Override
+            public void end() {
+                log.debug("Finished replacing " + matched + "/" + checked + " matched elements in " +
+                          (System.nanoTime()-startTime)/1000000 + " ms");
+            }
         };
         log.info("Created " + this);
     }
 
+    private int wraps = 0;
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
+        if (payload.getStream() != null) { // Streaming mode (yay)
+            try {
+                payload.setStream(XMLStepper.streamingReplaceElementText(payload.getStream(), replacer));
+                log.debug("Wrapped Payload Stream from " + payload.getData(Payload.ORIGIN) + " in XML text replacer");
+            } catch (Exception e) {
+                throw new PayloadException("Exception setting up streaming replacer", e);
+            }
+            return true;
+        }
         try {
             String replaced = XMLStepper.replaceElementText(RecordUtil.getString(payload), replacer);
             payload.setStream(new StringInputStream(replaced));
