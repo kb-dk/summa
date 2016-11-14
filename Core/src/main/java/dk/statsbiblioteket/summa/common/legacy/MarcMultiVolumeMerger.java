@@ -86,10 +86,20 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      */
     public static final String CONF_MERGE_RECORDS = "summa.ingest.marcmultivolume.mergerecords";
 
+    /**
+     * If true, a successful merge will result in the record having both parent Records and Child records removed
+     * before being passed on in the chain.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_REMOVE_MERGED_RELATIVES = "summa.ingest.marcmultivolume.removemerged";
+    public static final boolean DEFAULT_REMOVE_MERGED_RELATIVES = false;
+
     private URL xsltLocation;
     @SuppressWarnings({"FieldCanBeLocal"})
     private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
     private final PayloadMatcher keep;
+    private final boolean removeMerged;
 
     public MarcMultiVolumeMerger(Configuration conf) {
         super(conf);
@@ -111,8 +121,8 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         } else {
             keep = null;
         }
-        log.info("MarcMultiVolumeMerger for '" + xsltLocation + "' ready for use.  Namespaces will "
-                 + (stripXMLNamespaces ? "" : "not ") + "be stripped from input before merging");
+        removeMerged = conf.getBoolean(CONF_REMOVE_MERGED_RELATIVES, DEFAULT_REMOVE_MERGED_RELATIVES);
+        log.info("Constructed " + this);
     }
 
     @Override
@@ -127,6 +137,10 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         if (mergedContent != null) {
             try {
                 record.setContent(mergedContent.getBytes("utf-8"), false);
+                if (removeMerged) {
+                    record.setParents(null);
+                    record.setChildren(null);
+                }
             } catch (UnsupportedEncodingException e) {
                 //noinspection DuplicateStringLiteralInspection
                 throw new IllegalArgumentException("utf-8 not supported");
@@ -305,4 +319,9 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         return line;
     }
 
+    @Override
+    public String toString() {
+        return String.format("MarcMultiVolumeMerger(xslt=%s, namespace-stripping=%b, mergedRemoval=%b",
+                             xsltLocation, stripXMLNamespaces, removeMerged);
+    }
 }
