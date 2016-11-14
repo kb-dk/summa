@@ -40,7 +40,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An abstract implementation of a SQL database driven extension of {@link StorageBase}.
@@ -497,6 +500,9 @@ public abstract class DatabaseStorage extends StorageBase {
     private final QueryOptions defaultGetOptions;
 
     private final boolean obeyTimestampContract;
+
+    // Timestamp for service start. Used for logging
+    private final String START_TIME = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(new Date());
 
     /**
      * A variation of {@link QueryOptions} used to keep track of recursion
@@ -2359,6 +2365,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    long totalFlushed = 0;
     /**
      * Flush a list of records to the storage.
      * Note: the 'synchronized' part of this method decl is paramount to
@@ -2395,7 +2402,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 setBaseStatisticInvalid(base, conn);
             }
             // TODO Introduce time-based logging on info
-            log.debug("Flushed " + recs.size() + " in " + (System.nanoTime() - start) / 1000000D + "ms");
+            totalFlushed += recs.size();
+            log.debug("Flushed " + recs.size() + " records in " + (System.nanoTime() - start) / 1000000 + "ms"
+                      + "(" + totalFlushed + " flushed since " + START_TIME + ")");
         } catch (SQLException e) {
             error = e.getMessage();
             throw new IOException(String.format("flushAll(%d records): Failed to flush %s: %s",
@@ -2463,7 +2472,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 oldChildrenIds.removeAll(newChildIds);
 
                 for (String c :  oldChildrenIds){ //touch children that are not children anymore
-                    touchRecord(c, conn);
+                    touchRecord(c, conn, false);
                     touchChildren(c,null,conn);
                 }
                 break;
@@ -2471,19 +2480,19 @@ public abstract class DatabaseStorage extends StorageBase {
                 oldParentsIds=getParentsIdsOnly(r.getId(), conn);
                 oldParentsIds.removeAll(newParentsIds);
                 for (String p :  oldParentsIds){ //touch children that are not children anymore
-                    touchRecord(p, conn);
+                    touchRecord(p, conn, false);
                     touchParents(p,null,conn);
                 }
                 break;
             case all:
                 oldParentsIds.removeAll(newParentsIds);
                 for (String p :  oldParentsIds){ //touch parents that are not parents anymore
-                    touchRecord(p,conn);
+                    touchRecord(p,conn, false);
                     touchParents(p,null,conn);
                 }
                 oldChildrenIds.removeAll(newChildIds);
                 for (String c :  oldChildrenIds){ //touch children that are not children anymore
-                    touchRecord(c, conn);
+                    touchRecord(c, conn, false);
                     touchChildren(c,null,conn);
                 }
                 break;
@@ -2513,7 +2522,6 @@ public abstract class DatabaseStorage extends StorageBase {
         RELATION clearRelation = this.relationsClear;
         // Update the timestamp we check against in getRecordsModifiedAfter
         updateModificationTime(r.getBase());
-        invalidateCachedStats();
 
         boolean recordExist = recordExist(conn, r.getId());
         
@@ -2586,7 +2594,6 @@ public abstract class DatabaseStorage extends StorageBase {
         // getRecordsModifiedAfter. This is also done in the end of the flush()
         // because the operation is non-instantaneous
         updateModificationTime(r.getBase());
-        invalidateCachedStats();
     }
 
 
@@ -2606,7 +2613,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException  if error is experienced when closing statement.
      * @throws SQLException if {@link Connection#prepareStatement} fails.
      */
-    protected void touchParents(String id, QueryOptions options, Connection conn, HashSet<String> parentsVisited) throws IOException, SQLException {
+    protected void touchParents(String id, QueryOptions options, Connection conn, HashSet<String> parentsVisited)
+            throws IOException, SQLException {
 
         List<String> parents= getParentsIdsOnly(id, conn);
 
@@ -3057,7 +3065,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException If error executing the SQL.
      */
     private void clearBaseWithConnection(String base, Connection conn) throws IOException, SQLException {
-        long start = System.currentTimeMillis();
+        long startTime = System.nanoTime();
         log.info("Clearing base '" + base + "'");
 
         final int _ID = 1;
@@ -3109,10 +3117,13 @@ public abstract class DatabaseStorage extends StorageBase {
 
                     cursor.updateInt(_DELETED, 1);
                     cursor.updateLong(_MTIME, timestampGenerator.next());
-                    log.debug("Deleted " + id);
                     cursor.updateRow();
                     totalCount++;
                     pageCount++;
+                    if ((totalCount & 0x3FF) == 0) { // Every 1024
+                        log.debug("Deleted record #" + totalCount + ". Latest deleted Record: " + id);
+                    }
+                    log.trace("Deleted " + id);
                 }
                 log.trace("Closing cursor");
                 cursor.close();
@@ -3126,8 +3137,10 @@ public abstract class DatabaseStorage extends StorageBase {
             updateModificationTime(base);
             log.debug("Comitting (last)");
             stmt.getConnection().commit();
-            log.info("Cleared base '" + base + "' in " + (System.currentTimeMillis() - start) + "ms. Marked "
-                     + totalCount + " records as deleted");
+            long ns = (System.nanoTime()-startTime);
+            log.info(String.format(
+                    "Cleared base '%s' in %d ms. Marked %d records as deleted at %.2f records/s. Last record ID was %s",
+                    base, ns/1000000, totalCount, 1.0*totalCount/(ns/1000000.0), id));
         } catch (SQLException e) {
             String msg =
                     "Error clearing base '" + base + "' after " + totalCount + " records, last record id was '" + id
@@ -3294,6 +3307,9 @@ public abstract class DatabaseStorage extends StorageBase {
         long pageCount = getPageSizeUpdate();
         String previousRecordId = null;
         Record previousRecord = null;
+        AtomicBoolean invalidateCachedStats = new AtomicBoolean(false);
+        Set<String> modifiedBases = new HashSet<>();
+
         try {
             // Page through all records in the result set in one transaction
             // We apply the job to the previous record so that we can detect
@@ -3321,7 +3337,7 @@ public abstract class DatabaseStorage extends StorageBase {
                         //System.out.println("Processing " + record);
                         if (previousRecord != null
                             && applyJobtoRecord(job, previousRecord, previousRecordId, base, options,
-                                                totalCount == 0, false, conn)) {
+                                                totalCount == 0, false, conn, invalidateCachedStats, modifiedBases)) {
                             totalCount++;
                             pageCount++;
                         }
@@ -3334,9 +3350,16 @@ public abstract class DatabaseStorage extends StorageBase {
 
             // The last iteration, now with last=true
             if (previousRecord != null) {
-                applyJobtoRecord(job, previousRecord, previousRecordId, base, options, totalCount == 0, true, conn);
+                applyJobtoRecord(job, previousRecord, previousRecordId, base, options, totalCount == 0, true, conn,
+                                 invalidateCachedStats, modifiedBases);
             }
-
+            if (invalidateCachedStats.get()) {
+                log.debug("Invalidating stats caches as some records were modified due by the job '" + jobName + "'");
+                invalidateCachedStats();
+                for (String modifiedBase: modifiedBases) {
+                    updateModificationTime(modifiedBase);
+                }
+            }
             // Commit the full transaction
             // FIXME: It would probably save memory to do incremental commits
             stmt.getConnection().commit();
@@ -3372,12 +3395,12 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param isFirst     True if it is the first record.
      * @param isLast      True if it is the last record.
      * @param conn        The database connection.
-     * @return False if the batch job wasn't runned because the record was
-     *         filtered out.
+     * @return False if the batch job wasn't runned because the record was filtered out.
      */
     private boolean applyJobtoRecord(
             BatchJob job, Record record, String oldRecordId, String jobBase, QueryOptions options, boolean isFirst,
-            boolean isLast, Connection conn) throws SQLException, IOException {
+            boolean isLast, Connection conn, AtomicBoolean invalidateStats, Set<String> changedBases)
+            throws SQLException, IOException {
 
         if (!options.allowsRecord(record)) {
             return false;
@@ -3386,6 +3409,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // Set up the batch job context and run it
         log.debug(String.format("Running batch job '%s' on '%s'", job, record.getId()));
         job.setContext(record, isFirst, isLast);
+        boolean preDeleted = record.isDeleted();
         try {
             job.eval();
         } catch (ScriptException e) {
@@ -3407,8 +3431,10 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             // Mark all caches as dirty
-            invalidateCachedStats();
-            updateModificationTime(record.getBase());
+            invalidateStats.set(true);
+            changedBases.add(record.getBase());
+        //invalidateCachedStats();
+            //updateModificationTime(record.getBase());
             if (jobBase != null && !jobBase.equals(record.getBase())) {
                 // The record base was changed by the batch job
                 updateModificationTime(jobBase);
@@ -3859,37 +3885,55 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * Touch a record means updating the records timestamp. This also updates
-     * the storage last modification time.
+     * Touch a record means updating the records timestamp.
      *
      * @param id   The record ID.
      * @param conn The database connection, changes are not committed.
+     * @param updateStats if true, this method will update database statistics (this can take > 100 ms), if false
+     *                    the statistics should be updated by the caller.
      * @throws IOException  If error occurs while communication with the storage.
      * @throws SQLException If error occur while executing the SQL.
      */
-    protected void touchRecord(String id, Connection conn) throws IOException, SQLException {
+    protected void touchRecord(String id, Connection conn, boolean updateStats) throws IOException, SQLException {
         // TODO: Use handle directly
+        long pointTime = System.nanoTime();
         StatementHandle handle = statementHandler.getTouchRecord();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
-        log.debug("Touching: " + id);
-        invalidateCachedStats();
+        final long prepareStatementTime = System.nanoTime()-pointTime;
         Record r = null;
+
+        pointTime = System.nanoTime();
+        long executeTime;
+        final long closeTime;
         try {
             stmt.setLong(1, timestampGenerator.next());
             stmt.setString(2, id);
             stmt.executeUpdate();
-            r = getRecordWithConnection(id, null, conn);
-            if (r != null) {
-                updateLastModficationTimeForBase(r.getBase(), conn);
+            executeTime = System.nanoTime()-pointTime;
+            if (updateStats) {
+                r = getRecordWithConnection(id, null, conn);
+                if (r != null) {
+                    updateLastModficationTimeForBase(r.getBase(), conn);
+                }
             }
         } catch (NullPointerException e) {
             log.warn("touch(" + id + ") failed as the retrieved Record was " + r);
+            executeTime = System.nanoTime()-pointTime;
         } finally {
+            pointTime = System.nanoTime();
             closeStatement(stmt);
+            closeTime = System.nanoTime()-pointTime;
+        }
+        if (updateStats) {
+            invalidateCachedStats();
         }
 
-        if (log.isTraceEnabled()) {
-            log.trace("Touched: " + id);
+        if (log.isDebugEnabled()) {
+            log.debug("Touched: " + id + " in "
+                      + prepareStatementTime + " prepareNS + "
+                      + executeTime + " executeNS + "
+                      + closeTime + " closeNS = " + (prepareStatementTime+executeTime+closeTime)
+                      + ". updateStats=" + (updateStats ? "true, but not counted in time spend" : "false"));
         }
     }
 
@@ -4349,12 +4393,12 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private void invalidateCachedStats() {
         String invalidateCachedStats = "UPDATE " + BASE_STATISTICS + " SET " + VALID_COLUMN + " = 0";
-
+        log.debug("Invalidating cached stats");
         Connection conn = null;
         try {
             conn = getConnection();
             Statement stmt = conn.createStatement();
-            //  stmt.execute(invalidateCachedStats); ///TODO must uncomment!
+            stmt.execute(invalidateCachedStats);
         } catch (SQLException e) {
             log.error("Error invalidating base statistic in database", e);
         } finally {

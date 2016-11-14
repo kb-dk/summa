@@ -154,7 +154,7 @@ public class PostGreSQLStorage  extends DatabaseStorage implements Configurable 
                 continue;
             }
             touched.add(parent.getId());
-            touchRecord(parent.getId(), conn);
+            touchRecord(parent.getId(), conn, false);
             touchParents(parent.getId(), touched, options, conn);
         }
     }

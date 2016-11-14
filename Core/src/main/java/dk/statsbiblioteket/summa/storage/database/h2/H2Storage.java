@@ -581,7 +581,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                 continue;
             }
             touched.add(parent.getId());
-            touchRecord(parent.getId(), conn);
+            touchRecord(parent.getId(), conn, false);
             touchParents(parent.getId(), touched, options, conn);
         }
     }
