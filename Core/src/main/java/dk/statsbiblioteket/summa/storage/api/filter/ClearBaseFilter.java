@@ -103,12 +103,14 @@ public class ClearBaseFilter extends ObjectFilterImpl {
         }
 
         fired = true;
-        log.debug("Performing clear on all bases");
+        log.debug("Performing clear on " + bases.size() + " bases (" + Strings.join(bases) + ")");
         for (String base : bases) {
             try {
                 //noinspection DuplicateStringLiteralInspection
+                long clearStart = System.nanoTime();
                 log.info("Clearing base: " + base);
                 storage.clearBase(base);
+                log.info("Cleared base " + base + " in " + (System.nanoTime()-clearStart)/1000000/1000 + " seconds");
             } catch (IOException e) {
                 log.error("Error clearing base: " + base, e);
             }

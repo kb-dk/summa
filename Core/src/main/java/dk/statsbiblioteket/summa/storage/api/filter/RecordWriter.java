@@ -125,9 +125,9 @@ public class RecordWriter extends ObjectFilterImpl {
 
     public static final boolean DEFAULT_TRY_UPDATE = false;
 
-    private static class Batcher implements Runnable {
+    private class Batcher implements Runnable {
         /* CAVEAT: We log under the name of the RecordWriter !! */
-        private static final Log log = LogFactory.getLog(RecordWriter.class);
+        private final Log log = LogFactory.getLog(RecordWriter.class);
 
         private boolean mayRun;
         long lastCommit;
@@ -174,10 +174,10 @@ public class RecordWriter extends ObjectFilterImpl {
 
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.debug("Batching: " + r.toString(true));
+                log.debug("Batching" + profiler.getBeats() + ": " + r.toString(true));
             } else {
                 //noinspection DuplicateStringLiteralInspection
-                log.debug("Batching: " + r);
+                log.debug("Batching #" + profiler.getBeats() + ": " + r);
             }
 
             lastUpdate = System.currentTimeMillis();

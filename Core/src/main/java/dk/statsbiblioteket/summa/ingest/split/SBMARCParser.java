@@ -280,7 +280,7 @@ public class SBMARCParser extends MARCParser {
             if (PARENT_FIELD_SUBFIELD_ID.equals(subFieldCode) || PARENT_FIELD_SUBFIELD_SBID.equals(subFieldCode)) {
                 parent = expandID(subFieldContent);
                 log.trace("Parent for " + id + " is " + parent);
-            } else {
+            } else if (!"x".equals(subFieldCode)) {
                 unsupported(dataFieldTag, subFieldCode);
             }
             return;
@@ -292,7 +292,7 @@ public class SBMARCParser extends MARCParser {
                 lastChildID = expandID(subFieldContent);
             } else if (CHILD_FIELD_SUBFIELD_SORT.equals(subFieldCode)) {
                 lastChildSort = subFieldContent;
-            } else {
+            } else if (!"x".equals(subFieldCode)) {
                 unsupported(dataFieldTag, subFieldCode);
             }
         }

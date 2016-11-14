@@ -294,7 +294,7 @@ public class DatabaseStorageTest extends StorageTestBase {
     private void testRelativesScaling(boolean obeyTimestampContract) throws Exception {
         final int RECORDS = 10000;
         final int PARENT_EVERY = 1000;
-        final int LOG_EVERY = RECORDS/1000;
+        final int LOG_EVERY = RECORDS/100;
         final int BATCH_SIZE= 100; // Way above aviser's 15
 
         final byte[] EMPTY = new byte[0];
@@ -969,10 +969,6 @@ public class DatabaseStorageTest extends StorageTestBase {
         catch(Exception e){
             //ignore
         }
-
-
-
-
     }
 
     /**

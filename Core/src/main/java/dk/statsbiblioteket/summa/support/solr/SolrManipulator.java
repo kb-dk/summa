@@ -117,6 +117,7 @@ public class SolrManipulator implements IndexManipulator {
     public static final int DEFAULT_CONNECTION_MAXREQUESTS = 100;
 
     public static final String UPDATE_COMMAND = "/update";
+    private static final long M = 1000000;
 
     protected final String hostWithPort;
     protected final String restCall;
@@ -373,10 +374,13 @@ public class SolrManipulator implements IndexManipulator {
             }
         }
         requestProfiler.beat();
+        final long tStart = System.nanoTime();
         if (!conn.isOpen()) {
             Socket socket = new Socket(host.getHostName(), host.getPort());
             conn.bind(socket, params);
         }
+        final long tBind = System.nanoTime()-tStart;
+
         BasicHttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest(
             "POST", restCall + UPDATE_COMMAND); // "/servlets-examples/servlet/RequestInfoExample");
         request.setEntity(new StringEntity(command, "utf-8"));
@@ -384,7 +388,6 @@ public class SolrManipulator implements IndexManipulator {
 //        request.setHeader("Accept", "application/xml");
 //        request.addHeader(new BasicHeader("Content-Type", "application/xml"));
 //        request.addHeader(new BasicHeader("Accept", "application/xml"));
-
         String updateCommand = hostWithPort + restCall + UPDATE_COMMAND; // For feedback
         request.setParams(params);
         HttpResponse response;
@@ -397,6 +400,7 @@ public class SolrManipulator implements IndexManipulator {
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
             throw new IOException(message, e);
         }
+        final long tPre = System.nanoTime()-tStart-tBind;
 
         try {
             response = httpexecutor.execute(request, conn, context);
@@ -407,6 +411,7 @@ public class SolrManipulator implements IndexManipulator {
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
             throw new IOException(message, e);
         }
+        final long tSend = System.nanoTime()-tStart-tBind-tPre;
 
         try {
             response.setParams(params);
@@ -424,6 +429,12 @@ public class SolrManipulator implements IndexManipulator {
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
             throw new IOException(message, e);
         }
+        final long tPost = System.nanoTime()-tStart-tBind-tPre-tSend;
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("send(command.length=%d) finished in %dms (bind=%d, pre=%d, send=%d, post=%d)",
+                                    command.length(), (tBind+tPre+tSend+tPost)/M, tBind/M, tPre/M, tSend/M, tPost/M));
+        }
+
         int code = response.getStatusLine().getStatusCode();
         if (code == 400) { // Bad Request: Solr did not like the input
             String message = String.format(

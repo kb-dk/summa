@@ -173,7 +173,10 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
         if (queue.isEmpty()) {
             return;
         }
-        if (queue.size() == maxCount || System.currentTimeMillis() - lastAction >= maxMS) {
+        if (queue.size() >= maxCount || System.currentTimeMillis() - lastAction >= maxMS) {
+            log.debug("Performing flush due to check queue.size(" + queue.size() + ") >= maxCount(" + maxCount
+                      + ") || (currentTimeMillis(" + System.currentTimeMillis() + ") - lastAction(" + lastAction
+                      + ") >= maxMS(" + maxMS + ")");
             performFlush();
         }
     }
