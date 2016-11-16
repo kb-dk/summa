@@ -236,25 +236,26 @@ public class SolrManipulator implements IndexManipulator {
                 batcher.flush();
             }
         } catch (NoRouteToHostException e) {
-            String error = String.format(
+            shutdown(String.format(
                     "NoRouteToHostException sending %d updates (%d adds, %d deletes) to %s. "
                     + "This is likely to be caused by depletion of ports in the ephemeral range. "
                     + "Consider adjusting batch setup from the current %s"
                     + "Payloads: %s. The JVM will be shut down in 5 seconds. First part of command:\n%s",
                     payloads.size(), add, del, this, batcher,
-                    Strings.join(payloads, ", "), trim(command.toString(), 1000));
-            Logging.logProcess("SolrManipulator", error, Logging.LogLevel.FATAL, "", e);
-            Logging.fatal(log, "SolrManipulator.send", error, e);
-            new DeferredSystemExit(1, 5000);
+                    Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
         } catch (IOException e) {
-            String error = String.format(
+            shutdown(String.format(
                     "IOException sending %d updates (%d adds, %d deletes) to %s. Payloads: %s. "
                     + "The JVM will be shut down in 5 seconds. First part of command:\n%s",
-                    payloads.size(), add, del, this, Strings.join(payloads, ", "), trim(command.toString(), 1000));
-            Logging.logProcess("SolrManipulator", error, Logging.LogLevel.FATAL, "", e);
-            Logging.fatal(log, "SolrManipulator.send", error, e);
-            new DeferredSystemExit(1, 5000);
+                    payloads.size(), add, del, this, Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
         }
+    }
+
+    private void shutdown(String error, IOException e) {
+        Logging.logProcess("SolrManipulator", error, Logging.LogLevel.FATAL, "", e);
+        Logging.fatal(log, "SolrManipulator.send", error, e);
+        new DeferredSystemExit(1, 5000);
+        fullStop = true;
     }
 
     private int ok = 0;
@@ -364,7 +365,17 @@ public class SolrManipulator implements IndexManipulator {
         context.setAttribute(ExecutionContext.HTTP_TARGET_HOST, host);
     }
 
+    private boolean fullStop = false;
     private synchronized void send(String designation, String command) throws IOException {
+        if (fullStop) {
+            log.info("Full stop signalled earlier. Blocking and waiting for JVM shutdown");
+            try {
+                Thread.sleep(24*60*60*1000);
+            } catch (InterruptedException e) {
+                log.warn("Full stop interrupted. Continuing");
+            }
+        }
+
         if (maxRequests > 0 && requestProfiler.getBps() > maxRequests) {
             try {
                 Thread.sleep(maxRequests > 500 ? 2 : 1000/maxRequests);
@@ -450,6 +461,7 @@ public class SolrManipulator implements IndexManipulator {
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.FATAL, designation);
             Logging.fatal(log, "SolrManipulator.send", message);
             new DeferredSystemExit(1);
+            fullStop = true;
             throw new IOException(message);
         } else if (code != 200) {
             String message = String.format(
@@ -459,6 +471,7 @@ public class SolrManipulator implements IndexManipulator {
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.FATAL, designation);
             Logging.fatal(log, "SolrManipulator.send", message);
             new DeferredSystemExit(1);
+            fullStop = true;
             throw new IOException(message);
         }
 
