@@ -143,6 +143,20 @@ public class StorageWS implements ServletContextListener {
     }
 
     /**
+     * Wrapper for {@link #realGetRecord(String, boolean, boolean, boolean)} with parameters shuffled to ensure
+     * that ID is last.
+     * @param expand Whether or not to include all parent/child relations when getting the record.
+     * @param legacyMerge Whether or not to return to record in a merged format suitable for legacy use.
+     * @param escapeContent Whether or not the XML should be returned escaped or directly.
+     * @param id The record id.
+     * @return A String with the contents of the record or null if unable to retrieve record.
+     */
+    @WebMethod
+    public String getCustomRecord(boolean expand, boolean legacyMerge, boolean escapeContent, String id) {
+        return realGetRecord(id, expand, legacyMerge, escapeContent);
+    }
+
+    /**
      * Get the contents of a record (including all parent/child relations) from
      * storage.
      *
@@ -152,7 +166,7 @@ public class StorageWS implements ServletContextListener {
      */
     @WebMethod
     public String getRecord(String id) {
-        return realGetRecord(id, true, false);
+        return realGetRecord(id, true, false, escapeContent);
     }
 
     /**
@@ -166,7 +180,7 @@ public class StorageWS implements ServletContextListener {
      */
     @WebMethod
     public String getLegacyRecord(String id) {
-        return realGetRecord(id, true, true);
+        return realGetRecord(id, true, true, escapeContent);
     }
 
     /**
@@ -180,7 +194,22 @@ public class StorageWS implements ServletContextListener {
     public String getRecords(String[] ids) {
         List<String> list = Arrays.asList(ids);
         log.debug("getRecords, fetching " + list.size() + " records from storage.");
-        return realGetRecords(list);
+        return realGetRecords(list, escapeContent);
+    }
+
+    /**
+     * Get all records specified by the supplied set of id's.
+     * For bulk ID lookups, this method is preferable over multiple single calls.
+     *
+     * @param escapeContent Whether or not the XML should be returned escaped or directly.
+     * @param ids List of all record id's to fetch from storage.
+     * @return XML block to return directly to web-service.
+     */
+    @WebMethod
+    public String getCustomRecords(boolean escapeContent, String[] ids) {
+        List<String> list = Arrays.asList(ids);
+        log.debug("getRecords, fetching " + list.size() + " records from storage.");
+        return realGetRecords(list, escapeContent);
     }
 
     /**
@@ -204,7 +233,7 @@ public class StorageWS implements ServletContextListener {
      * @param ids Id's of records to fetch from storage.
      * @return List of Records specified by the given list of id's.
      */
-    private String realGetRecords(List<String> ids) {
+    private String realGetRecords(List<String> ids, boolean escapeContent) {
         StringWriter sw = new StringWriter(5000);
         long totalTime = 0;
         long time = 0;
@@ -255,14 +284,11 @@ public class StorageWS implements ServletContextListener {
      * Get the contents of a record from storage.
      *
      * @param id The record id.
-     * @param expand Whether or not to include all parent/child relations when
-     * getting the record.
-     * @param legacyMerge Whether or not to return to record in a merged format
-     * suitable for legacy use.
-     * @return A String with the contents of the record or null if unable to
-     * retrieve record.
+     * @param expand Whether or not to include all parent/child relations when getting the record.
+     * @param legacyMerge Whether or not to return to record in a merged format suitable for legacy use.
+     * @return A String with the contents of the record or null if unable to retrieve record.
      */
-    private String realGetRecord(String id, boolean expand, boolean legacyMerge) {
+    private String realGetRecord(String id, boolean expand, boolean legacyMerge, boolean escapeContent) {
         if (log.isTraceEnabled()) {
             log.trace(String.format(
                     "realGetRecord('%s', expand=%b, legacyMerge=%b)",

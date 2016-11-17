@@ -314,27 +314,55 @@
                    value="dk.statsbiblioteket.summa.web.services.StorageWS" />
 
         <parameter name="allowedMethods"
-                   value="getRecord getLegacyRecord getRecords"/>
+                   value="getRecord getCustomRecord getLegacyRecord getRecords getCustomRecords"/>
 
-        <operation name="getRecords">
-            <documentation>
-                This method returns a collection of records given an array of
-                string (ids) or null in case it is unable to fetch the record.
+         <operation name="getRecords">
+             <documentation>
+                 This method returns a collection of records given an array of
+                 string (ids) or null in case it is unable to fetch the record.
 
-                ids: Array containing strings with id's of the record to fetch.
-            </documentation>
-            <parameter name="ids" type="StringArray" />
-        </operation>
+                 ids: Array containing strings with id's of the record to fetch.
+             </documentation>
+             <parameter name="ids" type="StringArray" />
+         </operation>
 
-        <operation name="getRecord">
-            <documentation>
-                This method returns the record with the given id or null in case
-                it is unable to fetch the record.
+         <operation name="getCustomRecords">
+             <documentation>
+                 This method returns a collection of records given an array of
+                 string (ids) or null in case it is unable to fetch the record.
 
-                id: The id of the record to fetch.
-            </documentation>
-            <parameter name="id" type="tns:string" />
-        </operation>
+                 escapeContent: If true, the content of the records is treated as plain text (and entity-escaped).
+                 ids: Array containing strings with id's of the record to fetch.
+             </documentation>
+             <parameter name="escapeContent" type="tns:boolean" />
+             <parameter name="ids" type="StringArray" />
+         </operation>
+
+         <operation name="getRecord">
+             <documentation>
+                 This method returns the record with the given id or null in case
+                 it is unable to fetch the record.
+
+                 id: The id of the record to fetch.
+             </documentation>
+             <parameter name="id" type="tns:string" />
+         </operation>
+
+         <operation name="getCustomRecord">
+             <documentation>
+                 This method returns the record with the given id or null in case
+                 it is unable to fetch the record.
+
+                 expand: Expand parent/chile and include them in the response.
+                 legacyMerge: If true, parent/childs are collapsed into the main record.
+                 escapeContent: If true, the content of the records is treated as plain text (and entity-escaped).
+                 id: The id of the record to fetch.
+             </documentation>
+             <parameter name="expand" type="tns:boolean" />
+             <parameter name="legacyMerge" type="tns:boolean" />
+             <parameter name="escapeContent" type="tns:boolean" />
+             <parameter name="id" type="tns:string" />
+         </operation>
 
         <operation name="getLegacyRecord">
             <documentation>
