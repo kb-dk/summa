@@ -33,6 +33,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Legacy multi volume handling of Marc2-like records (the DanMarc2 subset used
@@ -95,11 +96,20 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     public static final String CONF_REMOVE_MERGED_RELATIVES = "summa.ingest.marcmultivolume.removemerged";
     public static final boolean DEFAULT_REMOVE_MERGED_RELATIVES = false;
 
+    /**
+     * If true, child records marked as deleted are ignored when merging.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_IGNORE_DELETED = "summa.ingest.marcmultivolume.ignoredeleted";
+    public static final boolean DEFAULT_IGNORE_DELETED = true;
+
     private URL xsltLocation;
     @SuppressWarnings({"FieldCanBeLocal"})
     private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
     private final PayloadMatcher keep;
     private final boolean removeMerged;
+    private final boolean ignoreDeleted;
 
     public MarcMultiVolumeMerger(Configuration conf) {
         super(conf);
@@ -113,8 +123,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         if (conf.valueExists(CONF_MERGE_RECORDS)) {
             log.debug("Creating ignore matcher");
             try {
-                keep = new PayloadMatcher(
-                    conf.getSubConfiguration(CONF_MERGE_RECORDS));
+                keep = new PayloadMatcher(conf.getSubConfiguration(CONF_MERGE_RECORDS));
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException("Sub configuration not supported", e);
             }
@@ -122,6 +131,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             keep = null;
         }
         removeMerged = conf.getBoolean(CONF_REMOVE_MERGED_RELATIVES, DEFAULT_REMOVE_MERGED_RELATIVES);
+        ignoreDeleted = conf.getBoolean(CONF_IGNORE_DELETED, DEFAULT_IGNORE_DELETED);
         log.info("Constructed " + this);
     }
 
@@ -172,10 +182,16 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             //noinspection DuplicateStringLiteralInspection
             log.debug(String.format(NO_RELATIVES, record.getId(), "children"));
                 return null;
+        } else if (record.hasChildren() && countNotDeleted(record.getChildren()) == 0) {
+            log.trace("No non-deleted children for " + record.getId());
+            return null;
         } else if (record.hasParents() && record.getParents() == null) {
             //noinspection DuplicateStringLiteralInspection
             log.debug(String.format(NO_RELATIVES, record.getId(), "parents"));
                 return null;
+        } else if (record.hasParents() && countNotDeleted(record.getParents()) == 0) {
+            log.trace("No non-deleted parents for " + record.getId());
+            return null;
         } else {
             //noinspection DuplicateStringLiteralInspection
             log.debug("Processing " + record.getChildren().size() + " children of " + record.getId());
@@ -184,13 +200,26 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         //noinspection DuplicateStringLiteralInspection
         StringWriter output = new StringWriter(5000);
         try {
-            addProcessedContent(output, record.getParents() != null, record, 0);
+            addProcessedContent(output, countNotDeleted(record.getParents()) != 0, record, 0);
             log.trace("Finished processing content for " + record);
         } catch (Exception e) {
             log.warn("Exception transforming " + record + ". The content will not be updated", e);
             return null;
         }
         return output.toString();
+    }
+
+    private int countNotDeleted(List<Record> subRecords) {
+        if (subRecords == null) {
+            return 0;
+        }
+        int count = 0;
+        for (Record sub: subRecords) {
+            if (!sub.isDeleted()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
@@ -208,11 +237,10 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      * @throws javax.xml.transform.TransformerException if there was an error
      *         during transformation.
      */
-    private void addProcessedContent(StringWriter output, boolean hasParent,
-                                     Record record, int level) throws
-                                                          TransformerException {
+    private void addProcessedContent(
+            StringWriter output, boolean hasParent, Record record, int level) throws TransformerException {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Processing "+record.getId()+"  at level " + level);
+        log.debug("Processing " + record.getId() + "  at level " + level);
 
         String content = record.getContentAsUTF8();
         // This ugly hack is to ensure efficiency and check that the last
@@ -264,6 +292,8 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             for (Record child: record.getChildren()) {
                 if (keep != null && !keep.isMatch(child)) {
                     log.debug("Ignoring sub Record as it matches the ignore setup. Ignored is " + record);
+                } else if (ignoreDeleted && child.isDeleted()) {
+                    log.debug("Ignoring sub Record as it is marked as deleted. Ignored is " + record);
                 } else {
                     addProcessedContent(output, true, child, level+1);
                 }

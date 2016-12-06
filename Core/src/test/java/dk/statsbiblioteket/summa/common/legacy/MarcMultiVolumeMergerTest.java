@@ -47,7 +47,6 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        makeSampleHorizon();
     }
 
     private void makeSampleHorizon() throws IOException {
@@ -117,24 +116,60 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void testMerge() throws Exception {
-        MarcMultiVolumeMerger merger =
-                new MarcMultiVolumeMerger(Configuration.newMemoryBased());
+        makeSampleHorizon();
+        MarcMultiVolumeMerger merger = new MarcMultiVolumeMerger(Configuration.newMemoryBased());
         merger.setSource(this);
         String processed = merger.next().getRecord().getContentAsUTF8();
-        log.info("Processed:\n" + processed);
+//        log.info("Processed:\n" + processed);
+        // FIXME: Convert this to a proper XML-assert as the attribute order depends on Java version
         assertContains(processed, // BIND
-              "  <datafield tag=\"248\" ind1=\"0\" ind2=\"0\">\n"
-              + "    <subfield code=\"a\">Kaoskyllingens endeligt</subfield>");
+                       "<datafield ind2=\"0\" ind1=\"0\" tag=\"248\">" +
+                       "<subfield code=\"a\">Kaoskyllingens endeligt</subfield>");
         assertContains(processed, // SECTION
-              "  <datafield tag=\"247\" ind1=\"0\" ind2=\"0\">\n"
-              + "    <subfield code=\"a\">Kaoskyllingens rige</subfield>");
+                       "<datafield ind2=\"0\" ind1=\"0\" tag=\"247\">"
+                       + "<subfield code=\"a\">Kaoskyllingens rige</subfield>");
         assertContains(processed, // HOVEDPOST
-              "  <datafield tag=\"245\" ind1=\"0\" ind2=\"0\">\n"
-              + "    <subfield code=\"a\">Kaoskyllingen</subfield>");
+                       "<datafield tag=\"245\" ind1=\"0\" ind2=\"0\">"
+                       + "<subfield code=\"a\">Kaoskyllingen</subfield>");
         assertContains(processed, // Correct close tag
-              "</record>");
+                       "</record>");
     }
 
+    public void testDeleteDiscard() throws IOException {
+        makeSampleHorizon();
+        markAsDeleted("child_book1.xml"); // child1: Den apokalyptiske Kaoskylling
+        MarcMultiVolumeMerger merger = new MarcMultiVolumeMerger(Configuration.newMemoryBased());
+        merger.setSource(this);
+        String processed = merger.next().getRecord().getContentAsUTF8();
+        assertFalse("The result should not contain the deleted record\n" + processed,
+                    processed.contains("Den apokalyptiske Kaoskylling"));
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void markAsDeleted(String id) {
+        for (Record record: records) {
+            if (id.equals(record.getId())) {
+                record.setDeleted(true);
+                return;
+            }
+            for (Record sub: record.getChildren()) {
+                if (id.equals(sub.getId())) {
+                    sub.setDeleted(true);
+                    return;
+                }
+            }
+            for (Record sup: record.getParents()) {
+                if (id.equals(sup.getId())) {
+                    sup.setDeleted(true);
+                    return;
+                }
+            }
+        }
+        fail("Unable to locate record with ID '" + id + "' intended for delete marker");
+    }
+
+    // <datafieldind2="0"ind1="0"tag="248"><subfieldcode="a">Kaoskyllingensendeligt</subfield>
+    // <datafieldtag="248"ind2="0"ind1="0"><subfieldcode="a">Kaoskyllingensendeligt</subfield>
     public void testMergeAleph() throws Exception {
         makeSampleAleph();
         MarcMultiVolumeMerger merger = new MarcMultiVolumeMerger(
@@ -167,7 +202,7 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
 
     private void assertContains(String main, String sub) {
         boolean contains = flatten(main).contains(flatten(sub));
-        assertTrue("The String '" + sub + "' should exist in the main String",
+        assertTrue("The String '" + sub + "' should exist in the main String\n" + main,
                    contains);
     }
 
