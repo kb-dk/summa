@@ -43,10 +43,20 @@ public class Environment {
      * <pre>
      *   "Your home dir is ${user.home}"
      * </pre>
-     * escapes to<br/>
+     * escapes to
      * <pre>
      *    "Your home dir is /home/username"
      * </pre>
+     *
+     * Default values are supported with {@code :}. Example:
+     * <pre>
+     *   "Tomcat port is ${tomcat.port:8080}"
+     * </pre>
+     * escapes to
+     * <pre>
+     *   "Tomcat port is ${8080}"
+     * </pre>
+     * if the property {@code tomcat.port} is not set.
      * @param s the string to escape, if {@code s} is {@code null} this method also returns {@code null}.
      * @return the string with any system property references replaces by their actual values, or {@code null} if the
      *         input string is {@code null}.
@@ -58,12 +68,26 @@ public class Environment {
         StringBuffer expanded = new StringBuffer();
         Matcher matcher = EXPAND.matcher(s);
         while (matcher.find()) {
-            String expVal = getSystemProperties().get(matcher.group(1));
+            String rawKey = matcher.group(1);
+            int cPos = rawKey.indexOf(":");
+            String defaultValue;
+
+            if (cPos == -1) {
+                defaultValue = null;
+            } else {
+                defaultValue = rawKey.substring(cPos+1);
+                rawKey = rawKey.substring(0, cPos);
+            }
+            String expVal = getSystemProperties().get(rawKey);
+            if (expVal == null && defaultValue != null) {
+                log.debug("No property for key '" + rawKey + "', using default value '" + defaultValue + "'");
+                expVal = defaultValue;
+            }
             if (expVal == null) {
-                log.warn("Unable to expand environment variable \"" + matcher.group(1) + "\"");
+                log.warn("Unable to expand environment variable \"" + rawKey + "\"");
 //                System.out.println("Group " + matcher.group(1) + " input " + s);
                 matcher.appendReplacement(expanded, "");
-                expanded.append("${").append(matcher.group(1)).append("}");
+                expanded.append("${").append(rawKey).append("}");
             } else {
                 try {
                     matcher.appendReplacement(expanded, Matcher.quoteReplacement(expVal));
@@ -97,12 +121,27 @@ public class Environment {
             }
             // Directly specified properties
             for (Map.Entry entry : System.getProperties().entrySet()) {
-                sysProps.put(entry.getKey().toString(), entry.getValue().toString());
+                final String key = entry.getKey().toString();
+                final String value = entry.getValue().toString();
+                sysProps.put(key, value);
             }
             log.info("Resolved and cached JVM environment variables: " +
-                     Strings.join(sysProps.entrySet()).replace("\n", "\\n"));
+                     dumpCachedEntries().replace("\n", "\\n"));
         }
         return sysProps;
+    }
+    static String dumpCachedEntries() {
+        StringBuilder sb = new StringBuilder(2000);
+        for (Map.Entry<String, String> entry : getSystemProperties().entrySet()) {
+            final String key = entry.getKey();
+            final String value = entry.getValue();
+            if (sb.length() != 0) {
+                sb.append(", ");
+            }
+            sb.append(key).append("=").append(
+                    !value.isEmpty() && (key.contains("password") || value.contains("password")) ? "[defined]" : value);
+        }
+        return sb.toString();
     }
     private static final Pattern NESTED = Pattern.compile(" -D([^=]+)=([^ ]+)");
     public static Map<String, String> sysProps = null;
@@ -264,6 +303,15 @@ public class Environment {
     public static void addLoggingShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new CustomShutdownHook("Shutdown logger"));
     }
+
+    /**
+     * Resets the cache of system properties. Call this if the properties has changed.
+     * This is a rare, if not unseen, scenario in normal code. Used mostly/only for testing.
+     */
+    public static void resetPropertyCache() {
+        sysProps = null;
+    }
+
     private static class CustomShutdownHook extends Thread {
         private CustomShutdownHook(String name) {
             super(name);

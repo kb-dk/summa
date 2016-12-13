@@ -23,13 +23,45 @@ import java.util.regex.Pattern;
  */
 public class EnvironmentTest extends TestCase {
 
-    /** Test escape one system properties. */ 
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        Environment.resetPropertyCache();
+    }
+
+    /** Test escape one system properties. */
     public void testEscapeOneSysProp() {
         String home = System.getProperty("user.home");
         String source = "${user.home}";
 
         assertEquals(home,
                      Environment.escapeSystemProperties(source));
+    }
+
+    public void testEscapingWithDefaultValue() {
+        System.setProperty("foo", "bar");
+        assertEquals("Existing properties should be escaped properly",
+                     "bar", Environment.escapeSystemProperties("${foo}"));
+        assertEquals("Non-existing properties should be left unchanged",
+                     "${zoo}", Environment.escapeSystemProperties("${zoo}"));
+        assertEquals("Non-existing properties with default value should return that value",
+                     "baz", Environment.escapeSystemProperties("${zoo:baz}"));
+    }
+
+    public void testPasswordMasking() {
+        System.setProperty("key.password", "foo");
+        System.setProperty("bar", "value.password");
+        System.setProperty("zoo", "baz");
+        String dump = Environment.dumpCachedEntries();
+        assertTrue("The human readable dump of cached properties should redact values for keys containing the String " +
+                   "'password'\n" + dump,
+                   dump.contains("key.password=[defined]"));
+        assertTrue("The human readable dump of cached properties should redact values containing the String " +
+                   "'password'\n" + dump,
+                   dump.contains("bar=[defined]"));
+        assertTrue("The human readable dump of cached properties should not redact values for 'normal' key/value-pairs"
+                   + "\n" + dump,
+                   dump.contains("zoo=baz"));
     }
 
     /** Test escape two system properties. */
@@ -50,14 +82,14 @@ public class EnvironmentTest extends TestCase {
         assertEquals(" " + home + "  " + ioTmpdir + " ", Environment.escapeSystemProperties(source));
     }
 
-    // Values containing $ is a problem as they are seen as a group
+    // Values containing $ are special when appending to matchers, so they need to be escaped by the implementation
     public void testReplacementQuoting() {
         String KEY = "mykey";
         String PROPERTIES = "${" + KEY + "}";
         String VALUE = "$MYVALUE";
         System.setProperty(KEY, VALUE);
         assertEquals("Escaping full value with String containing '$' should work",
-                     PROPERTIES.replace("${" + KEY + "}", VALUE), Environment.escapeSystemProperties(PROPERTIES));
+                     VALUE, Environment.escapeSystemProperties(PROPERTIES));
     }
 
     /**

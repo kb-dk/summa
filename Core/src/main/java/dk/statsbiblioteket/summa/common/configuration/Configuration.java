@@ -343,7 +343,9 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
         String expanded = Environment.escapeSystemProperties(val.toString().trim());
         log.debug(val.toString().equals(expanded) ?
                           ("Resolved " + key + "=\"" + val + "\" (no expansions)") :
-                          ("Resolved " + key + "=\"" + expanded + "\", expanded from \"" + val + "\""));
+                          ("Resolved " + key + "=\"" +
+                           (key.contains("password") || expanded.contains("password") ? "[defined]" : expanded)
+                           + "\", expanded from \"" + val + "\""));
         return expanded;
     }
 

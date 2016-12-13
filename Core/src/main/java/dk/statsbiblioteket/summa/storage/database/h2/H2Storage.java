@@ -53,7 +53,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     /**
      * If specified, an externally accessible H2 Server service is started with the given port. </p>
      * <p>
-     * Important: Only one external H2 Server service can be active at a time. If multiple servers are started, the last one takes precedence.
+     * Important: Only one external H2 Server service can be active at a time. If multiple servers are started,
+     * the last one takes precedence.
      * </p>
      * <p>
      * Optional.
@@ -111,8 +112,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     private long numFlushes;
 
     /**
-     * Boolean property determining whether the second level page cache should be enabled in the H2 database. The L2 cache provides some performance gains on
-     * larger bases, but might be a slow down on smaller bases.
+     * Boolean property determining whether the second level page cache should be enabled in the H2 database.
+     * The L2 cache provides some performance gains on larger bases, but might be a slow down on smaller bases.
      * <p/>
      * Enable this feature with care since some memory leaks has been experienced when this feature is enabled.
      * <p/>
@@ -146,7 +147,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
         // Database file location
         if (conf.valueExists(CONF_LOCATION)) {
-            log.debug("Property '" + CONF_LOCATION + "' exists, using value '" + conf.getString(CONF_LOCATION) + "' as location");
+            log.debug("Property '" + CONF_LOCATION + "' exists, using value '" + conf.getString(CONF_LOCATION)
+                      + "' as location");
             location = new File(conf.getString(CONF_LOCATION));
         } else {
             location = new File(StorageUtils.getGlobalPersistentDir(conf), "storage" + File.separator + "h2");
@@ -154,7 +156,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
 
         if (!location.equals(location.getAbsoluteFile())) {
-            log.debug(String.format("Transforming relative location '%s' to absolute location'%s'", location, location.getAbsoluteFile()));
+            log.debug(String.format("Transforming relative location '%s' to absolute location'%s'",
+                                    location, location.getAbsoluteFile()));
             location = location.getAbsoluteFile();
         }
 
@@ -195,7 +198,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     private void initExternalServer(Configuration conf) {
         if (conf.containsKey(CONF_H2_SERVER_PORT)) {
             if (h2Server != null) {
-                log.warn("Externally accessible H2 Server requested, with existing Server already running. " + "Shutting down old Server");
+                log.warn("Externally accessible H2 Server requested, with existing Server already running. "
+                         + "Shutting down old Server");
                 h2Server.shutdown();
                 h2Server = null;
             }
@@ -240,7 +244,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     @Override
-    protected String handleInternalBatchJob(String jobName, String base, long minMtime, long maxMtime, QueryOptions options) {
+    protected String handleInternalBatchJob(
+            String jobName, String base, long minMtime, long maxMtime, QueryOptions options) {
         String sResult = super.handleInternalBatchJob(jobName, base, minMtime, maxMtime, options);
         if (sResult != null) {
             return sResult;
@@ -250,7 +255,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
         String destination = options.meta(JOB_BACKUP_DESTINATION);
         if (destination == null) {
-            throw new IllegalArgumentException("The job " + JOB_BACKUP + " requires the parameter " + JOB_BACKUP_DESTINATION);
+            throw new IllegalArgumentException(
+                    "The job " + JOB_BACKUP + " requires the parameter " + JOB_BACKUP_DESTINATION);
         }
         log.info("Performing backup to destination '" + destination + "'");
         final String SQL = "BACKUP TO '" + destination + "'";
@@ -284,7 +290,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                  + (password == null || "".equals(password) ? "[undefined]" : "[defined]") + ", location '" + location
                 + "', createNew " + createNew + " and forceNew " + forceNew);
 
-        if (new File(location, DB_FILE + ".h2.db").isFile() || new File(location, DB_FILE + ".data.db").isFile()) {
+        if (new File(location, DB_FILE + ".h2.db").isFile()
+            || new File(location, DB_FILE + ".data.db").isFile()) {
             // Database location exists
             log.debug("Old database found at '" + location + "'");
             if (forceNew) {
@@ -303,7 +310,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             if (createNew) {
                 log.info("Creating new database at '" + location + "'");
             } else {
-                throw new IOException("No database exists at '" + location + " and createNew is false. The " + "metadata storage cannot run without a backend. Exiting");
+                throw new IOException("No database exists at '" + location + " and createNew is false. The "
+                                      + "metadata storage cannot run without a backend. Exiting");
             }
         }
 
@@ -329,7 +337,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         // http://www.h2database.com/html/advanced.html#mvcc
         final String dirtyReads = ";MVCC=FALSE;LOCK_MODE=0";
 
-        dataSource.setURL("jdbc:h2:" + location.getAbsolutePath() + File.separator + DB_FILE + l2cache + autoServer + dirtyReads);
+        dataSource.setURL("jdbc:h2:" + location.getAbsolutePath() + File.separator + DB_FILE
+                          + l2cache + autoServer + dirtyReads);
 
         if (username != null) {
             dataSource.setUser(username);
@@ -387,8 +396,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     /**
-     * Flush a single record to the storage. If the number of records now exceeds the maximal number of records before a optimize should happen, then
-     * optimization is done before the call to\ {@link DatabaseStorage#flush(Record)}.
+     * Flush a single record to the storage. If the number of records now exceeds the maximal number of records before
+     * an optimize should happen, then optimization is done before the call to\ {@link DatabaseStorage#flush(Record)}.
      *
      * @param rec
      *            The record to flush.
@@ -407,8 +416,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     /**
-     * Flush a list of records to the storage. Note: the 'synchronized' part of this method decl is paramount to allowing us to set our transaction level to
-     * Connection.TRANSACTION_READ_UNCOMMITTED.
+     * Flush a list of records to the storage. Note: the 'synchronized' part of this method decl is paramount to
+     * allowing us to set our transaction level to Connection.TRANSACTION_READ_UNCOMMITTED.
      *
      * @param recs
      *            List of records to flush to the storage.
@@ -426,7 +435,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     /**
-     * The purpose of this method is to make sure that H2's limit on the maximum number of memory buffered rows is bigger than the pageSize of the result sets
+     * The purpose of this method is to make sure that H2's limit on the maximum number of memory buffered rows is
+     * bigger than the pageSize of the result sets
      */
     private void setMaxMemoryRows() {
         Connection conn = getConnection();
@@ -453,10 +463,10 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     /**
-     * We override this method because H2 only uses its custom JdbcSQLExceptions, and not the proper exceptions according to the JDBC API.
+     * We override this method because H2 only uses its custom JdbcSQLExceptions, and not the proper exceptions
+     * according to the JDBC API.
      *
-     * @param e
-     *            SQL exception to inspect
+     * @param e SQL exception to inspect
      * @return whether or not {@code e} represents an integrity constraint violation
      */
     @Override
@@ -523,21 +533,17 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     /**
-     * The method {@link DatabaseStorage#touchParents} does the touching in one single SQL call. This call involves a nested <code>SELECT</code> which triggers
-     * a performance issue on large databases.
+     * The method {@link DatabaseStorage#touchParents} does the touching in one single SQL call.
+     * This call involves a nested <code>SELECT</code> which triggers a performance issue on large databases.
      * <p/>
-     * Because of this we override the generic method with one that does manual looping over all parents. It should still perform fairly good.
+     * Because of this we override the generic method with one that does manual looping over all parents.
+     * It should still perform fairly good.
      *
-     * @param id
-     *            The record id of the record which parents to update.
-     * @param options
-     *            Any query options that may affect how the touching should be carried out.
-     * @param conn
-     *            The database connection.
-     * @throws IOException
-     *             In case of communication errors with the database.
-     * @throws SQLException
-     *             If error occur while executing the SQL.
+     * @param id      The record id of the record which parents to update.
+     * @param options Any query options that may affect how the touching should be carried out.
+     * @param conn    The database connection.
+     * @throws IOException  In case of communication errors with the database.
+     * @throws SQLException If error occur while executing the SQL.
      */
     @Override
     protected void touchParents(String id, QueryOptions options, Connection conn) throws IOException, SQLException {
@@ -545,21 +551,16 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     /**
-     * @param id
-     *            The record id of the record which parents to update.
-     * @param options
-     *            Any query options that may affect how the touching should be carried out.
-     * @param conn
-     *            The database connection.
-     * @param touched
-     *            The set of already touched IDs.
-     * @throws IOException
-     *             In case of communication errors with the database.
-     * @throws SQLException
-     *             If error occur while executing the SQL.
+     * @param id      The record id of the record which parents to update.
+     * @param options Any query options that may affect how the touching should be carried out.
+     * @param conn    The database connection.
+     * @param touched The set of already touched IDs.
+     * @throws IOException  In case of communication errors with the database.
+     * @throws SQLException If error occur while executing the SQL.
      * @see #touchParents(String, QueryOptions, Connection);
      */
-    private void touchParents(String id, Set<String> touched, QueryOptions options, Connection conn) throws IOException, SQLException {
+    private void touchParents(
+            String id, Set<String> touched, QueryOptions options, Connection conn) throws IOException, SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Preparing to touch parents of " + id);
         }
@@ -608,7 +609,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
     @Override
     public String toString() {
-        return "H2Storage(location='" + location + "', external_port=" + (serverPort == null ? "N/A" : serverPort) + ", " + super.toString() + ")";
+        return "H2Storage(location='" + location + "', external_port=" + (serverPort == null ? "N/A" : serverPort)
+               + ", " + super.toString() + ")";
     }
 
     /**
