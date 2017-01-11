@@ -247,7 +247,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                             // Why the spaces?
                             Matcher hlMatcher = highlightPattern.matcher(" " + content + " ");
                             while (hlMatcher.find()) {
-                                terms.add(hlMatcher.group(1));
+                                // The highlighter can return things like 'Overskrift:', where ':' must be removed
+                                terms.add(altoStringTrimmer.matcher(hlMatcher.group(1)).replaceAll("$1"));
                             }
                         }
                     }

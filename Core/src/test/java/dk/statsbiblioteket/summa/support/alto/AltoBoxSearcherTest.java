@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -51,7 +52,7 @@ public class AltoBoxSearcherTest extends TestCase {
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getFullStack().search(new Request(
+        ResponseCollection responses = searcher.search(new Request(
                 DocumentKeys.SEARCH_QUERY, "hest",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
                 AltoBoxSearcher.CONF_BOX, true,
@@ -67,9 +68,63 @@ public class AltoBoxSearcherTest extends TestCase {
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getFullStack().search(new Request(
+        ResponseCollection responses = searcher.search(new Request(
                 DocumentKeys.SEARCH_QUERY, "hest",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
+                AltoBoxSearcher.SEARCH_BOX, true,
+                AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
+                //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad-segment_1
+                //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad
+                AltoBoxSearcher.SEARCH_ID_REGEXP, "(doms_newspaperCollection:uuid:[0-9abcdef]{8}-[0-9abcdef]{4}-"
+                                                  + "[0-9abcdef]{4}-[0-9abcdef]{4}-[0-9abcdef]{12}).*",
+                AltoBoxSearcher.SEARCH_ID_TEMPLATE, "$1",
+                "solrparam.hl", true,
+                "solrparam.hl.fl", "fulltext_org",
+                "solrparam.hl.snippets", 20
+        ));
+        List<AltoBoxResponse.Box> boxes = getBoxes(responses);
+        assertFalse("With highlighting there should be at least one box", boxes.isEmpty());
+        //System.out.println(responses.toXML());
+    }
+
+    /*
+    public void testWorkingProdAviserHighlight() throws IOException {
+        assertSpecificProdAviserHighlight("doms_aviser_page:uuid:145c11a0-530b-4c66-9d47-7e321fa23805", "gedeost");
+    }
+    // This does not work as RMI is (understandably) blocked in the prod firewall
+    public void testNonWorkingProdAviserHighlight() throws IOException {
+        SummaSearcher searcher = getAvailableSearcher(
+                "prod-search03", 56700, "/aviser/sbsolr/select", "aviser-storage");
+        assertHighlight(searcher, "doms_aviser_page:uuid:47aa35fc-6551-49b5-9c0c-4d323fd92f52", "titanic");
+    }
+      */
+
+    public void testWorkingMarsAviserHighlight() throws IOException {
+        SummaSearcher searcher = getAvailableSearcher(
+                "mars", 56700, "/aviser/sbsolr/select", "aviser-storage");
+        assertHighlight(searcher, "doms_aviser_page:uuid:065527ab-d9dd-4ebe-a2bb-ca49ac8c7b7a", "overskrift");
+    }
+
+    /*
+    This failed due to the highlighter returning 'Overskrift:' which did not match against the term 'overskrift' in
+    the ALTO-XML. The fix was to also normalise the highlighter's result to 'Overskrift' before processing it further.
+    This might lead to more false positive highlights, but that is preferable to the otherwise high amount of false
+    negatives (aka missing highlights).
+     */
+    public void testNonWorkingMarsAviserHighlight() throws IOException {
+        SummaSearcher searcher = getAvailableSearcher(
+                "mars", 56700, "/aviser/sbsolr/select", "aviser-storage");
+        assertHighlight(searcher, "doms_aviser_page:uuid:e66d8304-2a90-4faa-beee-2f7660675306", "overskrift");
+    }
+
+    private void assertHighlight(SummaSearcher searcher, String pageUUID, String query) throws IOException {
+        if (searcher == null) {
+            return;
+        }
+        ResponseCollection responses = searcher.search(new Request(
+                DocumentKeys.SEARCH_QUERY, query,
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID, recordBase",
+                DocumentKeys.SEARCH_FILTER, "pageUUID:\"" + pageUUID + "\"",
                 AltoBoxSearcher.SEARCH_BOX, true,
                 AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
                 //  doms_newspaperCollection:uuid:cced6bb3-96ed-45af-aeda-1bcab7a5b2ad-segment_1
@@ -93,7 +148,7 @@ public class AltoBoxSearcherTest extends TestCase {
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getFullStack().search(new Request(
+        ResponseCollection responses = searcher.search(new Request(
                 DocumentKeys.SEARCH_QUERY,
                 "lykønskning pageUUID:\"doms_aviser_page:uuid:4ab71f1e-f5d4-4e64-ba26-1f62ef2503c2\"",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
@@ -116,7 +171,7 @@ public class AltoBoxSearcherTest extends TestCase {
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getFullStack().search(new Request(
+        ResponseCollection responses = getAvailableSearcher().search(new Request(
                 DocumentKeys.SEARCH_QUERY,
                 "\"Jesper Tørring blev\"",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
@@ -140,7 +195,7 @@ public class AltoBoxSearcherTest extends TestCase {
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getFullStack().search(new Request(
+        ResponseCollection responses = getAvailableSearcher().search(new Request(
                 DocumentKeys.SEARCH_QUERY,
                 "\"hans jensen\" editionUUID:\"doms_aviser_edition:uuid:6e8dff93-d59d-4bec-be95-321cb73b8c9c\"",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
@@ -164,7 +219,7 @@ public class AltoBoxSearcherTest extends TestCase {
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getFullStack().search(new Request(
+        ResponseCollection responses = getAvailableSearcher().search(new Request(
                 DocumentKeys.SEARCH_QUERY, "hest",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
                 AltoBoxSearcher.SEARCH_BOX, true,
@@ -240,7 +295,7 @@ public class AltoBoxSearcherTest extends TestCase {
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getFullStack().search(new Request(
+        ResponseCollection responses = getAvailableSearcher().search(new Request(
                 DocumentKeys.SEARCH_QUERY, "hest",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
                 AltoBoxSearcher.SEARCH_BOX, true,
@@ -271,7 +326,11 @@ public class AltoBoxSearcherTest extends TestCase {
     }
 
     private SummaSearcher getAvailableSearcher() throws IOException {
-        SummaSearcher searcher = getFullStack();
+        return getAvailableSearcher("mars", 56700, "/aviser/sbsolr/select", "aviser-storage");
+    }
+    private SummaSearcherImpl getAvailableSearcher(
+            String host, int basePort, String solrPath, String storageID) throws IOException {
+        SummaSearcherImpl searcher = getFullStack(host, basePort, solrPath, storageID);
         try {
             searcher.search(new Request(DocumentKeys.SEARCH_QUERY, "ddsdffsfss"));
         } catch (IOException e) {
@@ -281,7 +340,8 @@ public class AltoBoxSearcherTest extends TestCase {
         return searcher;
     }
 
-    private SummaSearcherImpl getFullStack() throws IOException {
+    private SummaSearcherImpl getFullStack(
+            String host, int basePort, String rest, String storageID) throws IOException {
         Configuration searcherConf = Configuration.newMemoryBased(
                 SummaSearcherImpl.CONF_USE_LOCAL_INDEX, false
         );
@@ -290,13 +350,14 @@ public class AltoBoxSearcherTest extends TestCase {
         List<Configuration> nodeConfs = searcherConf.createSubConfigurations(SearchNodeFactory.CONF_NODES, 2);
 
         nodeConfs.get(0).set(SearchNodeFactory.CONF_NODE_CLASS, SBSolrSearchNode.class.getCanonicalName());
-        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_HOST, "mars:56708");
-        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_RESTCALL, "/aviser/sbsolr/select");
+        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_HOST, host + ":" + (basePort + 8)); // "mars:56708"
+        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_RESTCALL, rest); // "/aviser/sbsolr/select"
         nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_CONNECTION_TIMEOUT, 500);
         nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_READ_TIMEOUT, 5000);
 
         nodeConfs.get(1).set(SearchNodeFactory.CONF_NODE_CLASS, AltoBoxSearcher.class.getCanonicalName());
-        nodeConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//mars:56700/aviser-storage");
+        // "//mars:56700/aviser-storage"
+        nodeConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//" + host + ":" + basePort + "/" + storageID);
         nodeConfs.get(1).set(ConnectionConsumer.CONF_INITIAL_GRACE_TIME, 500);
         nodeConfs.get(1).set(ConnectionConsumer.CONF_SUBSEQUENT_GRACE_TIME, 1000);
         return new SummaSearcherImpl(searcherConf);
