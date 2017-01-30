@@ -23,8 +23,10 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -79,6 +81,23 @@ public class TeeFilterTest extends TestCase {
             for (String base: Arrays.asList("baseA", "baseB")) {
                 assertContains(id, base, generated);
             }
+        }
+    }
+
+    public void testDeleted() throws UnsupportedEncodingException {
+        Record delRecord = new Record("foo", "bar", "content".getBytes("utf-8"));
+        delRecord.setDeleted(true);
+        PayloadFeederHelper feeder =  new PayloadFeederHelper(Collections.singletonList(new Payload(delRecord)));
+        ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
+                TeeFilter.CONF_NEW_BASES, "baseA, baseB",
+                TeeFilter.CONF_MATCH_MODE, TeeFilter.MATCHER.whitelist_pass,
+                PayloadMatcher.CONF_ID_REGEX, ".*"
+        ));
+        List<Payload> generated = extractRecords(feeder, tee, 2);
+        assertEquals("The right number of Payloads should be generated", 2, generated.size());
+        for (Payload payload: generated) {
+            assertTrue("All Payloads should be marked as deleted, but " + payload + " weren't",
+                       payload.getRecord().isDeleted());
         }
     }
 
