@@ -150,4 +150,9 @@ public class PayloadFeederHelper implements ObjectFilter {
         //noinspection DuplicateStringLiteralInspection
         throw new UnsupportedOperationException("Remove not supported");
     }
+
+    // Intended for post-creation hacking of payloads
+    public List<Payload> getPayloads() {
+        return payloads;
+    }
 }

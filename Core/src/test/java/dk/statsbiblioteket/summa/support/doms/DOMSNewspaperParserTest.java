@@ -79,6 +79,24 @@ public class DOMSNewspaperParserTest extends TestCase {
         assertEquals("Test record should be split into the right number of segments", EXPECTED_SEGMENTS, counter);
     }
 
+    public void testSegmenterDeleted() throws Exception {
+        if (!DOMS_ALTO.exists()) {
+            log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
+            return;
+        }
+
+        ObjectFilter splitter = getSplitter(true);
+        assertTrue("There should be a Record available", splitter.hasNext());
+        int counter = 0;
+        while (splitter.hasNext()) {
+            Payload payload = splitter.next();
+            assertTrue("The segment " + payload.getId() +" should be marked as deleted",
+                       payload.getRecord().isDeleted());
+            counter++;
+        }
+        assertEquals("Test record should be split into the right number of segments", EXPECTED_SEGMENTS, counter);
+    }
+
     public void testHeadline() throws IOException {
         if (!DOMS_ALTO.exists()) {
             log.info("Cannon run test as '" + DOMS_ALTO + "' does not exist");
@@ -195,15 +213,29 @@ public class DOMSNewspaperParserTest extends TestCase {
     }
 
     private ObjectFilter getSplitter() throws IOException {
-        return getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
+        return getSplitter(false);
+    }
+
+    private ObjectFilter getSplitter(boolean isDeleted) throws IOException {
+        return getSplitter(DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS, isDeleted);
     }
 
     private ObjectFilter getSplitter(int maxHeadlineWords) throws IOException {
-        return getSplitter(DOMS_ALTO, maxHeadlineWords);
+        return getSplitter(DOMS_ALTO, maxHeadlineWords, false);
+    }
+
+    private ObjectFilter getSplitter(int maxHeadlineWords, boolean isDeleted) throws IOException {
+        return getSplitter(DOMS_ALTO, maxHeadlineWords, isDeleted);
     }
 
     private ObjectFilter getSplitter(File altofile, int maxHeadlineWords) throws IOException {
-        ObjectFilter source = new PayloadFeederHelper(0, altofile.toString());
+        return getSplitter(altofile, maxHeadlineWords, false);
+    }
+    private ObjectFilter getSplitter(File altofile, int maxHeadlineWords, boolean isDeleted) throws IOException {
+        PayloadFeederHelper source = new PayloadFeederHelper(0, altofile.toString());
+        for (Payload payload: source.getPayloads()) {
+            payload.getRecord().setDeleted(isDeleted);
+        }
         ObjectFilter splitter = new StreamController(Configuration.newMemoryBased(
                 StreamController.CONF_PARSER, DOMSNewspaperParser.class.getCanonicalName(),
                 DOMSNewspaperParser.CONF_HEADLINE_MAX_WORDS, maxHeadlineWords

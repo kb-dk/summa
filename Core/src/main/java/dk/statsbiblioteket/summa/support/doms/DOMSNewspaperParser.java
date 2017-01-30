@@ -173,13 +173,29 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
             Logging.logProcess("DOMSNewspaperParser", "Unable to locate ALTO. Passing content unmodified",
                                Logging.LogLevel.INFO, source);
             try {
-                addToQueue(source, new Record(source.getId() + NOALTO, base, content.getBytes("utf-8")));
+                addToQueue(source, createRecord(
+                        source, source.getId() + NOALTO, base, content.getBytes("utf-8")));
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("utf-8 not supported", e);
             }
         } else {
             produceSegments(source, content, altoStart, altoEnd);
         }
+    }
+
+    /**
+     * Produces a new Reocrd with the given id, base and content. If a record is embedded in source, its core
+     * attributes (isIndexable, isDeleted, creationTime) will be assigned to the newly created Record.
+     */
+    private Record createRecord(Payload source, String id, String base, byte[] content) {
+        Record record = new Record(id, base, content);
+        if (source.getRecord() != null) {
+            Record s = source.getRecord();
+            record.setDeleted(s.isDeleted());
+            record.setIndexable(s.isIndexable());
+            record.setCreationTime(s.getCreationTime());
+        }
+        return record;
     }
 
     private void produceSegments(Payload payload, String content, int altoStart, int altoEnd) throws PayloadException {
@@ -348,7 +364,8 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
 
             String concatID = payload.getId() + "-" + group.getKey();
             try {
-                addToQueue(payload, new Record(concatID, base, (pre + sw + post).getBytes("utf-8")));
+                addToQueue(payload, createRecord(
+                        payload, concatID, base, (pre + sw + post).getBytes("utf-8")));
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("utf-8 not supported", e);
             }
