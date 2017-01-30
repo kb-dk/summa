@@ -1988,12 +1988,20 @@ public abstract class DatabaseStorage extends StorageBase {
         if (!pruneRelativesOnGet) {
             return record;
         }
+        if (record == null) {
+            log.trace("pruneRelatives(null) called. Returning immediately");
+            return null;
+        }
         log.trace("Pruning deceased relatives from " + record.getId());
         pruneRelatives(null, record);
         return record;
     }
 
     private void pruneRelatives(Record previous, Record origo) {
+        if (origo == null) {
+            log.trace("pruneRelatives(previous, origo(null)) called. Returning immediately");
+            return;
+        }
         if (origo.getParents() != null && !origo.getParents().isEmpty()) {
             ArrayList<Record> parents = new ArrayList<>(origo.getParents());
             for (int i = parents.size()-1 ; i >= 0; i--) {
