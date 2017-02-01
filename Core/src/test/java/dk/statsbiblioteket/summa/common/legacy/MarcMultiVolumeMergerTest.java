@@ -34,8 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MarcMultiVolumeMergerTest extends TestCase implements
-                                                                  ObjectFilter {
+public class MarcMultiVolumeMergerTest extends TestCase implements ObjectFilter {
     private static Log log = LogFactory.getLog(MarcMultiVolumeMergerTest.class);
 
     private List<Record> records;
@@ -152,16 +151,20 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
                 record.setDeleted(true);
                 return;
             }
-            for (Record sub: record.getChildren()) {
-                if (id.equals(sub.getId())) {
-                    sub.setDeleted(true);
-                    return;
+            if (record.hasChildren()) {
+                for (Record sub : record.getChildren()) {
+                    if (id.equals(sub.getId())) {
+                        sub.setDeleted(true);
+                        return;
+                    }
                 }
             }
-            for (Record sup: record.getParents()) {
-                if (id.equals(sup.getId())) {
-                    sup.setDeleted(true);
-                    return;
+            if (record.hasParents()) {
+                for (Record sup : record.getParents()) {
+                    if (id.equals(sup.getId())) {
+                        sup.setDeleted(true);
+                        return;
+                    }
                 }
             }
         }
