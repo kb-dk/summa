@@ -539,7 +539,8 @@ public class Alto {
         }
 
         public String getContent() {
-            return content;
+            return subsContent != null && hyphenMode == HYPHEN_MODE.join && content.length() <= subsContent.length() &&
+                                content.equals(subsContent.substring(0, content.length())) ? subsContent : content;
         }
         public String getStyleRefs() {
             return styleRefs;
@@ -547,7 +548,8 @@ public class Alto {
 
         @Override
         public List<String> getAllTexts() {
-            if (subsContent != null && hyphenMode == HYPHEN_MODE.join) {
+            return Collections.singletonList(getContent());
+/*            if (subsContent != null && hyphenMode == HYPHEN_MODE.join) {
                 if (content.length() <= subsContent.length() &&
                     content.equals(subsContent.substring(0, content.length()))) { // Content is prefix
                     return Arrays.asList(subsContent);
@@ -555,7 +557,7 @@ public class Alto {
                 return Collections.emptyList();
 
             }
-            return Arrays.asList(content);
+            return Arrays.asList(content);*/
         }
     }
 
