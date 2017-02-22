@@ -230,8 +230,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
      */
     public String getProcessStats() {
         //noinspection DuplicateStringLiteralInspection
-        return "Processed " + payloadCount + " Payloads at "
-               + (payloadCount == 0 ? "NA" : totalTimeNS / 1000000.0 / payloadCount) + " ms/Payload";
+        return String.format("Processed %d Payloads at %.1fms/Payload",
+                             payloadCount, payloadCount == 0 ? 0 : totalTimeNS / 1000000.0 / payloadCount);
     }
 
     /**

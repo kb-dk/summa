@@ -234,9 +234,9 @@ public class RecordWriter extends ObjectFilterImpl {
                 totalCommits += records.size();
                 storage.flushAll(records, qOptions);
                 log.info(String.format(
-                        "Committed %s in %sms. Total commits: %d. Last commit was %sms ago",
+                        "Committed %s in %.1fms. Total commits: %d. Last commit was %dms ago",
                         stats, (System.nanoTime() - start) / 1000000D,
-                        totalCommits, (System.nanoTime() - lastCommit) / 1000000D));
+                        totalCommits, (System.nanoTime() - lastCommit) / 1000000));
                 lastCommit = System.nanoTime();
             } catch (NoRouteToHostException e) {
                 Logging.fatal(log, "RecordWriter.forceCommit",

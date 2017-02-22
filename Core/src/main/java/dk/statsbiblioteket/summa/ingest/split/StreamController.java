@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,7 +59,10 @@ public class StreamController implements ObjectFilter {
      * The stream parser.
      */
     protected StreamParser parser;
-    private long producedPayloads = 0;
+    private Profiler profiler = new Profiler();
+    {
+        profiler.pause();
+    }
 
     /**
      * Creates a stream controller with a given configuration.
@@ -93,6 +97,7 @@ public class StreamController implements ObjectFilter {
         try {
             while (payload == null) {
                 try {
+                    profiler.unpause();
                     log.trace("makePayload(): Calling parser.hasNext()");
                     if (parser.hasNext()) {
                         log.trace("makePayload(): Calling parser.next()");
@@ -104,6 +109,8 @@ public class StreamController implements ObjectFilter {
                 } catch (Exception e) {
                     log.warn("Exception requesting payload from parser, skipping to next stream payload", e);
                     parser.stop();
+                } finally {
+                    profiler.pause();
                 }
 
                 if (source.hasNext()) {
@@ -113,7 +120,12 @@ public class StreamController implements ObjectFilter {
                         log.warn(String.format("Got null Payload from source %s after hasNext() == true", source));
                     }
                     log.debug("makePayload: Opening source stream payload " + streamPayload);
-                    parser.open(streamPayload);
+                    try {
+                        profiler.unpause();
+                        parser.open(streamPayload);
+                    } finally {
+                        profiler.pause();
+                    }
                 } else {
                     log.debug("makePayload: No more stream payloads available");
                     return;
@@ -123,6 +135,7 @@ public class StreamController implements ObjectFilter {
             if (log.isTraceEnabled()) {
                 log.trace("Requested payload from parser in " + (System.nanoTime() - startTime) + " ns");
             }
+            profiler.beat();
         }
     }
 
@@ -159,7 +172,6 @@ public class StreamController implements ObjectFilter {
             log.debug("hasNext() is false, calling stop on parser");
             parser.stop();
         } */
-        producedPayloads++;
         return newPayload;
     }
 
@@ -187,8 +199,10 @@ public class StreamController implements ObjectFilter {
         } else {
             parser.stop();
             source.close(success);
-            log.info(
-                    "close(" + success + ") for " + parser + " called with " + producedPayloads + " produced Payloads");
+            log.info(String.format(
+                    "close(%b) called for %s with %d produced Payloads at %.1f payloads/second or %.1f ms/payload",
+                    success, parser, profiler.getBeats(), profiler.getBps(false),
+                    profiler.getBps(false) > 0.0 ? 1.0/profiler.getBps(false)*1000 : 0));
         }
     }
 
