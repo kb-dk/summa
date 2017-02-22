@@ -34,19 +34,35 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class DOMSNewspaperParserTest extends TestCase {
     private static Log log = LogFactory.getLog(DOMSNewspaperParserTest.class);
+    private final File OLD_ALTO = new File(
+            "/home/te/projects/summa/Core/src/test/resources/ingest/alto/e1ac7417-a850-4667-b6e9-56e3267b312c.xml");
     private final File DOMS_ALTO = new File("/home/te/tmp/sumfresh/sites/aviser/avis_4f23.xml");
     private final int EXPECTED_SEGMENTS = 12;
     private final File DOMS_XSLT = new File("/home/te/tmp/sumfresh/sites/aviser/xslt/index/aviser/doms_aviser.xsl");
 
     private final File DOMS_PROBLEM = Resolver.getFile("support/alto/faulty_alto.xml");
+
+    public void testHyphenation() throws IOException {
+        ObjectFilter splitter = getSplitter(OLD_ALTO, DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
+        assertTrue("There should be a Record available", splitter.hasNext());
+        while (splitter.hasNext()) {
+            Payload payload = splitter.next();
+            String out = RecordUtil.getString(payload);
+            if (out.contains("forfattede")) {
+                log.debug("Found 'forfattede' in " + payload.getId() + ": Hyphenated words are joined as expected");
+                return;
+            }
+            if (out.contains("forfat")) {
+                log.warn("Output contains 'forfat' which indicated non-joining of hyphenated words:\n" + out);
+            }
+        }
+        fail("Did not find 'forfattede' in output: Hyphenated words are not joined");
+    }
 
     public void testFaulty() throws Exception {
         ObjectFilter splitter = getSplitter(DOMS_PROBLEM, DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);

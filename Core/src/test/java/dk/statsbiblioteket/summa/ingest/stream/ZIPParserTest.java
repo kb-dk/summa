@@ -27,10 +27,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class ZIPParserTest extends TestCase {
@@ -61,6 +64,67 @@ public class ZIPParserTest extends TestCase {
         for (int i = 0 ; i < 10 ; i++) {
             testBasics();
         }
+    }
+
+    // See what happens when the writer for a pipe closes the pipe, but the reader has not finished
+    public void testPiping() throws IOException, InterruptedException {
+        final int BLOCK_COUNT = 20;
+        final int BLOCK_SIZE = 2024;
+        final int RECEIVE_BLOCK_SIZE = 1234;
+        final byte[] BLOCK = new byte[BLOCK_SIZE];
+        final int EVERY = BLOCK_COUNT*BLOCK_SIZE/10;
+        final AtomicInteger received = new AtomicInteger(0);
+
+        final PipedInputStream pin = new PipedInputStream();
+        PipedOutputStream pout = new PipedOutputStream();
+        pout.connect(pin);
+
+        Thread tout = new Thread() {
+            byte[] buf = new byte[RECEIVE_BLOCK_SIZE];
+            int next = EVERY;
+            @Override
+            public void run() {
+                log.debug("Receiver polling with buffer size " + buf.length);
+                try {
+                    int read;
+                    while ((read = pin.read(buf)) != -1) {
+                        received.addAndGet(read);
+                        if (received.get() >= next) {
+                            log.debug("Received " + received.get() + "/" + BLOCK_COUNT * BLOCK_SIZE);
+                            next += EVERY;
+                        }
+                        Thread.sleep(10);
+                    }
+                } catch (IOException e) {
+                    log.error("Unexpected exception in testPiping", e);
+                } catch (InterruptedException e) {
+                    log.error("Interruped unexpectedly", e);
+                }
+            }
+        };
+
+        tout.start();
+
+        log.debug(String.format("Feeder writing %dx%d bytes", BLOCK_COUNT, BLOCK_SIZE));
+        int next = EVERY;
+        for (int bi = 0 ; bi < BLOCK_COUNT ; bi++) {
+            pout.write(BLOCK);
+            if ((bi+1)*BLOCK_SIZE >= next) {
+                log.debug("Delivered " + (bi+1)*BLOCK_SIZE + "/" + BLOCK_COUNT * BLOCK_SIZE);
+                next += EVERY;
+            }
+        }
+
+        log.debug("Feeder flushing");
+        pout.flush();
+        log.debug("Feeder closing");
+        pout.close();
+        log.debug("Feeder sleeping");
+        Thread.sleep(500);
+        log.debug("Verifying result");
+        assertEquals("The amount of received content should match the send amount",
+                     BLOCK_COUNT*BLOCK_SIZE, received.get());
+        log.debug("All ok");
     }
 
     public void testArrayBlockingQueue() throws Exception {

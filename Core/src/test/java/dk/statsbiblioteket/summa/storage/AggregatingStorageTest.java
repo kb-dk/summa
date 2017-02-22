@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
@@ -27,15 +28,17 @@ import dk.statsbiblioteket.util.Files;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.regexp.RE;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 public class AggregatingStorageTest extends TestCase {
-    private Log log = LogFactory.getLog(AggregatingStorageTest.class);
+    private static Log log = LogFactory.getLog(AggregatingStorageTest.class);
 
     /** Storage communication port. */
     private static final int PORT = 29000;
@@ -110,6 +113,25 @@ public class AggregatingStorageTest extends TestCase {
     public void tearDown() throws Exception {
         storage.close();
     }
+
+    // Only made to check a specific problem with RMI access
+    public static void testLocalRMIAccess() throws IOException {
+        final String RECORD_ID = "summon_FETCH-crossref_primary_10_1002_piuz_2015900083";
+        final String RPC_ADDRESS = "//localhost:57400/summon-storage";
+
+        Configuration conf = Configuration.newMemoryBased();
+        Configuration sub = conf.createSubConfigurations(AggregatingStorage.CONF_SUB_STORAGES, 1).get(0);
+        sub.set(AggregatingStorage.CONF_SUB_STORAGE_BASES, "summon");
+        sub.set(ConnectionConsumer.CONF_RPC_TARGET, RPC_ADDRESS);
+        ReadableStorage aggregator = new AggregatingStorage(conf);
+
+        Record result = aggregator.getRecord(RECORD_ID, null);
+        assertNotNull("Looking up " + RECORD_ID + " should provide a record", result);
+        assertEquals("The id of the returned record should match the lookup-ID", RECORD_ID, result.getId());
+        log.debug("Got record:\n" + result);
+    }
+
+
 
     public void testGetNonExisitingRecord() throws Exception {
         Record r = storage.getRecord("nosuchrecord", null);
