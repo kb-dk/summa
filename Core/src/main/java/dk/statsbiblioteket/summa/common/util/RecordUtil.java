@@ -208,6 +208,7 @@ public class RecordUtil {
         toXML(out, level, processed, record, escapeContent, null);
     }
 
+    // TODO: This is a fairly heavy process. See if it can be optimized
     private static void toXML(XMLStreamWriter out, int level, Set<Record> processed, Record record,
                               boolean escapeContent, String timing) throws XMLStreamException {
         if (processed.contains(record)) {
@@ -233,6 +234,7 @@ public class RecordUtil {
         out.writeAttribute(BASE, record.getBase());
         out.writeAttribute(DELETED, Boolean.toString(record.isDeleted()));
         out.writeAttribute(INDEXABLE, Boolean.toString(record.isIndexable()));
+        // FIXME: Point of congestion as all threads synchronize on the static schemaTimestampFormatter
         synchronized (schemaTimestampFormatter) {
             out.writeAttribute(CTIME, schemaTimestampFormatter.format(new Date(record.getCreationTime())));
             out.writeAttribute(MTIME, schemaTimestampFormatter.format(new Date(record.getModificationTime())));
@@ -1181,6 +1183,66 @@ public class RecordUtil {
             }
         }
         return newRecord;
+    }
+
+    /**
+     * If the content of the Record is compressed, it will be uncompressed.
+     * @param record the Record with the content to uncompress.
+     * @param transitive if true, a transitive graph-traversal will be triggered, uncompressing parents and children.
+     * @return true if at least 1 uncompression was performed.
+     */
+    public static boolean uncompress(Record record, boolean transitive) {
+        if (transitive) {
+            return adjustCompression(record, null, false);
+        }
+        return adjustCompression(record, false);
+    }
+
+    /**
+     * Ensures that the compression of the content for the given Record matches shouldBeCompressed.
+     * Also, a transitive graph-traversal will be performed, processing parents and children in the same manner.
+     * @param record the Record with the content to uncompress.
+     * @param alreadyProcessed IDs for the Records already processed, to guard against cycles.
+     *                         If null, a new set will be created.
+     * @param shouldBeCompressed the wanted state of the content.
+     * @return true if at least 1 compression state adjustment was performed.
+     */
+    public static boolean adjustCompression(Record record, Set<String> alreadyProcessed, boolean shouldBeCompressed) {
+        boolean changed = adjustCompression(record, shouldBeCompressed);
+        if (alreadyProcessed == null) {
+            alreadyProcessed = new HashSet<>();
+        }
+        alreadyProcessed.add(record.getId());
+        if (record.getParents() != null) {
+            for (Record parent : record.getParents()) {
+                changed |= adjustCompression(parent, alreadyProcessed, shouldBeCompressed);
+            }
+        }
+        if (record.getChildren() != null) {
+            for (Record child : record.getChildren()) {
+                changed |= adjustCompression(child, alreadyProcessed, shouldBeCompressed);
+            }
+        }
+        return changed;
+    }
+
+    /**
+     * Ensures that the compression of the content for the given Record matches shouldBeCompressed.
+     * @param record the Record with the content to uncompress.
+     * @param shouldBeCompressed the wanted state of the content.
+     * @return true if at least 1 compression state adjustment was performed.
+     */
+    public static boolean adjustCompression(Record record, boolean shouldBeCompressed) {
+        boolean changed = true;
+        if (shouldBeCompressed && !record.isContentCompressed()) {
+            record.setContent(record.getContent(true), true);
+        }
+        if (!shouldBeCompressed && record.isContentCompressed()) {
+            record.setContent(record.getContent(true), false);
+        } else {
+            changed = false;
+        }
+        return changed;
     }
 
     /**

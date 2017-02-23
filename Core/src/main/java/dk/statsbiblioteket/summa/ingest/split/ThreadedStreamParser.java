@@ -155,6 +155,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         return false;
     }
 
+    // TODO: This should use a thread-pool instead
     private void startThread() {
         log.trace("Starting Thread for " + sourcePayload);
         running = true;

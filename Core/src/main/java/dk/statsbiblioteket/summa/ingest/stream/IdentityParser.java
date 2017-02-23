@@ -7,6 +7,7 @@ package dk.statsbiblioteket.summa.ingest.stream;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -28,9 +29,22 @@ import org.apache.commons.logging.LogFactory;
 public class IdentityParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(IdentityParser.class);
 
+    /**
+     * Not exactly identity... If true, the content of records is uncompressed (if it is not already uncompressed).
+     * This can be used for optimization if subsequent filters access otherwise compressed content multiple times.
+     * This has no effect if the Payload contains a Stream and not a Record.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_UNCOMPRESS = "identity.uncompress";
+    public static final boolean DEFAULT_UNCOMPRESS = false;
+
+    private final boolean uncompress;
+
     public IdentityParser(Configuration conf) {
         super(conf);
-        log.debug("IdentityParser created");
+        uncompress = conf.getBoolean(CONF_UNCOMPRESS, DEFAULT_UNCOMPRESS);
+        log.debug("Created " + this + " with uncompress=" + uncompress);
     }
 
     @Override
@@ -40,7 +54,12 @@ public class IdentityParser extends ThreadedStreamParser {
 
     @Override
     protected void protectedRun(Payload source) throws Exception {
-        Logging.logProcess("IdentityParser", "Passing Payload unmodified", Logging.LogLevel.TRACE, source);
+        if (uncompress && source.getRecord() != null && source.getRecord().isContentCompressed()) {
+            Logging.logProcess("IdentityParser", "Uncompressing Payload content", Logging.LogLevel.TRACE, source);
+            RecordUtil.adjustCompression(source.getRecord(), null, false);
+        } else if (log.isDebugEnabled()) {
+            Logging.logProcess("IdentityParser", "Passing Payload unmodified", Logging.LogLevel.TRACE, source);
+        }
         addToQueue(source);
     }
 }

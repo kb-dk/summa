@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.common;
 
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -390,6 +391,7 @@ public class Record implements Serializable, Comparable {
      */
     public byte[] getContent(boolean autoUncompress) {
         if (contentCompressed && autoUncompress) {
+//            log.info("### Unzipping " + id + "\n" + Strings.join(Thread.currentThread().getStackTrace(), "\n"));
             return Zips.gunzipBuffer(data);
         }
         return data;
@@ -400,6 +402,7 @@ public class Record implements Serializable, Comparable {
      */
     public void unCompressContent() {
         if (contentCompressed) {
+//            log.info("### Unzipping (explicit uncompress) " + id + "\n" + Strings.join(Thread.currentThread().getStackTrace(), "\n"));
             // this call also sets contentCompressed = false
             setRawContent(Zips.gunzipBuffer(data));
         }
@@ -410,6 +413,7 @@ public class Record implements Serializable, Comparable {
      */
     public void compressContent() {
         if (!contentCompressed) {
+//            log.info("### Compressing " + id + "\n" + Strings.join(Thread.currentThread().getStackTrace(), "\n"));
             // this call also sets contentCompressed = false
             setRawContent(Zips.gzipBuffer(data), true);
         }

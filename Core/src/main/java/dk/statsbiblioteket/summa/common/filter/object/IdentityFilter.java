@@ -14,8 +14,10 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,16 +32,37 @@ import org.apache.commons.logging.LogFactory;
 public class IdentityFilter extends ObjectFilterImpl  {
     private static Log log = LogFactory.getLog(IdentityFilter.class);
 
+    /**
+     * Not exactly identity... If true, the content of records is uncompressed (if it is not already uncompressed).
+     * This can be used for optimization if subsequent filters access otherwise compressed content multiple times.
+     * This has no effect if the Payload contains a Stream and not a Record.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_UNCOMPRESS = "identity.uncompress";
+    public static final boolean DEFAULT_UNCOMPRESS = false;
+
+    private final boolean uncompress;
+
     public IdentityFilter(Configuration conf) {
         super(conf);
-        log.debug("Created IdentityFilter");
+        uncompress = conf.getBoolean(CONF_UNCOMPRESS, DEFAULT_UNCOMPRESS);
+        log.debug("Created " + this);
     }
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
-        if (log.isDebugEnabled()) {
-            log.debug("Encountered " + payload + ", passing it on");
+        if (uncompress && payload.getRecord() != null && payload.getRecord().isContentCompressed()) {
+            Logging.logProcess("IdentityFilter", "Uncompressing Payload content", Logging.LogLevel.TRACE, payload);
+            RecordUtil.adjustCompression(payload.getRecord(), null, false);
+        } else if (log.isDebugEnabled()) {
+            Logging.logProcess("IdentityFilter", "Passing Payload unmodified", Logging.LogLevel.TRACE, payload);
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "IdentityFilter(uncompress=" + uncompress + ")";
     }
 }
