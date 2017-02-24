@@ -200,7 +200,7 @@ public class StreamController implements ObjectFilter {
             parser.stop();
             source.close(success);
             log.info(String.format(
-                    "close(%b) called for %s with %d produced Payloads at %.1f payloads/second or %.1f ms/payload",
+                    "Close(%b) called for %s with %d produced Payloads at %.1f payloads/second or %.1f ms/payload",
                     success, parser, profiler.getBeats(), profiler.getBps(false),
                     profiler.getBps(false) > 0.0 ? 1.0/profiler.getBps(false)*1000 : 0));
         }

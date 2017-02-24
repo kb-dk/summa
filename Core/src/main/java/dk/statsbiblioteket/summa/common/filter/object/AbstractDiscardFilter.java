@@ -101,7 +101,8 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
 
     @Override
     public String toString() {
-        return "AbstractDiscardFilter(logDiscards=" + logDiscards + ", markDiscards=" + markDiscards
-               + ", discarded=" + discardCount + "/" + totalCount + ")";
+        return "AbstractDiscardFilter(name='" + getName() + "', logDiscards=" + logDiscards
+               + ", markDiscards=" + markDiscards + ", discarded=" + discardCount + "/" + totalCount
+               + "stats=" + getProcessStats() +")";
     }
 }

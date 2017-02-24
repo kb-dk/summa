@@ -92,8 +92,8 @@ public class PushFilter implements ObjectFilter {
      */
     public PushFilter(int maxPayloads, int maxBytes) {
         queue = new PayloadQueue(maxPayloads, maxBytes);
-        log.debug(String.format("Constructed PushFilter with queue max payloads %d and max "
-                                + "payload bytes %d", maxPayloads, maxBytes));
+        log.debug(String.format("Constructed PushFilter with queue max payloads %d and max payload bytes %d",
+                                maxPayloads, maxBytes));
     }
 
     public void add(Payload payload) {
@@ -114,7 +114,7 @@ public class PushFilter implements ObjectFilter {
      * when all previously queued Payloads has been extracted.
      */
     public void signalEOF() {
-        log.trace("signalEOF() called");
+        log.debug("signalEOF() called");
         queue.uninterruptablePut(STOP);
     }
 
@@ -158,7 +158,7 @@ public class PushFilter implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.debug("Close has no effect on PushFilter. Use signalEOF to shut down the filter");
+        log.trace("Close has no effect on PushFilter. Use signalEOF to shut down the filter");
     }
 
     @Override

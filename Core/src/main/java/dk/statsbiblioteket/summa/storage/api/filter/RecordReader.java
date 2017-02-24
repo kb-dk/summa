@@ -594,13 +594,12 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     public Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
-
+        final long startNS = System.nanoTime();
         try {
 
             if (!hasNext()) {
                 throw new NoSuchElementException("No more Records available");
             }
-            sourceWait -= System.nanoTime();
 
             Payload payload = new Payload(recordIterator.next());
             if (firstRecordReceivedTime == -1) {
@@ -642,17 +641,17 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             if (progressTracker != null) {
                 progressTracker.updated(lastRecordTimestamp);
             }
-            sourceWait += System.nanoTime();
             if (log.isDebugEnabled()) {
                 log.debug(getIOStats() + ": " + payload);
             }
             return payload;
         } catch (RuntimeException e) {
-            sourceWait += System.nanoTime();
             if (!(e instanceof NoSuchElementException)) {
                 log.warn("Unexpected exception in next()", e);
             }
             throw e;
+        } finally {
+            sourceWait += (System.nanoTime()-startNS);
         }
     }
 
@@ -717,7 +716,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             storageWatcher.stop();
             log.info("Storage watcher stopped");
         }
-        log.info("Finished closing " + this);
+        log.info("Finished closing " + this + ". " + getIOStats());
     }
 
     public String getIOStats() {

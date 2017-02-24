@@ -180,7 +180,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
                                 sourcePayload, sourcePayload.getData(Payload.ORIGIN), SHUTDOWN_DELAY);
                         Logging.fatal(log, "ThreadedStreamParser", message, e);
                         Logging.logProcess("ThreadedStreamParser", message, Logging.LogLevel.WARN, sourcePayload, e);
-                        new DeferredSystemExit(1);
+                        new DeferredSystemExit(1, SHUTDOWN_DELAY);
                     } else {
                         String message = String.format("Exception caught from protectedRun of %s with origin '%s'",
                                                        sourcePayload, sourcePayload.getData(Payload.ORIGIN));
@@ -197,9 +197,9 @@ public abstract class ThreadedStreamParser implements StreamParser {
                     addToQueue(INTERRUPTOR);
                 }
                 if (log.isDebugEnabled()) {
-                    log.debug("run() finished with " + queue.size() + " remaining queued Payloads (the last queued "
-                              + "Payload is the interruptor-token-Payload) for " + this + " with source "
-                              + sourcePayload);
+                    log.debug(this.getClass().getSimpleName() + ": run() finished with "
+                              + queue.size() + " remaining queued Payloads (the last queued Payload is the "
+                              + "interruptor-token-Payload) for " + this + " with source " + sourcePayload);
                 }
             }
         }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ") daemon");

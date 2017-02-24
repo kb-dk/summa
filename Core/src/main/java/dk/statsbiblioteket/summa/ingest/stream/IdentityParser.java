@@ -14,7 +14,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Takes the received payload and immediately adds it to the out queue.
+ * Takes the received payload and immediately adds it to the out-queue.
  * </p><p>
  * Sample use it to act as as pre-fetcher placed immediately after a RecordReader, to avoid the wait in the
  * {@code request_batch -> wait -> process_batch -> repeat} process pattern.

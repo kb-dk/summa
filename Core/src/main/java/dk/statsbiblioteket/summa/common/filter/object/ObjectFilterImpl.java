@@ -235,8 +235,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     }
 
     /**
-     * @return the name of the filter, if specified. Else the class name of the
-     *         object.
+     * @return the name of the filter, if specified. Else the class name of the object.
      */
     public String getName() {
         return name;

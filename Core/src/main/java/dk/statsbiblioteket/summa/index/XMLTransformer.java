@@ -392,6 +392,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             try {
                 transformer.setParameter(IndexUtils.RECORD_FIELD, record.getId());
                 transformer.setParameter("recordBase", record.getBase());
+                // TODO: Seems that DTMManagerDefault.getDTM & DTMStringPool.stringToIndex takes most of the time
                 transformer.transform(source, result);
             } catch (StackOverflowError e) {
                 String error = e.getMessage();
