@@ -162,7 +162,7 @@ public class PostGreSQLStorage  extends DatabaseStorage implements Configurable 
     
     @Override
     protected void connectToDatabase(Configuration configuration) throws IOException {
-        log.info("Establishing connection to H2 with  username '" + username + "', password " + (password == null || "".equals(password) ? "[undefined]" : "[defined]") + ", driver '" + driver);
+        log.info("Establishing connection to PostgreSQL with  username '" + username + "', password " + (password == null || "".equals(password) ? "[undefined]" : "[defined]") + ", driver '" + driver);
        
 
         /*

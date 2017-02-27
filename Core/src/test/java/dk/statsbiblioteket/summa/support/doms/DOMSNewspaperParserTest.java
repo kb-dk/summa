@@ -55,10 +55,13 @@ public class DOMSNewspaperParserTest extends TestCase {
             String out = RecordUtil.getString(payload);
             if (out.contains("forfattede")) {
                 log.debug("Found 'forfattede' in " + payload.getId() + ": Hyphenated words are joined as expected");
+                if (out.contains("forfattede tede")) {
+                    log.warn("Output contains 'forfattede tede' which indicates duplicate hyphenation output:\n" + out);
+                }
                 return;
             }
             if (out.contains("forfat")) {
-                log.warn("Output contains 'forfat' which indicated non-joining of hyphenated words:\n" + out);
+                log.warn("Output contains 'forfat' which indicates non-joining of hyphenated words:\n" + out);
             }
         }
         fail("Did not find 'forfattede' in output: Hyphenated words are not joined");

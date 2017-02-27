@@ -539,8 +539,15 @@ public class Alto {
         }
 
         public String getContent() {
-            return subsContent != null && hyphenMode == HYPHEN_MODE.join && content.length() <= subsContent.length() &&
-                                content.equals(subsContent.substring(0, content.length())) ? subsContent : content;
+            if (subsContent != null && hyphenMode == HYPHEN_MODE.join) {
+                if (content.length() <= subsContent.length() &&
+                    // Really ugly check. Should explicitely check for first instead
+                    content.equals(subsContent.substring(0, content.length()))) {
+                    return subsContent;
+                }
+                return ""; // We have already delivered the hyphenated work
+            }
+            return content;
         }
         public String getStyleRefs() {
             return styleRefs;
