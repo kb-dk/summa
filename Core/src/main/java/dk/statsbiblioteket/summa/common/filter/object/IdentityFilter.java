@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
@@ -52,9 +53,22 @@ public class IdentityFilter extends ObjectFilterImpl  {
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
+        if (log.isDebugEnabled() && payload.getRecord() != null) {
+            Record record = payload.getRecord();
+            log.debug(getName() + " processing " + record.getId() + " with compressed=" + record.isContentCompressed()
+                      + " and raw content.length=" + record.getContent(false).length);
+        }
         if (uncompress && payload.getRecord() != null && payload.getRecord().isContentCompressed()) {
             Logging.logProcess("IdentityFilter", "Uncompressing Payload content", Logging.LogLevel.TRACE, payload);
+            final int compressedSize = payload.getRecord().getContent(false).length;
+            final long startTime = System.nanoTime();
             RecordUtil.adjustCompression(payload.getRecord(), null, false);
+            if (log.isDebugEnabled()) {
+                Record record = payload.getRecord();
+                log.debug(String.format("%s uncompressed %s content from %6d to %d bytes in %.1f ms",
+                                        getName(), record.getId(), compressedSize, record.getContent(false).length,
+                                        (System.nanoTime()-startTime)/1000000.0));
+            }
         } else if (log.isDebugEnabled()) {
             Logging.logProcess("IdentityFilter", "Passing Payload unmodified", Logging.LogLevel.TRACE, payload);
         }
