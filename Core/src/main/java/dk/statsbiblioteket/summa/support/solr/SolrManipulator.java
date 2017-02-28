@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
  * Streaming could be examined, but transmission errors would leave the overall state as unknown with regard to
  * the amount of documents passed to Solr. Furthermore this is vulnerable to errors and has little gain over batching
  * as documents are not visible in the searcher until {@link #commit()} has been called. Besides, the Solr FAQ states
- * hat it is not significantly faster: https://wiki.apache.org/solr/FAQ#How_can_indexing_be_accelerated.3F
+ * that it is not significantly faster: https://wiki.apache.org/solr/FAQ#How_can_indexing_be_accelerated.3F
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -447,31 +447,15 @@ public class SolrManipulator implements IndexManipulator {
         }
 
         int code = response.getStatusLine().getStatusCode();
-        if (code == 400) { // Bad Request: Solr did not like the input
+        if (code != 200) { // Bad Request: Solr did not like the input
             String message = String.format(
-                "Error 400 (Bad Request): Solr did not accept the document '%s' at %s. "
-                + "Trimmed request:\n%s\nResponse:\n%s",
-                designation, updateCommand, trim(command, 100), getResponse(response));
-            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
-            throw new IOException(message);
-        } else if (code == 404) {
-            String message = String.format(
-                "Fatal error, JVM will be shut down: HTTP error 404 when sending '%s' to Solr %s from %s",
-                designation, updateCommand, this);
+                    "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s from %s. Error code %d. "
+                    + "Trimmed request:\n%s\nResponse:\n%s",
+                    designation, updateCommand, this, code, trim(command, 200), getResponse(response));
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.FATAL, designation);
             Logging.fatal(log, "SolrManipulator.send", message);
-            new DeferredSystemExit(1);
             fullStop = true;
-            throw new IOException(message);
-        } else if (code != 200) {
-            String message = String.format(
-                "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s from %s. Error code %d. "
-                + "Trimmed request:\n%s\nResponse:\n%s",
-                designation, updateCommand, this, code, trim(command, 100), getResponse(response));
-            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.FATAL, designation);
-            Logging.fatal(log, "SolrManipulator.send", message);
-            new DeferredSystemExit(1);
-            fullStop = true;
+            new DeferredSystemExit(50);
             throw new IOException(message);
         }
 
