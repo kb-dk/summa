@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.GraphFilter;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.xml.XHTMLEntityResolver;
@@ -27,6 +28,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,6 +42,8 @@ import java.util.Arrays;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XMLTransformerTest extends TestCase {
+    private static Log log = LogFactory.getLog(XMLTransformerTest.class);
+
     public XMLTransformerTest(String name) {
         super(name);
     }
@@ -121,6 +126,10 @@ public class XMLTransformerTest extends TestCase {
     public void testMissingOutput() throws Exception {
         final String SAMPLE = "/home/te/tmp/sumfresh/sites/aviser/dump/index_3_pre_xslt_aviser/doms_newspaperCollection_uuid_1bc1069b-01de-433d-a8a5-abee5c800b00-segment_33.xml";
         final String XSLT = "/home/te/tmp/sumfresh/sites/aviser/xslt/index/aviser/doms_aviser.xsl";
+        if (!new File(SAMPLE).exists()) {
+            log.info("Unable to run testMissingInput() as it requires a local file");
+            return;
+        }
 
         Configuration conf = Configuration.newMemoryBased();
         conf.set(XMLTransformer.CONF_XSLT, XSLT);
@@ -132,6 +141,7 @@ public class XMLTransformerTest extends TestCase {
         Payload payload = new Payload(record);
 
         transformer.process(payload);
+        transformer.close(true);
         System.out.println("Transformed output:\n" + payload.getRecord().getContentAsUTF8());
     }
 
@@ -149,11 +159,14 @@ public class XMLTransformerTest extends TestCase {
 
         try  {
             transformer.process(payload);
+            transformer.close(true);
             fail("Transformation of " + SAMPLE + " should always fail, but produced\n"
                  + payload.getRecord().getContentAsUTF8());
         } catch (StackOverflowError e) {
+            transformer.close(false);
             // Expected
         } catch (PayloadException e) {
+            transformer.close(false);
             fail("XMLTransformer stack overflow Throwable should be a StackOverflowError when "
                  + XMLTransformer.CONF_CATCH_STACK_OVERFLOW + " is false");
         }

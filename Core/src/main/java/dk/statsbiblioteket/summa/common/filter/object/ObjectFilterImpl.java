@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,8 +55,6 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     public static final int DEFAULT_STATUS_EVERY = 0;
 
     private ObjectFilter source;
-    private long payloadCount = 0;
-    private long totalTimeNS = 0;
 
     private String name;
     private Payload processedPayload = null;
@@ -64,10 +63,17 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     // If true, process-time statistics are logged after processPayload-calls
     private Logging.LogLevel processLogLevel;
 
+    private final Timing timing;
+    private final Timing timingSource;
+    private final Timing timingProcess;
+
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
         processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
         everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
+        timing = new Timing(name, null, "Payload");
+        timingSource = timing.getChild("waitSource", null, "Payload");
+        timingProcess = timing.getChild("process", null, "Payload");
         log.info("Created " + this);
     }
 
@@ -78,19 +84,20 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             return true;
         }
         checkSource();
-        while (processedPayload == null && source.hasNext()) {
+        while (processedPayload == null && sourceHasNext()) {
             processedPayload = source.next();
             if (processedPayload == null) {
                 log.debug("hasNext(): Got null from source. This is legal but unusual. Skipping to next payload");
                 continue;
             }
-            long startTime = System.nanoTime();
+            final long startTime = System.nanoTime();
             try {
                 log.trace("Processing Payload");
-                payloadCount++; // A bit prematurely but we also want to count exceptions
                 boolean discard = !processPayload(processedPayload);
-                long ms = (System.nanoTime() - startTime) / 1000000;
-                Logging.logProcess(name, "processPayload #" + payloadCount + " finished in " + ms + "ms for " + name,
+                final long ns = System.nanoTime() - startTime;
+                timingProcess.addNS(ns);
+                Logging.logProcess(name, "processPayload #" + timingProcess.getUpdates()
+                                         + " finished in " + ns/1000000 + "ms for " + name,
                                    processLogLevel, processedPayload);
                 if (discard) {
                     processedPayload.close();
@@ -98,6 +105,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                     continue;
                 }
             } catch (PayloadException e) {
+                timingProcess.addNS(System.nanoTime() - startTime);
                 Logging.logProcess(
                         name,
                         "processPayload failed with explicit PayloadException, Payload discarded",
@@ -106,6 +114,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 processedPayload = null;
                 continue;
             } catch (Exception e) {
+                timingProcess.addNS(System.nanoTime() - startTime);
                 Logging.logProcess(name, "processPayload failed, Payload discarded",
                                    Logging.LogLevel.WARN, processedPayload, e);
                 processedPayload.close();
@@ -113,6 +122,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 processedPayload = null;
                 continue;
             } catch (Throwable t) {
+                timingProcess.addNS(System.nanoTime() - startTime);
                 /* Woops, this means major trouble, we dump everything we have and prepare to die */
                 String msg = "Unexpected error on payload " + processedPayload.toString();
                 String content = "";
@@ -128,21 +138,30 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             }
 
             long spendTime = System.nanoTime() - startTime;
-            totalTimeNS += spendTime;
             String ms = Double.toString(spendTime / 1000000.0);
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace(getName() + " processed " + processedPayload + ", #" + payloadCount + ", in " + ms
-                          + " ms using " + this);
+                log.trace(getName() + " processed " + processedPayload + ", #" + timingProcess.getUpdates()
+                          + ", in " + ms + " ms using " + this);
             } else if (log.isDebugEnabled() && feedback) {
-                log.debug(getName() + " processed " + processedPayload + ", #" + payloadCount + ", in " + ms + " ms");
+                log.debug(getName() + " processed " + processedPayload + ", #" + timingProcess.getUpdates()
+                          + ", in " + ms + " ms");
             }
             break;
         }
-        if (everyStatus > 0 && payloadCount % everyStatus == 0) {
+        if (everyStatus > 0 && timingProcess.getUpdates() % everyStatus == 0) {
             log.info(this);
         }
         return processedPayload != null;
+    }
+
+    private boolean sourceHasNext() {
+        timingSource.start();
+        try {
+            return source.hasNext();
+        } finally {
+            timingSource.stop();
+        }
     }
 
     @Override
@@ -213,9 +232,10 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.info(String.format("Closing down '%s'. %s", this, getProcessStats()));
-        checkSource();
-        source.close(success);
+        log.info(String.format("Closing down '%s'", this));
+        if (source != null) {
+            source.close(success);
+        }
     }
 
     private void checkSource() {
@@ -225,13 +245,11 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     }
 
     /**
-     * @return simple statistics on processed Payloads.
-     *         Sample output: "Processed 1234 Payloads at 1.43232 ms/Payload" 
+     * @return statistics on processed Payloads.
      */
     public String getProcessStats() {
         //noinspection DuplicateStringLiteralInspection
-        return String.format("Processed %d Payloads at %.1fms/Payload",
-                             payloadCount, payloadCount == 0 ? 0 : totalTimeNS / 1000000.0 / payloadCount);
+        return timing.toString(false, false);
     }
 
     /**

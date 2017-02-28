@@ -57,6 +57,7 @@ public class ObjectFilterImplTest extends TestCase {
         while (processor.pump()) {
             count++;
         }
+        processor.close(true);
         assertEquals("The number of processed Payloads should match the input",
                      payloads.size(), count);
 
