@@ -61,7 +61,7 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
     public static final String CONF_SUCCESS_REQUIREMENT = "graphfilter.success.requirement";
     public static final String DEFAULT_SUCCESS_REQUIREMENT = "all";
 
-    public static enum REQUIREMENT {origin, all, none, one}
+    public enum REQUIREMENT {origin, all, none, one}
 
     private final boolean visitParents;
     private final boolean visitChildren;

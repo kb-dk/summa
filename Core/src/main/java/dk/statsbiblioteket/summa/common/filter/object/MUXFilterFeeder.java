@@ -83,10 +83,9 @@ public class MUXFilterFeeder implements Runnable {
     /**
      * The name of the Filter. Used for feedback and debugging.
      * </p><p>
-     * This property is optional. Default is "Unnamed Filter".
+     * This property is optional. Default is Feeder(innerFilter).
      */
     public static final String CONF_FILTER_NAME = "summa.muxfilter.filter.name";
-    public static final String DEFAULT_FILTER_NAME = "Unnamed MUXFilterFeeder";
     /**
      * If a Filter is marked as fallback, it should only be used if no other
      * filters accepts the Payload, regardless of the queue-sizes of the
@@ -116,7 +115,7 @@ public class MUXFilterFeeder implements Runnable {
     PayloadQueue out;
     private PushFilter pusher;
     private ObjectFilter filter;
-    private String filterName = DEFAULT_FILTER_NAME;
+    private final String filterName;
     private boolean isFallback = DEFAULT_FILTER_ISFALLBACK;
     private Set<String> bases = null;
     private long payloadCount = 0;
@@ -146,7 +145,7 @@ public class MUXFilterFeeder implements Runnable {
         }
         filter = createFilter(conf);
         filter.setSource(pusher);
-        filterName = conf.getString(CONF_FILTER_NAME, filterName);
+        filterName = conf.getString(CONF_FILTER_NAME, "Feeder(" + filter.getClass().getSimpleName() + ")");
         isFallback = conf.getBoolean(CONF_FILTER_ISFALLBACK, isFallback);
         List<String> baseList = conf.getStrings(CONF_FILTER_BASES, (List<String>)null);
         if (baseList != null

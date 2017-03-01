@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -116,6 +117,14 @@ public class SolrManipulator implements IndexManipulator {
     public static final String CONF_CONNECTION_MAXREQUESTS = "solr.connection.maxrequestspersecond";
     public static final int DEFAULT_CONNECTION_MAXREQUESTS = 100;
 
+    /**
+     * Log overall status in the class log on INFO for every x Payloads received.
+     * </p><p>
+     * Optional. Default is 0 (disabled).
+     */
+    public static final String CONF_STATUS_EVERY = "process.status.every";
+    public static final int DEFAULT_STATUS_EVERY = 0;
+
     public static final String UPDATE_COMMAND = "/update";
     private static final long M = 1000000;
 
@@ -129,11 +138,16 @@ public class SolrManipulator implements IndexManipulator {
     private final PayloadBatcher batcher;
     private final int maxRequests;
     private final Profiler requestProfiler;
+    private final int statusEvery;
     private int updatesSinceLastCommit = 0;
     private int updates = 0;
     private int deletesSinceLastCommit = 0;
     private int deletes = 0;
     // Not thread safe, but as we need to process updates sequentially, this is not an issue
+
+    private final Timing timing = new Timing("all", null, "update");
+    private final Timing timingReceive = timing.getChild("receive", null, "update");
+    private final Timing timingSend = timing.getChild("send", null, "update");
 
     // TODO: Guarantee recordID and recordBase
     public SolrManipulator(Configuration conf) {
@@ -144,6 +158,7 @@ public class SolrManipulator implements IndexManipulator {
         flushOnDelete = conf.getBoolean(CONF_FLUSH_ON_DELETE, DEFAULT_FLUSH_ON_DELETE);
         maxRequests = conf.getInt(CONF_CONNECTION_MAXREQUESTS, DEFAULT_CONNECTION_MAXREQUESTS);
         requestProfiler = new Profiler(1, maxRequests);
+        statusEvery = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
 
         batcher = new PayloadBatcher(conf) {
             @Override
@@ -173,12 +188,14 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public boolean update(Payload payload) throws IOException {
-        updatesSinceLastCommit++;
-        updates++;
-        if (payload.getRecord().isDeleted()) {
-            deletesSinceLastCommit++;
-            deletes++;
-        }
+        try {
+            timingReceive.start();
+            updatesSinceLastCommit++;
+            updates++;
+            if (payload.getRecord().isDeleted()) {
+                deletesSinceLastCommit++;
+                deletes++;
+            }
 /*            orderChanged = true;
             if (flushOnDelete) {
                 batcher.flush();
@@ -188,9 +205,15 @@ public class SolrManipulator implements IndexManipulator {
             log.trace("Removed " + payload.getId() + " from index");
             return false;
         } */
-        batcher.add(payload);
-        log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
-        return false;
+            batcher.add(payload);
+            log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
+            return false;
+        } finally {
+            timingReceive.stop();
+            if (statusEvery > 0 && updatesSinceLastCommit % statusEvery == 0) {
+                log.info("Received update #" + updatesSinceLastCommit + ". Timing: " + timing);
+            }
+        }
     }
 
     private void send(List<Payload> payloads) {
@@ -198,56 +221,61 @@ public class SolrManipulator implements IndexManipulator {
             log.warn("Potential logic failure: send(...) called with empty list of Payloads");
             return;
         }
-        int add = 0;
-        int del = 0;
-        StringWriter command = new StringWriter(payloads.size() * 1000);
-        // https://wiki.apache.org/solr/UpdateXmlMessages#Add_and_delete_in_a_single_batch
-        command.append("<update>");
-        boolean adding = false;
-        for (Payload payload: payloads) {
-            Record record = payload.getRecord();
-            if (adding) {
-                if (record.isDeleted()) {
-                    command.append("</add>");
-                    adding = false;
-                }
-            } else {
-                if (!record.isDeleted()) {
-                    command.append("<add>");
-                    adding = true;
-                }
-            }
-
-            if (record.isDeleted()) {
-                command.append("<delete><id>").append(XMLUtil.encode(payload.getId())).append("</id></delete>");
-                del++;
-            } else {
-                command.append(removeHeader(payload.getRecord().getContentAsUTF8()));
-                add++;
-            }
-        }
-        if (adding) {
-            command.append("</add>");
-        }
-        command.append("</update>");
         try {
-            send(payloads.size() + " Payloads", command.toString());
-            if (flushOnDelete) {
-                batcher.flush();
+            timingSend.start();
+            int add = 0;
+            int del = 0;
+            StringWriter command = new StringWriter(payloads.size() * 1000);
+            // https://wiki.apache.org/solr/UpdateXmlMessages#Add_and_delete_in_a_single_batch
+            command.append("<update>");
+            boolean adding = false;
+            for (Payload payload : payloads) {
+                Record record = payload.getRecord();
+                if (adding) {
+                    if (record.isDeleted()) {
+                        command.append("</add>");
+                        adding = false;
+                    }
+                } else {
+                    if (!record.isDeleted()) {
+                        command.append("<add>");
+                        adding = true;
+                    }
+                }
+
+                if (record.isDeleted()) {
+                    command.append("<delete><id>").append(XMLUtil.encode(payload.getId())).append("</id></delete>");
+                    del++;
+                } else {
+                    command.append(removeHeader(payload.getRecord().getContentAsUTF8()));
+                    add++;
+                }
             }
-        } catch (NoRouteToHostException e) {
-            shutdown(String.format(
-                    "NoRouteToHostException sending %d updates (%d adds, %d deletes) to %s. "
-                    + "This is likely to be caused by depletion of ports in the ephemeral range. "
-                    + "Consider adjusting batch setup from the current %s"
-                    + "Payloads: %s. The JVM will be shut down in 5 seconds. First part of command:\n%s",
-                    payloads.size(), add, del, this, batcher,
-                    Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
-        } catch (IOException e) {
-            shutdown(String.format(
-                    "IOException sending %d updates (%d adds, %d deletes) to %s. Payloads: %s. "
-                    + "The JVM will be shut down in 5 seconds. First part of command:\n%s",
-                    payloads.size(), add, del, this, Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
+            if (adding) {
+                command.append("</add>");
+            }
+            command.append("</update>");
+            try {
+                send(payloads.size() + " Payloads", command.toString());
+                if (flushOnDelete) {
+                    batcher.flush();
+                }
+            } catch (NoRouteToHostException e) {
+                shutdown(String.format(
+                        "NoRouteToHostException sending %d updates (%d adds, %d deletes) to %s. "
+                        + "This is likely to be caused by depletion of ports in the ephemeral range. "
+                        + "Consider adjusting batch setup from the current %s"
+                        + "Payloads: %s. The JVM will be shut down in 5 seconds. First part of command:\n%s",
+                        payloads.size(), add, del, this, batcher,
+                        Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
+            } catch (IOException e) {
+                shutdown(String.format(
+                        "IOException sending %d updates (%d adds, %d deletes) to %s. Payloads: %s. "
+                        + "The JVM will be shut down in 5 seconds. First part of command:\n%s",
+                        payloads.size(), add, del, this, Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
+            }
+        } finally {
+            timingSend.stop();
         }
     }
 
@@ -293,16 +321,17 @@ public class SolrManipulator implements IndexManipulator {
     @Override
     public synchronized void consolidate() throws IOException {
         log.info("Consolidate called. Currently there is no implementation of this functionality besides requesting a "
-                 + "commit. Note that consolidate is generally now recommended for Solr 4+.");
+                 + "commit. Note that consolidate is generally not recommended for Solr 4+.");
         commit(); // Just to make sure
     }
 
     @Override
     public synchronized void close() throws IOException {
-        log.info("Closing down " + this);
+        log.debug("Closing down " + this);
         batcher.close();
         commit();
         conn.close();
+        log.info("Closed " + this);
     }
 
     @Override
@@ -516,6 +545,6 @@ public class SolrManipulator implements IndexManipulator {
     @Override
     public String toString() {
         return "SolrManipulator(" + host + restCall + "). Processed " + updates + " updates including " + deletes
-               + " deletes";
+               + " deletes. Timing: " + timing;
     }
 }

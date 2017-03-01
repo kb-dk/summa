@@ -307,7 +307,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     private Iterator<Record> recordIterator = null;
 
-    private final Timing timing = new Timing("RecordReader", null, "Payload");
+    private final Timing timing = new Timing("pull", null, "Payload");
 
     /**
      * Connects to the Storage specified in the configuration and request an

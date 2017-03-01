@@ -64,7 +64,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     private Logging.LogLevel processLogLevel;
 
     private final Timing timing;
-    private final Timing timingSource;
+    private final Timing timingPull;
     private final Timing timingProcess;
 
     public ObjectFilterImpl(Configuration conf) {
@@ -72,7 +72,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
         everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         timing = new Timing(name, null, "Payload");
-        timingSource = timing.getChild("waitSource", null, "Payload");
+        timingPull = timing.getChild("pull", null, "Payload");
         timingProcess = timing.getChild("process", null, "Payload");
         log.info("Created " + this);
     }
@@ -156,11 +156,11 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     }
 
     private boolean sourceHasNext() {
-        timingSource.start();
+        timingPull.start();
         try {
             return source.hasNext();
         } finally {
-            timingSource.stop();
+            timingPull.stop();
         }
     }
 
