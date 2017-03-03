@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
@@ -308,6 +309,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private Iterator<Record> recordIterator = null;
 
     private final Timing timing = new Timing("pull", null, "Payload");
+    private final RecordStatsCollector stats;
 
     /**
      * Connects to the Storage specified in the configuration and request an
@@ -384,6 +386,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         lastRecordTimestamp = getStartTime();
         lastIteratorUpdate = lastRecordTimestamp;
         stopOnNewer = conf.getBoolean(CONF_STOP_ON_NEWER, DEFAULT_STOP_ON_NEWER);
+        stats = new RecordStatsCollector("in", conf);
         log.info("Created " + this);
     }
 
@@ -643,6 +646,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             if (progressTracker != null) {
                 progressTracker.updated(lastRecordTimestamp);
             }
+            stats.process(payload);
             return payload;
         } catch (RuntimeException e) {
             if (!(e instanceof NoSuchElementException)) {
@@ -717,7 +721,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     }
 
     public String getIOStats() {
-        return timing.toString(false, false);
+        return timing.toString(false, false) + ",  size=" + stats;
     }
 
     /**

@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
 import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -66,6 +67,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     private final Timing timing;
     private final Timing timingPull;
     private final Timing timingProcess;
+    private final RecordStatsCollector statsPull;
+    private final RecordStatsCollector statsProcess;
 
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
@@ -74,6 +77,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         timing = new Timing(name, null, "Payload");
         timingPull = timing.getChild("pull", null, "Payload");
         timingProcess = timing.getChild("process", null, "Payload");
+        statsPull = new RecordStatsCollector("in", conf);
+        statsProcess = new RecordStatsCollector("out", conf);
         log.info("Created " + this);
     }
 
@@ -86,6 +91,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         checkSource();
         while (processedPayload == null && sourceHasNext()) {
             processedPayload = source.next();
+            statsPull.process(processedPayload);
             if (processedPayload == null) {
                 log.debug("hasNext(): Got null from source. This is legal but unusual. Skipping to next payload");
                 continue;
@@ -94,6 +100,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             try {
                 log.trace("Processing Payload");
                 boolean discard = !processPayload(processedPayload);
+                statsProcess.process(processedPayload);
                 final long ns = System.nanoTime() - startTime;
                 timingProcess.addNS(ns);
                 Logging.logProcess(name, "processPayload #" + timingProcess.getUpdates()
@@ -249,7 +256,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
      */
     public String getProcessStats() {
         //noinspection DuplicateStringLiteralInspection
-        return timing.toString(false, false);
+        return timing.toString(false, false) + " size(" + statsPull + ", " + statsProcess + ")";
     }
 
     /**

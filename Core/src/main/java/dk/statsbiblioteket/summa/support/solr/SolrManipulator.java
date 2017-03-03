@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.filter.PayloadBatcher;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
+import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
@@ -148,6 +149,8 @@ public class SolrManipulator implements IndexManipulator {
     private final Timing timing = new Timing("all", null, "update");
     private final Timing timingReceive = timing.getChild("receive", null, "update");
     private final Timing timingSend = timing.getChild("send", null, "update");
+    private final RecordStatsCollector statsReceive;
+    private final RecordStatsCollector statsSend;
 
     // TODO: Guarantee recordID and recordBase
     public SolrManipulator(Configuration conf) {
@@ -169,6 +172,8 @@ public class SolrManipulator implements IndexManipulator {
             }
         };
         setupHttp();
+        statsReceive = new RecordStatsCollector("in", conf);
+        statsSend = new RecordStatsCollector("out", conf);
         log.info("Created SolrManipulator(" + hostWithPort + restCall + UPDATE_COMMAND + ")");
     }
 
@@ -205,13 +210,14 @@ public class SolrManipulator implements IndexManipulator {
             log.trace("Removed " + payload.getId() + " from index");
             return false;
         } */
+            statsReceive.process(payload);
             batcher.add(payload);
             log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
             return false;
         } finally {
             timingReceive.stop();
             if (statusEvery > 0 && updatesSinceLastCommit % statusEvery == 0) {
-                log.info("Received update #" + updatesSinceLastCommit + ". Timing: " + timing);
+                log.info("Received update #" + updatesSinceLastCommit + ". Stats: " + getProcessStats());
             }
         }
     }
@@ -256,7 +262,9 @@ public class SolrManipulator implements IndexManipulator {
             }
             command.append("</update>");
             try {
-                send(payloads.size() + " Payloads", command.toString());
+                final String commandString = command.toString();
+                statsSend.process("delivery#" + timingSend.getUpdates(), commandString.length());
+                send(payloads.size() + " Payloads", commandString);
                 if (flushOnDelete) {
                     batcher.flush();
                 }
@@ -542,9 +550,15 @@ public class SolrManipulator implements IndexManipulator {
         return raw;
     }
 
+    public String getProcessStats() {
+        //noinspection DuplicateStringLiteralInspection
+        return timing.toString(false, false) + " size(" + statsReceive + ", " + statsSend + ")";
+    }
+
+
     @Override
     public String toString() {
         return "SolrManipulator(" + host + restCall + "). Processed " + updates + " updates including " + deletes
-               + " deletes. Timing: " + timing;
+               + " deletes. Stats: " + getProcessStats();
     }
 }
