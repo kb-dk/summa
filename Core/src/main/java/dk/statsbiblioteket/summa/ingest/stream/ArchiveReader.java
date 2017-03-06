@@ -58,15 +58,16 @@ public class ArchiveReader extends FileSystemReader {
      * If true, the stream produced by {@link #next()} is copied and fully detached from the underlying file on
      * storage, before being passed on.
      * </p><p>
-     * This is highly recommended as missing close on delivered Streams can lead to deadlocks.
+     * This is highly recommended as missing close on delivered Streams can lead to deadlocks. However, the default
+     * is false to stay true to older setups, as lasge streams requires a similar amount of memory.
      * </p><p>
      * Note: This has the unfortunate side-effect of premature marking of the source file as being completed.
      *       This does not change the recommendation of having the feature enabled.
      * </p><p>
-     * Optional. Default is true.
+     * Optional. Default is false.
      */
     public static final String CONF_COPY_STREAM = "archivereader.copystream";
-    public static final boolean DEFAULT_COPY_STREAM = true;
+    public static final boolean DEFAULT_COPY_STREAM = false;
 
     protected FileProvider provider;
     private final boolean copyStream;
