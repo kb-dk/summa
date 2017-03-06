@@ -14,7 +14,6 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.Streams;
@@ -1199,9 +1198,9 @@ public class RecordUtil {
         if (payload.getRecord() != null) {
             return payload;
         }
-        ByteOutputStream bos = new ByteOutputStream();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Streams.pipe(payload.getStream(), bos);
-        payload.setStream(new ByteArrayInputStream(bos.getBytes()));
+        payload.setStream(new ByteArrayInputStream(bos.toByteArray()));
         return payload;
     }
 
