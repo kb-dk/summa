@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.Streams;
@@ -1183,6 +1184,25 @@ public class RecordUtil {
             }
         }
         return newRecord;
+    }
+
+
+    /**
+     * If the Payload contains a Stream, it will be copied into memory, the old stream will be closed and a new
+     * stream will be created from the copied bytes.
+     * </p><p>
+     * Used to de-couple the Payload from the source.
+     * @param payload a Payload with a stream.
+     * @return the payload with the stream de-coupled from the original stream.
+     */
+    public static Payload copyStream(Payload payload) throws IOException {
+        if (payload.getRecord() != null) {
+            return payload;
+        }
+        ByteOutputStream bos = new ByteOutputStream();
+        Streams.pipe(payload.getStream(), bos);
+        payload.setStream(new ByteArrayInputStream(bos.getBytes()));
+        return payload;
     }
 
     /**

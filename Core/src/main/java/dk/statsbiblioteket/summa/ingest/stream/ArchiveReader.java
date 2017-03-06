@@ -18,10 +18,12 @@ import de.schlichtherle.truezip.file.TFile;
 import de.schlichtherle.truezip.file.TFileInputStream;
 import de.schlichtherle.truezip.file.TVFS;
 import de.schlichtherle.truezip.fs.FsSyncException;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,7 +54,22 @@ import java.util.regex.Pattern;
 public class ArchiveReader extends FileSystemReader {
     private static final Log log = LogFactory.getLog(ArchiveReader.class);
 
+    /**
+     * If true, the stream produced by {@link #next()} is copied and fully detached from the underlying file on
+     * storage, before being passed on.
+     * </p><p>
+     * This is highly recommended as missing close on delivered Streams can lead to deadlocks.
+     * </p><p>
+     * Note: This has the unfortunate side-effect of premature marking of the source file as being completed.
+     *       This does not change the recommendation of having the feature enabled.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_COPY_STREAM = "archivereader.copystream";
+    public static final boolean DEFAULT_COPY_STREAM = true;
+
     protected FileProvider provider;
+    private final boolean copyStream;
 
     public ArchiveReader(Configuration conf) {
         boolean recursive = conf.getBoolean(CONF_RECURSIVE, DEFAULT_RECURSIVE);
@@ -60,6 +77,7 @@ public class ArchiveReader extends FileSystemReader {
         Pattern filePattern = Pattern.compile(conf.getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
         String postfix = conf.getString(CONF_COMPLETED_POSTFIX, DEFAULT_COMPLETED_POSTFIX);
         String realPostfix = "".equals(postfix) ? null : postfix;
+        copyStream = conf.getBoolean(CONF_COPY_STREAM, DEFAULT_COPY_STREAM);
 
         String rootString = conf.getString(CONF_ROOT_FOLDER);
         if ("".equals(rootString)) {
@@ -83,7 +101,7 @@ public class ArchiveReader extends FileSystemReader {
         }
 
         log.info("ArchiveReader created. Root: '" + root + "', recursive: " + recursive + ", file pattern: '"
-                 + filePattern.pattern() + "', completed postfix: '" + postfix + "'");
+                 + filePattern.pattern() + "', completed postfix: '" + postfix + "', copyStream=" + copyStream);
     }
 
     @Override
@@ -93,7 +111,7 @@ public class ArchiveReader extends FileSystemReader {
     }
 
     @Override
-    public boolean hasNext() {
+    public synchronized boolean hasNext() {
         log.trace("hasNext() called");
         return provider.hasNext();
     }
@@ -112,15 +130,23 @@ public class ArchiveReader extends FileSystemReader {
     }
 
     @Override
-    public void close(boolean success) {
+    public synchronized void close(boolean success) {
         log.debug("close(" + success + ") called");
         provider.close(success);
     }
 
     @Override
-    public Payload next() {
+    public synchronized Payload next() {
         log.trace("next() called");
-        return provider.next();
+        Payload payload = provider.next();
+        try {
+            return copyStream ? RecordUtil.copyStream(payload) : payload;
+        } catch (IOException e) {
+            String message = "Unable to copy stream. Delivering Payload as-is";
+            Logging.logProcess("ArchiveReader", message, Logging.LogLevel.ERROR, payload, e);
+            log.error(message + ". Payload=" + payload.getId(), e);
+            return payload;
+        }
     }
 
     private static final List<FileProvider> EMPTY = new ArrayList<>(0);

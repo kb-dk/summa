@@ -439,7 +439,8 @@ public class ArchiveReaderTest extends TestCase {
                 ArchiveReader.CONF_ROOT_FOLDER, SOURCE,
                 ArchiveReader.CONF_RECURSIVE, true,
                 ArchiveReader.CONF_FILE_PATTERN, ".*\\.xml",
-                ArchiveReader.CONF_COMPLETED_POSTFIX, ".finito");
+                ArchiveReader.CONF_COMPLETED_POSTFIX, ".finito",
+                ArchiveReader.CONF_COPY_STREAM, false);
         ArchiveReader reader = new ArchiveReader(conf);
         assertTrue("There should be at least one Record available", reader.hasNext());
         assertFalse("There should be no marked files, but there were " + countFinito(new File(SOURCE)),
