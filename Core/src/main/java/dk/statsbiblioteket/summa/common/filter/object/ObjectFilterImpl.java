@@ -77,8 +77,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         timing = new Timing(name, null, "Payload");
         timingPull = timing.getChild("pull", null, "Payload");
         timingProcess = timing.getChild("process", null, "Payload");
-        statsPull = new RecordStatsCollector("in", conf);
-        statsProcess = new RecordStatsCollector("out", conf);
+        statsPull = new RecordStatsCollector(name + ".in", conf);
+        statsProcess = new RecordStatsCollector(name + ".out", conf);
         log.info("Created " + this);
     }
 

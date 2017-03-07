@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
+import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -123,11 +124,18 @@ public abstract class ThreadedStreamParser implements StreamParser {
     private long queueCount = 0;
     private final boolean shutdownOnException;
 
+    private final Timing timing;
+    private final Timing timingProcess;
+    private final Timing timingPut;
+
     public ThreadedStreamParser(Configuration conf) {
         queue = new PayloadQueue(conf.getInt(CONF_QUEUE_SIZE, DEFAULT_QUEUE_SIZE),
                                  conf.getInt(CONF_QUEUE_BYTESIZE, DEFAULT_QUEUE_BYTESIZE));
         queueTimeout = conf.getInt(CONF_QUEUE_TIMEOUT, queueTimeout);
         shutdownOnException = conf.getBoolean(CONF_SHUTDOWN_ON_EXCEPTION, DEFAULT_SHUTDOWN_ON_EXCEPTION);
+        timing =  new Timing(this.getClass().getSimpleName());
+        timingProcess = timing.getChild("process", null, "Payload");
+        timingPut = timing.getChild("put");
         log.debug("Constructed ThreadedStreamParser with queue-size " + queue.remainingCapacity()
                   + " shutdown on exception " + shutdownOnException + " and queue timeout " + queueTimeout + " ms");
     }
@@ -141,7 +149,10 @@ public abstract class ThreadedStreamParser implements StreamParser {
                     "Already parsing %s when open(%s) was called",
                     sourcePayload, streamPayload));
         }
-        queue.clear(); // Clean-up from previous runs
+        if (!queue.isEmpty()) {
+            log.debug("open(" + streamPayload.getId() + ") clearing old queue of size " + queue.size());
+            queue.clear(); // Clean-up from previous runs
+        }
         if (streamPayload.getStream() == null && !acceptStreamlessPayloads()) {
             log.warn("No stream in received " + streamPayload + ". No Records will be generated");
             empty = true;
@@ -167,6 +178,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
             @Override
             public void run() {
                 log.trace("run() entered");
+                final long startTime = System.nanoTime();
                 try {
                     protectedRun(sourcePayload);
                     if (autoClose()) {
@@ -193,13 +205,17 @@ public abstract class ThreadedStreamParser implements StreamParser {
                     running = false;
                     addToQueue(INTERRUPTOR);
                 } finally {
+                    synchronized (timingProcess) {
+                        timingProcess.addNS(System.nanoTime()-startTime);
+                    }
                     running = false;
                     addToQueue(INTERRUPTOR);
                 }
                 if (log.isDebugEnabled()) {
                     log.debug(this.getClass().getSimpleName() + ": run() finished with "
                               + queue.size() + " remaining queued Payloads (the last queued Payload is the "
-                              + "interruptor-token-Payload) for " + this + " with source " + sourcePayload);
+                              + "interruptor-token-Payload) for " + this + " with source " + sourcePayload + " in "
+                              + (System.nanoTime()-startTime)/1000000 + "ms");
                 }
             }
         }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ") daemon");
@@ -312,18 +328,9 @@ public abstract class ThreadedStreamParser implements StreamParser {
         if (record.getId() != null) {
             newPayload.setID(record.getId());
         }
-
+        queueCount++;
         uninterruptiblePut(newPayload);
     }
-
-    /**
-     * Add the generated InputStream to the queue by creating a Payload around
-     * it, blocking until there is room in the queue.
-     * @param stream the newly generated strean to add to the out queue.
-     */
-//    protected void addToQueue(InputStream stream) {
-//        uninterruptiblePut(new Payload(stream));
-//    }
 
     /**
      * Add the generated Payload to the queue, blocking until there is room
@@ -339,9 +346,13 @@ public abstract class ThreadedStreamParser implements StreamParser {
     }
 
     private void uninterruptiblePut(Payload p) {
+        final long startTime = System.nanoTime();
         while (true) {
             try {
                 queue.put(p);
+                synchronized (timingPut) {
+                    timingPut.addNS(System.nanoTime()-startTime);
+                }
                 return;
             } catch (InterruptedException e) {
                 log.warn("Interrupted while queueing payload. Retrying");
@@ -366,7 +377,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
     @Override
     public void close() {
         //noinspection DuplicateStringLiteralInspection
-        log.info("close() called after " + queueCount + " queued Payloads");
+        log.info("close() called after " + queueCount + " queued Payloads with timing " + timing);
         // TODO: Check whether this discards any currently processed Payloads
         empty = true;
         stop();

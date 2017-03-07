@@ -53,9 +53,9 @@ public class IdentityFilter extends ObjectFilterImpl  {
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
-        if (log.isDebugEnabled() && payload.getRecord() != null) {
+        if (log.isTraceEnabled() && payload.getRecord() != null) {
             Record record = payload.getRecord();
-            log.debug(getName() + " processing " + record.getId() + " with compressed=" + record.isContentCompressed()
+            log.trace(getName() + " processing " + record.getId() + " with compressed=" + record.isContentCompressed()
                       + " and raw content.length=" + record.getContent(false).length);
         }
         if (uncompress && payload.getRecord() != null && payload.getRecord().isContentCompressed()) {
@@ -65,7 +65,7 @@ public class IdentityFilter extends ObjectFilterImpl  {
             RecordUtil.adjustCompression(payload.getRecord(), null, false);
             if (log.isDebugEnabled()) {
                 Record record = payload.getRecord();
-                log.debug(String.format("%s uncompressed %s content from %6d to %d bytes in %.1f ms",
+                log.debug(String.format("%s uncompressed %s content from %d to %d bytes in %.1f ms",
                                         getName(), record.getId(), compressedSize, record.getContent(false).length,
                                         (System.nanoTime()-startTime)/1000000.0));
             }

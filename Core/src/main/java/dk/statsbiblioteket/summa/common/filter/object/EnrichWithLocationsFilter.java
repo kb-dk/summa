@@ -170,6 +170,9 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
     private final boolean matcherSpacePrefix;
     private final boolean matcherSpacePostfix;
 
+    private long assignedLocations = 0;
+    private long assignedLocationSets = 0;
+
     public EnrichWithLocationsFilter(Configuration conf) {
         super(conf);
         designationField = conf.getString(CONF_DESIGNATION_FIELD, DEFAULT_DESIGNATION_FIELD);
@@ -221,21 +224,24 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
 
     @Override
     public void beforeLastEndTag(XMLStreamWriter xml) throws XMLStreamException {
-        log.debug("Flushing " + matcher.getLocations().size() + " location designations");
+        final Map<String, Set<String>> locations = matcher.getLocations();
+        assignedLocationSets++;
+        assignedLocations += locations.size();
+        log.debug("Flushing " + locations.size() + " location designations");
 
-        for (Map.Entry<String, Set<String>> location: matcher.getLocations().entrySet()) {
+        for (Map.Entry<String, Set<String>> location: locations.entrySet()) {
             final String designation = location.getKey();
             write(xml, designationField, designation);
         }
 
-        for (Map.Entry<String, Set<String>> location: matcher.getLocations().entrySet()) {
+        for (Map.Entry<String, Set<String>> location: locations.entrySet()) {
             final String designation = location.getKey();
             for (String coordinates: location.getValue()) {
                 write(xml, combinedField, designation + COMBINED_DELIMITER + coordinates);
             }
         }
 
-        for (Map.Entry<String, Set<String>> location: matcher.getLocations().entrySet()) {
+        for (Map.Entry<String, Set<String>> location: locations.entrySet()) {
             final String designation = location.getKey();
             for (String coordinates: location.getValue()) {
                 write(xml, coordinatesField, coordinates);
@@ -336,4 +342,9 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
         }
     }
 
+    @Override
+    public String toString() {
+        return "EnrichWithLocationsFilter(enrichedPayloads=" + assignedLocationSets
+               + ", assignedLocations=" + assignedLocations + ", " + super.toString() + ")";
+    }
 }

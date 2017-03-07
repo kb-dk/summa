@@ -386,7 +386,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         lastRecordTimestamp = getStartTime();
         lastIteratorUpdate = lastRecordTimestamp;
         stopOnNewer = conf.getBoolean(CONF_STOP_ON_NEWER, DEFAULT_STOP_ON_NEWER);
-        stats = new RecordStatsCollector("in", conf);
+        stats = new RecordStatsCollector("RecordReader.in", conf);
         log.info("Created " + this);
     }
 

@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.support.alto;
 
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.xml.XMLStepper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -63,6 +64,7 @@ public class Alto {
     private Map<String, TextStyle> styles = new HashMap<>();
     private List<Page> layout = new ArrayList<>();
     private HYPHEN_MODE hyphenMode = HYPHEN_MODE.join;
+    private Timing timing = new Timing("parse");
 
     public enum HYPHEN_MODE {split, join}
 
@@ -87,6 +89,7 @@ public class Alto {
         long startTime = System.currentTimeMillis();
         this.origin = origin;
         this.filename = origin;
+        timing.start();
         XMLStepper.iterateTags(xml, new XMLStepper.Callback() {
             @Override
             public boolean elementStart(
@@ -153,6 +156,7 @@ public class Alto {
             log.debug(String.format("Successfully parsed alto XML in %dms, fileName='%s', #pages=%d",
                                     System.currentTimeMillis() - startTime, filename, layout.size()));
         }
+        timing.stop();
     }
 
     public String getFilename() {
@@ -703,5 +707,9 @@ public class Alto {
         public String toString() {
             return "Box(" + hpos + "," + vpos + " " + width + "x" + height + ")";
         }
+    }
+
+    public Timing getTiming() {
+        return timing;
     }
 }
