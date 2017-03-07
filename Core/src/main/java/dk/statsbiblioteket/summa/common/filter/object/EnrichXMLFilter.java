@@ -199,8 +199,4 @@ public abstract class EnrichXMLFilter extends ObjectFilterImpl {
      */
     public abstract void beforeLastEndTag(XMLStreamWriter xml) throws XMLStreamException;
 
-    @Override
-    public String toString() {
-        return "EnrichXMLFilter()";
-    }
 }
