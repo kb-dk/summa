@@ -24,9 +24,6 @@ import java.util.List;
  * The setup of the filters is done with {@link FilterSequence}. See the JavaDoc
  * for that class for property requirements.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_OK,
-        author = "te")
 public class FilterPump extends StateThread implements Configurable {
     /* We delay the creation of the log until we know the name of the chain. */
     private Log log;
@@ -39,12 +36,19 @@ public class FilterPump extends StateThread implements Configurable {
     public static final String DEFAULT_CHAIN_NAME = "Unnamed Chain";
     private FilterSequence sequence;
 
+    /**
+     * Log overall status in the class log on INFO for every x Payloads pulled.
+     * 0 disables this.
+     * </p><p>
+     * Optional. Default is 10000.
+     */
+    public static final String CONF_STATUS_EVERY = "process.status.every";
+    public static final int DEFAULT_STATUS_EVERY = 10000;
+
+    private final int everyStatus;
+
     private String chainName = DEFAULT_CHAIN_NAME;
     private static final int DEBUG_FEEDBACK = 100;
-    private static final int INFO_FEEDBACK = 10000;
-
-    long objectCounter = 0;
-    long streamBytesCounter = 0;
 
     public FilterPump(Configuration configuration) throws IOException {
         classLog.trace ("Constructing FilterPump with config class " + configuration.getClass());
@@ -53,6 +57,7 @@ public class FilterPump extends StateThread implements Configurable {
         log = LogFactory.getLog(FilterPump.class.getName() + "#" + chainName);
         log.info("Constructing FilterPump for chain '" + chainName + "'");
         sequence = new FilterSequence(configuration);
+        everyStatus = configuration.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         log.debug("Constructed filter sequence");
     }
 
@@ -106,7 +111,7 @@ public class FilterPump extends StateThread implements Configurable {
     private void logStatistics(Profiler profiler, long startTime, Payload last) {
         if (!(log.isTraceEnabled()
               || (log.isDebugEnabled() && profiler.getBeats() % DEBUG_FEEDBACK == 0)
-              || (log.isInfoEnabled() && profiler.getBeats() % INFO_FEEDBACK == 0))) {
+              || (log.isInfoEnabled() && profiler.getBeats() % everyStatus == 0))) {
             return;
         }
         String ms = Double.toString((System.nanoTime() - startTime) / 1000000.0);
@@ -119,7 +124,7 @@ public class FilterPump extends StateThread implements Configurable {
                 + "%s pumps/sec, last pump took %s ms and delivered %s",
                 profiler.getBeats(), profiler.getSpendTime(), profiler.getBpsSpan(), currentAverage,
                 overallAverage, ms, last == null ? "no Payload" : last.getId());
-        if (profiler.getBeats() % INFO_FEEDBACK == 0) {
+        if (profiler.getBeats() % everyStatus == 0) {
             log.info(message);
         } else if (profiler.getBeats() % DEBUG_FEEDBACK == 0) {
             log.debug(message); 
