@@ -56,9 +56,12 @@ public class AltoTest extends TestCase {
     }
 
     public void testIllustrations() throws FileNotFoundException, XMLStreamException {
-        assertNotNull("The file " + ALTO1909 + " should be available", Resolver.getFile(ALTO1909));
-        Alto alto = new Alto(Resolver.getFile(ALTO1909));
-
+        if (Resolver.getFile(ALTO1909) == null) {
+            System.out.println(
+                    "Cannot run testIllustrations() as the copyrighted file " + ALTO1909 + " is not available");
+            return;
+        }
+        new Alto(Resolver.getFile(ALTO1909));
     }
 
     public void testBasicParse() throws XMLStreamException, FileNotFoundException {
