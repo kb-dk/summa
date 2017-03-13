@@ -94,11 +94,14 @@
             <artifactId>marc4j</artifactId>
         </dependency>
 
-        <dependency> <!-- Tired of tiny changes to Java XSLT processing -->
+        <!--<dependency>
         	<groupId>xalan</groupId>
         	<artifactId>xalan</artifactId>
+        </dependency>-->
+        <dependency>
+            <groupId>net.sf.saxon</groupId>
+            <artifactId>Saxon-HE</artifactId>
         </dependency>
-
 
         <!-- The test framework must be first as it overrides subsequent classes from Lucene/Solr -->
         <dependency>

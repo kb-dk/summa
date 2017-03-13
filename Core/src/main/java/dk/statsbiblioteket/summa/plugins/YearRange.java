@@ -74,8 +74,8 @@ public class YearRange {
      * The expanded range will expand between the lowest and highest number
      * regardless of the input order.
      *
-     * @param in1 a bounderey for the range.
-     * @param in2 a bounderey for the range.
+     * @param in1 a boundery for the range.
+     * @param in2 a boundery for the range.
      * @return an expanded range.
      */
     public static String makeRange(String in1, String in2) {

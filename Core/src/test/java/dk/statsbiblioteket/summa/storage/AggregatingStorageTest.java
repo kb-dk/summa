@@ -28,7 +28,6 @@ import dk.statsbiblioteket.util.Files;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.regexp.RE;
 
 import java.io.File;
 import java.io.IOException;

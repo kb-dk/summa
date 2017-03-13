@@ -26,9 +26,9 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.xml.SummaEntityResolver;
+import dk.statsbiblioteket.summa.plugins.SaxonXSLT;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.NamespaceRemover;
-import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.EntityResolver;
@@ -224,7 +224,7 @@ public class XMLTransformer extends GraphFilter<Object> {
     @Override
     public boolean finish(Payload payload, Object state, boolean success) throws PayloadException {
         if (!success) {
-            Logging.logProcess(getName(), "Unable to transform. discarding", Logging.LogLevel.DEBUG, payload);
+            Logging.logProcess(getName(), "Unable to transform. Discarding", Logging.LogLevel.DEBUG, payload);
         }
         return success;
     }
@@ -296,7 +296,8 @@ public class XMLTransformer extends GraphFilter<Object> {
         private void initTransformer(Configuration conf) throws ConfigurationException {
             try {
                 // getLocalTransformer would in principle be better, but is it really safe in our context?
-                transformer = XSLT.createTransformer(xsltLocation);
+                //transformer = XSLT.createTransformer(xsltLocation);
+                transformer = SaxonXSLT.createTransformer(xsltLocation);
                 // We want our extensions to work
                 transformer.setParameter(XMLConstants.FEATURE_SECURE_PROCESSING, false);
                 if (!conf.valueExists(CONF_ENTITY_RESOLVER)) {
@@ -307,7 +308,7 @@ public class XMLTransformer extends GraphFilter<Object> {
                 Class<? extends EntityResolver> resolver = conf.getClass(
                     CONF_ENTITY_RESOLVER, EntityResolver.class, SummaEntityResolver.class);
                 entityResolver = Configuration.create(resolver, conf);
-                log.debug("Getting transformer");
+                log.debug("Constructed Transformer with class " + transformer.getClass());
             } catch (NullPointerException e) {
                 throw new ConfigurationException("Unable to construct Transformer for xslt '" + xsltLocation + "'", e);
             } catch (TransformerException e) {

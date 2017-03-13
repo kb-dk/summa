@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
+import dk.statsbiblioteket.summa.plugins.SaxonXSLT;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
@@ -260,10 +261,10 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             output.append(content.subSequence(0, endPos-2));
         } else {
             if(t == null) {
-                t = XSLT.createTransformer(xsltLocation);
+                t = SaxonXSLT.createTransformer(xsltLocation);
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            XSLT.transform(t, new ByteArrayInputStream(record.getContent()), out);
+            SaxonXSLT.transform(t, new ByteArrayInputStream(record.getContent()), out);
             byte[] transformed = out.toByteArray();
             BufferedReader read;
             try {
