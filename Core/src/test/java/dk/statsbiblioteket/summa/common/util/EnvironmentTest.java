@@ -34,8 +34,7 @@ public class EnvironmentTest extends TestCase {
         String home = System.getProperty("user.home");
         String source = "${user.home}";
 
-        assertEquals(home,
-                     Environment.escapeSystemProperties(source));
+        assertEquals(home, Environment.escapeSystemProperties(source));
     }
 
     public void testEscapingWithDefaultValue() {
@@ -46,6 +45,8 @@ public class EnvironmentTest extends TestCase {
                      "${zoo}", Environment.escapeSystemProperties("${zoo}"));
         assertEquals("Non-existing properties with default value should return that value",
                      "baz", Environment.escapeSystemProperties("${zoo:baz}"));
+        assertEquals("Non-existing properties with empty default value should return empty",
+                     "", Environment.escapeSystemProperties("${zoo:}"));
     }
 
     public void testPasswordMasking() {

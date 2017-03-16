@@ -50,6 +50,7 @@ public class RecordStatsCollector {
     private final String name;
 
     private long recordCount = 0;
+    private long conpressedCount = 0;
     private long sizeSum = 0;
 
     private String smallestID = null;
@@ -94,6 +95,9 @@ public class RecordStatsCollector {
         }
         final String id = record.getId();
         final long size = record.getContent(false).length;
+        if (record.isContentCompressed()) {
+            conpressedCount++;
+        }
         return process(id, size);
     }
 
@@ -131,7 +135,8 @@ public class RecordStatsCollector {
     }
 
     private String getLogMessage() {
-        return name + "(records=" + recordCount + ", average=" + (recordCount == 0 ? 0 : sizeSum/recordCount/1024)
+        return name + "(records=" + recordCount + "(compressed=" + conpressedCount
+               + "), average=" + (recordCount == 0 ? 0 : sizeSum/recordCount/1024)
                + "KB, smallest=" + pack(smallestID, smallestSize) + ", largest=" + pack(largestID, largestSize)
                + ", last=" + pack(lastID, lastSize) + ")";
     }

@@ -186,7 +186,7 @@ public class XMLTransformerTest extends TestCase {
 
 
     // Performance test of XML transformation
-    public void testALTO() throws IOException, PayloadException {
+    public void testALTOPerformace() throws IOException, PayloadException {
         final int WARM = 3;
         final int RUNS = 20;
         Configuration conf = Configuration.newMemoryBased(

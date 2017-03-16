@@ -5,6 +5,7 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.CopyingInputStream;
@@ -13,6 +14,7 @@ import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bouncycastle.util.io.Streams;
 
 import java.io.*;
 import java.util.regex.Pattern;
@@ -80,6 +82,16 @@ public class DumpFilter extends ObjectFilterImpl {
     public static final boolean DEFAULT_DUMP_STREAMS = false;
 
     /**
+     * If true, the raw content of Records is dumped.
+     * Important: This is truly raw, so if the content is compressed, it will be the compressed
+     * bytes that are dumped.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_DUMP_RAW_CONTENT = "summa.dumpfilter.dumprawcontent";
+    public static final boolean DEFAULT_DUMP_RAW_CONTENT = false;
+
+    /**
      * The maximum number of Records to dump. Aafter this number is reached,
      * no more dumps will be made.
      * </p><p>
@@ -105,6 +117,7 @@ public class DumpFilter extends ObjectFilterImpl {
     private Pattern idPattern;
     private boolean dumpNonRecords = DEFAULT_DUMP_NONRECORDS;
     private boolean dumpStreams = DEFAULT_DUMP_STREAMS;
+    private final boolean dumpRawContent;
     private boolean dumpXML = DEFAULT_DUMP_XML;
     private int maxDumps = DEFAULT_MAXDUMPS;
     private int resetReceivedDumpsMS = DEFAULT_RESET_MAXDUMPS_MS;
@@ -131,6 +144,7 @@ public class DumpFilter extends ObjectFilterImpl {
         dumpXML = conf.getBoolean(CONF_DUMP_XML, dumpXML);
         maxDumps = conf.getInt(CONF_MAXDUMPS, maxDumps);
         resetReceivedDumpsMS = conf.getInt(CONF_RESET_MAXDUMPS_MS, resetReceivedDumpsMS);
+        dumpRawContent = conf.getBoolean(CONF_DUMP_RAW_CONTENT, DEFAULT_DUMP_RAW_CONTENT);
         feedback = false; // No timestats on dump
         log.info(String.format(
                 "Created DumpFilter '%s' with base='%s', id='%s', dumpNonRecords=%b, maxDumps=%d, resetMaxDumpsMS=%d",
@@ -179,12 +193,32 @@ public class DumpFilter extends ObjectFilterImpl {
             Files.saveString(meta.toString(), new File(output, fileName + ".meta"));
         } catch (IOException e) {
             throw new PayloadException("Unable to dump content", e, payload);
-        } 
+        }
+        if (dumpRawContent && payload.getRecord() != null) {
+            rawContent(payload.getRecord());
+        }
         if (!dumpStreams || payload.getStream() == null) {
             return;
         }
         log.trace("Wrapping " + payload + " stream in dumping stream");
         wrapStream(payload);
+    }
+
+    private void rawContent(Record record) {
+        File outFile = new File(output, RecordUtil.getFileName(record.getId()) + ".rawcontent");
+        OutputStream out;
+        try {
+            out = new FileOutputStream(outFile);
+            Streams.pipeAll(new ByteArrayInputStream(record.getContent(false)), out);
+        } catch (FileNotFoundException e) {
+            log.warn(String.format(
+                    "Unable to create an output stream for %s with name '%s'",
+                    record.getId(), outFile));
+        } catch (IOException e) {
+            log.warn(String.format(
+                    "Unable to dump raw content from %s to '%s'",
+                    record.getId(), outFile));
+        }
     }
 
     private void wrapStream(Payload payload) {

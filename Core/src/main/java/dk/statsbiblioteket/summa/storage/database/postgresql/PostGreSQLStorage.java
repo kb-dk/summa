@@ -86,7 +86,8 @@ public class PostGreSQLStorage  extends DatabaseStorage implements Configurable 
         driverUrl = conf.getString(CONF_DRIVER_URL); //"jdbc:postgresql://devel06:5432/elba-devel";
         driver = conf.getString(CONF_DRIVER, DEFAULT_DRIVER);;
         
-        log.debug("PostGreSqlStorage extracted properties username: " + username + ", password: " + (password == null ? "[undefined]" : "[defined]") + ",0 driver: '" + driver + "', createNew: ");
+        log.debug("PostgreSqlStorage extracted properties username: " + username + ", password: "
+                  + (password == null || password.isEmpty() ? "[undefined]" : "[defined]") + ",0 driver: '" + driver);
         init(conf);
 
         log.info("Started " + this);

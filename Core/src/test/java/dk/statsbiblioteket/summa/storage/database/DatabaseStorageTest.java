@@ -838,7 +838,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         log.info("Adding self-referencing Record " + testId2);
         try{
             storage.flushAll(Arrays.asList(r2));
-            fail();
+            fail("flushAll of " + r2 + " should faild but did not");
         }
         catch(Exception e){
             //ignore

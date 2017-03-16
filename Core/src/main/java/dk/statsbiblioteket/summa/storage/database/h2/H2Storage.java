@@ -176,8 +176,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
 
         log.info("H2Storage creating storage with properties username: " + username + ", password: "
-                 + (password == null ? "[undefined]" : "[defined]") + ", location: '" + location + "', createNew: "
-                + createNew + ", forceNew: " + forceNew);
+                 + (password == null || password.isEmpty() ? "[undefined]" : "[defined]") + ", location: '" + location
+                 + "', createNew: " + createNew + ", forceNew: " + forceNew);
         try {
             init(conf);
         } catch (Exception e) {
@@ -344,7 +344,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             dataSource.setUser(username);
         }
 
-        if (password != null) {
+        if (password != null && !password.isEmpty()) {
             dataSource.setPassword(password);
         }
 

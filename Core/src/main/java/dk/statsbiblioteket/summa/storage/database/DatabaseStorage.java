@@ -447,19 +447,19 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtMarkHasRelations;
     private StatementHandle stmtCreateRelation;
      */
-    /** Update statement for modification time of a base. */
+    /* Update statement for modification time of a base. */
     //    private StatementHandle stmtUpdateMtimForBase;
-    /** Insert statement for base statistic. */
+    /* Insert statement for base statistic. */
     //    private StatementHandle stmtInsertBaseStats;
-    /** Sets a base statistic row in invalid. */
+    /* Sets a base statistic row in invalid. */
     //    private StatementHandle stmtSetBaseStatsInvalid;
-    /** Retrieves the last modification time for a base. */
+    /* Retrieves the last modification time for a base. */
     //    private StatementHandle stmtGetLastModificationTime;
-    /** Insert full set of data into base statistic row. */
+    /* Insert full set of data into base statistic row. */
     //    private StatementHandle stmtInsertFullBaseStats;
-    /** Update full set of base statistic. */
+    /* Update full set of base statistic. */
     //    private StatementHandle stmtUpdateFullBaseStats;
-    /** String for all columns. */
+    /* String for all columns. */
     //    private String allColumns;
     //    private String allColumnsButDataAndMeta;
 
@@ -3135,7 +3135,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
                 log.trace("Closing cursor");
                 cursor.close();
-                log.debug("Comitting at update " + totalCount);
+                log.debug("Committing at update " + totalCount);
                 stmt.getConnection().commit();
             }
             updateLastModficationTimeForBase(base, conn);
@@ -3143,7 +3143,7 @@ public abstract class DatabaseStorage extends StorageBase {
             invalidateCachedStats();
             log.debug("Updating modification timestamps");
             updateModificationTime(base);
-            log.debug("Comitting (last)");
+            log.debug("Committing (last)");
             stmt.getConnection().commit();
             long ns = (System.nanoTime()-startTime);
             log.info(String.format(
@@ -3680,7 +3680,10 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setInt(HAS_RELATIONS_FLAG_KEY, boolToInt(hasRelations));
             stmt.setLong(6, nowStamp);
             stmt.setLong(7, nowStamp);
-            stmt.setBytes(8, Zips.gzipBuffer(record.getContent()));
+            // Content might already be compressed but _must_ always be compressed in storage
+            stmt.setBytes(8, record.isContentCompressed() ?
+                    record.getContent(false) :
+                    Zips.gzipBuffer(record.getContent()));
             stmt.setBytes(9, record.hasMeta() ? record.getMeta().toFormalBytes() : new byte[0]);
             stmt.executeUpdate();
         } finally {
@@ -3849,7 +3852,10 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setInt(3, boolToInt(record.isIndexable()));
             stmt.setInt(4, boolToInt(hasRelations));
             stmt.setLong(5, nowStamp);
-            stmt.setBytes(6, Zips.gzipBuffer(record.getContent()));
+            // Content might already be compressed but _must_ always be compressed in storage
+            stmt.setBytes(6, record.isContentCompressed() ?
+                    record.getContent(false) :
+                    Zips.gzipBuffer(record.getContent()));
             stmt.setBytes(7, record.hasMeta() ? record.getMeta().toFormalBytes() : new byte[0]);
             stmt.setString(8, record.getId());
             stmt.executeUpdate();

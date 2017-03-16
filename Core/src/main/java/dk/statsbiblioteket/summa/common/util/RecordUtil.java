@@ -772,6 +772,10 @@ public class RecordUtil {
      */
     public static String getFileName(Payload payload) {
         String candidate = payload.getId();
+        return getFileName(candidate);
+    }
+
+    public static String getFileName(String candidate) {
         if (candidate == null || "".equals(candidate)) {
             Calendar calendar = Calendar.getInstance();
             return String.format("%1$tF_%1$tH%1$tM%1$tS_", calendar) + Integer.toString(counter++);
