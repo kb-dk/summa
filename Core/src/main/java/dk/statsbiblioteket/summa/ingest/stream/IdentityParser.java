@@ -5,6 +5,7 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
@@ -39,11 +40,27 @@ public class IdentityParser extends ThreadedStreamParser {
     public static final String CONF_UNCOMPRESS = "identity.uncompress";
     public static final boolean DEFAULT_UNCOMPRESS = false;
 
+    /**
+     * Not exactly identity... If true, the content of records is compressed (if it is not already compressed).
+     * This can be used for optimization if subsequent filters access otherwise compresses content.
+     * This has no effect if the Payload contains a Stream and not a Record.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_COMPRESS = "identity.compress";
+    public static final boolean DEFAULT_COMPRESS = false;
+
     private final boolean uncompress;
+    private final boolean compress;
 
     public IdentityParser(Configuration conf) {
         super(conf);
         uncompress = conf.getBoolean(CONF_UNCOMPRESS, DEFAULT_UNCOMPRESS);
+        compress = conf.getBoolean(CONF_COMPRESS, DEFAULT_COMPRESS);
+        if (uncompress && compress) {
+            log.warn("Both uncompress and compress is true. This is normally an error. "
+                     + "The effective order will be uncompress + compress");
+        }
         log.debug("Created " + this + " with uncompress=" + uncompress);
     }
 
@@ -57,6 +74,12 @@ public class IdentityParser extends ThreadedStreamParser {
         if (uncompress && source.getRecord() != null && source.getRecord().isContentCompressed()) {
             Logging.logProcess("IdentityParser", "Uncompressing Payload content", Logging.LogLevel.TRACE, source);
             RecordUtil.adjustCompression(source.getRecord(), null, false);
+        } else if (log.isDebugEnabled() && !compress) {
+            Logging.logProcess("IdentityParser", "Passing Payload unmodified", Logging.LogLevel.TRACE, source);
+        }
+        if (compress && source.getRecord() != null && !source.getRecord().isContentCompressed()) {
+            Logging.logProcess("IdentityFilter", "Compressing Payload content", Logging.LogLevel.TRACE, source);
+            RecordUtil.adjustCompression(source.getRecord(), null, true);
         } else if (log.isDebugEnabled()) {
             Logging.logProcess("IdentityParser", "Passing Payload unmodified", Logging.LogLevel.TRACE, source);
         }

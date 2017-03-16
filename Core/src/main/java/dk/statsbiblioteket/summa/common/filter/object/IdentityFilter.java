@@ -35,7 +35,7 @@ public class IdentityFilter extends ObjectFilterImpl  {
 
     /**
      * Not exactly identity... If true, the content of records is uncompressed (if it is not already uncompressed).
-     * This can be used for optimization if subsequent filters access otherwise compressed content multiple times.
+     * This can be used for optimization if subsequent filters access otherwise uncompresses content multiple times.
      * This has no effect if the Payload contains a Stream and not a Record.
      * </p><p>
      * Optional. Default is false.
@@ -43,11 +43,27 @@ public class IdentityFilter extends ObjectFilterImpl  {
     public static final String CONF_UNCOMPRESS = "identity.uncompress";
     public static final boolean DEFAULT_UNCOMPRESS = false;
 
+    /**
+     * Not exactly identity... If true, the content of records is compressed (if it is not already compressed).
+     * This can be used for optimization if subsequent filters access otherwise compresses content.
+     * This has no effect if the Payload contains a Stream and not a Record.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_COMPRESS = "identity.compress";
+    public static final boolean DEFAULT_COMPRESS = false;
+
     private final boolean uncompress;
+    private final boolean compress;
 
     public IdentityFilter(Configuration conf) {
         super(conf);
         uncompress = conf.getBoolean(CONF_UNCOMPRESS, DEFAULT_UNCOMPRESS);
+        compress = conf.getBoolean(CONF_COMPRESS, DEFAULT_COMPRESS);
+        if (uncompress && compress) {
+            log.warn("Both uncompress and compress is true. This is normally an error. "
+                     + "The effective order will be uncompress + compress");
+        }
         log.debug("Created " + this);
     }
 
@@ -69,6 +85,21 @@ public class IdentityFilter extends ObjectFilterImpl  {
                                         getName(), record.getId(), compressedSize, record.getContent(false).length,
                                         (System.nanoTime()-startTime)/1000000.0));
             }
+        } else if (log.isDebugEnabled() && !compress) {
+            Logging.logProcess("IdentityFilter", "Passing Payload unmodified", Logging.LogLevel.TRACE, payload);
+        }
+
+        if (compress && payload.getRecord() != null && !payload.getRecord().isContentCompressed()) {
+            Logging.logProcess("IdentityFilter", "Compressing Payload content", Logging.LogLevel.TRACE, payload);
+            final int uncompressedSize = payload.getRecord().getContent(false).length;
+            final long startTime = System.nanoTime();
+            RecordUtil.adjustCompression(payload.getRecord(), null, true);
+            if (log.isDebugEnabled()) {
+                Record record = payload.getRecord();
+                log.debug(String.format("%s compressed %s content from %d to %d bytes in %.1f ms",
+                                        getName(), record.getId(), uncompressedSize, record.getContent(false).length,
+                                        (System.nanoTime()-startTime)/1000000.0));
+            }
         } else if (log.isDebugEnabled()) {
             Logging.logProcess("IdentityFilter", "Passing Payload unmodified", Logging.LogLevel.TRACE, payload);
         }
@@ -77,6 +108,6 @@ public class IdentityFilter extends ObjectFilterImpl  {
 
     @Override
     public String toString() {
-        return "IdentityFilter(uncompress=" + uncompress + ")";
+        return "IdentityFilter(uncompress=" + uncompress + "compress=" + compress + ")";
     }
 }
