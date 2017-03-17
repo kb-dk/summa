@@ -5,3 +5,4 @@ upload.id
 push
 *.versionsBackup
 SBSolr/overlays/
+*~
