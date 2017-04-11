@@ -146,10 +146,7 @@ public class SolrManipulator implements IndexManipulator {
     private int deletes = 0;
     // Not thread safe, but as we need to process updates sequentially, this is not an issue
 
-    private final Timing timing = new Timing("all", null, "update");
-    private final Timing timingReceive = timing.getChild("receive", null, "update");
-    private final Timing timingSend = timing.getChild("send", null, "update");
-    private final RecordStatsCollector statsReceive;
+    private final Timing timingSend = new Timing("send", null, "update");
     private final RecordStatsCollector statsSend;
 
     // TODO: Guarantee recordID and recordBase
@@ -172,8 +169,7 @@ public class SolrManipulator implements IndexManipulator {
             }
         };
         setupHttp();
-        statsReceive = new RecordStatsCollector("SolrManipulator.in", conf);
-        statsSend = new RecordStatsCollector("SolrManipulator.out", conf);
+        statsSend = new RecordStatsCollector("SolrManipulator.out", conf, false);
         log.info("Created SolrManipulator(" + hostWithPort + restCall + UPDATE_COMMAND + ")");
     }
 
@@ -194,7 +190,6 @@ public class SolrManipulator implements IndexManipulator {
     @Override
     public boolean update(Payload payload) throws IOException {
         try {
-            timingReceive.start();
             updatesSinceLastCommit++;
             updates++;
             if (payload.getRecord().isDeleted()) {
@@ -210,12 +205,10 @@ public class SolrManipulator implements IndexManipulator {
             log.trace("Removed " + payload.getId() + " from index");
             return false;
         } */
-            statsReceive.process(payload);
             batcher.add(payload);
             log.trace("Updated " + payload.getId() + " (" + updatesSinceLastCommit + " updates waiting for commit)");
             return false;
         } finally {
-            timingReceive.stop();
             if (statusEvery > 0 && updatesSinceLastCommit % statusEvery == 0) {
                 log.info("Received update #" + updatesSinceLastCommit + ". Stats: " + getProcessStats());
             }
@@ -478,9 +471,15 @@ public class SolrManipulator implements IndexManipulator {
             throw new IOException(message, e);
         }
         final long tPost = System.nanoTime()-tStart-tBind-tPre-tSend;
-        if (log.isDebugEnabled()) {
-            log.debug(String.format("send(command.length=%d) finished in %dms (bind=%d, pre=%d, send=%d, post=%d)",
-                                    command.length(), (tBind+tPre+tSend+tPost)/M, tBind/M, tPre/M, tSend/M, tPost/M));
+
+        final String logMessage = String.format(
+                "send(command.length=%d) finished in %dms (bind=%d, pre=%d, send=%d, post=%d), total updates: %d, %s",
+                command.length(), (tBind+tPre+tSend+tPost)/M, tBind/M, tPre/M, tSend/M, tPost/M, updates,
+                getProcessStats());
+        if (statusEvery > 0 && updatesSinceLastCommit % statusEvery == 0) {
+            log.info(logMessage);
+        } else if (log.isDebugEnabled()) {
+            log.debug(logMessage);
         }
 
         int code = response.getStatusLine().getStatusCode();
@@ -552,7 +551,7 @@ public class SolrManipulator implements IndexManipulator {
 
     public String getProcessStats() {
         //noinspection DuplicateStringLiteralInspection
-        return timing.toString(false, false) + " size(" + statsReceive + ", " + statsSend + ")";
+        return "timing(" + timingSend.toString(false, false) + "), size(" + statsSend + ")";
     }
 
 

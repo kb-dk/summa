@@ -97,7 +97,7 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
             return true;
         }
         if (logProcess() && log.isDebugEnabled()) {
-            log.debug("Processing " + (tracker == null ? "sub " : "origin ") + record);
+            log.debug(this.getName() + ": Processing " + (tracker == null ? "sub " : "origin ") + record);
         }
         if (!visitChildren && !visitParents) { // No traversal
             return processRecord(record, true, state) || requirement == REQUIREMENT.none;
@@ -123,7 +123,7 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
      * @return true if {@link #processRecord} should log the Record.
      */
     protected boolean logProcess() {
-        return true;
+        return false;
     }
 
     /**

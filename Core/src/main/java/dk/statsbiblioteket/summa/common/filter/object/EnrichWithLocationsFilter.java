@@ -227,7 +227,7 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
         final Map<String, Set<String>> locations = matcher.getLocations();
         assignedLocationSets++;
         assignedLocations += locations.size();
-        log.debug("Flushing " + locations.size() + " location designations");
+        log.trace("Flushing " + locations.size() + " location designations");
 
         for (Map.Entry<String, Set<String>> location: locations.entrySet()) {
             final String designation = location.getKey();
@@ -242,7 +242,6 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
         }
 
         for (Map.Entry<String, Set<String>> location: locations.entrySet()) {
-            final String designation = location.getKey();
             for (String coordinates: location.getValue()) {
                 write(xml, coordinatesField, coordinates);
             }
