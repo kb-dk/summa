@@ -46,8 +46,17 @@ public class RecordStatsCollector {
      */
     public static final String CONF_NAME = "stat.name";
 
+    /**
+     * Whether or not an update will result in a debug-level logging of status.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_LOG_ON_DEBUG = "stats.debuglog.enabled";
+    public static final boolean DEFAULT_LOG_ON_DEBUG = true;
+
     private final int logEvery;
     private final String name;
+    private final boolean logOnDebug;
 
     private long recordCount = 0;
     private long conpressedCount = 0;
@@ -62,19 +71,26 @@ public class RecordStatsCollector {
     private String lastID = null;
     private long lastSize = -1;
 
-    public RecordStatsCollector(String name, int logEvery) {
+    public RecordStatsCollector(String name, int logEvery, boolean logOnDebug) {
         this.name = name;
         this.logEvery = logEvery;
+        this.logOnDebug = logOnDebug;
         log.debug("Created " + this);
     }
 
     public RecordStatsCollector(String name, Configuration conf) {
-        this(name, conf.getInt(CONF_INFO_LOG_EVERY, DEFAULT_INFO_LOG_EVERY));
+        this(name, conf, conf.getBoolean(CONF_LOG_ON_DEBUG, DEFAULT_LOG_ON_DEBUG));
+    }
+
+    public RecordStatsCollector(String name, Configuration conf, boolean defaultLogOnDebug) {
+        this(name, conf.getInt(CONF_INFO_LOG_EVERY, DEFAULT_INFO_LOG_EVERY),
+             conf.getBoolean(CONF_LOG_ON_DEBUG, defaultLogOnDebug));
     }
 
     public RecordStatsCollector(Configuration conf) {
         this.name = conf.getString(CONF_NAME, this.getClass().getSimpleName());
         this.logEvery = conf.getInt(CONF_INFO_LOG_EVERY, DEFAULT_INFO_LOG_EVERY);
+        this.logOnDebug = conf.getBoolean(CONF_LOG_ON_DEBUG, DEFAULT_LOG_ON_DEBUG);
         log.debug("Created " + this);
     }
 
@@ -121,12 +137,10 @@ public class RecordStatsCollector {
     }
 
     private void maybeLog() {
-        if (log.isDebugEnabled()) {
-            log.debug(getLogMessage());
-            return;
-        }
         if (logEvery > 0 && recordCount % logEvery == 0) {
             log.info(getLogMessage());
+        } else if (logOnDebug && log.isDebugEnabled()) {
+            log.debug(getLogMessage());
         }
     }
 

@@ -69,6 +69,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     private final Timing timingProcess;
     private final RecordStatsCollector statsPull;
     private final RecordStatsCollector statsProcess;
+    private final long objectCreation = System.nanoTime();
 
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
@@ -77,8 +78,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         timing = new Timing(name, null, "Payload");
         timingPull = timing.getChild("pull", null, "Payload");
         timingProcess = timing.getChild("process", null, "Payload");
-        statsPull = new RecordStatsCollector(name + ".in", conf);
-        statsProcess = new RecordStatsCollector(name + ".out", conf);
+        statsPull = new RecordStatsCollector(name + ".pull", conf, false);
+        statsProcess = new RecordStatsCollector(name + ".process", conf, false);
         log.info("Created " + this);
     }
 
@@ -90,19 +91,21 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         }
         checkSource();
         while (processedPayload == null && sourceHasNext()) {
+            timingPull.start();
             processedPayload = source.next();
+            timingPull.stop();
             statsPull.process(processedPayload);
             if (processedPayload == null) {
                 log.debug("hasNext(): Got null from source. This is legal but unusual. Skipping to next payload");
                 continue;
             }
+
             final long startTime = System.nanoTime();
             try {
                 log.trace("Processing Payload");
                 boolean discard = !processPayload(processedPayload);
                 statsProcess.process(processedPayload);
                 final long ns = System.nanoTime() - startTime;
-                timingProcess.addNS(ns);
                 Logging.logProcess(name, "processPayload #" + timingProcess.getUpdates()
                                          + " finished in " + ns/1000000 + "ms for " + name,
                                    processLogLevel, processedPayload);
@@ -112,7 +115,6 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                     continue;
                 }
             } catch (PayloadException e) {
-                timingProcess.addNS(System.nanoTime() - startTime);
                 Logging.logProcess(
                         name,
                         "processPayload failed with explicit PayloadException, Payload discarded",
@@ -121,7 +123,6 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 processedPayload = null;
                 continue;
             } catch (Exception e) {
-                timingProcess.addNS(System.nanoTime() - startTime);
                 Logging.logProcess(name, "processPayload failed, Payload discarded",
                                    Logging.LogLevel.WARN, processedPayload, e);
                 processedPayload.close();
@@ -129,7 +130,6 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 processedPayload = null;
                 continue;
             } catch (Throwable t) {
-                timingProcess.addNS(System.nanoTime() - startTime);
                 /* Woops, this means major trouble, we dump everything we have and prepare to die */
                 String msg = "Unexpected error on payload " + processedPayload.toString();
                 String content = "";
@@ -142,6 +142,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 }
                 Logging.fatal(log, "ObjectFilterImpl.hasNext", msg + content, t);
                 throw new Error(msg, t);
+            } finally {
+                timingProcess.addNS(System.nanoTime() - startTime);
             }
 
             long spendTime = System.nanoTime() - startTime;
@@ -152,7 +154,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                           + ", in " + ms + " ms using " + this);
             } else if (log.isDebugEnabled() && feedback) {
                 log.debug(getName() + " processed " + processedPayload + ", #" + timingProcess.getUpdates()
-                          + ", in " + ms + " ms");
+                          + ", in " + ms + " ms" + ", " + getProcessStats());
             }
             break;
         }
@@ -167,7 +169,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         try {
             return source.hasNext();
         } finally {
-            timingPull.stop();
+            timingPull.stop(timingPull.getUpdates()); // hasNext does not count as a full update
         }
     }
 
@@ -256,7 +258,11 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
      */
     public String getProcessStats() {
         //noinspection DuplicateStringLiteralInspection
-        return timing.toString(false, false) + " size(" + statsPull + ", " + statsProcess + ")";
+        return String.format("Timing: %s, utilization=(pull=%.1f, process=%.1f), size=(%s, %s)",
+                             timing.toString(false, false),
+                             100.0*timingPull.getNS()/(System.nanoTime()-objectCreation),
+                             100.0*timingProcess.getNS()/(System.nanoTime()-objectCreation),
+                             statsPull, statsProcess);
     }
 
     /**

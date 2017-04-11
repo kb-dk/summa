@@ -310,6 +310,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
     private final Timing timing = new Timing("pull", null, "Payload");
     private final RecordStatsCollector stats;
+    private final long objectCreation = System.nanoTime();
 
     /**
      * Connects to the Storage specified in the configuration and request an
@@ -386,7 +387,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         lastRecordTimestamp = getStartTime();
         lastIteratorUpdate = lastRecordTimestamp;
         stopOnNewer = conf.getBoolean(CONF_STOP_ON_NEWER, DEFAULT_STOP_ON_NEWER);
-        stats = new RecordStatsCollector("RecordReader.in", conf);
+        stats = new RecordStatsCollector("RecordReader.in", conf, false);
         log.info("Created " + this);
     }
 
@@ -721,7 +722,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     }
 
     public String getIOStats() {
-        return timing.toString(false, false) + ",  size=" + stats;
+        return String.format("Timing=%s, utilization=%.1f%%, size=%s",
+                             timing.toString(false, false),
+                             100.0*timing.getNS()/(System.nanoTime() - objectCreation),
+                             stats);
     }
 
     /**
