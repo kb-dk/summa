@@ -384,6 +384,11 @@ public class RecordWriter extends ObjectFilterImpl {
         return true;
     }
 
+    @Override
+    protected String getStatsProcessDesignation() {
+        return "push";
+    }
+
     /**
      * Explicit flush of queued Records to Storage.
      */

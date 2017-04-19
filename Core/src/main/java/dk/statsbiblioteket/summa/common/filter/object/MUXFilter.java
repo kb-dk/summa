@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -103,6 +104,14 @@ public class MUXFilter implements ObjectFilter, Runnable {
     public static final int DEFAULT_OUTQUEUE_MAXBYTES = 1024 * 1024;
 
     /**
+     * Log overall status in the class log on INFO for every x Payloads processed.
+     * </p><p>
+     * Optional. Default is 0 (disabled).
+     */
+    public static final String CONF_STATUS_EVERY = "process.status.every";
+    public static final int DEFAULT_STATUS_EVERY = 0;
+
+    /**
      * If true, Payloads that does not match any feeders will be passed on
      * directly without logging any errors. If false, non-matched Payloads will
      * be discarded and an error will be logged.
@@ -114,6 +123,11 @@ public class MUXFilter implements ObjectFilter, Runnable {
 
     private ObjectFilter source = null;
 
+    private final int everyStatus;
+    private final Timing timing;
+    private final Timing timingPull;
+    private final Timing timingQueue;
+
     private final List<MUXFilterFeeder> feeders;
     private Payload availablePayload = null;
     private boolean eofReached = false;
@@ -124,6 +138,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
 
     public MUXFilter(Configuration conf) {
         log.debug("Constructing MUXFilter");
+        everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         outqueue = new PayloadQueue(
                 conf.getInt(CONF_OUTQUEUE_MAXPAYLOADS, DEFAULT_OUTQUEUE_MAXPAYLOADS),
                 conf.getInt(CONF_OUTQUEUE_MAXBYTES, DEFAULT_OUTQUEUE_MAXBYTES));
@@ -159,6 +174,11 @@ public class MUXFilter implements ObjectFilter, Runnable {
         profiler = new Profiler();
         profiler.setBpsSpan(100);
         profiler.pause();
+
+        timing = new Timing(name, null, "Payload", new Timing.STATS[]{Timing.STATS.ms});
+        timingPull = timing.getChild("pull", null, "Payload");
+        timingQueue = timing.getChild("queue", null, "Payload");
+
         log.info(String.format(
             "Constructed MUXFilter '%s' with %d feeders, allow unmatched: %b",
             name, feeders.size(), allowUnmatched));
@@ -181,11 +201,11 @@ public class MUXFilter implements ObjectFilter, Runnable {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Starting run");
         profiler.unpause();
-        while (source.hasNext()) {
+        while (sourceHasNext()) {
             Payload nextPayload = null;
-            while (nextPayload == null && source.hasNext()) {
+            while (nextPayload == null && sourceHasNext()) {
                 try {
-                    nextPayload = source.next();
+                    nextPayload = sourceNext();
                 } catch (Exception e) {
                     log.warn(
                         "run(): Exception while getting next from source in '" + name + "'. Retrying in 500 ms", e);
@@ -203,6 +223,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 log.warn("source.next() gave a null-pointer");
                 break;
             }
+
+            timingQueue.start();
             MUXFilterFeeder feeder;
             try {
                 if (log.isTraceEnabled()) {
@@ -211,6 +233,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 feeder = getFeeder(nextPayload);
             } catch (Exception e) {
                 log.error("Unexpected exception while getting feeder for " + nextPayload + " in '" + name + "'");
+                timingQueue.stop();
                 continue;
             }
             if (feeder == null) {
@@ -218,15 +241,41 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 if (allowUnmatched) {
                     outqueue.uninterruptablePut(nextPayload);
                 }
-                continue;
+            } else {
+                if (log.isTraceEnabled()) {
+                    //noinspection DuplicateStringLiteralInspection
+                    log.trace("Adding " + nextPayload + " to " + feeder);
+                }
+                feeder.queuePayload(nextPayload);
             }
-            if (log.isTraceEnabled()) {
-                //noinspection DuplicateStringLiteralInspection
-                log.trace("Adding " + nextPayload + " to " + feeder);
+            timingQueue.stop();
+            if (everyStatus > 0 && timingQueue.getUpdates() % everyStatus == 0) {
+                log.info(getProcessStats());
             }
-            feeder.queuePayload(nextPayload);
         }
         sendEOFToFeeders();
+    }
+
+    private String getProcessStats() {
+        return timing.toString();
+    }
+
+    private Payload sourceNext() {
+        try {
+            timingPull.start();
+            return source.next();
+        } finally {
+            timingPull.stop();
+        }
+    }
+
+    private boolean sourceHasNext() {
+        try {
+            timingPull.start();
+            return source.hasNext();
+        } finally {
+            timingPull.stop(timingPull.getUpdates()); // hasNext does not count as a full update
+        }
     }
 
     private void sendEOFToFeeders() {

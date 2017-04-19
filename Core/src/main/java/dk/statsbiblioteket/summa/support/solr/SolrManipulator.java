@@ -169,7 +169,7 @@ public class SolrManipulator implements IndexManipulator {
             }
         };
         setupHttp();
-        statsSend = new RecordStatsCollector("SolrManipulator.out", conf, false);
+        statsSend = new RecordStatsCollector("SolrManipulator.out", conf, null, false, "solrdocs");
         log.info("Created SolrManipulator(" + hostWithPort + restCall + UPDATE_COMMAND + ")");
     }
 

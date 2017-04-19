@@ -54,9 +54,18 @@ public class RecordStatsCollector {
     public static final String CONF_LOG_ON_DEBUG = "stats.debuglog.enabled";
     public static final boolean DEFAULT_LOG_ON_DEBUG = true;
 
+    /**
+     * The name of the elements to count.
+     * </p><p>
+     * Optional. Default is 'records'.
+     */
+    public static final String CONF_ELEMENT_DESIGNATION = "stats.elements.designation";
+    public static final String DEFAULT_ELEMENT_DESIGNATION = "records";
+
     private final int logEvery;
     private final String name;
     private final boolean logOnDebug;
+    private final String elementDesignation;
 
     private long recordCount = 0;
     private long conpressedCount = 0;
@@ -72,25 +81,31 @@ public class RecordStatsCollector {
     private long lastSize = -1;
 
     public RecordStatsCollector(String name, int logEvery, boolean logOnDebug) {
-        this.name = name;
-        this.logEvery = logEvery;
-        this.logOnDebug = logOnDebug;
-        log.debug("Created " + this);
+        this(name, null, logEvery, logOnDebug, DEFAULT_ELEMENT_DESIGNATION);
     }
 
     public RecordStatsCollector(String name, Configuration conf) {
-        this(name, conf, conf.getBoolean(CONF_LOG_ON_DEBUG, DEFAULT_LOG_ON_DEBUG));
+        this(name, conf, null, null, null);
     }
 
     public RecordStatsCollector(String name, Configuration conf, boolean defaultLogOnDebug) {
-        this(name, conf.getInt(CONF_INFO_LOG_EVERY, DEFAULT_INFO_LOG_EVERY),
-             conf.getBoolean(CONF_LOG_ON_DEBUG, defaultLogOnDebug));
+        this(name, conf, null, defaultLogOnDebug, null);
     }
 
     public RecordStatsCollector(Configuration conf) {
-        this.name = conf.getString(CONF_NAME, this.getClass().getSimpleName());
-        this.logEvery = conf.getInt(CONF_INFO_LOG_EVERY, DEFAULT_INFO_LOG_EVERY);
-        this.logOnDebug = conf.getBoolean(CONF_LOG_ON_DEBUG, DEFAULT_LOG_ON_DEBUG);
+        this (null, conf, null, null, null);
+    }
+
+    public RecordStatsCollector(
+            String name, Configuration conf, Integer logEvery, Boolean logOnDebug, String elementDesignation) {
+        this.name = name != null ? name :
+                conf.getString(CONF_NAME, this.getClass().getSimpleName());
+        this.logEvery = logEvery != null ? logEvery :
+                conf.getInt(CONF_INFO_LOG_EVERY, DEFAULT_INFO_LOG_EVERY);
+        this.logOnDebug = logOnDebug != null ? logOnDebug :
+                conf.getBoolean(CONF_LOG_ON_DEBUG, DEFAULT_LOG_ON_DEBUG);
+        this.elementDesignation = elementDesignation != null ? elementDesignation:
+                conf.getString(CONF_ELEMENT_DESIGNATION, DEFAULT_ELEMENT_DESIGNATION);
         log.debug("Created " + this);
     }
 
@@ -149,7 +164,7 @@ public class RecordStatsCollector {
     }
 
     private String getLogMessage() {
-        return name + "(records=" + recordCount + "(compressed=" + conpressedCount
+        return name + "(" + elementDesignation + "=" + recordCount + "(compressed=" + conpressedCount
                + "), average=" + (recordCount == 0 ? 0 : sizeSum/recordCount/1024)
                + "KB, smallest=" + pack(smallestID, smallestSize) + ", largest=" + pack(largestID, largestSize)
                + ", last=" + pack(lastID, lastSize) + ")";

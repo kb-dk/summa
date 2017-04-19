@@ -48,12 +48,9 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.*;
 import javax.xml.transform.TransformerException;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -123,7 +120,42 @@ public class SummonSearchNodeTest extends TestCase {
         System.out.println(responses.toXML());
     }
 
-    // The Unicode character &#x1d49c in Summon XML was converted to &#xD835;&#xDC9C; in the output XML
+    public void testSpecificFailingQueryTerenceTao() throws RemoteException {
+        final String QUERY = "terence tao NOT lma_long:03c NOT lma_long:03d";
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, QUERY), responses);
+        String xml = responses.toXML();
+        assertFalse("The response should not contain the invalid Unicode character &#xD835;\n" + xml,
+                    xml.toLowerCase(Locale.ENGLISH).contains("&#xd835;"));
+        System.out.println(xml);
+    }
+
+    public void testDiagnoseHighUnicodeEntities() throws XMLStreamException {
+        final String HIGH = "<item>&#x1d49c;</item>";
+        XMLInputFactory inFactory = XMLInputFactory.newFactory();
+        XMLStreamReader reader = inFactory.createXMLStreamReader(new StringReader(HIGH));
+        reader.next();
+        reader.next();
+        final String content = reader.getText();
+
+        assertEquals("The char count for the content should be correct", 2, content.length());
+
+        XMLOutputFactory outFactory = XMLOutputFactory.newFactory();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10);
+        XMLStreamWriter writer = outFactory.createXMLStreamWriter(bout);
+        writer.writeStartElement("item");
+        writer.writeCharacters(content);
+        writer.writeEndElement();
+        writer.flush();
+        final String rewritten = bout.toString();
+
+        log.info("Read & write resulted in '" + rewritten + "'");
+    }
+
+    // "terence tao"
+    // The Unicode character &#x1d49c; in Summon XML was converted to &#xD835;&#xDC9C; in the output XML
     public void testSpecificFailingQuerySaraTuring() throws RemoteException {
         final String QUERY = "sara turing";
 
@@ -133,7 +165,7 @@ public class SummonSearchNodeTest extends TestCase {
         String xml = responses.toXML();
         assertFalse("The response should not contain the invalid Unicode character &#xDC9C;\n" + xml,
                     xml.contains("&#xDC9C;"));
-        System.out.println(xml);
+//        System.out.println(xml);
     }
 
     public void testSpecificProblemSearch() throws RemoteException {

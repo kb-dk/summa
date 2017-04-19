@@ -69,17 +69,16 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     private final Timing timingProcess;
     private final RecordStatsCollector statsPull;
     private final RecordStatsCollector statsProcess;
-    private final long objectCreation = System.nanoTime();
 
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
         processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
         everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
-        timing = new Timing(name, null, "Payload");
-        timingPull = timing.getChild("pull", null, "Payload");
-        timingProcess = timing.getChild("process", null, "Payload");
-        statsPull = new RecordStatsCollector(name + ".pull", conf, false);
-        statsProcess = new RecordStatsCollector(name + ".process", conf, false);
+        timing = new Timing(name, null, "Payload", new Timing.STATS[]{Timing.STATS.ms});
+        timingPull = timing.getChild(getStatsPullDesignation(), null, "Payload");
+        timingProcess = timing.getChild(getStatsProcessDesignation(), null, "Payload");
+        statsPull = new RecordStatsCollector(name + "." + getStatsPullDesignation(), conf, false);
+        statsProcess = new RecordStatsCollector(name + "." + getStatsProcessDesignation(), conf, false);
         log.info("Created " + this);
     }
 
@@ -107,7 +106,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 statsProcess.process(processedPayload);
                 final long ns = System.nanoTime() - startTime;
                 Logging.logProcess(name, "processPayload #" + timingProcess.getUpdates()
-                                         + " finished in " + ns/1000000 + "ms for " + name,
+                                         + " finished in " + ns / 1000000 + "ms for " + name,
                                    processLogLevel, processedPayload);
                 if (discard) {
                     processedPayload.close();
@@ -187,18 +186,19 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
 
     /**
      * Perform implementation-specific processing of the given Payload.
+     *
      * @param payload the Payload to process.
      * @return true if the processing resulted in a payload that should be
-     *         preserved, false if the Payload should be discarded. Note that
-     *         returning false will not raise any warnings and should be used
-     *         where the discarding of the Payload is an non-exceptional event.
-     *         An example of such use is the AbstractDiscardFilter.
-     *         If the Payload is to be discarded because of an error, throw
-     *         a PayloadException instead.
+     * preserved, false if the Payload should be discarded. Note that
+     * returning false will not raise any warnings and should be used
+     * where the discarding of the Payload is an non-exceptional event.
+     * An example of such use is the AbstractDiscardFilter.
+     * If the Payload is to be discarded because of an error, throw
+     * a PayloadException instead.
      * @throws PayloadException if it was not possible to process the Payload
-     *         and if this means that further processing of the Payload does
-     *         not make sense. Throwing this means that the Payload will be
-     *         discarded by ObjectFilterImpl.
+     *                          and if this means that further processing of the Payload does
+     *                          not make sense. Throwing this means that the Payload will be
+     *                          discarded by ObjectFilterImpl.
      */
     protected abstract boolean processPayload(Payload payload) throws PayloadException;
 
@@ -217,7 +217,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             throw new IllegalArgumentException(
                     "Only ObjectFilters accepted as source. The filter provided was of class " + filter.getClass());
         }
-        source = (ObjectFilter)filter;
+        source = (ObjectFilter) filter;
     }
 
     // TODO: Consider if close is a wise action - what about pooled ingests?
@@ -258,11 +258,15 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
      */
     public String getProcessStats() {
         //noinspection DuplicateStringLiteralInspection
-        return String.format("Timing: %s, utilization=(pull=%.1f, process=%.1f), size=(%s, %s)",
-                             timing.toString(false, false),
-                             100.0*timingPull.getNS()/(System.nanoTime()-objectCreation),
-                             100.0*timingProcess.getNS()/(System.nanoTime()-objectCreation),
-                             statsPull, statsProcess);
+        return String.format("Timing: %s, size=(%s, %s)",
+                             timing, statsPull, statsProcess);
+    }
+
+    protected String getStatsPullDesignation() {
+        return "pull";
+    }
+    protected String getStatsProcessDesignation() {
+        return "process";
     }
 
     /**

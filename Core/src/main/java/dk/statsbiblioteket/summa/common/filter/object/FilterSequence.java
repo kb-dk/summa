@@ -29,19 +29,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Wraps a sequence of ObjectFilters - in the Composite Pattern this would be a
- * node.
+ * Wraps a sequence of ObjectFilters - in the Composite Pattern this would be a node.
  * </p><p>
  * The filters are specified by a list of subconfigurations. the key for the
  * list is {@link #CONF_FILTERS}. Each subconfiguration contains the class-name
  * of the wanted filter in the property {@link #CONF_FILTER_CLASS} along with
  * the filter-specific setup.
  * </p><p>
- * The filters are added in order of appearance.
+ * The filters are added in order of appearance and chained after each other.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,
         author = "te")
+// TODO: Make this an ObjectFilterImpl
 public class FilterSequence implements ObjectFilter {
     private static Log log = LogFactory.getLog(FilterSequence.class);
 
