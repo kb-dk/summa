@@ -64,6 +64,8 @@ public class IdentityFilter extends ObjectFilterImpl  {
             log.warn("Both uncompress and compress is true. This is normally an error. "
                      + "The effective order will be uncompress + compress");
         }
+        final boolean showStats = compress || uncompress;
+        setStatsDefaults(conf, false, showStats, showStats, showStats);
         log.debug("Created " + this);
     }
 

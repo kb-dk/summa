@@ -178,6 +178,10 @@ public class RecordStatsCollector {
         return name;
     }
 
+    public long getRecordCount() {
+        return recordCount;
+    }
+
     @Override
     public String toString() {
         return getLogMessage();

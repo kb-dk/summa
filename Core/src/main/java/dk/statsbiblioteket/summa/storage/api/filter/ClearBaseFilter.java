@@ -67,11 +67,13 @@ public class ClearBaseFilter extends ObjectFilterImpl {
 
     public ClearBaseFilter(WritableStorage storage, Configuration conf) {
         this(storage, new PayloadMatcher(conf), conf);
+        setStatsDefaults(conf, false, false, false, false);
         log.info("Created ClearBaseFilter directly on Storage with configuration");
     }
 
     public ClearBaseFilter(Configuration conf) {
         this(new StorageWriterClient(conf), new PayloadMatcher(conf, false), conf);
+        setStatsDefaults(conf, false, false, false, false);
         log.info("Created ClearBaseFilter for bases: " + Strings.join(bases, ", "));
     }
 

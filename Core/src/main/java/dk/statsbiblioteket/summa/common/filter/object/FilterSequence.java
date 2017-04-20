@@ -42,7 +42,7 @@ import java.util.List;
         state = QAInfo.State.QA_OK,
         author = "te")
 // TODO: Make this an ObjectFilterImpl
-public class FilterSequence implements ObjectFilter {
+public class FilterSequence extends ObjectFilterBase {
     private static Log log = LogFactory.getLog(FilterSequence.class);
 
     /**
@@ -76,6 +76,7 @@ public class FilterSequence implements ObjectFilter {
     private ObjectFilter lastFilter = null;
 
     public FilterSequence(Configuration conf) throws IOException {
+        super(conf);
         log.trace("Creating FilterSequence");
         List<Configuration> filterConfigurations;
         try {
@@ -100,6 +101,8 @@ public class FilterSequence implements ObjectFilter {
         if (lastFilter == null) {
             throw new ConfigurationException("No filters created in FilterSequence");
         }
+        // We only want output size
+        setStatsDefaults(conf, false, false, false, true);
         log.debug("Finished building sequence  of " + filters.size() + " length");
     }
 
@@ -158,6 +161,18 @@ public class FilterSequence implements ObjectFilter {
     }
 
     @Override
+    public Payload next() {
+        // TODO: Is it possible to differentiate between processing time and source pull time?
+        final long startNS = System.nanoTime();
+        Payload next =lastFilter.next();
+        sizeProcess.process(next);
+        logProcess(next, System.nanoTime()-startNS);
+        logStatusIfNeeded();
+        return next;
+    }
+
+
+    @Override
     public void setSource(Filter filter) {
         filters.get(0).setSource(filter);
     }
@@ -169,12 +184,8 @@ public class FilterSequence implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
+        super.close(success);
         lastFilter.close(success);
-    }
-
-    @Override
-    public Payload next() {
-        return lastFilter.next();
     }
 
     @Override
@@ -184,6 +195,6 @@ public class FilterSequence implements ObjectFilter {
 
     @Override
     public String toString() {
-        return "FilterSequence(filters=" + Strings.join(filters, ", ") + ')';
+        return "FilterSequence(filters=" + (filters == null ? "not_created_yet" : Strings.join(filters, ", ")) + ')';
     }
 }

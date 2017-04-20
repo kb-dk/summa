@@ -21,13 +21,13 @@ import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSuppor
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
+import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +58,7 @@ import java.util.List;
         author = "te",
         comment = "This is a central component, which uses threading."
                   + " Please pay special attention to potential deadlocks")
-public class MUXFilter implements ObjectFilter, Runnable {
+public class MUXFilter extends ObjectFilterBase implements Runnable {
     private static Log log = LogFactory.getLog(MUXFilter.class);
 
     /**
@@ -104,14 +104,6 @@ public class MUXFilter implements ObjectFilter, Runnable {
     public static final int DEFAULT_OUTQUEUE_MAXBYTES = 1024 * 1024;
 
     /**
-     * Log overall status in the class log on INFO for every x Payloads processed.
-     * </p><p>
-     * Optional. Default is 0 (disabled).
-     */
-    public static final String CONF_STATUS_EVERY = "process.status.every";
-    public static final int DEFAULT_STATUS_EVERY = 0;
-
-    /**
      * If true, Payloads that does not match any feeders will be passed on
      * directly without logging any errors. If false, non-matched Payloads will
      * be discarded and an error will be logged.
@@ -123,11 +115,6 @@ public class MUXFilter implements ObjectFilter, Runnable {
 
     private ObjectFilter source = null;
 
-    private final int everyStatus;
-    private final Timing timing;
-    private final Timing timingPull;
-    private final Timing timingQueue;
-
     private final List<MUXFilterFeeder> feeders;
     private Payload availablePayload = null;
     private boolean eofReached = false;
@@ -137,8 +124,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
     private final String name;
 
     public MUXFilter(Configuration conf) {
+        super(conf);
         log.debug("Constructing MUXFilter");
-        everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         outqueue = new PayloadQueue(
                 conf.getInt(CONF_OUTQUEUE_MAXPAYLOADS, DEFAULT_OUTQUEUE_MAXPAYLOADS),
                 conf.getInt(CONF_OUTQUEUE_MAXBYTES, DEFAULT_OUTQUEUE_MAXBYTES));
@@ -174,16 +161,21 @@ public class MUXFilter implements ObjectFilter, Runnable {
         profiler = new Profiler();
         profiler.setBpsSpan(100);
         profiler.pause();
-
-        timing = new Timing(name, null, "Payload", new Timing.STATS[]{Timing.STATS.ms});
-        timingPull = timing.getChild("pull", null, "Payload");
-        timingQueue = timing.getChild("queue", null, "Payload");
+        setStatsDefaults(conf, true, true, true, false);
 
         log.info(String.format(
             "Constructed MUXFilter '%s' with %d feeders, allow unmatched: %b",
             name, feeders.size(), allowUnmatched));
     }
 
+    @Override
+    protected RecordStatsCollector createSizeProcess(Configuration conf) {
+        return new RecordStatsCollector("queue", conf, false);
+    }
+    @Override
+    protected Timing createTimingProcess() {
+        return new Timing("queued", null, "Payload");
+    }
     /**
      * The run-method extracts Payloads from source and feeds them into
      * the proper feeders until the source has no more Payloads.
@@ -224,7 +216,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 break;
             }
 
-            timingQueue.start();
+            sizePull.process(nextPayload);
+            timingProcess.start();
             MUXFilterFeeder feeder;
             try {
                 if (log.isTraceEnabled()) {
@@ -233,7 +226,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 feeder = getFeeder(nextPayload);
             } catch (Exception e) {
                 log.error("Unexpected exception while getting feeder for " + nextPayload + " in '" + name + "'");
-                timingQueue.stop();
+                timingProcess.stop();
                 continue;
             }
             if (feeder == null) {
@@ -247,17 +240,12 @@ public class MUXFilter implements ObjectFilter, Runnable {
                     log.trace("Adding " + nextPayload + " to " + feeder);
                 }
                 feeder.queuePayload(nextPayload);
+                sizeProcess.process(nextPayload);
             }
-            timingQueue.stop();
-            if (everyStatus > 0 && timingQueue.getUpdates() % everyStatus == 0) {
-                log.info(getProcessStats());
-            }
+            logProcess(nextPayload, timingProcess.stop());
+            logStatusIfNeeded();
         }
         sendEOFToFeeders();
-    }
-
-    private String getProcessStats() {
-        return timing.toString();
     }
 
     private Payload sourceNext() {
@@ -376,21 +364,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
     }*/
 
     @Override
-    public boolean pump() throws IOException {
-        if (!hasNext()) {
-            return false;
-        }
-        Payload next = next();
-        Logging.logProcess("MUXFilter",
-                           "Calling close for object as part of pump()",
-                           Logging.LogLevel.TRACE, next);
-        next.close();
-        return hasNext();
-    }
-
-    @Override
     public void close(boolean success) {
-        log.info("Closing down " + this);
+        super.close(success);
         // Feeders are push-oriented, so in theory they should be when an EOF is received from the source.
         // However, this does not seem to work so...
         for (MUXFilterFeeder feeder : feeders) {

@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
+import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
@@ -332,6 +333,7 @@ public class RecordWriter extends ObjectFilterImpl {
         batchMaxMemory = conf.getInt(CONF_BATCH_MAXMEMORY, DEFAULT_BATCH_MAXMEMORY);
         batchTimeout = conf.getInt(CONF_BATCH_TIMEOUT, DEFAULT_BATCH_TIMEOUT);
         batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage, qOptions);
+        setStatsDefaults(conf, false, false, true, true);
 
         // TODO: Perform a check to see if the Storage is alive
     }
@@ -385,8 +387,8 @@ public class RecordWriter extends ObjectFilterImpl {
     }
 
     @Override
-    protected String getStatsProcessDesignation() {
-        return "push";
+    protected RecordStatsCollector createSizeProcess(Configuration conf) {
+        return new RecordStatsCollector("send", conf, false);
     }
 
     /**

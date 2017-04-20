@@ -206,6 +206,7 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
         inputRegexp = inputRegexpStr == null || inputRegexpStr.isEmpty() ? null : Pattern.compile(inputRegexpStr);
         inputReplacement = conf.getString(CONF_INPUT_CLEAN_REPLACEMENT, DEFAULT_INPUT_CLEAN_REPLACEMENT);
         loadMatcherRules();
+        setStatsDefaults(conf, false, true, true, true);
         // TODO: Proper toString
         log.info("Created " + this);
     }

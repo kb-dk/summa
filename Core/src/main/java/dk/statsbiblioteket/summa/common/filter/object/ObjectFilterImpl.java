@@ -19,13 +19,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
-import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
 
 /**
  * Convenience implementation of ObjectFilter, suitable as a super-class for
@@ -35,50 +29,13 @@ import java.io.IOException;
         state = QAInfo.State.QA_OK,
         author = "te",
         comment = "Class needs JavaDoc")
-public abstract class ObjectFilterImpl implements ObjectFilter {
-    private Log log = LogFactory.getLog(ObjectFilterImpl.class.getName() + "#" + this.getClass().getSimpleName());
-
-    /**
-     * The feedback level used to log statistics to the process log.
-     * Valid values are FATAL, ERROR, WARN, INFO, DEBUG and TRACE.
-     * </p><p>
-     * Optional. Default is TRACE.
-     */
-    public static final String CONF_PROCESS_LOGLEVEL = "process.loglevel";
-    public static final Logging.LogLevel DEFAULT_FEEDBACK = Logging.LogLevel.TRACE;
-
-    /**
-     * Log overall status in the class log on INFO for every x Payloads processed.
-     * </p><p>
-     * Optional. Default is 0 (disabled).
-     */
-    public static final String CONF_STATUS_EVERY = "process.status.every";
-    public static final int DEFAULT_STATUS_EVERY = 0;
-
+public abstract class ObjectFilterImpl extends ObjectFilterBase {
     private ObjectFilter source;
 
-    private String name;
     private Payload processedPayload = null;
-    protected boolean feedback = true;
-    private final int everyStatus;
-    // If true, process-time statistics are logged after processPayload-calls
-    private Logging.LogLevel processLogLevel;
-
-    private final Timing timing;
-    private final Timing timingPull;
-    private final Timing timingProcess;
-    private final RecordStatsCollector statsPull;
-    private final RecordStatsCollector statsProcess;
 
     public ObjectFilterImpl(Configuration conf) {
-        name = conf.getString(CONF_FILTER_NAME, this.getClass().getSimpleName());
-        processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
-        everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
-        timing = new Timing(name, null, "Payload", new Timing.STATS[]{Timing.STATS.ms});
-        timingPull = timing.getChild(getStatsPullDesignation(), null, "Payload");
-        timingProcess = timing.getChild(getStatsProcessDesignation(), null, "Payload");
-        statsPull = new RecordStatsCollector(name + "." + getStatsPullDesignation(), conf, false);
-        statsProcess = new RecordStatsCollector(name + "." + getStatsProcessDesignation(), conf, false);
+        super(conf);
         log.info("Created " + this);
     }
 
@@ -90,24 +47,19 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         }
         checkSource();
         while (processedPayload == null && sourceHasNext()) {
-            timingPull.start();
-            processedPayload = source.next();
-            timingPull.stop();
-            statsPull.process(processedPayload);
+            processedPayload = sourceNext();
             if (processedPayload == null) {
                 log.debug("hasNext(): Got null from source. This is legal but unusual. Skipping to next payload");
                 continue;
             }
 
             final long startTime = System.nanoTime();
+            boolean exception = true;
             try {
                 log.trace("Processing Payload");
                 boolean discard = !processPayload(processedPayload);
-                statsProcess.process(processedPayload);
-                final long ns = System.nanoTime() - startTime;
-                Logging.logProcess(name, "processPayload #" + timingProcess.getUpdates()
-                                         + " finished in " + ns / 1000000 + "ms for " + name,
-                                   processLogLevel, processedPayload);
+                sizeProcess.process(processedPayload);
+                exception = false;
                 if (discard) {
                     processedPayload.close();
                     processedPayload = null;
@@ -115,21 +67,21 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 }
             } catch (PayloadException e) {
                 Logging.logProcess(
-                        name,
+                        getName(),
                         "processPayload failed with explicit PayloadException, Payload discarded",
                         Logging.LogLevel.WARN, processedPayload, e);
                 processedPayload.close();
                 processedPayload = null;
                 continue;
             } catch (Exception e) {
-                Logging.logProcess(name, "processPayload failed, Payload discarded",
+                Logging.logProcess(getName(), "processPayload failed, Payload discarded",
                                    Logging.LogLevel.WARN, processedPayload, e);
                 processedPayload.close();
                 //noinspection UnusedAssignment
                 processedPayload = null;
                 continue;
             } catch (Throwable t) {
-                /* Woops, this means major trouble, we dump everything we have and prepare to die */
+                /* Whoops, this means major trouble, we dump everything we have and prepare to die */
                 String msg = "Unexpected error on payload " + processedPayload.toString();
                 String content = "";
                 Record rec = processedPayload.getRecord();
@@ -143,24 +95,26 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 throw new Error(msg, t);
             } finally {
                 timingProcess.addNS(System.nanoTime() - startTime);
+                if (!exception) {
+                    logProcess(processedPayload, System.nanoTime() - startTime);
+                }
             }
 
-            long spendTime = System.nanoTime() - startTime;
-            String ms = Double.toString(spendTime / 1000000.0);
-            if (log.isTraceEnabled()) {
-                //noinspection DuplicateStringLiteralInspection
-                log.trace(getName() + " processed " + processedPayload + ", #" + timingProcess.getUpdates()
-                          + ", in " + ms + " ms using " + this);
-            } else if (log.isDebugEnabled() && feedback) {
-                log.debug(getName() + " processed " + processedPayload + ", #" + timingProcess.getUpdates()
-                          + ", in " + ms + " ms" + ", " + getProcessStats());
-            }
+            logStatusIfNeeded();
             break;
         }
-        if (everyStatus > 0 && timingProcess.getUpdates() % everyStatus == 0) {
-            log.info(this);
-        }
         return processedPayload != null;
+    }
+
+    private Payload sourceNext() {
+        timingPull.start();
+        try {
+            Payload next = source.next();
+            sizePull.process(next);
+            return next;
+        } finally {
+        timingPull.stop();
+        }
     }
 
     private boolean sourceHasNext() {
@@ -203,11 +157,6 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     protected abstract boolean processPayload(Payload payload) throws PayloadException;
 
     @Override
-    public void remove() {
-        // Do nothing as default
-    }
-
-    @Override
     public void setSource(Filter filter) {
         if (filter == null) {
             //noinspection DuplicateStringLiteralInspection
@@ -220,28 +169,9 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         source = (ObjectFilter) filter;
     }
 
-    // TODO: Consider if close is a wise action - what about pooled ingests?
-    @Override
-    public boolean pump() throws IOException {
-        checkSource();
-        if (!hasNext()) {
-            log.trace("pump(): hasNext() returned false");
-            return false;
-        }
-        Payload payload = next();
-        if (payload != null) {
-            //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("ObjectFilterImpl",
-                               "Calling close for Payload as part of pump()",
-                               Logging.LogLevel.TRACE, payload);
-            payload.close();
-        }
-        return hasNext();
-    }
-
     @Override
     public void close(boolean success) {
-        log.info(String.format("Closing down '%s'", this));
+        super.close(success);
         if (source != null) {
             source.close(success);
         }
@@ -251,34 +181,5 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         if (source == null) {
             throw new IllegalStateException("No source defined for " + getClass().getSimpleName() + " filter");
         }
-    }
-
-    /**
-     * @return statistics on processed Payloads.
-     */
-    public String getProcessStats() {
-        //noinspection DuplicateStringLiteralInspection
-        return String.format("Timing: %s, size=(%s, %s)",
-                             timing, statsPull, statsProcess);
-    }
-
-    protected String getStatsPullDesignation() {
-        return "pull";
-    }
-    protected String getStatsProcessDesignation() {
-        return "process";
-    }
-
-    /**
-     * @return the name of the filter, if specified. Else the class name of the object.
-     */
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return getName() + "(feedback=" + feedback + ", processLogLevel=" + processLogLevel
-               + ", stats=" + getProcessStats() + ")";
     }
 }

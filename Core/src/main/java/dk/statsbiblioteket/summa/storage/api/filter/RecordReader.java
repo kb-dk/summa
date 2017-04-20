@@ -14,22 +14,19 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterBase;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageChangeListener;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
-import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,16 +50,7 @@ import java.util.NoSuchElementException;
         author = "te")
 // TODO: If keepalive, the state should be saved at regular intervals
 // TODO: Change the + 1000 ms when the time granularity of JavaDB improves
-public class RecordReader implements ObjectFilter, StorageChangeListener {
-
-    /**
-     * Log overall status in the class log on INFO for every x Payloads processed.
-     * </p><p>
-     * Optional. Default is 0 (disabled).
-     */
-    public static final String CONF_STATUS_EVERY = "process.status.every";
-    public static final int DEFAULT_STATUS_EVERY = 0;
-
+public class RecordReader extends ObjectFilterBase implements StorageChangeListener {
     /**
      * Local log instance.
      */
@@ -276,7 +264,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private final boolean stopOnNewer;
     private final boolean allowPartialDeliveries;
     private long firstRecordReceivedTime = -1; // -1 means no records received
-    private final int everyStatus;
     private final long continueOffset;
 
     /**
@@ -287,10 +274,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * True if end of file is reached.
      */
     private boolean eofReached = false;
-    /**
-     * Number of read records.
-     */
-    private long recordCounter = 0;
     /**
      * Start time for this record reader instance.
      */
@@ -307,9 +290,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * Record iterator.
      */
     private Iterator<Record> recordIterator = null;
-
-    private final Timing timing = new Timing("pull", null, "Payload");
-    private final RecordStatsCollector stats;
 
     /**
      * Connects to the Storage specified in the configuration and request an
@@ -328,6 +308,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * @see #CONF_USE_PERSISTENCE
      */
     public RecordReader(Configuration conf) throws IOException {
+        super(conf);
         log.trace("Constructing RecordReader");
         storage = new StorageReaderClient(conf);
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
@@ -360,7 +341,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS, DEFAULT_MAX_READ_SECONDS);
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         loadData = conf.getBoolean(CONF_LOAD_DATA_COLUMN, DEFAULT_LOAD_DATA_COLUMN);
-        everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         allowPartialDeliveries = conf.getBoolean(
                 CONF_ALLOW_PARTIAL_DELIVERIES, StorageIterator.DEFAULT_ALLOW_PARTIAL_DELIVERIES);
         if (usePersistence) {
@@ -386,7 +366,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         lastRecordTimestamp = getStartTime();
         lastIteratorUpdate = lastRecordTimestamp;
         stopOnNewer = conf.getBoolean(CONF_STOP_ON_NEWER, DEFAULT_STOP_ON_NEWER);
-        stats = new RecordStatsCollector("RecordReader.in", conf, false);
+        setStatsDefaults(conf, true, true, false, false);
         log.info("Created " + this);
     }
 
@@ -514,7 +494,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             return false;
         }
         try {
-            timing.start();
+            timingPull.start();
             try {
                 log.trace("hasNext: Calling checkIterator()");
                 checkIterator();
@@ -539,7 +519,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             }
             return !isEof();
         } finally {
-            timing.stop(timing.getUpdates());
+            timingPull.stop(timingPull.getUpdates());
         }
     }
 
@@ -597,13 +577,15 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     public Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
+        final long startNS = System.nanoTime();
         try {
             if (!hasNext()) {
                 throw new NoSuchElementException("No more Records available");
             }
-            timing.start();
+            timingPull.start();
 
             Payload payload = new Payload(recordIterator.next());
+            sizePull.process(payload);
             if (firstRecordReceivedTime == -1) {
                 firstRecordReceivedTime = System.currentTimeMillis();
             }
@@ -618,13 +600,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                          + ". The current Record will be the last");
                 markEof();
             }
-            recordCounter++;
 
-            if (everyStatus > 0 && recordCounter % everyStatus == 0) {
-                log.info(getIOStats() + ": " + payload);
-            } else if (log.isDebugEnabled()) {
-                log.debug(getIOStats() + ": " + payload);
-            }
+            logProcess(payload, System.nanoTime()-startNS);
 
             if (log.isTraceEnabled()) {
                 log.trace("next(): Got lastModified timestamp " +
@@ -632,7 +609,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                           + " for " + payload);
             }
 
-            if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
+            if (maxReadRecords != -1 && maxReadRecords <= sizePull.getRecordCount()) {
                 log.debug("Reached maximum number of Records to read (" + maxReadRecords + ")");
                 markEof();
             }
@@ -646,7 +623,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             if (progressTracker != null) {
                 progressTracker.updated(lastRecordTimestamp);
             }
-            stats.process(payload);
             return payload;
         } catch (RuntimeException e) {
             if (!(e instanceof NoSuchElementException)) {
@@ -654,7 +630,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             }
             throw e;
         } finally {
-            timing.stop();
+            timingPull.stop();
+            logStatusIfNeeded();
         }
     }
 
@@ -668,21 +645,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         throw new UnsupportedOperationException("RecordReader must be the first filter in the chain");
     }
 
-    @Override
-    public boolean pump() throws IOException {
-        if (!hasNext()) {
-            return false;
-        }
-        Payload next = next();
-        if (next == null) {
-            return false;
-        }
-        Logging.logProcess("RecordReader", "Calling close for Payload as part of pump()",
-                           Logging.LogLevel.TRACE, next);
-        next.close();
-        return true;
-    }
-
     /**
      * If success is true and persistence enabled, the current progress in the
      * harvest is stored. If success is false, no progress is stored.
@@ -692,6 +654,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     // TODO: Check why this is not called in FacetTest
     @Override
     public void close(boolean success) {
+        super.close(success);
         //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") entered");
         markEof();
@@ -720,11 +683,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
     }
 
-    public String getIOStats() {
-        return String.format("Timing=%s, size=%s",
-                             timing.toString(false, false), stats);
-    }
-
     /**
      * If a progress-file is existing, it is cleared.
      */
@@ -751,6 +709,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 startFromScratch, storage, base == null || "".equals(base) ? "*" : base,
                 String.format(ProgressTracker.ISO_TIME, lastRecordTimestamp), progressTracker,
                 maxReadRecords, maxReadSeconds, batchSize, loadData, storageWatcher != null,
-                stopOnNewer, allowPartialDeliveries, recordCounter, continueOffset, getIOStats());
+                stopOnNewer, allowPartialDeliveries, sizeProcess.getRecordCount(), continueOffset, getProcessStats());
     }
 }

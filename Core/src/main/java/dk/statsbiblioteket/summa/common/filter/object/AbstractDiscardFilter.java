@@ -54,6 +54,7 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
         super(conf);
         markDiscards = conf.getBoolean(CONF_MARK, DEFAULT_MARK);
         logDiscards = conf.getBoolean(CONF_LOG_DISCARDS, DEFAULT_LOG_DISCARDS);
+        setStatsDefaults(conf, false, false, true, false);
     }
 
     /**
