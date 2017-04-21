@@ -36,7 +36,7 @@ public abstract class ObjectFilterImpl extends ObjectFilterBase {
 
     public ObjectFilterImpl(Configuration conf) {
         super(conf);
-        log.info("Created " + this);
+//        log.info("Created " + this);
     }
 
     // if hasNext is true, a processed Payload is ready for delivery

@@ -20,7 +20,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
-import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.summa.support.alto.Alto;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -57,7 +56,7 @@ import java.util.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class DOMSNewspaperParser extends ThreadedStreamParser {
+public class DOMSNewspaperParser extends DOMSNewspaperBase {
     private static Log log = LogFactory.getLog(DOMSNewspaperParser.class);
     private final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newFactory();
 
@@ -93,55 +92,10 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
     public static final String CONF_HEADLINE_MAX_CHARS = "headline.maxchars";
     public static final int DEFAULT_HEADLINE_MAX_CHARS = DEFAULT_HEADLINE_MAX_WORDS*4;
 
-    /**
-     * The base for te generated Reords.
-     * </p><p>
-     * Optional. Default is 'aviser'.
-     */
-
-    public static final String CONF_BASE = "domsnewspaperparser.base";
-    public static final String DEFAULT_BASE = "aviser";
-
-    /**
-     * Whether or not to pass ALTO-less records onwards.
-     * </p><p>
-     * Optional. Default is true.
-     */
-    public static final String CONF_ACCEPT_ALTOLESS = "domsnewspaperparser.acceptaltoless";
-    public static final boolean DEFAULT_ACCEPT_ALTOLESS = true;
-
-    /**
-     * How to handle hyphenated multi-line terms. Valid values are
-     * {@code split}; hyphenated words are reported as distinct words,
-     * {@code join}, hyphenated words are joined without hyphenation sign.
-     * </p><p>
-     * Optional. Default is {@code join}.
-     */
-    public static final String CONF_HYPHENATION = "altoparser.hyphenation";
-    public static final String DEFAULT_HYPHENATION = Alto.HYPHEN_MODE.join.toString();
-
-    /**
-     * If true, relatives (parent Records and child Records) are preserved when producing segment Records.
-     * </p><p>
-     * Optional boolean. Default is true.
-     */
-    public static final String CONF_KEEPRELATIVES = "altoparser.keeprelatives";
-    public static final boolean DEFAULT_KEEPRELATIVES = true;
-
-    public static final String NOALTO = "_noalto_";
-
     final private int minBlocks;
     final private int minWords;
     private final int maxHeadlineWords;
     private final int maxHeadlineChars;
-    final private boolean acceptALTOLess;
-    final private String base;
-    private final Alto.HYPHEN_MODE hyphenMode;
-    private final boolean keepRelatives;
-    private final NumberFormat spatial = NumberFormat.getInstance(Locale.ENGLISH);
-    {
-        spatial.setGroupingUsed(false);
-    }
 
     public DOMSNewspaperParser(Configuration conf) {
         super(conf);
@@ -149,56 +103,11 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         minWords = conf.getInt(CONF_SEGMENT_MIN_WORDS, DEFAULT_SEGMENT_MIN_WORDS);
         maxHeadlineWords = conf.getInt(CONF_HEADLINE_MAX_WORDS, DEFAULT_HEADLINE_MAX_WORDS);
         maxHeadlineChars = conf.getInt(CONF_HEADLINE_MAX_CHARS, DEFAULT_HEADLINE_MAX_CHARS);
-        base = conf.getString(CONF_BASE, DEFAULT_BASE);
-        acceptALTOLess = conf.getBoolean(CONF_ACCEPT_ALTOLESS, DEFAULT_ACCEPT_ALTOLESS);
-        hyphenMode = Alto.HYPHEN_MODE.valueOf(conf.getString(CONF_HYPHENATION, DEFAULT_HYPHENATION));
-        keepRelatives = conf.getBoolean(CONF_KEEPRELATIVES, DEFAULT_KEEPRELATIVES);
         log.info("Created " + this);
     }
 
     @Override
-    protected void protectedRun(Payload source) throws PayloadException {
-        // Hackity hack. We should stream-process the XML, which seems to require quite a lot of custom coding
-
-        // Unbound schemaLocation makes Java 1.7 XML streaming throw an exception, so we must remove it
-        String content = RecordUtil.getString(source).replaceAll("xsi:schemaLocation=\"[^\"]+\"", "");
-        int altoStart = content.indexOf("<alto ");
-        int altoEnd = content.indexOf(">", content.indexOf("</alto"))+1;
-        if (altoStart < 0 || altoEnd < 1) {
-            if (!acceptALTOLess) {
-                throw new PayloadException(
-                        "Unable to locate start (" + altoStart + ") or end (" + altoEnd + ") tags for element 'alto'",
-                        source);
-            }
-            Logging.logProcess("DOMSNewspaperParser", "Unable to locate ALTO. Passing content unmodified",
-                               Logging.LogLevel.INFO, source);
-            try {
-                addToQueue(source, createRecord(
-                        source, source.getId() + NOALTO, base, content.getBytes("utf-8")));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("utf-8 not supported", e);
-            }
-        } else {
-            produceSegments(source, content, altoStart, altoEnd);
-        }
-    }
-
-    /**
-     * Produces a new Reocrd with the given id, base and content. If a record is embedded in source, its core
-     * attributes (isIndexable, isDeleted, creationTime) will be assigned to the newly created Record.
-     */
-    private Record createRecord(Payload source, String id, String base, byte[] content) {
-        Record record = new Record(id, base, content);
-        if (source.getRecord() != null) {
-            Record s = source.getRecord();
-            record.setDeleted(s.isDeleted());
-            record.setIndexable(s.isIndexable());
-            record.setCreationTime(s.getCreationTime());
-        }
-        return record;
-    }
-
-    private void produceSegments(Payload payload, String content, int altoStart, int altoEnd) throws PayloadException {
+    protected void produceSegments(Payload payload, String content, int altoStart, int altoEnd) throws PayloadException {
         // Compensate for wring declaration in the ALTO XMLK
         Alto alto;
         try {
@@ -207,7 +116,6 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
         } catch (XMLStreamException e) {
             throw new PayloadException("Unable to parse ALTO for substring " + altoStart + ", " + altoEnd, e, payload);
         }
-        List<Alto.Illustration> illustrations = alto.getIllustrations(); // Not coupled to textBlockGroups
         Map<String, List<Alto.TextBlock>> groups = alto.getTextBlockGroups(minBlocks, minWords);
         if (groups.isEmpty()) {
             Logging.logProcess("DOMSNewspaperParser",
@@ -215,9 +123,6 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                                Logging.LogLevel.INFO, payload);
             groups.put(Alto.NOGROUP, Collections.<Alto.TextBlock>emptyList());
         }
-
-        final String pre = content.substring(0, altoStart);
-        final String post = content.substring(altoEnd);
 
         int segmentCount = 1;
         for (Map.Entry<String, List<Alto.TextBlock>> group: groups.entrySet()) {
@@ -249,17 +154,7 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
                     segmentXML.writeEndElement();
                 }
                 segmentXML.writeCharacters("\n");
-                writeIfDefined(segmentXML, "filename", alto.getFilename());
-                writeIfDefined(segmentXML, "origin", alto.getOrigin());
-                writeIfDefined(segmentXML, "processingStepSettings", alto.getProcessingStepSettings());
-                writeIfDefined(segmentXML, "measurementUnit", alto.getMeasurementUnit());
-                writeIfDefined(segmentXML, "pageWidth", alto.getWidth());
-                writeIfDefined(segmentXML, "pageHeight", alto.getHeight());
-                writeIfDefined(segmentXML, "pagePixels", alto.getPixels());
-                writeIfDefined(segmentXML, "predictedWordAccuracy", alto.getPredictedWordAccuracy());
-                writeIfDefined(segmentXML, "predictedWordAccuracy_sort", padDouble(alto.getPredictedWordAccuracy()));
-                writeIfDefined(segmentXML, "characterErrorRatio", alto.getCharacterErrorRatio());
-                writeIfDefined(segmentXML, "characterErrorRatio_sort", padDouble(alto.getCharacterErrorRatio()));
+                addAltoBasics(segmentXML, alto);
                 segmentXML.writeStartElement("content");
                 segmentXML.writeCharacters("\n");
                 long blockCount = 0;
@@ -363,36 +258,17 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
             }
 
             String concatID = payload.getId() + "-" + group.getKey();
-            try {
+            addToQueue(payload, content, concatID, altoStart, altoEnd, sw.toString());
+/*            try {
+                final String pre = content.substring(0, altoStart);
+                final String post = content.substring(altoEnd);
+
                 addToQueue(payload, createRecord(
                         payload, concatID, base, (pre + sw + post).getBytes("utf-8")));
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("utf-8 not supported", e);
-            }
+            }*/
         }
-    }
-
-    // Special processing: If the origin has parents or children, add those to the articleRecord before queuing
-    private void addToQueue(Payload origin, Record articleRecord) {
-        if (keepRelatives && origin.getRecord() != null) {
-            articleRecord.setParents(origin.getRecord().getParents());
-            articleRecord.setChildren(origin.getRecord().getChildren());
-        }
-        addToQueue(articleRecord);
-    }
-
-    private String padDouble(Double val) {
-        return val == null ? null : Double.toString(val + 100000).substring(1);
-    }
-
-    private void writeIfDefined(XMLStreamWriter xml, String element, Object content) throws XMLStreamException {
-        if (content != null && !content.toString().isEmpty()) {
-            xml.writeStartElement(element);
-            xml.writeCharacters(content.toString());
-            xml.writeEndElement();
-            xml.writeCharacters("\n");
-        }
-        // TODO: Implement this
     }
 
     // TODO: Consider creating a more intelligent headline extractor that looks at font size
@@ -427,11 +303,6 @@ public class DOMSNewspaperParser extends ThreadedStreamParser {
             return "N/A";
         }
         return Strings.join(headline, " ");
-    }
-
-    @Override
-    protected boolean acceptStreamlessPayloads() {
-        return true;
     }
 
     @Override

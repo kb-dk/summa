@@ -674,6 +674,18 @@ public class Alto {
         public int getHeight() {
             return height;
         }
+        public int getCenterX() {
+            return hpos+width/2;
+        }
+        public int getCenterY() {
+            return vpos+height/2;
+        }
+        public double getCenterXFraction() {
+            return getCenterX()*scaleH;
+        }
+        public double getCenterYFraction() {
+            return getCenterY()*scaleV;
+        }
 
         /**
          * @return horizontal position (x) as a fraction of the page width.
