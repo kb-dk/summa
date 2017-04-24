@@ -18,7 +18,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.object.EnrichWithLocationsFilter;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.VerbatimMatcher;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -37,11 +36,19 @@ import java.util.regex.Pattern;
  * Collects matched locations. Workflow is {@code {@link #findMatches} -> {@link #getLocations()} -> {@link #reset()}}.
  */
 public class LocationMatcher extends VerbatimMatcher<String> {
-    private static final Log log = LogFactory.getLog(LocationMatcher.class);
-
     // Fixed Solr XML: <field name="somename">content</field>
     public static final String FIELD = "field";
     public static final String NAME = "name";
+
+    /**
+     * The source of locations. Must be a uncompresses UTF-8 file, one entry/line.
+     * The format must be [designation][delimiter][decimal_lattitude][delimiter][decimal_longitude].
+     * The source can be an URL, a class path location or a file path.
+     * </p><p>
+     * Mandatory.
+     */
+    public static final String CONF_LOCATIONS_SOURCE = "enrich.locations.source";
+    private static final Log log = LogFactory.getLog(LocationMatcher.class);
 
     /**
      * If true, Danish genitive is added to the locations:
@@ -107,7 +114,12 @@ public class LocationMatcher extends VerbatimMatcher<String> {
 
     public LocationMatcher(Configuration conf) {
         super();
-        source = conf.getString(EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE);
+        if (!conf.valueExists(CONF_LOCATIONS_SOURCE)) {
+            throw new Configurable.ConfigurationException(
+                    "Could not locate '" + CONF_LOCATIONS_SOURCE + "'");
+        }
+
+        source = conf.getString(CONF_LOCATIONS_SOURCE);
         sourceDelimiter = conf.getString(EnrichWithLocationsFilter.CONF_LOCATIONS_DELIMITER, EnrichWithLocationsFilter.DEFAULT_LOCATIONS_DELIMITER);
         addDanishGenitive = conf.getBoolean(CONF_INPUT_DANISH_GENITIVE, DEFAULT_INPUT_DANISH_GENITIVE);
         setMatchMode(matchMode = MATCH_MODE.valueOf(

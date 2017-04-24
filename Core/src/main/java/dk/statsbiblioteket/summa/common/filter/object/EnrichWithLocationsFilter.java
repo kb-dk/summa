@@ -45,15 +45,6 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
     public static final String CONF_INPUT_FIELD = "enrich.input.field";
 
     /**
-     * The source of locations. Must be a uncompresses UTF-8 file, one entry/line.
-     * The format must be [designation][delimiter][decimal_lattitude][delimiter][decimal_longitude].
-     * The source can be an URL, a class path location or a file path.
-     * </p><p>
-     * Mandatory.
-     */
-    public static final String CONF_LOCATIONS_SOURCE = "enrich.locations.source";
-
-    /**
      * The delimiter for the locations source data. This is a regexp Pattern.
      * </p><p>
      * Optional. Default is ",".
@@ -113,8 +104,8 @@ public class EnrichWithLocationsFilter extends EnrichXMLFilter {
             throw new ConfigurationException("Could not locate '" + CONF_INPUT_FIELD + "'");
         }
         inputField = conf.getString(CONF_INPUT_FIELD);
-        if (!conf.valueExists(CONF_LOCATIONS_SOURCE)) {
-            throw new ConfigurationException("Could not locate '" + CONF_LOCATIONS_SOURCE + "'");
+        if (!conf.valueExists(LocationMatcher.CONF_LOCATIONS_SOURCE)) {
+            throw new ConfigurationException("Could not locate '" + LocationMatcher.CONF_LOCATIONS_SOURCE + "'");
         }
 
         matcher = new LocationMatcher(conf);
