@@ -39,8 +39,7 @@ import java.util.regex.Pattern;
         author = "te")
 public class DOMSNewspaperParserTest extends TestCase {
     private static Log log = LogFactory.getLog(DOMSNewspaperParserTest.class);
-    private final File OLD_ALTO = new File(
-            "/home/te/projects/summa/Core/src/test/resources/ingest/alto/e1ac7417-a850-4667-b6e9-56e3267b312c.xml");
+    public static final String OLD_ALTO = "ingest/alto/e1ac7417-a850-4667-b6e9-56e3267b312c.xml";
     private final File DOMS_ALTO = new File("/home/te/tmp/sumfresh/sites/aviser/avis_4f23.xml");
     private final int EXPECTED_SEGMENTS = 12;
     private final File DOMS_XSLT = new File("/home/te/tmp/sumfresh/sites/aviser/xslt/index/aviser/doms_aviser.xsl");
@@ -48,7 +47,7 @@ public class DOMSNewspaperParserTest extends TestCase {
     private final File DOMS_PROBLEM = Resolver.getFile("support/alto/faulty_alto.xml");
 
     public void testHyphenation() throws IOException {
-        ObjectFilter splitter = getSplitter(OLD_ALTO, DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
+        ObjectFilter splitter = getSplitter(Resolver.getFile(OLD_ALTO), DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
         assertTrue("There should be a Record available", splitter.hasNext());
         while (splitter.hasNext()) {
             Payload payload = splitter.next();

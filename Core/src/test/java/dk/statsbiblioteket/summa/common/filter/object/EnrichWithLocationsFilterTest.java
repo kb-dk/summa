@@ -1,18 +1,12 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
-import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.ingest.stream.StreamToContentFilter;
 import dk.statsbiblioteket.summa.support.doms.LocationMatcher;
-import dk.statsbiblioteket.util.Strings;
 import org.junit.Test;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
@@ -37,7 +31,7 @@ public class EnrichWithLocationsFilterTest {
     public void testBasicEnrichment() throws IOException {
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
-                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat"
+                LocationMatcher.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat"
         ));
         assertEnriched(enricher, "Westminster", "London Westminster");
     }
@@ -46,7 +40,7 @@ public class EnrichWithLocationsFilterTest {
     public void testLongestEnrichment() throws IOException {
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
-                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
+                LocationMatcher.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
                 LocationMatcher.CONF_MATCH_MODE, "longest"
         ));
         assertNotEnriched(enricher, "Westminster", "Aarhus");
@@ -57,7 +51,7 @@ public class EnrichWithLocationsFilterTest {
     public void testIsolation() throws IOException {
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
-                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
+                LocationMatcher.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
                 EnrichWithLocationsFilter.CONF_MATCH_SPACE_POSTFIX, true
         ));
         assertNotEnriched(enricher, "Somewhere");
@@ -67,7 +61,7 @@ public class EnrichWithLocationsFilterTest {
     public void testNoGenitive() throws IOException {
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
-                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
+                LocationMatcher.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
                 EnrichWithLocationsFilter.CONF_MATCH_SPACE_PREFIX, true,
                 EnrichWithLocationsFilter.CONF_MATCH_SPACE_POSTFIX, true,
                 LocationMatcher.CONF_MATCH_MODE, "all"
@@ -81,7 +75,7 @@ public class EnrichWithLocationsFilterTest {
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
                 LocationMatcher.CONF_INPUT_DANISH_GENITIVE, true,
-                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
+                LocationMatcher.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
                 EnrichWithLocationsFilter.CONF_MATCH_SPACE_PREFIX, true,
                 EnrichWithLocationsFilter.CONF_MATCH_SPACE_POSTFIX, true,
                 LocationMatcher.CONF_MATCH_MODE, "all"
@@ -94,7 +88,7 @@ public class EnrichWithLocationsFilterTest {
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
                 LocationMatcher.CONF_INPUT_DANISH_GENITIVE, true,
-                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
+                LocationMatcher.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
                 EnrichWithLocationsFilter.CONF_MATCH_SPACE_PREFIX, true,
                 EnrichWithLocationsFilter.CONF_MATCH_SPACE_POSTFIX, true,
                 LocationMatcher.CONF_MATCH_MODE, "longest"
@@ -108,7 +102,7 @@ public class EnrichWithLocationsFilterTest {
         Pattern clean = Pattern.compile("[^\\p{IsAlphabetic}]+");
         ObjectFilter enricher = new EnrichWithLocationsFilter(Configuration.newMemoryBased(
                 EnrichWithLocationsFilter.CONF_INPUT_FIELD, "fulltext",
-                EnrichWithLocationsFilter.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
+                LocationMatcher.CONF_LOCATIONS_SOURCE, "common/filter/object/fake_locations.dat",
                 EnrichWithLocationsFilter.CONF_INPUT_CLEAN_REGEXP, clean.pattern(),
                 EnrichWithLocationsFilter.CONF_MATCH_SPACE_POSTFIX, true
         ));

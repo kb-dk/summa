@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.support.doms;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.support.alto.Alto;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -84,7 +85,7 @@ public class DOMSLocationProximity extends DOMSNewspaperBase {
 
     @Override
     protected void produceSegments(Payload payload, String content, int altoStart, int altoEnd) throws PayloadException {
-        // Compensate for wring declaration in the ALTO XMLK
+        // Compensate for wring declaration in the ALTO XML
         Alto alto;
         try {
             alto = new Alto(content.substring(altoStart, altoEnd), payload.getId());
@@ -99,8 +100,16 @@ public class DOMSLocationProximity extends DOMSNewspaperBase {
                 if (matcher.findMatches(block.getAllText()) == 0) {
                     continue;
                 }
-                Map<String, String> annuli = getContents(alto, block.getCenterX(), block.getCenterY());
                 for (Map.Entry<String, Set<String>> location : matcher.getLocations().entrySet()) {
+                    Point center = getCenter(block, location.getKey());
+                    if (center == null) {
+                        log.debug("Unable to locate center for '" + location.getKey() + "' in " + payload.getId());
+                        center = new Point(block.getCenterX(), block.getCenterY());
+                    }
+                    Map<String, String> annuli = getAnnuli(payload, alto, center);
+                    if (annuli.isEmpty()) {
+                        continue;
+                    }
                     addRecords(
                             payload, alto, content, altoStart, altoEnd, location.getKey(), location.getValue(), annuli);
                 }
@@ -108,8 +117,64 @@ public class DOMSLocationProximity extends DOMSNewspaperBase {
         }
     }
 
-    private Map<String, String> getContents(Alto alto, int origoX, int origoY) {
-        throw new UnsupportedOperationException("!");
+    private Point getCenter(Alto.TextBlock block, String locationKey) {
+        throw new UnsupportedOperationException("Implement this");
+        // Split locationKey in tokens (on space)
+        // Find consecutive words that matches all tokens
+        // Return the center point for the words
+    }
+
+    /**
+     * Using {@link #radii}, extract the texts from blocks where the center is inside of the annuli defined by
+     * subsequent radii.
+     */
+    private Map<String, String> getAnnuli(Payload payload, Alto alto, Point origo) {
+        Map<String, String> annuli = new LinkedHashMap<>(radii.size());
+        int innerRadius = 0;
+        for (int outerRadius: radii) {
+            if (outerRadius <= 0) { // 0 is implicit
+                continue;
+            }
+            final String content = getAnnulusContent(alto, origo, innerRadius, outerRadius);
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("getAnnuli(%s, ..., %s) with annulus(%d→%d) got content of length %d",
+                                        payload.getId(), origo, innerRadius, outerRadius, content.length()));
+            }
+            if (content.isEmpty()) {
+                innerRadius = outerRadius;
+                continue;
+            }
+            annuli.put(innerRadius + "_" + outerRadius, content);
+            innerRadius = outerRadius;
+        }
+        return annuli;
+    }
+
+    /**
+     * Iterates all TextBlocks in the Alto and returns the text content of those blocks which center is within the
+     * annulus defined by innerRadius (inclusive) and outerRadius (exclusive).
+     */
+    private String getAnnulusContent(Alto alto, Point origo, int innerRadius, int outerRadius) {
+        final StringBuilder sb = new StringBuilder();
+        final int innerSquared = innerRadius*innerRadius;
+        final int outerSquared = outerRadius*outerRadius;
+
+        for (Alto.Page page : alto.getLayout()) {
+            for (Alto.TextBlock block : page.getPrintSpace()) {
+                final int distX = block.getCenterX()-origo.x;
+                final int distY = block.getCenterY()-origo.y;
+                final int distSquared = distX*distX + distY*distY;
+                System.out.println("Center=" + block.getCenterX() + ", " + block.getCenterY() + " Origo=" + origo);
+                //System.out.println("Dist: " + distSquared + ", inner=" + innerSquared + ", outer=" + outerSquared);
+                if (innerSquared <= distSquared && distSquared < outerSquared) {
+                    if (sb.length() != 0) {
+                        sb.append(" ");
+                    }
+                    sb.append(block.getAllText());
+                }
+            }
+        }
+        return sb.toString();
     }
 
     private void addRecords(Payload payload, Alto alto, String content, int altoStart, int altoEnd, String designation,
@@ -141,4 +206,18 @@ public class DOMSLocationProximity extends DOMSNewspaperBase {
         return SANITIZER.reset(designation.toLowerCase().replace(" ", "_")).replaceAll("");
     }
 
+    private static class Point {
+        public int x;
+        public int y;
+
+        public Point(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public String toString() {
+            return x + ", " + y;
+        }
+    }
 }
