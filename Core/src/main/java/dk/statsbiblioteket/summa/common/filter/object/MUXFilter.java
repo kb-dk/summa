@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
+import dk.statsbiblioteket.summa.common.util.StatUtil;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -173,8 +174,8 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
         return new RecordStatsCollector("queue", conf, false);
     }
     @Override
-    protected Timing createTimingProcess() {
-        return new Timing("queued", null, "Payload");
+    protected Timing createTimingProcess(Configuration conf) {
+        return StatUtil.createTiming(conf, "process", "queued", null, "Payload", null);
     }
     /**
      * The run-method extracts Payloads from source and feeds them into

@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
+import dk.statsbiblioteket.summa.common.util.StatUtil;
 import dk.statsbiblioteket.util.Timing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,6 +32,11 @@ import java.io.IOException;
  * processed Payload.
  * </p><p>
  * Note: Default instrumentation logging is process time and process size only.
+ * </p><p>
+ * Note: Property-based fine-grained control of pull-timing and process-timing is possible.
+ *       See {@link StatUtil} for default. The prefixed for the properties are "pull." and "process.",
+ *       e.g. specifying pull.timing.stats="name, utilization" will log only the name ("pull") and utilization for pull.
+ * </p>
  */
 public abstract class ObjectFilterBase implements ObjectFilter {
     protected Log log = LogFactory.getLog(ObjectFilterBase.class.getName() + "#" + this.getClass().getSimpleName());
@@ -108,8 +114,8 @@ public abstract class ObjectFilterBase implements ObjectFilter {
         processLogLevel = Logging.LogLevel.valueOf(conf.getString(CONF_PROCESS_LOGLEVEL, DEFAULT_FEEDBACK.toString()));
         everyStatus = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         //timing = new Timing(name, null, "Payload", new Timing.STATS[]{Timing.STATS.ms}); // FIXME: Also affects children
-        timingPull = createTimingPull();
-        timingProcess = createTimingProcess();
+        timingPull = createTimingPull(conf);
+        timingProcess = createTimingProcess(conf);
         sizePull = createSizePull(conf);
         sizeProcess = createSizeProcess(conf);
         setStatsDefaults(conf, DEFAULT_SHOWSTATS_PULL_TIMING, DEFAULT_SHOWSTATS_PULL_SIZE,
@@ -235,15 +241,15 @@ public abstract class ObjectFilterBase implements ObjectFilter {
     protected RecordStatsCollector createSizePull(Configuration conf) {
         return new RecordStatsCollector("in", conf, false);
     }
-    protected Timing createTimingPull() {
-        return new Timing("pull", null, "Payload");
+    protected Timing createTimingPull(Configuration conf) {
+        return StatUtil.createTiming(conf, "pull", "pull", null, "Payload", null);
     }
 
     protected RecordStatsCollector createSizeProcess(Configuration conf) {
         return new RecordStatsCollector("out", conf, false);
     }
-    protected Timing createTimingProcess() {
-        return new Timing("process", null, "Payload");
+    protected Timing createTimingProcess(Configuration conf) {
+        return StatUtil.createTiming(conf, "process", "process", null, "Payload", null);
     }
 
     /**
