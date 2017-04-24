@@ -128,8 +128,11 @@ public abstract class ObjectFilterBase implements ObjectFilter {
     }
 
     protected void logStatusIfNeeded() {
-        if (everyStatus > 0 && getUpdates() % everyStatus == 0) {
-            log.info(getName() + ": " + getProcessStats());
+        if (everyStatus > 0) {
+            final long updates = getUpdates();
+            if (updates > 0 && updates % everyStatus == 0) {
+                log.info(getName() + ": " + getProcessStats());
+            }
         }
     }
 
@@ -237,10 +240,10 @@ public abstract class ObjectFilterBase implements ObjectFilter {
     }
 
     protected RecordStatsCollector createSizeProcess(Configuration conf) {
-        return new RecordStatsCollector("process", conf, false);
+        return new RecordStatsCollector("out", conf, false);
     }
     protected Timing createTimingProcess() {
-        return new Timing("out", null, "Payload");
+        return new Timing("process", null, "Payload");
     }
 
     /**
