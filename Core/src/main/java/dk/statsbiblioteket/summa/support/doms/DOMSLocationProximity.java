@@ -51,9 +51,7 @@ import java.util.regex.Pattern;
  * ...doms-postfix-xml...
  * </p>
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+// TODO: This is way too coarse. Need to do spatial calculations based on TextString instead of TextBlock
 public class DOMSLocationProximity extends DOMSNewspaperBase {
     private static Log log = LogFactory.getLog(DOMSLocationProximity.class);
     private final XMLOutputFactory xmlOutFactory = XMLOutputFactory.newFactory();

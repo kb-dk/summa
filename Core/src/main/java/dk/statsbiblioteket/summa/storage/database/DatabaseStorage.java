@@ -26,10 +26,7 @@ import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.summa.storage.database.cursors.*;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -503,6 +500,47 @@ public abstract class DatabaseStorage extends StorageBase {
 
     // Timestamp for service start. Used for logging
     private final String START_TIME = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm").format(new Date());
+
+    protected static final Timing timing = new Timing("all");
+
+    protected static final Timing timingGetRecordsModifiedAfter = timing.getChild("recordsModifiedAfter");
+    protected static final Timing timingDoGetRecordsModifiedAfterCursor = timing.getChild("doGetRecordsModifiedAfterCursor");
+    protected static final Timing timingNext = timing.getChild("next");
+    protected static final Timing timingRecordExists = timing.getChild("recordExists");
+
+    protected static final Timing timingGetRecord = timing.getChild("getRecord");
+    protected static final Timing timingGetRecordWithConnection = timing.getChild("getRecordWithConnection");
+    protected static final Timing timingGetRecords = timing.getChild("getRecords");
+    protected static final Timing timingGetRecordsWithFullObjectTree = timing.getChild("getRecordsWithFullObjectTree");
+    protected static final Timing timingGetRecordsWithConnection = timing.getChild("getRecordsWithConnection");
+    protected static final Timing timingGetParents = timing.getChild("getParents");
+    protected static final Timing timingGetParentsIDsOnly = timing.getChild("getParentsIDsOnly");
+    protected static final Timing timingGetChildren = timing.getChild("getChildren");
+    protected static final Timing timingGetChildIDsOnly = timing.getChild("getChildIDsOnly");
+    protected static final Timing timingResolveRelatedIDs = timing.getChild("resolveRelatedIDs");
+
+    protected static final Timing timingFlush = timing.getChild("flush");
+    protected static final Timing timingFlushWithConnection = timing.getChild("flushWithConnection");
+    protected static final Timing timingCreateNewRecordWithConnection = timing.getChild("CreateNewRecordWithConnection");
+    protected static final Timing timingFlushAll = timing.getChild("flushAll");
+    protected static final Timing timingLoadAndSetChildRelations = timing.getChild("loadAndSetChildRelations");
+    protected static final Timing timingUpdateRecord = timing.getChild("updateRecord");
+    protected static final Timing timingUpdateRecordWithConnection = timing.getChild("updateRecordWithConnection");
+    protected static final Timing timingTouchRecord = timing.getChild("touchRecord");
+
+    protected static final Timing timingTouchOldParentChildRelations = timing.getChild("touchOldParentChildRelations");
+    protected static final Timing timingRelationsExists = timing.getChild("CheckRelations");
+    protected static final Timing timingCreateRelations = timing.getChild("CreateRelations");
+    protected static final Timing timingCheckHasRelations = timing.getChild("CheckHasRelations");
+    protected static final Timing timingExpandRelationsWithConnection = timing.getChild("expandRelationsWithConnection");
+
+    protected static final Timing timingClearBase = timing.getChild("ClearBase");
+    protected static final Timing timingBatchJob = timing.getChild("BatchJob");
+    protected static final Timing timingApplyJobToRecord = timing.getChild("ApplyJobToRecord");
+    protected static final Timing timingUpdateLastModficationTimeForBase = timing.getChild("UpdateLastModficationTimeForBase");
+    protected static final Timing timingGetModificationTime = timing.getChild("GetModificationTime");
+    protected static final Timing timingGetStats = timing.getChild("GetStats");
+    protected static final Timing timingInvalidateStats = timing.getChild("InvalidateStats");
 
     /**
      * A variation of {@link QueryOptions} used to keep track of recursion
@@ -1380,7 +1418,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public synchronized long getRecordsModifiedAfter(long mtime, String base, QueryOptions options) throws IOException {
 
         log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime + ", '" + base + "', " + options + ").");
-
+        timingGetRecordsModifiedAfter.start();
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
                     "MTIME must be part of QueryOptions-ATTRIBUTES when requesting a MTIME-based iterator. "
@@ -1400,6 +1438,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (usePagingModel) {
             iter = new PagingCursor(this, (ResultSetCursor)iter);
         }
+        timingGetRecordsModifiedAfter.stop();
         return registerCursor(iter);
     }
 
@@ -1464,7 +1503,6 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public ConnectionCursor getRecordsModifiedAfterCursor(
             long mtime, String base, QueryOptions options) throws IOException {
-
 
         StatementHandle handle;
         PreparedStatement stmt;
@@ -1596,6 +1634,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private synchronized ResultSetCursor doGetRecordsModifiedAfterCursor(
             long mtimeTimestamp, String base, QueryOptions options, PreparedStatement stmt) throws IOException {
         log.debug("doGetRecordsModifiedAfterCursor('" + mtimeTimestamp + "', " + base + ") entered");
+        timingDoGetRecordsModifiedAfterCursor.start();
 
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
@@ -1611,7 +1650,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
             assignFetchSize(stmt, true);
         } catch (SQLException e) {
-           log.warn("Error preparering fetchDirection and size");
+            timingDoGetRecordsModifiedAfterCursor.stop();
+            log.warn("Error preparering fetchDirection and size");
             throw new IOException("Error preparing connection for cursoring", e);
         }
 
@@ -1638,7 +1678,9 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             // stmt will be closed when the iterator is closed
-            return startIterator(stmt, base, options);
+            ResultSetCursor cursor = startIterator(stmt, null, options);
+            timingDoGetRecordsModifiedAfterCursor.stop();
+            return cursor;
         }
 
         // Prepared stmt for a specific base
@@ -1650,12 +1692,14 @@ public abstract class DatabaseStorage extends StorageBase {
                     "Could not prepare stmtGetModifiedAfter with base '" + base + "' and time " + mtimeTimestamp, e);
         }
 
-        return startIterator(stmt, base, options);
+        ResultSetCursor cursor = startIterator(stmt, base, options);
+        timingDoGetRecordsModifiedAfterCursor.stop();
+        return cursor;
     }
 
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options) throws IOException {
-        long startTime = System.currentTimeMillis();
+        long startNS = System.nanoTime();
         if (options == null) {
             options = defaultGetOptions;
         }
@@ -1667,13 +1711,15 @@ public abstract class DatabaseStorage extends StorageBase {
             Record record = getRecord(currentID, options);
             result.add(record);
         }
+        final long spendNS = System.nanoTime() - startNS;
         if (log.isDebugEnabled()) {
             String message = "Finished getRecords(" + ids.size() + " ids (" + Strings.join(ids, 10) + ")) with "
                              + result.size() + " results (" + Strings.join(result, 10) + ") in "
-                             + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
+                             + spendNS/1000000 + "ms. " + getRequestStats();
             log.debug(message);
         }
         //            recordlog.info(message); // Already logged in getRecord
+        timingGetRecords.addNS(spendNS);
         return result;
 
     }
@@ -1690,6 +1736,7 @@ public abstract class DatabaseStorage extends StorageBase {
     @Deprecated
     public List<Record> getRecordsWithConnection(
             List<String> ids, QueryOptions options, Connection conn) throws IOException {
+        final long startNS = System.nanoTime();
         ArrayList<Record> result = new ArrayList<>(ids.size());
 
         for (String id : ids) {
@@ -1703,6 +1750,7 @@ public abstract class DatabaseStorage extends StorageBase {
 //                result.add(null);
             }
         }
+        timingGetRecordsWithConnection.addNS(System.nanoTime()-startNS);
         return result;
     }
 
@@ -1716,7 +1764,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException If error occur while fetching records.
      */
     public Record getRecordWithFullObjectTree(String recordId) throws IOException {
-        long startTime = System.currentTimeMillis();
+        final long startNS = System.nanoTime();
         String orgRecordId= recordId;
         log.trace("getRecordWithFullObjectTree(" + recordId + ") called");
 
@@ -1802,7 +1850,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     log.debug(String.format(
                             "Finished getRecordWithFullObjectTree(%s) expanded with %s in %dms total (%.1f connect, " +
                             "%.1f parentID, %.1f prepareStatement, %.1f execute, %.1f iterate)",
-                            recordId, parentChildStats(topParentRecord), System.currentTimeMillis() - startTime,
+                            recordId, parentChildStats(topParentRecord), (System.nanoTime() - startNS)/1000000,
                             connectTime/M, parentIDTime/M, statementTime/M, executeTime/M, iterateTime/M));
                 }
                 return topParentRecord; //Return recordId (no relations found). will happen 90% of all requests
@@ -1821,7 +1869,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.debug(String.format(
                         "Finished getRecordWithFullObjectTree(%s) expanded with %s in %dms total (%.1f connect, " +
                         "%.1f parentID, %.1f prepareStatement, %.1f execute, %.1f iterate, %.1f child, %.1f postOrder)",
-                        recordId, parentChildStats(recordNode), System.currentTimeMillis() - startTime,
+                        recordId, parentChildStats(recordNode), (System.nanoTime() - startNS)/1000000,
                         connectTime/M, parentIDTime/M, statementTime/M, executeTime/M, iterateTime/M, childTime/M,
                         postOrderTime/M));
             }
@@ -1838,6 +1886,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 return null;
             }
             closeConnection(conn);
+            timingGetRecordsWithFullObjectTree.addNS(System.nanoTime()-startNS);
         }
     }
 
@@ -1874,7 +1923,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     //This method will call itself recursively
     private void loadAndSetChildRelations(Record parentRecord, Connection conn, HashSet<String> previousIdsForCycleDetection) throws SQLException {
-
+        final long startNS = System.nanoTime();
         if (previousIdsForCycleDetection== null){
             previousIdsForCycleDetection = new HashSet<>();
         }
@@ -1901,6 +1950,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (!children.isEmpty()) { //Keep current API where it is null if none exist instead of empty list
             parentRecord.setChildren(children);
         }
+        timingLoadAndSetChildRelations.addNS(System.nanoTime()-startNS);
     }
 
     /**
@@ -1937,6 +1987,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public Record getRecord(String id, QueryOptions options) throws IOException {
+        final long startNS = System.nanoTime();
         if (options == null) {
             options = defaultGetOptions;
         }
@@ -1973,6 +2024,7 @@ public abstract class DatabaseStorage extends StorageBase {
             return null;
         } finally {
             closeConnection(conn);
+            timingGetRecord.addNS(System.nanoTime()-startNS);
         }
     }
 
@@ -1988,12 +2040,14 @@ public abstract class DatabaseStorage extends StorageBase {
         if (!pruneRelativesOnGet) {
             return record;
         }
+        final long startNS = System.nanoTime();
         if (record == null) {
             log.trace("pruneRelatives(null) called. Returning immediately");
             return null;
         }
         log.trace("Pruning deceased relatives from " + record.getId());
         pruneRelatives(null, record);
+        timingGetRecord.addNS(System.nanoTime()-startNS);
         return record;
     }
 
@@ -2039,6 +2093,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private Record getRecordWithConnection(
             String id, QueryOptions options, Connection conn) throws IOException, SQLException {
         log.trace("getRecord('" + id + "', " + options + ")");
+        final long startNS = System.nanoTime();
 
         if (isPrivateId(id)) {
             if (!allowsPrivate(options)) {
@@ -2063,6 +2118,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             if (!resultSet.next()) {
                 log.debug("No such record '" + id + "'");
+                //throw new RuntimeException("Just for debug tracing");
                 return null;
             }
 
@@ -2089,8 +2145,9 @@ public abstract class DatabaseStorage extends StorageBase {
                     }
                     return null;
                 }
-//                long expand = System.nanoTime();
+                final long expandNS = System.nanoTime();
                 expandRelationsWithConnection(record, options, conn);
+                timingExpandRelationsWithConnection.addNS(System.nanoTime()-expandNS);
 //                log.debug("getRecordWithConnection***: Expand in " + (System.nanoTime()-expand)/M + "ms");
 
             } finally {
@@ -2107,8 +2164,10 @@ public abstract class DatabaseStorage extends StorageBase {
             closeStatement(stmt);
 //            log.debug("getRecordWithConnection***: CloseStatement in " + (System.nanoTime()-closeS)/M + "ms");
 //            log.debug("Full getRecordWithConnection***: " + (System.nanoTime()-fullStart)/MI + "ms");
+            timingGetRecordWithConnection.addNS(System.nanoTime()-startNS);
         }
 
+        timingGetRecordWithConnection.addNS(System.nanoTime()-startNS);
         return record;
     }
 
@@ -2127,6 +2186,9 @@ public abstract class DatabaseStorage extends StorageBase {
             OutputStreamWriter writer = new OutputStreamWriter(bytes);
             BaseStats.toXML(getStats(), writer);
             return new Record("__holdings__", "__private__", bytes.toByteArray());
+        } else if ("__statistics__".equals(id)) {
+                return new Record("__statistics__", "__private__",
+                                  (timing.toString() + ", " + getIterationStats()).getBytes("utf-8"));
         } else {
             log.debug(String.format("No such private record '%s'", id));
             return null;
@@ -2210,6 +2272,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public Record next(long iteratorKey) throws IOException {
+        final long startNS = System.nanoTime();
         if (iteratorKey == EMPTY_ITERATOR_KEY) {
             throw new NoSuchElementException("Empty cursor");
         }
@@ -2235,6 +2298,7 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             expand -= System.nanoTime();
             lastIterated = expandRelationsWithConnection(r, cursor.getQueryOptions(), cursor.getConnection());
+            timingExpandRelationsWithConnection.addNS(System.nanoTime()+expand);
             //Record expanded = expandRelations(r, cursor.getQueryOptions());
             expand += System.nanoTime();
             nextCalls++;
@@ -2245,6 +2309,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.info(getIterationStats());
                 logNextMS = System.currentTimeMillis() + logEveryMS;
             }
+            timingNext.addNS(System.nanoTime()-startNS);
             return lastIterated;
         } catch (Exception e) {
             log.warn("Failed to expand relations for '" + r.getId() + "'", e);
@@ -2335,7 +2400,8 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     @Override
     public synchronized void flush(Record record, QueryOptions options) throws IOException {
-        long startTime = System.currentTimeMillis();
+        final long startNS = System.nanoTime();
+        timingFlush.start();
         Connection conn = getTransactionalConnection();
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
@@ -2359,7 +2425,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 if (error == null) {
                     // All is OK, write to the DB
                     conn.commit();
-                    log.debug("Committed " + record.getId() + " in " + (System.currentTimeMillis() - startTime) + "ms");
+                    log.debug("Committed " + record.getId() + " in " + (System.nanoTime() - startNS)/1000000 + "ms");
                 } else {
                     log.warn(String.format("Not committing %s because of error: %s", record.getId(), error));
                 }
@@ -2370,6 +2436,7 @@ public abstract class DatabaseStorage extends StorageBase {
             } finally {
                 closeConnection(conn);
             }
+            timingFlush.stop();
         }
     }
 
@@ -2388,6 +2455,7 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     // TODO: Race conditions in FacetTest indicates that flush is guaranteed to have written everything before returning
     public synchronized void flushAll(List<Record> recs, QueryOptions options) throws IOException {
+        timingFlushAll.start();
         Connection conn = getTransactionalConnection();
       
         
@@ -2452,6 +2520,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     log.error("Transaction rollback failed: " + e.getMessage(), e);
                 }
                 closeConnection(conn);
+                timingFlushAll.stop();
             }
         }
     }
@@ -2461,16 +2530,18 @@ public abstract class DatabaseStorage extends StorageBase {
      */
 
     private void touchOldParentChildRelations(Record r, Connection conn) throws IOException, SQLException{
+        final long startNS = System.nanoTime();
+
         List<String> newChildIds = r.getChildIds();
         List<String> newParentsIds = r.getChildIds();
         if (newChildIds == null){
-            newChildIds= new ArrayList<String>();
+            newChildIds= new ArrayList<>();
         }
         if (newParentsIds == null){
-            newParentsIds= new ArrayList<String>();
+            newParentsIds= new ArrayList<>();
         }
-        List<String> oldParentsIds = new ArrayList<String>();
-        List<String> oldChildrenIds = new ArrayList<String>();
+        List<String> oldParentsIds = new ArrayList<>();
+        List<String> oldChildrenIds = new ArrayList<>();
         switch (relationsTouch){
 
             case none:
@@ -2505,7 +2576,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
                 break;
         }
-
+        timingTouchOldParentChildRelations.addNS(System.nanoTime()-startNS);
     }
 
     /**
@@ -2519,6 +2590,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected void flushWithConnection(
             Record r, QueryOptions options, Connection conn) throws IOException, SQLException {
+        final long startNS = System.nanoTime();
         if (log.isTraceEnabled()) {
             log.trace("Flushing: " + r.toString(true));
         } else if (log.isDebugEnabled()) {
@@ -2602,6 +2674,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // getRecordsModifiedAfter. This is also done in the end of the flush()
         // because the operation is non-instantaneous
         updateModificationTime(r.getBase());
+        timingFlushWithConnection.addNS(System.nanoTime()-startNS);
     }
 
 
@@ -2789,6 +2862,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected List<Record> getParents(
             String id, QueryOptions options, Connection conn) throws IOException, SQLException {
+        final long startNS = System.nanoTime();
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getGetParents(options);
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
@@ -2828,15 +2902,17 @@ public abstract class DatabaseStorage extends StorageBase {
             } else {
                 closeStatement(stmt);
             }
+            timingGetParents.addNS(System.nanoTime() - startNS);
         }
     }
 
 
     protected List<String> getParentsIdsOnly( String id,Connection conn) throws IOException, SQLException {
+        final long startNS = System.nanoTime();
         StatementHandle handle = statementHandler.getParentIdsOnly();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
-        List<String> parentsIds = new ArrayList<String>();
+        List<String> parentsIds = new ArrayList<>();
 
 
         try {
@@ -2858,10 +2934,12 @@ public abstract class DatabaseStorage extends StorageBase {
             if (stmt != null) {
                 closeStatement(stmt);
             }
+            timingGetParentsIDsOnly.addNS(System.nanoTime() - startNS);
         }
     }
 
     protected List<String> getChildIdsOnly( String id,Connection conn) throws IOException, SQLException {
+        final long startNS = System.nanoTime();
         StatementHandle handle = statementHandler.getChildIdsOnly();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
@@ -2887,6 +2965,7 @@ public abstract class DatabaseStorage extends StorageBase {
             if (stmt != null) {
                 closeStatement(stmt);
             }
+            timingGetChildIDsOnly.addNS(System.nanoTime() - startNS);
         }
     }
 
@@ -2904,6 +2983,7 @@ public abstract class DatabaseStorage extends StorageBase {
     @SuppressWarnings("unused")
     private List<Record> getChildren(
             String id, QueryOptions options, Connection conn) throws IOException, SQLException {
+        final long startNS = System.nanoTime();
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getGetChildren(options);
 
@@ -2937,6 +3017,7 @@ public abstract class DatabaseStorage extends StorageBase {
             if (iter != null) {
                 iter.close();
             }
+            timingGetChildren.addNS(System.nanoTime() - startNS);
         }
     }
 
@@ -2951,6 +3032,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected void resolveRelatedIds(Record rec, Connection conn, QueryOptions options)
             throws SQLException, IOException {
+        final long startNS = System.nanoTime();
         boolean resolveParents = hasAttribute(options, QueryOptions.ATTRIBUTES.PARENTS);
         boolean resolveChildren = hasAttribute(options, QueryOptions.ATTRIBUTES.CHILDREN);
         if (expandRelativesLists || (resolveParents && resolveChildren)) {
@@ -2967,6 +3049,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
         // Do nothing if none are to be resolved
+        timingResolveRelatedIDs.addNS(System.nanoTime() - startNS);
     }
 
     protected void resolveRelatedParentsAndChildrenIDs(Record rec, Connection conn) throws SQLException {
@@ -3044,6 +3127,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     @Override
     public synchronized void clearBase(String base) throws IOException {
+        timingClearBase.start();
         log.debug(String.format("clearBase(%s) called", base));
         Connection conn = null;
 
@@ -3060,6 +3144,7 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new IOException(msg, e);
         } finally {
             closeConnection(conn);
+            timingClearBase.stop();
         }
     }
 
@@ -3182,7 +3267,8 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public synchronized String batchJob(
             String jobName, String base, long minMtime, long maxMtime, QueryOptions options) throws IOException {
-        long start = System.currentTimeMillis();
+        final long startNS = System.nanoTime();
+        timingBatchJob.start();
         if (INTERNAL_BATCH_JOB.equals(jobName)) {
             jobName = options.meta(INTERNAL_JOB_NAME);
             if (jobName == null) {
@@ -3196,7 +3282,7 @@ public abstract class DatabaseStorage extends StorageBase {
             if ((result = handleInternalBatchJob(
                     jobName, base, minMtime, Math.min(maxMtime, System.currentTimeMillis()), options)) == null) {
                 log.info(String.format("Batch job %s completed in %ds",
-                                       jobName, (System.currentTimeMillis() - start) / 1000));
+                                       jobName, (System.nanoTime() - startNS) / 1000000000L));
             } else {
                 log.error("Unknown internal batch job " + jobName + " ");
             }
@@ -3210,7 +3296,7 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             conn = getDefaultConnection();
             String result = batchJobWithConnection(jobName, base, minMtime, maxMtime, options, conn);
-            log.info("Batch job completed in " + (System.currentTimeMillis() - start) / 1000 + "s");
+            log.info("Batch job completed in " + (System.nanoTime() - startNS) / 1000000000L + "s");
             return result;
         } catch (SQLException e) {
             String msg = "Error running batch job: " + e.getMessage();
@@ -3218,6 +3304,7 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new IOException(msg, e);
         } finally {
             closeConnection(conn);
+            timingBatchJob.stop();
         }
     }
 
@@ -3344,7 +3431,7 @@ public abstract class DatabaseStorage extends StorageBase {
                         Record record = scanRecord(cursor, options); // advances cursor
                         //System.out.println("Processing " + record);
                         if (previousRecord != null
-                            && applyJobtoRecord(job, previousRecord, previousRecordId, base, options,
+                            && applyJobToRecord(job, previousRecord, previousRecordId, base, options,
                                                 totalCount == 0, false, conn, invalidateCachedStats, modifiedBases)) {
                             totalCount++;
                             pageCount++;
@@ -3358,7 +3445,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             // The last iteration, now with last=true
             if (previousRecord != null) {
-                applyJobtoRecord(job, previousRecord, previousRecordId, base, options, totalCount == 0, true, conn,
+                applyJobToRecord(job, previousRecord, previousRecordId, base, options, totalCount == 0, true, conn,
                                  invalidateCachedStats, modifiedBases);
             }
             if (invalidateCachedStats.get()) {
@@ -3405,7 +3492,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param conn        The database connection.
      * @return False if the batch job wasn't runned because the record was filtered out.
      */
-    private boolean applyJobtoRecord(
+    private boolean applyJobToRecord(
             BatchJob job, Record record, String oldRecordId, String jobBase, QueryOptions options, boolean isFirst,
             boolean isLast, Connection conn, AtomicBoolean invalidateStats, Set<String> changedBases)
             throws SQLException, IOException {
@@ -3413,6 +3500,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (!options.allowsRecord(record)) {
             return false;
         }
+        timingApplyJobToRecord.stop(); // Always called inside synchronized
 
         // Set up the batch job context and run it
         log.debug(String.format("Running batch job '%s' on '%s'", job, record.getId()));
@@ -3448,12 +3536,13 @@ public abstract class DatabaseStorage extends StorageBase {
                 updateModificationTime(jobBase);
             }
         }
+        timingApplyJobToRecord.stop();
         return true;
     }
 
     
     private boolean relationExist(Connection conn, String parentId,String childId)  throws SQLException{
-        
+        final long startNS = System.nanoTime();
         StatementHandle handleCheckPC = statementHandler.getParentAndChildCount();
         PreparedStatement stmtCheckPC = conn.prepareStatement(handleCheckPC.getSql());
         stmtCheckPC.setString(1, parentId);
@@ -3461,14 +3550,16 @@ public abstract class DatabaseStorage extends StorageBase {
  
         ResultSet rs = stmtCheckPC.executeQuery();        
         rs.next();        
-        int number = rs.getInt(1);        
+        int number = rs.getInt(1);
+        timingRelationsExists.addNS(System.nanoTime() - startNS);
         return number>0;
     }
     
     
     
     private boolean recordExist(Connection conn, String id)  throws SQLException{
-        
+        final long startNS = System.nanoTime();
+
         StatementHandle handleCheckExists = statementHandler.getRecordExist();
         PreparedStatement stmtCheckExists = conn.prepareStatement(handleCheckExists.getSql());
         stmtCheckExists.setString(1, id);
@@ -3479,6 +3570,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (number>0) {
             log.debug("Record already exist:" + id);
         }
+        timingRecordExists.addNS(System.nanoTime() - startNS);
         return number>0;
     }
     
@@ -3489,6 +3581,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param conn The database connection.
      */
     private void createRelations(Record rec, Connection conn) throws SQLException {
+        final long startNS = System.nanoTime();
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getCreateRelation();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
@@ -3555,6 +3648,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
         closeStatement(stmt);
+        timingCreateRelations.addNS(System.nanoTime()-startNS);
     }
 
     /**
@@ -3600,6 +3694,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException If error occur with SQL execution.
      */
     private void checkHasRelations(String id, Connection conn) throws SQLException {
+        final long startNS = System.nanoTime();
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getRelatedIds();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
@@ -3631,6 +3726,7 @@ public abstract class DatabaseStorage extends StorageBase {
             if (log.isTraceEnabled()) {
                 log.trace("No relations for record " + id);
             }
+            timingCheckHasRelations.addNS(System.nanoTime()-startNS);
             return;
         }
 
@@ -3646,6 +3742,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.warn("Failed to mark " + id + " as having relations: " + e.getMessage(), e);
         } finally {
             closeStatement(stmt);
+            timingCheckHasRelations.addNS(System.nanoTime()-startNS);
         }
     }
 
@@ -3660,6 +3757,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private void createNewRecordWithConnection(Record record, QueryOptions options,
                                                Connection conn) throws IOException, SQLException {
+        final long startNS = System.nanoTime();
         if (log.isTraceEnabled()) {
             log.trace("Creating: " + record.getId());
         }
@@ -3700,6 +3798,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 checkHasRelations(record.getId(), conn);
             }
         }
+        timingCreateNewRecordWithConnection.addNS(System.nanoTime()-startNS);
     }
 
     /**
@@ -3730,6 +3829,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException If error occur while executing SQL.
      */
     private void updateLastModficationTimeForBase(String base, Connection conn) throws SQLException {
+        final long startNS = System.nanoTime();
+
         long mtime = System.currentTimeMillis();
         log.debug("Updating mtime for base '" + base + " and setting it to " + mtime);
         // TODO: Use handle directly
@@ -3753,6 +3854,7 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             closeStatement(stmt);
             closeStatement(insertStmt);
+            timingUpdateLastModficationTimeForBase.addNS(System.nanoTime()-startNS);
         }
     }
 
@@ -3762,6 +3864,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
 
     public void updateRecord(Record record, QueryOptions options) throws IOException, SQLException {
+        final long startNS = System.nanoTime();
         Connection conn = null;
         try{
             conn = getTransactionalConnection();
@@ -3771,9 +3874,9 @@ public abstract class DatabaseStorage extends StorageBase {
         catch(Exception e){
             log.error("Error updateRecord for record:"+record.getId());
             throw e;
-        }
-        finally {
+        } finally {
             closeConnection(conn);
+            timingUpdateRecord.addNS(System.nanoTime()-startNS);
         }
 
     }
@@ -3829,6 +3932,8 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private void updateRecordWithConnection(
             Record record, QueryOptions options, Connection conn) throws IOException, SQLException {
+        final long startNS = System.nanoTime();
+
         log.debug("Updating: " + record.getId());
         // Respect the TRY_UPDATE meta flag. See docs for {@link QueryOptions}
         if (options != null && "true".equals(options.meta(TRY_UPDATE))) {
@@ -3896,6 +4001,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 checkHasRelations(record.getId(), conn);
             }
         }
+        timingUpdateRecordWithConnection.addNS(System.nanoTime()-startNS);
     }
 
     /**
@@ -3910,6 +4016,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected void touchRecord(String id, Connection conn, boolean updateStats) throws IOException, SQLException {
         // TODO: Use handle directly
+        final long startNS = System.nanoTime();
         long pointTime = System.nanoTime();
         StatementHandle handle = statementHandler.getTouchRecord();
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
@@ -3949,6 +4056,7 @@ public abstract class DatabaseStorage extends StorageBase {
                       + closeTime + " closeNS = " + (prepareStatementTime+executeTime+closeTime)
                       + ". updateStats=" + (updateStats ? "true, but not counted in time spend" : "false"));
         }
+        timingTouchRecord.addNS(System.nanoTime()-startNS);
     }
 
    
@@ -3962,6 +4070,7 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     @Override
     public long getModificationTime(String base) throws IOException {
+        final long startNS = System.nanoTime();
         Connection conn = null;
         try {
             conn = getDefaultConnection();
@@ -3971,6 +4080,7 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new IOException("Error fetching last modification time", e);
         } finally {
             closeConnection(conn);
+            timingGetModificationTime.addNS(System.nanoTime()-startNS);
         }
     }
 
@@ -4365,7 +4475,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public void close() throws IOException {
         log.info("Closing DatabaseStorage");
         iteratorReaper.stop();
-        log.info("DatabaseStorage closed: " + getIterationStats());
+        log.info("DatabaseStorage closed: " + getIterationStats() + ", " + timing);
     }
 
     /**
@@ -4375,6 +4485,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException If error occur while communicating storage.
      */
     public List<BaseStats> getStats() throws IOException {
+        final long startNS = System.nanoTime();
         log.trace("getStats()");
         Connection conn = null;
 
@@ -4399,6 +4510,7 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new IOException("Could not get database stats", e);
         } finally {
             closeConnection(conn);
+            timingGetStats.addNS(System.nanoTime()-startNS);
         }
     }
 
@@ -4406,6 +4518,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * Invalidate cached statistic in database.
      */
     private void invalidateCachedStats() {
+        final long startNS = System.nanoTime();
         String invalidateCachedStats = "UPDATE " + BASE_STATISTICS + " SET " + VALID_COLUMN + " = 0";
         log.debug("Invalidating cached stats");
         Connection conn = null;
@@ -4417,6 +4530,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.error("Error invalidating base statistic in database", e);
         } finally {
             closeConnection(conn);
+            timingInvalidateStats.addNS(System.nanoTime()-startNS);
         }
     }
 

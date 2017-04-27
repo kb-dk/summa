@@ -323,6 +323,24 @@ public class StorageTool {
     }
 
     /**
+     * Print instrumentation data for a storage, such as average getRecord-time.
+     *
+     * @param storage The storage reader client.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
+     * @throws IOException If error occur while communicatinh to storage.
+     */
+    private static int actionStatistics(StorageReaderClient storage) throws IOException {
+        StringMap meta = new StringMap();
+        meta.put("ALLOW_PRIVATE", "true");
+        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
+        long start = System.currentTimeMillis();
+        Record holdings = storage.getRecord("__statistics__", opts);
+        System.out.println(holdings.getContentAsUTF8());
+        System.err.println(String.format("Retrieved stats in %sms", System.currentTimeMillis() - start));
+        return 0;
+    }
+
+    /**
      * This action runs a single batch job on the storage.
      *
      * @param argv   Specifying the batch job to run.
@@ -482,7 +500,9 @@ public class StorageTool {
                 + "\txslt <record_id> <xslt_url>\n"
                 + "\tdump [base [maxrecords [format]]]   (dump storage on stdout)\n"
                 + "\t                        format=content|meta|full\n"
-                + "\tclear base   (clear all records from base)\n\tholdings\n"
+                + "\tclear base   (clear all records from base)\n"
+                + "\tholdings     (show information on the records in the storage - potentially very slow)\n"
+                + "\tstats        (show performance statistics)\n"
                 + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
                 + "\tbackup <destination>   (full copy of the running storage at the point of command execution)\n");
     }
@@ -556,6 +576,9 @@ public class StorageTool {
                 break;
             case "holdings":
                 exitCode = actionHoldings(reader);
+                break;
+            case "stats":
+                exitCode = actionStatistics(reader);
                 break;
             case "batchjob":
                 exitCode = actionBatchJob(args, writer);
