@@ -98,14 +98,21 @@ public class RecordStatsCollector {
 
     public RecordStatsCollector(
             String name, Configuration conf, Integer logEvery, Boolean logOnDebug, String elementDesignation) {
+        this(name, conf, "", logEvery, logOnDebug, elementDesignation);
+    }
+
+    public RecordStatsCollector(String name, Configuration conf, String confKeyPrefix, Integer logEvery,
+                                    Boolean logOnDebug, String elementDesignation) {
+        final String keyPrefix = confKeyPrefix == null || confKeyPrefix.isEmpty() ? "" :
+                confKeyPrefix.endsWith(".") ? confKeyPrefix : confKeyPrefix + ".";
         this.name = name != null ? name :
-                conf.getString(CONF_NAME, this.getClass().getSimpleName());
+                conf.getString(keyPrefix+CONF_NAME, this.getClass().getSimpleName());
         this.logEvery = logEvery != null ? logEvery :
-                conf.getInt(CONF_INFO_LOG_EVERY, DEFAULT_INFO_LOG_EVERY);
+                conf.getInt(keyPrefix+CONF_INFO_LOG_EVERY, DEFAULT_INFO_LOG_EVERY);
         this.logOnDebug = logOnDebug != null ? logOnDebug :
-                conf.getBoolean(CONF_LOG_ON_DEBUG, DEFAULT_LOG_ON_DEBUG);
+                conf.getBoolean(keyPrefix+CONF_LOG_ON_DEBUG, DEFAULT_LOG_ON_DEBUG);
         this.elementDesignation = elementDesignation != null ? elementDesignation:
-                conf.getString(CONF_ELEMENT_DESIGNATION, DEFAULT_ELEMENT_DESIGNATION);
+                conf.getString(keyPrefix+CONF_ELEMENT_DESIGNATION, DEFAULT_ELEMENT_DESIGNATION);
         log.debug("Created " + this);
     }
 

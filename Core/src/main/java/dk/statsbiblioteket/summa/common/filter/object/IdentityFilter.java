@@ -110,6 +110,6 @@ public class IdentityFilter extends ObjectFilterImpl  {
 
     @Override
     public String toString() {
-        return "IdentityFilter(uncompress=" + uncompress + "compress=" + compress + ")";
+        return "IdentityFilter(uncompress=" + uncompress + ", compress=" + compress + ")";
     }
 }

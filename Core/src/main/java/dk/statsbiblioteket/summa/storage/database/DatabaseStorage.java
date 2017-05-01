@@ -2187,12 +2187,16 @@ public abstract class DatabaseStorage extends StorageBase {
             BaseStats.toXML(getStats(), writer);
             return new Record("__holdings__", "__private__", bytes.toByteArray());
         } else if ("__statistics__".equals(id)) {
-                return new Record("__statistics__", "__private__",
-                                  (timing.toString() + ", " + getIterationStats()).getBytes("utf-8"));
+            return new Record("__statistics__", "__private__", getHumanStats().getBytes("utf-8"));
         } else {
             log.debug(String.format("No such private record '%s'", id));
             return null;
         }
+    }
+
+    private String getHumanStats() {
+        // TODO: When sbutil 0.5.51 comes out, pretty-print timing with newlines as separator
+        return timing.toString() + "\n\n" + getIterationStats();
     }
 
     /**
@@ -2289,6 +2293,7 @@ public abstract class DatabaseStorage extends StorageBase {
         cursorNext -= System.nanoTime();
         Record r;
         if (!cursor.hasNext() || (r = cursor.next()) == null) {
+            cursorNext += System.nanoTime();
             cursor.close();
             iterators.remove(cursor.getKey());
             throw new NoSuchElementException("Iterator " + iteratorKey + " depleted");

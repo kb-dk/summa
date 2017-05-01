@@ -18,17 +18,16 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterBase;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
-import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
-import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
-import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.summa.common.util.*;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Timing;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -127,25 +126,35 @@ public class RecordWriter extends ObjectFilterImpl {
     public static final boolean DEFAULT_TRY_UPDATE = false;
 
     private class Batcher implements Runnable {
+
+        public static final String CONF_STATUS_EVERY = "batch." + ObjectFilterBase.CONF_STATUS_EVERY;
+        public static final int DEFAULT_STATUS_EVERY = 0;
+
         /* CAVEAT: We log under the name of the RecordWriter !! */
         private final Log log = LogFactory.getLog(RecordWriter.class);
 
+        private final int batchSize;
+        private final int batchMaxMemory;
+        private final int batchTimeout;
+        private final List<Record> records;
+        private final Thread watcher;
+        private final WritableStorage storage;
+        private final QueryOptions qOptions;
+
         private boolean mayRun;
-        long lastCommit;
+        private long lastCommit;
         private long lastUpdate;
-        private int batchSize;
-        private int batchMaxMemory;
-        private int batchTimeout;
-        private List<Record> records;
-        private Thread watcher;
-        private WritableStorage storage;
-        private QueryOptions qOptions;
-        private long totalCommits = 0;
 
-        private long byteSize = 0;
+        private final int statusEvery;
+        private long totalRecordsCommitted = 0;
+        private long totalBatchesCommitted = 0;
+        private long batchByteSize = 0;
 
-        public Batcher (
-            int batchSize, int batchMaxMemory, int batchTimeout, WritableStorage storage, QueryOptions qOptions) {
+        private final Timing timingSend;
+        private final RecordStatsCollector sizeSend;
+
+        public Batcher (Configuration conf, int batchSize, int batchMaxMemory, int batchTimeout,
+                        WritableStorage storage, QueryOptions qOptions) {
             mayRun = true;
             records = new ArrayList<>(batchSize);
             this.batchSize = batchSize;
@@ -155,6 +164,9 @@ public class RecordWriter extends ObjectFilterImpl {
             lastCommit = System.nanoTime();
             this.storage = storage;
             this.qOptions = qOptions;
+            statusEvery = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
+            timingSend = StatUtil.createTiming(conf, "batch", "batchsend", null, "RecordBatch", null);
+            sizeSend = new RecordStatsCollector("batch", conf, null, false, "batches");
 
             log.debug("Starting batch job watcher");
             watcher = new Thread(this, "RecordBatcher daemon");
@@ -164,7 +176,7 @@ public class RecordWriter extends ObjectFilterImpl {
         }
 
         public synchronized void add(Record r) {
-            while (records.size() >= batchSize || byteSize > batchMaxMemory) {
+            while (records.size() >= batchSize || batchByteSize > batchMaxMemory) {
                 try {
                     log.debug("Waiting for batch queue to flush");
                     wait(batchTimeout);
@@ -183,13 +195,13 @@ public class RecordWriter extends ObjectFilterImpl {
 
             lastUpdate = System.currentTimeMillis();
             records.add(r);
-            byteSize += RecordUtil.calculateRecordSize(r, true);
+            batchByteSize += RecordUtil.calculateRecordSize(r, true);
             notifyAll();
         }
 
         public void clear() {
             records.clear();
-            byteSize = 0;
+            batchByteSize = 0;
         }
 
 
@@ -198,7 +210,7 @@ public class RecordWriter extends ObjectFilterImpl {
                    && (records.size() >= batchSize
                        || System.currentTimeMillis() - lastUpdate >= batchTimeout
                        || !mayRun // Force commit if closing
-                       || byteSize > batchMaxMemory
+                       || batchByteSize > batchMaxMemory
             );
         }
 
@@ -226,19 +238,28 @@ public class RecordWriter extends ObjectFilterImpl {
             }
 
             try {
-                String stats = records.size() + " records of total size " + byteSize/1024 + "KB, last recordID:'"
+                String stats = records.size() + " records of total size " + batchByteSize / 1024 + "KB, last recordID:'"
                                + (records.isEmpty() ? "N/A" : records.get(records.size()-1).getId()) + "'";
                 if (log.isDebugEnabled()) {
                     log.debug(String.format("Committing %s.", stats));
                 }
                 long start = System.nanoTime();
-                totalCommits += records.size();
+                timingSend.start();
                 storage.flushAll(records, qOptions);
-                if (log.isDebugEnabled()) {
-                    log.debug(String.format(
-                            "Committed %s in %.1fms. Total commits: %d. Last commit was %dms ago. %s",
+                timingSend.stop();
+                sizeSend.process("batch#" + totalBatchesCommitted, batchByteSize);
+                totalBatchesCommitted++;
+                totalRecordsCommitted += records.size();
+                if (statusEvery != 0 && totalBatchesCommitted % statusEvery == 0 || log.isDebugEnabled()) {
+                    final String message =String.format(
+                            "Committed %s in %.1fms. Last commit was %dms ago. %s",
                             stats, (System.nanoTime() - start) / 1000000D,
-                            totalCommits, (System.nanoTime() - lastCommit) / 1000000, getProcessStats()));
+                            (System.nanoTime() - lastCommit) / 1000000, getBatchProcessStats());
+                    if (statusEvery != 0 && totalBatchesCommitted % statusEvery == 0) {
+                        log.info(message);
+                    } else {
+                        log.debug(message);
+                    }
                 }
                 lastCommit = System.nanoTime();
             } catch (NoRouteToHostException e) {
@@ -263,6 +284,10 @@ public class RecordWriter extends ObjectFilterImpl {
             log.trace("Notified");
         }
 
+        private String getBatchProcessStats() {
+            return "Timing=" + timingSend + ". SizeStats=" + sizeSend;
+        }
+
         public void stop() {
             log.debug("Stopping Batcher thread");
             mayRun = false;
@@ -274,6 +299,7 @@ public class RecordWriter extends ObjectFilterImpl {
             } catch (InterruptedException e) {
                 log.warn("Interrupted while waiting for record batching thread");
             }
+            log.info("Batcher closed. " + getBatchProcessStats());
         }
 
         @Override
@@ -332,7 +358,7 @@ public class RecordWriter extends ObjectFilterImpl {
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         batchMaxMemory = conf.getInt(CONF_BATCH_MAXMEMORY, DEFAULT_BATCH_MAXMEMORY);
         batchTimeout = conf.getInt(CONF_BATCH_TIMEOUT, DEFAULT_BATCH_TIMEOUT);
-        batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage, qOptions);
+        batcher = new Batcher(conf, batchSize, batchMaxMemory, batchTimeout, storage, qOptions);
         setStatsDefaults(conf, false, false, true, true);
 
         // TODO: Perform a check to see if the Storage is alive
@@ -348,7 +374,7 @@ public class RecordWriter extends ObjectFilterImpl {
         this.batchSize = batchSize;
         this.batchMaxMemory = batchMaxMemory;
         this.batchTimeout = batchTimeout;
-        batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage, null);
+        batcher = new Batcher(Configuration.newMemoryBased(), batchSize, batchMaxMemory, batchTimeout, storage, null);
     }
 
     /**
@@ -387,8 +413,13 @@ public class RecordWriter extends ObjectFilterImpl {
     }
 
     @Override
+    protected Timing createTimingProcess(Configuration conf) {
+        return StatUtil.createTiming(conf, "process", "queue", null, "Payload", null);
+    }
+
+    @Override
     protected RecordStatsCollector createSizeProcess(Configuration conf) {
-        return new RecordStatsCollector("send", conf, false);
+        return new RecordStatsCollector("out", conf, false);
     }
 
     /**
