@@ -265,8 +265,20 @@ public class XMLTransformer extends GraphFilter<Object> {
 
         public Changeling(Configuration conf, boolean failOnMissing) {
             String xsltLocationString = conf.getString(CONF_XSLT, null);
-            if ((failOnMissing && xsltLocationString == null) || "".equals(xsltLocationString)) {
-                throw new ConfigurationException(String.format("The property %s must be defined", CONF_XSLT));
+            if (xsltLocationString == null || xsltLocationString.isEmpty()) {
+                if (failOnMissing) {
+                    throw new ConfigurationException(String.format("The property %s must be defined", CONF_XSLT));
+                }
+                log.debug("No " + CONF_XSLT + " defined, but failOnMissing=false. Skipping all other properties");
+                // Set everything to null as the Changeling will be discarded anyway
+                xsltLocation = null;
+                stripXMLNamespaces = false;
+                matcher = null;
+                source = null;
+                destination = null;
+                stackOverflowCatch = false;
+                escapeContentOnXmlFull = false;
+                return;
             }
             matcher = new PayloadMatcher(conf, false);
             //noinspection DuplicateStringLiteralInspection
