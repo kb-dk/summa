@@ -19,10 +19,12 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.rmi.CORBA.Util;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
@@ -102,6 +104,22 @@ public class PayloadFeederHelper implements ObjectFilter {
         this.payloads = new ArrayList<>(payloads.size());
         this.payloads.addAll(payloads);
         delay = delayBetweenPayloads;
+    }
+
+    /**
+     * Creates trivial Payloads with Records for testing.
+     */
+    public PayloadFeederHelper(int numPayloads, int sizeInBytes, boolean compressed, String idPrefix, String base) {
+        payloads = new ArrayList<>(payloads.size());
+        final byte[] content = new byte[sizeInBytes];
+        for (int i = 0 ; i < numPayloads ; i++) {
+            Record record = new Record(idPrefix + i, base, content);
+            if (compressed) {
+                // A bit stupid to repeat this. Re-use for better performance
+                RecordUtil.adjustCompression(record, true);
+            }
+            payloads.add(new Payload(record));
+        }
     }
 
     @Override
