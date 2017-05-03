@@ -94,6 +94,19 @@ public class PayloadFeederHelper implements ObjectFilter {
     }
 
     /**
+     * Creates payload feeder with the given Records wrapped as Payloads.
+     * @param records The Records to wrap.
+     */
+    public static PayloadFeederHelper createHelper(List<Record> records) {
+        //noinspection DuplicateStringLiteralInspection
+        List<Payload> payloads = new ArrayList<>(records.size());
+        for (Record record: records) {
+            payloads.add(new Payload(record));;
+        }
+        return new PayloadFeederHelper(payloads);
+    }
+
+    /**
      * Creates payload feeder which delay each delivery a small or large period.
      * @param payloads The list of payloads.
      * @param delayBetweenPayloads The delay between each payload.
@@ -110,7 +123,7 @@ public class PayloadFeederHelper implements ObjectFilter {
      * Creates trivial Payloads with Records for testing.
      */
     public PayloadFeederHelper(int numPayloads, int sizeInBytes, boolean compressed, String idPrefix, String base) {
-        payloads = new ArrayList<>(payloads.size());
+        payloads = new ArrayList<>(numPayloads);
         final byte[] content = new byte[sizeInBytes];
         for (int i = 0 ; i < numPayloads ; i++) {
             Record record = new Record(idPrefix + i, base, content);
