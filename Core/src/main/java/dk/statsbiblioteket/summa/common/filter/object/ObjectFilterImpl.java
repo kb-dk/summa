@@ -66,6 +66,7 @@ public abstract class ObjectFilterImpl extends ObjectFilterBase {
             return true;
         }
         checkSource();
+        outer:
         while (processedPayload == null && sourceHasNext()) {
             processedPayload = sourceNext();
             if (processedPayload == null) {
@@ -75,6 +76,7 @@ public abstract class ObjectFilterImpl extends ObjectFilterBase {
             }
 
             if (payloadMatcher.isMatcherActive() && !payloadMatcher.isMatch(processedPayload)) {
+                //log.debug(getName() + "### active matcher & !matching with unaction " + unmatchAction +" for " + processedPayload);
                 switch (unmatchAction) {
                     case discard: {
                         log.debug(getName() + ": Discarding payload as payloadMatcher matches and action is " +
@@ -86,7 +88,7 @@ public abstract class ObjectFilterImpl extends ObjectFilterBase {
                             ": " + processedPayload);
                     case passthrough: {
                         // Breaking here means thet the Payload will be passed through unprocessed
-                        continue;
+                        continue outer; // Not sure how continue deals with switch inside while, so go on the defensive
                     }
                     default: throw new UnsupportedOperationException("Unknown action " + unmatchAction);
                 }

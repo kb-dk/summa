@@ -178,9 +178,9 @@ public class DumpFilter extends ObjectFilterImpl {
         return true;
     }
 
+    private int errorCounter = 0;
     private void dump(Payload payload) throws PayloadException {
         String fileName = RecordUtil.getFileName(payload);
-
         StringWriter meta = new StringWriter(1000);
         meta.append(payload.toString(true));
         try {
@@ -193,6 +193,11 @@ public class DumpFilter extends ObjectFilterImpl {
             }
             Files.saveString(meta.toString(), new File(output, fileName + ".meta"));
         } catch (IOException e) {
+            errorCounter++;
+            if (errorCounter <= 20) {
+                log.warn("Exception #" + errorCounter + " while attempting to dump " + fileName + ".meta. " +
+                         "This message is only shown for the first 20 exceptions", e);
+            }
             throw new PayloadException("Unable to dump content", e, payload);
         }
         if (dumpRawContent && payload.getRecord() != null) {
