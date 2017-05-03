@@ -139,41 +139,46 @@ public class PayloadMatcher {
 
 
     public PayloadMatcher(Configuration conf) {
-        this(conf, true);
+        this(conf, "", true);
     }
 
     public PayloadMatcher(Configuration conf, boolean warnOnNoMatchers) {
-        log.debug("Constructing PayloadMatcher");
-        idMatchers = getMatchers(conf, CONF_ID_REGEX, "id");
-        baseMatchers = getMatchers(conf, CONF_BASE_REGEX, "base");
+        this(conf, "", warnOnNoMatchers);
+    }
+    public PayloadMatcher(Configuration conf, String keyPrefix, boolean warnOnNoMatchers) {
+        if (keyPrefix != null && !keyPrefix.isEmpty() && !keyPrefix.endsWith(".")) {
+            keyPrefix += ".";
+        }
+        log.debug("Constructing PayloadMatcher with keyPrefix='" + keyPrefix + "'");
+        idMatchers = getMatchers(conf, keyPrefix + CONF_ID_REGEX, "id");
+        baseMatchers = getMatchers(conf, keyPrefix + CONF_BASE_REGEX, "base");
         //noinspection DuplicateStringLiteralInspection
-        contentMatchers = getMatchers(conf, CONF_CONTENT_REGEX, "content");
+        contentMatchers = getMatchers(conf, keyPrefix + CONF_CONTENT_REGEX, "content");
 
-        metaKeys = conf.getStrings(CONF_META_KEY, (List<String>)null);
+        metaKeys = conf.getStrings(keyPrefix + CONF_META_KEY, (List<String>)null);
         metaValueMatchers = getMatchers(
-                conf, CONF_META_VALUE_REGEXP, "meta value");
-        if (metaKeys != null && metaValueMatchers != null
-            && metaKeys.size() != metaValueMatchers.size()) {
+                conf, keyPrefix + CONF_META_VALUE_REGEXP, "meta value");
+        if (metaKeys != null && metaValueMatchers != null && metaKeys.size() != metaValueMatchers.size()) {
             throw new IllegalArgumentException(String.format(
                     "The number of %s was %d while number of %s was %s. As the"
                     + " lists are used in parallel, the numbers must match",
-                    CONF_META_KEY, metaKeys.size(),
-                    CONF_META_VALUE_REGEXP, metaValueMatchers.size()));
+                    keyPrefix + CONF_META_KEY, metaKeys.size(),
+                    keyPrefix + CONF_META_VALUE_REGEXP, metaValueMatchers.size()));
         }
 
         if (warnOnNoMatchers && !isMatcherActive()) {
             log.warn("No patterns configured. Set the properties "
-                     + PayloadMatcher.CONF_META_KEY + ", "
-                     + PayloadMatcher.CONF_ID_REGEX + ", "
-                     + PayloadMatcher.CONF_BASE_REGEX +", and/or"
-                     + PayloadMatcher.CONF_CONTENT_REGEX
+                     + keyPrefix + CONF_META_KEY + ", "
+                     + keyPrefix + CONF_ID_REGEX + ", "
+                     + keyPrefix + CONF_BASE_REGEX +", and/or"
+                     + keyPrefix + CONF_CONTENT_REGEX
                      + " to control the behaviour");
         }
-        matchMethod = MATCH_METHOD.valueOf(conf.getString(CONF_MATCH_METHOD, DEFAULT_MATCH_METHOD));
-        dotAll = conf.getBoolean(CONF_DOT_ALL, DEFAULT_DOT_ALL);
-        matchAmount = conf.getInt(CONF_MATCH_AMOUNT, DEFAULT_MATCH_AMOUNT);
+        matchMethod = MATCH_METHOD.valueOf(conf.getString(keyPrefix + CONF_MATCH_METHOD, DEFAULT_MATCH_METHOD));
+        dotAll = conf.getBoolean(keyPrefix + CONF_DOT_ALL, DEFAULT_DOT_ALL);
+        matchAmount = conf.getInt(keyPrefix + CONF_MATCH_AMOUNT, DEFAULT_MATCH_AMOUNT);
         matchEquality = MATCH_AMOUNT_EQUALITY.valueOf(
-                conf.getString(CONF_MATCH_AMOUNT_EQUALITY, DEFAULT_MATCH_AMOUNT_EQUALITY));
+                conf.getString(keyPrefix + CONF_MATCH_AMOUNT_EQUALITY, DEFAULT_MATCH_AMOUNT_EQUALITY));
         log.info("Constructed " + this);
     }
 

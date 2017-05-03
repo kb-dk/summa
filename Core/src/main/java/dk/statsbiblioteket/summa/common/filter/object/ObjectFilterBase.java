@@ -135,7 +135,7 @@ public abstract class ObjectFilterBase implements ObjectFilter {
 
     protected void logStatusIfNeeded() {
         if (everyStatus > 0) {
-            final long updates = getUpdates();
+            final long updates = getUpdateCount();
             if (updates > 0 && updates % everyStatus == 0) {
                 log.info(getName() + ": " + getProcessStats());
             }
@@ -148,23 +148,26 @@ public abstract class ObjectFilterBase implements ObjectFilter {
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.trace(String.format("%s processed %s, #%d, in %.1f ms using %s",
-                                    getName(), payload, getUpdates(), ms, this));
+                                    getName(), payload, getUpdateCount(), ms, this));
         } else if (log.isDebugEnabled() && feedback) {
             if (showPullSizeStats || showProcessSizeStats) {
                 log.debug(String.format("%s processed Payload #%d, in %.1f ms, %s",
-                                        getName(), getUpdates(), ms, getProcessStats()));
+                                        getName(), getUpdateCount(), ms, getProcessStats()));
             } else {
                 log.debug(String.format("%s processed %s, #%d, in %.1f ms, %s",
-                                        getName(), payload, getUpdates(), ms, getProcessStats()));
+                                        getName(), payload, getUpdateCount(), ms, getProcessStats()));
             }
         }
 
-        Logging.logProcess(name, "processPayload #" + getUpdates()
+        Logging.logProcess(name, "processPayload #" + getUpdateCount()
                                  + " finished in " + ns / 1000000 + "ms for " + name,
                            processLogLevel, payload);
     }
 
-    private long getUpdates() {
+    /**
+     * @return the number of updates, if available. This is often the same as the number of processed Payloads.
+     */
+    public long getUpdateCount() {
         return showPullTimingStats ? timingPull.getUpdates() : showProcessTimingStats ? timingProcess.getUpdates() :
                 showPullSizeStats ? sizePull.getRecordCount() : showProcessSizeStats ? sizeProcess.getRecordCount() :
                         0;

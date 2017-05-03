@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -30,12 +31,31 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te",
         comment = "Class needs JavaDoc")
 public abstract class ObjectFilterImpl extends ObjectFilterBase {
-    private ObjectFilter source;
 
+    public enum UNMATCH_ACTION {passthrough, discard, fail}
+    /**
+     * If any payload matching is defined (see {@link PayloadMatcher} for properties) and the source Payload does not
+     * match, this is the action to take.
+     * </p><p>
+     * Optional. Default is passthrough.
+     */
+    public static final String CONF_UNMATCHED = "unmatched.action";
+    public static final UNMATCH_ACTION DEFAULT_UNMATCHED = UNMATCH_ACTION.passthrough;
+
+    /**
+     * If no PayloadMatcher properties are defined, all incoming Payloads will match.
+     */
+    private final PayloadMatcher payloadMatcher;
+    private final ObjectFilterImpl.UNMATCH_ACTION unmatchAction;
+
+    private ObjectFilter source;
     private Payload processedPayload = null;
 
     public ObjectFilterImpl(Configuration conf) {
         super(conf);
+        payloadMatcher = new PayloadMatcher(conf, "objectfilter", false);
+        unmatchAction = ObjectFilterImpl.UNMATCH_ACTION.valueOf(
+                conf.getString(ObjectFilterImpl.CONF_UNMATCHED, ObjectFilterImpl.DEFAULT_UNMATCHED.toString()));
 //        log.info("Created " + this);
     }
 
@@ -49,8 +69,27 @@ public abstract class ObjectFilterImpl extends ObjectFilterBase {
         while (processedPayload == null && sourceHasNext()) {
             processedPayload = sourceNext();
             if (processedPayload == null) {
-                log.debug("hasNext(): Got null from source. This is legal but unusual. Skipping to next payload");
+                log.debug(getName() + ": hasNext(): Got null from source. This is legal but unusual. " +
+                          "Skipping to next payload");
                 continue;
+            }
+
+            if (payloadMatcher.isMatcherActive() && !payloadMatcher.isMatch(processedPayload)) {
+                switch (unmatchAction) {
+                    case discard: {
+                        log.debug(getName() + ": Discarding payload as payloadMatcher matches and action is " +
+                                  unmatchAction + ": " + processedPayload);
+                        continue;
+                    }
+                    case fail: throw new RuntimeException(
+                            "Raising exception as payloadMatcher matches and action is " + unmatchAction +
+                            ": " + processedPayload);
+                    case passthrough: {
+                        // Breaking here means thet the Payload will be passed through unprocessed
+                        continue;
+                    }
+                    default: throw new UnsupportedOperationException("Unknown action " + unmatchAction);
+                }
             }
 
             final long startTime = System.nanoTime();

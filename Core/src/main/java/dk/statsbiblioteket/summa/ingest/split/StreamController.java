@@ -19,6 +19,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -46,6 +48,7 @@ public class StreamController implements ObjectFilter {
      * This property is mandatory.
      */
     public static final String CONF_PARSER = "summa.ingest.stream.controller.parser";
+
     private String name;
     /**
      * The payload.
@@ -59,6 +62,12 @@ public class StreamController implements ObjectFilter {
      * The stream parser.
      */
     protected StreamParser parser;
+
+    /**
+     * If no PayloadMatcher properties are defined, all incoming Payloads will match.
+     */
+    protected final PayloadMatcher payloadMatcher;
+    protected final ObjectFilterImpl.UNMATCH_ACTION unmatchAction;
     private Profiler profiler = new Profiler();
     {
         profiler.pause();
@@ -75,6 +84,10 @@ public class StreamController implements ObjectFilter {
                 CONF_PARSER, StreamParser.class, getDefaultStreamParserClass(), conf);
         log.info("Creating StreamParser '" + getName() + "' with class " + parserClass.getSimpleName());
         parser = Configuration.create(parserClass, conf);
+        payloadMatcher = new PayloadMatcher(conf, "stream.controller", false);
+        unmatchAction = ObjectFilterImpl.UNMATCH_ACTION.valueOf(
+                conf.getString(ObjectFilterImpl.CONF_UNMATCHED, ObjectFilterImpl.DEFAULT_UNMATCHED.toString()));
+        // TODO: Add proper toString to use with log.info on creation
     }
 
     /**
@@ -113,12 +126,36 @@ public class StreamController implements ObjectFilter {
                     profiler.pause();
                 }
 
-                if (source.hasNext()) {
+                Payload streamPayload = null;
+                while (streamPayload == null && source.hasNext()) {
                     log.trace("makePayload(): Source hasNext, calling source.next()");
-                    Payload streamPayload = source.next();
+                    streamPayload = source.next();
                     if (streamPayload == null) {
                         log.warn(String.format("Got null Payload from source %s after hasNext() == true", source));
+                        continue;
                     }
+
+                    if (payloadMatcher.isMatcherActive() && !payloadMatcher.isMatch(streamPayload)) {
+                        switch (unmatchAction) {
+                            case discard: {
+                                log.debug(getName() + ": Discarding payload as payloadMatcher matches and action is " +
+                                          unmatchAction + ": " + streamPayload);
+                                continue;
+                            }
+                            case fail:
+                                throw new RuntimeException(
+                                        "Raising exception as payloadMatcher matches and action is " + unmatchAction +
+                                        ": " + streamPayload);
+                            case passthrough: {
+                                payload = streamPayload;
+                                return;
+                            }
+                            default:
+                                throw new UnsupportedOperationException("Unknown action " + unmatchAction);
+                        }
+                    }
+                }
+                if (streamPayload != null) {
                     log.debug("makePayload: Opening source stream payload " + streamPayload);
                     try {
                         profiler.unpause();
@@ -161,8 +198,8 @@ public class StreamController implements ObjectFilter {
         payload = null;
         if (log.isTraceEnabled()) {
             try {
-                log.trace("next() produced " + newPayload + " with content\n"
-                          + newPayload.getRecord().getContentAsUTF8());
+                log.trace("next() produced " + newPayload +
+                          " with content\n" + newPayload.getRecord().getContentAsUTF8());
             } catch (NullPointerException e) {
                 log.warn("NPE while dumping content of " + newPayload, e);
             }
@@ -196,14 +233,14 @@ public class StreamController implements ObjectFilter {
     public final void close(boolean success) {
         if (source == null) {
             log.warn(String.format("close(%b): Cannot close as no source is specified", success));
-        } else {
-            parser.stop();
-            source.close(success);
-            log.info(String.format(
-                    "Close(%b) called for %s with %d produced Payloads at %.1f payloads/second or %.1f ms/payload",
-                    success, parser, profiler.getBeats(), profiler.getBps(false),
-                    profiler.getBps(false) > 0.0 ? 1.0/profiler.getBps(false)*1000 : 0));
+            return;
         }
+        parser.stop();
+        source.close(success);
+        log.info(String.format(
+                "Close(%b) called for %s with %d produced Payloads at %.1f payloads/second or %.1f ms/payload",
+                success, parser, profiler.getBeats(), profiler.getBps(false),
+                profiler.getBps(false) > 0.0 ? 1.0/profiler.getBps(false)*1000 : 0));
     }
 
     @Override
