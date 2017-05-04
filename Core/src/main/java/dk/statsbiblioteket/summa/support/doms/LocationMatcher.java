@@ -176,7 +176,9 @@ public class LocationMatcher extends VerbatimMatcher<String> {
             XMLStreamWriter xml, String designation, Set<String> coordinates) throws XMLStreamException {
         assignedLocations++;
         write(xml, designationField, designation);
-        write(xml, combinedField, designation + COMBINED_DELIMITER + coordinates);
+        for (String coordinate: coordinates) {
+            write(xml, combinedField, designation + COMBINED_DELIMITER + coordinate);
+        }
         for (String coordinate: coordinates) {
             write(xml, coordinatesField, coordinate);
         }
