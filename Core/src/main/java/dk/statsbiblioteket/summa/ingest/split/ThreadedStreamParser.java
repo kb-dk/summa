@@ -361,6 +361,20 @@ public abstract class ThreadedStreamParser implements StreamParser {
     }
 
     /**
+     * @return the current size of the out-queue in bytes.
+     */
+    protected long getQueueByteSize() {
+        return queue.byteSize();
+    }
+
+    /**
+     * @return the current size of the out-queue in Payloads.
+     */
+    protected long getQueueSize() {
+        return queue.size();
+    }
+
+    /**
      * Override this to perform processing on the Payload immediately before it
      * is returned by {@link #next}.
      * @param payload the Payload to post-process.

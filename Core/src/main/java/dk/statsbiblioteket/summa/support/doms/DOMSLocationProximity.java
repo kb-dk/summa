@@ -113,7 +113,7 @@ public class DOMSLocationProximity extends DOMSNewspaperBase {
                             continue;
                         }
                         addRecord(payload, alto, content, altoStart, altoEnd,
-                                  location.getKey() + "-" + locationCounter, location.getValue(), annuli);
+                                  location.getKey(), locationCounter, location.getValue(), annuli);
                     }
                     locationCounters.put(location.getKey(), locationCounter);
                 }
@@ -220,7 +220,7 @@ public class DOMSLocationProximity extends DOMSNewspaperBase {
 
     private void addRecord(
             Payload payload, Alto alto, String content, int altoStart, int altoEnd, String designation,
-            Set<String> coordinates, Map<String, String> annuli) throws PayloadException {
+            int locationCounter, Set<String> coordinates, Map<String, String> annuli) throws PayloadException {
         StringWriter sw = new StringWriter();
         try {
             XMLStreamWriter locationXML = xmlOutFactory.createXMLStreamWriter(sw);
@@ -231,16 +231,18 @@ public class DOMSLocationProximity extends DOMSNewspaperBase {
 
             for (Map.Entry<String, String> annulus: annuli.entrySet()) {
                 locationXML.writeStartElement("annulus_" + annulus.getKey());
+//                locationXML.writeAttribute("index", annulus.getKey());
                 locationXML.writeCharacters(annulus.getValue());
-                locationXML.writeEndElement();
+                locationXML.writeEndElement(); // annulus_*
                 locationXML.writeCharacters("\n");
             }
+            locationXML.writeEndElement(); // altosegment
             locationXML.flush();
         } catch (XMLStreamException e) {
             throw new PayloadException("Unable to generate ALTO segment XML", e, payload);
         }
 
-        String concatID = payload.getId() + "-loc-" + sanitize(designation);
+        String concatID = payload.getId() + "-loc-" + sanitize(designation) + "-" + locationCounter;
         addToQueue(payload, content, concatID, altoStart, altoEnd, sw.toString());
     }
 
