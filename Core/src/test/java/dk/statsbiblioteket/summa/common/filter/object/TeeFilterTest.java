@@ -43,6 +43,8 @@ public class TeeFilterTest extends TestCase {
                 PayloadMatcher.CONF_ID_REGEX, "original.*"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 8);
+        tee.close(true);
+
         for (String prefix: Arrays.asList("prefixA_", "prefixB_")) {
             for (String id: Arrays.asList("original1", "original2")) {
                 String concat = prefix + id;
@@ -61,6 +63,8 @@ public class TeeFilterTest extends TestCase {
                 PayloadMatcher.CONF_ID_REGEX, "original.*"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 4);
+        tee.close(true);
+
         for (String prefix: Arrays.asList("prefixA_", "prefixB_")) {
             for (String id: Arrays.asList("original1", "original2")) {
                 String concat = prefix + id;
@@ -77,6 +81,8 @@ public class TeeFilterTest extends TestCase {
                 PayloadMatcher.CONF_ID_REGEX, "original.*"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 4);
+        tee.close(true);
+
         for (String id: Arrays.asList("original1", "original2")) {
             for (String base: Arrays.asList("baseA", "baseB")) {
                 assertContains(id, base, generated);
@@ -94,6 +100,8 @@ public class TeeFilterTest extends TestCase {
                 PayloadMatcher.CONF_ID_REGEX, ".*"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 2);
+        tee.close(true);
+
         assertEquals("The right number of Payloads should be generated", 2, generated.size());
         for (Payload payload: generated) {
             assertTrue("All Payloads should be marked as deleted, but " + payload + " weren't",
@@ -107,13 +115,13 @@ public class TeeFilterTest extends TestCase {
         Record childWithParent = new Record("originalChild", "originalBase", "content".getBytes());
         childWithParent.setParents(Arrays.asList(parent));
         feeder = new PayloadFeederHelper(Arrays.asList(new Payload(childWithParent)));
-
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
                 TeeFilter.CONF_ID_PREFIXES, "prefixA_, prefixB_",
                 TeeFilter.CONF_MATCH_MODE, TeeFilter.MATCHER.whitelist_pass,
                 PayloadMatcher.CONF_ID_REGEX, "original.*"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 2);
+        tee.close(true);
 
         for (String id: Arrays.asList("prefixA_originalChild", "prefixB_originalChild")) {
             for (String base: Arrays.asList("originalBase")) {
@@ -137,6 +145,8 @@ public class TeeFilterTest extends TestCase {
                 PayloadMatcher.CONF_ID_REGEX, "original1"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 5);
+        tee.close(true);
+
         for (String prefix: Arrays.asList("prefixA_", "prefixB_")) {
             String concat = prefix + "original1";
             for (String base: Arrays.asList("baseA", "baseB")) {
@@ -155,6 +165,8 @@ public class TeeFilterTest extends TestCase {
                 PayloadMatcher.CONF_ID_REGEX, "original1"
         ));
         List<Payload> generated = extractRecords(feeder, tee, 4);
+        tee.close(true);
+
         for (String prefix: Arrays.asList("prefixA_", "prefixB_")) {
             String concat = prefix + "original2";
             for (String base: Arrays.asList("baseA", "baseB")) {

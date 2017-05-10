@@ -67,7 +67,7 @@ public abstract class MultiFilterBase implements ObjectFilter {
     public static final String CONF_MATCH_MODE = "match.mode";
     public static final String DEFAULT_MATCH_MODE = MATCHER.defaultMatcher().toString();
 
-    public static enum MATCHER {
+    public enum MATCHER {
         whitelist_discard {
             @Override
             public boolean shouldProcess(Payload payload) {
@@ -296,7 +296,7 @@ public abstract class MultiFilterBase implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.debug(String.format("Closing down '%s'. %s", this, getProcessStats()));
+        log.info(String.format("Closing down '%s'. %s", this, getProcessStats()));
         checkSource();
         source.close(success);
     }

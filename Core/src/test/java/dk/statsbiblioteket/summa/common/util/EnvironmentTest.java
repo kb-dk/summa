@@ -49,6 +49,16 @@ public class EnvironmentTest extends TestCase {
                      "", Environment.escapeSystemProperties("${zoo:}"));
     }
 
+    public void testEscapingEmptyArgument() {
+        System.setProperty("foo", "");
+        assertEquals("Existing properties should be escaped properly",
+                     "", Environment.escapeSystemProperties("${foo}"));
+        assertEquals("Non-existing properties with default value should return that value",
+                     "baz", Environment.escapeSystemProperties("${zoo:baz}"));
+        assertEquals("Non-existing properties with Empty default value should return that value",
+                     "", Environment.escapeSystemProperties("${zoo:}"));
+    }
+
     public void testPasswordMasking() {
         System.setProperty("key.password", "foo");
         System.setProperty("bar", "value.password");

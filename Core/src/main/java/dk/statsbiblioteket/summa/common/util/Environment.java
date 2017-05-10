@@ -84,7 +84,8 @@ public class Environment {
                 expVal = defaultValue;
             }
             if (expVal == null) {
-                log.warn("Unable to expand environment variable \"" + rawKey + "\"");
+                log.warn(String.format(
+                        "Unable to expand environment variable '%s', with no fallback defined", rawKey));
 //                System.out.println("Group " + matcher.group(1) + " input " + s);
                 matcher.appendReplacement(expanded, "");
                 expanded.append("${").append(rawKey).append("}");

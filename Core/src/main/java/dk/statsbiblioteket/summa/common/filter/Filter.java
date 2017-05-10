@@ -36,7 +36,7 @@ public interface Filter {
      * </p><p>
      * Support for filter-name is optional for Filters. 
      */
-    public static final String CONF_FILTER_NAME = "filter.name";
+    String CONF_FILTER_NAME = "filter.name";
 
     /**
      * Set the source for the Filter. This allows for chaining. Implementations
@@ -44,7 +44,7 @@ public interface Filter {
      * accept as sources.
      * @param filter the source for the Filter.
      */
-    public void setSource(Filter filter);
+    void setSource(Filter filter);
 
     /**
      * Filters are utilized by calling pump until it returns false.
@@ -61,7 +61,7 @@ public interface Filter {
      * @return true if more data are available, else false.
      * @throws IOException if case of major errors during pumping.
      */
-    public boolean pump() throws IOException;
+    boolean pump() throws IOException;
 
     /**
      * Closes this and any underlying Filters in a manner depending on
@@ -76,5 +76,5 @@ public interface Filter {
      *       the filter source, if available.
      * @param success if true a normal shutdown should take place.
      */
-    public void close(boolean success);
+    void close(boolean success);
 }

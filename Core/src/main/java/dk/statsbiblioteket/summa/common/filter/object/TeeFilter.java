@@ -91,8 +91,9 @@ public class TeeFilter extends MultiFilterBase {
 
     @Override
     protected void process(Payload payload) throws PayloadException {
-        for (String base: recordBases.isEmpty() ? Arrays.asList(payload.getRecord().getBase()) : recordBases) {
-            for (String prefix: idPrefixes.isEmpty() ? Arrays.asList("") : idPrefixes) {
+        for (String base: recordBases.isEmpty() ?
+                Collections.singletonList(payload.getRecord().getBase()) : recordBases) {
+            for (String prefix: idPrefixes.isEmpty() ? Collections.singletonList("") : idPrefixes) {
                 Record newRecord = RecordUtil.clone(payload.getRecord(), referenceContent);
                 newRecord.setBase(base);
                 newRecord.setId(prefix + newRecord.getId());
@@ -103,6 +104,7 @@ public class TeeFilter extends MultiFilterBase {
 
     @Override
     public String toString() {
-        return "TeeFilter(bases=[" + Strings.join(recordBases) + "], idPrefixes=[" + Strings.join(idPrefixes) + "])";
+        return String.format("TeeFilter(name='%s', bases=[%s], idPrefixes=[%s], referenceContext=%b)",
+                             getName(), Strings.join(recordBases), Strings.join(idPrefixes), referenceContent);
     }
 }
