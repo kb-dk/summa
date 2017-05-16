@@ -17,9 +17,14 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import junit.framework.TestCase;
 
+import javax.script.ScriptException;
+import java.io.IOException;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 /**
  * Test cases for {@link ScriptFilter}
@@ -46,6 +51,25 @@ public class ScriptFilterTest extends TestCase {
         buf.setSource(filter);
 
         return buf;
+    }
+
+    public void testSelectiveScripting() throws IOException, ScriptException {
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
+                new Payload(new Record("recA", "A", "foo".getBytes("utf-8"))),
+                new Payload(new Record("recB", "B", "foo".getBytes("utf-8")))
+        ));
+        ScriptFilter scripter = new ScriptFilter(Configuration.newMemoryBased(
+                ScriptFilter.CONF_SCRIPT_INLINE, "payload.getRecord().setId('processed');",
+                "objectfilter.summa.record.basepatterns", "A"
+        ));
+        scripter.setSource(feeder);
+        assertTrue("First Payload should be available", scripter.hasNext());
+        Payload processedA = scripter.next();
+        assertTrue("Second Payload should be available", scripter.hasNext());
+        Payload processedB = scripter.next();
+        assertFalse("there should not be a third Payload", scripter.hasNext());
+        assertEquals("The first Payload should have a changed ID", "processed", processedA.getId());
+        assertEquals("The second Payload should have an unchanged ID", "recB", processedB.getId());
     }
 
     public void testRenameRecordIdJS() throws Exception {

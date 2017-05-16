@@ -149,8 +149,14 @@ public class ScriptFilter extends ObjectFilterImpl {
      * @throws IOException If error occur reading script.
      */
     public ScriptFilter(Reader script, boolean compileScript, String scriptExtension)
-        throws ScriptException, IOException {
-        super(Configuration.newMemoryBased(CONF_FILTER_NAME, "ScriptFilter[" + scriptExtension + "]"));
+            throws ScriptException, IOException {
+        this(Configuration.newMemoryBased(CONF_FILTER_NAME, "ScriptFilter[" + scriptExtension + "]"),
+             script, compileScript, scriptExtension);
+    }
+
+    public ScriptFilter(Configuration conf, Reader script, boolean compileScript, String scriptExtension)
+            throws ScriptException, IOException {
+        super(conf);
         final int bufferSize = 1024;
         this.compileScript = compileScript;
         engineManager = new ScriptEngineManager();
@@ -197,6 +203,11 @@ public class ScriptFilter extends ObjectFilterImpl {
         this(new InputStreamReader(script), compileScript, scriptExtension);
     }
 
+    public ScriptFilter(Configuration conf, InputStream script, boolean compileScript, String scriptExtension)
+                                           throws ScriptException, IOException {
+        this(conf, new InputStreamReader(script), compileScript, scriptExtension);
+    }
+
     /**
      * Creates a script filter. Script is being pre compiled.
      * @param script The script.
@@ -226,7 +237,7 @@ public class ScriptFilter extends ObjectFilterImpl {
      * @throws IOException If error while reading script.
      */
     public ScriptFilter(Configuration conf) throws ScriptException, IOException {
-        this(readScript(conf), conf.getBoolean(CONF_COMPILE, DEFAULT_COMPILE), getScriptExtension(conf));
+        this(conf, readScript(conf), conf.getBoolean(CONF_COMPILE, DEFAULT_COMPILE), getScriptExtension(conf));
     }
 
     /**
