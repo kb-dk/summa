@@ -4691,7 +4691,12 @@ public abstract class DatabaseStorage extends StorageBase {
         return stats;
     }
 
-    // TODO: Take base as argument
+
+    /*
+     * Experimental method only intended with options:clear parents, touch children. 
+     * The batch size is loaded in a single statement so when iterating over records,
+     * there is no additional SQL queries. 
+     */
     public List<Record> aviserLoadFromMTime(String recordBase, long mTime, int batchSize) throws Exception{
       if (recordBase == null){
         throw new Exception("recordBase must be set");
@@ -4781,8 +4786,8 @@ public abstract class DatabaseStorage extends StorageBase {
       }
       finally{
         closeStatement(stmt);
-        System.out.println("close");
-         //Det andre metoder på klassen lukker ikke connection. Forstår det ikke helt.
+        
+         // conn.close(); Det andre metoder på klassen lukker ikke connection. Forstår det ikke helt.
       }
       
         return records;
