@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  * This class is not thread safe inside of the same instantiation. Using multiple instantiations in separate threads
  * will work.
  */
-public class SolrDocumentEnrich {
+public class SolrDocumentEnrich implements SolrDocumentAdjustFilter.Adjuster {
     private static Log log = LogFactory.getLog(SolrDocumentEnrich.class);
 
     public enum ELEMENTS {
@@ -82,14 +82,14 @@ public class SolrDocumentEnrich {
     }
 
     /**
-     * If the Payload contains a Record, call {@link #enrich(Record)} with that.
+     * If the Payload contains a Record, call {@link #adjust(Record)} with that.
      * @return true if the content of the Payload was modified.
      */
-    public boolean enrich(Payload payload) {
-        return payload.getRecord() != null && enrich(payload.getRecord());
+    public boolean adjust(Payload payload) {
+        return payload.getRecord() != null && adjust(payload.getRecord());
     }
 
-    public boolean enrich(Record record) {
+    public boolean adjust(Record record) {
         if (elements.isEmpty()) {
             return false;
         }

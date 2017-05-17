@@ -31,7 +31,7 @@ public class SolrDocumentEnrichTest {
     public void testNoChange() throws UnsupportedEncodingException {
         SolrDocumentEnrich enricher = new SolrDocumentEnrich(Configuration.newMemoryBased());
         Record record = new Record("dummy", "dummy", SIMPLE.getBytes("utf-8"));
-        assertFalse("The enricher should not be active", enricher.enrich(record));
+        assertFalse("The enricher should not be active", enricher.adjust(record));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class SolrDocumentEnrichTest {
                 SolrDocumentEnrich.CONF_ELEMENTS, SolrDocumentEnrich.ELEMENTS.recordID.toString()
         ));
         Record record = new Record("dummyID", "dummy", SIMPLE.getBytes("utf-8"));
-        assertTrue("The enricher should process the Record", enricher.enrich(record));
+        assertTrue("The enricher should process the Record", enricher.adjust(record));
         assertTrue("The result should contain the recordID", record.getContentAsUTF8().contains(
                 "<doc>\n<field name=\"recordID\">dummyID</field>\n<field name=\"foo\">bar</field></doc>"
         ));
@@ -52,7 +52,7 @@ public class SolrDocumentEnrichTest {
                 SolrDocumentEnrich.CONF_ELEMENTS, SolrDocumentEnrich.ELEMENTS.recordID.toString()
         ));
         Record record = new Record("dummyID", "dummy", EXTRA.getBytes("utf-8"));
-        assertTrue("The enricher should process the Record", enricher.enrich(record));
+        assertTrue("The enricher should process the Record", enricher.adjust(record));
         assertTrue("The result should contain the recordID", record.getContentAsUTF8().contains(
                 "<doc boost=\"5\">\n<field name=\"recordID\">dummyID</field>\n<field name=\"foo\">bar</field></doc>"
         ));
@@ -66,7 +66,7 @@ public class SolrDocumentEnrichTest {
         ));
         Record record = new Record("dummyID", "dummy", SIMPLE.getBytes("utf-8"));
         record.setModificationTime(now);
-        assertTrue("The enricher should process the Record", enricher.enrich(record));
+        assertTrue("The enricher should process the Record", enricher.adjust(record));
         assertTrue("The result should contain the field mtime", record.getContentAsUTF8().contains(
                 "<doc>\n<field name=\"mtime\">"
         ));

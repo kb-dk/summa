@@ -155,43 +155,46 @@ public class DatabaseStorageTest extends StorageTestBase {
     public void testAllRecordsExpandOnlyParent() throws Exception {
         DatabaseStorage storage = getStorageWithMixedRelations();
 
+        List<Record> extracted;
         try {
-            List<Record> extracted = getRecordsWithParents(storage, "aviser");
-            assertEquals("All Records should be extracted", 3, extracted.size());
-            for (Record record: extracted) {
-                if ("ChildWithParent".equals(record.getId())) {
-                    assertNotNull("Child record should have a parent list", record.getParents());
-                    assertEquals("Child record should have 1 parent in the parent list", 1, record.getParents().size());
-                    return;
-                }
-            }
-            fail("Unable to locate Record ChildWithParent");
+            extracted = getRecordsWithParents(storage, "aviser");
         } finally {
             storage.close();
         }
+        assertMixedRelations("Generic", extracted);
     }
 
     public void testAllRecordsExpandOnlyParentOptimized() throws Exception {
         DatabaseStorage storage = getStorageWithMixedRelations();
 
+        List<Record> extracted;
         try {
-            List<Record> extracted = storage.aviserLoadFromMTime("aviser",0L, 500);
-            assertEquals("All Records should be extracted", 3, extracted.size());
-            for (Record record: extracted) {
-                if ("ChildWithParent".equals(record.getId())) {
-                    assertNotNull("Child record should have a parent list", record.getParents());
-                    assertEquals("Child record should have 1 parent in the parent list", 1, record.getParents().size());
-                    return;
-                }
-            }
-            fail("Unable to locate Record ChildWithParent");
+            extracted = storage.aviserLoadFromMTime("aviser", 0L, 500);
         } finally {
             storage.close();
         }
+        assertMixedRelations("Optimized", extracted);
     }
 
+    private void assertMixedRelations(String designation, List<Record> extracted) {
+        assertEquals("All Records should be extracted", 3, extracted.size());
+        boolean foundChild = false;
+        for (Record record: extracted) {
+            if ("ChildWithParent".equals(record.getId())) {
+                assertNotNull(designation + ". Child record should have a parent list", record.getParents());
+                assertEquals(designation + ". Child record should have 1 parent in the parent list",
+                             1, record.getParents().size());
+                foundChild = true;
+                assertTrue("The parent should be marked as deleted", record.getParents().get(0).isDeleted());
+            }
+        }
+        if (!foundChild) {
+            fail("Unable to locate Record ChildWithParent");
+        }
+    }
     private DatabaseStorage getStorageWithMixedRelations() throws Exception {
         Record parent1 = new Record("ParentWithChild", "aviser", new byte[0]);
+        parent1.setDeleted(true);
         Record child1 = new Record("ChildWithParent", "aviser", new byte[0]);
         child1.setParentIds(Collections.singletonList(parent1.getId()));
 

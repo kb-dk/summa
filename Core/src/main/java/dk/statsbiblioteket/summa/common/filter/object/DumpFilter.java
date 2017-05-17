@@ -17,6 +17,8 @@ import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.util.io.Streams;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -92,13 +94,23 @@ public class DumpFilter extends ObjectFilterImpl {
     public static final boolean DEFAULT_DUMP_RAW_CONTENT = false;
 
     /**
-     * The maximum number of Records to dump. Aafter this number is reached,
+     * The maximum number of Records to dump. After this number is reached,
      * no more dumps will be made.
      * </p><p>
      * Optional. The default is 500. Setting this to -1 means infinite dumps.
      */
     public static final String CONF_MAXDUMPS = "summa.dumpfilter.maxdumps";
     public static final int DEFAULT_MAXDUMPS = 50;
+
+    /**
+     * The maximum number of Records to dump from any recordBase.
+     * This setting only has effect if the received Payloads contains Records.
+     * Setting this without explicitly setting {@link #CONF_MAXDUMPS} will set CONF_MAXDUMPS to -1.
+     * </p><p>
+     * Optional. Default is -1 (infinite).
+     */
+    public static final String CONF_MAXBASEDUMPS = "summa.dumpfilter.maxbasedumps";
+    public static final int DEFAULT_MAXBASEDUMPS = -1;
 
     /**
      * If the dumper has not received any Payloads for this number of ms,
@@ -119,8 +131,10 @@ public class DumpFilter extends ObjectFilterImpl {
     private boolean dumpStreams = DEFAULT_DUMP_STREAMS;
     private final boolean dumpRawContent;
     private boolean dumpXML = DEFAULT_DUMP_XML;
-    private int maxDumps = DEFAULT_MAXDUMPS;
+    private final int maxDumps;
     private int resetReceivedDumpsMS = DEFAULT_RESET_MAXDUMPS_MS;
+    private final int maxBaseDumps;
+    private final Map<String, Long> baseCounters;
     // TODO: Implement this
 
     private long payloadsDumpedSinceReset = 0;
@@ -142,15 +156,18 @@ public class DumpFilter extends ObjectFilterImpl {
         dumpNonRecords = conf.getBoolean(CONF_DUMP_NONRECORDS, dumpNonRecords);
         dumpStreams = conf.getBoolean(CONF_DUMP_STREAMS, dumpStreams);
         dumpXML = conf.getBoolean(CONF_DUMP_XML, dumpXML);
-        maxDumps = conf.getInt(CONF_MAXDUMPS, maxDumps);
+        maxBaseDumps = conf.getInt(CONF_MAXBASEDUMPS, DEFAULT_MAXBASEDUMPS);
+        maxDumps = conf.getInt(CONF_MAXDUMPS, conf.containsKey(CONF_MAXBASEDUMPS) ? -1 : DEFAULT_MAXDUMPS);
+        baseCounters = maxBaseDumps >= 0 ? new HashMap<String, Long>() : null;
         resetReceivedDumpsMS = conf.getInt(CONF_RESET_MAXDUMPS_MS, resetReceivedDumpsMS);
         dumpRawContent = conf.getBoolean(CONF_DUMP_RAW_CONTENT, DEFAULT_DUMP_RAW_CONTENT);
         feedback = false; // No timestats on dump
         setStatsDefaults(conf, false, false, false, false);
         log.info(String.format(
-                "Created DumpFilter '%s' with base='%s', id='%s', dumpNonRecords=%b, maxDumps=%d, resetMaxDumpsMS=%d",
+                "Created DumpFilter '%s' with base='%s', id='%s', dumpNonRecords=%b, maxDumps=%d, maxBaseDumps=%d, " +
+                "resetMaxDumpsMS=%d",
                 getName(), conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP), conf.getString(CONF_IDEXP, DEFAULT_IDEXP),
-                dumpNonRecords, maxDumps, resetReceivedDumpsMS));
+                dumpNonRecords, maxDumps, maxBaseDumps, resetReceivedDumpsMS));
     }
 
     @Override
@@ -160,6 +177,21 @@ public class DumpFilter extends ObjectFilterImpl {
             payloadsDumpedSinceReset = 0;
         }
         lastPayloadReceivedTimestamp = System.currentTimeMillis();
+        if (baseCounters != null && payload.getRecord() != null) {
+            Long count = baseCounters.get(payload.getRecord().getBase());
+            if (count == null) {
+                count = 0L;
+            }
+            count++;
+            baseCounters.put(payload.getRecord().getBase(), count);
+            if (count > maxBaseDumps) {
+                Logging.logProcess(getName(),
+                                   "Not dumping as received payloads (" + count + ") for recordBase=" +
+                                   payload.getRecord().getBase() + " was > than max base dumps " + maxBaseDumps,
+                                   Logging.LogLevel.TRACE, payload);
+                return true;
+            }
+        }
         if (maxDumps != -1 && payloadsDumpedSinceReset > maxDumps) {
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess(getName(), "Not dumping as received payloads since reset " + payloadsDumpedSinceReset

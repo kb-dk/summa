@@ -25,6 +25,11 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 /**
  * Convenience implementation of ObjectFilter, suitable as a super-class for
  * filters. The implementation can only be chained after other ObjectFilters.
+ * </p><p>
+ * This implementation handles the updating of timing and size statistics,
+ * as well as calls to {@link #logStatusIfNeeded()}.
+ * Sub-classes need only implement {@link #processPayload(Payload)}.
+ * </p>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_OK,
