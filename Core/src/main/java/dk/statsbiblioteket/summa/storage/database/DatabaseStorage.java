@@ -4692,22 +4692,27 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
 
-    /*
-     * Experimental method only intended with options:clear parents, touch children. 
+    /**
+     * Optimized bulk record getter that has implicit {@link QueryOptions}
+     * attributes == null
+     * deleted == null
+     * indexable == null
+     * child.depth == 0
+     * parent.depth == 1
      * The batch size is loaded in a single statement so when iterating over records,
-     * there is no additional SQL queries. 
+     * there is no additional SQL queries.
      */
-    public List<Record> aviserLoadFromMTime(String recordBase, long mTime, int batchSize) throws Exception{
+    public List<Record> aviserLoadFromMTime(String recordBase, long mTime, int batchSize) throws SQLException {
       if (recordBase == null){
-        throw new Exception("recordBase must be set");
+        throw new IllegalArgumentException("recordBase must be set");
       }
       if (batchSize <1 || batchSize > 10000){ //The 10000 limit is to prevent locking up DB
-        throw new Exception("BatchSize must be between 1 and 10000"); 
+        throw new IllegalArgumentException("BatchSize must be between 1 and 10000");
       }            
-      ArrayList<Record> records = new ArrayList<Record>();
+      ArrayList<Record> records = new ArrayList<>();
       
       Connection conn = getTransactionalConnection();
-      String sql="SELECT A.id,A.base,A.deleted,A.indexable,A.hasRelations,A.data,A.ctime,A.mtime,A.meta,R.parentId,'' AS childId , "+
+      final String sql = "SELECT A.id,A.base,A.deleted,A.indexable,A.hasRelations,A.data,A.ctime,A.mtime,A.meta,R.parentId,'' AS childId , "+
       "B.id as p_Id ,B.base as p_base, B.deleted as p_deleted ,B.indexable as p_indexable,B.hasRelations as p_hasRelations,B.data as p_data,B.ctime as p_ctime ,B.mtime as p_mtime,B.meta as p_meta "+
       "FROM summa_records A "+
       "LEFT JOIN summa_relations R ON A.id=R.childId OR A.id=R.parentid "+
@@ -4716,75 +4721,74 @@ public abstract class DatabaseStorage extends StorageBase {
       
       PreparedStatement stmt = conn.prepareStatement(sql); 
       try {
-        stmt.setString(1, recordBase);
-        stmt.setLong(2, mTime);
-        stmt.setInt(3, batchSize);
-      
-        ResultSet rs = stmt.executeQuery();
-        while (rs.next()){
-          
-          //Load the record
-          String id = rs.getString("id");
-          String base = rs.getString("base");
-          boolean deleted = rs.getBoolean("deleted");
-          boolean indexable = rs.getBoolean("indexable");
-          boolean hasRelations = rs.getBoolean("hasRelations");
-          byte[] data = rs.getBytes("data");
-          long ctime = rs.getLong("ctime");
-          long mtime = rs.getLong("mtime");
-          byte[] meta = rs.getBytes("meta");
-          String parentId=rs.getString("parentid");
-          //childid not loaded
-          
-          //Now load the parent record
-          String p_id = rs.getString("p_id");
-          String p_base = rs.getString("p_base");
-          boolean p_deleted = rs.getBoolean("p_deleted");
-          boolean p_indexable = rs.getBoolean("p_indexable");
-          boolean p_hasRelations = rs.getBoolean("p_hasRelations");
-          byte[] p_data = rs.getBytes("p_data");
-          long p_ctime = rs.getLong("p_ctime");
-          long p_mtime = rs.getLong("p_mtime");
-          byte[] p_meta = rs.getBytes("p_meta");
-                    
-          if (p_id== null){            
-            Record r = new Record(id,base,deleted,indexable,data,ctime,mtime, null, null,null, true);
-            r.setHasRelations(hasRelations); 
-            records.add(r);
-          }else{
-            ArrayList<String> pList= new ArrayList<String>();
-            pList.add(parentId);
-            
-            ArrayList<String> cList= new ArrayList<String>();
-            cList.add(id);
-                      
-            //Create the record object tree.
-            Record r = new Record(id,base,deleted,indexable,data,ctime,mtime, pList, null,null, true);
-            Record p = new Record(p_id,p_base,p_deleted,p_indexable,p_data,p_ctime,p_mtime,null, cList,null, true);
-            
-            r.setHasRelations(hasRelations); 
-            p.setHasRelations(p_hasRelations);
-            
-            //And set the parent/children again as objects
-            ArrayList<Record> pRecordList = new ArrayList<Record>();
-            pRecordList.add(p);
-            
-            ArrayList<Record> cRecordList = new ArrayList<Record>();
-            cRecordList.add(r);
-            
-            r.setParents(pRecordList);
-            p.setChildren(cRecordList);
-            records.add(r);
+          stmt.setString(1, recordBase);
+          stmt.setLong(2, mTime);
+          stmt.setInt(3, batchSize);
+
+          ResultSet rs = stmt.executeQuery();
+          while (rs.next()) {
+
+              //Load the record
+              String id = rs.getString("id");
+              String base = rs.getString("base");
+              boolean deleted = rs.getBoolean("deleted");
+              boolean indexable = rs.getBoolean("indexable");
+              boolean hasRelations = rs.getBoolean("hasRelations");
+              byte[] data = rs.getBytes("data");
+              long ctime = rs.getLong("ctime");
+              long mtime = rs.getLong("mtime");
+              byte[] meta = rs.getBytes("meta");
+              String parentId = rs.getString("parentid");
+              //childid not loaded
+
+              //Now load the parent record
+              String p_id = rs.getString("p_id");
+              String p_base = rs.getString("p_base");
+              boolean p_deleted = rs.getBoolean("p_deleted");
+              boolean p_indexable = rs.getBoolean("p_indexable");
+              boolean p_hasRelations = rs.getBoolean("p_hasRelations");
+              byte[] p_data = rs.getBytes("p_data");
+              long p_ctime = rs.getLong("p_ctime");
+              long p_mtime = rs.getLong("p_mtime");
+              byte[] p_meta = rs.getBytes("p_meta");
+
+              if (p_id == null) {
+                  Record r = new Record(id, base, deleted, indexable, data, ctime, mtime, null, null,
+                                        meta.length == 0 ? null : StringMap.fromFormal(meta), true);
+                  r.setHasRelations(hasRelations);
+                  records.add(r);
+              } else {
+                  ArrayList<String> pList = new ArrayList<>();
+                  pList.add(parentId);
+
+                  ArrayList<String> cList = new ArrayList<>();
+                  cList.add(id);
+
+                  //Create the record object tree.
+                  Record r = new Record(id, base, deleted, indexable, data, ctime, mtime, pList, null,
+                                        meta.length == 0 ? null : StringMap.fromFormal(meta), true);
+                  Record p = new Record(p_id, p_base, p_deleted, p_indexable, p_data, p_ctime, p_mtime,
+                                        null, cList, meta.length == 0 ? null : StringMap.fromFormal(meta), true);
+
+                  r.setHasRelations(hasRelations);
+                  p.setHasRelations(p_hasRelations);
+
+                  //And set the parent/children again as objects
+                  ArrayList<Record> pRecordList = new ArrayList<>();
+                  pRecordList.add(p);
+
+                  ArrayList<Record> cRecordList = new ArrayList<>();
+                  cRecordList.add(r);
+
+                  r.setParents(pRecordList);
+                  p.setChildren(cRecordList);
+                  records.add(r);
+              }
+
+
           }
-            
-                   
-        }
-                                  
-      }
-      catch(Exception e){
-        e.printStackTrace();
-      }
-      finally{
+
+      } finally {
         closeStatement(stmt);
         
          // conn.close(); Det andre metoder på klassen lukker ikke connection. Forstår det ikke helt.
