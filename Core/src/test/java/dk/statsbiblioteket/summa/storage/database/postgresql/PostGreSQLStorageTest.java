@@ -27,6 +27,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -51,9 +52,26 @@ public class PostGreSQLStorageTest {
     //    <entry key="queryoptions.attributes">ID, BASE, DELETED, INDEXABLE, HAS_RELATIONS, CONTENT, CREATIONTIME, MODIFICATIONTIME, PARENTS</entry>
     // </properties>
     public static final String MARS = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_mars.xml";
-    public static final String PS3 = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_ps3.xml";
+    public static final String PS3 = "/home/teg/workspace/summa/Core/postgresql_ps3.xml";
 
 
+    @Test
+    public void TEGAviserTestPS3() throws Exception {
+        
+      final String BASE = "aviser";
+      long mTime  = 1494469519068L-60*60*24*5;
+      PostGreSQLStorage storage = getDeveloperTestStorage(PS3);
+      List<Record> records = storage.aviserLoadFromMTime(mTime, 500);
+      
+      for (Record r : records){
+        String recordId=r.getId();
+        String parentid = r.getParentIds().get(0);
+        System.out.println(recordId+" : "+ parentid);
+      }
+      
+    }
+    
+    
     @Test
     public void testConnectionMars() throws IOException {
         testConnection(MARS, 0L, 2000);

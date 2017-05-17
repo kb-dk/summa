@@ -4691,6 +4691,94 @@ public abstract class DatabaseStorage extends StorageBase {
         return stats;
     }
 
+    
+    public List<Record> aviserLoadFromMTime(long mTime, int batchSize) throws Exception{
+    
+      
+      ArrayList<Record> records = new ArrayList<Record>();
+      
+      Connection conn = getTransactionalConnection();
+      String sql="SELECT A.id,A.base,A.deleted,A.indexable,A.hasRelations,A.data,A.ctime,A.mtime,A.meta,R.parentId,'' AS childId , "+
+      "B.id as p_Id ,B.base as p_base, B.deleted as p_deleted ,B.indexable as p_indexable,B.hasRelations as p_hasRelations,B.data as p_data,B.ctime as p_ctime ,B.mtime as p_mtime,B.meta as p_meta "+
+      "FROM summa_records A "+
+      "LEFT JOIN summa_relations R ON A.id=R.childId OR A.id=R.parentid "+
+      "LEFT JOIN summa_records B ON B.id=R.parentid "+
+      "WHERE  A.base= ? AND A.mtime > ? ORDER BY mtime LIMIT ?";
+      
+      PreparedStatement stmt = conn.prepareStatement(sql); 
+      try {
+        stmt.setString(1, "aviser");
+        stmt.setLong(2, mTime);
+        stmt.setInt(3, batchSize);
+      
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()){
+          
+          //Load the record
+          String id = rs.getString("id");
+          String base = rs.getString("base");
+          boolean deleted = rs.getBoolean("deleted");
+          boolean indexable = rs.getBoolean("indexable");
+          boolean hasRelations = rs.getBoolean("hasRelations");
+          byte[] data = rs.getBytes("data");
+          long ctime = rs.getLong("ctime");
+          long mtime = rs.getLong("mtime");
+          byte[] meta = rs.getBytes("meta");
+          String parentId=rs.getString("parentid");
+          //childid not loaded
+          
+          //Now load the parent record
+          String p_id = rs.getString("p_id");
+          String p_base = rs.getString("p_base");
+          boolean p_deleted = rs.getBoolean("p_deleted");
+          boolean p_indexable = rs.getBoolean("p_indexable");
+          boolean p_hasRelations = rs.getBoolean("p_hasRelations");
+          byte[] p_data = rs.getBytes("p_data");
+          long p_ctime = rs.getLong("p_ctime");
+          long p_mtime = rs.getLong("p_mtime");
+          byte[] p_meta = rs.getBytes("p_meta");
+          
+          ArrayList<String> pList= new ArrayList<String>();
+          pList.add(parentId);
+          
+          ArrayList<String> cList= new ArrayList<String>();
+          cList.add(id);
+                    
+          //Create the record object tree.
+          Record r = new Record(id,base,deleted,indexable,data,ctime,mtime, pList, null,null, true);
+          Record p = new Record(p_id,p_base,p_deleted,p_indexable,p_data,p_ctime,p_mtime,null, cList,null, true);
+          
+          r.setHasRelations(hasRelations); //We actually know they have...
+          p.setHasRelations(p_hasRelations);
+          
+          //And set the parent/children again as objects
+          ArrayList<Record> pRecordList = new ArrayList<Record>();
+          pRecordList.add(p);
+          
+          ArrayList<Record> cRecordList = new ArrayList<Record>();
+          cRecordList.add(r);
+          
+          r.setParents(pRecordList);
+          p.setChildren(cRecordList);
+          
+          records.add(r);         
+        }
+                                  
+      }
+      catch(Exception e){
+        e.printStackTrace();
+      }
+      finally{
+        closeStatement(stmt);
+        System.out.println("close");
+         //Det andre metoder på klassen lukker ikke connection. Forstår det ikke helt.
+      }
+      
+        return records;
+      
+    }
+    
+    
     @Override
     public String toString() {
         return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d,"
