@@ -4789,9 +4789,8 @@ public abstract class DatabaseStorage extends StorageBase {
           }
 
       } finally {
-        closeStatement(stmt);
-        
-         // conn.close(); Det andre metoder på klassen lukker ikke connection. Forstår det ikke helt.
+        closeStatement(stmt);        
+        conn.close();
       }
       
         return records;
