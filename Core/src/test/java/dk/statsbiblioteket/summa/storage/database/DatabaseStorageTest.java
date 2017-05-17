@@ -149,6 +149,69 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
+    /*
+    When requesting parent expansion, we also want Records without parents.
+     */
+    public void testAllRecordsExpandOnlyParent() throws Exception {
+        DatabaseStorage storage = getStorageWithMixedRelations();
+
+        try {
+            List<Record> extracted = getRecordsWithParents(storage, "aviser");
+            assertEquals("All Records should be extracted", 3, extracted.size());
+            for (Record record: extracted) {
+                if ("ChildWithParent".equals(record.getId())) {
+                    assertNotNull("Child record should have a parent list", record.getParents());
+                    assertEquals("Child record should have 1 parent in the parent list", 1, record.getParents().size());
+                    return;
+                }
+            }
+            fail("Unable to locate Record ChildWithParent");
+        } finally {
+            storage.close();
+        }
+    }
+
+    public void testAllRecordsExpandOnlyParentOptimized() throws Exception {
+        DatabaseStorage storage = getStorageWithMixedRelations();
+
+        try {
+            List<Record> extracted = storage.aviserLoadFromMTime(0L, 500);
+            assertEquals("All Records should be extracted", 3, extracted.size());
+            for (Record record: extracted) {
+                if ("ChildWithParent".equals(record.getId())) {
+                    assertNotNull("Child record should have a parent list", record.getParents());
+                    assertEquals("Child record should have 1 parent in the parent list", 1, record.getParents().size());
+                    return;
+                }
+            }
+            fail("Unable to locate Record ChildWithParent");
+        } finally {
+            storage.close();
+        }
+    }
+
+    private DatabaseStorage getStorageWithMixedRelations() throws Exception {
+        Record parent1 = new Record("ParentWithChild", "aviser", new byte[0]);
+        Record child1 = new Record("ChildWithParent", "aviser", new byte[0]);
+        child1.setParentIds(Collections.singletonList(parent1.getId()));
+
+        Record neutral1 = new Record("RecordWithoutFamily", "aviser", new byte[0]);
+
+        Configuration conf = createConf();
+        conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
+        conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
+        conf.set(QueryOptions.CONF_CHILD_DEPTH, 0);
+        conf.set(QueryOptions.CONF_PARENT_DEPTH, 3);
+        conf.set(QueryOptions.CONF_ATTRIBUTES, "all");
+        conf.set(QueryOptions.CONF_FILTER_INDEXABLE, "null");
+        conf.set(QueryOptions.CONF_FILTER_DELETED, "null");
+
+        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079+storageCounter++);
+        DatabaseStorage storage = new H2Storage(conf);
+        storage.flushAll(Arrays.asList(parent1, child1, neutral1));
+        return storage;
+    }
+
     public void testRelativesGetOnlyParentExpansionDefault() throws Exception {
         Record parent1 = new Record("Parent", "dummy", new byte[0]);
 
