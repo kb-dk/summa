@@ -4737,31 +4737,38 @@ public abstract class DatabaseStorage extends StorageBase {
           long p_ctime = rs.getLong("p_ctime");
           long p_mtime = rs.getLong("p_mtime");
           byte[] p_meta = rs.getBytes("p_meta");
-          
-          ArrayList<String> pList= new ArrayList<String>();
-          pList.add(parentId);
-          
-          ArrayList<String> cList= new ArrayList<String>();
-          cList.add(id);
                     
-          //Create the record object tree.
-          Record r = new Record(id,base,deleted,indexable,data,ctime,mtime, pList, null,null, true);
-          Record p = new Record(p_id,p_base,p_deleted,p_indexable,p_data,p_ctime,p_mtime,null, cList,null, true);
-          
-          r.setHasRelations(hasRelations); //We actually know they have...
-          p.setHasRelations(p_hasRelations);
-          
-          //And set the parent/children again as objects
-          ArrayList<Record> pRecordList = new ArrayList<Record>();
-          pRecordList.add(p);
-          
-          ArrayList<Record> cRecordList = new ArrayList<Record>();
-          cRecordList.add(r);
-          
-          r.setParents(pRecordList);
-          p.setChildren(cRecordList);
-          
-          records.add(r);         
+          if (p_id== null){            
+            Record r = new Record(id,base,deleted,indexable,data,ctime,mtime, null, null,null, true);
+            r.setHasRelations(hasRelations); 
+            records.add(r);
+          }else{
+            ArrayList<String> pList= new ArrayList<String>();
+            pList.add(parentId);
+            
+            ArrayList<String> cList= new ArrayList<String>();
+            cList.add(id);
+                      
+            //Create the record object tree.
+            Record r = new Record(id,base,deleted,indexable,data,ctime,mtime, pList, null,null, true);
+            Record p = new Record(p_id,p_base,p_deleted,p_indexable,p_data,p_ctime,p_mtime,null, cList,null, true);
+            
+            r.setHasRelations(hasRelations); 
+            p.setHasRelations(p_hasRelations);
+            
+            //And set the parent/children again as objects
+            ArrayList<Record> pRecordList = new ArrayList<Record>();
+            pRecordList.add(p);
+            
+            ArrayList<Record> cRecordList = new ArrayList<Record>();
+            cRecordList.add(r);
+            
+            r.setParents(pRecordList);
+            p.setChildren(cRecordList);
+            records.add(r);
+          }
+            
+                   
         }
                                   
       }
