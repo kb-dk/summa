@@ -62,10 +62,10 @@ public class PostGreSQLStorageTest {
     public void TEGAviserTestPS3() throws Exception {
         
       final String BASE = "aviser";
-      long mTime  = 1494469519068L-60*60*24*5;
       PostGreSQLStorage storage = getDeveloperTestStorage(PS3, false);
-      List<Record> records = storage.getRecordsModifiedAfterOptimized(
-                0L, null, null, DatabaseStorage.OPTIMIZATION.singleParent).getKey();
+        long mTime  = storage.getTimestampGenerator().baseTimestamp(1494469519068L-60*60*24*5);
+        List<Record> records = storage.getRecordsModifiedAfterOptimized(
+                mTime, BASE, null, DatabaseStorage.OPTIMIZATION.singleParent).getKey();
 
       for (Record r : records){
         String recordId=r.getId();
@@ -74,7 +74,8 @@ public class PostGreSQLStorageTest {
       }
       
     }
-    
+// Performing optimized getRecordsModifiedAfter with mTime=1567064417441415168, base=aviser, pageSize=500
+// Performing optimized getRecordsModifiedAfter with mTime=1494469087068, base=aviser, pageSize=500
     
     @Test
     public void testConnectionMarsOptimized() throws IOException {
