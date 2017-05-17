@@ -61,7 +61,7 @@ public class PostGreSQLStorageTest {
       final String BASE = "aviser";
       long mTime  = 1494469519068L-60*60*24*5;
       PostGreSQLStorage storage = getDeveloperTestStorage(PS3);
-      List<Record> records = storage.aviserLoadFromMTime(mTime, 500);
+      List<Record> records = storage.aviserLoadFromMTime("aviser",mTime, 500);
       
       for (Record r : records){
         String recordId=r.getId();
