@@ -153,7 +153,7 @@ public class DatabaseStorageTest extends StorageTestBase {
     When requesting parent expansion, we also want Records without parents.
      */
     public void testAllRecordsExpandOnlyParent() throws Exception {
-        DatabaseStorage storage = getStorageWithMixedRelations();
+        DatabaseStorage storage = getStorageWithMixedRelations(false);
 
         List<Record> extracted;
         try {
@@ -163,13 +163,50 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
         assertMixedRelations("Generic", extracted);
     }
-
-    public void testAllRecordsExpandOnlyParentOptimized() throws Exception {
-        DatabaseStorage storage = getStorageWithMixedRelations();
+    public void testAllRecordsExpandOnlyParentNullBase() throws Exception {
+        DatabaseStorage storage = getStorageWithMixedRelations(false);
 
         List<Record> extracted;
         try {
-            extracted = storage.aviserLoadFromMTime("aviser", 0L, 500);
+            extracted = getRecordsWithParents(storage, null);
+        } finally {
+            storage.close();
+        }
+        assertMixedRelations("Generic", extracted);
+    }
+
+    public void testAllRecordsExpandImplicitOptimize() throws Exception {
+        DatabaseStorage storage = getStorageWithMixedRelations(true);
+
+        List<Record> extracted;
+        try {
+            extracted = getRecordsWithParents(storage, "aviser");
+        } finally {
+            storage.close();
+        }
+        assertMixedRelations("Implicit optimize", extracted);
+    }
+
+    public void testAllRecordsExpandOnlyParentOptimized() throws Exception {
+        DatabaseStorage storage = getStorageWithMixedRelations(false);
+
+        List<Record> extracted;
+        try {
+            extracted = storage.getRecordsModifiedAfterOptimized(
+                    0L, "aviser", null, DatabaseStorage.OPTIMIZATION.singleParent).getKey();
+        } finally {
+            storage.close();
+        }
+        assertMixedRelations("Optimized", extracted);
+    }
+
+    public void testAllRecordsExpandOnlyParentOptimizedNullBase() throws Exception {
+        DatabaseStorage storage = getStorageWithMixedRelations(false);
+
+        List<Record> extracted;
+        try {
+            extracted = storage.getRecordsModifiedAfterOptimized(
+                    0L, null, null, DatabaseStorage.OPTIMIZATION.singleParent).getKey();
         } finally {
             storage.close();
         }
@@ -192,7 +229,7 @@ public class DatabaseStorageTest extends StorageTestBase {
             fail("Unable to locate Record ChildWithParent");
         }
     }
-    private DatabaseStorage getStorageWithMixedRelations() throws Exception {
+    private DatabaseStorage getStorageWithMixedRelations(boolean optimize) throws Exception {
         Record parent1 = new Record("ParentWithChild", "aviser", new byte[0]);
         parent1.setDeleted(true);
         Record child1 = new Record("ChildWithParent", "aviser", new byte[0]);
@@ -204,10 +241,11 @@ public class DatabaseStorageTest extends StorageTestBase {
         conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
         conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
         conf.set(QueryOptions.CONF_CHILD_DEPTH, 0);
-        conf.set(QueryOptions.CONF_PARENT_DEPTH, 3);
+        conf.set(QueryOptions.CONF_PARENT_DEPTH, 1);
         conf.set(QueryOptions.CONF_ATTRIBUTES, "all");
         conf.set(QueryOptions.CONF_FILTER_INDEXABLE, "null");
         conf.set(QueryOptions.CONF_FILTER_DELETED, "null");
+        conf.set(DatabaseStorage.CONF_USE_OPTIMIZATIONS, optimize);
 
         conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079+storageCounter++);
         DatabaseStorage storage = new H2Storage(conf);
@@ -405,7 +443,7 @@ public class DatabaseStorageTest extends StorageTestBase {
     private List<Record> getRecordsWithParents(DatabaseStorage storage, String base) throws IOException {
         List<Record> records = new ArrayList<>();
 
-        final QueryOptions options = new QueryOptions(false, false, 0, 2);
+        final QueryOptions options = new QueryOptions(null, null, 0, 1);
         options.setAttributes(QueryOptions.ATTRIBUTES_ALL);
         options.removeAttribute(QueryOptions.ATTRIBUTES.CHILDREN);
 //        options.removeAttribute(QueryOptions.ATTRIBUTES.PARENTS);

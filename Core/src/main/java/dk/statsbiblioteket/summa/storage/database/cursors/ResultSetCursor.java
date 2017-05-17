@@ -408,4 +408,9 @@ public class ResultSetCursor implements ConnectionCursor {
     public String toString() {
         return "ResultSetCursor[" + key + "]";
     }
+
+    @Override
+    public boolean needsExpansion() {
+        return true;
+    }
 }

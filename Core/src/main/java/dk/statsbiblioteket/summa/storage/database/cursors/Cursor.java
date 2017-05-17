@@ -60,4 +60,10 @@ public interface Cursor extends Iterator<Record> {
      *         {@code null} in case the query runs over all bases
      */
     String getBase();
+
+    /**
+     * @return true if Records returned by {@link #next()} needs to be expanded
+     * with regards to parents and children.
+     */
+    boolean needsExpansion();
 }

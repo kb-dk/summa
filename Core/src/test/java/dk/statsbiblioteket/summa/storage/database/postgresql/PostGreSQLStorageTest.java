@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import org.junit.Test;
@@ -51,8 +52,10 @@ public class PostGreSQLStorageTest {
     //    <entry key="queryoptions.parent.depth">3</entry>
     //    <entry key="queryoptions.attributes">ID, BASE, DELETED, INDEXABLE, HAS_RELATIONS, CONTENT, CREATIONTIME, MODIFICATIONTIME, PARENTS</entry>
     // </properties>
-    public static final String MARS = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_mars.xml";
-    public static final String PS3 = "/home/teg/workspace/summa/Core/postgresql_ps3.xml";
+    //public static final String MARS = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_mars.xml";
+    public static final String MARS = "/storage/postgresql_mars.xml";
+    //public static final String PS3 = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_ps3.xml";
+    public static final String PS3 = "storage/postgresql_ps3.xml";
 
 
     @Test
@@ -60,9 +63,10 @@ public class PostGreSQLStorageTest {
         
       final String BASE = "aviser";
       long mTime  = 1494469519068L-60*60*24*5;
-      PostGreSQLStorage storage = getDeveloperTestStorage(PS3);
-      List<Record> records = storage.aviserLoadFromMTime("aviser",mTime, 500);
-      
+      PostGreSQLStorage storage = getDeveloperTestStorage(PS3, false);
+      List<Record> records = storage.getRecordsModifiedAfterOptimized(
+                0L, null, null, DatabaseStorage.OPTIMIZATION.singleParent).getKey();
+
       for (Record r : records){
         String recordId=r.getId();
         String parentid = r.getParentIds().get(0);
@@ -73,39 +77,58 @@ public class PostGreSQLStorageTest {
     
     
     @Test
-    public void testConnectionMars() throws IOException {
-        testConnection(MARS, 0L, 2000);
+    public void testConnectionMarsOptimized() throws IOException {
+        testConnection(MARS, 0L, 2000, true);
     }
 
     @Test
-    public void testConnectionPS3_Zero() throws IOException { // Fast (760 records/sec, average=72KB)
-        testConnection(PS3, 0L, 500);
+    public void testConnectionPS3_ZeroOptimized() throws IOException { // Fast (760 records/sec, average=72KB)
+        testConnection(PS3, 0L, 1000, true);
+    }
+    @Test
+    public void testConnectionPS3_ZeroNonOptimized() throws IOException { // Fast (760 records/sec, average=72KB)
+        testConnection(PS3, 0L, 1000, false);
     }
 
     @Test
-    public void testConnectionPS3_first4000() throws IOException { // Fast (760 records/sec, average=43KB)
-        testConnection(PS3, 1450342478857L, 500);
+    public void testConnectionPS3_first4000Optimized() throws IOException { // Fast (760 records/sec, average=43KB)
+        testConnection(PS3, 1450342478857L, 1000, true);
     }
 
     @Test
-    public void testConnectionPS3Late() throws IOException { // Slow (14 records/sec, average=83KB)
+    public void testConnectionPS3LateOptimized() throws IOException {
         // 20170511-042519.068
-        testConnection(PS3, 1494469519068L-60*60*24*5, 500);
+        testConnection(PS3, 1494469519068L-60*60*24*5, 1000, true);
     }
     @Test
-    public void testConnectionPS3YearBack() throws IOException { // Slow (14 records/sec)
-        testConnection(PS3, 1494469519068L-60*60*24*365, 500);
+    public void testConnectionPS3LateNonOptimized() throws IOException { // Slow (14 records/sec, average=83KB)
+        // 20170511-042519.068
+        testConnection(PS3, 1494469519068L-60*60*24*5, 1000, false);
+    }
+
+
+    // Unwarmed: Retrieved 1000 records in 196.7 seconds at 5.1 records/sec with last timestamp 1494472231463 and stats read(records=1000(compressed=1000), average=75KB, smallest=(size=3KB, ID=doms_newspaperCollection:uuid:b64f049a-b6b7-4a94-b1b4-f32940c749c6), largest=(size=281KB, ID=doms_newspaperCollection:uuid:b87a9d5c-087c-4d8f-bb2e-bba8ab92963f), last=(size=37KB, ID=doms_newspaperCollection:uuid:a0f816cc-e763-4a78-a453-4899fe0a9de4))
+    // Warmed_ Retrieved 1000 records in 165.6 seconds at 6.0 records/sec with last timestamp 1494472231463 and stats read(records=1000(compressed=1000), average=75KB, smallest=(size=3KB, ID=doms_newspaperCollection:uuid:b64f049a-b6b7-4a94-b1b4-f32940c749c6), largest=(size=281KB, ID=doms_newspaperCollection:uuid:b87a9d5c-087c-4d8f-bb2e-bba8ab92963f), last=(size=37KB, ID=doms_newspaperCollection:uuid:a0f816cc-e763-4a78-a453-4899fe0a9de4))
+    @Test
+    public void testConnectionPS3YearBackOptimized() throws IOException {
+        testConnection(PS3, 1494469519068L-60*60*24*365, 1000, true);
+    }
+    // Warmed: Retrieved 1000 records in 155.1 seconds at 6.4 records/sec with last timestamp 1494472231463 and stats read(records=1000(compressed=1000), average=75KB, smallest=(size=3KB, ID=doms_newspaperCollection:uuid:b64f049a-b6b7-4a94-b1b4-f32940c749c6), largest=(size=281KB, ID=doms_newspaperCollection:uuid:b87a9d5c-087c-4d8f-bb2e-bba8ab92963f), last=(size=37KB, ID=doms_newspaperCollection:uuid:a0f816cc-e763-4a78-a453-4899fe0a9de4))
+    @Test
+    public void testConnectionPS3YearBackNonOptimized() throws IOException {
+        testConnection(PS3, 1494469519068L-60*60*24*365, 1000, false);
     }
 
     @Test
     public void testConnectionPS3One() throws IOException { // Is it the specifying of a timestamp that is the problem?
-        testConnection(PS3, 1L, 500);
+        testConnection(PS3, 1L, 1000, true);
     }
 
-    private double testConnection(String postgreSQLSetup, long firstTimestamp, int maxRecords) throws IOException {
+    private double testConnection(String postgreSQLSetup, long firstTimestamp, int maxRecords, boolean useOptimizations)
+            throws IOException {
         final String BASE = "aviser";
 
-        PostGreSQLStorage storage = getDeveloperTestStorage(postgreSQLSetup);
+        PostGreSQLStorage storage = getDeveloperTestStorage(postgreSQLSetup, useOptimizations);
         if (storage == null) {
             return 0D;
         }
@@ -152,17 +175,19 @@ public class PostGreSQLStorageTest {
         return opts;
     }
 
-    private PostGreSQLStorage getDeveloperTestStorage(String postgreSQLSetup) throws IOException {
+    private PostGreSQLStorage getDeveloperTestStorage(String postgreSQLSetup, boolean useOptimizations)
+            throws IOException {
         File CF = Resolver.getFile(postgreSQLSetup);
-        if (CF == null) {
-            System.out.println("Unable to run test 'PostGreSQLStorageTest.testConnection' as the file '" + MARS +
-                               "' is not available");
+        if (CF == null || !CF.exists()) {
+            System.out.println("Unable to run test 'PostGreSQLStorageTest.testConnection' as the file '" +
+                               postgreSQLSetup + "' is not available");
             return null;
         }
         File CF2 = new File(CF.getAbsoluteFile() + ".copy");
         Files.copy(CF, CF2, true);
 
         Configuration conf = Configuration.load(CF2.getAbsolutePath());
+        conf.set(DatabaseStorage.CONF_USE_OPTIMIZATIONS, useOptimizations);
         return new PostGreSQLStorage(conf);
     }
 }

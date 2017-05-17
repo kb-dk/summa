@@ -473,7 +473,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * Iterator keys.
      */
-    private Map<Long, ConnectionCursor> iterators = new HashMap<>(10);
+    private Map<Long, Cursor> iterators = new HashMap<>(10);
 
     private CursorReaper iteratorReaper;
     /**
@@ -1424,7 +1424,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param base    the base which the retrieved records must belong to.
      *                if the base is null, all bases matches.
      * @param options any {@link QueryOptions} the query should match.
-     * @return a iteration key.
+     * @return a iteration key, usable for calls to {@link #next}.
      * @throws IOException if prepared SQL statement is invalid.
      */
     @Override
@@ -1440,18 +1440,36 @@ public abstract class DatabaseStorage extends StorageBase {
         // Convert time to the internal binary format used by DatabaseStorage
         long mtimeTimestamp = timestampGenerator.baseTimestamp(mtime);
 
-        ConnectionCursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
-        //        Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
+        Cursor cursor;
+        if (useOptimizations && options != null && !options.hasDeletedFilter() && !options.hasIndexableFilter() &&
+            options.childDepth() == 0 && options.parentHeight() == 1) {
+            log.debug("Using optimized record iterator with optimization == " + OPTIMIZATION.singleParent);
+            try {
+                cursor = new ChunkedCursor(this, OPTIMIZATION.singleParent, base, mtimeTimestamp, options);
+                if (!cursor.hasNext()) {
+                    timingGetRecordsModifiedAfter.stop();
+                    return EMPTY_ITERATOR_KEY;
+                }
 
-        if (iter == null) {
-            return EMPTY_ITERATOR_KEY;
-        }
+            } catch (Exception e) {
+                throw new IOException("Unable to construct optimized cursor for base " + base);
+            }
+        } else {
+            log.debug("No optimization available, creating standard Record iterator for base " + base);
+            cursor = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
+            //        Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
 
-        if (usePagingModel) {
-            iter = new PagingCursor(this, (ResultSetCursor)iter);
+            if (cursor == null || !cursor.hasNext()) {
+                timingGetRecordsModifiedAfter.stop();
+                return EMPTY_ITERATOR_KEY;
+            }
+
+            if (usePagingModel) {
+                cursor = new PagingCursor(this, (ResultSetCursor) cursor);
+            }
         }
         timingGetRecordsModifiedAfter.stop();
-        return registerCursor(iter);
+        return registerCursor(cursor);
     }
 
     /**
@@ -1514,8 +1532,7 @@ public abstract class DatabaseStorage extends StorageBase {
      *         caller to avoid leaking connections and locking up the storage.
      * @throws IOException if prepared SQL statement is invalid.
      */
-    public ConnectionCursor getRecordsModifiedAfterCursor(
-            long mtime, String base, QueryOptions options) throws IOException {
+    public Cursor getRecordsModifiedAfterCursor(long mtime, String base, QueryOptions options) throws IOException {
 
         StatementHandle handle;
         PreparedStatement stmt;
@@ -2296,7 +2313,7 @@ public abstract class DatabaseStorage extends StorageBase {
         lastNextTimeNS = -System.nanoTime();
 
         cursorGet -= System.nanoTime();
-        ConnectionCursor cursor = iterators.get(iteratorKey);
+        Cursor cursor = iterators.get(iteratorKey);
         cursorGet += System.nanoTime();
 
         if (cursor == null) {
@@ -2304,8 +2321,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         cursorNext -= System.nanoTime();
-        Record r;
-        if (!cursor.hasNext() || (r = cursor.next()) == null) {
+        if (!cursor.hasNext() || (lastIterated = cursor.next()) == null) {
             cursorNext += System.nanoTime();
             cursor.close();
             iterators.remove(cursor.getKey());
@@ -2314,25 +2330,29 @@ public abstract class DatabaseStorage extends StorageBase {
         cursorNext += System.nanoTime();
 
         try {
-            expand -= System.nanoTime();
-            lastIterated = expandRelationsWithConnection(r, cursor.getQueryOptions(), cursor.getConnection());
-            timingExpandRelationsWithConnection.addNS(System.nanoTime()+expand);
-            //Record expanded = expandRelations(r, cursor.getQueryOptions());
-            expand += System.nanoTime();
-            nextCalls++;
-            contentRawSize += lastIterated.getContent(false).length;
-            lastNextTimeNS += System.nanoTime();
-
-            if (System.currentTimeMillis() >= logNextMS) {
-                log.info(getIterationStats());
-                logNextMS = System.currentTimeMillis() + logEveryMS;
+            if (cursor.needsExpansion()) {
+                expand -= System.nanoTime();
+                // Ugly hack with the casting to ConnectionCursor
+                this.lastIterated = expandRelationsWithConnection(
+                        lastIterated, cursor.getQueryOptions(), ((ConnectionCursor)cursor).getConnection());
+                timingExpandRelationsWithConnection.addNS(System.nanoTime() + expand);
+                //Record expanded = expandRelations(r, cursor.getQueryOptions());
+                expand += System.nanoTime();
             }
-            timingNext.addNS(System.nanoTime()-startNS);
-            return lastIterated;
         } catch (Exception e) {
-            log.warn("Failed to expand relations for '" + r.getId() + "'", e);
-            return r;
+            log.warn("Failed to expand relations for '" + lastIterated.getId() + "'", e);
+            return lastIterated;
         }
+        nextCalls++;
+        contentRawSize += this.lastIterated.getContent(false).length;
+        lastNextTimeNS += System.nanoTime();
+
+        if (System.currentTimeMillis() >= logNextMS) {
+            log.info(getIterationStats());
+            logNextMS = System.currentTimeMillis() + logEveryMS;
+        }
+        timingNext.addNS(System.nanoTime()-startNS);
+        return this.lastIterated;
     }
 
     private String getIterationStats() {
@@ -4457,10 +4477,9 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return a key to access the iterator remotely via the {@link #next}
      *         methods
      */
-    private long registerCursor(ConnectionCursor iter) {
+    private long registerCursor(Cursor iter) {
         log.trace("registerCursor: Got iter " + iter.getKey() + " adding to iterator list");
         iterators.put(iter.getKey(), iter);
-
         return iter.getKey();
     }
 
@@ -4704,6 +4723,37 @@ public abstract class DatabaseStorage extends StorageBase {
         return stats;
     }
 
+    public enum OPTIMIZATION {
+        /**
+         * Optimized bulk record getter that has implicit {@link QueryOptions}
+         * attributes == null
+         * deleted == null
+         * indexable == null
+         * child.depth == 0
+         * parent.depth == 1
+         * The batch size is loaded in a single statement so when iterating over records,
+         * there are no additional SQL queries.
+         */
+        singleParent
+    }
+
+    /**
+     * Entry point for calls optimized by special-casing.
+     * See {@link OPTIMIZATION} for details on the individual optimizations.
+     * @param mTime a timestamp as returned by a {@link UniqueTimestampGenerator}.
+     * @param base the record base or null if the base should be ignored in the request (= all bases).
+     * @param optimization the optimization strategy.
+     * @return the retrieved Records and a cursor, directly usable for subsequent calls to this method.
+     *         A cursor value of -1 means no more Records beyond the ones returned.
+     */
+    public SimplePair<List<Record>, Long> getRecordsModifiedAfterOptimized(
+            long mTime, String base, QueryOptions options, OPTIMIZATION optimization) throws Exception {
+        switch (optimization) {
+            case singleParent: return getRecordsModifiedAfterSingleParent(mTime, base);
+            default: throw new UnsupportedOperationException("The optimization '" + optimization + " ' is unknown");
+        }
+    }
+
 
     /**
      * Optimized bulk record getter that has implicit {@link QueryOptions}
@@ -4720,8 +4770,9 @@ public abstract class DatabaseStorage extends StorageBase {
      *         A cursor value of -1 means no more Records beyond the ones returned.
      */
     // TODO: Add support for deleted and indexable
-    public SimplePair<List<Record>, Long> getRecordsModifiedAfterSingleParent(long mTime, String base)
+    private SimplePair<List<Record>, Long> getRecordsModifiedAfterSingleParent(long mTime, String base)
             throws SQLException {
+        final long startNS = System.nanoTime();
         if (mTime == 1) {
             throw new IllegalArgumentException("mTime == -1 which signifies no more records");
         }
@@ -4730,6 +4781,8 @@ public abstract class DatabaseStorage extends StorageBase {
                     "pageSize (option " + CONF_PAGE_SIZE + ") is " + pageSize +
                     ", but must be between 1 and 10000 for single parent optimization");
         }
+        log.debug("Performing optimized getRecordsModifiedAfter with mTime=" + mTime + ", base=" + base +
+                  ", pageSize=" + pageSize);
         List<Record> records = new ArrayList<>();
 
         Connection conn = getTransactionalConnection();
@@ -4746,6 +4799,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         PreparedStatement stmt = conn.prepareStatement(sql);
         long cursor = -1;
+        long queryTime = -1;
         try {
             if (base == null) {
                 stmt.setLong(1, mTime);
@@ -4756,7 +4810,10 @@ public abstract class DatabaseStorage extends StorageBase {
                 stmt.setInt(3, pageSize);
             }
 
+            queryTime = -System.nanoTime();
             ResultSet rs = stmt.executeQuery();
+            queryTime += System.nanoTime();
+
             while (rs.next()) {
                 addRecordFromResultSet(rs, records);
                 cursor = rs.getLong("mtime");
@@ -4765,6 +4822,9 @@ public abstract class DatabaseStorage extends StorageBase {
             closeStatement(stmt);
             conn.close();
         }
+        log.debug("Finished optimized getRecordsModifiedAfter with mTime=" + mTime + ", base=" + base +
+                  ", pageSize=" + pageSize + " in " + (System.nanoTime()-startNS)/1000000 +
+                  "ms (query_time=" + queryTime/1000000 + "ms)");
         return new SimplePair<>(records, cursor);
     }
 

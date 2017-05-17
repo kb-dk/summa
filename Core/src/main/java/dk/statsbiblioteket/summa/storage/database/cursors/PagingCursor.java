@@ -212,5 +212,9 @@ public class PagingCursor implements ConnectionCursor {
         return "PagingCursor[" + key + "]";
     }
 
+    @Override
+    public boolean needsExpansion() {
+        return true;
+    }
 }
 
