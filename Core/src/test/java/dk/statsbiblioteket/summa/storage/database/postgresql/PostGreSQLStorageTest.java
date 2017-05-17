@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
@@ -58,12 +59,13 @@ public class PostGreSQLStorageTest {
     public static final String PS3 = "storage/postgresql_ps3.xml";
 
 
+    @SuppressWarnings("ConstantConditions")
     @Test
     public void TEGAviserTestPS3() throws Exception {
         
       final String BASE = "aviser";
       PostGreSQLStorage storage = getDeveloperTestStorage(PS3, false);
-        long mTime  = storage.getTimestampGenerator().baseTimestamp(1494469519068L-60*60*24*5);
+        long mTime  = UniqueTimestampGenerator.baseTimestamp(1494469519068L-60*60*24*5);
         List<Record> records = storage.getRecordsModifiedAfterOptimized(
                 mTime, BASE, null, DatabaseStorage.OPTIMIZATION.singleParent).getKey();
 
@@ -84,16 +86,22 @@ public class PostGreSQLStorageTest {
 
     @Test
     public void testConnectionPS3_ZeroOptimized() throws IOException { // Fast (760 records/sec, average=72KB)
-        testConnection(PS3, 0L, 1000, true);
+        testConnection(PS3, 0L, 2000, true);
     }
     @Test
     public void testConnectionPS3_ZeroNonOptimized() throws IOException { // Fast (760 records/sec, average=72KB)
-        testConnection(PS3, 0L, 1000, false);
+        testConnection(PS3, 0L, 2000, false);
     }
 
     @Test
-    public void testConnectionPS3_first4000Optimized() throws IOException { // Fast (760 records/sec, average=43KB)
-        testConnection(PS3, 1450342478857L, 1000, true);
+    public void testConnectionPS3_after7500_Optimized() throws IOException { // Fast (760 records/sec, average=43KB)
+        final long mTime = UniqueTimestampGenerator.systemTime(1520795047176437760L);
+        testConnection(PS3, mTime, 10000, true);
+    }
+
+    @Test
+    public void testConnectionPS3_after30K_Optimized() throws IOException { // Fast (760 records/sec, average=43KB)
+        testConnection(PS3, 1450346305158L, 5000, true);
     }
 
     @Test

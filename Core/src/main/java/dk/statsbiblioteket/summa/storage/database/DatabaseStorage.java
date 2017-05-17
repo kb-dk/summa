@@ -4741,6 +4741,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * Entry point for calls optimized by special-casing.
      * See {@link OPTIMIZATION} for details on the individual optimizations.
      * @param mTime a timestamp as returned by a {@link UniqueTimestampGenerator}.
+     *        to convert from epoch milliseconds to mTime, use UniqueTimestampGenerator.baseTimestamp(epoch_ms).
      * @param base the record base or null if the base should be ignored in the request (= all bases).
      * @param optimization the optimization strategy.
      * @return the retrieved Records and a cursor, directly usable for subsequent calls to this method.

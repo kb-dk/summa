@@ -161,7 +161,7 @@ public class UniqueTimestampGenerator {
      * {@link System#currentTimeMillis()} on the creation of {@code timeStamp}
      * @return a unique time stamp.
      */
-    public long systemTime(long timestamp) {
+    public static long systemTime(long timestamp) {
         return timestamp >>> SALT_BITS;
     }
 
@@ -191,7 +191,7 @@ public class UniqueTimestampGenerator {
      *                   generated for {@code systemTime}
      * @return a timestamp useful for comparison against other timestamps
      */
-    public long baseTimestamp (long systemTime) {
+    public static long baseTimestamp (long systemTime) {
         return systemTime << SALT_BITS;
     }
 
