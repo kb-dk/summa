@@ -175,7 +175,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         DatabaseStorage storage = getStorageWithMixedRelations();
 
         try {
-            List<Record> extracted = storage.aviserLoadFromMTime(0L, 500);
+            List<Record> extracted = storage.aviserLoadFromMTime("aviser",0L, 500);
             assertEquals("All Records should be extracted", 3, extracted.size());
             for (Record record: extracted) {
                 if ("ChildWithParent".equals(record.getId())) {

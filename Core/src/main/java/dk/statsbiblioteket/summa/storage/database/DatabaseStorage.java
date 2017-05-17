@@ -4692,9 +4692,13 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     // TODO: Take base as argument
-    public List<Record> aviserLoadFromMTime(long mTime, int batchSize) throws Exception{
-    
-      
+    public List<Record> aviserLoadFromMTime(String recordBase, long mTime, int batchSize) throws Exception{
+      if (recordBase == null){
+        throw new Exception("recordBase must be set");
+      }
+      if (batchSize <1 || batchSize > 10000){ //The 10000 limit is to prevent locking up DB
+        throw new Exception("BatchSize must be between 1 and 10000"); 
+      }            
       ArrayList<Record> records = new ArrayList<Record>();
       
       Connection conn = getTransactionalConnection();
@@ -4707,7 +4711,7 @@ public abstract class DatabaseStorage extends StorageBase {
       
       PreparedStatement stmt = conn.prepareStatement(sql); 
       try {
-        stmt.setString(1, "aviser");
+        stmt.setString(1, recordBase);
         stmt.setLong(2, mTime);
         stmt.setInt(3, batchSize);
       
