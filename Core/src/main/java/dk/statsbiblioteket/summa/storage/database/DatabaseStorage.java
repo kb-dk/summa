@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.storage.BaseStats;
@@ -425,6 +426,15 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final String CONF_OBEY_TIMESTAMP_CONTRACT = "databasestorage.obeytimestampcontract";
     public static final boolean DEFAULT_OBEY_TIMESTAMP_CONTRACT = true;
 
+    /**
+     * Whether or not to use special-casing of certain requests, notably ones with parent expansion and no children
+     * {@link #getRecordsModifiedAfterSingleParent(long, String)}.
+     * </p><p>
+     * Optional. Default is false (which will likely be changed to true in the future).
+     */
+    public static final String CONF_USE_OPTIMIZATIONS = "databasestorage.useoptimizations";
+    public static final boolean DEFAULT_USE_OPTIMIZATIONS = false;
+
     /*
     private StatementHandle stmtGetModifiedAfter;
     private StatementHandle stmtGetModifiedAfterAll;
@@ -484,10 +494,12 @@ public abstract class DatabaseStorage extends StorageBase {
      * True if paging model should be used.
      */
     private boolean usePagingModel;
-    private int pageSize;
+
+    private final int pageSize;
     private int pageSizeUpdate;
     private final boolean expandRelativesLists;
     private final boolean pruneRelativesOnGet;
+    private boolean useOptimizations;
 
     private StatementHandler statementHandler;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
@@ -731,6 +743,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.info("Disabling relationships tracking on: " + Strings.join(disabledRelationsTracking, ", "));
         }
         defaultGetOptions = QueryOptions.getOptions(conf);
+        useOptimizations = conf.getBoolean(CONF_USE_OPTIMIZATIONS, DEFAULT_USE_OPTIMIZATIONS);
         log.info("Constructed " + this);
     }
 
@@ -776,7 +789,7 @@ public abstract class DatabaseStorage extends StorageBase {
     protected void init(Configuration conf) throws IOException {
         log.trace("init called");
         connectToDatabase(conf);
-        
+
         iteratorReaper.runInThread();
 
         log.debug("Initialization finished");
@@ -815,7 +828,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws SQLException if unable to set write access or auto commit.
      */
     public Connection getDefaultConnection() throws SQLException {
-        Connection conn = getConnection();             
+        Connection conn = getConnection();
         return conn;
     }
 
@@ -827,17 +840,17 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return database connection from connection pool.
      */
     private Connection getTransactionalConnection()   {
- 
+
         try{
-        Connection conn = getConnection();
-    
-        return conn;
+            Connection conn = getConnection();
+
+            return conn;
         }
         catch(Exception e){
-           System.out.println(e);
-            throw new RuntimeException("Error with database connection properties"); 
+            System.out.println(e);
+            throw new RuntimeException("Error with database connection properties");
         }
-        
+
     }
 
     /**
@@ -1407,16 +1420,15 @@ public abstract class DatabaseStorage extends StorageBase {
      * <p/>
      * The returned iteration key, can be used for later iteration over records.
      *
-     * @param mtime   a timestamp as returned by a
-     *                {@link UniqueTimestampGenerator}.
+     * @param mtime   a timestamp as returned by a {@link UniqueTimestampGenerator}.
      * @param base    the base which the retrieved records must belong to.
+     *                if the base is null, all bases matches.
      * @param options any {@link QueryOptions} the query should match.
      * @return a iteration key.
      * @throws IOException if prepared SQL statement is invalid.
      */
     @Override
     public synchronized long getRecordsModifiedAfter(long mtime, String base, QueryOptions options) throws IOException {
-
         log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime + ", '" + base + "', " + options + ").");
         timingGetRecordsModifiedAfter.start();
         if (!hasMTime(options)) {
@@ -1496,6 +1508,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param mtime   a timestamp as returned by a
      *                {@link UniqueTimestampGenerator}.
      * @param base    the base which the retrieved records must belong to.
+     *                if the base is null, the results from all bases is retrieved.
      * @param options any {@link QueryOptions} the query should match.
      * @return a {@link ResultSetCursor} that <i>must</i> be closed by the
      *         caller to avoid leaking connections and locking up the storage.
@@ -2003,7 +2016,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
-      
+
         try {
             if (log.isTraceEnabled()) {
                 log.trace("Calling getRecord(" + id + ", ...) with meta "
@@ -2360,7 +2373,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         Connection conn = getTransactionalConnection();
-        
+
 
         try {
             return expandRelationsWithConnection(r, options, conn);
@@ -2412,7 +2425,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // want to leak them pooled connections!
         String error = null;
         try {
-           
+
             flushWithConnection(record, options, conn);
             // Update last modification time.
             updateLastModficationTimeForBase(record.getBase(), conn);
@@ -2462,8 +2475,8 @@ public abstract class DatabaseStorage extends StorageBase {
     public synchronized void flushAll(List<Record> recs, QueryOptions options) throws IOException {
         timingFlushAll.start();
         Connection conn = getTransactionalConnection();
-      
-        
+
+
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
         String error = null;
@@ -2601,47 +2614,47 @@ public abstract class DatabaseStorage extends StorageBase {
         } else if (log.isDebugEnabled()) {
             log.debug("Flushing with connection: " + r.toString(false));
         }
-        
-        
+
+
         RELATION relationsTouch= this.relationsTouch;
         RELATION clearRelation = this.relationsClear;
         // Update the timestamp we check against in getRecordsModifiedAfter
         updateModificationTime(r.getBase());
 
         boolean recordExist = recordExist(conn, r.getId());
-        
+
         try {
-           if(!recordExist){
-              createNewRecordWithConnection(r, options, conn);
-           }
-           else{
-               //Special case. The method below is extremely slow for yet unknown reasons for large object trees (10000+) and scales badly.
-               //avoid calling it for some settings where we know it is unnessecary. It can be improved by a different implementation
-               //by loading the full object tree(ID's only) from the old record and comparing.            
+            if(!recordExist){
+                createNewRecordWithConnection(r, options, conn);
+            }
+            else{
+                //Special case. The method below is extremely slow for yet unknown reasons for large object trees (10000+) and scales badly.
+                //avoid calling it for some settings where we know it is unnessecary. It can be improved by a different implementation
+                //by loading the full object tree(ID's only) from the old record and comparing.
 
 
-               if (relationsTouch.equals(RELATION.child)
-                   && clearRelation.equals(RELATION.parent)
-                   && (r.getParents() == null || r.getParents().size()==0) //Single object with no tree-changes     
-                   && (r.getChildren() == null || r.getChildren().size()==0) //Single object with no tree-changes
-                       ){
-                   //do not update  old tree recursive
-               }
-               else{
-                   touchOldParentChildRelations(r, conn);
-               }
+                if (relationsTouch.equals(RELATION.child)
+                    && clearRelation.equals(RELATION.parent)
+                    && (r.getParents() == null || r.getParents().size()==0) //Single object with no tree-changes
+                    && (r.getChildren() == null || r.getChildren().size()==0) //Single object with no tree-changes
+                        ){
+                    //do not update  old tree recursive
+                }
+                else{
+                    touchOldParentChildRelations(r, conn);
+                }
 
 
-               // We already had the record stored, so fire an update instead
-               updateRecordWithConnection(r, options, conn);    
-           }
-           
-           
+                // We already had the record stored, so fire an update instead
+                updateRecordWithConnection(r, options, conn);
+            }
+
+
         } catch (SQLException e) {
-           
-      throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
-                                                    + "failed to flush %s: %s", r.getId(), e.getMessage()), e);
-           
+
+            throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
+                                                + "failed to flush %s: %s", r.getId(), e.getMessage()), e);
+
         }
 
         // Recursively add child records
@@ -2784,31 +2797,31 @@ public abstract class DatabaseStorage extends StorageBase {
             log.info("Touching " + children.size() + " children of " + id);
         }
 
-         int touched = 0;
-        
+        int touched = 0;
+
         // Use handle directly
 
         PreparedStatement stmt = null;
         try {
 
-                //Single touch
-                StatementHandle handle = statementHandler.getTouchRecord();
-                stmt = conn.prepareStatement(handle.getSql());
+            //Single touch
+            StatementHandle handle = statementHandler.getTouchRecord();
+            stmt = conn.prepareStatement(handle.getSql());
 
-                //Single touch, unique modified time
-                for (String r : children) {
-                    long nowStamp = timestampGenerator.next();
-                    stmt.setLong(1, nowStamp);
-                    stmt.setString(2, r);
-                    stmt.executeUpdate();
-                    
-                    if (touched % 100000==0){
-                     log.info("Total touched so far:"+touched);    
-                        
-                    }
-                    touched++;
-                    
+            //Single touch, unique modified time
+            for (String r : children) {
+                long nowStamp = timestampGenerator.next();
+                stmt.setLong(1, nowStamp);
+                stmt.setString(2, r);
+                stmt.executeUpdate();
+
+                if (touched % 100000==0){
+                    log.info("Total touched so far:"+touched);
+
                 }
+                touched++;
+
+            }
                         
                 /* Multitouch code, not used
                 StatementHandle handle = statementHandler.getTouchChildren();
@@ -2823,14 +2836,14 @@ public abstract class DatabaseStorage extends StorageBase {
                  */
 
 
-                // It would be a tempting optimization to drop the getParents() call
-                // at the top and simply return here if stmt.getUpdateCount() == 0.
-                // This would avoid the creation of a ResultSet in getParents().
-                // We can't do this because there might be a ref to a non-existing
-                // parent which in turn might have a parent that actually exist.
-                // If we returned on zero updates we wouldn't touch the topmost
-                // parent
-            
+            // It would be a tempting optimization to drop the getParents() call
+            // at the top and simply return here if stmt.getUpdateCount() == 0.
+            // This would avoid the creation of a ResultSet in getParents().
+            // We can't do this because there might be a ref to a non-existing
+            // parent which in turn might have a parent that actually exist.
+            // If we returned on zero updates we wouldn't touch the topmost
+            // parent
+
         } catch (SQLException e) {
             log.error("Failed to touch child of '" + id + "': " + e.getMessage(), e);
             // Consider this non-fatal
@@ -3534,7 +3547,7 @@ public abstract class DatabaseStorage extends StorageBase {
             // Mark all caches as dirty
             invalidateStats.set(true);
             changedBases.add(record.getBase());
-        //invalidateCachedStats();
+            //invalidateCachedStats();
             //updateModificationTime(record.getBase());
             if (jobBase != null && !jobBase.equals(record.getBase())) {
                 // The record base was changed by the batch job
@@ -3545,32 +3558,32 @@ public abstract class DatabaseStorage extends StorageBase {
         return true;
     }
 
-    
+
     private boolean relationExist(Connection conn, String parentId,String childId)  throws SQLException{
         final long startNS = System.nanoTime();
         StatementHandle handleCheckPC = statementHandler.getParentAndChildCount();
         PreparedStatement stmtCheckPC = conn.prepareStatement(handleCheckPC.getSql());
         stmtCheckPC.setString(1, parentId);
         stmtCheckPC.setString(2, childId);
- 
-        ResultSet rs = stmtCheckPC.executeQuery();        
-        rs.next();        
+
+        ResultSet rs = stmtCheckPC.executeQuery();
+        rs.next();
         int number = rs.getInt(1);
         timingRelationsExists.addNS(System.nanoTime() - startNS);
         return number>0;
     }
-    
-    
-    
+
+
+
     private boolean recordExist(Connection conn, String id)  throws SQLException{
         final long startNS = System.nanoTime();
 
         StatementHandle handleCheckExists = statementHandler.getRecordExist();
         PreparedStatement stmtCheckExists = conn.prepareStatement(handleCheckExists.getSql());
         stmtCheckExists.setString(1, id);
- 
-        ResultSet rs = stmtCheckExists.executeQuery();        
-        rs.next();        
+
+        ResultSet rs = stmtCheckExists.executeQuery();
+        rs.next();
         int number = rs.getInt(1);
         if (number>0) {
             log.debug("Record already exist:" + id);
@@ -3578,7 +3591,7 @@ public abstract class DatabaseStorage extends StorageBase {
         timingRecordExists.addNS(System.nanoTime() - startNS);
         return number>0;
     }
-    
+
     /**
      * Create parent/child and child/parent relations for the given record.
      *
@@ -3599,20 +3612,20 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
                 boolean exist = relationExist(conn, rec.getId(), childId);
 
-                
+
                 stmt.setString(1, rec.getId());
                 stmt.setString(2, childId);
 
-                try {                                
-                   if (!exist){
-                      stmt.executeUpdate();
-                   }
-                    
-                } catch (SQLException e) {                                
+                try {
+                    if (!exist){
+                        stmt.executeUpdate();
+                    }
+
+                } catch (SQLException e) {
                     closeStatement(stmt);
                     throw new SQLException(String.format("Error creating child relations for %s", rec.getId()), e);
-                
-                }               
+
+                }
             }
 
             // Make sure that all children are tagged as having relations,
@@ -3632,17 +3645,17 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
                 boolean exist = relationExist(conn, parentId,rec.getId());
 
-                
+
                 stmt.setString(1, parentId);
                 stmt.setString(2, rec.getId());
 
                 try {
-                 if (!exist){
-                    stmt.executeUpdate();
-                 }
+                    if (!exist){
+                        stmt.executeUpdate();
+                    }
                 } catch (SQLException e) {
-                        closeStatement(stmt);
-                        throw new SQLException("Error creating parent relations for " + rec.getId(), e);                    
+                    closeStatement(stmt);
+                    throw new SQLException("Error creating parent relations for " + rec.getId(), e);
                 }
             }
 
@@ -4064,7 +4077,7 @@ public abstract class DatabaseStorage extends StorageBase {
         timingTouchRecord.addNS(System.nanoTime()-startNS);
     }
 
-   
+
     /**
      * Return the last modification time for a base or the storage, if no
      * changes to a base has happened yet. This is drawn from the database.
@@ -4146,7 +4159,7 @@ public abstract class DatabaseStorage extends StorageBase {
             closeStatement(stmt);
         }
     }
-    
+
     /**
      * WARNING: <i>This will remove all data from the storage!</i>.
      * Destroys and removes all table definitions from the underlying database.
@@ -4547,8 +4560,8 @@ public abstract class DatabaseStorage extends StorageBase {
         Statement stmt = conn.createStatement();
         ResultSet results = stmt.executeQuery(query);
 
-        try {                       
-            while(results.next()){                
+        try {
+            while(results.next()){
                 String baseName = results.getString(1);
                 long lastModified = results.getLong(2);
                 long deletedIndexables = results.getLong(3);
@@ -4701,103 +4714,111 @@ public abstract class DatabaseStorage extends StorageBase {
      * parent.depth == 1
      * The batch size is loaded in a single statement so when iterating over records,
      * there is no additional SQL queries.
+     * @param mTime a timestamp as returned by a {@link UniqueTimestampGenerator}.
+     * @param base the record base or null if the base should be ignored in the request (= all bases).
+     * @return the retrieved Records and a cursor, directly usable for subsequent calls to this method.
+     *         A cursor value of -1 means no more Records beyond the ones returned.
      */
-    public List<Record> aviserLoadFromMTime(String recordBase, long mTime, int batchSize) throws SQLException {
-      if (recordBase == null){
-        throw new IllegalArgumentException("recordBase must be set");
-      }
-      if (batchSize <1 || batchSize > 10000){ //The 10000 limit is to prevent locking up DB
-        throw new IllegalArgumentException("BatchSize must be between 1 and 10000");
-      }            
-      ArrayList<Record> records = new ArrayList<>();
-      
-      Connection conn = getTransactionalConnection();
-      final String sql = "SELECT A.id,A.base,A.deleted,A.indexable,A.hasRelations,A.data,A.ctime,A.mtime,A.meta,R.parentId,'' AS childId , "+
-      "B.id as p_Id ,B.base as p_base, B.deleted as p_deleted ,B.indexable as p_indexable,B.hasRelations as p_hasRelations,B.data as p_data,B.ctime as p_ctime ,B.mtime as p_mtime,B.meta as p_meta "+
-      "FROM summa_records A "+
-      "LEFT JOIN summa_relations R ON A.id=R.childId OR A.id=R.parentid "+
-      "LEFT JOIN summa_records B ON B.id=R.parentid "+
-      "WHERE  A.base= ? AND A.mtime > ? ORDER BY mtime LIMIT ?";
-      
-      PreparedStatement stmt = conn.prepareStatement(sql); 
-      try {
-          stmt.setString(1, recordBase);
-          stmt.setLong(2, mTime);
-          stmt.setInt(3, batchSize);
+    // TODO: Add support for deleted and indexable
+    public SimplePair<List<Record>, Long> getRecordsModifiedAfterSingleParent(long mTime, String base)
+            throws SQLException {
+        if (mTime == 1) {
+            throw new IllegalArgumentException("mTime == -1 which signifies no more records");
+        }
+        if (pageSize <1 || pageSize > 10000){ //The 10000 limit is to prevent locking up DB
+            throw new IllegalArgumentException(
+                    "pageSize (option " + CONF_PAGE_SIZE + ") is " + pageSize +
+                    ", but must be between 1 and 10000 for single parent optimization");
+        }
+        List<Record> records = new ArrayList<>();
 
-          ResultSet rs = stmt.executeQuery();
-          while (rs.next()) {
+        Connection conn = getTransactionalConnection();
+        final String sql =
+                "SELECT A.id,A.base,A.deleted,A.indexable,A.hasRelations,A.data,A.ctime,A.mtime,A.meta,R.parentId," +
+                "'' AS childId , B.id as p_Id ,B.base as p_base, B.deleted as p_deleted ,B.indexable as p_indexable, " +
+                "B.hasRelations as p_hasRelations, B.data as p_data, B.ctime as p_ctime, B.mtime as p_mtime, " +
+                "B.meta as p_meta "+
+                "FROM summa_records A "+
+                "LEFT JOIN summa_relations R ON A.id=R.childId OR A.id=R.parentid "+
+                "LEFT JOIN summa_records B ON B.id=R.parentid "+
+                "WHERE" + (base == null ? "" : " A.base= ? AND") +
+                " A.mtime > ? ORDER BY mtime LIMIT ?";
 
-              //Load the record
-              String id = rs.getString("id");
-              String base = rs.getString("base");
-              boolean deleted = rs.getBoolean("deleted");
-              boolean indexable = rs.getBoolean("indexable");
-              boolean hasRelations = rs.getBoolean("hasRelations");
-              byte[] data = rs.getBytes("data");
-              long ctime = rs.getLong("ctime");
-              long mtime = rs.getLong("mtime");
-              byte[] meta = rs.getBytes("meta");
-              String parentId = rs.getString("parentid");
-              //childid not loaded
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        long cursor = -1;
+        try {
+            if (base == null) {
+                stmt.setLong(1, mTime);
+                stmt.setInt(2, pageSize);
+            } else {
+                stmt.setString(1, base);
+                stmt.setLong(2, mTime);
+                stmt.setInt(3, pageSize);
+            }
 
-              //Now load the parent record
-              String p_id = rs.getString("p_id");
-              String p_base = rs.getString("p_base");
-              boolean p_deleted = rs.getBoolean("p_deleted");
-              boolean p_indexable = rs.getBoolean("p_indexable");
-              boolean p_hasRelations = rs.getBoolean("p_hasRelations");
-              byte[] p_data = rs.getBytes("p_data");
-              long p_ctime = rs.getLong("p_ctime");
-              long p_mtime = rs.getLong("p_mtime");
-              byte[] p_meta = rs.getBytes("p_meta");
-
-              if (p_id == null) {
-                  Record r = new Record(id, base, deleted, indexable, data, ctime, mtime, null, null,
-                                        meta.length == 0 ? null : StringMap.fromFormal(meta), true);
-                  r.setHasRelations(hasRelations);
-                  records.add(r);
-              } else {
-                  ArrayList<String> pList = new ArrayList<>();
-                  pList.add(parentId);
-
-                  ArrayList<String> cList = new ArrayList<>();
-                  cList.add(id);
-
-                  //Create the record object tree.
-                  Record r = new Record(id, base, deleted, indexable, data, ctime, mtime, pList, null,
-                                        meta.length == 0 ? null : StringMap.fromFormal(meta), true);
-                  Record p = new Record(p_id, p_base, p_deleted, p_indexable, p_data, p_ctime, p_mtime,
-                                        null, cList, meta.length == 0 ? null : StringMap.fromFormal(meta), true);
-
-                  r.setHasRelations(hasRelations);
-                  p.setHasRelations(p_hasRelations);
-
-                  //And set the parent/children again as objects
-                  ArrayList<Record> pRecordList = new ArrayList<>();
-                  pRecordList.add(p);
-
-                  ArrayList<Record> cRecordList = new ArrayList<>();
-                  cRecordList.add(r);
-
-                  r.setParents(pRecordList);
-                  p.setChildren(cRecordList);
-                  records.add(r);
-              }
-
-
-          }
-
-      } finally {
-        closeStatement(stmt);        
-        conn.close();
-      }
-      
-        return records;
-      
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                addRecordFromResultSet(rs, records);
+                cursor = rs.getLong("mtime");
+            }
+        } finally {
+            closeStatement(stmt);
+            conn.close();
+        }
+        return new SimplePair<>(records, cursor);
     }
-    
-    
+
+    private void addRecordFromResultSet(ResultSet rs, List<Record> records) throws SQLException {
+        //Load the record
+        String id = rs.getString("id");
+        String base = rs.getString("base");
+        boolean deleted = rs.getBoolean("deleted");
+        boolean indexable = rs.getBoolean("indexable");
+        boolean hasRelations = rs.getBoolean("hasRelations");
+        byte[] data = rs.getBytes("data");
+        long ctime = timestampGenerator.systemTime(rs.getLong("ctime"));
+        long mtime = timestampGenerator.systemTime(rs.getLong("mtime"));
+        byte[] meta = rs.getBytes("meta");
+        String parentId = rs.getString("parentid");
+        //childid not loaded
+
+        //Now load the parent record
+        String p_id = rs.getString("p_id");
+        String p_base = rs.getString("p_base");
+        boolean p_deleted = rs.getBoolean("p_deleted");
+        boolean p_indexable = rs.getBoolean("p_indexable");
+        boolean p_hasRelations = rs.getBoolean("p_hasRelations");
+        byte[] p_data = rs.getBytes("p_data");
+        long p_ctime = timestampGenerator.systemTime(rs.getLong("p_ctime"));
+        long p_mtime = timestampGenerator.systemTime(rs.getLong("p_mtime"));
+        byte[] p_meta = rs.getBytes("p_meta");
+
+
+        if (p_id == null) {
+            Record r = new Record(id, base, deleted, indexable, data, ctime, mtime, null, null,
+                                  meta.length == 0 ? null : StringMap.fromFormal(meta), true);
+            r.setHasRelations(hasRelations);
+            records.add(r);
+            return;
+        }
+
+        //Create the record object tree.
+        Record r = new Record(id, base, deleted, indexable, data, ctime, mtime,
+                              Collections.singletonList(parentId), null,
+                              meta.length == 0 ? null : StringMap.fromFormal(meta), true);
+        Record p = new Record(p_id, p_base, p_deleted, p_indexable, p_data, p_ctime, p_mtime,
+                              null, Collections.singletonList(id),
+                              meta.length == 0 ? null : StringMap.fromFormal(p_meta), true);
+
+        r.setHasRelations(hasRelations);
+        p.setHasRelations(p_hasRelations);
+
+        //And set the parent/children again as objects
+        r.setParents(Collections.singletonList(p));
+        p.setChildren(Collections.singletonList(r));
+        records.add(r);
+    }
+
     @Override
     public String toString() {
         return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d,"
