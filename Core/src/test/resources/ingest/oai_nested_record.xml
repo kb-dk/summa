@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <responseDate>2017-05-29T08:45:49.830+02:00</responseDate>
+  <request verb="ListIdentifiers" resumptionToken="+F2hiFJ1Vlc1756Bfn6/X5euc+e587wIPvfXJq2rB1zXvnoF+fr+c1tV7rmr2eATDV3xAA==">http://example.com</request>
+  <ListRecords>
+    <record>
+      <header>
+        <identifier>123456:78901234</identifier>
+        <datestamp>2017-05-16T10:34:32.984210Z</datestamp>
+        <setSpec>foo</setSpec>
+      </header>
+      <metadata>
+        <marcx:collection xmlns:marcx="info:lc/xmlns/marcxchange-v1">
+          <marcx:record format="danMARC2" type="Bibliographic">
+            <marcx:leader>00000n    1230000   4500</marcx:leader>
+            <marcx:datafield ind1="0" ind2="0" tag="001">
+              <marcx:subfield code="a">12345678</marcx:subfield>
+              <marcx:subfield code="b">123456</marcx:subfield>
+              <marcx:subfield code="c">19920207</marcx:subfield>
+              <marcx:subfield code="d">19870514</marcx:subfield>
+              <marcx:subfield code="f">a</marcx:subfield>
+              <marcx:subfield code="o">c</marcx:subfield>
+            </marcx:datafield>
+          </marcx:record>
+        </marcx:collection>
+      </metadata>
+    </record>
+  </ListRecords>
+</OAI-PMH>

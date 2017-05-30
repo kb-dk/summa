@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -23,6 +24,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterBase;
+import dk.statsbiblioteket.summa.common.filter.object.XMLReplaceFilter;
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -54,6 +58,97 @@ public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
      */
     public static Test suite() {
         return new TestSuite(XMLSplitterFilterTest.class);
+    }
+
+    public void testNestedRecords() throws IOException {
+        XMLSplitterFilter splitter = new XMLSplitterFilter(Configuration.newMemoryBased(
+                ObjectFilterBase.CONF_FILTER_NAME, "Splitter",
+                XMLSplitterFilter.CONF_ID_PREFIX, "dummy",
+                XMLSplitterFilter.CONF_COLLAPSE_PREFIX, true,
+                XMLSplitterFilter.CONF_RECORD_ELEMENT, "record",
+                XMLSplitterFilter.CONF_RECORD_NAMESPACE, "http://www.openarchives.org/OAI/2.0/",
+                XMLSplitterFilter.CONF_ID_ELEMENT, "identifier",
+                XMLSplitterFilter.CONF_ID_NAMESPACE, "http://www.openarchives.org/OAI/2.0/",
+                XMLSplitterFilter.CONF_BASE, "dummybase",
+                XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, true,
+                XMLSplitterFilter.CONF_REQUIRE_VALID, false
+        ));
+        splitter.setSource(new PayloadFeederHelper("ingest/oai_nested_record.xml"));
+        assertTrue("There should be a Record available", splitter.hasNext());
+        String produced = splitter.next().getRecord().getContentAsUTF8();
+        assertEquals("There should be the right number of open- and close-tags for 'record'\n" + produced,
+                     4, produced.split("record").length-1);
+        //System.out.println(produced);
+    }
+
+    public void testNestedRecordsInner() throws IOException {
+        XMLSplitterFilter splitter = new XMLSplitterFilter(Configuration.newMemoryBased(
+                ObjectFilterBase.CONF_FILTER_NAME, "Splitter",
+                XMLSplitterFilter.CONF_ID_PREFIX, "dummy",
+                XMLSplitterFilter.CONF_COLLAPSE_PREFIX, true,
+                XMLSplitterFilter.CONF_RECORD_ELEMENT, "record",
+                XMLSplitterFilter.CONF_RECORD_NAMESPACE, "info:lc/xmlns/marcxchange-v1",
+                XMLSplitterFilter.CONF_ID_ELEMENT, "leader",
+                XMLSplitterFilter.CONF_ID_NAMESPACE, "info:lc/xmlns/marcxchange-v1",
+                XMLSplitterFilter.CONF_BASE, "dummybase",
+                XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, true,
+                XMLSplitterFilter.CONF_REQUIRE_VALID, false
+        ));
+        splitter.setSource(new PayloadFeederHelper("ingest/oai_nested_record.xml"));
+        assertTrue("There should be a Record available", splitter.hasNext());
+        String produced = splitter.next().getRecord().getContentAsUTF8();
+        assertEquals("There should be the right number of open- and close-tags for 'record'\n" + produced,
+                     2, produced.split("record").length-1);
+        System.out.println(produced);
+        /*
+        XMLReplaceFilter replacer = new XMLReplaceFilter(Configuration.newMemoryBased(
+                XMLReplaceFilter.CONF_ID_FIELDS, "001*a,002*a,002*c,011*a,013*a,014*a,015*a,016*a,017*a,018*a"
+        ));
+        replacer.setSource(splitter);
+        StreamController marcSplitter = new StreamController(Configuration.newMemoryBased(
+                StreamController.CONF_PARSER, SBMARCParser.class,
+                MARCParser.CONF_BASE, "dummybase",
+                MARCParser.CONF_ID_PREFIX, "dummyid_"
+        ));
+        marcSplitter.setSource(replacer);
+        assertTrue("There should be a Record available", marcSplitter.hasNext());
+        String produced = marcSplitter.next().getRecord().getContentAsUTF8();
+        assertEquals("There should be the right number of open- and close-tags for 'record'\n" + produced,
+                     2, produced.split("record").length-1);*/
+
+    }
+
+    public void testNestedRecordsInnerMarc() throws IOException {
+        XMLSplitterFilter splitter = new XMLSplitterFilter(Configuration.newMemoryBased(
+                ObjectFilterBase.CONF_FILTER_NAME, "Splitter",
+                XMLSplitterFilter.CONF_ID_PREFIX, "dummy",
+                XMLSplitterFilter.CONF_COLLAPSE_PREFIX, true,
+                XMLSplitterFilter.CONF_RECORD_ELEMENT, "record",
+                XMLSplitterFilter.CONF_RECORD_NAMESPACE, "info:lc/xmlns/marcxchange-v1",
+                XMLSplitterFilter.CONF_ID_ELEMENT, "leader", // Will be overwritten later
+                XMLSplitterFilter.CONF_ID_NAMESPACE, "info:lc/xmlns/marcxchange-v1",
+                XMLSplitterFilter.CONF_BASE, "dummybase",
+                XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, true,
+                XMLSplitterFilter.CONF_REQUIRE_VALID, false
+        ));
+        splitter.setSource(new PayloadFeederHelper("ingest/oai_nested_record.xml"));
+        XMLReplaceFilter replacer = new XMLReplaceFilter(Configuration.newMemoryBased(
+                XMLReplaceFilter.CONF_ID_FIELDS, "001*a,002*a,002*c,011*a,013*a,014*a,015*a,016*a,017*a,018*a"
+        ));
+        replacer.setSource(splitter);
+        StreamController marcSplitter = new StreamController(Configuration.newMemoryBased(
+                StreamController.CONF_PARSER, SBMARCParser.class,
+                MARCParser.CONF_BASE, "dummybase",
+                MARCParser.CONF_ID_PREFIX, "dummyid_"
+        ));
+        marcSplitter.setSource(replacer);
+        assertTrue("There should be a Record available", marcSplitter.hasNext());
+        Record record = marcSplitter.next().getRecord();
+        String content = record.getContentAsUTF8();
+        assertEquals("There should be the right number of open- and close-tags for 'record'\n" + content,
+                     2, content.split("record").length-1);
+        assertEquals("The Record should have the correct ID", "dummyid_12345678", record.getId());
+        assertEquals("The Record should have the correct base", "dummybase", record.getBase());
     }
 
     /**
