@@ -34,6 +34,7 @@ public class SolrDocumentAdjustFilterTest {
             "<field name=\"ts_change\">2017-04-31T10:15:00.123Z</field>\n" +
             "<field name=\"ts_change\">2000-02-29T10:15:00.123Z</field>\n" +
             "<field name=\"ts_change\">2001-02-29T10:15:00.123Z</field>\n" +
+            "<field name=\"ts_change\">2001-02-29</field>\n" +
             "<field name=\"ts_change\">2004-02-29T10:15:00.123Z</field>\n" +
             "</doc>";
     public static final String SOLR1_EXPECTED =
@@ -45,6 +46,7 @@ public class SolrDocumentAdjustFilterTest {
             "<field name=\"ts_change\">2017-05-01T10:15:00.123Z</field>\n" +
             "<field name=\"ts_change\">2000-02-29T10:15:00.123Z</field>\n" +
             "<field name=\"ts_change\">2001-03-01T10:15:00.123Z</field>\n" +
+            "<field name=\"ts_change\">2001-03-01</field>\n" +
             "<field name=\"ts_change\">2004-02-29T10:15:00.123Z</field>\n" +
             "</doc>";
 
