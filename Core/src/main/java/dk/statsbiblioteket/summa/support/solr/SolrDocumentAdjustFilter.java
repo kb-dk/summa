@@ -34,8 +34,10 @@ public class SolrDocumentAdjustFilter extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(SolrDocumentAdjustFilter.class);
 
     public enum ADJUSTMENT {
-        /** {@link dk.statsbiblioteket.summa.support.solr.SolrDocumentEnrich} */
-        enrich
+        /** Add Record meta-data toSolr document {@link SolrDocumentEnrich} */
+        enrich,
+        /** Adjust wrong date using lenient parsing {@link SolrLenientTimestamp} */
+        lenient_dates
     }
 
     /**
@@ -70,6 +72,10 @@ public class SolrDocumentAdjustFilter extends ObjectFilterImpl {
                     adjustments.add(new SolrDocumentEnrich(conf));
                     break;
                 }
+                case lenient_dates: {
+                    adjustments.add(new SolrLenientTimestamp(conf));
+                    break;
+                }
                 default: throw new UnsupportedOperationException("Unknown adjuster '" + adjustment + "'");
             }
         }
@@ -87,5 +93,15 @@ public class SolrDocumentAdjustFilter extends ObjectFilterImpl {
     public interface Adjuster {
         boolean adjust(Payload payload) throws PayloadException;
         boolean adjust(Record record) throws PayloadException;
+    }
+
+    @Override
+    public String toString() {
+        return "SolrDocumentAdjustFilter(adjustments=[" + Strings.join(adjustments) + "])";
+    }
+
+    @Override
+    public void close(boolean success) {
+        super.close(success);
     }
 }

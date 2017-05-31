@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -142,4 +143,9 @@ public class SolrDocumentEnrich implements SolrDocumentAdjustFilter.Adjuster {
     }
 
     private final StringBuilder enriched = new StringBuilder();
+
+    @Override
+    public String toString() {
+        return "SolrDocumentEnrich(elements=[" + Strings.join(elements) + "])";
+    }
 }
