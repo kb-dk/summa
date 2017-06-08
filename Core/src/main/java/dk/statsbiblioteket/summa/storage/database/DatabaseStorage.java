@@ -2378,6 +2378,7 @@ public abstract class DatabaseStorage extends StorageBase {
                              ns/M, ns/M/calls, calls*M/ns);
     }
 
+    // TODO: Make the interval adjustable
     private final long logEveryMS = 60000;
     private long logNextMS = System.currentTimeMillis() + logEveryMS;
     private long lastNextTimeNS = 0;

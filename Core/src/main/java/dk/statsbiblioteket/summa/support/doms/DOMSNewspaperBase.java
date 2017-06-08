@@ -68,6 +68,22 @@ public abstract class DOMSNewspaperBase extends ThreadedStreamParser {
     public static final String CONF_KEEPRELATIVES = "altoparser.keeprelatives";
     public static final boolean DEFAULT_KEEPRELATIVES = true;
     private static Log log = LogFactory.getLog(DOMSNewspaperBase.class);
+    /**
+     * If true, newly created segment Records inherit their ctime from the originating Record.
+     * If false, ctime is set to now.
+     * </p><p>
+     * Optional boolean. Default is true;
+     */
+    public static final String CONF_KEEP_CTIME = "altoparser.keepctime";
+    public static final boolean DEFAULT_KEEP_CTIME = true;
+    /**
+     * If true, newly created segment Records inherit their mtime from the originating Record.
+     * If false, mtime is set to now.
+     * </p><p>
+     * Optional boolean. Default is true;
+     */
+    public static final String CONF_KEEP_MTIME = "altoparser.keepmtime";
+    public static final boolean DEFAULT_KEEP_MTIME = true;
 
     public static final String NOALTO = "_noalto_";
 
@@ -75,6 +91,8 @@ public abstract class DOMSNewspaperBase extends ThreadedStreamParser {
     protected final String base;
     protected final Alto.HYPHEN_MODE hyphenMode;
     protected final boolean keepRelatives;
+    protected final boolean keepCTime;
+    protected final boolean keepMTime;
     protected final NumberFormat spatial = NumberFormat.getInstance(Locale.ENGLISH);
     {
         spatial.setGroupingUsed(false);
@@ -86,6 +104,8 @@ public abstract class DOMSNewspaperBase extends ThreadedStreamParser {
         acceptALTOLess = conf.getBoolean(CONF_ACCEPT_ALTOLESS, DEFAULT_ACCEPT_ALTOLESS);
         hyphenMode = Alto.HYPHEN_MODE.valueOf(conf.getString(CONF_HYPHENATION, DEFAULT_HYPHENATION));
         keepRelatives = conf.getBoolean(CONF_KEEPRELATIVES, DEFAULT_KEEPRELATIVES);
+        keepCTime = conf.getBoolean(CONF_KEEP_CTIME, DEFAULT_KEEP_CTIME);
+        keepMTime = conf.getBoolean(CONF_KEEP_MTIME, DEFAULT_KEEP_MTIME);
     }
 
     @Override
@@ -131,7 +151,12 @@ public abstract class DOMSNewspaperBase extends ThreadedStreamParser {
             Record s = source.getRecord();
             record.setDeleted(s.isDeleted());
             record.setIndexable(s.isIndexable());
-            record.setCreationTime(s.getCreationTime());
+            if (keepCTime) {
+                record.setCreationTime(s.getCreationTime());
+            }
+            if (keepMTime) {
+                record.setModificationTime(s.getModificationTime());
+            }
         }
         return record;
     }

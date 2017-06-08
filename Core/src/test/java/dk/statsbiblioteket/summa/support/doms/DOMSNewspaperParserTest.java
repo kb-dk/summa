@@ -14,6 +14,7 @@
  */
 package dk.statsbiblioteket.summa.support.doms;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -24,6 +25,7 @@ import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
@@ -31,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +48,23 @@ public class DOMSNewspaperParserTest extends TestCase {
     private final File DOMS_XSLT = new File("/home/te/tmp/sumfresh/sites/aviser/xslt/index/aviser/doms_aviser.xsl");
 
     private final File DOMS_PROBLEM = Resolver.getFile("support/alto/faulty_alto.xml");
+
+    public void testTimestamps() throws IOException {
+        final Record pageRecord = new Record("foo", "bar",
+                                       Files.loadString(Resolver.getFile(OLD_ALTO)).getBytes("utf-8"));
+        final long ctime = System.currentTimeMillis() - 24*60*60*1000;
+        final long mtime = ctime + 5*60*60*1000;
+        pageRecord.setCreationTime(ctime);
+        pageRecord.setModificationTime(mtime);
+        ObjectFilter splitter = getSplitter(PayloadFeederHelper.createHelper(Collections.singletonList(pageRecord)),
+                                            DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS, false);
+        assertTrue("There should be a Record available", splitter.hasNext());
+        final Record segmentRecord = splitter.next().getRecord();
+        assertEquals("ctime for segment Record should match page Record",
+                     pageRecord.getCreationTime(), segmentRecord.getCreationTime());
+        assertEquals("mtime for segment Record should match page Record",
+                     pageRecord.getModificationTime(), segmentRecord.getModificationTime());
+    }
 
     public void testHyphenation() throws IOException {
         ObjectFilter splitter = getSplitter(Resolver.getFile(OLD_ALTO), DOMSNewspaperParser.DEFAULT_HEADLINE_MAX_WORDS);
@@ -251,6 +271,10 @@ public class DOMSNewspaperParserTest extends TestCase {
     }
     private ObjectFilter getSplitter(File altofile, int maxHeadlineWords, boolean isDeleted) throws IOException {
         PayloadFeederHelper source = new PayloadFeederHelper(0, altofile.toString());
+        return getSplitter(source, maxHeadlineWords, isDeleted);
+    }
+
+    private ObjectFilter getSplitter(PayloadFeederHelper source, int maxHeadlineWords, boolean isDeleted) {
         for (Payload payload: source.getPayloads()) {
             payload.getRecord().setDeleted(isDeleted);
         }
