@@ -102,7 +102,7 @@ public class QuerySanitizer implements Configurable {
         fixExclamations = ACTION.valueOf(conf.getString(CONF_FIX_EXCLAMATIONS, DEFAULT_FIX_EXCLAMATIONS.toString()));
         fixRegexps =      ACTION.valueOf(conf.getString(CONF_FIX_REGEXP, DEFAULT_FIX_REGEXP.toString()));
 
-        fixTrailingQuestionmarks = Boolean.valueOf(conf.getString(CONF_FIX_TRAILING_QUESTIONMARKS,  ""+DEFAULT_FIX_TRAILING_QUSTIONMARKS));
+        fixTrailingQuestionmarks = conf.getBoolean(CONF_FIX_TRAILING_QUESTIONMARKS, false);
         log.debug(String.format(
                 "Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s, regexps:%s, , questionmarks:%s",
                 fixQuotes, fixParentheses, fixQualifiers, fixExclamations, fixRegexps, fixTrailingQuestionmarks));
