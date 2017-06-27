@@ -15,7 +15,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>2.3.0-20170601</version>
+    <version>2.3.0-20170601-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -144,6 +144,7 @@
                 <version>2.4</version>
                 <classifier>jdk15</classifier>
             </dependency>
+
             <dependency>
                 <groupId>axis</groupId>
                 <artifactId>axis</artifactId>
@@ -164,6 +165,7 @@
                 <artifactId>axis-wsdl4j</artifactId>
                 <version>1.5.1</version>
             </dependency>
+
 <!--            <dependency>
             	<groupId>xalan</groupId>
             	<artifactId>xalan</artifactId>
