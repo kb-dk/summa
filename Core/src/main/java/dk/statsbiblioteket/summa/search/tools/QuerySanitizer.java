@@ -75,6 +75,15 @@ public class QuerySanitizer implements Configurable {
     public static final String CONF_FIX_REGEXP = "sanitizer.regexps";
     public static final ACTION DEFAULT_FIX_REGEXP = ACTION.escape;
 
+    
+    /**
+     * How to handle regexps. Regexps are signalled by the use of '/'.
+     * </p><p>
+     * Optional. Possible actions are ignore, remove (default) and escape.
+     */
+    public static final String CONF_FIX_TRAILING_QUESTIONMARKS = "sanitizer.trailingquestionmarks";
+    public static final boolean DEFAULT_FIX_TRAILING_QUSTIONMARKS = false;
+    
     // TODO: Standalone dash (-), ampersand (&) and other special characters
 
     private final ACTION fixQuotes;
@@ -82,17 +91,21 @@ public class QuerySanitizer implements Configurable {
     private final ACTION fixQualifiers;
     private final ACTION fixExclamations;
     private final ACTION fixRegexps;
-
+    private final boolean fixTrailingQuestionmarks;
+    
     @SuppressWarnings({"UnusedParameters"})
     public QuerySanitizer(Configuration conf) {
+
         fixQuotes =       ACTION.valueOf(conf.getString(CONF_FIX_QUOTES, DEFAULT_FIX_QUOTES.toString()));
         fixParentheses =  ACTION.valueOf(conf.getString(CONF_FIX_PARENTHESES, DEFAULT_FIX_PARENTHESES.toString()));
         fixQualifiers =   ACTION.valueOf(conf.getString(CONF_FIX_QUALIFIERS, DEFAULT_FIX_QUALIFIERS.toString()));
         fixExclamations = ACTION.valueOf(conf.getString(CONF_FIX_EXCLAMATIONS, DEFAULT_FIX_EXCLAMATIONS.toString()));
         fixRegexps =      ACTION.valueOf(conf.getString(CONF_FIX_REGEXP, DEFAULT_FIX_REGEXP.toString()));
+
+        fixTrailingQuestionmarks = Boolean.valueOf(conf.getString(CONF_FIX_TRAILING_QUESTIONMARKS,  ""+DEFAULT_FIX_TRAILING_QUSTIONMARKS));
         log.debug(String.format(
-                "Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s, regexps:%s",
-                fixQuotes, fixParentheses, fixQualifiers, fixExclamations, fixRegexps));
+                "Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s, regexps:%s, , questionmarks:%s",
+                fixQuotes, fixParentheses, fixQualifiers, fixExclamations, fixRegexps, fixTrailingQuestionmarks));
     }
 
     /**
@@ -174,8 +187,8 @@ public class QuerySanitizer implements Configurable {
 
     private SanitizedQuery sanitize(SanitizedQuery query) {
         int lastChangeCount = -1;
-        while (query.getChangeCount() != lastChangeCount) {
-            if (fixQuotes != ACTION.ignore) {
+        while (query.getChangeCount() != lastChangeCount) {  
+          if (fixQuotes != ACTION.ignore) {
                 fixQuotes(query); // Must be first
             }
             if (fixParentheses != ACTION.ignore) {
@@ -190,6 +203,11 @@ public class QuerySanitizer implements Configurable {
             if (fixRegexps!= ACTION.ignore) {
                 fixRegexps(query, fixRegexps);
             }
+            if (fixTrailingQuestionmarks) {
+              fixTrailingQuestionMarks(query);
+          }
+            
+            
             lastChangeCount = query.getChangeCount();
         }
         return query;
@@ -209,7 +227,21 @@ public class QuerySanitizer implements Configurable {
                             "Uneven (" + quoteCount + ") number of quotation marks");
         }
     }
-
+    
+    private void fixTrailingQuestionMarks(SanitizedQuery query) {
+    String lastQuery = query.getLastQuery();
+    //Replace all trailing ? with *. Example: Hvor er Toke??? -> Hvor er Toke* .  Hvor er Toke -> Hvor er Toke (no change)
+      boolean anyReplaced=false;
+      while (lastQuery.endsWith("?")){
+        lastQuery=lastQuery.substring(0, lastQuery.length()-1);
+        anyReplaced=true;
+      }
+      if (anyReplaced){
+        lastQuery=lastQuery+"*";        
+      }
+      query.addChange(lastQuery, SanitizedQuery.CHANGE.summasyntax, "replaced trailing questionmarks");
+    }
+    
     // If a single parentheses-fail is found, all non-quoted parentheses are removed
     private void fixParentheses(SanitizedQuery query) {
         String q = query.getLastQuery();

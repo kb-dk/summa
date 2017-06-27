@@ -11,10 +11,15 @@ import java.util.Arrays;
 public class QuerySanitizerTest extends TestCase {
     private QuerySanitizer sanitizer = new QuerySanitizer(Configuration.newMemoryBased());
     private QuerySanitizer removingSanitizer = new QuerySanitizer(Configuration.newMemoryBased(
-        QuerySanitizer.CONF_FIX_EXCLAMATIONS, "remove",
+        QuerySanitizer.CONF_FIX_EXCLAMATIONS, "remove",        
         QuerySanitizer.CONF_FIX_QUALIFIERS, "remove")
     );
+    
+    private QuerySanitizer trailingQuestionMarkSanitizer = new QuerySanitizer(Configuration.newMemoryBased(               
+        QuerySanitizer.CONF_FIX_TRAILING_QUESTIONMARKS, "true")
+    );
 
+    
     private QuerySanitizer.SanitizedQuery.CHANGE ERROR = QuerySanitizer.SanitizedQuery.CHANGE.error;
     private QuerySanitizer.SanitizedQuery.CHANGE SYNTAX = QuerySanitizer.SanitizedQuery.CHANGE.summasyntax;
 
@@ -88,6 +93,17 @@ public class QuerySanitizerTest extends TestCase {
         assertSanitize("Quoted trailing exclamation mark",  "\"foo bar!\"", "\"foo bar!\"", false);
         assertSanitize("Escaped trailing exclamation mark", "foo bar\\!",   "foo bar\\!",   false);
     }
+    
+    public void testTrailingQuestionmarks() {
+      assertSanitizeQuestionmark("Bad trailing questionmark",     "Hvor er Toke*",   "Hvor er Toke?");
+      assertSanitizeQuestionmark("Bad trailing questionmarks",     "Hvor er Toke*",   "Hvor er Toke????");
+      assertSanitizeQuestionmark("No change",     "Hvor er Toke",   "Hvor er Toke");
+      assertSanitizeQuestionmark("No change",     "Hvor ? Toke",   "Hvor ? Toke");
+      assertSanitizeQuestionmark("No change",     "?Hvor er Toke",   "?Hvor er Toke");
+    }
+    
+    
+    
 
     public void testDash() {
         assertSanitize("Phrased words with dash",            "\"foo-bar\"", "\"foo-bar\"", true);
@@ -122,4 +138,10 @@ public class QuerySanitizerTest extends TestCase {
         String actualC = Strings.join(clean.getChanges(), ", ");
         assertEquals(message + ": '" + query + "'. Change type", expectedC, actualC);
     }
+    
+    private void assertSanitizeQuestionmark(String message, String expected, String query) {
+       String result =trailingQuestionMarkSanitizer.sanitize(query).getLastQuery();
+       assertEquals(message + ": '" + query + "'", expected, result);
+}
+    
 }
