@@ -1443,7 +1443,10 @@ public abstract class DatabaseStorage extends StorageBase {
         Cursor cursor;
         if (useOptimizations && options != null && !options.hasDeletedFilter() && !options.hasIndexableFilter() &&
             options.childDepth() == 0 && options.parentHeight() == 1) {
-            log.debug("Using optimized record iterator with optimization == " + OPTIMIZATION.singleParent);
+            log.info(String.format(
+                    "getRecordsModifiedAfter(mtime=%d, base=%s, options=%s): " +
+                    "Using optimized record iterator with optimization=%s",
+                    mtime, base, options, OPTIMIZATION.singleParent));
             try {
                 cursor = new ChunkedCursor(this, OPTIMIZATION.singleParent, base, mtimeTimestamp, options);
                 if (!cursor.hasNext()) {
@@ -1455,7 +1458,10 @@ public abstract class DatabaseStorage extends StorageBase {
                 throw new IOException("Unable to construct optimized cursor for base " + base);
             }
         } else {
-            log.debug("No optimization available, creating standard Record iterator for base " + base);
+            log.info(String.format(
+                    "getRecordsModifiedAfter(mtime=%d, base=%s, options=%s): " +
+                    "No optimization available (useOptimizations=%b), creating standard Record iterator",
+                    mtime, base, options, useOptimizations));
             cursor = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
             //        Cursor iter = getRecordsModifiedAfterCursor(mtimeTimestamp, base, options);
 
