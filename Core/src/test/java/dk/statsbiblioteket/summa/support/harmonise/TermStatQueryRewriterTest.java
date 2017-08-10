@@ -94,6 +94,16 @@ public class TermStatQueryRewriterTest extends TestCase {
         assertRewriteResults(rewriter, TESTS, request);
     }
 
+    public void testRangeRewrite() throws IOException {
+        final String RANGE = "mtime:[2017-01-10T00:00:00Z TO *]";
+        TermStatQueryRewriter rewriter = setupTestTermStats();
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, RANGE);
+        Map<String, String> rewrittenMap = rewriter.rewrite(request);
+        String actual = rewrittenMap.get("a");
+        assertEquals("The range should not be changed in any way", RANGE, actual);
+    }
+
     public void testNumber() throws IOException {
         TermStatQueryRewriter rewriter = setupTestTermStats();
         String[] TESTS = new String[]{ // query, expectedA, expectedB

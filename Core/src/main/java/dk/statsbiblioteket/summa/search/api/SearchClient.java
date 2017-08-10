@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.rmi.SummaRest;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -149,11 +150,13 @@ public class SearchClient implements Configurable, SummaSearcher {
             log.debug("Skipping search to " + server + " as the SearchClient is disabled");
             return new ResponseCollection();
         }
-        log.debug("Performing RMI based remote search against " + server);
+        log.debug("Performing RMI based remote search against " + server + " with query '" +
+                  request.getString(DocumentKeys.SEARCH_QUERY) + "'");
         if (rmi != null) {
             return searchRMI(request);
         }
-        log.debug("Performing REST based remote search against " + server);
+        log.debug("Performing REST based remote search against " + server + " with query '" +
+                  request.getString(DocumentKeys.SEARCH_QUERY) + "'");
         return searchRest(request);
     }
 

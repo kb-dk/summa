@@ -155,7 +155,7 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     // "terence tao"
-    // The Unicode character &#x1d49c; in Summon XML was converted to &#xD835;&#xDC9C; in the output XML
+    // The Unicode character &#x1d49c; (𝒜) in Summon XML was converted to &#xD835;&#xDC9C; in the output XML
     public void testSpecificFailingQuerySaraTuring() throws RemoteException {
         final String QUERY = "sara turing";
 

@@ -227,6 +227,9 @@ public class QueryRewriter {
                                        new WhitespaceAnalyzer(Version.LUCENE_46));
         queryParser.setAutoGeneratePhraseQueries(true);
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
+        // Without this, ranges (also those with timestamps) are lowercased
+        // Note that this also effects regexp, prefix and fuzzy-queries
+        queryParser.setLowercaseExpandedTerms(false);
         return queryParser;
     }
 

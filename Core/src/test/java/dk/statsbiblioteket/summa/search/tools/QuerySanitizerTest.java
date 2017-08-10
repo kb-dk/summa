@@ -41,6 +41,11 @@ public class QuerySanitizerTest extends TestCase {
         return new TestSuite(QuerySanitizerTest.class);
     }
 
+    public void testLowercasing() {
+        final String RANGE = "mtime:[2017-01-10T00:00:00Z TO *]";
+        assertSanitize("Range query",              RANGE,         RANGE, false);
+    }
+
     public void testUnbalancedQuotes() {
         assertSanitize("Unbalanced quotes",              "foo bar",         "foo bar\"", false, ERROR);
         assertSanitize("Unbalanced quotes",              "foo bar",         "\"foo bar", false, ERROR);
