@@ -217,6 +217,7 @@ public class QueryRewriter {
 
         queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
         queryParser.setAutoGeneratePhraseQueries(true);
+        queryParser.setLowercaseExpandedTerms(false);
         return queryParser;
     }
 

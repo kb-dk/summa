@@ -65,6 +65,16 @@ public class QueryRewritingSearchNodeTest extends TestCase {
         });
     }
 
+    public void testRangeIdentity() throws RemoteException {
+        final String RANGE = "mtime:[2017-01-10T00:00:00Z TO *]";
+        assertTransformations(Configuration.newMemoryBased(
+                QueryRewritingSearchNode.CONF_PHRASE_QUERIES, false,
+                QueryRewritingSearchNode.CONF_SANITIZE_QUERIES, true
+        ), new String[][]{
+            {RANGE, RANGE}
+        });
+    }
+
     public void testSpace() throws RemoteException {
         assertTransformations(Configuration.newMemoryBased(), new String[][]{
             {"foo", "\"foo\""},

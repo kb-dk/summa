@@ -151,12 +151,12 @@ public class SearchClient implements Configurable, SummaSearcher {
             return new ResponseCollection();
         }
         log.debug("Performing RMI based remote search against " + server + " with query '" +
-                  request.getString(DocumentKeys.SEARCH_QUERY) + "'");
+                  request.getString(DocumentKeys.SEARCH_QUERY, "N/A") + "'");
         if (rmi != null) {
             return searchRMI(request);
         }
         log.debug("Performing REST based remote search against " + server + " with query '" +
-                  request.getString(DocumentKeys.SEARCH_QUERY) + "'");
+                  request.getString(DocumentKeys.SEARCH_QUERY, "N/A") + "'");
         return searchRest(request);
     }
 

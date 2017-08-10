@@ -1,5 +1,5 @@
 mvn clean
-source ~/bin/jdk17
+source ~/bin/jdk18
 mvn -DskipTests -Dmaven.javadoc.skip=true package
 md5sum Summix/target/summix-*.zip
 if [ "." != ".$1" ]; then

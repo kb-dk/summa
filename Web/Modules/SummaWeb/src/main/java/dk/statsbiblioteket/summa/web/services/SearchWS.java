@@ -52,9 +52,6 @@ import java.util.regex.Pattern;
 
 /**
  * A class containing methods meant to be exposed as a web service.
- *
- * @author Mads Villadsen <mailto:mv@statsbiblioteket.dk>
- * @author Henrik Bitsch Kirk <mailto:hbk@statsbiblioteket.dk>
  */
 @WebService
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -63,10 +60,20 @@ import java.util.regex.Pattern;
 public class SearchWS implements ServletContextListener {
     private Log log;
 
+    /**
+     * The current web service framework (axis) delivers invalid entities when returning unicodes above 0xFFFF.
+     * Setting this to true removes those codes before sending the result.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_PRUNE_HIGHORDERUNICODE = "searchws.prune.highorderunicode";
+    public static final boolean DEFAULT_PRUNE_HIGHORDERUNICODE = true;
+
     static SummaSearcher searcher;
     static SummaSearcher suggester;
     static SummaSearcher didyoumean;
     private Configuration conf;
+    private boolean pruneHighOrderUnicode = true;
 
     /**
      * Local XML output factory.
@@ -98,6 +105,18 @@ public class SearchWS implements ServletContextListener {
     public SearchWS() {
         log = LogFactory.getLog(SearchWS.class);
         // Do not log anything here as contextInitialized will be called _after_ the constructor
+    }
+
+    SearchWS(SummaSearcher searcher) {
+        log = LogFactory.getLog(SearchWS.class);
+        SearchWS.searcher = searcher;
+    }
+
+    SearchWS(Configuration conf, SummaSearcher searcher) {
+        log = LogFactory.getLog(SearchWS.class);
+        SearchWS.searcher = searcher;
+        this.conf = conf;
+        pruneHighOrderUnicode = conf.getBoolean(CONF_PRUNE_HIGHORDERUNICODE, DEFAULT_PRUNE_HIGHORDERUNICODE);
     }
 
     /**
@@ -177,6 +196,7 @@ public class SearchWS implements ServletContextListener {
         //final String SEARCH_CONTEXT = "java:comp/env/confLocation";
         if (conf == null) {
             conf = Configuration.resolve(CONFIGURATION_LOCATION, CONFIGURATION_LOCATION, DEFAULT_CONF_FILE, true);
+            pruneHighOrderUnicode = conf.getBoolean(CONF_PRUNE_HIGHORDERUNICODE, DEFAULT_PRUNE_HIGHORDERUNICODE);
         }
         return conf;
     }
@@ -227,7 +247,7 @@ public class SearchWS implements ServletContextListener {
             log.debug("didYouMean('" + query + "', " + maxSuggestions + ") finished in "
                       + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
-        return retXML;
+        return pruneHighOrderUnicode("DidYouMean(q=" + query + ")", retXML);
     }
 
     /**
@@ -270,7 +290,7 @@ public class SearchWS implements ServletContextListener {
             log.debug("getSuggestion('" + prefix + "', " + maxSuggestions + ") finished in "
                       + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
-        return retXML;
+        return pruneHighOrderUnicode("getSuggestions(prefix=" + prefix + ")", retXML);
     }
 
     /**
@@ -330,7 +350,7 @@ public class SearchWS implements ServletContextListener {
 
         log.debug("getRecentSuggestions(" + ageSeconds + "s, " + maxSuggestions
                   + ") finished in " + (System.currentTimeMillis() - startTime) + "ms");
-        return retXML;
+        return pruneHighOrderUnicode("getRecentSuggestions", retXML);
     }
 
     /**
@@ -416,7 +436,7 @@ public class SearchWS implements ServletContextListener {
 
         log.trace("getField('" + id + "', '" + fieldName + "') finished in " + (System.currentTimeMillis() - startTime)
                   + "ms" + getTiming(res));
-        return retXML;
+        return pruneHighOrderUnicode("getField(id=" + id + ", field=" + fieldName + ")", retXML);
     }
 
 
@@ -466,7 +486,7 @@ public class SearchWS implements ServletContextListener {
         if (log.isTraceEnabled()) {
             log.trace(call + " finished in " + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
-        return retXML;
+        return pruneHighOrderUnicode("indexLookup(field=" + field + ", term=" + term + ")", retXML);
     }
 
     /**
@@ -520,7 +540,8 @@ public class SearchWS implements ServletContextListener {
         if (log.isTraceEnabled()) {
             log.trace(call + " finished in " + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
-        return retXML;
+        return pruneHighOrderUnicode(
+                "extendedIndexLookup(query=" + query + ", field=" + field + ", term=" + term + ")", retXML);
     }
 
     /**
@@ -558,7 +579,7 @@ public class SearchWS implements ServletContextListener {
             log.debug("getMoreLikeThis('" + id + "', " + numberOfRecords + ") finished in "
                       + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
         }
-        return retXML;
+        return pruneHighOrderUnicode("getMoreLikeThis(id=" + id + ")", retXML);
     }
 
     /**
@@ -605,6 +626,7 @@ public class SearchWS implements ServletContextListener {
         req.addJSON(json);
         try {
             res = getSearcher().search(req);
+            addDebugUnicode(req, res);
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
@@ -616,7 +638,21 @@ public class SearchWS implements ServletContextListener {
             log.debug(String.format("directJSON(%s) finished in %s ms%s",
                                     json, System.currentTimeMillis() - startTime, getTiming(res)));
         }
-        return retXML;
+        return pruneHighOrderUnicode("directJSON(query=" + req.getString(DocumentKeys.SEARCH_QUERY, ""), retXML);
+    }
+
+    // Really ugly, but temporarily needed to debug high unicode support through the web service layer
+    private void addDebugUnicode(Request req, ResponseCollection res) {
+        if (!req.getBoolean("debugunicode", false)) {
+            return;
+        }
+        DocumentResponse documents = new DocumentResponse(
+                null, "Dummy", 0, 10, null, false, new String[]{"recordID", "content"}, 10, 10);
+        DocumentResponse.Record record = new DocumentResponse.Record("DummyID", "unittest", 1.2f, "a");
+        record.add(new DocumentResponse.Field("basic", "foo", false));
+        record.add(new DocumentResponse.Field("extended", "\uD835\uDC9C", false));
+        documents.addGroup(new DocumentResponse.Group(record, "recordID"));
+        res.add(documents);
     }
 
     public static final Pattern PROCESSING_OPTIONS = Pattern.compile("\\<\\:(.*)\\:\\>(.*)");
@@ -730,6 +766,7 @@ public class SearchWS implements ServletContextListener {
         try {
             long callStart = System.currentTimeMillis();
             res = getSearcher().search(req);
+            addDebugUnicode(req, res);
             res.addTiming("searchws.outercall", System.currentTimeMillis() - callStart);
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
@@ -747,7 +784,7 @@ public class SearchWS implements ServletContextListener {
                     filter, query, numberOfRecords, startIndex, sortKey, reverse,
                     System.currentTimeMillis() - startTime,  getTiming(res)));
         }
-        return retXML;
+        return pruneHighOrderUnicode("simpleSearchSorted(query=" + query + ")", retXML);
     }
 
     /**
@@ -846,7 +883,7 @@ public class SearchWS implements ServletContextListener {
         String retXML = advancedFacet(query, null);
 
         log.debug("simpleFacet('" + query + "') finished in " + (System.currentTimeMillis() - startTime) + "ms");
-        return retXML;
+        return pruneHighOrderUnicode("simpleFacet(query=" + query + ")", retXML);
     }
 
 
@@ -908,7 +945,7 @@ public class SearchWS implements ServletContextListener {
         }
         facetTime += System.currentTimeMillis();
         log.debug("exposedFacet(..., " + format + ") finished in " + facetTime + "ms" + getTiming(res));
-        return retXML;
+        return pruneHighOrderUnicode("exposedFacet(request=" + request + ")", retXML);
 
     }
 
@@ -988,7 +1025,7 @@ public class SearchWS implements ServletContextListener {
 
         log.debug("advancedFacet('" + query + "', '" + facetKeys + "') finished in "
                   + (System.currentTimeMillis() - startTime) + "ms" + getTiming(res));
-        return retXML;
+        return pruneHighOrderUnicode("advancedFacet(query=" + query + ")", retXML);
     }
 
     /**
@@ -1066,5 +1103,26 @@ public class SearchWS implements ServletContextListener {
                 log.warn("Exception shutting down searcher from contextDestroyed for " + searcher, e);
             }
         }
+    }
+
+    /**
+     * Checks the input for unicode-points above 0xFFFF as the axis framework produces invalid XML entities with
+     * those. Any such high-order codepoints are removed and a warning is logged.
+     */
+    private String pruneHighOrderUnicode(String designation, String in) {
+        if (!pruneHighOrderUnicode) {
+            return in;
+        }
+        final StringBuilder sb = new StringBuilder(in.length());
+        for (int offset = 0; offset < in.length(); ) {
+            final int codepoint = in.codePointAt(offset);
+            if (codepoint <= 0xFFF) {
+                sb.append((char)codepoint);
+            } else {
+                log.warn("Encountered and removed codepoint " + codepoint + " from " + designation);
+            }
+            offset += Character.charCount(codepoint); // Probably faster to special case this in the if above
+        }
+        return sb.toString();
     }
 }
