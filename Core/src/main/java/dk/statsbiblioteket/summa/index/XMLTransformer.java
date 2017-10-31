@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.xml.SummaEntityResolver;
 import dk.statsbiblioteket.summa.plugins.SaxonXSLT;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.NamespaceRemover;
 import org.apache.commons.logging.Log;
@@ -159,12 +160,23 @@ public class XMLTransformer extends GraphFilter<Object> {
     public static final String CONF_CATCH_STACK_OVERFLOW = "summa.xmltransformer.stackoverflow.catch";
     public static final boolean DEFAULT_CATCH_STACK_OVERFLOW = true;
 
+    /**
+     * Heavy debug mode: Dumps the incoming document in the log at INFO-level.
+     * Only enable this temporarily.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_FULL_DEBUG_DUMP = "summa.xmltransformer.fulldebugdump";
+    public static final boolean DEFAULT_FULL_DEBUG_DUMP = false;
+
     private final boolean topLevelStackOverflowCatch;
 
     /**
      * Set with {@link RecordUtil#CONF_ESCAPE_CONTENT}. Can be overwritten inside Changelings.
+     * Default is false.
      */
     private final boolean defaultEscapeContentOnXmlFull;
+    private final boolean fullDebugDump;
 
     private List<Changeling> changelings = new ArrayList<>();
 
@@ -176,8 +188,7 @@ public class XMLTransformer extends GraphFilter<Object> {
     public XMLTransformer(Configuration conf) {
         super(conf);
         topLevelStackOverflowCatch = conf.getBoolean(CONF_CATCH_STACK_OVERFLOW, DEFAULT_CATCH_STACK_OVERFLOW);
-        defaultEscapeContentOnXmlFull = conf.getBoolean(
-                RecordUtil.CONF_ESCAPE_CONTENT, RecordUtil.DEFAULT_ESCAPE_CONTENT);
+        defaultEscapeContentOnXmlFull = conf.getBoolean(RecordUtil.CONF_ESCAPE_CONTENT, false);
         Changeling base = new Changeling(conf, false);
         if (base.isValid()) {
             changelings.add(base);
@@ -196,6 +207,7 @@ public class XMLTransformer extends GraphFilter<Object> {
                 "Unable to extract any transformation setups (key: " + CONF_SETUPS + ") or a XSLT location (key: "
                 + CONF_XSLT + ") from configuration");
         }
+        fullDebugDump = conf.getBoolean(CONF_FULL_DEBUG_DUMP, DEFAULT_FULL_DEBUG_DUMP);
         log.info("XMLTransformer with " + changelings.size() + " transforming sub-units initialized");
     }
 
@@ -355,17 +367,7 @@ public class XMLTransformer extends GraphFilter<Object> {
         }
 
         private synchronized void innerTransform(Record record) throws PayloadException {
-            Reader inner;
-            try { // Special processing as RecordUtil.getStream does not support controlling content escaping
-                inner = RecordUtil.PART.xmlfull.toString().equals(source) && !escapeContentOnXmlFull ?
-                        new StringReader(RecordUtil.toXML(record, false)) :
-                        new InputStreamReader(RecordUtil.getStream(record, source), "utf-8");
-            } catch (UnsupportedEncodingException e) {
-                throw new IllegalStateException("utf-8 should be supported", e);
-            } catch (IOException e) {
-                throw new PayloadException("IOException while XML-serializing content", e);
-            }
-            Reader reader = stripXMLNamespaces ? new NamespaceRemover(inner) : inner;
+            Reader reader = getReader(record);
 
             XMLReader xml;
             try {
@@ -394,10 +396,37 @@ public class XMLTransformer extends GraphFilter<Object> {
                 nonCatchTransform(record, source, result);
             }
             RecordUtil.setBytes(record, out.toByteArray(), destination);
+            if (fullDebugDump) {
+                try {
+                    log.info(String.format(
+                            "Finished transforming record %s using XSLT %s ans stripNamespaces=%b from\n" +
+                            "%s\n**************** to ****************\n%s",
+                            record.getId(), xsltLocation, stripXMLNamespaces,
+                            Strings.flush(getReader(record)),
+                            RecordUtil.getString(record, RecordUtil.PART.content)));
+                } catch (IOException e) {
+                    throw new PayloadException("Unable to stream content from record " + record.getId(), e);
+                }
+            }
             if (log.isTraceEnabled()) {
                 log.trace(getName() + " finished transforming " + record);
             }
         }
+
+        private Reader getReader(Record record) throws PayloadException {
+            Reader inner;
+            try { // Special processing as RecordUtil.getStream does not support controlling content escaping
+                inner = RecordUtil.PART.xmlfull.toString().equals(source) && !escapeContentOnXmlFull ?
+                        new StringReader(RecordUtil.toXML(record, false)) :
+                        new InputStreamReader(RecordUtil.getStream(record, source), "utf-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new IllegalStateException("utf-8 should be supported", e);
+            } catch (IOException e) {
+                throw new PayloadException("IOException while XML-serializing content", e);
+            }
+            return stripXMLNamespaces ? new NamespaceRemover(inner) : inner;
+        }
+
 
         // Don't init cause with the StackOverflowError as it is by nature excessive and not very telling
         @SuppressWarnings("ThrowInsideCatchBlockWhichIgnoresCaughtException")
