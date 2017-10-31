@@ -201,11 +201,12 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
                     nextPayload = sourceNext();
                 } catch (Exception e) {
                     log.warn(
-                        "run(): Exception while getting next from source in '" + name + "'. Retrying in 500 ms", e);
+                        "run() Exception while getting next from source in '" + name
+                        + "'. Retrying in 500 ms", e);
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException e1) {
-                        log.warn("run(): Interrupted while sleeping", e1);
+                        log.warn("run() in muxer " + name + ": Interrupted while sleeping", e1);
                     }
                 }
                 if (nextPayload != null) {
@@ -213,7 +214,7 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
                 }
             }
             if (nextPayload == null) {
-                log.warn("source.next() gave a null-pointer");
+                log.warn("source.next() in muxer " + name + " gave a null-pointer");
                 break;
             }
 
@@ -222,7 +223,7 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
             MUXFilterFeeder feeder;
             try {
                 if (log.isTraceEnabled()) {
-                    log.trace("Getting feeder for " + nextPayload);
+                    log.trace("Getting feeder for " + nextPayload + " in muxer " + name);
                 }
                 feeder = getFeeder(nextPayload);
             } catch (Exception e) {
@@ -238,7 +239,7 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
             } else {
                 if (log.isTraceEnabled()) {
                     //noinspection DuplicateStringLiteralInspection
-                    log.trace("Adding " + nextPayload + " to " + feeder);
+                    log.trace("Muxer " + name + ": Adding " + nextPayload + " to " + feeder);
                 }
                 feeder.queuePayload(nextPayload);
                 sizeProcess.process(nextPayload);
@@ -268,7 +269,7 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
     }
 
     private void sendEOFToFeeders() {
-        log.debug("Sending EOF to all feeders");
+        log.debug("Muxer " + name + ": Sending EOF to all feeders");
         for (MUXFilterFeeder feeder: feeders) {
             feeder.signalEOF();
         }
