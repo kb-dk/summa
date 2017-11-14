@@ -12,8 +12,9 @@ public class QuerySanitizerTest extends TestCase {
     private QuerySanitizer sanitizer = new QuerySanitizer(Configuration.newMemoryBased());
     private QuerySanitizer removingSanitizer = new QuerySanitizer(Configuration.newMemoryBased(
         QuerySanitizer.CONF_FIX_EXCLAMATIONS, "remove",        
-        QuerySanitizer.CONF_FIX_QUALIFIERS, "remove")
-    );
+        QuerySanitizer.CONF_FIX_QUALIFIERS, "remove",
+        QuerySanitizer.CONF_FIX_SMARTQUOTES, "remove"
+    ));
     
     private QuerySanitizer trailingQuestionMarkSanitizer = new QuerySanitizer(Configuration.newMemoryBased(               
         QuerySanitizer.CONF_FIX_TRAILING_QUESTIONMARKS, "true")
@@ -44,6 +45,15 @@ public class QuerySanitizerTest extends TestCase {
     public void testLowercasing() {
         final String RANGE = "mtime:[2017-01-10T00:00:00Z TO *]";
         assertSanitize("Range query",              RANGE,         RANGE, false);
+    }
+
+    public void testSmartQuotes() {
+        for (char quoteSign: QuerySanitizer.DEFAULT_SMARTQUOTES.toCharArray()) {
+            assertSanitize("Remove alternative quote signs " + quoteSign,
+                           "foo bar", "foo " + quoteSign + "bar" + quoteSign, true, ERROR);
+            assertSanitize("Replace alternative quote signs " + quoteSign,
+                           "foo \"bar\"", "foo " + quoteSign + "bar" + quoteSign, false, ERROR);
+        }
     }
 
     public void testUnbalancedQuotes() {
@@ -145,7 +155,7 @@ public class QuerySanitizerTest extends TestCase {
     }
     
     private void assertSanitizeQuestionmark(String message, String expected, String query) {
-       String result =trailingQuestionMarkSanitizer.sanitize(query).getLastQuery();
+       String result = trailingQuestionMarkSanitizer.sanitize(query).getLastQuery();
        assertEquals(message + ": '" + query + "'", expected, result);
 }
     

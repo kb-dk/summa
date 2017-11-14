@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Pre-processor for entered queries that handles common problems.
@@ -34,6 +35,22 @@ public class QuerySanitizer implements Configurable {
     private static Log log = LogFactory.getLog(QuerySanitizer.class);
 
     public enum ACTION {ignore, remove, escape}
+
+    /**
+     * How to handle smart quotes, as send by Apple iOS 11 devices or text copied from Microsoft Word.
+     * </p><p>
+     * Optional. Possible actions are ignore, remove and escape (aka replace with the common quote sign {@code "}).
+     */
+    public static final String CONF_FIX_SMARTQUOTES = "sanitizer.smartquotes";
+    public static final ACTION DEFAULT_FIX_SMARTQUOTES = ACTION.escape;
+
+    /**
+     * The characters treated as quote signs, when {@link #CONF_FIX_EXCLAMATIONS} is true.
+     * </p><p>
+     * Optional. Default is the list from https://unicode-table.com/en/sets/quotation-marks/
+     */
+    public static final String CONF_SMARTQUOTES = "sanitizer.smartquotes.characters";
+    public static final String DEFAULT_SMARTQUOTES = "«‹»›„‚“‟‘‛”’❛❜❟❝❞❮❯\u2E42〝〞〟";
 
     /**
      * How to handle unbalanced quotation marks-
@@ -75,7 +92,7 @@ public class QuerySanitizer implements Configurable {
     public static final String CONF_FIX_REGEXP = "sanitizer.regexps";
     public static final ACTION DEFAULT_FIX_REGEXP = ACTION.escape;
 
-    
+
     /**
      * How to handle regexps. Regexps are signalled by the use of '/'.
      * </p><p>
@@ -83,29 +100,39 @@ public class QuerySanitizer implements Configurable {
      */
     public static final String CONF_FIX_TRAILING_QUESTIONMARKS = "sanitizer.trailingquestionmarks";
     public static final boolean DEFAULT_FIX_TRAILING_QUSTIONMARKS = false;
-    
+
     // TODO: Standalone dash (-), ampersand (&) and other special characters
 
+    private final ACTION fixSmartQuotes;
+    private final Pattern SMART_QUOTES;
     private final ACTION fixQuotes;
     private final ACTION fixParentheses;
     private final ACTION fixQualifiers;
     private final ACTION fixExclamations;
     private final ACTION fixRegexps;
     private final boolean fixTrailingQuestionmarks;
-    
+
     @SuppressWarnings({"UnusedParameters"})
     public QuerySanitizer(Configuration conf) {
 
+        fixSmartQuotes =  ACTION.valueOf(conf.getString(CONF_FIX_SMARTQUOTES, DEFAULT_FIX_SMARTQUOTES.toString()));
         fixQuotes =       ACTION.valueOf(conf.getString(CONF_FIX_QUOTES, DEFAULT_FIX_QUOTES.toString()));
         fixParentheses =  ACTION.valueOf(conf.getString(CONF_FIX_PARENTHESES, DEFAULT_FIX_PARENTHESES.toString()));
         fixQualifiers =   ACTION.valueOf(conf.getString(CONF_FIX_QUALIFIERS, DEFAULT_FIX_QUALIFIERS.toString()));
         fixExclamations = ACTION.valueOf(conf.getString(CONF_FIX_EXCLAMATIONS, DEFAULT_FIX_EXCLAMATIONS.toString()));
         fixRegexps =      ACTION.valueOf(conf.getString(CONF_FIX_REGEXP, DEFAULT_FIX_REGEXP.toString()));
-
         fixTrailingQuestionmarks = conf.getBoolean(CONF_FIX_TRAILING_QUESTIONMARKS, false);
+        SMART_QUOTES = generateSmartQuotePattern(conf.getString(CONF_SMARTQUOTES, DEFAULT_SMARTQUOTES));
+
         log.debug(String.format(
-                "Created QuerySanitizer with quotes:%s, parentheses:%s, qualifiers:%s, exclamations:%s, regexps:%s, , questionmarks:%s",
-                fixQuotes, fixParentheses, fixQualifiers, fixExclamations, fixRegexps, fixTrailingQuestionmarks));
+                "Created QuerySanitizer with smartquotes:%s, quotes:%s, parentheses:%s, qualifiers:%s, " +
+                "exclamations:%s, regexps:%s, , questionmarks:%s",
+                fixSmartQuotes, fixQuotes, fixParentheses, fixQualifiers,
+                fixExclamations, fixRegexps, fixTrailingQuestionmarks));
+    }
+
+    private Pattern generateSmartQuotePattern(String quoteChars) {
+        return Pattern.compile("[" + quoteChars + "]");
     }
 
     /**
@@ -187,9 +214,12 @@ public class QuerySanitizer implements Configurable {
 
     private SanitizedQuery sanitize(SanitizedQuery query) {
         int lastChangeCount = -1;
-        while (query.getChangeCount() != lastChangeCount) {  
-          if (fixQuotes != ACTION.ignore) {
-                fixQuotes(query); // Must be first
+        while (query.getChangeCount() != lastChangeCount) {
+            if (fixSmartQuotes != ACTION.ignore) {
+                fixSmartQuotes(query); // Must be before fixQuotes
+            }
+            if (fixQuotes != ACTION.ignore) {
+                fixQuotes(query); // Must be before parentheses etc.
             }
             if (fixParentheses != ACTION.ignore) {
                 fixParentheses(query);
@@ -204,10 +234,10 @@ public class QuerySanitizer implements Configurable {
                 fixRegexps(query, fixRegexps);
             }
             if (fixTrailingQuestionmarks) {
-              fixTrailingQuestionMarks(query);
-          }
-            
-            
+                fixTrailingQuestionMarks(query);
+            }
+
+
             lastChangeCount = query.getChangeCount();
         }
         return query;
@@ -220,28 +250,39 @@ public class QuerySanitizer implements Configurable {
         }
     }
 
+    private void fixSmartQuotes(SanitizedQuery query) {
+        String adjusted = SMART_QUOTES.matcher(query.getLastQuery()).replaceAll(
+                fixSmartQuotes == ACTION.escape ? "\"" : "");
+
+        if (adjusted != null && !adjusted.equals(query.getLastQuery())) {
+            query.addChange(adjusted, SanitizedQuery.CHANGE.error,
+                            "Quote-like characters replaced with " +
+                            (fixSmartQuotes == ACTION.escape ? "simple quote sign (\")" : "empty string"));
+        }
+    }
+
     private void fixQuotes(SanitizedQuery query) {
         int quoteCount = countQuotes(query.getLastQuery());
         if (quoteCount % 2 != 0) {
-            query.addChange(fixChar(query.getLastQuery(), '\"', fixQuotes), SanitizedQuery.CHANGE.error,
-                            "Uneven (" + quoteCount + ") number of quotation marks");
+            String adjusted = fixChar(query.getLastQuery(), '\"', fixQuotes);
+            query.addChange(adjusted, SanitizedQuery.CHANGE.error, "Uneven (" + quoteCount + ") number of quotation marks");
         }
     }
-    
+
     private void fixTrailingQuestionMarks(SanitizedQuery query) {
-    String lastQuery = query.getLastQuery();
-    //Replace all trailing ? with *. Example: Hvor er Toke??? -> Hvor er Toke* .  Hvor er Toke -> Hvor er Toke (no change)
-      boolean anyReplaced=false;
-      while (lastQuery.endsWith("?")){
-        lastQuery=lastQuery.substring(0, lastQuery.length()-1);
-        anyReplaced=true;
-      }
-      if (anyReplaced){
-        lastQuery=lastQuery+"*";        
-      }
-      query.addChange(lastQuery, SanitizedQuery.CHANGE.summasyntax, "replaced trailing questionmarks");
+        String lastQuery = query.getLastQuery();
+        //Replace all trailing ? with *. Example: Hvor er Toke??? -> Hvor er Toke* .  Hvor er Toke -> Hvor er Toke (no change)
+        boolean anyReplaced=false;
+        while (lastQuery.endsWith("?")){
+            lastQuery=lastQuery.substring(0, lastQuery.length()-1);
+            anyReplaced=true;
+        }
+        if (anyReplaced){
+            lastQuery=lastQuery+"*";
+        }
+        query.addChange(lastQuery, SanitizedQuery.CHANGE.summasyntax, "replaced trailing questionmarks");
     }
-    
+
     // If a single parentheses-fail is found, all non-quoted parentheses are removed
     private void fixParentheses(SanitizedQuery query) {
         String q = query.getLastQuery();
