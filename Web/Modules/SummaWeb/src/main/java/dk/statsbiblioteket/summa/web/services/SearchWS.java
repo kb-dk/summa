@@ -630,15 +630,19 @@ public class SearchWS implements ServletContextListener {
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
-            String mes = String.format("Error performing JSON query '%s': %s", json, e.getMessage());
+            String mes = String.format("IOException performing JSON query '%s': %s", json, e.getMessage());
             log.warn(mes, e);
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
+        } catch (Exception e) {
+            String mes = String.format("Exception performing JSON query '%s': %s", json, e.getMessage());
+            log.warn(mes, e);
+            throw new RuntimeException(mes, e);
         }
         if (log.isDebugEnabled()) {
             log.debug(String.format("directJSON(%s) finished in %s ms%s",
                                     json, System.currentTimeMillis() - startTime, getTiming(res)));
         }
-        return pruneHighOrderUnicode("directJSON(query=" + req.getString(DocumentKeys.SEARCH_QUERY, ""), retXML);
+        return pruneHighOrderUnicode("directJSON(query=" + req.getString(DocumentKeys.SEARCH_QUERY, "") + ")", retXML);
     }
 
     // Really ugly, but temporarily needed to debug high unicode support through the web service layer
@@ -772,10 +776,15 @@ public class SearchWS implements ServletContextListener {
             retXML = res.toXML();
         } catch (IOException e) {
             log.warn(String.format(
-                    "Error executing query '" + PARAMS + "'. Error was: %s",
+                    "IOException executing query '" + PARAMS + "'. Error was: %s",
                     filter, query, numberOfRecords, startIndex, sortKey, reverse, e.getMessage()), e);
-            String mes = String.format("Error performing query: %s", e.getMessage());
+            String mes = String.format("IOException performing query: %s", e.getMessage());
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
+        } catch (Exception e) {
+            log.warn(String.format(
+                    "Exception executing query '" + PARAMS + "'. Error was: %s",
+                    filter, query, numberOfRecords, startIndex, sortKey, reverse, e.getMessage()), e);
+            throw new RuntimeException(String.format("Exception performing query: %s", e.getMessage()));
         }
 
         if (log.isDebugEnabled()) {
