@@ -1110,18 +1110,23 @@ public class SearchWS implements ServletContextListener {
      * those. Any such high-order codepoints are removed and a warning is logged.
      */
     private String pruneHighOrderUnicode(String designation, String in) {
+        final int LIMIT = 0xFFFF;
         if (!pruneHighOrderUnicode) {
             return in;
         }
         final StringBuilder sb = new StringBuilder(in.length());
+        int removes = 0;
         for (int offset = 0; offset < in.length(); ) {
             final int codepoint = in.codePointAt(offset);
-            if (codepoint <= 0xFFF) {
+            if (codepoint <= LIMIT) {
                 sb.append((char)codepoint);
             } else {
-                log.warn("Encountered and removed codepoint " + codepoint + " from " + designation);
+                removes++;
             }
             offset += Character.charCount(codepoint); // Probably faster to special case this in the if above
+        }
+        if (removes > 0) {
+            log.warn("Encountered and removed " + removes + " chars with codepoint > " + LIMIT + " from " + designation);
         }
         return sb.toString();
     }
