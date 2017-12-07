@@ -44,7 +44,9 @@ public class NormaliseTest extends TestCase {
 
     public void testCallback() throws IOException, TransformerException {
         String normalised = SaxonXSLT.transform(
-                Resolver.getURL("plugins/normalise.xslt"), Resolver.getUTF8Content("plugins/normalise.xml"));
+                Resolver.getURL("plugins/normalise.xslt"),
+                Resolver.getUTF8Content("plugins/normalise.xml"),
+                false);
         assertTrue("The Normaliser callback should remove paranthesis\n" + normalised,
                    normalised.contains("Some data"));
     }

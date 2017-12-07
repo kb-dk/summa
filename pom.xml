@@ -9,7 +9,7 @@
 
     <properties>
         <solr_lucene_version>4.8.1</solr_lucene_version>
-        <sbutil_version>0.5.50</sbutil_version>
+        <sbutil_version>0.5.54</sbutil_version>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
@@ -535,6 +535,7 @@
     <!-- General building for summa -->
     <build>
         <plugins>
+      
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.2-beta-5</version>

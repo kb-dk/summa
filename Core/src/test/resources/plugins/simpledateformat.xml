@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dummy:dates xmlns:dummy="http://example.com">
+    <dummy:date>2017-11-15T11:00:00-06:00</dummy:date>
+    <dummy:date>2017-07-15T11:00:00-06:00</dummy:date>
+    <dummy:date>2017-11-16T11:00:00+00:00</dummy:date>
+    <dummy:date>2017-11-17T11:00:00+01:00</dummy:date>
+    <dummy:date>2017-11-18T11:00:00Z</dummy:date>
+</dummy:dates>

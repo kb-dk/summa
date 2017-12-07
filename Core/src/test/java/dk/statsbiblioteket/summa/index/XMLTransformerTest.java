@@ -255,10 +255,10 @@ public class XMLTransformerTest extends TestCase {
         }
     }
 
-    // Temporary test. Delete at will
+    // Temporary test. Delete at will or leave it - if the files does not exist it will exit quietly
     public void testMissingOutput() throws Exception {
-        final String SAMPLE = "/home/te/tmp/sumfresh/sites/aviser/dump/index_3_pre_xslt_aviser/doms_newspaperCollection_uuid_1bc1069b-01de-433d-a8a5-abee5c800b00-segment_33.xml";
-        final String XSLT = "/home/te/tmp/sumfresh/sites/aviser/xslt/index/aviser/doms_aviser.xsl";
+        final String SAMPLE = "/home/te/tmp/sumfresh/sites/doms/dump/index_1_premux/pvica_tv_oai_du_8dc41330-24b5-436a-82c0-814185351981.xml";
+        final String XSLT = "/home/te/tmp/sumfresh/sites/doms/xslt/index/doms/pvica_tv.xsl";
         if (!new File(SAMPLE).exists()) {
             log.info("Unable to run testMissingInput() as it requires a local file");
             return;

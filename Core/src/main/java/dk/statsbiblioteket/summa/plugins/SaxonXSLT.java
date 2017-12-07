@@ -22,10 +22,16 @@ import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.ObjectValue;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.StringValue;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.w3c.dom.Document;
 
 import javax.xml.transform.ErrorListener;
@@ -37,7 +43,11 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -302,6 +312,11 @@ public class SaxonXSLT {
             log.info("Creating Saxon TransformerFactory with Summa callback functions");
             net.sf.saxon.Configuration saxonConf = new net.sf.saxon.Configuration();
             saxonConf.registerExtensionFunction(new ISBNDefinition());
+            saxonConf.registerExtensionFunction(new DateTimeFormatDefinition());
+            //saxonConf.registerExtensionFunction(new SimpleDateformatDefinition());
+            //saxonConf.registerExtensionFunction(new SDFNewDefinition());
+            //saxonConf.registerExtensionFunction(new SDFParseDefinition());
+            //saxonConf.registerExtensionFunction(new SDFFormatDefinition());
             saxonConf.registerExtensionFunction(new DatetimeSolrDefinition());
             saxonConf.registerExtensionFunction(new DatetimeExpandDefinition());
             saxonConf.registerExtensionFunction(new DatetimeExpandDateDefinition());
@@ -351,6 +366,123 @@ public class SaxonXSLT {
     }
 
     /* Saxon function definitions below */
+
+    private static abstract class ObjectFromStringDefinition<T> extends ExtensionFunctionDefinition {
+        @Override
+        public StructuredQName getFunctionQName() {
+            // We mimick Xalan's namespace to get direct compatibility
+            return new StructuredQName("java", "http://xml.apache.org/xalan/java", getID());
+        }
+        @Override
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[]{SequenceType.SINGLE_STRING};
+        }
+        @Override
+        public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+            return SequenceType.ANY_SEQUENCE;
+        }
+        @Override
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @Override public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    return new ObjectValue<>(createObject(arguments[0].head().getStringValue()));
+                }
+            };
+        }
+
+        @Override
+        public int getMinimumNumberOfArguments() {
+            return 1;
+        }
+
+        @Override
+        public int getMaximumNumberOfArguments() {
+            return 1;
+        }
+
+        protected abstract String getID();
+        protected abstract T createObject(String in);
+    }
+
+    //  SimpleDateFormatter abstract class
+    private static abstract class ObjectFromSDFDefinition<T> extends ExtensionFunctionDefinition {
+        @Override
+        public StructuredQName getFunctionQName() {
+            // We mimick Xalan's namespace to get direct compatibility
+            return new StructuredQName("java", "http://xml.apache.org/xalan/java", getID());
+        }
+        @Override
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[]{SequenceType.ANY_SEQUENCE, SequenceType.SINGLE_STRING};
+        }
+        @Override
+        public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+            return SequenceType.ANY_SEQUENCE;
+        }
+        @Override
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @Override public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    if (!(arguments[0] instanceof ObjectValue) ||
+                        !(((ObjectValue)arguments[0]).getObject() instanceof SimpleDateFormat)) {
+                        throw new IllegalArgumentException("Expected first argument to be a SimpleDateFormat but got " +
+                        arguments[0].getClass().getCanonicalName());
+                    }
+                    SimpleDateFormat sdf = (SimpleDateFormat)((ObjectValue)arguments[0]).getObject();
+                    return new ObjectValue<>(performCall(sdf, arguments[1].head().getStringValue()));
+                }
+            };
+        }
+
+        protected abstract String getID();
+        protected abstract T performCall(SimpleDateFormat sdf, String input);
+    }
+
+    //  SimpleDateFormatter abstract class
+    private static abstract class StringFromSDFDefinition<T> extends ExtensionFunctionDefinition {
+        @Override
+        public StructuredQName getFunctionQName() {
+            // We mimick Xalan's namespace to get direct compatibility
+            return new StructuredQName("java", "http://xml.apache.org/xalan/java", getID());
+        }
+        @Override
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[]{SequenceType.ANY_SEQUENCE, SequenceType.ANY_SEQUENCE};
+        }
+        @Override
+        public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+            return SequenceType.SINGLE_STRING;
+        }
+        @Override
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @SuppressWarnings("unchecked")
+                @Override public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    if (!(arguments[0] instanceof ObjectValue) ||
+                        !(((ObjectValue)arguments[0]).getObject() instanceof SimpleDateFormat)) {
+                        throw new IllegalArgumentException("Expected first argument to be a SimpleDateFormat but got " +
+                        arguments[0].getClass().getCanonicalName()); // FIXME: Not the correct dotted class
+                    }
+                    if (!(arguments[1] instanceof ObjectValue)) {
+                        throw new IllegalArgumentException("Expected second argument to be an ObjectValue but got " +
+                        arguments[0].getClass().getCanonicalName());
+                    }
+                    SimpleDateFormat sdf = (SimpleDateFormat)((ObjectValue)arguments[0]).getObject();
+                    Object o = ((ObjectValue)arguments[1]).getObject();
+                    T t;
+                    try {
+                        t = (T)o;
+                    } catch (ClassCastException e) {
+                        throw new IllegalArgumentException("Unable to cast object of class " + o.getClass(), e);
+                    }
+                    return new StringValue(performCall(sdf, t));
+                }
+            };
+        }
+
+        protected abstract String getID();
+        protected abstract String performCall(SimpleDateFormat sdf, T input);
+    }
 
     private static abstract class SingleStringDefinition extends ExtensionFunctionDefinition {
         @Override
@@ -519,6 +651,59 @@ public class SaxonXSLT {
         }
     }
 
+
+    // Arguments: isodate, format, locate
+    private static class DateTimeFormatDefinition extends ExtensionFunctionDefinition {
+        @Override
+        public StructuredQName getFunctionQName() {
+            // We mimick Xalan's namespace to get direct compatibility
+            return new StructuredQName("java", "http://xml.apache.org/xalan/java",
+                                       "dk.statsbiblioteket.summa.plugins.DateTime.format");
+//            return new StructuredQName("kbext", "http://kb.dk/saxon-extension", getID());
+        }
+        @Override
+        public int getMinimumNumberOfArguments() {
+            return 3;
+        }
+        @Override
+        public int getMaximumNumberOfArguments() {
+            return 3;
+        }
+        @Override
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[]{
+                    SequenceType.SINGLE_STRING, SequenceType.SINGLE_STRING, SequenceType.SINGLE_STRING};
+        }
+        @Override
+        public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+            return SequenceType.SINGLE_STRING;
+        }
+        @Override
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @Override public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    final String in = arguments[0].head().getStringValue();
+                    final String format = arguments[1].head().getStringValue();
+                    final String locale = arguments[2].head().getStringValue();
+
+                    try {
+                        return new StringValue(dateTimeFormat(in, format, locale));
+                    } catch (ParseException e) {
+                        log.warn("DateTimeFormatDefinition: Unable to parse '" + in + "' as ISO datetime", e);
+                        return new StringValue("");
+                    }
+                }
+            };
+        }
+    }
+
+    private static final DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
+    public static String dateTimeFormat(String in, String format, String locale) throws ParseException {
+
+        DateTime dt = parser.parseDateTime(in).withZone(DateTimeZone.forID(locale));
+        return DateTimeFormat.forPattern(format).print(dt);
+    }
+
     private static class YearRangeDefinition extends ExtensionFunctionDefinition {
         @Override
         public StructuredQName getFunctionQName() {
@@ -556,4 +741,61 @@ public class SaxonXSLT {
         }
     }
 
+    private static class SimpleDateformatDefinition extends ObjectFromStringDefinition<SimpleDateFormat> {
+        @Override
+        protected String getID() {
+            return "java.text.SimpleDateFormat";
+        }
+
+        @Override
+        protected SimpleDateFormat createObject(String in) {
+            return new SimpleDateFormat(in);
+        }
+    }
+
+    private static class SDFNewDefinition extends ObjectFromStringDefinition<SimpleDateFormat> {
+        @Override
+        protected String getID() {
+            return "java.text.SimpleDateFormat.new";
+        }
+
+        @Override
+        public int getMaximumNumberOfArguments() {
+            return 2;
+        }
+
+        @Override
+        protected SimpleDateFormat createObject(String in) {
+            return new SimpleDateFormat(in);
+        }
+    }
+
+    private static class SDFParseDefinition extends ObjectFromSDFDefinition<Date> {
+        @Override
+        protected String getID() {
+            return "java.text.SimpleDateFormat.parse";
+        }
+
+        @Override
+        protected Date performCall(SimpleDateFormat sdf, String input) {
+            try {
+                return sdf.parse(input);
+            } catch (ParseException e) {
+                throw new IllegalArgumentException(
+                        "Unable to parse '" + input + " using format String " + sdf.toPattern(), e);
+            }
+        }
+    }
+
+    private static class SDFFormatDefinition extends StringFromSDFDefinition<Date> {
+        @Override
+        protected String getID() {
+            return "java.text.SimpleDateFormat.format";
+        }
+
+        @Override
+        protected String performCall(SimpleDateFormat sdf, Date input) {
+            return sdf.format(input);
+        }
+    }
 }

@@ -17,7 +17,7 @@
 
     <build>
 
-        <resources>
+          <resources>
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
@@ -32,6 +32,28 @@
 
         <!-- Jars -->
         <plugins>
+          <!-- Checks for known vulnerabilities in third-party includes -->
+          <!-- TODO: Enable this and handle the problems
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <autoUpdate>true</autoUpdate>
+                    <cveValidForHours>12</cveValidForHours>
+                    <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
+                    <suppressionFile>./suppressions.xml</suppressionFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+          </plugin>
+-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
