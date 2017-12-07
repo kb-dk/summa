@@ -15,9 +15,12 @@
 package dk.statsbiblioteket.summa.plugins;
 
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.facetbrowser.FacetManipulator;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
@@ -25,6 +28,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 public class SimpleDateFormatTest extends TestCase {
+    private static Log log = LogFactory.getLog(SimpleDateFormatTest.class);
+
     public SimpleDateFormatTest(String name) {
         super(name);
     }
@@ -51,13 +56,14 @@ public class SimpleDateFormatTest extends TestCase {
                 "2017-11-17T11:00:00Z",
                 "2017-11-18T12:00:00Z",
         };
-        String normalised = SaxonXSLT.transform(
+        String transformed = SaxonXSLT.transform(
                 Resolver.getURL("plugins/simpledateformat.xslt"),
                 Resolver.getUTF8Content("plugins/simpledateformat.xml"));
         for (String expected: expecteds) {
-            assertTrue("The datetime '" + expected + "' should be present in\n" + normalised.replace(">", ">\n"),
-                       normalised.contains(expected));
+            assertTrue("The datetime '" + expected + "' should be present in\n" + transformed.replace(">", ">\n"),
+                       transformed.contains(expected));
         }
+        log.info("Transformed XML:\n" + transformed);
     }
 
     public void disabledtestTimezoneHack() throws ParseException {

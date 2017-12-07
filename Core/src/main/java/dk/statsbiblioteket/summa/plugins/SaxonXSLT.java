@@ -658,7 +658,7 @@ public class SaxonXSLT {
         public StructuredQName getFunctionQName() {
             // We mimick Xalan's namespace to get direct compatibility
             return new StructuredQName("java", "http://xml.apache.org/xalan/java",
-                                       "dk.statsbiblioteket.summa.plugins.DateTime.format");
+                                       "dk.statsbiblioteket.summa.plugins.DateTime.isoToCustom");
 //            return new StructuredQName("kbext", "http://kb.dk/saxon-extension", getID());
         }
         @Override
@@ -686,22 +686,10 @@ public class SaxonXSLT {
                     final String format = arguments[1].head().getStringValue();
                     final String locale = arguments[2].head().getStringValue();
 
-                    try {
-                        return new StringValue(dateTimeFormat(in, format, locale));
-                    } catch (ParseException e) {
-                        log.warn("DateTimeFormatDefinition: Unable to parse '" + in + "' as ISO datetime", e);
-                        return new StringValue("");
-                    }
+                    return new StringValue(Datetime.isoToCustom(in, format, locale));
                 }
             };
         }
-    }
-
-    private static final DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
-    public static String dateTimeFormat(String in, String format, String locale) throws ParseException {
-
-        DateTime dt = parser.parseDateTime(in).withZone(DateTimeZone.forID(locale));
-        return DateTimeFormat.forPattern(format).print(dt);
     }
 
     private static class YearRangeDefinition extends ExtensionFunctionDefinition {

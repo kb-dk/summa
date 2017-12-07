@@ -20,7 +20,13 @@
 package dk.statsbiblioteket.summa.plugins;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
+import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -254,4 +260,10 @@ public class Datetime {
         return dateExpand(iso, locale) + " " + timeExpand(iso, locale);
     }
 
+
+    private static final DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
+    public static CharSequence isoToCustom(String format, String locale, String in) {
+        DateTime dt = parser.parseDateTime(in).withZone(DateTimeZone.forID(locale));
+        return DateTimeFormat.forPattern(format).print(dt);
+    }
 }
