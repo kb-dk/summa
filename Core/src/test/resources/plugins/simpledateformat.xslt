@@ -22,11 +22,11 @@
             <Index:fields>
                 <xsl:for-each select="dummy:date">
                     <Index:field Index:name="parsed">
-                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.DateTime.isoToCustom($solrtime,$da,.)"/><xsl:text> *** </xsl:text>
-                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.DateTime.isoToCustom($printer,$da,.)"/><xsl:text> *** </xsl:text>
-                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.DateTime.isoToCustom($printerYear,$da,.)"/><xsl:text> *** </xsl:text>
-                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.DateTime.isoToCustom($printerDate,$da,.)"/><xsl:text> *** </xsl:text>
-                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.DateTime.isoToCustom($printerTime,$da,.)"/>
+                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Datetime.isoToCustom($solrtime,$da,.)"/><xsl:text> *** </xsl:text>
+                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Datetime.isoToCustom($printer,$da,.)"/><xsl:text> *** </xsl:text>
+                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Datetime.isoToCustom($printerYear,$da,.)"/><xsl:text> *** </xsl:text>
+                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Datetime.isoToCustom($printerDate,$da,.)"/><xsl:text> *** </xsl:text>
+                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Datetime.isoToCustom($printerTime,$da,.)"/>
                         <!--                <xsl:value-of select="$parseTest1"/>-->
                     </Index:field>
                 </xsl:for-each>

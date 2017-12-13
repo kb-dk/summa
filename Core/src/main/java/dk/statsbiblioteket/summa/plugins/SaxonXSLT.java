@@ -27,11 +27,6 @@ import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.StringValue;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.w3c.dom.Document;
 
 import javax.xml.transform.ErrorListener;
@@ -47,7 +42,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -658,7 +652,7 @@ public class SaxonXSLT {
         public StructuredQName getFunctionQName() {
             // We mimick Xalan's namespace to get direct compatibility
             return new StructuredQName("java", "http://xml.apache.org/xalan/java",
-                                       "dk.statsbiblioteket.summa.plugins.DateTime.isoToCustom");
+                                       "dk.statsbiblioteket.summa.plugins.Datetime.isoToCustom");
 //            return new StructuredQName("kbext", "http://kb.dk/saxon-extension", getID());
         }
         @Override
