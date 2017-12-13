@@ -1,0 +1,64 @@
+#!/bin/bash
+
+#
+# Packs callback JARs for use with XSLT in jEdit or similar
+#
+
+###############################################################################
+# CONFIG
+###############################################################################
+pushd ${BASH_SOURCE%/*} > /dev/null
+: ${SUMMA_HOME:=$(pwd)}
+: ${SUMMA_VERSION:=$(grep -m 2 "<version>" pom.xml | tail -n 1 | cut -d'>' -f2 | cut -d'<' -f1)}
+: ${CORE_JAR:="$SUMMA_HOME/Core/target/summa-core-${SUMMA_VERSION}-xslt-callbacks.jar"}
+: ${JODA_VERSION:=$(grep -A 2 '<artifactId>joda-time' pom.xml | grep '<version>' | cut -d'>' -f2 | cut -d'<' -f1)}
+: ${JODA_JAR:=$(find ~/.m2/ -iname "joda-time-${JODA_VERSION}.jar")}
+popd > /dev/null
+
+
+function usage() {
+    echo "Usage: ./callbackJARS"
+    exit $1
+}
+
+check_parameters() {
+    if [[ -z "$SUMMA_VERSION" ]]; then
+        >&2 echo "Error: Unable to determine SUMMA_VERSION from $SUMMA_HOME/pom.xml"
+        usage 2
+    fi
+    if [[ ! -s "$CORE_JAR" ]]; then
+        >&2 echo "Error: Unable to locate core JAR '$CORE_JAR'"
+        usage 3
+    fi
+    if [[ -z "$JODA_VERSION" ]]; then
+        >&2 echo "Error: Unable to determine JODA_VERSION from $SUMMA_HOME/pom.xml"
+        usage 4
+    fi
+    if [[ ! -s "$JODA_JAR" ]]; then
+        >&2 echo "Error: Unable to locate Joda-time JAR '$JODA_JAR' in ~/.ms"
+        usage 5
+    fi
+}
+
+################################################################################
+# FUNCTIONS
+################################################################################
+
+make_full_jar() {
+    local WORK=$(mktemp -d)
+    pushd "$WORK" > /dev/null
+    unzip -q "$JODA_JAR"
+    unzip -oq "$CORE_JAR"
+    zip -rq summa-xslt-callbacks-${SUMMA_VERSION}.jar *
+    popd > /dev/null
+    cp "$WORK/summa-xslt-callbacks-${SUMMA_VERSION}.jar" .
+    rm -r "$WORK"
+}
+
+
+###############################################################################
+# CODE
+###############################################################################
+
+check_parameters "$@"
+make_full_jar

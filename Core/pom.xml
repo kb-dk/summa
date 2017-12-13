@@ -79,6 +79,19 @@
                             </includes>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>xslt-callbacks</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>xslt-callbacks</classifier>
+                            <includes>
+                                <include>**/summa/plugins/**/*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -166,6 +179,11 @@
         <dependency>
             <groupId>de.schlichtherle.truezip</groupId>
             <artifactId>truezip-driver-tar</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
         </dependency>
 <!--        <dependency>
             <groupId>org.archive</groupId>
