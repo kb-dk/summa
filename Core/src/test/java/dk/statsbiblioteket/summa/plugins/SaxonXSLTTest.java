@@ -28,9 +28,9 @@ public class SaxonXSLTTest {
     @Test
     public void testDateTimeFormatDefinitionLogic() throws ParseException {
         assertEquals("2017-12-07T11:51:00", Datetime.isoToCustom(
-                             "2017-12-07T10:51:00Z", "YYYY-MM-dd'T'HH:mm:ss", "Europe/Copenhagen"));
+                             "YYYY-MM-dd'T'HH:mm:ss", "Europe/Copenhagen", "2017-12-07T10:51:00Z"));
         assertEquals("2017-12", Datetime.isoToCustom(
-                             "2017-12-07T10:51:00Z", "YYYY-MM", "Europe/Copenhagen"));
+                             "YYYY-MM", "Europe/Copenhagen", "2017-12-07T10:51:00Z"));
     }
 
 }

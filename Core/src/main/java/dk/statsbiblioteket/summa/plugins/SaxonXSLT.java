@@ -32,6 +32,7 @@ import org.w3c.dom.Document;
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -300,8 +301,8 @@ public class SaxonXSLT {
         localMapCache = createLocalMapCache();
     }
 
-    private static TransformerFactoryImpl saxonFactory = null;
-    private synchronized static TransformerFactoryImpl getTransformerFactory() {
+    private static TransformerFactory saxonFactory = null;
+    private synchronized static TransformerFactory getTransformerFactory() {
         if (saxonFactory == null) {
             log.info("Creating Saxon TransformerFactory with Summa callback functions");
             net.sf.saxon.Configuration saxonConf = new net.sf.saxon.Configuration();
