@@ -963,6 +963,12 @@ public class Record implements Serializable, Comparable {
      *         respond true to and equals().
      */
     private static <E extends Comparable> boolean deepEquals(Iterable<E> a, Iterable<E> b) {
+        if (a == null && b == null) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
         Iterator<? extends Comparable> ia = a.iterator();
         Iterator<? extends Comparable> ib = b.iterator();
 
