@@ -70,7 +70,8 @@ public class StorageReaderClientTest {
                 RMIStorageProxy.CONF_BACKEND, PostGreSQLStorage.class.getName(),
                 PostGreSQLStorage.CONF_DRIVER_URL, "jdbc:postgresql://mars:5432/summa_doms_devel",
                 DatabaseStorage.CONF_USERNAME, "summa",
-                DatabaseStorage.CONF_PASSWORD, password
+                DatabaseStorage.CONF_PASSWORD, password,
+                DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, true
         ));
         try {
             testProblematicChildParent("PostgreSQL",
@@ -81,7 +82,6 @@ public class StorageReaderClientTest {
     }
 
     // Debugging of problematic Record-relations on mars (SummaRise/doms devel machine). Enable for integration test
-    @Test
     public void testProblematicChildParentMars() throws IOException {
         testProblematicChildParent("mars", "//mars:57300/doms-storage");
     }
@@ -90,6 +90,16 @@ public class StorageReaderClientTest {
         StorageReaderClient client = new StorageReaderClient(Configuration.newMemoryBased(
                 ConnectionConsumer.CONF_RPC_TARGET, rmi
         ));
+
+        { // height & depth 2
+            final QueryOptions options = new QueryOptions();
+            options.parentHeight = 2;
+            options.childDepth = 2;
+            Record parent = client.getRecord(PVICA_PARENT, options);
+            Record child = client.getRecord(PVICA_CHILD, options);
+
+            pvicaCheck(designation,"height & depth 2", PVICA_PARENT, PVICA_CHILD, parent, child);
+        }
 
         { // Sanity check
             Record parent = client.getRecord(PVICA_PARENT, null);
@@ -118,15 +128,6 @@ public class StorageReaderClientTest {
             pvicaCheck(designation,"height & depth -1", PVICA_PARENT, PVICA_CHILD, parent, child);
         }
 
-        { // height & depth 2
-            final QueryOptions options = new QueryOptions();
-            options.parentHeight = 2;
-            options.childDepth = 2;
-            Record parent = client.getRecord(PVICA_PARENT, options);
-            Record child = client.getRecord(PVICA_CHILD, options);
-
-            pvicaCheck(designation,"height & depth 2", PVICA_PARENT, PVICA_CHILD, parent, child);
-        }
     }
 
     private void pvicaCheck(
