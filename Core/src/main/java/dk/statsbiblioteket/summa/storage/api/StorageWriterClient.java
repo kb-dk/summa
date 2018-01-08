@@ -146,7 +146,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage> imp
         WritableStorage storage = getConnection();
 
         if (storage == null) {
-            throw new NoRouteToHostException(UNABLE_TO_CONNECT + getVendorId());
+            throw new NoRouteToHostException(UNABLE_TO_CONNECT + getVendorId() + " while calling close()");
         }
 
         try {

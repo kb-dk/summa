@@ -16,6 +16,7 @@ import org.junit.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 
@@ -54,6 +55,30 @@ public class StorageReaderClientTest {
         } finally {
             tearDownLocal();
         }
+    }
+
+    @Test
+    public void testCycleHandling() throws IOException {
+        setupLocal();
+        {
+            Record r1 = new Record("r1", "dummy", new byte[0]);
+            r1.setChildIds(Arrays.asList("r2", "r3"));
+            dbStorage.flush(r1, null);
+
+            Record r2 = new Record("r2", "dummy", new byte[0]);
+            r2.setChildIds(Collections.singletonList("r1"));
+            dbStorage.flush(r2, null);
+
+            Record r3 = new Record("r3", "dummy", new byte[0]);
+            dbStorage.flush(r3, null);
+        }
+        Record e1 = dbStorage.getRecord("r1", new QueryOptions(null, null, 3, 3));
+        assertNotNull("Extracting a Record with child-cycle should work", e1);
+        assertTrue("Root record should have children", e1.hasChildren());
+        assertEquals("Root record should have the right number of children", 2, e1.getChildren().size());
+
+        Record e2 = e1.getChildren().get(0);
+        assertTrue("Sub-Record 1 should not have children", e2.hasChildren());
     }
 
     // Local PostgreSQL-proxy and remote PostgreSQL-server
@@ -163,7 +188,8 @@ public class StorageReaderClientTest {
         dbStorage = (DatabaseStorage) StorageFactory.createStorage(Configuration.newMemoryBased(
                 Storage.CONF_CLASS, H2Storage.class,
                 DatabaseStorage.CONF_LOCATION, testRoot,
-                H2Storage.CONF_H2_SERVER_PORT, 8088
+                H2Storage.CONF_H2_SERVER_PORT, 8088,
+                DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, true
         ));
         addRecords(dbStorage);
 

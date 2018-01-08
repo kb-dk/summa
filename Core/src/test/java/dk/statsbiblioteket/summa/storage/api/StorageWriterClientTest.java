@@ -27,7 +27,6 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * StorageWriterClient Tester.
@@ -81,7 +80,7 @@ public class StorageWriterClientTest extends TestCase {
                       storage.getRecord("Dummy1", null));
     }
 
-    public void testNoConnectionTimeout() throws IOException {
+    public void testNoConnectionTimeout() {
         final int LIMIT = 1000;
         Configuration conf = Configuration.newMemoryBased(
                 ConnectionConsumer.CONF_RPC_TARGET, "//localhost:28087/nonexisting",
@@ -115,8 +114,10 @@ public class StorageWriterClientTest extends TestCase {
         remoteStorage.clearBase("SomeBase");
         assertTrue("The added record should not exist anymore",
                    localStorage.getRecord("Dummy1", null).isDeleted());
-        remoteStorage.close();
-        remoteStorage2.close();
+        // Attempts to close remote connection which is wrong. Should just release connection
+        //remoteStorage.close();
+        //remoteStorage2.close();
+
         localStorage.close();
     }
 

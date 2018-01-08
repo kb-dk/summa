@@ -99,8 +99,8 @@ public class StorageWS implements ServletContextListener {
      */
     public StorageWS() {
         // Do nothing. All initialization is done in contextInitialized or lazy
-        synchronized (this.getClass()) {
-       }
+        //synchronized (this.getClass()) {
+       //}
     }
 
     /**

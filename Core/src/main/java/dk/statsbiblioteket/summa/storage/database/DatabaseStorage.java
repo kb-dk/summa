@@ -2457,7 +2457,6 @@ public abstract class DatabaseStorage extends StorageBase {
             // Update last modification time.
             updateLastModficationTimeForBase(record.getBase(), conn);
             setBaseStatisticInvalid(record.getBase(), conn);
-            log.debug("Updates last modification time for base '" + record.getBase() + "'");
         } catch (SQLException e) {
             // This error is logged in the finally clause below
             error = e.getMessage() + '\n' + Strings.getStackTrace(e);
@@ -3213,12 +3212,14 @@ public abstract class DatabaseStorage extends StorageBase {
                      + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
         sql = getPagingStatement(sql, true);
 
+        // TODO: Remove param
         PreparedStatement stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
         try {
-            stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+            // TODO: Remove
+            //stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
             assignFetchSize(stmt, false);
         } catch (SQLException e) {
@@ -3268,11 +3269,6 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.debug("Committing at update " + totalCount);
                 stmt.getConnection().commit();
             }
-            updateLastModficationTimeForBase(base, conn);
-            log.debug("Commit finished, invalidate cache stats");
-            invalidateCachedStats();
-            log.debug("Updating modification timestamps");
-            updateModificationTime(base);
             log.debug("Committing (last)");
             stmt.getConnection().commit();
             long ns = (System.nanoTime()-startTime);
@@ -3289,6 +3285,33 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             closeStatement(stmt);
         }
+
+        // This will only be reached if the clear was successful
+        log.info("Clear for base " + base + " successfull, updating overall timestamps and statistics");
+        updateBaseMTimeAndStatsWithConnection(conn, base);
+    }
+
+    void updateBaseMTimeAndStats(String base) throws IOException {
+        Connection conn = null;
+        try {
+            conn = getDefaultConnection();
+            updateBaseMTimeAndStatsWithConnection(conn, base);
+        } catch (SQLException e) {
+            String msg = "SQLException updating mtime and stats for base '" + base + "'";
+            log.error(msg, e);
+            throw new IOException(msg, e);
+        } finally {
+            if (conn != null) {
+                closeConnection(conn);
+            }
+        }
+    }
+
+    void updateBaseMTimeAndStatsWithConnection(Connection conn, String base) throws SQLException {
+        log.debug("Updating base mtime");
+        updateLastModficationTimeForBase(base, conn);
+        updateModificationTime(base);
+        invalidateCachedStats();
     }
 
     /**
@@ -3861,6 +3884,11 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             stmt.setString(1, base);
             stmt.execute();
+            conn.commit();
+        } catch (SQLException e) {
+            log.warn("setBaseStatisticInvalid(" + base + ", ...) failed. Rolling back");
+            conn.rollback();
+            throw new SQLException("setBaseStatisticInvalid(" + base + ", ...) failed", e);
         } finally {
             closeStatement(stmt);
         }
@@ -3896,6 +3924,11 @@ public abstract class DatabaseStorage extends StorageBase {
                 insertStmt.setLong(2, mtime);
                 insertStmt.execute();
             }
+            conn.commit();
+        } catch (SQLException e) {
+            log.warn("updateLastModficationTimeForBase(" + base + ", ...) failed. Rolling back");
+            conn.rollback();
+            throw new SQLException("updateLastModficationTimeForBase(" + base + ", ...) failed", e);
         } finally {
             closeStatement(stmt);
             closeStatement(insertStmt);
@@ -4407,7 +4440,7 @@ public abstract class DatabaseStorage extends StorageBase {
          * queried the relations even though useLazyRelations==true so don't
          * resolve the relations in that case
          */
-        if (useLazyRelations && hasRelations && parentIds == null && childIds == null) {
+        if (useLazyRelations && hasRelations) { //  && parentIds == null && childIds == null removed as it broke QueryOptions
             resolveRelatedIds(rec, resultSet.getStatement().getConnection(), options);
         }
 //        log.debug("DatabaseStorage***: ResolvedRelatedID " + (System.nanoTime()-start)/M);
@@ -4561,7 +4594,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * Invalidate cached statistic in database.
      */
-    private void invalidateCachedStats() {
+    void invalidateCachedStats() throws SQLException {
         final long startNS = System.nanoTime();
         String invalidateCachedStats = "UPDATE " + BASE_STATISTICS + " SET " + VALID_COLUMN + " = 0";
         log.debug("Invalidating cached stats");
@@ -4570,15 +4603,18 @@ public abstract class DatabaseStorage extends StorageBase {
             conn = getConnection();
             Statement stmt = conn.createStatement();
             stmt.execute(invalidateCachedStats);
+            conn.commit();
         } catch (SQLException e) {
-            log.error("Error invalidating base statistic in database", e);
+            log.warn("invalidateCachedStats() failed. Rolling back");
+            conn.rollback();
+            throw new SQLException("invalidateCachedStats failed", e);
         } finally {
             closeConnection(conn);
             timingInvalidateStats.addNS(System.nanoTime()-startNS);
         }
     }
 
-    private List<BaseStats> getStatsWithConnection(Connection conn) throws SQLException, IOException {
+    private List<BaseStats> getStatsWithConnection(Connection conn) throws SQLException {
         long startTime = System.currentTimeMillis();
         List<BaseStats> stats = new LinkedList<>();
 

@@ -54,7 +54,7 @@ public class PostGreSQLStorageTest {
     //    <entry key="queryoptions.attributes">ID, BASE, DELETED, INDEXABLE, HAS_RELATIONS, CONTENT, CREATIONTIME, MODIFICATIONTIME, PARENTS</entry>
     // </properties>
     //public static final String MARS = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_mars.xml";
-    public static final String MARS = "/storage/postgresql_mars.xml";
+    public static final String MARS = "storage/postgresql_mars.xml";
     //public static final String PS = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_ps3.xml";
     public static final String PS = "storage/postgresql_ps4.xml";
 
@@ -184,7 +184,7 @@ public class PostGreSQLStorageTest {
         return opts;
     }
 
-    private PostGreSQLStorage getDeveloperTestStorage(String postgreSQLSetup, boolean useOptimizations)
+    public static PostGreSQLStorage getDeveloperTestStorage(String postgreSQLSetup, boolean useOptimizations)
             throws IOException {
         File CF = Resolver.getFile(postgreSQLSetup);
         if (CF == null || !CF.exists()) {

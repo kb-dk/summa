@@ -175,7 +175,7 @@ public class RecordReader extends ObjectFilterBase implements StorageChangeListe
     /**
      * The maximum depth to expand children to if {@link #CONF_EXPAND_CHILDREN}  is true.
      * </p><p>
-     * Optional. Default is 100. -1 means no limit (not recommended due to the possibility of endless recursion).
+     * Optional. Default is 100. -1 means no limit.
      */
     public static final String CONF_EXPANSION_DEPTH = "summa.storage.recordreader.expansiondepth";
     public static final int DEFAULT_EXPANSION_DEPTH = 100;

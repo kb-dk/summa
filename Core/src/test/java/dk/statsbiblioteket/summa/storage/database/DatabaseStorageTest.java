@@ -26,6 +26,10 @@ import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
+import dk.statsbiblioteket.summa.storage.database.postgresql.PostGreSQLStorage;
+import dk.statsbiblioteket.summa.storage.database.postgresql.PostGreSQLStorageTest;
+import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -68,6 +72,35 @@ public class DatabaseStorageTest extends StorageTestBase {
     public void testStatsOnEmptyStorage() throws Exception {
         List<BaseStats> stats = storage.getStats();
         assertTrue(stats.isEmpty());
+    }
+
+    public void testLocksLocalH2Storage() throws Exception {
+        testLocks(storage);
+    }
+
+    public void testLocksRemotePostgreSQLMars() throws Exception {
+        DatabaseStorage storage = PostGreSQLStorageTest.getDeveloperTestStorage(PostGreSQLStorageTest.MARS, false);
+        assertNotNull(storage);
+        testLocks(storage);
+    }
+
+    public void testLocksRemotePostgreSQLMars2() throws Exception {
+        DatabaseStorage storage = PostGreSQLStorageTest.getDeveloperTestStorage(PostGreSQLStorageTest.MARS, false);
+        assertNotNull(storage);
+        log.info("Attempting call to updateBaseMTimeAndStats");
+        storage.updateBaseMTimeAndStats("dummy"); // Not normally called from outside, but triggers lock problem
+        // Does not get any further with PostgreSQL against mars
+    }
+
+    /**
+     * Connects to a Storage, ingests Records, requests stats, then attempts to clear the ingested Records.
+     */
+    private void testLocks(DatabaseStorage storage) throws Exception {
+        storage.flush(new Record("dummy1", "dummy", new byte[0]));
+        storage.flush(new Record("dummy2", "dummy", new byte[0]));
+        assertNotNull("getStats() should give a result", storage.getStats());
+        storage.clearBase("dummy");
+        storage.flush(new Record("dummy3", "dummy", new byte[0]));
     }
 
     // For performance reasons the authoritative Records in the Statsbiblioteket aviser project should
@@ -237,6 +270,8 @@ public class DatabaseStorageTest extends StorageTestBase {
 
         Record neutral1 = new Record("RecordWithoutFamily", "aviser", new byte[0]);
 
+        int storagePort = 8079+storageCounter++;
+
         Configuration conf = createConf();
         conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
         conf.set(DatabaseStorage.CONF_RELATION_CLEAR, DatabaseStorage.RELATION.parent);
@@ -247,7 +282,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         conf.set(QueryOptions.CONF_FILTER_DELETED, "null");
         conf.set(DatabaseStorage.CONF_USE_OPTIMIZATIONS, optimize);
 
-        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079+storageCounter++);
+        conf.set(H2Storage.CONF_H2_SERVER_PORT, storagePort);
         DatabaseStorage storage = new H2Storage(conf);
         storage.flushAll(Arrays.asList(parent1, child1, neutral1));
         return storage;
