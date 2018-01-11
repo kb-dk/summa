@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.summa.plugins.SaxonXSLT;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
@@ -465,7 +466,7 @@ public class StorageTool {
      */
     public static Transformer compileTransformer(String xsltUrl) {
         Transformer transformer;
-        TransformerFactory tFactory = TransformerFactory.newInstance();
+        TransformerFactory tFactory = SaxonXSLT.getTransformerFactory();
         InputStream in = null;
 
         try {

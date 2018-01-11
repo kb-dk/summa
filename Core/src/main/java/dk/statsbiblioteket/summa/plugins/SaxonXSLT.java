@@ -302,7 +302,7 @@ public class SaxonXSLT {
     }
 
     private static TransformerFactory saxonFactory = null;
-    private synchronized static TransformerFactory getTransformerFactory() {
+    public synchronized static TransformerFactory getTransformerFactory() {
         if (saxonFactory == null) {
             log.info("Creating Saxon TransformerFactory with Summa callback functions");
             net.sf.saxon.Configuration saxonConf = new net.sf.saxon.Configuration();
