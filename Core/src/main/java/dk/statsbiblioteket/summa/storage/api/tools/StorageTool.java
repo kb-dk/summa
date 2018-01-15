@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.plugins.SaxonXSLT;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
@@ -56,8 +57,8 @@ public class StorageTool {
      * @param rec          The record to print.
      * @param withContents True if this record should be printed with its content false otherwise.
      */
-    public static void printRecord(Record rec, boolean withContents) {
-        printRecord(rec, System.out, withContents);
+    public static void printRecord(Record rec, boolean withContents, boolean expand) {
+        printRecord(rec, System.out, withContents, expand);
     }
 
     /**
@@ -67,14 +68,21 @@ public class StorageTool {
      * @param out          The output stream.
      * @param withContents True if this record should be printed with its content false otherwise.
      */
-    public static void printRecord(Record rec, OutputStream out, boolean withContents) {
+    public static void printRecord(Record rec, OutputStream out, boolean withContents, boolean expand) {
         PrintWriter output = new PrintWriter(out, true);
 
         if (rec == null) {
             output.println("Record is 'null'");
             return;
         }
-
+        if (expand) {
+            try {
+                output.println(RecordUtil.toXML(rec, false));
+                return;
+            } catch (IOException e) {
+                throw new RuntimeException("Exception generating XML representation for record " + rec);
+            }
+        }
         output.println(rec.toString(true));
 
         if (withContents) {
@@ -91,29 +99,41 @@ public class StorageTool {
      * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating to storage.
      */
-    private static int actionGet(String[] argv, StorageReaderClient storage) throws IOException {
+    private static int actionGet(String[] argv, StorageReaderClient storage, boolean expand) throws IOException {
         if (argv.length == 1) {
             System.err.println("You must specify at least one record id to the 'get' action");
             return 1;
         }
-
-        // Allow this call to access private storage records, like __holdings__
-        QueryOptions options = new QueryOptions();
-        options.meta("ALLOW_PRIVATE", "true");
 
         List<String> ids = new ArrayList<>(argv.length - 1);
         ids.addAll(Arrays.asList(argv).subList(1, argv.length));
 
         System.err.println("Getting record(s): " + Strings.join(ids, ", "));
         long startTime = System.currentTimeMillis();
-        List<Record> recs = storage.getRecords(ids, options);
+        List<Record> recs = storage.getRecords(ids, getOptions(expand)); // Use the default options from Storage
         System.err.println("Got " + recs.size() + " records in " + (System.currentTimeMillis() - startTime) + " ms");
 
         for (Record r : recs) {
-            printRecord(r, true);
+            printRecord(r, true, expand);
             System.out.println("===================");
         }
         return 0;
+    }
+
+    private static QueryOptions getOptions(Boolean expand) {
+        if (expand == null) {
+            return null; // Storage default
+        }
+        QueryOptions options;
+        if (expand) { // Expand parent & children
+            options = new QueryOptions(null, null, 10, 10);
+            options.setAttributes(QueryOptions.ATTRIBUTES_ALL);
+            options.removeAttribute(QueryOptions.ATTRIBUTES.META); // TODO: Consider enabling this for get
+        } else { // No expansion
+            options = new QueryOptions();
+        }
+        options.meta("ALLOW_PRIVATE", "true");
+        return options;
     }
 
     /**
@@ -218,7 +238,7 @@ public class StorageTool {
         int count = 0;
         while (records.hasNext()) {
             rec = records.next();
-            printRecord(rec, true);
+            printRecord(rec, true, false);
 
             count++;
             if (count >= numPeek) {
@@ -235,6 +255,54 @@ public class StorageTool {
                                + " ms (incl. iterator lookup time)");
         } else {
             System.err.println("Peek on all bases completed in " + (System.currentTimeMillis() - startTime)
+                               + " ms (incl. iterator lookup time)");
+        }
+        return 0;
+    }
+
+    /**
+     * This action lists recordIDs from the storage along with basic info.
+     *
+     * @param argv    Command line arguments, specifying the base or nothing, which results in all record being printed.
+     * @param storage The storage reader client.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
+     * @throws IOException If error occur while communicating to storage.
+     */
+    private static int actionList(String[] argv, StorageReaderClient storage) throws IOException {
+        int numPeek;
+        String base;
+
+        if (argv.length == 1) {
+            System.err.println("Listing all bases");
+            base = null;
+        } else {
+            base = argv[1];
+            System.err.println("Listing records from base '" + base + "'");
+        }
+
+        numPeek = argv.length <= 2 ? 20 : Integer.parseInt(argv[2]);
+
+        long startTime = System.currentTimeMillis();
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
+
+        System.err.println("Got iterator after " + (System.currentTimeMillis() - startTime) + " ms");
+
+        Iterator<Record> records = new StorageIterator(storage, iterKey, numPeek);
+        Record rec;
+        int count = 0;
+        while (records.hasNext() && (numPeek == -1 || count++ < numPeek)) {
+            printRecord(records.next(), false, false);
+        }
+
+        if (count == 0) {
+            System.err.println("Base '" + base + "' is empty");
+        }
+
+        if (base != null) {
+            System.err.println("List on base '" + base + "' completed in " + (System.currentTimeMillis() - startTime)
+                               + " ms (incl. iterator lookup time)");
+        } else {
+            System.err.println("List on all bases completed in " + (System.currentTimeMillis() - startTime)
                                + " ms (incl. iterator lookup time)");
         }
         return 0;
@@ -271,7 +339,7 @@ public class StorageTool {
             count++;
             rec = records.next();
             if ("meta".equals(format) || "full".equals(format)) {
-                printRecord(rec, "full".equals(format));
+                printRecord(rec, "full".equals(format), false);
             } else {
                 System.out.println(rec.getContentAsUTF8());
             }
@@ -428,23 +496,25 @@ public class StorageTool {
 
         String recordId = argv[1];
         String xsltUrl = argv[2];
+        Boolean expand = argv.length == 4 ? Boolean.parseBoolean(argv[3]) : null;
 
-        Record r = storage.getRecord(recordId, null);
+        Record r = storage.getRecord(recordId, getOptions(expand));
 
         if (r == null) {
             System.err.println("No such record '" + recordId + "'");
             return 2;
         }
+        final String xml = expand != null && expand ? RecordUtil.toXML(r, false) : r.getContentAsUTF8();
 
         System.out.println(r.toString(true) + "\n");
-        System.out.println("Original content:\n\n" + r.getContentAsUTF8() + "\n");
+        System.out.println("Original content (expand==" + expand + "):\n\n" + xml + "\n");
         System.out.println("\n===========================\n");
 
         Transformer t = compileTransformer(xsltUrl);
         StreamResult input = new StreamResult();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         input.setOutputStream(out);
-        Source so = new StreamSource(new ByteArrayInputStream(r.getContent()));
+        Source so = new StreamSource(new ByteArrayInputStream(xml.getBytes("utf-8")));
 
         try {
             t.transform(so, input);
@@ -494,11 +564,14 @@ public class StorageTool {
         System.err.println("USAGE:\n\tstorage-tool.sh <action> [arg]...");
         System.err.println(
                 "Actions:\n"
-                + "\tget  <record_id>\n"
+                + "\tget  <record_id>+\n"
+                + "\tget_expand  <record_id>+\n"
                 + "\tdelete  <record_id>\n"
                 + "\tpeek [base] [max_count=5]\n"
-                + "\ttouch <record_id> [record_id...]\n"
-                + "\txslt <record_id> <xslt_url>\n"
+                + "\tlist [base] [max_count=20]\n"
+                + "\ttouch <record_id>+\n"
+                // TODO: touch_base
+                + "\txslt <record_id> <xslt_url> [expand]\n"
                 + "\tdump [base [maxrecords [format]]]   (dump storage on stdout)\n"
                 + "\t                        format=content|meta|full\n"
                 + "\tclear base   (clear all records from base)\n"
@@ -555,10 +628,16 @@ public class StorageTool {
         int exitCode;
         switch (action) {
             case "get":
-                exitCode = actionGet(args, reader);
+                exitCode = actionGet(args, reader, false);
+                break;
+            case "get_expand":
+                exitCode = actionGet(args, reader, true);
                 break;
             case "peek":
                 exitCode = actionPeek(args, reader);
+                break;
+            case "list":
+                exitCode = actionList(args, reader);
                 break;
             case "touch":
                 exitCode = actionTouch(args, reader, writer);
