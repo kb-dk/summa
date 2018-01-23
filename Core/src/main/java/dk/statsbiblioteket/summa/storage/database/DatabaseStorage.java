@@ -435,6 +435,8 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final String CONF_USE_OPTIMIZATIONS = "databasestorage.useoptimizations";
     public static final boolean DEFAULT_USE_OPTIMIZATIONS = false;
 
+    private static final int IS_CONNECTION_VALID_TIMEOUT_SECONDS = 2;
+
     /*
     private StatementHandle stmtGetModifiedAfter;
     private StatementHandle stmtGetModifiedAfterAll;
@@ -2455,7 +2457,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             flushWithConnection(record, options, conn);
             // Update last modification time.
-            updateLastModficationTimeForBase(record.getBase(), conn);
+            updateLastModficationTimeForBase(record.getBase());
             setBaseStatisticInvalid(record.getBase(), conn);
         } catch (SQLException e) {
             // This error is logged in the finally clause below
@@ -2518,7 +2520,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
             for (String base : bases.keySet()) {
                 log.debug("Updates last modification time for base '" + base + "'");
-                updateLastModficationTimeForBase(base, conn);
+                updateLastModficationTimeForBase(base);
                 setBaseStatisticInvalid(base, conn);
             }
             // TODO Introduce time-based logging on info
@@ -2538,7 +2540,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     conn.commit();
                     log.debug("Transaction of " + recs.size() + " records completed in "
                               + (System.nanoTime() - start) / 1000000D + "ms");
-                    if (isDebug) {
+                    if (isDebug) { // TODO: Make this a single log-entry
                         for (Record r : recs) {
                             // It may seem dull to iterate over all records
                             // *again*, but time has taught us that this info is
@@ -3288,30 +3290,18 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // This will only be reached if the clear was successful
         log.info("Clear for base " + base + " successfull, updating overall timestamps and statistics");
-        updateBaseMTimeAndStatsWithConnection(conn, base);
+        updateBaseMTimeAndStats(base);
     }
 
     void updateBaseMTimeAndStats(String base) throws IOException {
-        Connection conn = null;
-        try {
-            conn = getDefaultConnection();
-            updateBaseMTimeAndStatsWithConnection(conn, base);
-        } catch (SQLException e) {
-            String msg = "SQLException updating mtime and stats for base '" + base + "'";
-            log.error(msg, e);
-            throw new IOException(msg, e);
-        } finally {
-            if (conn != null) {
-                closeConnection(conn);
-            }
-        }
-    }
-
-    void updateBaseMTimeAndStatsWithConnection(Connection conn, String base) throws SQLException {
         log.debug("Updating base mtime");
-        updateLastModficationTimeForBase(base, conn);
-        updateModificationTime(base);
-        invalidateCachedStats();
+        try {
+            updateLastModficationTimeForBase(base);
+            updateModificationTime(base);
+            invalidateCachedStats();
+        } catch (SQLException e) {
+            throw new IOException("Exception updating stats", e);
+        }
     }
 
     /**
@@ -3898,22 +3888,24 @@ public abstract class DatabaseStorage extends StorageBase {
      * Update the last modification time for a single base.
      *
      * @param base The base.
-     * @param conn The connection.
      * @throws SQLException If error occur while executing SQL.
      */
-    private void updateLastModficationTimeForBase(String base, Connection conn) throws SQLException {
+    private void updateLastModficationTimeForBase(String base) throws SQLException {
         final long startNS = System.nanoTime();
 
         long mtime = System.currentTimeMillis();
-        log.debug("Updating mtime for base '" + base + " and setting it to " + mtime);
+        Connection conn = getTransactionalConnection();
+        log.debug("updateLastModficationTimeForBase: Updating mtime for base '" + base + " to " + mtime);
         // TODO: Use handle directly
         StatementHandle handle = statementHandler.getUpdateMtimeForBase();
+        log.debug("updateLastModficationTimeForBase: Preparing statement");
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
         PreparedStatement insertStmt = null;
         try {
             // update mtime and base
             stmt.setLong(1, mtime);
             stmt.setString(2, base);
+            log.debug("updateLastModficationTimeForBase: Executing statement");
             if (stmt.executeUpdate() == 0) { // This is a new base, update
                 // insert base and mtime
                 log.debug("Base row didn't exists in " + BASE_STATISTICS + " insert new row");
@@ -3924,15 +3916,27 @@ public abstract class DatabaseStorage extends StorageBase {
                 insertStmt.setLong(2, mtime);
                 insertStmt.execute();
             }
+            log.debug("updateLastModficationTimeForBase: Committing");
             conn.commit();
         } catch (SQLException e) {
             log.warn("updateLastModficationTimeForBase(" + base + ", ...) failed. Rolling back");
             conn.rollback();
             throw new SQLException("updateLastModficationTimeForBase(" + base + ", ...) failed", e);
         } finally {
+            log.debug("updateLastModficationTimeForBase: Closing statement");
             closeStatement(stmt);
             closeStatement(insertStmt);
+            conn.close();
             timingUpdateLastModficationTimeForBase.addNS(System.nanoTime()-startNS);
+        }
+    }
+
+    protected boolean isConnectionValid(Connection conn) {
+        try {
+            return conn.isValid(IS_CONNECTION_VALID_TIMEOUT_SECONDS);
+        } catch (Exception e) {
+            log.warn("isConnectionValid: Exception which calling connection-isValid()", e);
+            return false;
         }
     }
 
@@ -4112,7 +4116,7 @@ public abstract class DatabaseStorage extends StorageBase {
             if (updateStats) {
                 r = getRecordWithConnection(id, null, conn);
                 if (r != null) {
-                    updateLastModficationTimeForBase(r.getBase(), conn);
+                    updateLastModficationTimeForBase(r.getBase());
                 }
             }
         } catch (NullPointerException e) {
