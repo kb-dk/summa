@@ -65,15 +65,34 @@ public class AltoBoxSearcherTest extends TestCase {
 
     // Does not highlight "Ninn-Hansen" although it exists in the record
     // http://rhea:56808/mediehub/storage/services/StorageWS?method=getRecord&id=doms_newspaperCollection:uuid:3350757c-25a7-4146-b464-2f99610e3303
-    public void testHighlightDividedWords() throws IOException {
+    public void testHighlightSingleLineHyphenationWords() throws IOException {
         //final String QUERY = "shikoku AND pageUUID:\"doms_aviser_page:uuid:83c5e391-6cd5-4b52-8e91-dd1c686caf7c\"";
-        final String QUERY = "erik ninn-hansen AND pageUUID:\"doms_aviser_page:uuid:3350757c-25a7-4146-b464-2f99610e3303\"";
+        final String query = "erik ninn-hansen AND pageUUID:\"doms_aviser_page:uuid:3350757c-25a7-4146-b464-2f99610e3303\"";
         SummaSearcher searcher = getStageSearcher();
         if (searcher == null) {
             return;
         }
+        String[] expected = new String[]{"Ninn", "Hansen"};
+
+        testHighlightHelper("Single-line",searcher, query, expected);
+    }
+
+    public void testHighlightMultiLineHyphenationWords() throws IOException {
+        //final String QUERY = "shikoku AND pageUUID:\"doms_aviser_page:uuid:83c5e391-6cd5-4b52-8e91-dd1c686caf7c\"";
+        final String query = "Jensen AND pageUUID:\"doms_aviser_page:uuid:9d35d33b-75b2-4912-b77f-5a9e4cc5179b\"";
+        SummaSearcher searcher = getDevelSearcher();
+        if (searcher == null) {
+            return;
+        }
+        String[] expected = new String[]{"Jensen"};
+
+        testHighlightHelper("Multi-line",searcher, query, expected);
+    }
+
+    private void testHighlightHelper(
+            String designation, SummaSearcher searcher, String query, String[] expected) throws IOException {
         ResponseCollection responses = searcher.search(new Request(
-                DocumentKeys.SEARCH_QUERY, QUERY,
+                DocumentKeys.SEARCH_QUERY, query,
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
                 AltoBoxSearcher.SEARCH_BOX, true,
                 AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
@@ -87,22 +106,30 @@ public class AltoBoxSearcherTest extends TestCase {
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
                 if (((DocumentResponse)response).getHitCount() == 0) {
-                    log.warn("testHighlightDividedWords: No hits for '" + QUERY + "'. Skipping unit test");
+                    log.warn(designation + ": No hits for '" + query + "'. Skipping unit test");
                 }
             }
         }
         List<AltoBoxResponse.Box> boxes = getBoxes(responses);
-        assertFalse("With highlighting there should be at least one box", boxes.isEmpty());
+        assertFalse(designation + ": With highlighting there should be at least one box", boxes.isEmpty());
 
         boolean match = false;
         for (AltoBoxResponse.Box box: boxes) {
-            if (box.getContent().contains("Ninn") && box.getContent().contains("Hansen")) {
+            boolean subMatch = true;
+            for (String exp: expected) {
+                if (!box.getContent().contains(exp)) {
+                    subMatch = false;
+                    break;
+                }
+            }
+            if (subMatch) {
                 match = true;
                 break;
             }
         }
-        assertTrue("One of the boxes should contain 'Ninn' and 'Hansen'", match);
+        assertTrue(designation + ": One of the boxes should contain 'Ninn' and 'Hansen'", match);
     }
+
 
     public void testHighlight() throws IOException {
         SummaSearcher searcher = getDevelSearcher();

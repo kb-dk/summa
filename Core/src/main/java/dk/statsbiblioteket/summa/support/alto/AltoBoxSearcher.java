@@ -367,7 +367,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                 // <String ID="S17" CONTENT="Den" WC="0.852" CC="7 8 8" HEIGHT="244" WIDTH="624" HPOS="756" VPOS="1316"/>
 
                 if ("String".equals(current) && tags.size() > 1 && "TextLine".equals(tags.get(tags.size()-2))) {
-                    String content = XMLStepper.getAttribute(xml, "CONTENT", null);
+                    String content = getContent(xml);
                     content = altoStringTrimmer.matcher(content).replaceAll("$1");
                     if (boxResponse.isRelativeCoordinates() && (pageWidth == -1 || pageHeight == -1) &&
                         !warnedNoPageSize) {
@@ -379,6 +379,17 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                     addHighlightBoxIfMatch(xml, content);
                 }
                 return false;
+            }
+
+            private String getContent(XMLStreamReader xml) {
+                // <String CC="2 2 2 2 3 3" CONTENT="forfat" HEIGHT="116" HPOS="3596" ID="S326" SUBS_CONTENT="forfattede" SUBS_TYPE="HypPart1" VPOS="7160" WC="0.259" WIDTH="348"/>
+                if ("HypPart1".equals(XMLStepper.getAttribute(xml, "SUBS_TYPE", null))) {
+                    String subs = XMLStepper.getAttribute(xml, "SUBS_CONTENT", null);
+                    if (subs != null) {
+                        return subs;
+                    }
+                }
+                return XMLStepper.getAttribute(xml, "CONTENT", null);
             }
 
             private void addHighlightBoxIfMatch(XMLStreamReader xml, String content) {
