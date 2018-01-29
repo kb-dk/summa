@@ -196,6 +196,10 @@ public class AltoBoxResponse extends ResponseImpl {
         private String rel(double val) {
             return relative ? Double.toString(val) : Integer.toString((int) val);
         }
+
+        public String getContent() {
+            return content;
+        }
     }
 
     @Override

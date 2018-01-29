@@ -149,6 +149,13 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     public static final String DEFAULT_ALTO_STRING_TRIM_REGEXP =
             "^[-—•«»|'„“‘’,./!?\" :;()^]*(.*?)[-—•«»|'„“‘’,./!?\" :;()^]*$";
 
+    /**
+     * After ALTO String content has been trimmed, a split on the given regexp is attempted.
+     * The parts are used highlight-term matching.
+     */
+    public static final String CONF_ALTO_STRING_SPLIT_REGEXP = "box.altostringsplit.regexp";
+    public static final String DEFAULT_ALTO_STRING_SPLIT_REGEXP = "[-—•|/]";
+
     private final StorageReaderClient storage;
     private final boolean defaultBox;
     private final String defaultIDField;
@@ -158,6 +165,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
     private final boolean defaultRelativeCoordinates;
     private final boolean defaultYisx;
     private final Pattern altoStringTrimmer;
+    private final Pattern altoStringSplitter;
 
     public AltoBoxSearcher(Configuration conf) throws RemoteException {
         super(conf);
@@ -171,6 +179,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
         defaultYisx = conf.getBoolean(CONF_COORDINATES_YISX, DEFAULT_COORDINATES_YISX);
         altoStringTrimmer = Pattern.compile(
                 conf.getString(CONF_ALTO_STRING_TRIM_REGEXP, DEFAULT_ALTO_STRING_TRIM_REGEXP));
+        altoStringSplitter = Pattern.compile(
+                conf.getString(CONF_ALTO_STRING_SPLIT_REGEXP, DEFAULT_ALTO_STRING_SPLIT_REGEXP));
         readyWithoutOpen();
         log.info("Created " + this);
     }
@@ -366,26 +376,45 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                         warnedNoPageSize = true;
                     }
 
-                    if (boxResponse.getLookupTerms().contains(content)) {
-                        if (!boxResponse.isRelativeCoordinates() || pageWidth == -1 || pageHeight == -1) {
-                            boxResponse.add(recordID, new AltoBoxResponse.Box(
-                                    getInt(xml, "HPOS"), getInt(xml, "VPOS"),
-                                    getInt(xml, "WIDTH"), getInt(xml, "HEIGHT"),
-                                    content,
-                                    XMLStepper.getAttribute(xml, "WC", "N/A"),
-                                    XMLStepper.getAttribute(xml, "CC", "N/A"), false));
-                        } else {
-                            int ph = boxResponse.isYisx() ? pageHeight : pageWidth;
-                            boxResponse.add(recordID, new AltoBoxResponse.Box(
-                                    getRel(xml, "HPOS", pageWidth), getRel(xml, "VPOS", ph),
-                                    getRel(xml, "WIDTH", pageWidth), getRel(xml, "HEIGHT", ph),
-                                    content,
-                                    XMLStepper.getAttribute(xml, "WC", "N/A"),
-                                    XMLStepper.getAttribute(xml, "CC", "N/A"), true));
-                        }
-                    }
+                    addHighlightBoxIfMatch(xml, content);
                 }
                 return false;
+            }
+
+            private void addHighlightBoxIfMatch(XMLStreamReader xml, String content) {
+                if (!boxResponse.getLookupTerms().contains(content)) {
+                    boolean matched = false;
+                    String[] tokens = altoStringSplitter.split(content);
+                    if (tokens.length > 1) {
+                        for (String token : tokens) {
+                            if (boxResponse.getLookupTerms().contains(token)) {
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!matched) {
+                        return;
+                    }
+                }
+
+                if (!boxResponse.isRelativeCoordinates() || pageWidth == -1 || pageHeight == -1) {
+                    boxResponse.add(recordID, new AltoBoxResponse.Box(
+                            getInt(xml, "HPOS"), getInt(xml, "VPOS"),
+                            getInt(xml, "WIDTH"), getInt(xml, "HEIGHT"),
+                            content,
+                            XMLStepper.getAttribute(xml, "WC", "N/A"),
+                            XMLStepper.getAttribute(xml, "CC", "N/A"), false));
+                    return;
+                }
+
+                int ph = boxResponse.isYisx() ? pageHeight : pageWidth;
+                boxResponse.add(recordID, new AltoBoxResponse.Box(
+                        getRel(xml, "HPOS", pageWidth), getRel(xml, "VPOS", ph),
+                        getRel(xml, "WIDTH", pageWidth), getRel(xml, "HEIGHT", ph),
+                        content,
+                        XMLStepper.getAttribute(xml, "WC", "N/A"),
+                        XMLStepper.getAttribute(xml, "CC", "N/A"), true));
             }
 
             private double getRel(XMLStreamReader xml, String attributeName, int page) {

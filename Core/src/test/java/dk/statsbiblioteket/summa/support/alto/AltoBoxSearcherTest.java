@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.solr.SBSolrSearchNode;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
@@ -32,7 +33,6 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -48,7 +48,7 @@ public class AltoBoxSearcherTest extends TestCase {
     private static Log log = LogFactory.getLog(AltoBoxSearcherTest.class);
 
     public void testNoTermsNoHighlight() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher();
+        SummaSearcher searcher = getDevelSearcher();
         if (searcher == null) {
             return;
         }
@@ -63,8 +63,49 @@ public class AltoBoxSearcherTest extends TestCase {
 //        System.out.println(responses.toXML());
     }
 
+    // Does not highlight "Ninn-Hansen" although it exists in the record
+    // http://rhea:56808/mediehub/storage/services/StorageWS?method=getRecord&id=doms_newspaperCollection:uuid:3350757c-25a7-4146-b464-2f99610e3303
+    public void testHighlightDividedWords() throws IOException {
+        //final String QUERY = "shikoku AND pageUUID:\"doms_aviser_page:uuid:83c5e391-6cd5-4b52-8e91-dd1c686caf7c\"";
+        final String QUERY = "erik ninn-hansen AND pageUUID:\"doms_aviser_page:uuid:3350757c-25a7-4146-b464-2f99610e3303\"";
+        SummaSearcher searcher = getStageSearcher();
+        if (searcher == null) {
+            return;
+        }
+        ResponseCollection responses = searcher.search(new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
+                AltoBoxSearcher.SEARCH_BOX, true,
+                AltoBoxSearcher.SEARCH_ID_FIELD, "", // default
+                AltoBoxSearcher.SEARCH_ID_REGEXP, "(doms_newspaperCollection:uuid:[0-9abcdef]{8}-[0-9abcdef]{4}-"
+                                                  + "[0-9abcdef]{4}-[0-9abcdef]{4}-[0-9abcdef]{12}).*",
+                AltoBoxSearcher.SEARCH_ID_TEMPLATE, "$1",
+                "solrparam.hl", true,
+                "solrparam.hl.fl", "fulltext_org",
+                "solrparam.hl.snippets", 20
+        ));
+        for (Response response: responses) {
+            if (response instanceof DocumentResponse) {
+                if (((DocumentResponse)response).getHitCount() == 0) {
+                    log.warn("testHighlightDividedWords: No hits for '" + QUERY + "'. Skipping unit test");
+                }
+            }
+        }
+        List<AltoBoxResponse.Box> boxes = getBoxes(responses);
+        assertFalse("With highlighting there should be at least one box", boxes.isEmpty());
+
+        boolean match = false;
+        for (AltoBoxResponse.Box box: boxes) {
+            if (box.getContent().contains("Ninn") && box.getContent().contains("Hansen")) {
+                match = true;
+                break;
+            }
+        }
+        assertTrue("One of the boxes should contain 'Ninn' and 'Hansen'", match);
+    }
+
     public void testHighlight() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher();
+        SummaSearcher searcher = getDevelSearcher();
         if (searcher == null) {
             return;
         }
@@ -93,15 +134,14 @@ public class AltoBoxSearcherTest extends TestCase {
     }
     // This does not work as RMI is (understandably) blocked in the prod firewall
     public void testNonWorkingProdAviserHighlight() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher(
+        SummaSearcher searcher = getDevelSearcher(
                 "prod-search03", 56700, "/aviser/sbsolr/select", "aviser-storage");
         assertHighlight(searcher, "doms_aviser_page:uuid:47aa35fc-6551-49b5-9c0c-4d323fd92f52", "titanic");
     }
       */
 
     public void testWorkingMarsAviserHighlight() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher(
-                "mars", 56700, "/aviser/sbsolr/select", "aviser-storage");
+        SummaSearcher searcher = getDevelSearcher();
         assertHighlight(searcher, "doms_aviser_page:uuid:065527ab-d9dd-4ebe-a2bb-ca49ac8c7b7a", "overskrift");
     }
 
@@ -112,8 +152,7 @@ public class AltoBoxSearcherTest extends TestCase {
     negatives (aka missing highlights).
      */
     public void testNonWorkingMarsAviserHighlight() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher(
-                "mars", 56700, "/aviser/sbsolr/select", "aviser-storage");
+        SummaSearcher searcher = getDevelSearcher();
         assertHighlight(searcher, "doms_aviser_page:uuid:e66d8304-2a90-4faa-beee-2f7660675306", "overskrift");
     }
 
@@ -144,7 +183,7 @@ public class AltoBoxSearcherTest extends TestCase {
     // The ALTO-text for this was "Lykønskning," with highlight "Lykønskening".
     // The matcher did not ignore the comma at the end.
     public void testCommaHighlight() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher();
+        SummaSearcher searcher = getDevelSearcher();
         if (searcher == null) {
             return;
         }
@@ -167,11 +206,11 @@ public class AltoBoxSearcherTest extends TestCase {
     }
 
     public void testPhraseHighlight() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher();
+        SummaSearcher searcher = getDevelSearcher();
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getAvailableSearcher().search(new Request(
+        ResponseCollection responses = getDevelSearcher().search(new Request(
                 DocumentKeys.SEARCH_QUERY,
                 "\"Jesper Tørring blev\"",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
@@ -191,11 +230,11 @@ public class AltoBoxSearcherTest extends TestCase {
     }
 
     public void testSpecificHansJensen() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher();
+        SummaSearcher searcher = getDevelSearcher();
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getAvailableSearcher().search(new Request(
+        ResponseCollection responses = getDevelSearcher().search(new Request(
                 DocumentKeys.SEARCH_QUERY,
                 "\"hans jensen\" editionUUID:\"doms_aviser_edition:uuid:6e8dff93-d59d-4bec-be95-321cb73b8c9c\"",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
@@ -215,11 +254,11 @@ public class AltoBoxSearcherTest extends TestCase {
     }
 
     public void testHighlightRelative() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher();
+        SummaSearcher searcher = getDevelSearcher();
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getAvailableSearcher().search(new Request(
+        ResponseCollection responses = getDevelSearcher().search(new Request(
                 DocumentKeys.SEARCH_QUERY, "hest",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
                 AltoBoxSearcher.SEARCH_BOX, true,
@@ -291,11 +330,11 @@ public class AltoBoxSearcherTest extends TestCase {
     }
 
     public void testEnabledNoHighlight() throws IOException {
-        SummaSearcher searcher = getAvailableSearcher();
+        SummaSearcher searcher = getDevelSearcher();
         if (searcher == null) {
             return;
         }
-        ResponseCollection responses = getAvailableSearcher().search(new Request(
+        ResponseCollection responses = searcher.search(new Request(
                 DocumentKeys.SEARCH_QUERY, "hest",
                 DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, fulltext_org, alto_box, pageUUID",
                 AltoBoxSearcher.SEARCH_BOX, true,
@@ -325,12 +364,27 @@ public class AltoBoxSearcherTest extends TestCase {
         return boxes;
     }
 
-    private SummaSearcher getAvailableSearcher() throws IOException {
-        return getAvailableSearcher("mars", 56700, "/aviser/sbsolr/select", "aviser-storage");
+    private SummaSearcher getDevelSearcher() throws IOException {
+        return getFullStackWithTest("mars", 50001, "/solr/aviser.2.devel/select",
+                                    "mars", 56700, "aviser-storage");
+        //return getDevelSearcher("mars", 56708, "/aviser/sbsolr/select", "aviser-storage");
     }
-    private SummaSearcherImpl getAvailableSearcher(
-            String host, int basePort, String solrPath, String storageID) throws IOException {
-        SummaSearcherImpl searcher = getFullStack(host, basePort, solrPath, storageID);
+    private SummaSearcher getStageSearcher() throws IOException {
+//        return getFullStackWithTest("rhea", 50001, "/solr/aviser.p.20170228/select",
+//                                    "rhea", 56700, "aviser-storage");
+        return getFullStackWithTest("rhea", 50001, "/solr/aviser.1.stage/select",
+                                    "rhea", 56700, "aviser-storage");
+    }
+
+    // Not available due to tightened firewall rules
+    private SummaSearcher getProd3Searcher() throws IOException {
+        return getFullStackWithTest("prod-search03", 50001, "/solr/aviser.1.prod/select",
+                                    "prod-search03", 56700, "aviser-storage");
+    }
+    private SummaSearcherImpl getFullStackWithTest(
+            String solrHost, int solrPort, String solrRest, String storageHost, int storagePort, String storageID)
+            throws IOException {
+        SummaSearcherImpl searcher = getFullStack(solrHost, solrPort, solrRest, storageHost, storagePort, storageID);
         try {
             searcher.search(new Request(DocumentKeys.SEARCH_QUERY, "ddsdffsfss"));
         } catch (IOException e) {
@@ -341,7 +395,8 @@ public class AltoBoxSearcherTest extends TestCase {
     }
 
     private SummaSearcherImpl getFullStack(
-            String host, int basePort, String rest, String storageID) throws IOException {
+            String solrHost, int solrPort, String solrRest, String storageHost, int storagePort, String storageID)
+            throws IOException {
         Configuration searcherConf = Configuration.newMemoryBased(
                 SummaSearcherImpl.CONF_USE_LOCAL_INDEX, false
         );
@@ -350,14 +405,14 @@ public class AltoBoxSearcherTest extends TestCase {
         List<Configuration> nodeConfs = searcherConf.createSubConfigurations(SearchNodeFactory.CONF_NODES, 2);
 
         nodeConfs.get(0).set(SearchNodeFactory.CONF_NODE_CLASS, SBSolrSearchNode.class.getCanonicalName());
-        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_HOST, host + ":" + (basePort + 8)); // "mars:56708"
-        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_RESTCALL, rest); // "/aviser/sbsolr/select"
+        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_HOST, solrHost + ":" + solrPort); // "mars:56708"
+        nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_RESTCALL, solrRest); // "/aviser/sbsolr/select"
         nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_CONNECTION_TIMEOUT, 500);
         nodeConfs.get(0).set(SBSolrSearchNode.CONF_SOLR_READ_TIMEOUT, 5000);
 
         nodeConfs.get(1).set(SearchNodeFactory.CONF_NODE_CLASS, AltoBoxSearcher.class.getCanonicalName());
         // "//mars:56700/aviser-storage"
-        nodeConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//" + host + ":" + basePort + "/" + storageID);
+        nodeConfs.get(1).set(ConnectionConsumer.CONF_RPC_TARGET, "//" + storageHost + ":" + storagePort + "/" + storageID);
         nodeConfs.get(1).set(ConnectionConsumer.CONF_INITIAL_GRACE_TIME, 500);
         nodeConfs.get(1).set(ConnectionConsumer.CONF_SUBSEQUENT_GRACE_TIME, 1000);
         return new SummaSearcherImpl(searcherConf);

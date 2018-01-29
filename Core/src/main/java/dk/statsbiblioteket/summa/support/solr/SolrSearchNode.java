@@ -926,7 +926,8 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             String error = String.format(
                 "getData(host='%s', command='%s') for %s failed with error stream\n%s",
                 "http://" + host, command, getID(),
-                Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
+                conn.getErrorStream() == null ? "N/A" :
+                        Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
             log.warn(error, e);
             throw new IOException(error, e);
         }
