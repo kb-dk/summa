@@ -91,8 +91,10 @@ public class SolrDocumentAdjustFilter extends ObjectFilterImpl {
     }
 
     public interface Adjuster {
+        /**
+         * @return true if the payload was adjusted.
+         */
         boolean adjust(Payload payload) throws PayloadException;
-        boolean adjust(Record record) throws PayloadException;
     }
 
     @Override

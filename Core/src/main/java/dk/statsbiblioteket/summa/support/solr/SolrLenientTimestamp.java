@@ -68,17 +68,13 @@ public class SolrLenientTimestamp implements SolrDocumentAdjustFilter.Adjuster {
         log.info("Created " + this);
     }
 
-    /**
-     * If the Payload contains a Record, call {@link #adjust(Record)} with that.
-     * @return true if the content of the Payload was modified.
-     */
     @Override
     public boolean adjust(Payload payload) {
-        return payload.getRecord() != null && adjust(payload.getRecord());
-    }
+        if (payload.getRecord() == null) {
+            return false;
+        }
+        final Record record = payload.getRecord();
 
-    @Override
-    public boolean adjust(Record record) {
         if (fields.isEmpty()) {
             return false;
         }
