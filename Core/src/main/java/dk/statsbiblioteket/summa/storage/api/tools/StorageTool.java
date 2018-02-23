@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -134,6 +135,31 @@ public class StorageTool {
         }
         options.meta("ALLOW_PRIVATE", "true");
         return options;
+    }
+
+    /**
+     * Method for the 'put' commande. Loads record content from the provided file and stores it
+     * using the provided id and base. Usable for experiments.
+     * @param args   id, base, file.
+     * @param writer Storage writer.
+     * @return 0 if everything went well.
+     */
+    private static int actionPut(String[] args, StorageWriterClient writer) throws IOException {
+        if (args.length != 3) {
+            System.err.println("Error: Illegal number of arguments. Please provide id, base, file where");
+            System.err.println("  id = recordID");
+            System.err.println("  base = recordBase");
+            System.err.println("  file = local file path to record content, expected to be UTF-8");
+            return 8;
+        }
+        final String recordID = args[0];
+        final String recordBase = args[1];
+        final String file = args[2];
+        // TODO: Shortcut the unnecessary decode+encode of UTF-8 (this also allows arbitrary content)
+        final String content = Files.loadString(new File(file));
+        Record record = new Record(recordID, recordBase, content.getBytes("utf-8"));
+        writer.flush(record);
+        return 0;
     }
 
     /**
@@ -566,6 +592,7 @@ public class StorageTool {
                 "Actions:\n"
                 + "\tget  <record_id>+\n"
                 + "\tget_expand  <record_id>+\n"
+                + "\tput <record_id> <record_base> <file>\n"
                 + "\tdelete  <record_id>\n"
                 + "\tpeek [base] [max_count=5]\n"
                 + "\tlist [base] [max_count=20]\n"
@@ -633,6 +660,9 @@ public class StorageTool {
             case "get_expand":
                 exitCode = actionGet(args, reader, true);
                 break;
+            case "put":
+                exitCode = actionPut(args, writer);
+                break;
             case "peek":
                 exitCode = actionPeek(args, reader);
                 break;
@@ -674,4 +704,5 @@ public class StorageTool {
         }
         System.exit(exitCode);
     }
+
 }
