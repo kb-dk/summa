@@ -145,16 +145,16 @@ public class StorageTool {
      * @return 0 if everything went well.
      */
     private static int actionPut(String[] args, StorageWriterClient writer) throws IOException {
-        if (args.length != 3) {
+        if (args.length != 4) {
             System.err.println("Error: Illegal number of arguments. Please provide id, base, file where");
             System.err.println("  id = recordID");
             System.err.println("  base = recordBase");
             System.err.println("  file = local file path to record content, expected to be UTF-8");
             return 8;
         }
-        final String recordID = args[0];
-        final String recordBase = args[1];
-        final String file = args[2];
+        final String recordID = args[1];
+        final String recordBase = args[2];
+        final String file = args[3];
         // TODO: Shortcut the unnecessary decode+encode of UTF-8 (this also allows arbitrary content)
         final String content = Files.loadString(new File(file));
         Record record = new Record(recordID, recordBase, content.getBytes("utf-8"));
