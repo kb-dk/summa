@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.api.document.HighlightResponse;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLStepper;
 import org.apache.commons.logging.Log;
@@ -212,6 +213,9 @@ public class AltoBoxSearcher extends SearchNodeImpl {
             log.debug("No recordIDs resolved for " + request);
             return;
         }
+        log.debug("Resolved " + boxResponse.getLookupRecordIDs().size() + " recordIDs and " +
+                  boxResponse.getLookupTerms().size() + " terms from highlighting: [" +
+                  Strings.join(boxResponse.getLookupTerms(), 10) + "]");
         resolveBoxes(boxResponse);
     }
 
@@ -333,7 +337,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                     log.warn("Unable to resolve " + recordID + " from " + storage.getVendorId());
                     continue;
                 }
-                log.debug("Got " + record);
+                log.debug("Got " + record + ", iterating and extracting boxes from " +
+                          boxResponse.getLookupTerms().size() + " terms");
                 XMLStreamReader xml =
                         xmlFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART.content));
                 resolveBoxes(xml, recordID, boxResponse);
@@ -436,6 +441,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                 return Integer.parseInt(XMLStepper.getAttribute(xml, attributeName, "-1"));
             }
         });
+        log.debug("Finished extracting at least " + boxResponse.getBoxes().size() + " boxes for " + recordID);
     }
 
     @Override

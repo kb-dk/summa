@@ -79,7 +79,7 @@ public class AltoBoxSearcherTest extends TestCase {
 
     public void testHighlightMultiLineHyphenationWords() throws IOException {
         //final String QUERY = "shikoku AND pageUUID:\"doms_aviser_page:uuid:83c5e391-6cd5-4b52-8e91-dd1c686caf7c\"";
-        final String query = "Jensen AND pageUUID:\"doms_aviser_page:uuid:9d35d33b-75b2-4912-b77f-5a9e4cc5179b\"";
+        final String query = "\"Jensen\"^0.7573837 pageUUID:\"doms_aviser_page:uuid:9d35d33b-75b2-4912-b77f-5a9e4cc5179b\"";
         SummaSearcher searcher = getDevelSearcher();
         if (searcher == null) {
             return;
