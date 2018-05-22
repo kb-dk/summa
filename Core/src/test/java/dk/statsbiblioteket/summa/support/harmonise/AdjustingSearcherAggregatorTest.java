@@ -68,6 +68,20 @@ public class AdjustingSearcherAggregatorTest extends TestCase {
         aggregator.close();
     }
 
+    // Very bogus as it requires already running searchers at specific addresses on mars
+    public void testSubjectFacet() throws IOException, SubConfigurationsNotSupportedException {
+        AdjustingSearcherAggregator aggregator = getSBAggregator("localhost");
+        Request request = new Request();
+        request.addJSON(
+                "{\"search.document.query\":\"peter\"," +
+                "\"search.document.collectdocids\":true," +
+                "\"search.facet.facets\":\"lsubject\"}"
+        );
+        ResponseCollection responses = aggregator.search(request);
+        aggregator.close();
+        System.out.println(responses.toXML());
+    }
+
     // Very bogus as it requires already running searchers at specific addresses on Statsbiblioteket
     public void testGroupMerge() throws IOException, SubConfigurationsNotSupportedException {
 

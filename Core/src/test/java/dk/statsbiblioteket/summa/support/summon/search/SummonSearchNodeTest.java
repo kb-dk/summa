@@ -45,6 +45,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Ignore;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -319,7 +320,17 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testBulkDocIDRequestSingle() throws RemoteException {
-        assertBulkDocIDRequest("Single document", 1, "FETCH-proquest_dll_15622214411");
+        SearchNode summon = SummonTestHelper.createPagingSummonSearchNode();
+        try {
+            List<String> ids = getAttributes(summon, new Request(
+                    DocumentKeys.SEARCH_QUERY, "dolphin training",
+                    DocumentKeys.SEARCH_MAX_RECORDS, 1
+            ), "id", false);
+            assertEquals("There should be a single ID for 'dolphin training' with max records 1", 1, ids.size());
+            assertBulkDocIDRequest("Single document", 1, ids.get(0));
+        } finally {
+            summon.close();
+        }
     }
 
     public void testBulkIDOverflow() throws Exception {
@@ -375,24 +386,30 @@ public class SummonSearchNodeTest extends TestCase {
     }
 
     public void testBulkDocIDRequestMulti() throws RemoteException {
-        final List<String> IDs = Arrays.asList(
-                "summon_FETCH-gale_legaltrac_2308302761",
-                "summon_FETCH-proquest_dll_11692083811",
-                "summon_FETCH-LOGICAL-c811-60dce11a4b98aba9002078a4fc2cfd624c146f82ceca1772fafece2d86f46d861"
-        ).subList(0, 3);
-        final int EXPECTED = IDs.size();
+        SearchNode summon = SummonTestHelper.createPagingSummonSearchNode();
+        try {
+            List<String> ids = getAttributes(summon, new Request(
+                    DocumentKeys.SEARCH_QUERY, "umbrellas",
+                    DocumentKeys.SEARCH_MAX_RECORDS, 3
+            ), "id", false);
+            assertEquals("There should be the right number of IDs for 'umbrellas'", 3, ids.size());
 
-        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
-        List<String> first = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(IDs));
+            assertBulkDocIDRequest("Single document", 1, ids.get(0));
+            final int EXPECTED = ids.size();
 
-        Collections.sort(IDs);
-        Collections.sort(first);
-        System.out.println("Requested: " + Strings.join(IDs));
-        System.out.println("Received:  " + Strings.join(first));
-        assertEquals("There should be the expected number of Records for first class ID lookup",
-                     EXPECTED, first.size());
+            List<String> first = getHits(summon, DocumentKeys.SEARCH_IDS, Strings.join(ids));
+            Collections.sort(ids);
+            Collections.sort(first);
+            System.out.println("Requested: " + Strings.join(ids));
+            System.out.println("Received:  " + Strings.join(first));
+            assertEquals("There should be the expected number of Records for first class ID lookup",
+                         EXPECTED, first.size());
+        } finally {
+            summon.close();
+        }
     }
 
+    @Ignore // Largely made irrelevant by time
     public void testBulkDocIDRequestMultiFallback() throws RemoteException {
         final List<String> IDs = Arrays.asList(
                 "summon_FETCH-gale_legaltrac_2308302761",
@@ -413,6 +430,7 @@ public class SummonSearchNodeTest extends TestCase {
                      EXPECTED, first.size());
     }
 
+    @Ignore // Largely made irrelevant by time
     public void testFallbackDocIDRequest() throws RemoteException {
         final List<String> IDs = Arrays.asList(
                 "summon_FETCH-eric_primary_EJ5633011",    // Returned as summon_FETCH-LOGICAL-c611-6aa4a4e310c8434ecaf0289c01a569c2b03cf40b9ea8913fd9bc487fb3db1caa1
@@ -434,6 +452,7 @@ public class SummonSearchNodeTest extends TestCase {
                      EXPECTED, first.size());
     }
 
+    @Ignore // Largely made irrelevant by time
     public void testOriginatingID() throws RemoteException {
         final List<String> IDs = Arrays.asList(
                 "summon_chadwyckhealey_pio_511600010016", // Works with FETCH, not without
@@ -531,6 +550,7 @@ public class SummonSearchNodeTest extends TestCase {
         }
     }
 
+    @Ignore // Largely made irrelevant by time
     public void disabledtestFatalDocIDRequest() throws RemoteException {
         final List<String> IDs = Arrays.asList(
                 "summon_FETCH-eric_primary_EJ5633011", // Exists 20140224
@@ -770,20 +790,47 @@ public class SummonSearchNodeTest extends TestCase {
         summon.close();
     }
 
-    public void testExplicitFacet() throws RemoteException {
+    public void testQueryTermFacet() throws RemoteException {
+        assertFacetExistence("peter", "SubjectTerms");
+    }
+
+    public void testQueryTermFacet1Hit() throws RemoteException {
+        assertFacetExistence("leaking chaos systems Altmann, Eduardo Portela Jefferson Tél Tamás", "SubjectTerms");
+    }
+
+    public void testIDSearchFacet() throws RemoteException {
+        final String QUERY = "\\\"peter\\\"";
+        assertFacetExistence("peter", "SubjectTerms");
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        List<String> ids = getAttributes(summon, new Request(
+                DocumentKeys.SEARCH_QUERY, QUERY,
+                DocumentKeys.SEARCH_MAX_RECORDS, 1
+        ), "id", false);
+        assertEquals("The right number of hits were expected", 1, ids.size());
+
+        final String ID = ids.get(0);
+        assertFacetExistence("recordID:\\\"" + ID + "\\\"", "SubjectTerms");
+    }
+
+    private void assertFacetExistence(String query, String facetName) throws RemoteException {
         final String JSON =
-                "{\"search.document.query\":\"peter\","
+                "{\"search.document.query\":\"" + query + "\","
                 + "\"search.document.collectdocids\":\"true\","
-                + "\"search.facet.facets\":\"SubjectTerms\"}";
-                //+ "\"search.facet.facets\":\"SubjectTerms,lsubject\"}";
+                + "\"search.facet.facets\":\"" + facetName + "\"}";
 
         SearchNode summon = SummonTestHelper.createSummonSearchNode();
         ResponseCollection responses = new ResponseCollection();
         Request request = new Request();
         request.addJSON(JSON);
         summon.search(request, responses);
-        assertTrue("The response should contain some facets\n" + responses.toXML(),
-                   responses.toXML().contains("facet name"));
+        final String xml = responses.toXML();
+        System.out.println(xml);
+//        System.out.println(responses.toXML());
+        assertTrue("The response should contain some facets for query '" + query + "'\n" + xml,
+                   xml.contains("facet name"));
+        assertTrue("The response should contain facets for 'SubjectTerms' with query '" + query + "'\n" + xml,
+                   xml.contains("<facet name=\"SubjectTerms\">"));
         summon.close();
     }
 

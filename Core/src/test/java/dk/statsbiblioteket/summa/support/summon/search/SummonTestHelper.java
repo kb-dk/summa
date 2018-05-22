@@ -51,6 +51,7 @@ public class SummonTestHelper {
         try {
             Configuration conf = getDefaultSummonConfiguration();
             conf.set(SummonResponseBuilder.CONF_SHORT_DATE, useShortDate);
+//            conf.set(SummonResponseBuilder.CONF_COLLAPSE_MULTI_FIELDS, false);
             conf.set(SolrSearchNode.CONF_RECORD_CACHE, SolrSearchNode.CACHE_TYPE.wildcard.toString());
 
             summon = new SummonSearchNode(conf);

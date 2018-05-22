@@ -183,7 +183,6 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         final boolean facetingEnabled = request.getBoolean(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
         final XML_MODE xmlMode = XML_MODE.valueOf(
                 request.getString(SEARCH_XML_FIELD_HANDLING, defaultXmlHandling));
-
         XMLStreamReader xml;
         try {
             xml = xmlFactory.createXMLStreamReader(new StringReader(solrResponse));
@@ -602,8 +601,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
 
         // Entering embedded XML land
         XMLStreamReader subXML = xml;
-
-        if ("PublicationDate_xml".equals(name) || "Author_xml".equals(name)) {
+        if (EXPLICIT_XML_HANDLING.contains(name)) {
             // We need specific as well as general extraction so we extract the snippet and duplicate it
             String snippet = XMLStepper.getSubXML(xml, true);
 
@@ -632,6 +630,7 @@ public class SummonResponseBuilder extends SolrResponseBuilder {
         return fields;
     }
 
+    private Set<String> EXPLICIT_XML_HANDLING = new HashSet<>(Arrays.asList("PublicationDate_xml", "Author_xml"));
     private void extractSpecific(
             XMLStreamReader xml, final XML_MODE xmlMode, final String fieldName,
             final List<DocumentResponse.Field> fields, final ConvenientMap extracted) throws XMLStreamException {
