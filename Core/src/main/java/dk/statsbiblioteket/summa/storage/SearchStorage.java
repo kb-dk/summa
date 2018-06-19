@@ -104,18 +104,22 @@ public class SearchStorage implements Storage {
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
 
     public SearchStorage(Configuration conf) throws RemoteException {
-        if (conf.valueExists(SummaSearcher.CONF_CLASS)) {
-            log.debug("Creating an embedded SearchNode of class " + conf.getString(SummaSearcher.CONF_CLASS));
-            searchNode = SearchNodeFactory.createSearchNode(conf);
-            searchClient = null;
-        } else if (conf.valueExists(ConnectionConsumer.CONF_RPC_TARGET)) {
-            log.debug("Connecting to a remote SummaSearcher at " + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
-            searchNode = null;
-            searchClient = new SearchClient(conf);
-        } else {
-            throw new ConfigurationException("Either " + SummaSearcher.CONF_CLASS + " or "
-                                             + ConnectionConsumer.CONF_RPC_TARGET + " must be specified");
-        }
+        this(conf,
+             conf.valueExists(SummaSearcher.CONF_CLASS) ? SearchNodeFactory.createSearchNode(conf) : null,
+             conf.valueExists(ConnectionConsumer.CONF_RPC_TARGET) ? new SearchClient(conf) : null);
+    }
+
+    public SearchStorage(Configuration conf, SearchNode searchNode) throws RemoteException {
+        this(conf, searchNode, null);
+    }
+
+    public SearchStorage(Configuration conf, SearchClient searchClient) throws RemoteException {
+        this(conf, null, searchClient);
+    }
+
+    SearchStorage(Configuration conf, SearchNode searchNode, SearchClient searchClient) throws RemoteException {
+        this.searchNode = searchNode;
+        this.searchClient = searchClient;
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         idField = conf.getString(CONF_ID_FIELD, DEFAULT_ID_FIELD);
         recordBase = conf.getString(CONF_RECORD_BASE, DEFAULT_RECORD_BASE);
@@ -123,7 +127,7 @@ public class SearchStorage implements Storage {
         log.info("Created SearchStorage with batchSize=" + batchSize + ", idField='" + idField
                  + "', recordBase='" + recordBase + "', explicitIDSearch=" + explicitIDSearch + ", backed by "
                  + (searchNode == null ? "SearchClient(" + conf.getString(ConnectionConsumer.CONF_RPC_TARGET) + ")" :
-                    "embedded SearchNode(" + conf.getString(SummaSearcher.CONF_CLASS) + ")"));
+                    "embedded SearchNode(" + conf.getString(SummaSearcher.CONF_CLASS, "N/A") + ")"));
     }
 
     /**

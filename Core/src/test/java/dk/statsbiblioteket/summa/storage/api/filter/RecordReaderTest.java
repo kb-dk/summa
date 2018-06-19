@@ -75,6 +75,21 @@ public class RecordReaderTest extends TestCase {
         return new TestSuite(RecordReaderTest.class);
     }
 
+    // Integration test: Only directly usable for toes@kb.dk - might be used for inspiration for at proper unit test
+    public void disabledtestDOMSIntegration() throws IOException {
+        File TMP = File.createTempFile("SummaRise-doms-integration", ".xml");
+        
+        TMP.deleteOnExit();
+        RecordReader reader = new RecordReader(Configuration.newMemoryBased(
+                RecordReader.CONF_START_FROM_SCRATCH, false,
+                RecordReader.CONF_PROGRESS_FILE, TMP.getAbsolutePath(),
+                RecordReader.CONF_BASE, "doms_radioTVCollection",
+                RecordReader.CONF_EXPAND_CHILDREN, true,
+                RecordReader.CONF_EXPAND_PARENTS, false,
+                ConnectionConsumer.CONF_RPC_TARGET, "localhost:57300/doms-storage-proxy"
+        ));
+    }
+
     public void testIterator() throws IOException {
         int RECORDS = 10;
         int BATCH = 4;

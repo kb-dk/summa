@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.configuration.Log4JSetup;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.Environment;
+import dk.statsbiblioteket.summa.common.util.UnicodeUtil;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
@@ -1119,24 +1120,6 @@ public class SearchWS implements ServletContextListener {
      * those. Any such high-order codepoints are removed and a warning is logged.
      */
     private String pruneHighOrderUnicode(String designation, String in) {
-        final int LIMIT = 0xFFFF;
-        if (!pruneHighOrderUnicode) {
-            return in;
-        }
-        final StringBuilder sb = new StringBuilder(in.length());
-        int removes = 0;
-        for (int offset = 0; offset < in.length(); ) {
-            final int codepoint = in.codePointAt(offset);
-            if (codepoint <= LIMIT) {
-                sb.append((char)codepoint);
-            } else {
-                removes++;
-            }
-            offset += Character.charCount(codepoint); // Probably faster to special case this in the if above
-        }
-        if (removes > 0) {
-            log.warn("Encountered and removed " + removes + " chars with codepoint > " + LIMIT + " from " + designation);
-        }
-        return sb.toString();
+        return pruneHighOrderUnicode ? UnicodeUtil.pruneHighOrderUnicode(designation, in, true, log) : in;
     }
 }

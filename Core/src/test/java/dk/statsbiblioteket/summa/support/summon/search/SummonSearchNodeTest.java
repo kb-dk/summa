@@ -107,7 +107,17 @@ public class SummonSearchNodeTest extends TestCase {
         ResponseCollection responses = new ResponseCollection();
         summon.search(new Request(DocumentKeys.SEARCH_QUERY, QUERY), responses);
         System.out.println(responses.toXML());
-}
+    }
+
+    public void testSpecificSearchSOAPProblem() throws RemoteException {
+        //final String QUERY = "roberto constantini";
+        final String QUERY = "id:summon_FETCH-ceeol_journals_4571843";
+
+        SummonSearchNode summon = SummonTestHelper.createSummonSearchNode();
+        ResponseCollection responses = new ResponseCollection();
+        summon.search(new Request(DocumentKeys.SEARCH_QUERY, QUERY), responses);
+        System.out.println(responses.toXML());
+    }
 
     public void testDebug() throws RemoteException {
         //final String QUERY = "roberto constantini";

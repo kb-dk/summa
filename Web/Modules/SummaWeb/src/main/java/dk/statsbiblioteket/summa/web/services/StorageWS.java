@@ -21,7 +21,9 @@ import dk.statsbiblioteket.summa.common.configuration.Log4JSetup;
 import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
 import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.summa.common.util.UnicodeUtil;
 import dk.statsbiblioteket.summa.storage.api.*;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +56,15 @@ public class StorageWS implements ServletContextListener {
      * Logger for StorageWS.
      */
     private static Log log = LogFactory.getLog(StorageWS.class);
+
+    /**
+     * The current web service framework (axis) delivers invalid entities when returning unicodes above 0xFFFF.
+     * Setting this to true removes those codes before sending the result.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_PRUNE_HIGHORDERUNICODE = "storagews.prune.highorderunicode";
+    public static final boolean DEFAULT_PRUNE_HIGHORDERUNICODE = true;
 
     /**
      * Records namespace, used in response.
@@ -93,6 +104,7 @@ public class StorageWS implements ServletContextListener {
     private XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     /** True if content should be escaped. */
     static boolean escapeContent = RecordUtil.DEFAULT_ESCAPE_CONTENT;
+    private static boolean pruneHighOrderUnicode = true;
 
     /**
      * Constructor for Storage WebService.
@@ -112,6 +124,7 @@ public class StorageWS implements ServletContextListener {
         if (storage == null) {
             Configuration conf = getConfiguration();
             escapeContent = conf.getBoolean(RecordUtil.CONF_ESCAPE_CONTENT, escapeContent);
+            pruneHighOrderUnicode = conf.getBoolean(CONF_PRUNE_HIGHORDERUNICODE, DEFAULT_PRUNE_HIGHORDERUNICODE);
             if (conf.containsKey(Storage.CONF_CLASS)) {
                 log.info("Located " + Storage.CONF_CLASS + " in configuration. Creating direct Storage");
                 try {
@@ -277,7 +290,8 @@ public class StorageWS implements ServletContextListener {
             "Finished realGetRecords(%d ids) in %dms (query: %dms, xmlify: %dms, escapeContent=%b)",
             ids.size(), totalTime, time, xmlTime, escapeContent));
 
-        return retXML;
+        return !pruneHighOrderUnicode ? retXML :
+                UnicodeUtil.pruneHighOrderUnicode("realGetRecords(" + Strings.join(ids) + ")", retXML, true, log);
     }
 
     /**
@@ -336,7 +350,8 @@ public class StorageWS implements ServletContextListener {
                 "realGetRecord('%s', expand=%b, legacyMerge=%b, escapeContent=%b) finished in %d ms " +
                 "(%dms spend on XML creation)",
                 id, expand, legacyMerge, escapeContent, System.currentTimeMillis() - startTime, xmlTime));
-        return retXML;
+        return !pruneHighOrderUnicode ? retXML :
+                UnicodeUtil.pruneHighOrderUnicode("realGetRecord(" + id + ")", retXML, true, log);
     }
 
     /**

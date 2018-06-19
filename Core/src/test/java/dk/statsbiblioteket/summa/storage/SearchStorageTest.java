@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.storage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
@@ -25,12 +26,17 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.support.summon.search.SummonSearchNode;
+import dk.statsbiblioteket.summa.support.summon.search.SummonTestHelper;
 import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.Arrays;
 
 public class SearchStorageTest extends TestCase {
+    private SummonSearchNode summonSearchNode;
+    private Storage summonSearchStorage;
+
     private SummaSearcher plainSearcher;
     private SummaSearcher rmiSearcher;
     private Storage fakeStorage;
@@ -49,11 +55,20 @@ public class SearchStorageTest extends TestCase {
                 ConnectionConsumer.CONF_RPC_TARGET,
                 "//localhost:" + RMISearcherProxy.DEFAULT_REGISTRY_PORT + "/" + RMISearcherProxy.DEFAULT_SERVICE_NAME
         ));
+
+        summonSearchNode = SummonTestHelper.createSummonSearchNode();
+        summonSearchStorage = new SearchStorage(Configuration.newMemoryBased(), summonSearchNode);
     }
 
     @Override
     public void tearDown() throws Exception {
         rmiSearcher.close();
+    }
+
+    public void testSummonStorageSOAPProblem() throws IOException {
+        Record record = summonSearchStorage.getRecord("summon_FETCH-ceeol_journals_4571843", null);
+        assertNotNull("There should be a record", record);
+        System.out.println(record.getContentAsUTF8());
     }
 
     public void testSearcherStorage() throws IOException {
