@@ -20,6 +20,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.SubConfigurationsNotSupportedException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -252,8 +254,8 @@ public class RecordShaperFilter extends ObjectFilterImpl {
     private Pair<Pattern, String> assignContent;
     private Pair<Pattern, String> assignChildIDs;
     private Pair<Pattern, String> assignParentIDs;
-    private boolean discardOnErrors = DEFAULT_DISCARD_ON_ERRORS;
-    private String idHash = null;
+    private final boolean discardOnErrors;
+    private String idHash;
     private String idHashPrefix = "";
     private int idHashMinLength = DEFAULT_ID_HASH_MINLENGTH;
     private boolean copyMeta = DEFAULT_COPY_META;
@@ -263,8 +265,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
 
     public RecordShaperFilter(Configuration conf) {
         super(conf);
-        discardOnErrors = conf.getBoolean(
-                CONF_DISCARD_ON_ERRORS, discardOnErrors);
+        discardOnErrors = conf.getBoolean(CONF_DISCARD_ON_ERRORS, DEFAULT_DISCARD_ON_ERRORS);
         copyMeta = conf.getBoolean(CONF_COPY_META, copyMeta);
         if (conf.valueExists(CONF_CONTENT_REGEXP)) {
             assignContent = new Pair<>(
@@ -282,7 +283,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                     conf.getString(CONF_BASE_TEMPLATE, DEFAULT_BASE_TEMPLATE));
         }
         parseMetas(conf);
-        idHash = conf.getString(CONF_ID_HASH, idHash);
+        idHash = conf.getString(CONF_ID_HASH, null);
         if ("".equals(idHash)) {
             idHash = null;
         }
@@ -303,7 +304,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 "There were 0 metas specified with a requirement of 1 in order for a Payload to pass. Set requirements "
                 + "to something else or add at least 1 meta");
         }
-        log.info(String.format("Created an assign meta filter with %d meta extractions", metas.size()));
+        log.info("Created " + this);
     }
 
     private void parseMetas(Configuration conf) {
@@ -415,6 +416,9 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             }
 
             RecordUtil.setString(payload.getRecord(), newText, destination);
+            if ("id".equals(destination)) { // Kind of a hack to special-case it. Consider other priority for ID-resolve
+                payload.setID(newText);
+            }
         }
     }
 
@@ -566,5 +570,11 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         public S getValue() {
             return value;
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("RecordShaperFilter(requirement=%s, copyMetas=%b, metas=[%s])",
+                             metaRequirement, copyMeta, Strings.join(metas));
     }
 }

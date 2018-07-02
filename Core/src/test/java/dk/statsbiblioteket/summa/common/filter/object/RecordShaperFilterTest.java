@@ -66,6 +66,23 @@ public class RecordShaperFilterTest extends TestCase {
         return new TestSuite(RecordShaperFilterTest.class);
     }
 
+    public void testIDAdjustment() throws IOException {
+        Configuration conf = Configuration.newMemoryBased();
+        Configuration subMeta = conf.createSubConfigurations(RecordShaperFilter.CONF_META, 1).get(0);
+        subMeta.set(RecordShaperFilter.CONF_META_SOURCE, "id");
+        subMeta.set(RecordShaperFilter.CONF_META_KEY, "id");
+        subMeta.set(RecordShaperFilter.CONF_META_REGEXP, "^(.*)oai:(.*)$");
+        subMeta.set(RecordShaperFilter.CONF_META_TEMPLATE, "$1$2");
+        RecordShaperFilter shaper = new RecordShaperFilter(conf);
+
+        shaper.setSource(new PayloadFeederHelper(Collections.singletonList(
+                new Payload(new Record("prefix:oai:postfix", "dummy", new byte[0])))));
+        Payload shaped = shaper.next();
+        
+        assertEquals("The ID should be corrected", "prefix:postfix", shaped.getId());
+        assertEquals("The filename suggestion should be corrected", "prefix_postfix", RecordUtil.getFileName(shaped));
+    }
+
     /**
      * Test direct assignments.
      */
