@@ -100,6 +100,29 @@ public class DatabaseStorageTest extends StorageTestBase {
         storage.flush(new Record("dummy3", "dummy", new byte[0]));
     }
 
+    public void testParentChildClearBase() throws Exception {
+        // We need intermediates to get paging
+        DatabaseStorage storage = createStorageWithParentChild(DatabaseStorage.DEFAULT_PAGE_SIZE + 10);
+        try {
+            assertFalse("The record Parent should not be marked as deleted",
+                        storage.getRecord("Parent", null).isDeleted());
+            assertFalse("The record Child1 should not be marked as deleted",
+                        storage.getRecord("Child1", null).isDeleted());
+            assertFalse("The record Child2 should not be marked as deleted",
+                        storage.getRecord("Child2", null).isDeleted());
+
+            storage.clearBase("dummy");
+
+            assertTrue("After clear the record Parent should be marked as deleted",
+                        storage.getRecord("Parent", null).isDeleted());
+            assertTrue("After clear the record Child1 should be marked as deleted",
+                        storage.getRecord("Child1", null).isDeleted());
+            assertTrue("After clear the record Child2 should be marked as deleted",
+                        storage.getRecord("Child2", null).isDeleted());
+        } finally {
+            storage.close();
+        }
+    }
     // For performance reasons the authoritative Records in the Statsbiblioteket aviser project should
     // not have their childrenIDs enriched from the relations table
     public void testRelativesExpansion() throws Exception {
@@ -427,13 +450,9 @@ public class DatabaseStorageTest extends StorageTestBase {
     }
 
     private DatabaseStorage createStorageWithParentChild() throws Exception {
-        Record parent = new Record("Parent", "dummy", new byte[0]);
-
-        Record child1 = new Record("Child1", "dummy", new byte[0]);
-        child1.setParentIds(Collections.singletonList("Parent"));
-
-        Record child2 = new Record("Child2", "dummy", new byte[0]);
-        child2.setParentIds(Collections.singletonList("Parent"));
+        return createStorageWithParentChild(0);
+    }
+    private DatabaseStorage createStorageWithParentChild(int intermediateRecords) throws Exception {
 
         Configuration conf = createConf();
         conf.set(DatabaseStorage.CONF_RELATION_TOUCH, DatabaseStorage.RELATION.child);
@@ -444,11 +463,24 @@ public class DatabaseStorageTest extends StorageTestBase {
         conf.set(DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, false);
         conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079+storageCounter++);
         DatabaseStorage storage = new H2Storage(conf);
+
         try {
-            storage.flushAll(Arrays.asList(parent, child1, child2));
+            Record parent = new Record("Parent", "dummy", new byte[0]);
+            Record child1 = new Record("Child1", "dummy", new byte[0]);
+            child1.setParentIds(Collections.singletonList("Parent"));
+            storage.flushAll(Arrays.asList(parent, child1));
+
+            for (int i = 0 ; i < intermediateRecords ; i++) {
+                storage.flush(new Record("intermediate_" + i, "dummy", new byte[0]));
+            }
+
+            Record child2 = new Record("Child2", "dummy", new byte[0]);
+            child2.setParentIds(Collections.singletonList("Parent"));
+            storage.flush(child2);
         } catch (Exception e) {
             storage.close();
-            fail("Unable to create storage with 1 parent and 2 children: " + e.getMessage());
+            fail("Unable to create storage with 1 parent, 2 children and " + intermediateRecords + " intermediates: " +
+                 e.getMessage());
         }
         return storage;
     }
