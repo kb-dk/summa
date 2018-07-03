@@ -3295,7 +3295,7 @@ public abstract class DatabaseStorage extends StorageBase {
         updateBaseMTimeAndStats(base);
     }
 
-    void updateBaseMTimeAndStats(String base) throws IOException {
+    public void updateBaseMTimeAndStats(String base) throws IOException {
         log.debug("Updating base mtime");
         try {
             updateLastModficationTimeForBase(base);

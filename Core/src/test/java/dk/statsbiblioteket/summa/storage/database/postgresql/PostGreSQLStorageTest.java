@@ -154,6 +154,16 @@ public class PostGreSQLStorageTest {
         storage.close();
     }
 
+    /*@Test
+    public void testClear() throws IOException, SQLException {
+        PostGreSQLStorage storage = getDeveloperTestStorage(MARS_DOMS, true);
+
+        storage.clearBase("pvica_tv");
+        storage.updateBaseMTimeAndStats("pvica_radioTV");
+        storage.close();
+    } */
+
+
     private double testConnection(String postgreSQLSetup, long firstTimestamp, int maxRecords, boolean useOptimizations)
             throws IOException {
         final String BASE = "aviser";
