@@ -3211,9 +3211,10 @@ public abstract class DatabaseStorage extends StorageBase {
         final int _MTIME = 2;
         final int _DELETED = 3;
         // TODO: Reinstate old
+        //String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? AND "
+        //             + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
         String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? AND "
-                     + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
-//        String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? ";
+                     + MTIME_COLUMN + " > ? AND " + DELETED_COLUMN + " = 0";
         sql = getPagingStatement(sql, true);
 
         // TODO: Remove param
@@ -3233,8 +3234,8 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         // Convert time to the internal binary format used by DatabaseStorage
-        long lastMtimeTimestamp = timestampGenerator.baseTimestamp(0);
-        long startTimestamp = timestampGenerator.next();
+        long lastMtimeTimestamp = UniqueTimestampGenerator.baseTimestamp(0);
+//        long startTimestamp = timestampGenerator.next();
         String id = null;
         long totalCount = 0;
         long pageCount = pageSizeUpdate;
@@ -3242,13 +3243,13 @@ public abstract class DatabaseStorage extends StorageBase {
             // Page through all records in base and mark them as deleted
             // in one transaction
             while (pageCount >= pageSizeUpdate) {
-                log.debug(String.format("Preparing page for deletion on base '%s' for records "
-                                        + "in the range %s to %s", base, timestampGenerator.formatTimestamp
-                        (lastMtimeTimestamp), timestampGenerator.formatTimestamp(startTimestamp)));
+                log.debug(String.format(
+                        "Preparing page for deletion on base '%s' for records from %s and onwards",
+                        base, timestampGenerator.formatTimestamp(lastMtimeTimestamp)));
                 pageCount = 0;
                 stmt.setString(1, base);
                 stmt.setLong(2, lastMtimeTimestamp);
-                stmt.setLong(3, startTimestamp);
+//                stmt.setLong(3, startTimestamp);
                 stmt.execute();
                 ResultSet cursor = stmt.getResultSet();
                 while (cursor.next()) {
