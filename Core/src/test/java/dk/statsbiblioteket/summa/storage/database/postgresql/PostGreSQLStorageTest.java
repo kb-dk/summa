@@ -18,6 +18,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.RecordStatsCollector;
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
@@ -28,6 +29,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -53,8 +55,9 @@ public class PostGreSQLStorageTest {
     //    <entry key="queryoptions.parent.depth">3</entry>
     //    <entry key="queryoptions.attributes">ID, BASE, DELETED, INDEXABLE, HAS_RELATIONS, CONTENT, CREATIONTIME, MODIFICATIONTIME, PARENTS</entry>
     // </properties>
-    //public static final String MARS = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_mars.xml";
-    public static final String MARS = "storage/postgresql_mars.xml";
+    //public static final String MARS_AVISER = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_mars_aviser.xml";
+    public static final String MARS_AVISER = "storage/postgresql_mars_aviser.xml";
+    public static final String MARS_DOMS = "storage/postgresql_mars_doms.xml";
     //public static final String PS = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_ps3.xml";
     public static final String PS = "storage/postgresql_ps4.xml";
 
@@ -81,7 +84,7 @@ public class PostGreSQLStorageTest {
     
     @Test
     public void testConnectionMarsOptimized() throws IOException {
-        testConnection(MARS, 0L, 1899, true);
+        testConnection(MARS_AVISER, 0L, 1899, true);
     }
 
     @Test
@@ -131,6 +134,24 @@ public class PostGreSQLStorageTest {
     @Test
     public void testConnectionPS3One() throws IOException { // Is it the specifying of a timestamp that is the problem?
         testConnection(PS, 1L, 899, true);
+    }
+
+    @Test
+    public void testStatsConnectionReleaseBase() throws IOException, SQLException {
+        PostGreSQLStorage storage = getDeveloperTestStorage(MARS_DOMS, true);
+
+        StringMap meta = new StringMap();
+        meta.put("ALLOW_PRIVATE", "true");
+        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
+        Record holdings = storage.getRecord("__holdings__", opts);
+        //String xml = holdings.getContentAsUTF8();
+        //System.out.println(xml);
+
+        // After getting the record above, the database could not be updated
+        storage.updateLastModficationTimeForBase("pvica_tv");
+
+        //storage.clearBase("pvica_tv");
+        storage.close();
     }
 
     private double testConnection(String postgreSQLSetup, long firstTimestamp, int maxRecords, boolean useOptimizations)

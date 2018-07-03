@@ -26,10 +26,7 @@ import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
-import dk.statsbiblioteket.summa.storage.database.postgresql.PostGreSQLStorage;
 import dk.statsbiblioteket.summa.storage.database.postgresql.PostGreSQLStorageTest;
-import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
-import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -79,13 +76,13 @@ public class DatabaseStorageTest extends StorageTestBase {
     }
 
     public void testLocksRemotePostgreSQLMars() throws Exception {
-        DatabaseStorage storage = PostGreSQLStorageTest.getDeveloperTestStorage(PostGreSQLStorageTest.MARS, false);
+        DatabaseStorage storage = PostGreSQLStorageTest.getDeveloperTestStorage(PostGreSQLStorageTest.MARS_AVISER, false);
         assertNotNull(storage);
         testLocks(storage);
     }
 
     public void testLocksRemotePostgreSQLMars2() throws Exception {
-        DatabaseStorage storage = PostGreSQLStorageTest.getDeveloperTestStorage(PostGreSQLStorageTest.MARS, false);
+        DatabaseStorage storage = PostGreSQLStorageTest.getDeveloperTestStorage(PostGreSQLStorageTest.MARS_AVISER, false);
         assertNotNull(storage);
         log.info("Attempting call to updateBaseMTimeAndStats");
         storage.updateBaseMTimeAndStats("dummy"); // Not normally called from outside, but triggers lock problem

@@ -2139,7 +2139,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 throw new IllegalArgumentException(
                         "Private record requested, but ALLOW_PRIVATE flag not set in query options");
             }
-            return getPrivateRecord(id);
+            return getPrivateRecord(conn, id);
         }
         long fullStart = System.nanoTime();
         //long statement = System.nanoTime();
@@ -2216,13 +2216,13 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return the matching record or {@code null} in case of an unknown id.
      * @throws IOException if error when reading private record.
      */
-    private Record getPrivateRecord(String id) throws IOException {
+    private Record getPrivateRecord(Connection conn, String id) throws IOException {
         log.debug(String.format("Fetching private record '%s'", id));
 
         if ("__holdings__".equals(id)) {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             OutputStreamWriter writer = new OutputStreamWriter(bytes);
-            BaseStats.toXML(getStats(), writer);
+            BaseStats.toXML(getStatsWithConnection(conn), writer);
             return new Record("__holdings__", "__private__", bytes.toByteArray());
         } else if ("__statistics__".equals(id)) {
             return new Record("__statistics__", "__private__", getHumanStats().getBytes("utf-8"));
@@ -3210,8 +3210,10 @@ public abstract class DatabaseStorage extends StorageBase {
         final int _ID = 1;
         final int _MTIME = 2;
         final int _DELETED = 3;
+        // TODO: Reinstate old
         String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? AND "
                      + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
+//        String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? ";
         sql = getPagingStatement(sql, true);
 
         // TODO: Remove param
@@ -3890,7 +3892,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param base The base.
      * @throws SQLException If error occur while executing SQL.
      */
-    private void updateLastModficationTimeForBase(String base) throws SQLException {
+    public void updateLastModficationTimeForBase(String base) throws SQLException {
         final long startNS = System.nanoTime();
 
         long mtime = System.currentTimeMillis();
@@ -4566,15 +4568,22 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException If error occur while communicating storage.
      */
     public List<BaseStats> getStats() throws IOException {
+        Connection conn = getConnection();
+        try {
+            return getStatsWithConnection(conn);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    private List<BaseStats> getStatsWithConnection(Connection conn) throws IOException {
         final long startNS = System.nanoTime();
-        log.trace("getStats()");
-        Connection conn = null;
+        log.trace("getStatsWithConnection()");
 
         String isBaseStatsInvalid = "SELECT * FROM " + BASE_STATISTICS + " WHERE " + VALID_COLUMN + " = 0";
         String isBastStatsAva = "SELECT * FROM " + BASE_STATISTICS;
 
         try {
-            conn = getConnection();
             Statement stmt = conn.createStatement();
             Statement available = conn.createStatement();
             boolean resultSetAva = available.execute(isBastStatsAva);
@@ -4585,12 +4594,11 @@ public abstract class DatabaseStorage extends StorageBase {
                 return getHeavyStatsWithConnection(conn);
             } else {
                 log.debug("Return fast statistic");
-                return getStatsWithConnection(conn);
+                return getFastStatsWithConnection(conn);
             }
         } catch (SQLException e) {
             throw new IOException("Could not get database stats", e);
         } finally {
-            closeConnection(conn);
             timingGetStats.addNS(System.nanoTime()-startNS);
         }
     }
@@ -4618,7 +4626,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    private List<BaseStats> getStatsWithConnection(Connection conn) throws SQLException {
+    private List<BaseStats> getFastStatsWithConnection(Connection conn) throws SQLException {
         long startTime = System.currentTimeMillis();
         List<BaseStats> stats = new LinkedList<>();
 
