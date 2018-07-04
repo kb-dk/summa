@@ -3214,7 +3214,7 @@ public abstract class DatabaseStorage extends StorageBase {
         //String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? AND "
         //             + MTIME_COLUMN + " > ? AND " + MTIME_COLUMN + " < ? AND " + DELETED_COLUMN + " = 0";
         String sql = "SELECT id, mtime, deleted  FROM " + RECORDS + " WHERE " + BASE_COLUMN + " = ? AND "
-                     + MTIME_COLUMN + " > ? AND " + DELETED_COLUMN + " = 0";
+                     + MTIME_COLUMN + " > ? AND " + DELETED_COLUMN + " = 0 ORDER BY MTIME ASC ";
         sql = getPagingStatement(sql, true);
 
         // TODO: Remove param
@@ -3235,7 +3235,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // Convert time to the internal binary format used by DatabaseStorage
         long lastMtimeTimestamp = UniqueTimestampGenerator.baseTimestamp(0);
-//        long startTimestamp = timestampGenerator.next();
+        //        long startTimestamp = timestampGenerator.next();
         String id = null;
         long totalCount = 0;
         long pageCount = pageSizeUpdate;
@@ -3248,6 +3248,7 @@ public abstract class DatabaseStorage extends StorageBase {
                         base, timestampGenerator.formatTimestamp(lastMtimeTimestamp)));
                 pageCount = 0;
                 stmt.setString(1, base);
+               System.out.println("sql:"+sql  + " :"+ lastMtimeTimestamp);
                 stmt.setLong(2, lastMtimeTimestamp);
 //                stmt.setLong(3, startTimestamp);
                 stmt.execute();
@@ -3256,9 +3257,11 @@ public abstract class DatabaseStorage extends StorageBase {
                     // We read the data before we start updating the row, not
                     // all JDBC backends like if we update the row before we
                     // read it
+  
                     id = cursor.getString(_ID);
                     lastMtimeTimestamp = cursor.getLong(_MTIME);
 
+                    System.out.println(id);
                     cursor.updateInt(_DELETED, 1);
                     cursor.updateLong(_MTIME, timestampGenerator.next());
                     cursor.updateRow();
