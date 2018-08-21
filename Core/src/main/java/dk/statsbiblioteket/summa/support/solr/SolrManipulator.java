@@ -215,7 +215,7 @@ public class SolrManipulator implements IndexManipulator {
         }
     }
 
-    private void send(List<Payload> payloads) {
+    private synchronized void send(List<Payload> payloads) {
         if (payloads.isEmpty()) {
             log.warn("Potential logic failure: send(...) called with empty list of Payloads");
             return;
