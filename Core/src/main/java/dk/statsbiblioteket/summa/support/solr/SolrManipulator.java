@@ -283,13 +283,22 @@ public class SolrManipulator implements IndexManipulator {
     }
 
     private List<Payload> probeBadPayloads(List<Payload> payloads) {
+        log.info("Encountered batch which caused Solr to fail. Attempting delivery of problem-Payloads one at a time");
         List<Payload> bad = new ArrayList<>(payloads);
         Pair<Integer, Integer> addAndDeletes = new Pair<>(0, 0);
-        for (Payload payload: payloads) {
+
+        for (int i = 0; i < payloads.size(); i++) {
+            Payload payload = payloads.get(i);
+            String message = "Re-sending potentially bad payload " + i + "/" + payloads.size();
+            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.INFO, payload);
+            log.info(message + ": " + payload);
             try {
                 String commandString = createSolrUpdateBatch(Collections.singletonList(payload), addAndDeletes);
                 send("Re-send of single payload " + payload.getId(), commandString);
             } catch (Exception e) {
+                log.warn("Failed re-sending of bad payload " + i + "/" + payloads.size() + ": " + payload);
+                Logging.logProcess("SolrManipulator", "Solr error when delivering payload",
+                                   Logging.LogLevel.ERROR, payload, e);
                 bad.add(payload);
             }
         }
