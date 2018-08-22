@@ -110,9 +110,21 @@ public class SolrManipulator implements IndexManipulator {
     /**
      * If true and an IOException is encountered during Solr-interaction, the SolrManipulator tries to locate
      * which Payloads failed.
+     *
+     * Optional. Default is true.
      */
     public static final String CONF_ONERROR_LOCATEBADPAYLOADS = "solr.onerror.locatebadpayloads";
     public static final boolean DEFAULT_ONERROR_LOCATEBADPAYLOADS = true;
+
+    /**
+     * If CONF_ONERROR_LOCATEBADPAYLOADS is true the number of bad payloads is equal to or less than then
+     * given number, processing continues. If these two parameters are not satisfies, processing is aborted.
+     *
+     * Optional. Default is 0 (processing always aborts).
+     */
+    public static final String CONF_ONERROR_ACCEPTABLE_FAULTY_PAYLOADS_PER_BATCH =
+            "solr.onerror.acceptablefaultypayloadsperbatch";
+    public static final int DEFAULT_ONERROR_ACCEPTABLE_FAULTY_PAYLOADS_PER_BATCH = 0;
 
     /**
      * While additions and updates are batched, deletes require individual connections. If the frequency of requests
@@ -147,6 +159,7 @@ public class SolrManipulator implements IndexManipulator {
     //    private final String updateCommand;
     private final boolean flushOnDelete;
     public final boolean locateBadPayloads;
+    public final int acceptableBadPayloads;
 
 
     private final PayloadBatcher batcher;
@@ -173,6 +186,8 @@ public class SolrManipulator implements IndexManipulator {
         requestProfiler = new Profiler(1, maxRequests);
         statusEvery = conf.getInt(CONF_STATUS_EVERY, DEFAULT_STATUS_EVERY);
         locateBadPayloads = conf.getBoolean(CONF_ONERROR_LOCATEBADPAYLOADS, DEFAULT_ONERROR_LOCATEBADPAYLOADS);
+        acceptableBadPayloads = conf.getInt(CONF_ONERROR_ACCEPTABLE_FAULTY_PAYLOADS_PER_BATCH,
+                                            DEFAULT_ONERROR_ACCEPTABLE_FAULTY_PAYLOADS_PER_BATCH);
 
         batcher = new PayloadBatcher(conf) {
             @Override
@@ -243,6 +258,7 @@ public class SolrManipulator implements IndexManipulator {
             // https://wiki.apache.org/solr/UpdateXmlMessages#Add_and_delete_in_a_single_batch
             commandString = createSolrUpdateBatch(payloads, addAndDeletes);
 
+            // FIXME: Why is timingSend.getUpdates()==0 ? It is updated in the finally block!?
             statsSend.process("delivery#" + timingSend.getUpdates(), commandString.length());
             send(payloads.size() + " Payloads", commandString);
 
@@ -269,6 +285,13 @@ public class SolrManipulator implements IndexManipulator {
                 if (bad.isEmpty()) {
                     log.warn("IOException received during batch update, but sending all " + payloads.size() +
                              " Payloads one at a time did not raise any Exceptions. Cautiously continuing processing");
+                } else if (bad.size() <= acceptableBadPayloads) {
+                    log.warn(String.format(
+                            "IOException during batch update to Solr. Re-sending all %d Payloads in the batch " +
+                            "resulted in %d Payloads that could not be delivered to Solr. This is <= the limit " +
+                            "of %d bad Payloads/batch, so processing continues. The bad Payloads and the Exceptions " +
+                            "should be visible in the process log for failed Payloads. They are %s",
+                            payloads.size(), bad.size(), acceptableBadPayloads, Strings.join(bad, ", ")));
                 } else {
                     shutdown(String.format(
                             "IOException sending %d updates (%d adds, %d deletes) to %s. Isolated to offending %d " +
@@ -284,9 +307,10 @@ public class SolrManipulator implements IndexManipulator {
 
     private List<Payload> probeBadPayloads(List<Payload> payloads) {
         log.info("Encountered batch which caused Solr to fail. Attempting delivery of problem-Payloads one at a time");
-        List<Payload> bad = new ArrayList<>(payloads);
         Pair<Integer, Integer> addAndDeletes = new Pair<>(0, 0);
 
+        List<Payload> bad = new ArrayList<>(payloads);
+        List<Exception> exceptions = new ArrayList<>(); // For later logging
         for (int i = 0; i < payloads.size(); i++) {
             Payload payload = payloads.get(i);
             String message = "Re-sending potentially bad payload " + i + "/" + payloads.size();
@@ -296,10 +320,15 @@ public class SolrManipulator implements IndexManipulator {
                 String commandString = createSolrUpdateBatch(Collections.singletonList(payload), addAndDeletes);
                 send("Re-send of single payload " + payload.getId(), commandString);
             } catch (Exception e) {
-                log.warn("Failed re-sending of bad payload " + i + "/" + payloads.size() + ": " + payload);
-                Logging.logProcess("SolrManipulator", "Solr error when delivering payload",
-                                   Logging.LogLevel.ERROR, payload, e);
+                log.warn("Failed re-sending of bad payload " + i + "/" + payloads.size() + ": " + payload, e);
+                exceptions.add(e);
                 bad.add(payload);
+            }
+        }
+        if (bad.size() <= acceptableBadPayloads) { // Processing will continue and these are just a few bad apples
+            for (int i = 0; i < bad.size(); i++) {
+                Logging.logProcess("SolrManipulator", "Unrecoverable Solr error when delivering payload",
+                                   Logging.LogLevel.FATAL, bad.get(i), exceptions.get(i));
             }
         }
         return bad;
