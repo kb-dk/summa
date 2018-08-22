@@ -161,7 +161,6 @@ public class SolrManipulator implements IndexManipulator {
     public final boolean locateBadPayloads;
     public final int acceptableBadPayloads;
 
-
     private final PayloadBatcher batcher;
     private final int maxRequests;
     private final Profiler requestProfiler;
@@ -199,7 +198,7 @@ public class SolrManipulator implements IndexManipulator {
         };
         setupHttp();
         statsSend = new RecordStatsCollector("out", conf, null, false, "solrdocs");
-        log.info("Created SolrManipulator(" + hostWithPort + restCall + UPDATE_COMMAND + ")");
+        log.info("Created " + this);
     }
 
 
@@ -211,7 +210,7 @@ public class SolrManipulator implements IndexManipulator {
     @Override
     public synchronized void clear() throws IOException {
         log.debug("Attempting to delete all documents in the Solr index");
-        send(null, "<delete><query>*:*</query></delete>");
+        send(null, "<delete><query>*:*</query></delete>", false);
         commit();
         log.info("Delete all documents in the Solr index request sent");
     }
@@ -260,7 +259,7 @@ public class SolrManipulator implements IndexManipulator {
 
             // FIXME: Why is timingSend.getUpdates()==0 ? It is updated in the finally block!?
             statsSend.process("delivery#" + timingSend.getUpdates(), commandString.length());
-            send(payloads.size() + " Payloads", commandString);
+            send(payloads.size() + " Payloads", commandString, false);
 
             if (flushOnDelete && addAndDeletes.getValue() > 0) {
                 batcher.flush();
@@ -274,14 +273,14 @@ public class SolrManipulator implements IndexManipulator {
                     payloads.size(), addAndDeletes.getKey(), addAndDeletes.getValue(), this, batcher,
                     Strings.join(payloads, ", "), trim(commandString, 1000)), e);
         } catch (IOException e) {
-            if (!locateBadPayloads || payloads.size() <= 1) {
+            if (!locateBadPayloads) {
                 shutdown(String.format(
                         "IOException sending %d updates (%d adds, %d deletes) to %s. Payloads: %s. "
                         + "The JVM will be shut down in 5 seconds. First part of command:\n%s",
                         payloads.size(), addAndDeletes.getKey(), addAndDeletes.getValue(), this,
                         Strings.join(payloads, ", "), trim(commandString, 1000)), e);
             } else {
-                List<Payload> bad = probeBadPayloads(payloads);
+                final List<Payload> bad = probeBadPayloads(payloads);
                 if (bad.isEmpty()) {
                     log.warn("IOException received during batch update, but sending all " + payloads.size() +
                              " Payloads one at a time did not raise any Exceptions. Cautiously continuing processing");
@@ -309,16 +308,16 @@ public class SolrManipulator implements IndexManipulator {
         log.info("Encountered batch which caused Solr to fail. Attempting delivery of problem-Payloads one at a time");
         Pair<Integer, Integer> addAndDeletes = new Pair<>(0, 0);
 
-        List<Payload> bad = new ArrayList<>(payloads);
+        List<Payload> bad = new ArrayList<>();
         List<Exception> exceptions = new ArrayList<>(); // For later logging
         for (int i = 0; i < payloads.size(); i++) {
             Payload payload = payloads.get(i);
-            String message = "Re-sending potentially bad payload " + i + "/" + payloads.size();
+            String message = "Re-sending potentially bad payload " + (i+1) + "/" + payloads.size();
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.INFO, payload);
             log.info(message + ": " + payload);
             try {
                 String commandString = createSolrUpdateBatch(Collections.singletonList(payload), addAndDeletes);
-                send("Re-send of single payload " + payload.getId(), commandString);
+                send("Re-send of single payload " + payload.getId(), commandString, false);
             } catch (Exception e) {
                 log.warn("Failed re-sending of bad payload " + i + "/" + payloads.size() + ": " + payload, e);
                 exceptions.add(e);
@@ -326,10 +325,15 @@ public class SolrManipulator implements IndexManipulator {
             }
         }
         if (bad.size() <= acceptableBadPayloads) { // Processing will continue and these are just a few bad apples
+            log.info("Probing of " + payloads.size() + " Payloads led to " + bad.size() + " bad ones. " +
+                     "Processing is likely to continue");
             for (int i = 0; i < bad.size(); i++) {
                 Logging.logProcess("SolrManipulator", "Unrecoverable Solr error when delivering payload",
                                    Logging.LogLevel.FATAL, bad.get(i), exceptions.get(i));
             }
+        } else {
+            log.info("Probing of " + payloads.size() + " Payloads led to " + bad.size() + " bad ones. " +
+                     "Processing is likely to be terminated");
         }
         return bad;
     }
@@ -370,7 +374,7 @@ public class SolrManipulator implements IndexManipulator {
 
     private void shutdown(String error, IOException e) {
         Logging.logProcess("SolrManipulator", error, Logging.LogLevel.FATAL, "", e);
-        Logging.fatal(log, "SolrManipulator.send", error, e);
+        Logging.fatal(log, "SolrManipulator", error, e);
         new DeferredSystemExit(1, 5000);
         fullStop = true;
     }
@@ -400,7 +404,7 @@ public class SolrManipulator implements IndexManipulator {
         batcher.flush();
         orderChanged = false;
         log.info("Attempting commit of " + updatesSinceLastCommit + " updates to Solr");
-        send(null, "<commit/>");
+        send(null, "<commit/>", true);
         log.info("Committed " + updatesSinceLastCommit + " updates ("
                  + (updatesSinceLastCommit - deletesSinceLastCommit) + " adds, " + deletesSinceLastCommit
                  + " deletes) to Solr. Total updates: " + updates + " with " + deletes + " deletes");
@@ -487,7 +491,7 @@ public class SolrManipulator implements IndexManipulator {
 
     private boolean fullStop = false;
 
-    private void send(String designation, String command) throws IOException {
+    private void send(String designation, String command, boolean shutdownOnErrors) throws IOException {
         if (fullStop) {
             log.info("Full stop signalled earlier. Blocking and waiting for JVM shutdown");
             try {
@@ -584,15 +588,22 @@ public class SolrManipulator implements IndexManipulator {
 
         int code = response.getStatusLine().getStatusCode();
         if (code != 200) { // Bad Request: Solr did not like the input
-            String message = String.format(
-                    "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s from %s. Error code %d. "
-                    + "Trimmed request:\n%s\nResponse:\n%s",
-                    designation, updateCommand, this, code, trim(command, 200), getResponse(response));
-            Logging.logProcess("SolrManipulator", message, Logging.LogLevel.FATAL, designation);
-            Logging.fatal(log, "SolrManipulator.send", message);
-            fullStop = true;
-            new DeferredSystemExit(50);
-            throw new IOException(message);
+            if (shutdownOnErrors) {
+                String message = String.format(
+                        "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s from %s. Error code %d. "
+                        + "Trimmed request:\n%s\nResponse:\n%s",
+                        designation, updateCommand, this, code, trim(command, 200), getResponse(response));
+                Logging.logProcess("SolrManipulator", message, Logging.LogLevel.FATAL, designation);
+                Logging.fatal(log, "SolrManipulator.send", message);
+                fullStop = true;
+                new DeferredSystemExit(50);
+                throw new IOException(message);
+            } else {
+                // TODO Throw a custom Exception instead
+                throw new IOException(String.format(
+                        "Unable to send '%s' to Solr at %s from %s. Error code %d. Trimmed request:\n%s\nResponse:\n%s",
+                        designation, updateCommand, this, code, trim(command, 200), getResponse(response)));
+            }
         }
 
 
@@ -655,10 +666,12 @@ public class SolrManipulator implements IndexManipulator {
         return "timing(" + timingSend.toString(false, false) + "), size(" + statsSend + ")";
     }
 
-
     @Override
     public String toString() {
-        return "SolrManipulator(" + host + restCall + "). Processed " + updates + " updates including " + deletes
-               + " deletes. Stats: " + getProcessStats();
+        return String.format(
+                "SolrManipulator(%s, flushOnDelete=%b, locateBadPayloads=%b, acceptableBadPayloads=%d). " +
+                "Processed %d updates including %d deletes. Stats: %s",
+                hostWithPort + restCall + UPDATE_COMMAND, flushOnDelete, locateBadPayloads, acceptableBadPayloads,
+                updates, deletes, getProcessStats());
     }
 }
