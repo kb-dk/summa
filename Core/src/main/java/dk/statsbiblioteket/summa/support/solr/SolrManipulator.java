@@ -189,7 +189,7 @@ public class SolrManipulator implements IndexManipulator {
 
 
     @Override
-    public synchronized void open(File indexRoot) throws IOException {
+    public synchronized void open(File indexRoot) {
         log.info("Open(" + indexRoot + ") is ignored as this IndexManipulator uses external indexing");
     }
 
@@ -202,7 +202,7 @@ public class SolrManipulator implements IndexManipulator {
     }
 
     @Override
-    public boolean update(Payload payload) throws IOException {
+    public boolean update(Payload payload) {
         try {
             updatesSinceLastCommit++;
             updates++;
@@ -387,12 +387,12 @@ public class SolrManipulator implements IndexManipulator {
     }
 
     @Override
-    public void orderChangedSinceLastCommit() throws IOException {
+    public void orderChangedSinceLastCommit() {
         log.debug("orderChangedSinceLastCommit() called. No effect for this index manipulator");
     }
 
     @Override
-    public boolean isOrderChangedSinceLastCommit() throws IOException {
+    public boolean isOrderChangedSinceLastCommit() {
         return orderChanged;
     }
 
