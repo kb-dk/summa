@@ -129,10 +129,13 @@ public class SolrManipulator implements IndexManipulator {
     public static final String UPDATE_COMMAND = "/update";
     private static final long M = 1000000;
 
+    // Used by send to avoid dead-locking by splitting send and the possible post-send batcher.flush
+    private final Object sendLock = new Object();
+
     protected final String hostWithPort;
     protected final String restCall;
     protected final String fieldID;
-//    private final String updateCommand;
+    //    private final String updateCommand;
     private final boolean flushOnDelete;
 
 
@@ -215,66 +218,69 @@ public class SolrManipulator implements IndexManipulator {
         }
     }
 
-    private synchronized void send(List<Payload> payloads) {
+    private void send(List<Payload> payloads) {
         if (payloads.isEmpty()) {
             log.warn("Potential logic failure: send(...) called with empty list of Payloads");
             return;
         }
-        try {
-            timingSend.start();
-            int add = 0;
-            int del = 0;
-            StringWriter command = new StringWriter(payloads.size() * 1000);
-            // https://wiki.apache.org/solr/UpdateXmlMessages#Add_and_delete_in_a_single_batch
-            command.append("<update>");
-            boolean adding = false;
-            for (Payload payload : payloads) {
-                Record record = payload.getRecord();
-                if (adding) {
-                    if (record.isDeleted()) {
-                        command.append("</add>");
-                        adding = false;
-                    }
-                } else {
-                    if (!record.isDeleted()) {
-                        command.append("<add>");
-                        adding = true;
-                    }
-                }
 
-                if (record.isDeleted()) {
-                    command.append("<delete><id>").append(XMLUtil.encode(payload.getId())).append("</id></delete>");
-                    del++;
-                } else {
-                    command.append(removeHeader(payload.getRecord().getContentAsUTF8()));
-                    add++;
+        int add = 0;
+        int del = 0;
+        StringWriter command = new StringWriter(payloads.size() * 1000);
+        try {
+            synchronized (sendLock) {
+                timingSend.start();
+                // https://wiki.apache.org/solr/UpdateXmlMessages#Add_and_delete_in_a_single_batch
+                command.append("<update>");
+                boolean adding = false;
+                for (Payload payload : payloads) {
+                    Record record = payload.getRecord();
+                    if (adding) {
+                        if (record.isDeleted()) {
+                            command.append("</add>");
+                            adding = false;
+                        }
+                    } else {
+                        if (!record.isDeleted()) {
+                            command.append("<add>");
+                            adding = true;
+                        }
+                    }
+
+                    if (record.isDeleted()) {
+                        command.append("<delete><id>").append(XMLUtil.encode(payload.getId())).append("</id></delete>");
+                        del++;
+                    } else {
+                        command.append(removeHeader(payload.getRecord().getContentAsUTF8()));
+                        add++;
+                    }
                 }
-            }
-            if (adding) {
-                command.append("</add>");
-            }
-            command.append("</update>");
-            try {
+                if (adding) {
+                    command.append("</add>");
+                }
+                command.append("</update>");
+
                 final String commandString = command.toString();
                 statsSend.process("delivery#" + timingSend.getUpdates(), commandString.length());
                 send(payloads.size() + " Payloads", commandString);
-                if (flushOnDelete) {
-                    batcher.flush();
-                }
-            } catch (NoRouteToHostException e) {
-                shutdown(String.format(
-                        "NoRouteToHostException sending %d updates (%d adds, %d deletes) to %s. "
-                        + "This is likely to be caused by depletion of ports in the ephemeral range. "
-                        + "Consider adjusting batch setup from the current %s"
-                        + "Payloads: %s. The JVM will be shut down in 5 seconds. First part of command:\n%s",
-                        payloads.size(), add, del, this, batcher,
-                        Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
-            } catch (IOException e) {
-                shutdown(String.format(
-                        "IOException sending %d updates (%d adds, %d deletes) to %s. Payloads: %s. "
-                        + "The JVM will be shut down in 5 seconds. First part of command:\n%s",
-                        payloads.size(), add, del, this, Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
             }
+            // batcher.flush() must be outside of the send synchronization to avoid deadlock
+            if (flushOnDelete) {
+                batcher.flush();
+            }
+        } catch (NoRouteToHostException e) {
+            shutdown(String.format(
+                    "NoRouteToHostException sending %d updates (%d adds, %d deletes) to %s. "
+                    + "This is likely to be caused by depletion of ports in the ephemeral range. "
+                    + "Consider adjusting batch setup from the current %s"
+                    + "Payloads: %s. The JVM will be shut down in 5 seconds. First part of command:\n%s",
+                    payloads.size(), add, del, this, batcher,
+                    Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
+        } catch (IOException e) {
+            shutdown(String.format(
+                    "IOException sending %d updates (%d adds, %d deletes) to %s. Payloads: %s. "
+                    + "The JVM will be shut down in 5 seconds. First part of command:\n%s",
+                    payloads.size(), add, del, this, Strings.join(payloads, ", "), trim(command.toString(), 1000)), e);
         } finally {
             timingSend.stop();
         }
@@ -289,6 +295,7 @@ public class SolrManipulator implements IndexManipulator {
 
     private int ok = 0;
     private int fail = 0;
+
     private String removeHeader(String solrDocument) {
         if (solrDocument.contains("<")) {
             ok++;
@@ -301,15 +308,15 @@ public class SolrManipulator implements IndexManipulator {
         }
         final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
         return solrDocument.startsWith(XML_HEADER) ?
-               solrDocument.substring(XML_HEADER.length(), solrDocument.length()) :
-               solrDocument;
+                solrDocument.substring(XML_HEADER.length(), solrDocument.length()) :
+                solrDocument;
     }
 
     @Override
     public synchronized void commit() throws IOException {
         log.info("commit(): Flushing batcher with " + batcher.size() + " pending Payloads");
         batcher.flush();
-        orderChanged  = false;
+        orderChanged = false;
         log.info("Attempting commit of " + updatesSinceLastCommit + " updates to Solr");
         send(null, "<commit/>");
         log.info("Committed " + updatesSinceLastCommit + " updates ("
@@ -352,6 +359,7 @@ public class SolrManipulator implements IndexManipulator {
     HttpProcessor httpproc;
     HttpContext context;
     ConnectionReuseStrategy connStrategy;
+
     private void setupHttp() {
 /*        http = new DefaultHttpClient();
         http = new DefaultHttpClient(http.getParams().setBooleanParameter(CoreConnectionPNames.SO_KEEPALIVE, true));
@@ -361,8 +369,8 @@ public class SolrManipulator implements IndexManipulator {
         post.addHeader("Accept", "application/xml");
         post.addHeader("Accept-Charset", "utf-8");
   */
-       // Taken more or less directly from
-       // https://hc.apache.org/httpcomponents-core-ga/httpcore/examples/org/apache/http/examples/ElementalHttpPost.java
+        // Taken more or less directly from
+        // https://hc.apache.org/httpcomponents-core-ga/httpcore/examples/org/apache/http/examples/ElementalHttpPost.java
         params = new SyncBasicHttpParams();
         HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
         HttpProtocolParams.setContentCharset(params, "UTF-8");
@@ -371,14 +379,14 @@ public class SolrManipulator implements IndexManipulator {
 //        post.addHeader("Content-Type", "application/xml");
 //        post.addHeader("Accept", "application/xml");
 
-        httpproc = new ImmutableHttpProcessor(new HttpRequestInterceptor[] {
-            // Required protocol interceptors
-            new RequestContent(),
-            new RequestTargetHost(),
-            // Recommended protocol interceptors
-            new RequestConnControl(),
-            new RequestUserAgent(),
-            new RequestExpectContinue()});
+        httpproc = new ImmutableHttpProcessor(new HttpRequestInterceptor[]{
+                // Required protocol interceptors
+                new RequestContent(),
+                new RequestTargetHost(),
+                // Recommended protocol interceptors
+                new RequestConnControl(),
+                new RequestUserAgent(),
+                new RequestExpectContinue()});
 
         httpexecutor = new HttpRequestExecutor();
 
@@ -396,11 +404,12 @@ public class SolrManipulator implements IndexManipulator {
     }
 
     private boolean fullStop = false;
-    private synchronized void send(String designation, String command) throws IOException {
+
+    private void send(String designation, String command) throws IOException {
         if (fullStop) {
             log.info("Full stop signalled earlier. Blocking and waiting for JVM shutdown");
             try {
-                Thread.sleep(24*60*60*1000);
+                Thread.sleep(24 * 60 * 60 * 1000);
             } catch (InterruptedException e) {
                 log.warn("Full stop interrupted. Continuing");
             }
@@ -408,10 +417,10 @@ public class SolrManipulator implements IndexManipulator {
 
         if (maxRequests > 0 && requestProfiler.getBps() > maxRequests) {
             try {
-                Thread.sleep(maxRequests > 500 ? 2 : 1000/maxRequests);
+                Thread.sleep(maxRequests > 500 ? 2 : 1000 / maxRequests);
             } catch (InterruptedException e) {
                 log.warn(
-                    "send(" + designation + ") interrupted while taking a timeout to lower requests rate. Continuing");
+                        "send(" + designation + ") interrupted while taking a timeout to lower requests rate. Continuing");
             }
         }
         requestProfiler.beat();
@@ -420,10 +429,10 @@ public class SolrManipulator implements IndexManipulator {
             Socket socket = new Socket(host.getHostName(), host.getPort());
             conn.bind(socket, params);
         }
-        final long tBind = System.nanoTime()-tStart;
+        final long tBind = System.nanoTime() - tStart;
 
         BasicHttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest(
-            "POST", restCall + UPDATE_COMMAND); // "/servlets-examples/servlet/RequestInfoExample");
+                "POST", restCall + UPDATE_COMMAND); // "/servlets-examples/servlet/RequestInfoExample");
         request.setEntity(new StringEntity(command, "utf-8"));
         request.setHeader("Content-Type", "application/xml");
 //        request.setHeader("Accept", "application/xml");
@@ -436,45 +445,45 @@ public class SolrManipulator implements IndexManipulator {
             httpexecutor.preProcess(request, httpproc, context);
         } catch (HttpException e) {
             String message = String.format(
-                "HttpException while pre-processing the POST request for '%s' to %s. Trimmed request:\n%s",
-                designation, updateCommand, trim(command, 100));
+                    "HttpException while pre-processing the POST request for '%s' to %s. Trimmed request:\n%s",
+                    designation, updateCommand, trim(command, 100));
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
             throw new IOException(message, e);
         }
-        final long tPre = System.nanoTime()-tStart-tBind;
+        final long tPre = System.nanoTime() - tStart - tBind;
 
         try {
             response = httpexecutor.execute(request, conn, context);
         } catch (HttpException e) {
             String message = String.format(
-                "HttpException while executing '%s' at %s. Trimmed request:\n%s",
-                designation, updateCommand, trim(command, 100));
+                    "HttpException while executing '%s' at %s. Trimmed request:\n%s",
+                    designation, updateCommand, trim(command, 100));
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
             throw new IOException(message, e);
         }
-        final long tSend = System.nanoTime()-tStart-tBind-tPre;
+        final long tSend = System.nanoTime() - tStart - tBind - tPre;
 
         try {
             response.setParams(params);
             httpexecutor.postProcess(response, httpproc, context);
             //if (!connStrategy.keepAlive(response, context)) {
-                //System.out.println("No keep alive!");
+            //System.out.println("No keep alive!");
             // If we keep the connection alive, we sometimes get errors back
-                conn.close();
+            conn.close();
             //}
         } catch (HttpException e) {
             String message = String.format(
-                "HttpException %s while post-processing '%s' to %s. Trimmed request:\n%s\nResponse:\n%s",
-                response.getStatusLine().getStatusCode(), designation, updateCommand, trim(command, 100),
-                getResponse(response));
+                    "HttpException %s while post-processing '%s' to %s. Trimmed request:\n%s\nResponse:\n%s",
+                    response.getStatusLine().getStatusCode(), designation, updateCommand, trim(command, 100),
+                    getResponse(response));
             Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
             throw new IOException(message, e);
         }
-        final long tPost = System.nanoTime()-tStart-tBind-tPre-tSend;
+        final long tPost = System.nanoTime() - tStart - tBind - tPre - tSend;
 
         final String logMessage = String.format(
                 "send(command.length=%d) finished in %dms (bind=%d, pre=%d, send=%d, post=%d), total updates: %d, %s",
-                command.length(), (tBind+tPre+tSend+tPost)/M, tBind/M, tPre/M, tSend/M, tPost/M, updates,
+                command.length(), (tBind + tPre + tSend + tPost) / M, tBind / M, tPre / M, tSend / M, tPost / M, updates,
                 getProcessStats());
         if (statusEvery > 0 && updatesSinceLastCommit % statusEvery == 0) {
             log.info(logMessage);
@@ -540,6 +549,7 @@ public class SolrManipulator implements IndexManipulator {
     }
 
     private Pattern solrError = Pattern.compile(".*<lst name=\"error\"><str name=\"msg\">(.*)</str>.*", Pattern.DOTALL);
+
     private String getResponse(HttpResponse response) throws IOException {
         String raw = Strings.flush(response.getEntity().getContent());
         Matcher matcher = solrError.matcher(raw);
