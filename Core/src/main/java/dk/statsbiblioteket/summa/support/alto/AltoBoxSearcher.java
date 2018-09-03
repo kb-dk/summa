@@ -339,6 +339,8 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                 }
                 log.debug("Got " + record + ", iterating and extracting boxes from " +
                           boxResponse.getLookupTerms().size() + " terms");
+                //System.out.println("Storing in /tmp/sum_debug.xml");
+                //Files.saveString(record.getContentAsUTF8(), new File("/tmp/sum_debug.xml"));
                 XMLStreamReader xml =
                         xmlFactory.createXMLStreamReader(RecordUtil.getReader(record, RecordUtil.PART.content));
                 resolveBoxes(xml, recordID, boxResponse);
@@ -358,9 +360,17 @@ public class AltoBoxSearcher extends SearchNodeImpl {
             int pageHeight = -1;
             boolean warnedNoPageSize = false;
 
+            final List<String> contents = new ArrayList<String>() {
+                @Override
+                public boolean add(String o) {
+                    return o != null && super.add(o);
+                }
+            };
+            AltoBoxResponse.Box lastHyphenationBox = null;
+            boolean firstTextOnLine = false;
+
             @Override
-            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current)
-                    throws XMLStreamException {
+            public boolean elementStart(XMLStreamReader xml, List<String> tags, String current) {
 
                 // <Page ID="PAGE2" HEIGHT="11408" WIDTH="9304" PHYSICAL_IMG_NR="2" QUALITY="OK" POSITION="Single" PROCESSING="OCR1"  ACCURACY="85.29" PC="0.852900">
                 if ("Page".equals(current)) {
@@ -368,69 +378,103 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                     pageHeight = Integer.parseInt(XMLStepper.getAttribute(xml, "HEIGHT", Integer.toString(pageHeight)));
                 }
 
+                if ("TextLine".equals(current)) {
+                    firstTextOnLine = true;
+                }
+
                 // <TextLine ID="LINE3" STYLEREFS="TS20" HEIGHT="276" WIDTH="3740" HPOS="756" VPOS="1292">
                 // <String ID="S17" CONTENT="Den" WC="0.852" CC="7 8 8" HEIGHT="244" WIDTH="624" HPOS="756" VPOS="1316"/>
 
                 if ("String".equals(current) && tags.size() > 1 && "TextLine".equals(tags.get(tags.size()-2))) {
-                    String content = getContent(xml);
-                    content = altoStringTrimmer.matcher(content).replaceAll("$1");
-                    if (boxResponse.isRelativeCoordinates() && (pageWidth == -1 || pageHeight == -1) &&
-                        !warnedNoPageSize) {
-                        log.warn("Relative coordinated requested, but no page size has been determined. "
-                                 + "Using absolute coordinates");
-                        warnedNoPageSize = true;
-                    }
+                    assignContents(xml);
 
-                    addHighlightBoxIfMatch(xml, content);
+                    if (firstTextOnLine && lastHyphenationBox != null) { // We've got a hyphenation candidate
+                        // Permutate with the hyphenation prefix and add if the result matches the terms
+                        for (String postfix: contents) {
+                            addHighlightBoxIfMatch(lastHyphenationBox, lastHyphenationBox.content + postfix);
+                        }
+                    }
+                    firstTextOnLine = false;
+
+                    // Standard non-lenient processing
+                    for (String rawContent : contents) {
+                        String content = altoStringTrimmer.matcher(rawContent).replaceAll("$1");
+                        if (boxResponse.isRelativeCoordinates() && (pageWidth == -1 || pageHeight == -1) &&
+                            !warnedNoPageSize) {
+                            log.warn("Relative coordinated requested, but no page size has been determined. "
+                                     + "Using absolute coordinates");
+                            warnedNoPageSize = true;
+                        }
+
+                        addHighlightBoxIfMatch(xml, content);
+
+                        // If the text ends with "-" then create a box as it might be the first part of a hyphenation
+                        // Consider if this should be a regexp with other dashes
+                        if (rawContent.endsWith("-") && rawContent.length() > 1) {
+                            lastHyphenationBox = getBox(xml, rawContent.substring(0, rawContent.length() - 1));
+                        } else {
+                            lastHyphenationBox = null;
+                        }
+                    }
                 }
                 return false;
             }
 
-            private String getContent(XMLStreamReader xml) {
+            // There are either 0, 1 or 2 contents. 2 contents happens with hyphenated words
+            private void assignContents(XMLStreamReader xml) {
+                contents.clear();
                 // <String CC="2 2 2 2 3 3" CONTENT="forfat" HEIGHT="116" HPOS="3596" ID="S326" SUBS_CONTENT="forfattede" SUBS_TYPE="HypPart1" VPOS="7160" WC="0.259" WIDTH="348"/>
-                if ("HypPart1".equals(XMLStepper.getAttribute(xml, "SUBS_TYPE", null))) {
-                    String subs = XMLStepper.getAttribute(xml, "SUBS_CONTENT", null);
-                    if (subs != null) {
-                        return subs;
-                    }
+                contents.add(XMLStepper.getAttribute(xml, "CONTENT", null));
+
+                String subsType = XMLStepper.getAttribute(xml, "SUBS_TYPE", null);
+                if ("HypPart1".equals(subsType) || "HypPart2".equals(subsType)) {
+                    contents.add(XMLStepper.getAttribute(xml, "SUBS_CONTENT", null));
                 }
-                return XMLStepper.getAttribute(xml, "CONTENT", null);
             }
 
             private void addHighlightBoxIfMatch(XMLStreamReader xml, String content) {
-                if (!boxResponse.getLookupTerms().contains(content)) {
-                    boolean matched = false;
-                    String[] tokens = altoStringSplitter.split(content);
-                    if (tokens.length > 1) {
-                        for (String token : tokens) {
-                            if (boxResponse.getLookupTerms().contains(token)) {
-                                matched = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!matched) {
-                        return;
+                if (highlightTermMatchMatches(content)) {
+                    boxResponse.add(recordID, getBox(xml, content));
+                }
+            }
+
+            private void addHighlightBoxIfMatch(AltoBoxResponse.Box box, String content) {
+                if (highlightTermMatchMatches(content)) {
+                    AltoBoxResponse.Box boxClone = new AltoBoxResponse.Box(
+                            box.hpos, box.vpos, box.width, box.height, content, box.wc, box.cc, box.relative);
+                    boxResponse.add(recordID, boxClone);
+                }
+            }
+
+            private boolean highlightTermMatchMatches(String content) {
+                if (boxResponse.getLookupTerms().contains(content)) {
+                    return true;
+                }
+                for (String token : altoStringSplitter.split(content)) {
+                    if (boxResponse.getLookupTerms().contains(token)) {
+                        return true;
                     }
                 }
+                return false;
+            }
 
+            private AltoBoxResponse.Box getBox(XMLStreamReader xml, String content) {
                 if (!boxResponse.isRelativeCoordinates() || pageWidth == -1 || pageHeight == -1) {
-                    boxResponse.add(recordID, new AltoBoxResponse.Box(
+                    return new AltoBoxResponse.Box(
                             getInt(xml, "HPOS"), getInt(xml, "VPOS"),
                             getInt(xml, "WIDTH"), getInt(xml, "HEIGHT"),
                             content,
                             XMLStepper.getAttribute(xml, "WC", "N/A"),
-                            XMLStepper.getAttribute(xml, "CC", "N/A"), false));
-                    return;
+                            XMLStepper.getAttribute(xml, "CC", "N/A"), false);
                 }
 
                 int ph = boxResponse.isYisx() ? pageHeight : pageWidth;
-                boxResponse.add(recordID, new AltoBoxResponse.Box(
+                return new AltoBoxResponse.Box(
                         getRel(xml, "HPOS", pageWidth), getRel(xml, "VPOS", ph),
                         getRel(xml, "WIDTH", pageWidth), getRel(xml, "HEIGHT", ph),
                         content,
                         XMLStepper.getAttribute(xml, "WC", "N/A"),
-                        XMLStepper.getAttribute(xml, "CC", "N/A"), true));
+                        XMLStepper.getAttribute(xml, "CC", "N/A"), true);
             }
 
             private double getRel(XMLStreamReader xml, String attributeName, int page) {

@@ -58,6 +58,11 @@ public class StorageReaderClientTest {
     }
 
     @Test
+    public void testQueryStageForProblemRecord() {
+
+    }
+
+    @Test
     public void testCycleHandling() throws IOException {
         setupLocal();
         {

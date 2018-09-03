@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.support.solr.SBSolrSearchNode;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
@@ -77,6 +78,40 @@ public class AltoBoxSearcherTest extends TestCase {
         testHighlightHelper("Single-line",searcher, query, expected);
     }
 
+    // Uses production index. Not a good thing. (in a rainbow world) make a proper test
+    public void disabled_testHighlightHyphenationWordsProductionKhader() throws IOException {
+        // http://www2.statsbiblioteket.dk/mediestream/avis/record/doms_aviser_page%3Auuid%3A83c5e391-6cd5-4b52-8e91-dd1c686caf7c/query/shikoku
+
+        // "8hi- kuku"
+        //final String query = "shikoku AND pageUUID:\"doms_aviser_page:uuid:83c5e391-6cd5-4b52-8e91-dd1c686caf7c\"";
+        final String query = "khader AND pageUUID:\"doms_aviser_page:uuid:736ebbd3-f10b-4d6e-9a8a-01cb3c14d969\"";
+        SummaSearcher searcher = getProd3TunnelSearcher();
+        if (searcher == null) {
+            log.warn("testHighlightHyphenationWordsProduction: Unable to get production searcher");
+            return;
+        }
+        //String[] expected = new String[]{"shikoku"};
+        String[] expected = new String[]{"Khader"};
+        String boxContent = testHighlightHelper("ProductionDebug", searcher, query, expected);
+        log.info("Box content: " + boxContent);
+        assertEquals("The box content should be as expected (3 boxes)", "[Khader, Khader, Khader]", boxContent);
+    }
+
+    // Uses production index. Not a good thing. (in a rainbow world) make a proper test
+    public void disabled_testHighlightHyphenationWordsProductionElisabeth() throws IOException {
+        final String query = "elisabeth AND pageUUID:\"doms_aviser_page:uuid:c59afda7-6b5d-49fa-a513-3e57d64521c4\"";
+        SummaSearcher searcher = getProd3TunnelSearcher();
+        if (searcher == null) {
+            log.warn("testHighlightHyphenationWordsProduction: Unable to get production searcher");
+            return;
+        }
+        String[] expected = new String[]{"Elisabeth"};
+        String boxContent = testHighlightHelper("ProductionDebug", searcher, query, expected);
+        log.info("Box content: " + boxContent);
+        assertEquals("The box content should be as expected (2 boxes)", "[Elisabeth, Elisabeth]", boxContent);
+    }
+
+
     public void testHighlightMultiLineHyphenationWords() throws IOException {
         //final String QUERY = "shikoku AND pageUUID:\"doms_aviser_page:uuid:83c5e391-6cd5-4b52-8e91-dd1c686caf7c\"";
         final String query = "\"Jensen\"^0.7573837 pageUUID:\"doms_aviser_page:uuid:9d35d33b-75b2-4912-b77f-5a9e4cc5179b\"";
@@ -89,7 +124,8 @@ public class AltoBoxSearcherTest extends TestCase {
         testHighlightHelper("Multi-line",searcher, query, expected);
     }
 
-    private void testHighlightHelper(
+    // Returns the content of boxes
+    private String testHighlightHelper(
             String designation, SummaSearcher searcher, String query, String[] expected) throws IOException {
         ResponseCollection responses = searcher.search(new Request(
                 DocumentKeys.SEARCH_QUERY, query,
@@ -127,7 +163,18 @@ public class AltoBoxSearcherTest extends TestCase {
                 break;
             }
         }
-        assertTrue(designation + ": One of the boxes should contain 'Ninn' and 'Hansen'", match);
+        assertTrue(designation + ": One of the boxes should contain [" + Strings.join(expected) + "]", match);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (AltoBoxResponse.Box box: boxes) {
+            if (sb.length() > 1) {
+                sb.append(", ");
+            }
+            sb.append(box.getContent());
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
 
@@ -404,6 +451,10 @@ public class AltoBoxSearcherTest extends TestCase {
     }
 
     // Not available due to tightened firewall rules
+    private SummaSearcher getProd3TunnelSearcher() throws IOException {
+        return getFullStackWithTest("localhost", 51001, "/solr/aviser.1.prod/select",
+                                    "localhost", 56700, "aviser-storage");
+    }
     private SummaSearcher getProd3Searcher() throws IOException {
         return getFullStackWithTest("prod-search03", 50001, "/solr/aviser.1.prod/select",
                                     "prod-search03", 56700, "aviser-storage");
