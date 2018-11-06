@@ -543,6 +543,18 @@ public class Record implements Serializable, Comparable {
      * @param parentIds The IDs to assign to the Record.
      */
     public void setParentIds(List<String> parentIds) {
+        setParentIds(parentIds, true);
+    }
+    /**
+     * Sets the parent-IDs for this Record. This copies the content of the
+     * given parentIDs to the Record, so callers are free to clear the given
+     * list after this method is called.
+     * </p><p>
+     * Note: Duplicates are removed as part of the copy.
+     * @param parentIds The IDs to assign to the Record.
+     * @param clearParentReferences true if the parent references should be cleared.
+     */
+    public void setParentIds(List<String> parentIds, boolean clearParentReferences) {
         if (parentIds == null) {
             this.parentIds = null;
         } else if (parentIds.isEmpty()) {
@@ -553,8 +565,9 @@ public class Record implements Serializable, Comparable {
         } else {
             this.parentIds = new LinkedHashSet<>(parentIds);
         }
-
-        parents = null;
+        if (clearParentReferences) {
+            parents = null;
+        }
     }
 
     /**
@@ -577,6 +590,18 @@ public class Record implements Serializable, Comparable {
      * @param childIds List of record IDs for the record's children.
      */
     public void setChildIds(List<String> childIds) {
+        setChildIds(childIds, true);
+    }
+    /**
+     * Set the child IDs listed as children of this record. This will reset
+     * any children registered with {@link #setChildren(List)}. Note that this
+     * method copies the content of the given list, so callers are free to
+     * clear the list after calling.
+     *
+     * @param childIds List of record IDs for the record's children.
+     * @param clearChildReferences true if the child references should be cleared.
+     */
+    public void setChildIds(List<String> childIds, boolean clearChildReferences) {
         if (childIds == null) {
             this.childIds = null;
             return;
@@ -589,8 +614,9 @@ public class Record implements Serializable, Comparable {
         } else {
             this.childIds = new LinkedHashSet<>(childIds);
         }
-
-        children = null;
+        if (clearChildReferences) {
+            children = null;
+        }
     }
 
     /**

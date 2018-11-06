@@ -193,7 +193,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * The default value for this property is the empty list, meaning that
      * all bases will have relationship tracking enabled.
      */
-    public static final String CONF_DISABLE_REALTIONS_TRACKING = "summa.storage.database.disablerelationstracking";
+    public static final String CONF_DISABLE_RELATIONS_TRACKING = "summa.storage.database.disablerelationstracking";
 
     /**
      * The property-key for the boolean value determining if a new database
@@ -437,6 +437,23 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private static final int IS_CONNECTION_VALID_TIMEOUT_SECONDS = 2;
 
+    /**
+     * A list of strings with base names that explicitly should have relations
+     * stored as meta data on Record level, as opposed to only stored in the
+     * relations table.
+     * </p><p>
+     * Enable this for bases where invalidation of relations is a problem and
+     * where the sizes of relation-trees is manageable (< 100 Records).
+     * <p/>
+     * The default value for this property is the empty list, meaning that
+     * zero bases will have relationship storing enabled.
+     */
+    public static final String CONF_BASES_WITH_STORED_RELATIONS = "summa.storage.database.basesWithStoredRelations";
+    // Used for holding the original stored IDs as Record metadata
+    private static final String STORED_PARENT_IDS = "_StoredParentIDs_";
+    private static final String STORED_CHILD_IDS = "_StoredChildIDs_";
+    private static final String STORED_ID_DELIMITER = "__DELIM__";
+
     /*
     private StatementHandle stmtGetModifiedAfter;
     private StatementHandle stmtGetModifiedAfterAll;
@@ -487,6 +504,10 @@ public abstract class DatabaseStorage extends StorageBase {
      * List of base names for which we don't track relations.
      */
     private Set<String> disabledRelationsTracking;
+    /**
+     * List of base names which has relations stored on Record level.
+     */
+    private final TreeSet<String> basesWithStoredRelations;
 
     /**
      * True if lazy relation should be used.
@@ -738,12 +759,15 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         disabledRelationsTracking = new TreeSet<>();
-        disabledRelationsTracking.addAll(conf.getStrings(CONF_DISABLE_REALTIONS_TRACKING, new ArrayList<String>()));
+        disabledRelationsTracking.addAll(conf.getStrings(CONF_DISABLE_RELATIONS_TRACKING, new ArrayList<String>()));
         if (disabledRelationsTracking.isEmpty()) {
             log.debug("Tracking relations on all bases");
         } else {
             log.info("Disabling relationships tracking on: " + Strings.join(disabledRelationsTracking, ", "));
         }
+        basesWithStoredRelations = new TreeSet<String>();
+        basesWithStoredRelations.addAll(conf.getStrings(CONF_BASES_WITH_STORED_RELATIONS, new ArrayList<String>()));
+
         defaultGetOptions = QueryOptions.getOptions(conf);
         useOptimizations = conf.getBoolean(CONF_USE_OPTIMIZATIONS, DEFAULT_USE_OPTIMIZATIONS);
         log.info("Constructed " + this);
@@ -2084,9 +2108,49 @@ public abstract class DatabaseStorage extends StorageBase {
             return null;
         }
         log.trace("Pruning deceased relatives from " + record.getId());
+        // Hack: As parent & child-IDs are updated from the relations-base, we need to reset them to the original values
+        resetRelatives(record);
+
         pruneRelatives(null, record);
         timingGetRecord.addNS(System.nanoTime()-startNS);
         return record;
+    }
+
+    private void resetRelatives(Record record) {
+        if (!basesWithStoredRelations.contains(record.getBase())) {
+            return;
+        }
+        visitRelatives(record, new RecordCallback() {
+            @Override
+            public void process(Record record) {
+                if (record.getMeta(STORED_PARENT_IDS) == null) {
+                    Logging.logProcess(
+                            "DatabaseStorage.resetRelatives",
+                            "Expected " + STORED_PARENT_IDS + " to be present for all records in base '" +
+                            record.getBase() + "'. It is likely that the base needs a full re-ingest",
+                            Logging.LogLevel.WARN, record.getId());
+                } else {
+                    record.setParentIds(splitStoredIDs(record.getMeta(STORED_PARENT_IDS)), false);
+                }
+                if (record.getMeta(STORED_CHILD_IDS) == null) {
+                    // TODO: Is there a process log for persistent storage?
+                    Logging.logProcess(
+                            "DatabaseStorage.resetRelatives",
+                            "Expected " + STORED_CHILD_IDS + " to be present for all records in base '" +
+                            record.getBase() + "'. It is likely that the base needs a full re-ingest",
+                            Logging.LogLevel.WARN, record.getId());
+                } else {
+                    record.setChildIds(splitStoredIDs(record.getMeta(STORED_CHILD_IDS)), false);
+                }
+
+                log.debug("Resetting parent & child IDs to stored values for " + record);
+            }
+
+            private List<String> splitStoredIDs(String storedIDs) {
+                return storedIDs == null || storedIDs.isEmpty() ? Collections.<String>emptyList() :
+                        Arrays.asList(storedIDs.split(STORED_ID_DELIMITER));
+            }
+        });
     }
 
     private void pruneRelatives(Record previous, Record origo) {
@@ -2486,6 +2550,44 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    private void storeRelativeIDs(Record record) {
+        if (!basesWithStoredRelations.contains(record.getBase())) {
+            return;
+        }
+        visitRelatives(record, new RecordCallback() {
+            @Override
+            public void process(Record record) {
+                record.addMeta(STORED_PARENT_IDS, record.getParentIds() == null ? "" :
+                        Strings.join(record.getParentIds(), STORED_ID_DELIMITER));
+                record.addMeta(STORED_CHILD_IDS, record.getChildIds() == null ? "" :
+                        Strings.join(record.getChildIds(), STORED_ID_DELIMITER));
+            }
+        });
+    }
+
+    private void visitRelatives(Record record, RecordCallback callback) {
+        visitRelatives(record, callback, new HashSet<String>());
+    }
+    private void visitRelatives(Record record, RecordCallback callback, HashSet<String> visitedIDs) {
+        if (!visitedIDs.add(record.getId())) {
+            return;
+        }
+        callback.process(record);
+        if (record.getParents() != null) {
+            for (Record parent: record.getParents()) {
+                visitRelatives(parent, callback, visitedIDs);
+            }
+        }
+        if (record.getChildren() != null) {
+            for (Record child: record.getChildren()) {
+                visitRelatives(child, callback, visitedIDs);
+            }
+        }
+    }
+    private interface RecordCallback {
+        void process(Record record);
+    }
+
     long totalFlushed = 0;
     /**
      * Flush a list of records to the storage.
@@ -2643,7 +2745,6 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Flushing with connection: " + r.toString(false));
         }
 
-
         RELATION relationsTouch= this.relationsTouch;
         RELATION clearRelation = this.relationsClear;
         // Update the timestamp we check against in getRecordsModifiedAfter
@@ -2652,10 +2753,9 @@ public abstract class DatabaseStorage extends StorageBase {
         boolean recordExist = recordExist(conn, r.getId());
 
         try {
-            if(!recordExist){
+            if (!recordExist) {
                 createNewRecordWithConnection(r, options, conn);
-            }
-            else{
+            } else {
                 //Special case. The method below is extremely slow for yet unknown reasons for large object trees (10000+) and scales badly.
                 //avoid calling it for some settings where we know it is unnessecary. It can be improved by a different implementation
                 //by loading the full object tree(ID's only) from the old record and comparing.
@@ -2676,13 +2776,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 // We already had the record stored, so fire an update instead
                 updateRecordWithConnection(r, options, conn);
             }
-
-
         } catch (SQLException e) {
-
             throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
                                                 + "failed to flush %s: %s", r.getId(), e.getMessage()), e);
-
         }
 
         // Recursively add child records
@@ -3846,6 +3942,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setBytes(8, record.isContentCompressed() ?
                     record.getContent(false) :
                     Zips.gzipBuffer(record.getContent()));
+            storeRelativeIDs(record);
             stmt.setBytes(9, record.hasMeta() ? record.getMeta().toFormalBytes() : new byte[0]);
             stmt.executeUpdate();
         } finally {
@@ -4049,6 +4146,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setBytes(6, record.isContentCompressed() ?
                     record.getContent(false) :
                     Zips.gzipBuffer(record.getContent()));
+            storeRelativeIDs(record);
             stmt.setBytes(7, record.hasMeta() ? record.getMeta().toFormalBytes() : new byte[0]);
             stmt.setString(8, record.getId());
             stmt.executeUpdate();
@@ -4323,6 +4421,7 @@ public abstract class DatabaseStorage extends StorageBase {
         long mtime = getLong(resultSet, MTIME_KEY, 0);
         byte[] meta = resultSet.getBytes(META_KEY);
 //        log.debug("scanRecord***: meta" + (System.nanoTime()-start)/M);
+        // Only possible because the records are joined with relations
         String parentIds = resultSet.getString(PARENT_IDS_KEY);
         String childIds = resultSet.getString(CHILD_IDS_KEY);
 //        log.debug("DatabaseStorage***: parent/child ids" + (System.nanoTime()-start)/M + " parents=" + parentIds + ", childIDs=" + childIds);
@@ -4946,4 +5045,5 @@ public abstract class DatabaseStorage extends StorageBase {
                              iterators.size(), useLazyRelations, usePagingModel, pageSize,
                              pageSizeUpdate, expandRelativesLists, defaultGetOptions, getIterationStats());
     }
+
 }

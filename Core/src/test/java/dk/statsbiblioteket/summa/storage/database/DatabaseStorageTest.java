@@ -123,6 +123,120 @@ public class DatabaseStorageTest extends StorageTestBase {
             storage.close();
         }
     }
+
+    public void testRelationHiding() throws Exception {
+        Configuration conf = createConf();
+        conf.set(DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, true);
+        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079 + storageCounter++);
+        conf.set(DatabaseStorage.CONF_BASES_WITH_STORED_RELATIONS, new ArrayList<>(Collections.singleton("dummy")));
+        DatabaseStorage storage = new H2Storage(conf);
+        try {
+            { // IDs should not be assigned from relations
+                Record r1 = new Record("Ra1", "dummy", new byte[0]);
+                r1.setChildIds(Collections.singletonList("Ra2"));
+                storage.flush(r1);
+
+                Record r2 = new Record("Ra2", "dummy", new byte[0]);
+                storage.flush(r2);
+
+                Record rec = storage.getRecord("Ra1", null);
+                assertNotNull("There should be a record 'Ra1' before update", rec);
+                assertTrue("Ra1 should have child IDs",
+                           rec.getChildIds() != null && !rec.getChildIds().isEmpty());
+
+                QueryOptions options = new QueryOptions();
+                options.setAttributes(new QueryOptions.ATTRIBUTES[]{
+                        QueryOptions.ATTRIBUTES.ID,
+                        QueryOptions.ATTRIBUTES.BASE});
+                Record rec2 = storage.getRecord("Ra1", options);
+                assertNotNull("There should be a record 'Ra1' when requesting only ID & BASE", rec2);
+                assertTrue("Ra1 should have child IDs with limited meta",
+                           rec.getChildIds() != null && !rec.getChildIds().isEmpty());
+            }
+
+            { // Cut named connection
+                Record r1 = new Record("Ra1", "dummy", new byte[0]);
+                storage.flush(r1);
+
+                Record rec = storage.getRecord("Ra1", null);
+                assertNotNull("There should be a record 'Ra1' after update", rec);
+                assertTrue("Ra1 should have no child IDs but has " +
+                           (rec.getChildIds() == null ? 0 : rec.getChildIds().size()),
+                           rec.getChildIds() == null || rec.getChildIds().isEmpty());
+            }
+
+            { // Multiple IDs should be assignable
+                Record r1 = new Record("Ra1", "dummy", new byte[0]);
+                r1.setChildIds(Arrays.asList("Ra2", "Ra3"));
+                storage.flush(r1);
+
+                Record r2 = new Record("Ra2", "dummy", new byte[0]);
+                storage.flush(r2);
+
+                Record r3 = new Record("Ra3", "dummy", new byte[0]);
+                storage.flush(r3);
+
+                Record rec = storage.getRecord("Ra1", null);
+                assertNotNull("There should be a record 'Ra1' after multi-child update", rec);
+                assertEquals("Ra1 should have the right amount of child-IDs",
+                             2, rec.getChildIds().size());
+                assertEquals("Ra1 should have the right amount of children",
+                             2, rec.getChildren().size());
+
+            }
+        } finally {
+            storage.close();
+        }
+    }
+
+    public void testRelationReset() throws Exception {
+        Configuration conf = createConf();
+        conf.set(DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, true);
+        conf.set(H2Storage.CONF_H2_SERVER_PORT, 8079+storageCounter++);
+        DatabaseStorage storage = new H2Storage(conf);
+        try {
+            // R1 hasChild R2
+            {
+                Record r1 = new Record("R1", "dummy", new byte[0]);
+                r1.setChildIds(Collections.singletonList("R2"));
+                storage.flush(r1);
+
+                Record r2 = new Record("R2", "dummy", new byte[0]);
+                storage.flush(r2);
+
+                Record rec = storage.getRecord("R1", null);
+                assertTrue("R1-hasChild-R2", rec.getChildren() != null && rec.getChildren().size() == 1);
+            }
+
+            // Cyclic
+            {
+                Record r2 = new Record("R2", "dummy", new byte[0]);
+                r2.setChildIds(Collections.singletonList("R1"));
+                storage.flush(r2);
+
+                Record rec1 = storage.getRecord("R1", null);
+                assertTrue("Cyclic R1 children", rec1.getChildren() != null && rec1.getChildren().size() == 1);
+                Record rec2 = storage.getRecord("R2", null);
+                assertTrue("Cyclic R2 children", rec2.getChildren() != null && rec2.getChildren().size() == 1);
+            }
+
+            // Cycle broken
+            {
+                Record r1 = new Record("R1", "dummy", new byte[0]);
+                r1.setChildIds(Collections.<String>emptyList());
+                storage.flush(r1);
+
+                Record rec1 = storage.getRecord("R1", null);
+                assertTrue("Cycle broken R1 children", rec1.getChildren() == null || rec1.getChildren().isEmpty());
+                Record rec2 = storage.getRecord("R2", null);
+                assertTrue("Cycle broken R2 children", rec2.getChildren() != null && rec2.getChildren().size() == 1);
+            }
+
+        } finally {
+            storage.close();
+        }
+    }
+
     // For performance reasons the authoritative Records in the Statsbiblioteket aviser project should
     // not have their childrenIDs enriched from the relations table
     public void testRelativesExpansion() throws Exception {
@@ -1046,7 +1160,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         log.info("Adding self-referencing Record " + testId2);
         try{
             storage.flushAll(Arrays.asList(r2));
-            fail("flushAll of " + r2 + " should faild but did not");
+            fail("flushAll of " + r2 + " should fail but did not");
         }
         catch(Exception e){
             //ignore
