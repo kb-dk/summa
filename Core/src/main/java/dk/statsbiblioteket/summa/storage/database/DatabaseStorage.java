@@ -5040,10 +5040,12 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public String toString() {
-        return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d,"
-                             + "pageSizeUpdate=%d, expandRelativesList=%b, defaultGetOptions=%s) %s",
+        return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d, "
+                             + "pageSizeUpdate=%d, expandRelativesList=%b, defaultGetOptions=%s, " +
+                             "pruneRelativesOnGet=%b, basesWithStoredRelations=%s) %s",
                              iterators.size(), useLazyRelations, usePagingModel, pageSize,
-                             pageSizeUpdate, expandRelativesLists, defaultGetOptions, getIterationStats());
+                             pageSizeUpdate, expandRelativesLists, defaultGetOptions,
+                             pruneRelativesOnGet, Strings.join(basesWithStoredRelations, ","), getIterationStats());
     }
 
 }
