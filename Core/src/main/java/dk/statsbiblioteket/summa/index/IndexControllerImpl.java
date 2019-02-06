@@ -326,6 +326,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
     @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     protected void runMethod() {
+
         while (isRunning()) {
             if (commitTimeout == -1 && consolidateTimeout == -1) {
                 log.debug("No time-based triggers for Watchdog. Exiting thread.");

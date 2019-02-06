@@ -146,7 +146,7 @@ public abstract class StateThread implements Runnable {
             case ready:
             case stopped: {
                 log.debug("start: Creating and starting Thread");
-                String threadName = "".equals(getClass().getSimpleName()) ? "Anonymous" : getClass().getSimpleName();
+                String threadName = "".equals(getClass().getSimpleName()) ? "Statethread" : getClass().getSimpleName();
                 thread = new Thread(this, threadName + "-" + hashCode());
                 status = STATUS.running;
                 thread.start();
