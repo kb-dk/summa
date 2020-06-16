@@ -43,6 +43,12 @@ public class QueryRewriterTest extends TestCase {
                 "foo^0.000123");
     }
 
+    public void testMultiSpacet() throws ParseException {
+        assertIdentity(
+                "foo:\"double  space\"",
+                "foo:\"double  space\"");
+    }
+
     public void testLargeBoost() throws ParseException {
         assertIdentity(
                 "\"foo\"^123.0100021", // Rounding error
