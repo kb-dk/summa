@@ -11,10 +11,7 @@
     <artifactId>summa-exposed</artifactId>
     <name>Summa Exposed module</name>
 
-
-
     <build>
-
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
