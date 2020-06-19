@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.util.Collection;
+import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -90,7 +91,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
                 return;
             } catch (InterruptedException e) {
                 log.warn(String.format(
-                    "Interrupted while calling put(%s) from uninterruptiblePut. Retrying", payload), e);
+                        Locale.ROOT, "Interrupted while calling put(%s) from uninterruptiblePut. Retrying", payload), e);
             }
         }
     }

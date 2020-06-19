@@ -640,7 +640,7 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
         } catch (NullPointerException e) {
             return Environment.escapeSystemProperties(defaultValues);
         } catch (IllegalArgumentException e) {
-            log.warn(String.format("The property %s was expected to be a list of Strings, but "
+            log.warn(String.format(Locale.ROOT, "The property %s was expected to be a list of Strings, but "
                                    + "it was not. Using default %s instead", key, defaultValues));
             return Environment.escapeSystemProperties(defaultValues);
         }
@@ -1131,12 +1131,12 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
             con = configurable.getConstructor(Configuration.class);
             return con.newInstance(conf);
         } catch (NoSuchMethodException e) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "No constructor taking Configuration in %s. Creating object with empty constructor instead",
                     configurable.getSimpleName()));
             return createNonConfigurable(configurable);
         } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            throw new Configurable.ConfigurationException(String.format(
+            throw new Configurable.ConfigurationException(String.format(Locale.ROOT,
                     "Error creating new instance of class'%s' with constructor %s",
                     configurable.getCanonicalName(), con), e);
         }
@@ -1148,7 +1148,7 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
         try {
             return plainClass.getConstructor().newInstance();
         } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException(String.format("No empty constructor in  %s",
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "No empty constructor in  %s",
                                                              plainClass.getSimpleName()), e);
         } catch (IllegalAccessException e) {
             throw new Configurable.ConfigurationException("Error creating new instance, illegal access", e);
@@ -1484,7 +1484,7 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
             }
             return new Configuration(storage.getSubStorage(key));
         } catch (IOException e) {
-            throw new NullPointerException(String.format("Unable to extract subConfiguration '%s'", key));
+            throw new NullPointerException(String.format(Locale.ROOT, "Unable to extract subConfiguration '%s'", key));
         }
     }
 
@@ -1529,7 +1529,7 @@ public class Configuration implements Serializable, Iterable<Map.Entry<String, S
             return Collections.unmodifiableList(configurations);
         } catch (IOException e) {
             throw (NullPointerException)new NullPointerException(
-                    String.format("Unable to extract sub-configurations for key '%s'", key)).initCause(e);
+                    String.format(Locale.ROOT, "Unable to extract sub-configurations for key '%s'", key)).initCause(e);
         }
     }
 

@@ -25,6 +25,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Field;
 
+import java.util.Locale;
+
 /**
  * Convenience base for Document creators.
  */
@@ -59,6 +61,7 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
         LuceneIndexField indexField = descriptor.getFieldForIndexing(fieldName);
         if (indexField == null) {
             throw new IndexServiceException(String.format(
+                    Locale.ROOT,
                     "The field name '%s' could not be resolved. This should never happen (fallback should be the "
                     + "default field)",
                     fieldName));
@@ -101,7 +104,7 @@ public abstract class DocumentCreatorBase<T> extends GraphFilter<T> {
                                  String fieldName, String content) throws IndexServiceException {
         LuceneIndexField freetext = descriptor.getFieldForIndexing(IndexField.FREETEXT);
         if (freetext == null) {
-            throw new IndexServiceException(String.format(
+            throw new IndexServiceException(String.format(Locale.ROOT,
                     "The field freetext with name '%s' could not be resolved. This should never happen (fallback "
                     + "should be the default field)",
                     IndexField.FREETEXT));

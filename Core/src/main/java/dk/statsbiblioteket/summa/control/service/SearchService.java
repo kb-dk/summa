@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.control.service;
 
 import java.rmi.RemoteException;
 import java.io.IOException;
+import java.util.Locale;
 
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
@@ -72,12 +73,12 @@ public class SearchService extends ServiceBase {
         try {
             searcher = SummaSearcherFactory.createSearcher (conf);
         } catch (IllegalArgumentException e) {
-            String message = String.format("The SummaSearcher-class '%s' was not a Configurable: %s",
+            String message = String.format(Locale.ROOT, "The SummaSearcher-class '%s' was not a Configurable: %s",
                                            conf.getString (SummaSearcher.CONF_CLASS), e.getMessage ());
             setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
             throw new RemoteException(message, e);
         } catch (Exception e) {
-            String message = String.format("Exception creating instance of SummaSearcher class '%s': %s",
+            String message = String.format(Locale.ROOT, "Exception creating instance of SummaSearcher class '%s': %s",
                                            conf.getString (SummaSearcher.CONF_CLASS), e.getMessage());
             setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
             throw new RemoteException(message, e);
@@ -98,7 +99,7 @@ public class SearchService extends ServiceBase {
             setStatus(Status.CODE.stopped, "Searcher closed successfully", Logging.LogLevel.DEBUG);
         } catch (Exception e) {
             setStatus(Status.CODE.crashed, "Searcher closed with error: " + e.getMessage (), Logging.LogLevel.WARN, e);
-            throw new RemoteException(String.format("Unable to close searcher '%s': %s", searcher, e.getMessage ()), e);
+            throw new RemoteException(String.format(Locale.ROOT, "Unable to close searcher '%s': %s", searcher, e.getMessage ()), e);
         } finally {
             //noinspection AssignmentToNull
             searcher = null;

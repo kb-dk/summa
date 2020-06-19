@@ -132,7 +132,7 @@ public class WebServices {
             return new FileInputStream(new File(resource.toURI()));
         } catch (URISyntaxException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException(String.format(
+            throw new RuntimeException(String.format(Locale.ROOT,
                     "Unable to convert the URL '%s' to URI", resource), e);
         }
     }

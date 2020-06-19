@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Locale;
 import java.util.Random;
 
 import junit.framework.Test;
@@ -157,7 +158,7 @@ public class ReaderInputStreamTest extends TestCase {
             StringWriter sw = new StringWriter(input.length() * 10);
             sw.append("Diff for bytes:");
             for (int i = 0; i < Math.max(expected.length, actual.length); i++) {
-                sw.append(String.format(" (%s, %s)",
+                sw.append(String.format(Locale.ROOT, " (%s, %s)",
                         expected.length > i ? Byte.toString(expected[i]) : "NA",
                         actual.length > i ? Byte.toString(actual[i]) : "NA"));
             }

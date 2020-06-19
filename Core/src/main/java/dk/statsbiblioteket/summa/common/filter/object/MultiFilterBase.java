@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Handles logistics of retrieving a Payload and outputting 0-n Payloads.
@@ -296,7 +297,7 @@ public abstract class MultiFilterBase implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.info(String.format("Closing down '%s'. %s", this, getProcessStats()));
+        log.info(String.format(Locale.ROOT, "Closing down '%s'. %s", this, getProcessStats()));
         checkSource();
         source.close(success);
     }

@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Locale;
 
 /**
  * A {@link SummaSearcher} implementation exposing an RMI interface,
@@ -195,8 +196,7 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
             throw new QueryException("RMISearcherProxy", e);
         } catch (Throwable t) {
             RemoteHelper.exitOnThrowable(log, String.format(
-                    "search(%s) for %d:%s",
-                    request, registryPort, serviceName), t, flattenExceptions);
+                    Locale.ROOT, "search(%s) for %d:%s", request, registryPort, serviceName), t, flattenExceptions);
             return null;
         }
     }
@@ -212,7 +212,7 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
         try {
             RemoteHelper.unExportRemoteInterface (serviceName, registryPort);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format(
+            RemoteHelper.exitOnThrowable(log, String.format(Locale.ROOT,
                     "close().unExportRemoteInterface(serviceName='%s', registryPort=%d)",
                     serviceName, registryPort), t, flattenExceptions);
         } finally {
@@ -221,7 +221,7 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
             try {
                 backend.close();
             } catch (Throwable t) {
-                RemoteHelper.exitOnThrowable(log, String.format(
+                RemoteHelper.exitOnThrowable(log, String.format(Locale.ROOT,
                         "close() for %d:%s",
                         registryPort, serviceName), t, flattenExceptions);
             }
@@ -234,7 +234,7 @@ public class RMISearcherProxy extends UnicastRemoteObject implements RemoteSearc
                     log.debug("Skipping unexport of MBean for " + this + " and binding failed");
                 }
             } catch (Throwable t) {
-                RemoteHelper.exitOnThrowable(log, String.format(
+                RemoteHelper.exitOnThrowable(log, String.format(Locale.ROOT,
                         "close().unExportMBean() for %d:%s",
                         registryPort, serviceName), t, flattenExceptions);
             }

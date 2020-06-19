@@ -36,6 +36,7 @@ import java.rmi.RemoteException;
 import java.sql.*;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -156,8 +157,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
 
         if (!location.equals(location.getAbsoluteFile())) {
-            log.debug(String.format("Transforming relative location '%s' to absolute location'%s'",
-                                    location, location.getAbsoluteFile()));
+            log.debug(String.format(
+                    Locale.ROOT, "Transforming relative location '%s' to absolute location'%s'",
+                    location, location.getAbsoluteFile()));
             location = location.getAbsoluteFile();
         }
 

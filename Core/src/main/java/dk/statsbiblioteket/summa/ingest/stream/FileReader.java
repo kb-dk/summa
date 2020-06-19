@@ -121,7 +121,7 @@ public class FileReader extends FileSystemReader {
 
     @Override
     public void setSource(Filter source) {
-        throw new UnsupportedOperationException(String.format("A %s must be positioned at the start of a filter chain",
+        throw new UnsupportedOperationException(String.format(Locale.ROOT, "A %s must be positioned at the start of a filter chain",
                                                               getClass().getName()));
     }
 

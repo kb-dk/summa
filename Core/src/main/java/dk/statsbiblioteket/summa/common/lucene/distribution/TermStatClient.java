@@ -253,7 +253,7 @@ public class TermStatClient implements Configurable {
             log.info("No fields specified. Extracting all fields");
             fieldRegexps.add(".*");
         }
-        log.info(String.format("Extracting fields %s from %s with mdf=%d to %s",
+        log.info(String.format(Locale.ROOT, "Extracting fields %s from %s with mdf=%d to %s",
                                Strings.join(fieldRegexps, ", "), index, mdf, destination));
         Profiler profiler = new Profiler();
 
@@ -263,7 +263,7 @@ public class TermStatClient implements Configurable {
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
         TermStat termStat = new TermStat(Configuration.newMemoryBased());
         // TODO: Add timestamp for extraction
-        String header = String.format("TermStats created from %s at %2$tF %2$tT",
+        String header = String.format(Locale.ROOT, "TermStats created from %s at %2$tF %2$tT",
                                       index, System.currentTimeMillis());
         final String[] columns = new String[]{ "term", "tf_" + columnPrefix, "df_" + columnPrefix};
         termStat.create(new File(destination), header, columns);
@@ -316,7 +316,7 @@ public class TermStatClient implements Configurable {
             log.info("No fields specified. Extracting unique terms for all fields");
             fieldRegexps.add(".*");
         }
-        log.info(String.format("Extracting unique terms for fields %s from %s", 
+        log.info(String.format(Locale.ROOT, "Extracting unique terms for fields %s from %s",
                                Strings.join(fieldRegexps, ", "), index));
 
         Profiler profiler = new Profiler();
@@ -393,7 +393,7 @@ public class TermStatClient implements Configurable {
             log.info("No columns specified. Merging all columns");
             columns.add(".*");
         }
-        log.info(String.format("Merging columns %s from inputs %s with mdf %d to %s",
+        log.info(String.format(Locale.ROOT, "Merging columns %s from inputs %s with mdf %d to %s",
                                Strings.join(columns, ", "), Strings.join(inputs, ", "), mdf, destination));
         Profiler profiler = new Profiler();
 
@@ -415,7 +415,7 @@ public class TermStatClient implements Configurable {
      */
     public void dumpStats(File index, File destination) throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.debug(String.format("dumpStats(%s, %s) called", index, destination));
+        log.debug(String.format(Locale.ROOT, "dumpStats(%s, %s) called", index, destination));
         extract(index, destination.toString(), "dumpstats", Arrays.asList(".*"), 1, -1, false);
     }
 
@@ -449,7 +449,7 @@ public class TermStatClient implements Configurable {
                 source.reset();
                 sources.add(source);
             } catch (Exception e) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "Unable to open TermStat with source '%s'. "
                         + "Skipping source", fileSource), e);
             }
@@ -506,7 +506,7 @@ public class TermStatClient implements Configurable {
         destination.store();
         log.debug("Finished storing");
         destination.close();
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "Finished merging %d sources to '%s' in %s",
                 fileSources.size(), destination, profiler.getSpendTime()));
                 */

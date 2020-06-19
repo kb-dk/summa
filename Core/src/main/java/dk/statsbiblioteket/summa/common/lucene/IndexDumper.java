@@ -25,10 +25,7 @@ import org.apache.lucene.store.NIOFSDirectory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Simple dump of stored fields in the index.
@@ -45,8 +42,7 @@ public class IndexDumper {
         File location = new File(args[0]);
         if (!location.exists()) {
             throw new FileNotFoundException(String.format(
-                    "The stated index location '%s' does not exist",
-                    location.getAbsoluteFile()));
+                    Locale.ROOT, "The stated index location '%s' does not exist", location.getAbsoluteFile()));
         }
 
         if (args.length == 1) {
@@ -67,7 +63,7 @@ public class IndexDumper {
                 fieldNames.add(field);
             }
         }
-        System.out.println(String.format("Fields in '%s': %s", location, Strings.join(fieldNames, ", ")));
+        System.out.println(String.format(Locale.ROOT, "Fields in '%s': %s", location, Strings.join(fieldNames, ", ")));
         ir.close();
     }
 

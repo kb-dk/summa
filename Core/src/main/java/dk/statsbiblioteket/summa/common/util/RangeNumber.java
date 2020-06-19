@@ -16,6 +16,8 @@ package dk.statsbiblioteket.summa.common.util;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.util.Locale;
+
 /**
  * A range number represents a range as well as a pivot or "best guess" value.
  * It can be seen as a special case of a fuzzy number.
@@ -43,13 +45,12 @@ public class RangeNumber {
     public RangeNumber(int pivot, int min, int max) {
         if (pivot < min || pivot > max || max < min) {
             throw new IllegalStateException(String.format(
-                "The values should be logically consistent with "
-                + "min(%d) <= pivot(%d> <= max(%d)", min, pivot, max));
+                    Locale.ROOT, "The values should be logically consistent with min(%d) <= pivot(%d> <= max(%d)",
+                    min, pivot, max));
         }
         if (pivot == NEG_INF || pivot == POS_INF) {
             throw new IllegalStateException(String.format(
-                "The pivot(%d) must not be negative or positive infinity",
-                pivot));
+                    Locale.ROOT, "The pivot(%d) must not be negative or positive infinity", pivot));
         }
         this.pivot = pivot;
         this.min = min;

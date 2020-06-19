@@ -21,6 +21,7 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -57,8 +58,7 @@ public class TermStatPerformance {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     public static void testPerformance(File location, int runs)
                                                               throws Exception {
-        System.out.println(String.format(
-                "testPerformance('%s', %d runs) called",location, runs));
+        System.out.println(String.format(Locale.ROOT, "testPerformance('%s', %d runs) called", location, runs));
         TermStat ts = new TermStat(Configuration.newMemoryBased());
         ts.open(location);
         int terms = (int)ts.getTermCount(); // TODO: Remove this limit
@@ -75,14 +75,14 @@ public class TermStatPerformance {
             ts.getEntry(term);
             profiler.beat();
             if (i % feedback == 0) {
-                System.out.println(String.format(
+                System.out.println(String.format(Locale.ROOT,
                         "Executed %d/%d lookups. Average lookups/second: %d. "
                         + "ETA: %s",
                         i, runs, (int)profiler.getBps(true),
                         profiler.getETAAsString(true)));
             }
         }
-        System.out.println(String.format(
+        System.out.println(String.format(Locale.ROOT,
                 "Executed %d lookups in %s. Average lookups/second: %s",
                 runs, profiler.getSpendTime(), profiler.getBps(false)));
         ts.close();
@@ -90,7 +90,7 @@ public class TermStatPerformance {
 
     public static TermStat createTS(int terms, File location) throws Exception {
         System.out.println(
-                String.format("Creating sample term stats with %d terms",
+                String.format(Locale.ROOT, "Creating sample term stats with %d terms",
                               terms));
         int digits = Integer.toString(terms).length();
         Profiler profiler = new Profiler();
@@ -113,7 +113,7 @@ public class TermStatPerformance {
     private static String leader(int num, int digits) {
         String result = Integer.toString(num);
         if (result.length() > digits) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                     "The number %d already has more than %d digits",
                     num, digits));
         }

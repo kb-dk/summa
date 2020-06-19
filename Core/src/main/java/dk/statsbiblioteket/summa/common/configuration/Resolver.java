@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Locale;
 
 /**
  * Resolves paths relative to System properties.
@@ -86,9 +87,10 @@ public class Resolver {
             log.debug("Returning resolved File '" + resolved.getPath() + "'");
             return resolved;
         } catch (Exception e) {
-            log.info(String.format("Could not resolve File '%s' to persistentBaseFile with persistent base '%s'. "
-                                   + "Using file directly as '%s'",
-                                   file, persistentBase, file.getAbsolutePath()));
+            log.info(String.format(
+                    Locale.ROOT, "Could not resolve File '%s' to persistentBaseFile with persistent base '%s'. "
+                                 + "Using file directly as '%s'",
+                    file, persistentBase, file.getAbsolutePath()));
             return file;
         }
     }
@@ -144,7 +146,7 @@ public class Resolver {
             return url == null ? null : new File(url.toURI());
         } catch (URISyntaxException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException(String.format("Unable to convert URL '%s' to URI", url), e);
+            throw new RuntimeException(String.format(Locale.ROOT, "Unable to convert URL '%s' to URI", url), e);
         }
     }
 
@@ -223,7 +225,7 @@ public class Resolver {
         try {
             return new File(url.toURI());
         } catch (URISyntaxException e) {
-            throw new RuntimeException(String.format("Unable to convert the URL '%s' to URI", url), e);
+            throw new RuntimeException(String.format(Locale.ROOT, "Unable to convert the URL '%s' to URI", url), e);
         }
     }
 }

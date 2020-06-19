@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.util.Locale;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -74,8 +75,7 @@ public class LineInputStreamTest extends TestCase {
         }
         assertNull("EOF should be reached", lis.readLine());
         lis.close();
-        log.info(String.format(
-                "Got %d lines before the first empty line", lc));
+        log.info(String.format(Locale.ROOT, "Got %d lines before the first empty line", lc));
         log.info("The rest of the file was\n" + rest);
     }
 

@@ -168,7 +168,7 @@ public class DOMSLocationProximity extends DOMSNewspaperBase {
             radiiCount++;
             final String content = getAnnulusContent(alto, origo, innerRadius, outerRadius);
             if (log.isTraceEnabled()) {
-                log.trace(String.format(
+                log.trace(String.format(Locale.ROOT,
                         "getAnnuli(%s, ..., %s) with annulus #%d(%d→%d) got content of length %d",
                         payload.getId(), origo, radiiCount, innerRadius, outerRadius, content.length()));
             }

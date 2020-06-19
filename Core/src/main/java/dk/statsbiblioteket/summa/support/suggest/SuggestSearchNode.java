@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * A suggest-search is a low overhead Search meant for interactive use.
@@ -195,7 +196,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
         storageClass = Configuration.getClass(CONF_STORAGE_CLASS, SuggestStorage.class, DEFAULT_STORAGE, conf);
 
         storage = Configuration.create(storageClass, conf);
-        log.info(String.format(
+        log.info(String.format(Locale.ROOT,
                 "Created SuggestSearchNode with maxResults=%d,  defaultMaxResults=%d and storage=%s",
                 maxResults, defaultMaxResults, storageClass.getSimpleName()));
     }
@@ -272,7 +273,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
         if (maintenance) {
             return;
         }
-        log.debug(String.format("None of the expected keys %s, %s, %s, %s or %s encountered, no suggest will be" +
+        log.debug(String.format(Locale.ROOT, "None of the expected keys %s, %s, %s, %s or %s encountered, no suggest will be" +
                                 " performed", SuggestKeys.SEARCH_PREFIX, SuggestKeys.SEARCH_UPDATE_QUERY, SEARCH_CLEAR,
                                 SEARCH_IMPORT, SEARCH_EXPORT));
     }
@@ -288,7 +289,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
         String prefix = request.getString(SuggestKeys.SEARCH_PREFIX);
         int maxResults = request.getInt(SuggestKeys.SEARCH_MAX_RESULTS, this.defaultMaxResults);
         if (maxResults > this.maxResults) {
-            log.warn(String.format("maxResults %d requested for '%s' with configuration-"
+            log.warn(String.format(Locale.ROOT, "maxResults %d requested for '%s' with configuration-"
                                    + "defined maxResults %d. throttling to configuration-"
                                    + "defined max", maxResults, prefix, this.maxResults));
             maxResults = this.maxResults;
@@ -315,9 +316,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
         int ageSeconds = request.getInt(SuggestKeys.SEARCH_RECENT);
         int maxResults = request.getInt(SuggestKeys.SEARCH_MAX_RESULTS, this.defaultMaxResults);
         if (maxResults > this.maxResults) {
-            log.warn(String.format("maxResults %d requested for updates within last %ss with configuration-defined "
-                                   + "maxResults %d. Throttling to configuration-defined max",
-                                   maxResults, ageSeconds, this.maxResults));
+            log.warn(String.format(
+                    Locale.ROOT, "maxResults %d requested for updates within last %ss with configuration-defined "
+                                 + "maxResults %d. Throttling to configuration-defined max",
+                    maxResults, ageSeconds, this.maxResults));
             maxResults = this.maxResults;
         }
 
@@ -339,7 +341,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
         long startTime = System.nanoTime();
         String query = request.getString(SuggestKeys.SEARCH_UPDATE_QUERY);
         if (!request.containsKey(SuggestKeys.SEARCH_UPDATE_HITCOUNT)) {
-            String msg = String.format("Received an update with %s='%s' but no '%s' defined",
+            String msg = String.format(Locale.ROOT, "Received an update with %s='%s' but no '%s' defined",
                                        SuggestKeys.SEARCH_UPDATE_QUERY, query, SuggestKeys.SEARCH_UPDATE_HITCOUNT);
             log.warn(msg);
             //noinspection DuplicateStringLiteralInspection
@@ -370,7 +372,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
     @Override
     protected void managedOpen(String location) throws RemoteException {
         File fileLocation = new File(new File(location), SUGGEST_FOLDER);
-        log.debug(String.format("manageOpen(%s) called. The specific folder was '%s'", location,
+        log.debug(String.format(Locale.ROOT, "manageOpen(%s) called. The specific folder was '%s'", location,
                                 fileLocation.toString()));
         storage.close();
         try {

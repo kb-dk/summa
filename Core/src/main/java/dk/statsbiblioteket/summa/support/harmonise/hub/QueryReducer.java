@@ -152,7 +152,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
 
     @Override
     public String toString() {
-        return String.format("QueryReducer(#reducers=%d, default=%s)", reducerTargets.size(), defaultReducerTarget);
+        return String.format(Locale.ROOT, "QueryReducer(#reducers=%d, default=%s)", reducerTargets.size(), defaultReducerTarget);
     }
 
     // Consider using the callbacks from QueryRewriter
@@ -273,7 +273,7 @@ public class QueryReducer implements Configurable, RequestAdjuster {
         }
 
         public String toString() {
-            return String.format("ReducerTarget(componentID='%s', matchNones=%s)",
+            return String.format(Locale.ROOT, "ReducerTarget(componentID='%s', matchNones=%s)",
                                  componentID, Strings.join(blacklistMatcher.getBlacklistPatterns(), 5));
         }
     }

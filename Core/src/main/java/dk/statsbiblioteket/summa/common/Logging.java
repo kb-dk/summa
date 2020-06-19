@@ -20,6 +20,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * Utility class for doing conditional logging. Consider the case with a method
  * <code>
@@ -352,7 +354,7 @@ public class Logging {
      * @param logger   where to log.
      * @param logLevel the level to log on.
      * @param message  a {@link String#format}-syntax compatible format String.
-     * @param values   will be passed as {@code }String.format(message, values)}.
+     * @param values   will be passed as {@code }String.format(Locale.ROOT, message, values)}.
      */
     public static void log(Log logger, LogLevel logLevel, String message, Object... values) {
         log(logger, logLevel, null, message, values);
@@ -368,7 +370,7 @@ public class Logging {
      * @param logLevel the level to log on.
      * @param cause    passed on to logger.
      * @param message  a {@link String#format}-syntax compatible format String.
-     * @param values   will be passed as {@code }String.format(message, values)}.
+     * @param values   will be passed as {@code }String.format(Locale.ROOT, message, values)}.
      */
     public static void log(Log logger, LogLevel logLevel, Throwable cause, String message, Object... values) {
         if (logger.isTraceEnabled()
@@ -379,7 +381,7 @@ public class Logging {
             || logger.isFatalEnabled() && logLevel.getLevel() >= LogLevel.FATAL.getLevel()) {
             String mes;
             try {
-                mes = values == null || values.length == 0 ? message : String.format(message, values);
+                mes = values == null || values.length == 0 ? message : String.format(Locale.ROOT, message, values);
             } catch (Exception e) {
                 logger.warn("Logging.log: Unable to use format String '" + message + "' with values ["
                             + (values == null ? "null" : Strings.join(values, ", ")) + "]. "

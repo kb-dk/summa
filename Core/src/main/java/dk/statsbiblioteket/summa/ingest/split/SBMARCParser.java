@@ -26,10 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * A parser for the MARC-variant used at the State and University Library of
@@ -223,10 +220,11 @@ public class SBMARCParser extends MARCParser {
         // If child id and potentially sortField was received, add a child
         if (lastChildID != null) {
             if (!CHILD_FIELD.equals(tag)) {
-                log.warn(String.format("Sanity check failed: Collected child id '%s' for MARC"
-                                       + " record %s in %s but received endDataField-event for"
-                                       + " tag '%s'. The expected tag is '%s'", lastChildID, id, source, tag,
-                                       CHILD_FIELD));
+                log.warn(String.format(
+                        Locale.ROOT, "Sanity check failed: Collected child id '%s' for MARC"
+                                     + " record %s in %s but received endDataField-event for"
+                                     + " tag '%s'. The expected tag is '%s'",
+                        lastChildID, id, source, tag, CHILD_FIELD));
             } else {
                 children.add(new Child(lastChildID, lastChildSort));
             }
@@ -421,6 +419,6 @@ public class SBMARCParser extends MARCParser {
         Logging.logProcess("SBMARCParser", "Marking as deleted with message '" + content + "'",
                            Logging.LogLevel.DEBUG, id);
         isDeleted = true;
-        return String.format("<controlfield tag=\"%s\">%s</controlfield>\n", tag, content);
+        return String.format(Locale.ROOT, "<controlfield tag=\"%s\">%s</controlfield>\n", tag, content);
     }
 }

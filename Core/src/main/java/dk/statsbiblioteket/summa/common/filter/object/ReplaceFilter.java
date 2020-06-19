@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -185,12 +186,12 @@ public class ReplaceFilter extends ObjectFilterImpl {
         encodingOut = conf.getString(CONF_ENCODING_OUT, encodingOut);
         if (conf.valueExists(CONF_PATTERN_REGEXP)) {
             if (!conf.valueExists(CONF_PATTERN_REPLACEMENT)) {
-                throw new ConfigurationException(String.format("Property %s was defined but %s was not",
+                throw new ConfigurationException(String.format(Locale.ROOT, "Property %s was defined but %s was not",
                                                                CONF_PATTERN_REGEXP, CONF_PATTERN_REPLACEMENT));
             }
             pattern = Pattern.compile(conf.getString(CONF_PATTERN_REGEXP));
             patternReplacement = conf.getString(CONF_PATTERN_REPLACEMENT);
-            log.debug(String.format("Added pattern with regexp '%s' and replacement '%s'",
+            log.debug(String.format(Locale.ROOT, "Added pattern with regexp '%s' and replacement '%s'",
                                     pattern.pattern(), patternReplacement));
         }
 
@@ -198,25 +199,25 @@ public class ReplaceFilter extends ObjectFilterImpl {
             List<Configuration> ruleConfs;
             try {
                 ruleConfs = conf.getSubConfigurations(CONF_RULES);
-                log.debug(String.format("%d rules found", ruleConfs.size()));
+                log.debug(String.format(Locale.ROOT, "%d rules found", ruleConfs.size()));
             } catch (SubConfigurationsNotSupportedException e) {
                 throw new ConfigurationException("Storage doesn't support sub configurations", e);
             } catch (NullPointerException e) {
-                throw new ConfigurationException(String.format("IOException while extracting sub properties for %s",
+                throw new ConfigurationException(String.format(Locale.ROOT, "IOException while extracting sub properties for %s",
                                                                CONF_RULES), e);
             }
             Map<String, String> rules = new LinkedHashMap<>(ruleConfs.size());
             int count = 0;
-            log.debug(String.format("Located %d rules. Extracting...", ruleConfs.size()));
+            log.debug(String.format(Locale.ROOT, "Located %d rules. Extracting...", ruleConfs.size()));
             for (Configuration ruleConf : ruleConfs) {
                 if (!ruleConf.valueExists(CONF_RULE_TARGET) || !ruleConf.valueExists(CONF_RULE_REPLACEMENT)) {
-                    throw new ConfigurationException(String.format(
+                    throw new ConfigurationException(String.format(Locale.ROOT,
                             "For each sub-configuration in the list %s, a value for the key %s and the key %s must "
                             + "exist. Rule #%d (counting from 0) did not comply",
                             CONF_RULES, CONF_RULE_TARGET, CONF_RULE_REPLACEMENT, count));
                 }
                 if (log.isTraceEnabled()) {
-                    log.trace(String.format("Adding rule with target '%s' and replacement '%s'",
+                    log.trace(String.format(Locale.ROOT, "Adding rule with target '%s' and replacement '%s'",
                                             ruleConf.getString(CONF_RULE_TARGET),
                                             ruleConf.getString(CONF_RULE_REPLACEMENT)));
                 }
@@ -240,7 +241,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
             try {
                 processFactory(payload);
             } catch (UnsupportedEncodingException e) {
-                throw new PayloadException(String.format(
+                throw new PayloadException(String.format(Locale.ROOT,
                         "Unable to perform replacement on payload due to unsupported encoding. Encoding for read was "
                         + "'%s', encoding for store was '%s'",
                         encodingIn, encodingOut), e, payload);
@@ -264,7 +265,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
             try {
                 in = new InputStreamReader(payload.getStream(), encodingIn);
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException(String.format(
+                throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "The encoding '%s' for the InputStream is not supported on this platform", encodingIn), e);
             }
             try {
@@ -282,7 +283,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
             try {
                 resultBytes = result.getBytes(encodingOut);
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException(String.format(
+                throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "The encoding '%s' for output is not supported on this platform", encodingOut));
             }
             //noinspection UnusedAssignment
@@ -301,13 +302,13 @@ public class ReplaceFilter extends ObjectFilterImpl {
                 replaced = pattern.matcher(new String(in, encodingIn)).
                         replaceAll(patternReplacement);
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException(String.format("Encoding '%s' not supported for reading content",
+                throw new IllegalArgumentException(String.format(Locale.ROOT, "Encoding '%s' not supported for reading content",
                                                                  encodingIn), e);
             }
             try {
                 payload.getRecord().setContent(replaced.getBytes(encodingOut), compressed);
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException(String.format("Encoding '%s' not supported for storing content",
+                throw new IllegalArgumentException(String.format(Locale.ROOT, "Encoding '%s' not supported for storing content",
                                                                  encodingOut), e);
             }
         }

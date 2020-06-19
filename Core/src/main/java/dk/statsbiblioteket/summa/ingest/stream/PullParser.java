@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Locale;
 
 /**
  * Extract locations (URLs, everything accepted by the ClassLoader, files etc.)
@@ -59,16 +60,16 @@ public class PullParser extends ThreadedStreamParser {
             URL url = Resolver.getURL(line);
             if (url == null) {
                 //noinspection DuplicateStringLiteralInspection
-                log.warn(String.format("Unable to resolve '%s' to URL", line));
+                log.warn(String.format(Locale.ROOT, "Unable to resolve '%s' to URL", line));
                 continue;
             }
             Payload payload = null;
             try {
                 payload = new Payload(url.openStream(), url.toString());
                 payload.getData().put(Payload.ORIGIN, url);
-                log.debug(String.format("Created Payload with Stream to '%s'", url));
+                log.debug(String.format(Locale.ROOT, "Created Payload with Stream to '%s'", url));
             } catch (Exception e) {
-                log.warn(String.format("Unable to create Payload for line '%s'", line));
+                log.warn(String.format(Locale.ROOT, "Unable to create Payload for line '%s'", line));
             }
             addToQueue(payload);
         }

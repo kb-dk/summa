@@ -216,7 +216,7 @@ public class RecordReaderTest extends TestCase {
     public void testTimestampFormatting() throws Exception {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 57);
         Assert.assertEquals("The timestamp should be properly formatted", expected,
-                            String.format(ProgressTracker.TIMESTAMP_FORMAT, t));
+                            String.format(Locale.ROOT, ProgressTracker.TIMESTAMP_FORMAT, t));
     }
 
     public void waitForHasNext(RecordReader r, long timeout) throws Exception {
@@ -234,7 +234,7 @@ public class RecordReaderTest extends TestCase {
    /*public void testTimestampExtraction() throws Exception {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 57);
         long expectedMS = t.getTimeInMillis();
-        String formatted = String.format(RecordReader.TIMESTAMP_FORMAT, t);
+        String formatted = String.format(Locale.ROOT, RecordReader.TIMESTAMP_FORMAT, t);
         assertEquals("Parsing the formatted timestamp-containing text should "
                      + "match the expected point in time",
                      expectedMS, RecordReader.getTimestamp(new File("foo"), 

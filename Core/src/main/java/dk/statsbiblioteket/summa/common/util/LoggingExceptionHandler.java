@@ -18,6 +18,8 @@ import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * <p>Simple class that logs any uncaught exceptions via the commons-logging
  * configured logging mechanism.</p>
@@ -59,8 +61,8 @@ public class LoggingExceptionHandler
     @Override
     public void uncaughtException(Thread thread, Throwable e) {
         String message = String.format(
-                "Uncaught exception in thread '%s'. Processing is unstable "
-                + "and as a result, the JVM will be terminated in 5 seconds", 
+                Locale.ROOT, "Uncaught exception in thread '%s'. Processing is unstable "
+                             + "and as a result, the JVM will be terminated in 5 seconds",
                 thread);
         Logging.fatal(log, "LoggingExceptionHandler.uncaughtException", message, e);
         System.err.println(message);

@@ -53,6 +53,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -208,7 +209,7 @@ public class XMLTransformerTest extends TestCase {
             transformer.processRecord(record, true, null);
             profiler.beat();
         }
-        log.info(String.format("Finished stress testing XMLTransformer with %d runs at %.1fms/run",
+        log.info(String.format(Locale.ROOT, "Finished stress testing XMLTransformer with %d runs at %.1fms/run",
                                RUNS, 1000/profiler.getBps(false)));
 //        System.out.println(record.getContentAsUTF8());
     }

@@ -29,6 +29,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Highlighter that given a query an an Alto input returns a list of bounding boxes.
@@ -66,7 +67,7 @@ public class AltoHighlighter implements Configurable {
                 Alto.MEASUREMENT_UNIT.valueOf(conf.getString(CONF_MEASUREMENT_UNIT, DEFAULT_MEASUREMENT_UNIT));
         if (measurementUnit != Alto.MEASUREMENT_UNIT.percent) {
             throw new IllegalArgumentException(String.format(
-                    "Only '%s' is currently supported for value %s",
+                    Locale.ROOT, "Only '%s' is currently supported for value %s",
                     Alto.MEASUREMENT_UNIT.percent, CONF_MEASUREMENT_UNIT));
         }
     }

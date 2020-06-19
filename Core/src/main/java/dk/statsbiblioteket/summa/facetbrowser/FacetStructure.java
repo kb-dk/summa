@@ -106,7 +106,7 @@ public class FacetStructure implements Serializable {
                           String sortType, boolean reverse) {
         log.trace("Creating FacetStructure for '" + name + "'");
         if (fields == null || fields.length == 0) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                     "constructor: No fields specified in facet '%s'", name));
         }
         this.id = id;
@@ -167,7 +167,7 @@ public class FacetStructure implements Serializable {
                     try {
                         wantedTags = Integer.parseInt(facetArg);
                     } catch (NumberFormatException e) {
-                        log.warn(String.format("Argument '%s' in FacetDef '%s'", facetArg, facetDef));
+                        log.warn(String.format(Locale.ROOT, "Argument '%s' in FacetDef '%s'", facetArg, facetDef));
                     }
                     break;
             }
@@ -197,7 +197,7 @@ public class FacetStructure implements Serializable {
                 setFields(name);
             }
             if (fields == null || fields.length == 0) {
-                throw new IllegalArgumentException(String.format(
+                throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "Configuration-constructor: No fields specified in facet '%s'", name));
             }
             maxTags = conf.getInt(CONF_FACET_TAGS_MAX, maxTags);
@@ -209,7 +209,7 @@ public class FacetStructure implements Serializable {
                 setSortType(conf.getString(CONF_FACET_SORT_TYPE));
             }
         } catch (Exception e) {
-            throw new Configurable.ConfigurationException(String.format(
+            throw new Configurable.ConfigurationException(String.format(Locale.ROOT,
                     "Unable to construct FacetStructure for '%s'", name), e);
         }
     }
@@ -280,7 +280,7 @@ public class FacetStructure implements Serializable {
             new Locale(locale);
             this.locale = locale;
         } catch (Exception e) {
-            log.warn(String.format("Invalid locale '%s' specified for FacetStructure", locale));
+            log.warn(String.format(Locale.ROOT, "Invalid locale '%s' specified for FacetStructure", locale));
             //noinspection AssignmentToNull
             this.locale = null;
         }
@@ -311,7 +311,7 @@ public class FacetStructure implements Serializable {
                 this.reverse = true;
                 break;
             default:
-                log.warn(String.format("Invalid sortType '%s' specified for Facet '%s'. Using '%s' instead",
+                log.warn(String.format(Locale.ROOT, "Invalid sortType '%s' specified for Facet '%s'. Using '%s' instead",
                                        sortType, name, this.sortType));
                 break;
         }
@@ -322,7 +322,7 @@ public class FacetStructure implements Serializable {
     }
     private void setWantedTags(int wantedTags) {
         if (wantedTags > maxTags) {
-            log.warn(String.format("Requested %d wanted tags, but the maximum is %d. Rounding down to maximum",
+            log.warn(String.format(Locale.ROOT, "Requested %d wanted tags, but the maximum is %d. Rounding down to maximum",
                                    wantedTags, maxTags));
             this.wantedTags = maxTags;
         } else {
@@ -347,7 +347,7 @@ public class FacetStructure implements Serializable {
      */
     @Override
     public String toString() {
-        return String.format(
+        return String.format(Locale.ROOT,
                 "FacetStructure(id=%s, name='%s', fields='%s', defaultTags=%s, maxTags=%d, sortType=%s, "
                 + "sortLocale='%s', reverse=%b)",
                 id, name, Strings.join(fields, ", "), wantedTags, maxTags, sortType, locale, reverse);

@@ -63,7 +63,7 @@ public class FacetMapSinglePackedFactory {
     tagExtractTime += System.currentTimeMillis();
     final PackedInts.Reader doc2ref = pair.getKey();
     final PackedInts.Reader refs = pair.getValue();
-    log.info(String.format(
+    log.info(String.format(Locale.ROOT,
         "docs=%s, terms=%s, refs=%d. Term extraction time=%dms, Secondary structure processing time=%dms",
           docCount, totalUniqueTerms, refCount, indexExtractTime, tagExtractTime));
     return new FacetMapMulti(providers, indirectStarts, doc2ref, refs, maxTagOccurrences);
@@ -72,7 +72,7 @@ public class FacetMapSinglePackedFactory {
   private static List<ProviderData> extractProviderDatas(int docCount, List<TermProvider> providers) {
     List<ProviderData> providerDatas = new ArrayList<ProviderData>(providers.size());
     if (ExposedSettings.threads == 1 || providers.size() == 1) {
-      log.debug(String.format("FacetMapMulti: Performing single threaded extraction of term data from %d providers",
+      log.debug(String.format(Locale.ROOT, "FacetMapMulti: Performing single threaded extraction of term data from %d providers",
                               providers.size()));
       for (TermProvider provider: providers) {
         try {
@@ -84,7 +84,7 @@ public class FacetMapSinglePackedFactory {
       return providerDatas;
     }
 
-    log.debug(String.format("Starting a maximum of %d threads for extracting term data from %d providers",
+    log.debug(String.format(Locale.ROOT, "Starting a maximum of %d threads for extracting term data from %d providers",
                             ExposedSettings.threads, providers.size()));
     long realTime = -System.currentTimeMillis();
     long summedTime = 0;
@@ -105,7 +105,7 @@ public class FacetMapSinglePackedFactory {
       }
     }
     realTime += System.currentTimeMillis();
-    log.info(String.format(
+    log.info(String.format(Locale.ROOT,
           "FacetMapMulti: Finished running max %d threads for %d providers. " +
           "Real time spend: %dms. Summed thread time: %dms",
           ExposedSettings.threads, providers.size(), realTime, summedTime));
@@ -180,11 +180,11 @@ public class FacetMapSinglePackedFactory {
     if (provider instanceof GroupTermProvider) {
       // Not at all OO
       ((GroupTermProvider)provider).setOrderedOrdinals(i2o);
-      log.debug(String.format("Assigning indirects for %d unique terms, %d references, extracted in %d ms, to %s: %s",
+      log.debug(String.format(Locale.ROOT, "Assigning indirects for %d unique terms, %d references, extracted in %d ms, to %s: %s",
             uniqueTerms, providerMap.size(), processingTime, ((GroupTermProvider)provider).getRequest().getFieldNames(),
             i2o));
     } else {
-      log.debug(String.format("Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
+      log.debug(String.format(Locale.ROOT, "Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
                               provider.getClass()));
     }
     return new ProviderData(provider, providerMap, uniqueTerms, maxOccurences, processingTime);
@@ -242,7 +242,7 @@ public class FacetMapSinglePackedFactory {
     for (ExpandablePackedPair d2i: d2is) {
       d2i.assignSecondaries(starts, refs);
     }
-    log.info(String.format(
+    log.info(String.format(Locale.ROOT,
           "Extracted doc2in and refs %s from %d pairs for %d docIDs in %d seconds (%d of these seconds used for "
           + "counting docID frequencies and creating doc2in structure)",
           refs, fullSize, docCount, (System.currentTimeMillis() - startTime) / 1000, countTime / 1000));

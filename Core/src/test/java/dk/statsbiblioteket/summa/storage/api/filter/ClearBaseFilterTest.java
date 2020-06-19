@@ -35,6 +35,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
+import java.util.Locale;
 
 /**
  * Unit tests for {@link ClearBaseFilter}
@@ -158,7 +159,7 @@ public class ClearBaseFilterTest extends TestCase {
         cal.set(Calendar.HOUR_OF_DAY, 16);
         cal.set(Calendar.MINUTE, 9);
         cal.set(Calendar.SECOND, 32);
-        log.info(String.format(ProgressTracker.TIMESTAMP_FORMAT, cal));
+        log.info(String.format(Locale.ROOT, ProgressTracker.TIMESTAMP_FORMAT, cal));
     }
 
     public void testPayloadMatcher() throws Exception {

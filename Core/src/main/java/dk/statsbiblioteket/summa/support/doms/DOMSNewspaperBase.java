@@ -196,7 +196,7 @@ public abstract class DOMSNewspaperBase extends ThreadedStreamParser {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("utf-8 not supported", e);
         } catch (OutOfMemoryError e) {
-            OutOfMemoryError error = new OutOfMemoryError(String.format(
+            OutOfMemoryError error = new OutOfMemoryError(String.format(Locale.ROOT,
                     "OutOfMemoryError while creating and adding Record with origin=%s, id='%s', base='%s', " +
                     "content(pre=%d + innerXML=%d + post=%d = %d bytes), outQueue=%dKB",
                     origin, newID, base, pre.length()*2, innerXML.length()*2, post.length()*2,

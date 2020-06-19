@@ -144,7 +144,7 @@ public class SolrLenientTimestamp implements SolrDocumentAdjustFilter.Adjuster {
             }
         }
         // 1868-05-01T00:00:00.000Z
-        return String.format("%04d-%02d-%02d%s", year, month, day, timestamp.substring(10));
+        return String.format(Locale.ROOT, "%04d-%02d-%02d%s", year, month, day, timestamp.substring(10));
     }
     private final StringBuilder enriched = new StringBuilder();
 

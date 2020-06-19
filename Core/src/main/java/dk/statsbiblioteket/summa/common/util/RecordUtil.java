@@ -245,7 +245,7 @@ public class RecordUtil {
         try {
             writeContent(out, record, escapeContent);
         } catch (RuntimeException e) {
-            throw new XMLStreamException(String.format("Unable to write XML for content from %s", record), e);
+            throw new XMLStreamException(String.format(Locale.ROOT, "Unable to write XML for content from %s", record), e);
         }
         out.writeEndElement();
 
@@ -306,7 +306,7 @@ public class RecordUtil {
         if (eventType != XMLEvent.START_DOCUMENT || !content.hasNext()) {
             String snippet = record.getContent() == null ? "[no content in record]" : record.getContentAsUTF8();
             snippet = snippet.substring(0, Math.min(20, snippet.length()));
-            throw new XMLStreamException(String.format(
+            throw new XMLStreamException(String.format(Locale.ROOT,
                     "First event was not START_DOCUMENT for '%s...' from %s",
                     snippet, record));
         }
@@ -379,7 +379,7 @@ public class RecordUtil {
         int eventType = reader.getEventType();
         if (eventType != XMLEvent.START_DOCUMENT) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ParseException(String.format(
+            throw new ParseException(String.format(Locale.ROOT,
                     "The first event should be start, but it was %s",
                     XMLUtil.eventID2String(eventType)), 0);
         }
@@ -396,7 +396,7 @@ public class RecordUtil {
         if (!(eventType == XMLEvent.START_ELEMENT
             && RECORD.equals(reader.getLocalName())
             && RECORD_NAMESPACE.equals(reader.getName().getNamespaceURI()))) {
-            throw new ParseException(String.format(
+            throw new ParseException(String.format(Locale.ROOT,
                     "The element should be %s:%s, but was %s:%s",
                     RECORD_NAMESPACE, RECORD,
                     reader.getName().getNamespaceURI(), reader.getLocalName()),
@@ -443,7 +443,7 @@ public class RecordUtil {
             }
 
             if (reader.getEventType() != XMLStreamReader.START_ELEMENT) {
-                log.debug(String.format(
+                log.debug(String.format(Locale.ROOT,
                         "processRecord: Expected START_ELEMENT but got %s",
                         XMLUtil.eventID2String(reader.getEventType())));
                 continue;
@@ -506,7 +506,7 @@ public class RecordUtil {
                     writer.writeEndDocument();
                     return sw.toString().getBytes("utf-8");
                 } else if (!type.equals(CONTENT_TYPE_STRING)) {
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "Encountered unknown content type '%s' for %s. Parsing as string", type, record));
                 }
             }
@@ -622,7 +622,7 @@ public class RecordUtil {
                     break;
                 }
                 default: {
-                    throw new XMLStreamException(String.format(
+                    throw new XMLStreamException(String.format(Locale.ROOT,
                             "Unknown event type %d from reader", reader.getEventType()));
                 }
             }
@@ -634,7 +634,7 @@ public class RecordUtil {
                                                  e.getLocation(), e);
                 }
                 String content = record.getContent() == null ? "[no content]" : record.getContentAsUTF8();
-                throw new XMLStreamException(String.format(
+                throw new XMLStreamException(String.format(Locale.ROOT,
                         "Parse error. First 20 characters of %s was '%s'. Error was '%s'",
                         record, content.substring(0, Math.min(20, content.length())),
                         e.getMessage()), e.getLocation(), e);
@@ -778,7 +778,7 @@ public class RecordUtil {
     public static String getFileName(String candidate) {
         if (candidate == null || "".equals(candidate)) {
             Calendar calendar = Calendar.getInstance();
-            return String.format("%1$tF_%1$tH%1$tM%1$tS_", calendar) + Integer.toString(counter++);
+            return String.format(Locale.ROOT, "%1$tF_%1$tH%1$tM%1$tS_", calendar) + Integer.toString(counter++);
         }
         StringWriter fn = new StringWriter(candidate.length());
         for (char c: candidate.toCharArray()) {

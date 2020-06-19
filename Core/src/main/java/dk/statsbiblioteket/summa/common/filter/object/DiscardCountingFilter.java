@@ -25,6 +25,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * Discards Payloads based on counting, such as all payloads after the first
  * 100 or every second Payload. The primary purpose is to reduce the amount
@@ -75,7 +77,7 @@ public class DiscardCountingFilter extends AbstractDiscardFilter {
             fraction = Double.parseDouble(conf.getString(CONF_FRACTION));
         }
         this.feedback = false;
-        log.info(String.format("Created discarder witn min=%d, max=%d, fraction=%f", min, max, fraction));
+        log.info(String.format(Locale.ROOT, "Created discarder witn min=%d, max=%d, fraction=%f", min, max, fraction));
     }
 
     @SuppressWarnings("FloatingPointEquality")

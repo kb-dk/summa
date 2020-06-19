@@ -496,7 +496,7 @@ public class FacetTest extends NoExitTestCase {
             searcher.checkIndex(); // Make double sure
             log.debug("Searcher created");
             for (String name : "Jens Gurli Hans".split(" ")) {
-                log.debug(String.format("Verifying existence of %s data", name));
+                log.debug(String.format(Locale.ROOT, "Verifying existence of %s data", name));
                 SearchTest.verifySearch(searcher, name, 1);
                 verifyFacetResult(searcher, name);
             }
@@ -519,7 +519,7 @@ public class FacetTest extends NoExitTestCase {
         searcher.checkIndex(); // Make double sure
         log.debug("Searcher created");
         for (String name : "Jens Gurli Hans".split(" ")) {
-            log.debug(String.format("Verifying existence of %s data", name));
+            log.debug(String.format(Locale.ROOT, "Verifying existence of %s data", name));
             SearchTest.verifySearch(searcher, name, "Hans".equals(name) ? 3 : 1);
             verifyFacetResult(searcher, name);
         }
@@ -527,7 +527,7 @@ public class FacetTest extends NoExitTestCase {
 
         log.debug("Repeating tests to check for facet structure re-use");
         for (String name : "Jens Gurli Hans".split(" ")) {
-            log.debug(String.format("Verifying existence of %s data", name));
+            log.debug(String.format(Locale.ROOT, "Verifying existence of %s data", name));
             SearchTest.verifySearch(searcher, name, "Hans".equals(name) ? 3 : 1);
             verifyFacetResult(searcher, name);
         }
@@ -557,7 +557,7 @@ public class FacetTest extends NoExitTestCase {
         searcher.checkIndex(); // Make double sure
         log.debug("Searcher created");
         for (String name : "Jens Gurli Hans".split(" ")) {
-            log.debug(String.format("Verifying existence of %s data", name));
+            log.debug(String.format(Locale.ROOT, "Verifying existence of %s data", name));
             SearchTest.verifySearch(searcher, name, 1);
             verifyFacetResult(searcher, name);
         }
@@ -941,7 +941,7 @@ public class FacetTest extends NoExitTestCase {
             String second = Strings.join(getIDs(result), ", ");
             log.debug("IDs from sort_title reverse: " + second);
 
-            assertFalse(String.format("The first IDs '%s' should be in reverse order of the second IDs '%s'", first, second), first.equals(second));
+            assertFalse(String.format(Locale.ROOT, "The first IDs '%s' should be in reverse order of the second IDs '%s'", first, second), first.equals(second));
             searcher.close();
         } finally {
             storage.close();

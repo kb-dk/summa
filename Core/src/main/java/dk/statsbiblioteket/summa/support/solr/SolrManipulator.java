@@ -50,6 +50,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -265,16 +266,16 @@ public class SolrManipulator implements IndexManipulator {
                 batcher.flush();
             }
         } catch (NoRouteToHostException e) {
-            shutdown(String.format(
+            shutdown(String.format(Locale.ROOT,
                     "NoRouteToHostException sending %d updates (%d adds, %d deletes) to %s. "
                     + "This is likely to be caused by depletion of ports in the ephemeral range. "
                     + "Consider adjusting batch setup from the current %s"
                     + "Payloads: %s. The JVM will be shut down in 5 seconds. First part of command:\n%s",
-                    payloads.size(), addAndDeletes.getKey(), addAndDeletes.getValue(), this, batcher,
-                    Strings.join(payloads, ", "), trim(commandString, 1000)), e);
+                                   payloads.size(), addAndDeletes.getKey(), addAndDeletes.getValue(), this, batcher,
+                                   Strings.join(payloads, ", "), trim(commandString, 1000)), e);
         } catch (IOException e) {
             if (!locateBadPayloads) {
-                shutdown(String.format(
+                shutdown(String.format(Locale.ROOT,
                         "IOException sending %d updates (%d adds, %d deletes) to %s. Payloads: %s. "
                         + "The JVM will be shut down in 5 seconds. First part of command:\n%s",
                         payloads.size(), addAndDeletes.getKey(), addAndDeletes.getValue(), this,
@@ -285,14 +286,14 @@ public class SolrManipulator implements IndexManipulator {
                     log.warn("IOException received during batch update, but sending all " + payloads.size() +
                              " Payloads one at a time did not raise any Exceptions. Cautiously continuing processing");
                 } else if (bad.size() <= acceptableBadPayloads) {
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "IOException during batch update to Solr. Re-sending all %d Payloads in the batch " +
                             "resulted in %d Payloads that could not be delivered to Solr. This is <= the limit " +
                             "of %d bad Payloads/batch, so processing continues. The bad Payloads and the Exceptions " +
                             "should be visible in the process log for failed Payloads. They are %s",
                             payloads.size(), bad.size(), acceptableBadPayloads, Strings.join(bad, ", ")));
                 } else {
-                    shutdown(String.format(
+                    shutdown(String.format(Locale.ROOT,
                             "IOException sending %d updates (%d adds, %d deletes) to %s. Isolated to offending %d " +
                             "payloads by re-sending one at a time: %s. The JVM will be shut down in 5 seconds",
                             payloads.size(), addAndDeletes.getKey(), addAndDeletes.getValue(), this,
@@ -537,7 +538,7 @@ public class SolrManipulator implements IndexManipulator {
             try {
                 httpexecutor.preProcess(request, httpproc, context);
             } catch (HttpException e) {
-                String message = String.format(
+                String message = String.format(Locale.ROOT,
                         "HttpException while pre-processing the POST request for '%s' to %s. Trimmed request:\n%s",
                         designation, updateCommand, trim(command, 100));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
@@ -548,7 +549,7 @@ public class SolrManipulator implements IndexManipulator {
             try {
                 response = httpexecutor.execute(request, conn, context);
             } catch (HttpException e) {
-                String message = String.format(
+                String message = String.format(Locale.ROOT,
                         "HttpException while executing '%s' at %s. Trimmed request:\n%s",
                         designation, updateCommand, trim(command, 100));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
@@ -565,7 +566,7 @@ public class SolrManipulator implements IndexManipulator {
                 conn.close();
                 //}
             } catch (HttpException e) {
-                String message = String.format(
+                String message = String.format(Locale.ROOT,
                         "HttpException %s while post-processing '%s' to %s. Trimmed request:\n%s\nResponse:\n%s",
                         response.getStatusLine().getStatusCode(), designation, updateCommand, trim(command, 100),
                         getResponse(response));
@@ -576,7 +577,7 @@ public class SolrManipulator implements IndexManipulator {
 
         final long tPost = System.nanoTime() - tStart - tBind - tPre - tSend;
 
-        final String logMessage = String.format(
+        final String logMessage = String.format(Locale.ROOT,
                 "send(command.length=%d) finished in %dms (bind=%d, pre=%d, send=%d, post=%d), total updates: %d, %s",
                 command.length(), (tBind + tPre + tSend + tPost) / M, tBind / M, tPre / M, tSend / M, tPost / M, updates,
                 getProcessStats());
@@ -589,7 +590,7 @@ public class SolrManipulator implements IndexManipulator {
         int code = response.getStatusLine().getStatusCode();
         if (code != 200) { // Bad Request: Solr did not like the input
             if (shutdownOnErrors) {
-                String message = String.format(
+                String message = String.format(Locale.ROOT,
                         "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s from %s. Error code %d. "
                         + "Trimmed request:\n%s\nResponse:\n%s",
                         designation, updateCommand, this, code, trim(command, 200), getResponse(response));
@@ -600,7 +601,7 @@ public class SolrManipulator implements IndexManipulator {
                 throw new IOException(message);
             } else {
                 // TODO Throw a custom Exception instead
-                throw new IOException(String.format(
+                throw new IOException(String.format(Locale.ROOT,
                         "Unable to send '%s' to Solr at %s from %s. Error code %d. Trimmed request:\n%s\nResponse:\n%s",
                         designation, updateCommand, this, code, trim(command, 200), getResponse(response)));
             }
@@ -615,14 +616,14 @@ public class SolrManipulator implements IndexManipulator {
             httpResponse = http.execute(post);
             int code = httpResponse.getStatusLine().getStatusCode();
             if (code == 400) { // Bad Request: Solr did not like the input
-                String message = String.format(
+                String message = String.format(Locale.ROOT,
                     "Error 400 (Bad Request): Solr did not accept the document '%s' at %s. "
                     + "Trimmed request:\n%s\nResponse:\n%s",
                     designation, updateCommand, trim(command, 100), getResponse(httpResponse));
                 Logging.logProcess("SolrManipulator", message, Logging.LogLevel.WARN, designation);
                 throw new IOException(message);
             } else if (code != 200) {
-                String message = String.format(
+                String message = String.format(Locale.ROOT,
                     "Fatal error, JVM will be shut down: Unable to send '%s' to Solr at %s from %s. Error code %d. "
                     + "Trimmed request:\n%s\nResponse:\n%s",
                     designation, updateCommand, this, code, trim(command, 100), getResponse(httpResponse));
@@ -633,7 +634,7 @@ public class SolrManipulator implements IndexManipulator {
             }
         } catch (Exception e) {
             String snippet = command.length() > 40 ? command.substring(0, 40) : command;
-            String message = String.format(
+            String message = String.format(Locale.ROOT,
                 "Fatal error, JVM will be shut down: Non-explicitely handled Exception while attempting '%s' with"
                 + " '%s' to %s from %s",
                 updateCommand, snippet, designation, this);
@@ -668,7 +669,7 @@ public class SolrManipulator implements IndexManipulator {
 
     @Override
     public String toString() {
-        return String.format(
+        return String.format(Locale.ROOT,
                 "SolrManipulator(%s, flushOnDelete=%b, locateBadPayloads=%b, acceptableBadPayloads=%d). " +
                 "Processed %d updates including %d deletes. Stats: %s",
                 hostWithPort + restCall + UPDATE_COMMAND, flushOnDelete, locateBadPayloads, acceptableBadPayloads,

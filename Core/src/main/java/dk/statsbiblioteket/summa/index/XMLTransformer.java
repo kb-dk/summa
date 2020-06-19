@@ -49,6 +49,7 @@ import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Transform arbitrary XML in Payload.Record.content using XSLT. This is
@@ -279,7 +280,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             String xsltLocationString = conf.getString(CONF_XSLT, null);
             if (xsltLocationString == null || xsltLocationString.isEmpty()) {
                 if (failOnMissing) {
-                    throw new ConfigurationException(String.format("The property %s must be defined", CONF_XSLT));
+                    throw new ConfigurationException(String.format(Locale.ROOT, "The property %s must be defined", CONF_XSLT));
                 }
                 log.debug("No " + CONF_XSLT + " defined, but failOnMissing=false. Skipping all other properties");
                 // Set everything to null as the Changeling will be discarded anyway
@@ -298,10 +299,10 @@ public class XMLTransformer extends GraphFilter<Object> {
             xsltLocation = Resolver.getURL(xsltLocationString);
             if (failOnMissing && xsltLocation == null) {
                 throw new ConfigurationException(String.format(
-                    "The xsltLocation '%s' could not be resolved to a URL", xsltLocationString));
+                        Locale.ROOT, "The xsltLocation '%s' could not be resolved to a URL", xsltLocationString));
             }
             if (failOnMissing && !conf.valueExists(CONF_STRIP_XML_NAMESPACES)) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                     "The key %s was not defined. It is highly recommended to define it as the wrong value "
                     + "typically wrecks the output. Falling back to default %b",
                     CONF_STRIP_XML_NAMESPACES, DEFAULT_STRIP_XML_NAMESPACES));
@@ -336,7 +337,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             } catch (NullPointerException e) {
                 throw new ConfigurationException("Unable to construct Transformer for xslt '" + xsltLocation + "'", e);
             } catch (TransformerException e) {
-                throw new ConfigurationException(String.format(
+                throw new ConfigurationException(String.format(Locale.ROOT,
                     "Unable to create transformer based on '%s'", xsltLocation), e);
             }
             if (entityResolver != null && stripXMLNamespaces) {
@@ -398,7 +399,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             RecordUtil.setBytes(record, out.toByteArray(), destination);
             if (fullDebugDump) {
                 try {
-                    log.info(String.format(
+                    log.info(String.format(Locale.ROOT,
                             "Finished transforming record %s using XSLT %s ans stripNamespaces=%b from\n" +
                             "%s\n**************** to ****************\n%s",
                             record.getId(), xsltLocation, stripXMLNamespaces,

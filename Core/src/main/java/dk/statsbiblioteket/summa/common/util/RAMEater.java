@@ -18,6 +18,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -104,9 +105,9 @@ public class RAMEater {
         if (!resident) {
             return;
         }
-        System.out.println(String.format("Allocated %d MB",
+        System.out.println(String.format(Locale.ROOT, "Allocated %d MB",
                                          (long)bytes.size() * BLOCK_SIZE / 1048576));
-        System.out.println(String.format(
+        System.out.println(String.format(Locale.ROOT,
                 "Entering random updates mode: Updating %d random bytes each "
                 + "%d ms", updates, sleepTime));
         Random random = new Random();

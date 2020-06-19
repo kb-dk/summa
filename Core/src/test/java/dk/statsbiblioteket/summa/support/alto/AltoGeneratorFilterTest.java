@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -65,7 +66,7 @@ public class AltoGeneratorFilterTest extends TestCase {
             profiler.beat();
         } while (generator.pump());
         generator.close(true);
-        log.info(String.format("Generated %d ALTO-records at %d records/sec",
+        log.info(String.format(Locale.ROOT, "Generated %d ALTO-records at %d records/sec",
                                profiler.getBeats(), (int) profiler.getBps(true)));
     }
 
@@ -101,7 +102,7 @@ public class AltoGeneratorFilterTest extends TestCase {
             profiler.beat();
         }
         analyzer.close(true);
-        log.info(String.format("Processed %d ALTO-records which contained %d articles at %d articles/sec",
+        log.info(String.format(Locale.ROOT, "Processed %d ALTO-records which contained %d articles at %d articles/sec",
                                RECORDS, profiler.getBeats(), (int)profiler.getBps(true)));
     }
 

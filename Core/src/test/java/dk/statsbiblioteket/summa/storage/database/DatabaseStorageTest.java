@@ -645,7 +645,7 @@ public class DatabaseStorageTest extends StorageTestBase {
                 writer.processRecord(record);
                 profiler.beat();
                 if (i % LOG_EVERY == 0 || i == RECORDS - 1) {
-                    log.info(String.format("Record %6d. Current / overall speed: %6.2f / %6.2f records/sec",
+                    log.info(String.format(Locale.ROOT, "Record %6d. Current / overall speed: %6.2f / %6.2f records/sec",
                                            i, profiler.getBps(false), profiler.getBps(true)));
                 }
             }
@@ -1204,7 +1204,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
 
         for (int i = 0; i < RECORDS.length; i++) {
-            log.info(String.format("Records: %6d, children touched/sec: %4d",
+            log.info(String.format(Locale.ROOT, "Records: %6d, children touched/sec: %4d",
                                    RECORDS[i], RECORDS[i] * 60 / ms[i]));
         }
 
@@ -1225,7 +1225,7 @@ public class DatabaseStorageTest extends StorageTestBase {
 
         try {
             storage.flush(TOP);
-            log.info(String.format("Ingesting %d records of size %dMB for a total of %dMB",
+            log.info(String.format(Locale.ROOT, "Ingesting %d records of size %dMB for a total of %dMB",
                                    records, CONTENT.length / M, records * CONTENT.length / M));
             for (int i = 0 ; i < records ; i++) {
                 Record r = new Record("Child_" + i, "dummy", CONTENT);
@@ -1236,7 +1236,7 @@ public class DatabaseStorageTest extends StorageTestBase {
                 }
             }
             System.out.println("");
-            log.info(String.format("Finished ingesting of %dMB. Getting child 0 mtime...",
+            log.info(String.format(Locale.ROOT, "Finished ingesting of %dMB. Getting child 0 mtime...",
                                    records * CONTENT.length / M));
 
             QueryOptions options = new QueryOptions();
@@ -1247,7 +1247,7 @@ public class DatabaseStorageTest extends StorageTestBase {
             final long ttime = System.nanoTime();
             storage.flush(TOP);
             final long ms = (System.nanoTime()-ttime)/1000000;
-            log.info(String.format("Parent touched in %dms (%d child records/sec). Getting child 0 mtime...",
+            log.info(String.format(Locale.ROOT, "Parent touched in %dms (%d child records/sec). Getting child 0 mtime...",
                                    ms, records * 60 / ms));
             long newChildMtime = storage.getRecord("Child_0", options).getLastModified();
             assertFalse("The MTime of Child_0 should be changed after parent touch", oldChildMtime == newChildMtime);

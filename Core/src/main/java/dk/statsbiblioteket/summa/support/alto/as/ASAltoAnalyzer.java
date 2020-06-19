@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -100,10 +101,10 @@ public class ASAltoAnalyzer extends AltoAnalyzerBase<ASAltoAnalyzer.ASSegment> {
             }
             // Endless loop detection
             if (best == null && maxHPos == Integer.MAX_VALUE) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "getSegments found %d segments with %d remaining TextBlocks, where there should be 0 " +
                         "remaining. The content of the TextBlocks follows:\n%s",
-                        segments.size(), blocks.size(), dumpFull(blocks)));
+                                       segments.size(), blocks.size(), dumpFull(blocks)));
                 return segments;
             }
 

@@ -75,27 +75,27 @@ public class Datetime {
     public static synchronized String solrDateTime(String datetime) {
         Matcher dayHMSMatcher = solrDayHourMinuteSecondPattern.matcher(datetime);
         if (dayHMSMatcher.matches()) {
-            return String.format("%s-%s-%sT%s:%s:%sZ",
+            return String.format(Locale.ROOT, "%s-%s-%sT%s:%s:%sZ",
                                  dayHMSMatcher.group(1), dayHMSMatcher.group(2), dayHMSMatcher.group(3),
                                  dayHMSMatcher.group(4), dayHMSMatcher.group(5), dayHMSMatcher.group(6));
         }
         Matcher dayHMMatcher = solrDayHourMinutePattern.matcher(datetime);
         if (dayHMMatcher.matches()) {
-            return String.format("%s-%s-%sT%s:%s:00Z",
+            return String.format(Locale.ROOT, "%s-%s-%sT%s:%s:00Z",
                                  dayHMMatcher.group(1), dayHMMatcher.group(2), dayHMMatcher.group(3),
                                  dayHMMatcher.group(4), dayHMMatcher.group(5));
         }
         Matcher dayMatcher = solrDayPattern.matcher(datetime);
         if (dayMatcher.matches()) {
-            return String.format("%s-%s-%sT00:00:00Z", dayMatcher.group(1), dayMatcher.group(2), dayMatcher.group(3));
+            return String.format(Locale.ROOT, "%s-%s-%sT00:00:00Z", dayMatcher.group(1), dayMatcher.group(2), dayMatcher.group(3));
         }
         Matcher monthMatcher = solrMonthPattern.matcher(datetime);
         if (monthMatcher.matches()) {
-            return String.format("%s-%s-01T00:00:00Z", monthMatcher.group(1), monthMatcher.group(2));
+            return String.format(Locale.ROOT, "%s-%s-01T00:00:00Z", monthMatcher.group(1), monthMatcher.group(2));
         }
         Matcher yearMatcher = solrYearPattern.matcher(datetime);
         if (yearMatcher.matches()) {
-            return String.format("%s-01-01T00:00:00Z", yearMatcher.group(1));
+            return String.format(Locale.ROOT, "%s-01-01T00:00:00Z", yearMatcher.group(1));
         }
         return "";
     }

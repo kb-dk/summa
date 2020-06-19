@@ -23,6 +23,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * Passes all Payloads unchanged. Can be used with a muxer for processing some
  * Payloads while not touching others.
@@ -83,9 +85,10 @@ public class IdentityFilter extends ObjectFilterImpl  {
             RecordUtil.adjustCompression(payload.getRecord(), null, false);
             if (log.isDebugEnabled()) {
                 Record record = payload.getRecord();
-                log.debug(String.format("%s uncompressed %s content from %d to %d bytes in %.1f ms",
-                                        getName(), record.getId(), compressedSize, record.getContent(false).length,
-                                        (System.nanoTime()-startTime)/1000000.0));
+                log.debug(String.format(
+                        Locale.ROOT, "%s uncompressed %s content from %d to %d bytes in %.1f ms",
+                        getName(), record.getId(), compressedSize, record.getContent(false).length,
+                        (System.nanoTime()-startTime)/1000000.0));
             }
         } else if (log.isDebugEnabled() && !compress) {
             Logging.logProcess("IdentityFilter", "Passing Payload unmodified", Logging.LogLevel.TRACE, payload);
@@ -98,9 +101,10 @@ public class IdentityFilter extends ObjectFilterImpl  {
             RecordUtil.adjustCompression(payload.getRecord(), null, true);
             if (log.isDebugEnabled()) {
                 Record record = payload.getRecord();
-                log.debug(String.format("%s compressed %s content from %d to %d bytes in %.1f ms",
-                                        getName(), record.getId(), uncompressedSize, record.getContent(false).length,
-                                        (System.nanoTime()-startTime)/1000000.0));
+                log.debug(String.format(
+                        Locale.ROOT, "%s compressed %s content from %d to %d bytes in %.1f ms",
+                        getName(), record.getId(), uncompressedSize, record.getContent(false).length,
+                        (System.nanoTime()-startTime)/1000000.0));
             }
         } else if (log.isDebugEnabled()) {
             Logging.logProcess("IdentityFilter", "Passing Payload unmodified", Logging.LogLevel.TRACE, payload);

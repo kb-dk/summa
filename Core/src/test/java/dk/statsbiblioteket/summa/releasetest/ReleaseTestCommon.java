@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.net.URL;
+import java.util.Locale;
 
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -47,9 +48,8 @@ public class ReleaseTestCommon {
     public static void setupTestEnvironment() {
         System.setProperty(Configuration.CONF_PERSISTENT_DIR,
                            PERSISTENT_FOLDER.toString());
-        log.debug(String.format("Assigned %s to System property %s",
-                                PERSISTENT_FOLDER,
-                                Configuration.CONF_PERSISTENT_DIR));
+        log.debug(String.format(Locale.ROOT, "Assigned %s to System property %s",
+                                PERSISTENT_FOLDER, Configuration.CONF_PERSISTENT_DIR));
         System.setProperty(Resolver.SYSPROP_PERSISTENT_DIR,
                            PERSISTENT_FOLDER.toString());
     }

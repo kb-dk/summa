@@ -2,6 +2,8 @@ package org.apache.lucene.util.packed;
 
 import org.apache.lucene.util.ELog;
 
+import java.util.Locale;
+
 /**
  * Takes a reader with monotonic increasing values and produces
  * a reduced memory reader with the same content. The amount of memory reduction
@@ -64,7 +66,7 @@ public class MonotonicReaderFactory {
     boolean proceed = mem * MIN_SAVING <= reader.ramBytesUsed();
     PackedInts.Reader result =
         proceed ? createMonotonic(reader, bases, blockBits, maxDelta) : reader;
-    log.debug(String.format("reader(size=%d, bpv=%d, heap=%dKB) -> monotonic(bpv=%d, heap=%dKB). %s%dms",
+    log.debug(String.format(Locale.ROOT, "reader(size=%d, bpv=%d, heap=%dKB) -> monotonic(bpv=%d, heap=%dKB). %s%dms",
                             reader.size(), reader.getBitsPerValue(), reader.ramBytesUsed() / 1024,
                             PackedInts.bitsRequired(maxDelta), mem / 1024,
                             proceed ? "Conversion performed in " : "conversion skipped in ",

@@ -1469,7 +1469,7 @@ public abstract class DatabaseStorage extends StorageBase {
         Cursor cursor;
         if (useOptimizations && options != null && !options.hasDeletedFilter() && !options.hasIndexableFilter() &&
             options.childDepth() == 0 && options.parentHeight() == 1) {
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT,
                     "getRecordsModifiedAfter(mtime=%d, base=%s, options=%s): " +
                     "Using optimized record iterator with optimization=%s",
                     mtime, base, options, OPTIMIZATION.singleParent));
@@ -1484,7 +1484,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 throw new IOException("Unable to construct optimized cursor for base " + base);
             }
         } else {
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT,
                     "getRecordsModifiedAfter(mtime=%d, base=%s, options=%s): " +
                     "No optimization available (useOptimizations=%b), creating standard Record iterator",
                     mtime, base, options, useOptimizations));
@@ -1735,7 +1735,7 @@ public abstract class DatabaseStorage extends StorageBase {
             try {
                 stmt.setLong(1, mtimeTimestamp);
             } catch (SQLException e) {
-                throw new IOException(String.format("Could not prepare stmtGetModifiedAfterAll with time %d",
+                throw new IOException(String.format(Locale.ROOT, "Could not prepare stmtGetModifiedAfterAll with time %d",
                                                     mtimeTimestamp), e);
             }
 
@@ -1892,7 +1892,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 boolean next = resultSet.next();
 
                 if(!next){
-                    log.warn(String.format("RecordId '%s' not found" , recordId));
+                    log.warn(String.format(Locale.ROOT, "RecordId '%s' not found" , recordId));
                     return null;
                 }
             }
@@ -1909,7 +1909,7 @@ public abstract class DatabaseStorage extends StorageBase {
                             + recordId +" Original recordId in query:"+orgRecordId);
                 }
                 if (log.isDebugEnabled()) {
-                    log.debug(String.format(
+                    log.debug(String.format(Locale.ROOT,
                             "Finished getRecordWithFullObjectTree(%s) expanded with %s in %dms total (%.1f connect, " +
                             "%.1f parentID, %.1f prepareStatement, %.1f execute, %.1f iterate)",
                             recordId, parentChildStats(topParentRecord), (System.nanoTime() - startNS)/1000000,
@@ -1928,7 +1928,7 @@ public abstract class DatabaseStorage extends StorageBase {
             Record recordNode = findRecordIdPostOrderTransversal(recordId, topParentRecord);
             postOrderTime += System.nanoTime();
             if (log.isDebugEnabled()) {
-                log.debug(String.format(
+                log.debug(String.format(Locale.ROOT,
                         "Finished getRecordWithFullObjectTree(%s) expanded with %s in %dms total (%.1f connect, " +
                         "%.1f parentID, %.1f prepareStatement, %.1f execute, %.1f iterate, %.1f child, %.1f postOrder)",
                         recordId, parentChildStats(recordNode), (System.nanoTime() - startNS)/1000000,
@@ -1938,13 +1938,13 @@ public abstract class DatabaseStorage extends StorageBase {
             return recordNode;
 
         } catch (SQLException e) {
-            log.warn(String.format("Failed to load record '%s' for original recordId '%s'", recordId, orgRecordId), e);
+            log.warn(String.format(Locale.ROOT, "Failed to load record '%s' for original recordId '%s'", recordId, orgRecordId), e);
             return null;
         } finally {
             try {
                 resultSet.close();
             } catch (SQLException e) {
-                log.error(String.format("Failed to close result set after Record '%s'", recordId), e);
+                log.error(String.format(Locale.ROOT, "Failed to close result set after Record '%s'", recordId), e);
                 return null;
             }
             closeConnection(conn);
@@ -1956,7 +1956,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (record == null) {
             return "N/A";
         }
-        return String.format("%d parents and %d children",
+        return String.format(Locale.ROOT, "%d parents and %d children",
                              record.getParents() == null ? 0 : record.getParents().size(),
                              record.getChildren() == null ? 0 : record.getChildren().size());
     }
@@ -2199,7 +2199,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         if (isPrivateId(id)) {
             if (!allowsPrivate(options)) {
-                log.debug(String.format("Request for private record '%s' denied", id));
+                log.debug(String.format(Locale.ROOT, "Request for private record '%s' denied", id));
                 throw new IllegalArgumentException(
                         "Private record requested, but ALLOW_PRIVATE flag not set in query options");
             }
@@ -2281,7 +2281,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException if error when reading private record.
      */
     private Record getPrivateRecord(Connection conn, String id) throws IOException {
-        log.debug(String.format("Fetching private record '%s'", id));
+        log.debug(String.format(Locale.ROOT, "Fetching private record '%s'", id));
 
         if ("__holdings__".equals(id)) {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -2291,7 +2291,7 @@ public abstract class DatabaseStorage extends StorageBase {
         } else if ("__statistics__".equals(id)) {
             return new Record("__statistics__", "__private__", getHumanStats().getBytes("utf-8"));
         } else {
-            log.debug(String.format("No such private record '%s'", id));
+            log.debug(String.format(Locale.ROOT, "No such private record '%s'", id));
             return null;
         }
     }
@@ -2446,7 +2446,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (calls == 0) {
             return "N/A";
         }
-        return String.format("[total=%.2fms, %.2f ms/call, %.2f calls/ms]",
+        return String.format(Locale.ROOT, "[total=%.2fms, %.2f ms/call, %.2f calls/ms]",
                              ns/M, ns/M/calls, calls*M/ns);
     }
 
@@ -2529,7 +2529,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             // We can not throw the SQLException over RPC as the receiver
             // probably does not have the relevant exception class
-            throw new IOException(String.format("flush(...): Failed to flush %s: %s", record, e.getMessage()));
+            throw new IOException(String.format(Locale.ROOT, "flush(...): Failed to flush %s: %s", record, e.getMessage()));
         } finally {
             try {
                 if (error == null) {
@@ -2537,7 +2537,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     conn.commit();
                     log.debug("Committed " + record.getId() + " in " + (System.nanoTime() - startNS)/1000000 + "ms");
                 } else {
-                    log.warn(String.format("Not committing %s because of error: %s", record.getId(), error));
+                    log.warn(String.format(Locale.ROOT, "Not committing %s because of error: %s", record.getId(), error));
                 }
             } catch (SQLException e) {
                 error = "flush: Failed to commit " + record.getId() + ": " + e.getMessage();
@@ -2631,7 +2631,7 @@ public abstract class DatabaseStorage extends StorageBase {
                       + "(" + totalFlushed + " flushed since " + START_TIME + ")");
         } catch (SQLException e) {
             error = e.getMessage();
-            throw new IOException(String.format("flushAll(%d records): Failed to flush %s: %s",
+            throw new IOException(String.format(Locale.ROOT, "flushAll(%d records): Failed to flush %s: %s",
                                                 recs.size(), lastRecord, e.getMessage()), e);
         } finally {
             try {
@@ -2651,7 +2651,7 @@ public abstract class DatabaseStorage extends StorageBase {
                         }
                     }
                 } else {
-                    log.warn(String.format("Not committing the last %d records because of error '%s'. The records was"
+                    log.warn(String.format(Locale.ROOT, "Not committing the last %d records because of error '%s'. The records was"
                                            + " %s", recs.size(), error, Logs.expand(recs, 10)));
                 }
             } catch (SQLException e) {
@@ -2777,7 +2777,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 updateRecordWithConnection(r, options, conn);
             }
         } catch (SQLException e) {
-            throw new IOException(String.format("flushWithConnection: Internal error in DatabaseStorage, "
+            throw new IOException(String.format(Locale.ROOT, "flushWithConnection: Internal error in DatabaseStorage, "
                                                 + "failed to flush %s: %s", r.getId(), e.getMessage()), e);
         }
 
@@ -3154,7 +3154,7 @@ public abstract class DatabaseStorage extends StorageBase {
             results.close();
             return children;
         } catch (SQLException e) {
-            throw new IOException(String.format("Failed to get children for record '%s': %s", id, e.getMessage()), e);
+            throw new IOException(String.format(Locale.ROOT, "Failed to get children for record '%s': %s", id, e.getMessage()), e);
         } finally {
             if (iter != null) {
                 iter.close();
@@ -3270,7 +3270,7 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public synchronized void clearBase(String base) throws IOException {
         timingClearBase.start();
-        log.debug(String.format("clearBase(%s) called", base));
+        log.debug(String.format(Locale.ROOT, "clearBase(%s) called", base));
         Connection conn = null;
 
         if (base == null) {
@@ -3339,7 +3339,7 @@ public abstract class DatabaseStorage extends StorageBase {
             // Page through all records in base and mark them as deleted
             // in one transaction
             while (pageCount >= pageSizeUpdate) {
-                log.debug(String.format(
+                log.debug(String.format(Locale.ROOT,
                         "Preparing page for deletion on base '%s' for records from %s and onwards",
                         base, timestampGenerator.formatTimestamp(lastMtimeTimestamp)));
                 pageCount = 0;
@@ -3376,7 +3376,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Committing (last)");
             stmt.getConnection().commit();
             long ns = (System.nanoTime()-startTime);
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT,
                     "Cleared base '%s' in %d ms. Marked %d records as deleted at %.2f records/s. Last record ID was %s",
                     base, ns/1000000, totalCount, 1.0*totalCount/(ns/1000000.0), id));
         } catch (SQLException e) {
@@ -3435,13 +3435,13 @@ public abstract class DatabaseStorage extends StorageBase {
                 throw new IllegalArgumentException("The QueryOptions.meta-property " + INTERNAL_JOB_NAME
                                                    + " must be specified for internal jobs");
             }
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT,
                     "Starting internal batch job: %s, Base: %s, Min mtime: %s, Max mtime: %s, Query options: %s",
                     jobName, base, minMtime, maxMtime, options));
             String result;
             if ((result = handleInternalBatchJob(
                     jobName, base, minMtime, Math.min(maxMtime, System.currentTimeMillis()), options)) == null) {
-                log.info(String.format("Batch job %s completed in %ds",
+                log.info(String.format(Locale.ROOT, "Batch job %s completed in %ds",
                                        jobName, (System.nanoTime() - startNS) / 1000000000L));
             } else {
                 log.error("Unknown internal batch job " + jobName + " ");
@@ -3449,7 +3449,7 @@ public abstract class DatabaseStorage extends StorageBase {
             return result;
         }
 
-        log.info(String.format("\n  Batch job: %s\n  Base: %s\n  Min mtime: %s\n  Max mtime: %s\n  Query options: %s",
+        log.info(String.format(Locale.ROOT, "\n  Batch job: %s\n  Base: %s\n  Min mtime: %s\n  Max mtime: %s\n  Query options: %s",
                                jobName, base, minMtime, maxMtime, options));
         Connection conn = null;
 
@@ -3619,7 +3619,7 @@ public abstract class DatabaseStorage extends StorageBase {
             // FIXME: It would probably save memory to do incremental commits
             stmt.getConnection().commit();
         } catch (SQLException e) {
-            String msg = String.format("Error running batch job '%s': %s", job, e.getMessage());
+            String msg = String.format(Locale.ROOT, "Error running batch job '%s': %s", job, e.getMessage());
             log.error(msg, e);
             stmt.getConnection().rollback();
             throw new IOException(msg, e);
@@ -3663,13 +3663,13 @@ public abstract class DatabaseStorage extends StorageBase {
         timingApplyJobToRecord.stop(); // Always called inside synchronized
 
         // Set up the batch job context and run it
-        log.debug(String.format("Running batch job '%s' on '%s'", job, record.getId()));
+        log.debug(String.format(Locale.ROOT, "Running batch job '%s' on '%s'", job, record.getId()));
         job.setContext(record, isFirst, isLast);
         boolean preDeleted = record.isDeleted();
         try {
             job.eval();
         } catch (ScriptException e) {
-            throw new IOException(String.format("Error running batch job '%s': %s", job, e.getMessage()), e);
+            throw new IOException(String.format(Locale.ROOT, "Error running batch job '%s': %s", job, e.getMessage()), e);
         }
         if (job.shouldCommit()) {
             // If the record id has changed we must flush() the
@@ -3678,7 +3678,7 @@ public abstract class DatabaseStorage extends StorageBase {
             if (oldRecordId.equals(record.getId())) {
                 updateRecordWithConnection(record, options, conn);
             } else {
-                log.debug(String.format("Record renamed '%s' -> '%s'", oldRecordId, record.getId()));
+                log.debug(String.format(Locale.ROOT, "Record renamed '%s' -> '%s'", oldRecordId, record.getId()));
                 flushWithConnection(record, options, conn);
                 PreparedStatement delete = conn.prepareStatement(
                         "DELETE FROM " + RECORDS + " WHERE " + ID_COLUMN + "=?");
@@ -3765,7 +3765,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
                 } catch (SQLException e) {
                     closeStatement(stmt);
-                    throw new SQLException(String.format("Error creating child relations for %s", rec.getId()), e);
+                    throw new SQLException(String.format(Locale.ROOT, "Error creating child relations for %s", rec.getId()), e);
 
                 }
             }
@@ -4753,7 +4753,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 results.close();
             }
         }
-        log.debug(String.format("Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
+        log.debug(String.format(Locale.ROOT, "Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
         return stats;
     }
 
@@ -4877,7 +4877,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
             }
         }
-        log.debug(String.format("Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
+        log.debug(String.format(Locale.ROOT, "Extracted storage stats in %sms", System.currentTimeMillis() - startTime));
         return stats;
     }
 
@@ -5040,7 +5040,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public String toString() {
-        return String.format("DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d, "
+        return String.format(Locale.ROOT, "DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d, "
                              + "pageSizeUpdate=%d, expandRelativesList=%b, defaultGetOptions=%s, " +
                              "pruneRelativesOnGet=%b, basesWithStoredRelations=%s) %s",
                              iterators.size(), useLazyRelations, usePagingModel, pageSize,

@@ -28,6 +28,7 @@ import java.io.StringWriter;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * IndexFields are used on several levels. From abstract to concrete, their
@@ -350,6 +351,7 @@ public class IndexField<A, T, F> {
     public String toXMLFragment() {
         StringWriter sw = new StringWriter(1000);
         sw.append(String.format(
+                Locale.ROOT,
                 "<field name=\"%s\" parent=\"%s\" indexed=\"%s\" tokenized=\"%s\" stored=\"%s\" compressed=\"%s\" "
                         + "multiValued=\"%s\" queryBoost=\"%s\" indexBoost=\"%s\" sortLocale=\"%s\" sortCache=\"%s\" " +
                         "inFreeText=\"%s\" required=\"%s\" tokenized=\"%s\">\n",
@@ -360,9 +362,9 @@ public class IndexField<A, T, F> {
         }
         if (indexAnalyzer != null || !indexFilters.isEmpty()) {
             sw.append("<analyzer type=\"index\"\n>");
-            sw.append(String.format("%s\n", analyzerToXMLFragment(indexAnalyzer)));
+            sw.append(String.format(Locale.ROOT, "%s\n", analyzerToXMLFragment(indexAnalyzer)));
             for (F filter : indexFilters) {
-                sw.append(String.format("%s\n", filterToXMLFragment(filter)));
+                sw.append(String.format(Locale.ROOT, "%s\n", filterToXMLFragment(filter)));
             }
             sw.append("</analyzer>\n");
         }
@@ -598,7 +600,7 @@ public class IndexField<A, T, F> {
      * @return an XML fragment representing the analyzer.
      */
     protected String analyzerToXMLFragment(A analyzer) {
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedOperationException(String.format(Locale.ROOT,
                 "XML fragment creation for analyzer '%s' not supported in '%s'",
                 analyzer, getClass().toString()));
     }
@@ -611,7 +613,7 @@ public class IndexField<A, T, F> {
      * @return an analyzer based on the given node.
      */
     protected A createAnalyzer(Node node) {
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedOperationException(String.format(Locale.ROOT,
                 "Creation of analyzer based on Node '%s' not supported in '%s'",
                 node, getClass().toString()));
     }
@@ -627,7 +629,7 @@ public class IndexField<A, T, F> {
      * @return an XML fragment representing the analyzer.
      */
     protected String filterToXMLFragment(F filter) {
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedOperationException(String.format(Locale.ROOT,
                 "XML fragment creation for filter '%s' not supported in '%s'",
                 filter, getClass().toString()));
     }
@@ -640,7 +642,7 @@ public class IndexField<A, T, F> {
      * @return a filter based on the given node.
      */
     protected F createFilter(Node node) {
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedOperationException(String.format(Locale.ROOT,
                 "Creation of filter based on Node '%s' not supported in '%s'",
                 node, getClass().toString()));
     }
@@ -686,7 +688,7 @@ public class IndexField<A, T, F> {
      * @return an XML fragment representing the tokenizer.
      */
     protected String tokenizerToXMLFragment(T tokenizer) {
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedOperationException(String.format(Locale.ROOT,
                 "XML fragment creation for tokenizer '%s' not supported in '%s'",
                 tokenizer, getClass().toString()));
     }
@@ -699,7 +701,7 @@ public class IndexField<A, T, F> {
      * @return a tokenizer based on the given node.
      */
     protected T createTokenizer(Node node) {
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedOperationException(String.format(Locale.ROOT,
                 "Creation of tokenizer based on Node '%s' not supported in '%s'",
                 node, getClass().toString()));
     }

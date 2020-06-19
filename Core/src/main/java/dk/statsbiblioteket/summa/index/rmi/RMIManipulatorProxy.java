@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Locale;
 
 /**
  * Helper class that exposes a {@link IndexManipulator} as an RMI interface.
@@ -159,8 +160,8 @@ public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteMa
         try {
             backend.open(indexRoot);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("open(%s) for %d:%s", indexRoot, registryPort, 
-                                                            serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    Locale.ROOT, "open(%s) for %d:%s", indexRoot, registryPort, serviceName), t);
         }
     }
 
@@ -169,7 +170,8 @@ public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteMa
         try {
             backend.clear();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("clear() for %d:%s", registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    Locale.ROOT, "clear() for %d:%s", registryPort, serviceName), t);
         }
     }
 
@@ -178,8 +180,8 @@ public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteMa
         try {
             return backend.update(payload);
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("update(%s) for %d:%s", payload, registryPort, 
-                                                            serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    Locale.ROOT, "update(%s) for %d:%s", payload, registryPort, serviceName), t);
             return false; // exitOnThrowable always throws
         }
     }
@@ -189,7 +191,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteMa
         try {
             backend.commit();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("commit() for %d:%s", registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format(Locale.ROOT, "commit() for %d:%s", registryPort, serviceName), t);
         }
     }
 
@@ -198,7 +200,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteMa
         try {
             backend.consolidate();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("consolidate() for %d:%s", registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format(Locale.ROOT, "consolidate() for %d:%s", registryPort, serviceName), t);
         }
     }
 
@@ -207,7 +209,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteMa
         try {
             backend.close();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("close() for %d:%s", registryPort, serviceName), t);
+            RemoteHelper.exitOnThrowable(log, String.format(Locale.ROOT, "close() for %d:%s", registryPort, serviceName), t);
         }
     }
 
@@ -216,7 +218,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteMa
         try {
             backend.orderChangedSinceLastCommit();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("orderChangedSinceLastCommit() for %d:%s",
+            RemoteHelper.exitOnThrowable(log, String.format(Locale.ROOT, "orderChangedSinceLastCommit() for %d:%s",
                                                             registryPort, serviceName), t);
         }
     }
@@ -226,7 +228,7 @@ public class RMIManipulatorProxy extends UnicastRemoteObject implements RemoteMa
         try {
             return backend.isOrderChangedSinceLastCommit();
         } catch (Throwable t) {
-            RemoteHelper.exitOnThrowable(log, String.format("isOrderChangedSinceLastCommit() for %d:%s",
+            RemoteHelper.exitOnThrowable(log, String.format(Locale.ROOT, "isOrderChangedSinceLastCommit() for %d:%s",
                                                             registryPort, serviceName), t);
             return true; // We bomb out in a few seconds, so the value is random
         }

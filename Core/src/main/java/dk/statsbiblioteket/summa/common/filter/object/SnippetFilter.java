@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.util.Locale;
 
 /**
  * Extracts text sans XML-tags. The primary usage is for highlighting.
@@ -112,7 +113,8 @@ public class SnippetFilter extends ObjectFilterImpl {
             skipBreaker = null;
         }
         buffer = new StringBuffer(Math.min(10000, maxLength));
-        log.info(String.format("Constructed SnippetFilter with maxLength=%d, destination=%s", maxLength, destination));
+        log.info(String.format(
+                Locale.ROOT, "Constructed SnippetFilter with maxLength=%d, destination=%s", maxLength, destination));
     }
 
     // State for the snippet generator

@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Watches for changes to a Summa index, triggering an update to listeners.
@@ -97,7 +98,7 @@ public class IndexWatcher extends Observable<IndexListener> implements Configura
         indexMinRetention = conf.getInt(CONF_INDEX_WATCHER_MIN_RETENTION, indexMinRetention);
         String indexRoot = conf.getString(CONF_INDEX_WATCHER_INDEX_ROOT, DEFAULT_INDEX_ROOT);
         absoluteIndexRoot = Resolver.getPersistentFile(new File(indexRoot));
-        log.debug(String.format("Constructing with %s=%d, %s=%d, %s='%s', absoluteIndexRoot='%s'",
+        log.debug(String.format(Locale.ROOT, "Constructing with %s=%d, %s=%d, %s='%s', absoluteIndexRoot='%s'",
                                 CONF_INDEX_WATCHER_CHECK_INTERVAL, indexCheckInterval,
                                 CONF_INDEX_WATCHER_MIN_RETENTION, indexMinRetention, CONF_INDEX_WATCHER_INDEX_ROOT,
                                 indexRoot, absoluteIndexRoot.toString()));
@@ -194,10 +195,10 @@ public class IndexWatcher extends Observable<IndexListener> implements Configura
             }
             return v;
         } catch (IOException e) {
-            log.warn(String.format("Unable to load content of '%s'", vFile), e);
+            log.warn(String.format(Locale.ROOT, "Unable to load content of '%s'", vFile), e);
             return -1;
         } catch (NumberFormatException e) {
-            log.warn(String.format("Unable to parse content '%s' of '%s' as a long", content, vFile), e);
+            log.warn(String.format(Locale.ROOT, "Unable to parse content '%s' of '%s' as a long", content, vFile), e);
             return -1;
         }
     }

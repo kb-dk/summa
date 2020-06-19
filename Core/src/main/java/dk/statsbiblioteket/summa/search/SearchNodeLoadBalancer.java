@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Treats a list of SearchNodes as equal in functionality and distributes
@@ -64,13 +65,13 @@ public class SearchNodeLoadBalancer implements SearchNode {
 
     public SearchNodeLoadBalancer(Configuration conf) throws RemoteException {
         int instances = conf.getInt(CONF_SEARCHER_INSTANCES, DEFAULT_SEARCHER_INSTANCES);
-        log.trace(String.format("Constructing SearchNodeLoadBalancer with %d instances", instances));
+        log.trace(String.format(Locale.ROOT, "Constructing SearchNodeLoadBalancer with %d instances", instances));
         for (int i = 0; i < instances; i++) {
             List<SearchNode> baseNodes = SearchNodeFactory.createSearchNodes(conf);
             if (nodes == null) {
                 nodes = new ArrayList<>(instances * baseNodes.size());
             }
-            log.trace(String.format("Adding %d nodes", baseNodes.size()));
+            log.trace(String.format(Locale.ROOT, "Adding %d nodes", baseNodes.size()));
             nodes.addAll(baseNodes);
         }
         if (nodes == null) {
@@ -78,13 +79,13 @@ public class SearchNodeLoadBalancer implements SearchNode {
                      + "Specify SearchNodes under '" + SearchNodeFactory.CONF_NODES + "'");
             nodes = new ArrayList<>(0);
         }
-        log.debug(String.format("Balancer created with a total of %d SearchNodes", nodes.size()));
+        log.debug(String.format(Locale.ROOT, "Balancer created with a total of %d SearchNodes", nodes.size()));
     }
 
     @Override
     public void open(String location) throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
-        log.debug(String.format("open(%s) called", location));
+        log.debug(String.format(Locale.ROOT, "open(%s) called", location));
         for (SearchNode node : nodes) {
             node.open(location);
         }
@@ -112,7 +113,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
 
     @Override
     public void warmup(String request) {
-        log.debug(String.format("warmup(%s) called", request));
+        log.debug(String.format(Locale.ROOT, "warmup(%s) called", request));
         for (SearchNode node : nodes) {
             node.warmup(request);
         }

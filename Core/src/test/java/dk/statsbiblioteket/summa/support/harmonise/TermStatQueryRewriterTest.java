@@ -75,7 +75,7 @@ public class TermStatQueryRewriterTest extends TestCase {
         double targetNEb = Math.pow(Math.log(20/(double)(3+1)) + 1.0, 2);
         float boostNEb = (float) (idealNE / targetNEb);
 
-/*        System.out.println(String.format(
+/*        System.out.println(String.format(Locale.ROOT,
             "test idealIDFSqr=%f, targetIDFSqr=%f, boostFactor=%f",
             idealNE, targetNEa, boostNEa));
   */
@@ -159,7 +159,7 @@ public class TermStatQueryRewriterTest extends TestCase {
         double targetBb = Math.pow(Math.log(20/(double)(10+1)) + 1.0, 2);
         float boostBb = (float) (idealB / targetBb * queryBoost);
 
-/*        System.out.println(String.format(
+/*        System.out.println(String.format(Locale.ROOT,
             "test idealIDFSqr=%f, targetIDFSqr=%f, boostFactor=%f",
             idealB, targetBa, boostBa));
   */

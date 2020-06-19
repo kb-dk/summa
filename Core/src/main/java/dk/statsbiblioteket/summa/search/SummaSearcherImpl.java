@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.rmi.RemoteException;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -363,7 +364,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
      */
     @Override
     public void setSearchQueueMaxSize(int searchQueueMaxSize) {
-        log.debug(String.format("setSearchQueueMaxSize(%s) called", searchQueueMaxSize));
+        log.debug(String.format(Locale.ROOT, "setSearchQueueMaxSize(%s) called", searchQueueMaxSize));
         searchQueue.setOverallPermits(searchQueueMaxSize);
     }
 
@@ -375,7 +376,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher, Ind
     @Override
     public void setSearcherAvailabilityTimeout(
             int searcherAvailabilityTimeout) {
-        log.debug(String.format("setSearcherAvailabilityTimeout(%d) called", searcherAvailabilityTimeout));
+        log.debug(String.format(Locale.ROOT, "setSearcherAvailabilityTimeout(%d) called", searcherAvailabilityTimeout));
         this.searcherAvailabilityTimeout = searcherAvailabilityTimeout;
     }
 

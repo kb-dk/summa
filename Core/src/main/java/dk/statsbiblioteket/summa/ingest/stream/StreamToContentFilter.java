@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Adds a Record to the Payload with the content from the given Stream.
@@ -53,7 +54,7 @@ public class StreamToContentFilter extends ObjectFilterImpl {
         super(conf);
         base = conf.getString(CONF_BASE, base);
         feedback = false;
-        log.debug(String.format("Filter created with base='%s'", base));
+        log.debug(String.format(Locale.ROOT, "Filter created with base='%s'", base));
     }
 
     @Override

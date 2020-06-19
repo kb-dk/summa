@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -166,7 +167,7 @@ public class SummaRest {
 
     @Override
     public String toString() {
-        return String.format("SummaRest(searchers=[%s], readable storages=[%s], writable storages=[%s])",
+        return String.format(Locale.ROOT, "SummaRest(searchers=[%s], readable storages=[%s], writable storages=[%s])",
                              toString(searchers), toString(readStorages), toString(writeStorages));
     }
     private <O> String toString(Map<String, O> handlers) {

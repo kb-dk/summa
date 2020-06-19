@@ -32,6 +32,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -223,9 +224,7 @@ public class HttpStorageBridge extends TestCase implements Configurable {
         // Print URL query args
         while (query.hasNext()) {
             QueryToken tok = query.next();
-            w.println(String.format(
-                  "  <arg name=\"%s\" value=\"%s\"/>",
-                  tok.getKey(), tok.getValue()));
+            w.println(String.format(Locale.ROOT, "  <arg name=\"%s\" value=\"%s\"/>", tok.getKey(), tok.getValue()));
         }
         query.reset();
 

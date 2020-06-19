@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -79,8 +80,9 @@ public class SanitiseUnicodeFilter extends ObjectFilterImpl {
             replace = false;
         } else if (re.length() > 1 || re.charAt(0) > 0x7F) {
             throw new ConfigurationException(String.format(
-                    "The replacement character with key %s was '%s'. It must be of"
-                    + " length 1 or less and must be at code point 0x7F or less", CONF_REPLACEMENT_CHAR, re));
+                    Locale.ROOT, "The replacement character with key %s was '%s'. It must be of"
+                                 + " length 1 or less and must be at code point 0x7F or less",
+                    CONF_REPLACEMENT_CHAR, re));
         } else {
             replacement = re.charAt(0);
         }

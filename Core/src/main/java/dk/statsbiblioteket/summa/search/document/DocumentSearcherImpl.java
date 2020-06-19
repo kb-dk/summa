@@ -67,7 +67,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
         fallbackValues = conf.getStrings(CONF_FALLBACK_VALUES, fallbackValues);
 
         if (fallbackValues != null && resultFields.length != fallbackValues.length) {
-            log.error(String.format(
+            log.error(String.format(Locale.ROOT,
                     "The number of fallback-values(%s) was not equal to the number of result-fields(%s)",
                     fallbackValues.length, resultFields.length));
         }
@@ -79,7 +79,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
 
         maxRecords = conf.getLong(CONF_MAX_RECORDS, maxRecords);
         if (maxRecords <= 0) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "The property %s must be >0. It was %s. Resetting to default %s",
                     CONF_MAX_RECORDS, maxRecords,
                     maxRecords == Long.MAX_VALUE ? "Long.MAX_VALUE" : DEFAULT_MAX_NUMBER_OF_RECORDS));
@@ -188,14 +188,14 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
                 response.addTiming("lucene.hitcount", System.currentTimeMillis() - hitstart);
                 responses.add(response);
             } catch (Exception e) {
-                throw new RemoteException(String.format(
+                throw new RemoteException(String.format(Locale.ROOT,
                         "Unable to perform fast hit counting for query '%s' with filter '%s'", query, filters), e);
             }
         } else if (records > 0) { // Standard search
             log.trace("Performing standard search");
             try {
                 if (fallbackValues != null && resultFields.length != fallbackValues.length) {
-                    log.debug(String.format(
+                    log.debug(String.format(Locale.ROOT,
                             "Incoming request uses mistmatching result fields and fallback values %s(%s) and %s(%s)",
                             DocumentKeys.SEARCH_RESULT_FIELDS, resultFields.length,
                             DocumentKeys.SEARCH_FALLBACK_VALUES, fallbackValues.length));
@@ -205,7 +205,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
                 responses.add(fullSearch(request, filters, query, startIndex, records, sortKey, reverse, resultFields,
                                          fallbackValues));
             } catch (Exception e) {
-                throw new RemoteException(String.format("Unable to perform search for query '%s' with filter '%s'",
+                throw new RemoteException(String.format(Locale.ROOT, "Unable to perform search for query '%s' with filter '%s'",
                                                         query, filters), e);
             }
         }
@@ -222,7 +222,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
                     responses.add(docResponse);
                 }
             } catch (IOException e) {
-                throw new RemoteException(String.format("Unable to collect doc ids for query '%s', filter '%s'",
+                throw new RemoteException(String.format(Locale.ROOT, "Unable to collect doc ids for query '%s', filter '%s'",
                                                         query, filters), e);
             }
         }
@@ -277,7 +277,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
 
     @Override
     public void setMaxRecords(long maxRecords) {
-        log.debug(String.format("setMaxRecords(%d) called", maxRecords));
+        log.debug(String.format(Locale.ROOT, "setMaxRecords(%d) called", maxRecords));
         this.maxRecords = maxRecords;
     }
 
@@ -288,7 +288,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
 
     @Override
     public void setSortKey(String sortKey) {
-        log.debug(String.format("setSortKey(%s) called", sortKey));
+        log.debug(String.format(Locale.ROOT, "setSortKey(%s) called", sortKey));
         this.sortKey = sortKey;
     }
 
@@ -299,7 +299,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
 
     @Override
     public void setResultFields(String[] resultFields) {
-        log.debug(String.format("setResultFields(%s) called", Arrays.toString(resultFields)));
+        log.debug(String.format(Locale.ROOT, "setResultFields(%s) called", Arrays.toString(resultFields)));
         this.resultFields = resultFields;
     }
 
@@ -310,7 +310,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements Doc
 
     @Override
     public void setFallbackValues(String[] fallbackValues) {
-        log.debug(String.format("setFallbackValues(%s) called", Arrays.toString(fallbackValues)));
+        log.debug(String.format(Locale.ROOT, "setFallbackValues(%s) called", Arrays.toString(fallbackValues)));
     }
 
     @Override

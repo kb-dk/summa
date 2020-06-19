@@ -921,7 +921,7 @@ public class Record implements Serializable, Comparable {
         }
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(timestamp);
-        return String.format("%1$tF %1$tT", calendar);
+        return String.format(Locale.ROOT, "%1$tF %1$tT", calendar);
     }
 
     /**

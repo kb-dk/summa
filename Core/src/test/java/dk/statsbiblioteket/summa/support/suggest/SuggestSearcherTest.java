@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Sets up a proper SummaSearcher with a Suggest inside.
@@ -156,7 +157,7 @@ public class SuggestSearcherTest extends TestCase {
             put("Bar", 12);
             setProfiler.beat();
         }
-        String updates =String.format(
+        String updates =String.format(Locale.ROOT,
                 "Did %d updates at %s updates/sec",
                 setProfiler.getBeats(), setProfiler.getBps(false));
 
@@ -168,9 +169,9 @@ public class SuggestSearcherTest extends TestCase {
             getProfiler.beat();
         }
         log.info(updates);
-        log.info(String.format(
-                "Did %d requests at %s requests/sec",
-                getProfiler.getBeats(), getProfiler.getBps(false)));
+        log.info(String.format(Locale.ROOT,
+                               "Did %d requests at %s requests/sec",
+                               getProfiler.getBeats(), getProfiler.getBps(false)));
     }
 
     /* Helpers */
@@ -178,7 +179,7 @@ public class SuggestSearcherTest extends TestCase {
     private void assertGet(String prefix, String expected) throws
                                                            IOException {
         String xml = get(prefix);
-        assertTrue(String.format("The string '%s' should be in the result:\n%s",
+        assertTrue(String.format(Locale.ROOT, "The string '%s' should be in the result:\n%s",
                                  expected, xml),
                    xml.contains(expected));
         log.trace("Got xml for prefix '" + prefix + "':\n" + xml);

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class TestSingleSegmentOptimization extends TestCase {
   private ExposedHelper helper;
@@ -216,7 +217,7 @@ public class TestSingleSegmentOptimization extends TestCase {
       int matchFraction) throws Exception {
     long[] tim = testScaleOptimizedCollectorImpl(poolFactory, searcher, useSparse, matchFraction);
     output.append(String.format(
-        "%8d %6d %8d %6d %6d\n", matchFraction, tim[0], tim[1], tim[2], tim[0] + tim[1] + tim[2]));
+            Locale.ROOT, "%8d %6d %8d %6d %6d\n", matchFraction, tim[0], tim[1], tim[2], tim[0] + tim[1] + tim[2]));
   }
 
   public long[] testScaleOptimizedCollectorImpl(
@@ -371,6 +372,6 @@ public class TestSingleSegmentOptimization extends TestCase {
     }
     long seconds = Math.round(ms / 1000.0);
     long minutes = seconds / 60;
-    return String.format("%d:%02d minutes", minutes, seconds - minutes*60);
+    return String.format(Locale.ROOT, "%d:%02d minutes", minutes, seconds - minutes*60);
   }
 }

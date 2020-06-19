@@ -42,6 +42,8 @@ import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
+import java.util.Locale;
+
 /**
  * A request for a facet structure, containing facet names, wanted number of
  * tags and so on.
@@ -97,8 +99,8 @@ public class FacetRequest extends Structure {
                 // zoo
                 FacetStructure fc = defaults.getFacets().get(subTokens[0].trim());
                 if (fc == null) {
-                    log.warn(String.format("Could not find a Facet named '%s', parsed from "
-                                           + "'%s' in the default structure. Skipping Facet",
+                    log.warn(String.format(Locale.ROOT, "Could not find a Facet named '%s', parsed from "
+                                                        + "'%s' in the default structure. Skipping Facet",
                                            subTokens[0].trim(), wantedFacets));
                     continue;
                 }
@@ -130,7 +132,7 @@ public class FacetRequest extends Structure {
                         try {
                             maxTags = Integer.parseInt(facetArg);
                         } catch (NumberFormatException e) {
-                            log.warn(String.format("Argument '%s' to Facet '%s' in request '%s' could not be parsed", 
+                            log.warn(String.format(Locale.ROOT, "Argument '%s' to Facet '%s' in request '%s' could not be parsed",
                                                    facetArg, facetToken, wantedFacets));
                         }
                     }
@@ -138,7 +140,7 @@ public class FacetRequest extends Structure {
                 getFacets().put(fc.getName(), fc.getRequestFacet(maxTags, sortType, reverse));
             }
         } catch (Exception e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Exception encountered while parsing '%s'. Switching to default facets", wantedFacets));
             getFacets().putAll(defaults.getFacets());
         }

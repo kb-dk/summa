@@ -23,6 +23,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * <p>Simple class used to help launching a {@link Service}.</p>
  *
@@ -71,7 +73,7 @@ public class Launcher {
                 serviceClass = Configuration.getClass(
                         CONF_SERVICE_CLASS, DEFAULT_SERVICE_CLASS, conf);
             } catch (NullPointerException e) {
-                Logging.fatal(log, "Launcher.main", String.format(
+                Logging.fatal(log, "Launcher.main", String.format(Locale.ROOT,
                         "Property '%s' not defined in configuration. Config "
                       + "was:\n\n%s", CONF_SERVICE_CLASS, conf.dumpString()));
                 System.exit(2);

@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Representation of RecommendationResponse.xsd. Merging adds recommendations
@@ -102,7 +103,7 @@ public class RecommendationResponse extends ResponseImpl {
         }
 
         public void toXML(StringWriter sw) {
-            sw.append("  ").append(String.format("<recommendationList type=\"%s\">\n", type));
+            sw.append("  ").append(String.format(Locale.ROOT, "<recommendationList type=\"%s\">\n", type));
             for (Recommendation recommendation : this) {
                 recommendation.toXML(sw);
             }
@@ -123,7 +124,7 @@ public class RecommendationResponse extends ResponseImpl {
 
         public void toXML(StringWriter sw) {
             sw.append("    ");
-            sw.append(String.format("<recommendation title=\"%s\" description=\"%s\" link=\"%s\"/>\n",
+            sw.append(String.format(Locale.ROOT, "<recommendation title=\"%s\" description=\"%s\" link=\"%s\"/>\n",
                                     XMLUtil.encode(title), XMLUtil.encode(description), XMLUtil.encode(link)));
         }
     }

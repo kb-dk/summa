@@ -21,6 +21,7 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -111,7 +112,8 @@ public class SortFactory {
             return makeDefaultSorters(reverse);
         }
         try {
-            log.info(String.format("Creating lazy sorters for field '%s' with language '%s'", field, sortLanguage));
+            log.info(String.format(
+                    Locale.ROOT, "Creating lazy sorters for field '%s' with language '%s'", field, sortLanguage));
             normalSort = new Sort(getSortField(false));
             reverseSort = new Sort(getSortField(true));
         } catch (Exception e) {
@@ -158,7 +160,7 @@ public class SortFactory {
         synchronized (comparatorSync) {
             if (!comparators.containsKey(sortLanguage)) {
                 /* Language specified, so create localized sorters */
-                log.info(String.format(
+                log.info(String.format(Locale.ROOT,
                         "Creating localized comparators for field '%s' with language '%s'", field, sortLanguage));
                 switch (comparator) {
                     case lucene: {

@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -54,7 +55,7 @@ public class IndexCommon {
      * @return the timestamp for the current time.
      */
     public static String getTimestamp() {
-        return String.format(IndexCommon.TIMESTAMP_FORMAT,
+        return String.format(Locale.ROOT, IndexCommon.TIMESTAMP_FORMAT,
                              Calendar.getInstance());
     }
 

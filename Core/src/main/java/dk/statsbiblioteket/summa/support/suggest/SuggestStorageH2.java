@@ -37,6 +37,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Locale;
 
 
 /**
@@ -168,31 +169,31 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     @Override
     public synchronized void open(File location) throws IOException {
-        log.debug(String.format("open(%s) called for SuggestStorageH2", location));
+        log.debug(String.format(Locale.ROOT, "open(%s) called for SuggestStorageH2", location));
         this.location = location;
         boolean createNew;
         if (!location.exists()) {
             System.out.println("new");
-            log.info(String.format("Creating new SuggestStorageH2 at location '%s'", location));
+            log.info(String.format(Locale.ROOT, "Creating new SuggestStorageH2 at location '%s'", location));
             if (!location.mkdirs()) {
-                throw new ConfigurationException(String.format("Unable to create folder '%s'", location));
+                throw new ConfigurationException(String.format(Locale.ROOT, "Unable to create folder '%s'", location));
             }
             createNew = true;
         } else {
             System.out.println("exist");
             if (new File(location, DB_FILE + ".h2.db").isFile() || new File(location, DB_FILE + ".data.db").isFile()) {
                 /* Database location exists*/
-                log.debug(String.format("Reusing old database found at '%s'", location));
+                log.debug(String.format(Locale.ROOT, "Reusing old database found at '%s'", location));
                 createNew = false;
             } else {
-                log.debug(String.format("No database at '%s'", location));
+                log.debug(String.format(Locale.ROOT, "No database at '%s'", location));
                 createNew = true;
             }
         }
 
         connection = resetConnection();
         if (createNew) {
-            log.info(String.format("Creating new table for '%s'", location));
+            log.info(String.format(Locale.ROOT, "Creating new table for '%s'", location));
             try {
                 createSchema();
             } catch (SQLException e) {
@@ -238,7 +239,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             connection = dataSource.getConnection();
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
         } catch (SQLException e) {
-            throw new IOException(String.format("Unable to get a connection from '%s'", sourceURL), e);
+            throw new IOException(String.format(Locale.ROOT, "Unable to get a connection from '%s'", sourceURL), e);
         }
         
 
@@ -256,7 +257,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         try {
             s = connection.createStatement();
 
-            s.execute(String.format("CREATE TABLE IF NOT EXISTS suggest_data("
+            s.execute(String.format(Locale.ROOT, "CREATE TABLE IF NOT EXISTS suggest_data("
                                     + "user_query VARCHAR(%1$d) PRIMARY KEY, normalized_query VARCHAR(%1$d) NOT NULL, query_count INTEGER, "
                                     + "hit_count INTEGER, mtime BIGINT)", MAX_QUERY_LENGTH));
             System.out.println(1);
@@ -334,7 +335,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
      */
     @Override
     public synchronized void close() {
-        log.info(String.format("Closing '%s'", location));
+        log.info(String.format(Locale.ROOT, "Closing '%s'", location));
         if (closed) {
             return;
         }
@@ -419,7 +420,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             try {
                 delete(query);
             } catch (SQLException e) {
-                log.warn(String.format("Unable to delete suggestion '%s': %s", query, e.getMessage()), e);
+                log.warn(String.format(Locale.ROOT, "Unable to delete suggestion '%s': %s", query, e.getMessage()), e);
             }
             return;
         }
@@ -432,7 +433,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 updateSuggestion(query, hits, queryCount);
                 log.debug("Updated suggestion '" + query + "' with " + hits + " hits");
             } else {
-                throw new IOException(String.format("Unable to complete addSuggestion(%s, %d, %d)", query, hits,
+                throw new IOException(String.format(Locale.ROOT, "Unable to complete addSuggestion(%s, %d, %d)", query, hits,
                                                     queryCount), e);
             }
         }
@@ -572,7 +573,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
            
         } catch (SQLException e) {
-            log.error(String.format("Failed to update database with query %s, hits=%s, queryCount=%s: %s", query,
+            log.error(String.format(Locale.ROOT, "Failed to update database with query %s, hits=%s, queryCount=%s: %s", query,
                                     hits, queryCount, e.getMessage()), e);
         }
 
@@ -581,7 +582,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     @Override
     public ArrayList<String> listSuggestions(int start, int max) throws IOException {
-        log.debug(String.format("Listing suggestions from %d to %d", start, max));
+        log.debug(String.format(Locale.ROOT, "Listing suggestions from %d to %d", start, max));
 
         long startTime = System.currentTimeMillis();
         ResultSet rs = null;
@@ -604,11 +605,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 suggestions.add(rs.getString(1) + "\t" + rs.getInt(3) + "\t" + rs.getInt(2));
             }
 
-            log.debug(String.format("Listed %d suggestions in %sms", suggestions.size(),
+            log.debug(String.format(Locale.ROOT, "Listed %d suggestions in %sms", suggestions.size(),
                                     System.currentTimeMillis() - startTime));
             return suggestions;
         } catch (SQLException e) {
-            log.error(String.format("SQLException while dumping a maximum of %d suggestions, starting at %d", max,
+            log.error(String.format(Locale.ROOT, "SQLException while dumping a maximum of %d suggestions, starting at %d", max,
                                     start), e);
             return new ArrayList<>();
         } finally {
@@ -616,7 +617,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 try {
                     rs.close();
                 } catch (SQLException e) {
-                    log.warn(String.format("Exception while closing Resultset in listSuggestions(%d, %d)", start,
+                    log.warn(String.format(Locale.ROOT, "Exception while closing Resultset in listSuggestions(%d, %d)", start,
                                            max), e);
                 }
             }
@@ -656,18 +657,18 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                         hits = Long.valueOf(tokens[1]);
                     }
                 } catch (NumberFormatException e) {
-                    log.warn(String.format("NumberFormatException for hits with '%s'", tokens[1]));
+                    log.warn(String.format(Locale.ROOT, "NumberFormatException for hits with '%s'", tokens[1]));
                 }
                 try {
                     if (tokens.length > 2) {
                         queryCount = Integer.valueOf(tokens[2]);
                     }
                 } catch (NumberFormatException e) {
-                    log.warn(String.format("NumberFormatException for querycount with '%s'", tokens[2]));
+                    log.warn(String.format(Locale.ROOT, "NumberFormatException for querycount with '%s'", tokens[2]));
                 }
                 addSuggestion(query, (int) hits, queryCount);
             }
-            log.debug(String.format("Finished adding %d suggestions in %sms ", count,
+            log.debug(String.format(Locale.ROOT, "Finished adding %d suggestions in %sms ", count,
                                     (System.nanoTime() - start) / 1000000D));
             connection.commit();
             updateCount += count;
@@ -759,7 +760,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             TokenStream tokens = normalizer.tokenStream("query", new CharSequenceReader(s));
             return join(tokens, " ");
         } catch (IOException e) {
-            log.error(String.format("Error analyzing query '%s': %s", s, e.getMessage()), e);
+            log.error(String.format(Locale.ROOT, "Error analyzing query '%s': %s", s, e.getMessage()), e);
             return "ERROR";
         }
     }
@@ -769,7 +770,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             TokenStream tokens = sanitizer.tokenStream("query", new CharSequenceReader(s));
             return join(tokens, " ");
         } catch (IOException e) {
-            log.error(String.format("Error analyzing query '%s': %s", s, e.toString()), e);
+            log.error(String.format(Locale.ROOT, "Error analyzing query '%s': %s", s, e.toString()), e);
             return "ERROR";
         }
     }
@@ -799,7 +800,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         } catch (IOException e) {
             // This should *never* happen because we read from a local String,
             // not really doing IO
-            log.error(String.format("Error analyzing query: %s", e.toString()), e);
+            log.error(String.format(Locale.ROOT, "Error analyzing query: %s", e.toString()), e);
             return "ERROR";
         }
     }

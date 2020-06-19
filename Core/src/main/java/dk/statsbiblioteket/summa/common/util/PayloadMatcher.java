@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -160,8 +161,8 @@ public class PayloadMatcher {
                 conf, keyPrefix + CONF_META_VALUE_REGEXP, "meta value");
         if (metaKeys != null && metaValueMatchers != null && metaKeys.size() != metaValueMatchers.size()) {
             throw new IllegalArgumentException(String.format(
-                    "The number of %s was %d while number of %s was %s. As the"
-                    + " lists are used in parallel, the numbers must match",
+                    Locale.ROOT, "The number of %s was %d while number of %s was %s. As the"
+                                 + " lists are used in parallel, the numbers must match",
                     keyPrefix + CONF_META_KEY, metaKeys.size(),
                     keyPrefix + CONF_META_VALUE_REGEXP, metaValueMatchers.size()));
         }

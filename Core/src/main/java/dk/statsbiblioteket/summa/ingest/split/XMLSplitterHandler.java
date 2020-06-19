@@ -122,7 +122,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             for (String e : existing) {
                 if (e.split("=", 2)[0].equals(newPrefix)) {
                     if (log.isTraceEnabled()) {
-                        log.trace(String.format("Overwriting namespace %s with %s", e, n));
+                        log.trace(String.format(Locale.ROOT, "Overwriting namespace %s with %s", e, n));
                     }
                     existing.remove(e);
                     break;
@@ -130,7 +130,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             }
             existing.add(n);
         } catch (Exception e) {
-            log.warn(String.format("Exception in overwriteOrAdd(%s, %s)", Strings.join(existing, ", "), n), e);
+            log.warn(String.format(Locale.ROOT, "Exception in overwriteOrAdd(%s, %s)", Strings.join(existing, ", "), n), e);
         }
     }
 
@@ -255,7 +255,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                     Logging.logProcess("XMLSplitterHandler.endElement", message, Logging.LogLevel.WARN, origin);
                     log.warn(message);
                     if (log.isTraceEnabled()) {
-                        log.trace(String.format("Dumping id-less Record-XML (expected id-element %s#%s) from '%s':\n%s",
+                        log.trace(String.format(Locale.ROOT, "Dumping id-less Record-XML (expected id-element %s#%s) from '%s':\n%s",
                                                 target.idElement, target.idTag, origin, sw.toString()));
                     }
                     if (!missingIDReported) {

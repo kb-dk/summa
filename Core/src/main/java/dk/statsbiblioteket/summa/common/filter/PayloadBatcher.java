@@ -21,6 +21,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * Active PayloadQueue with callback flushing when it is full or when there is content and a timeout is reached.
  * Typically used to group requests to external resources.
@@ -71,11 +73,11 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
         maxBytes = conf.getLong(CONF_MAX_BYTES, DEFAULT_MAX_BYTES);
         maxMS = conf.getInt(CONF_MAX_MS, DEFAULT_MAX_MS);
         queue = new PayloadQueue(maxCount, maxBytes);
-        log.debug(String.format("Created PayloadBatcher with maxCount=%d, maxBytes=%d, maxMS=%d",
+        log.debug(String.format(Locale.ROOT, "Created PayloadBatcher with maxCount=%d, maxBytes=%d, maxMS=%d",
                                 maxCount, maxBytes, maxMS));
         if (maxMS != -1) {
             watcher = new Thread(
-                this, String.format("PayloadBatcher(count=%d, bytes=%d, MS=%d) daemon", maxCount, maxBytes, maxMS));
+                this, String.format(Locale.ROOT, "PayloadBatcher(count=%d, bytes=%d, MS=%d) daemon", maxCount, maxBytes, maxMS));
             watcher.setDaemon(true); // Allow the JVM to exit
             watcher.setUncaughtExceptionHandler(new LoggingExceptionHandler());
             watcher.start();
@@ -186,7 +188,8 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
      * close() has been called.
      */
     public void close() {
-        log.debug(String.format("Close called with %d received Payloads and %d still queued", received, queue.size()));
+        log.debug(String.format(
+                Locale.ROOT, "Close called with %d received Payloads and %d still queued", received, queue.size()));
         closed = true;
         try {
             if (!queue.isEmpty()) {
@@ -202,8 +205,9 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
         } catch (InterruptedException e) {
             log.warn("Interrupted while waiting for Payload batching thread", e);
         }
-        log.info(String.format("Closed batcher with %d processed Payloads, delivered in %d ms (%s Payloads/s)",
-                               received, flushTime, flushTime == 0 ? "N/A" : (received * 1000 / flushTime)));
+        log.info(String.format(
+                Locale.ROOT, "Closed batcher with %d processed Payloads, delivered in %d ms (%s Payloads/s)",
+                received, flushTime, flushTime == 0 ? "N/A" : (received * 1000 / flushTime)));
     }
 
     /**
@@ -221,6 +225,6 @@ public abstract class PayloadBatcher implements Configurable, Runnable {
     }
 
     public String toString() {
-        return String.format("PayloadBatcher(count=%d, bytes=%d, MS=%d)", maxCount, maxBytes, maxMS);
+        return String.format(Locale.ROOT, "PayloadBatcher(count=%d, bytes=%d, MS=%d)", maxCount, maxBytes, maxMS);
     }
 }

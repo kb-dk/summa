@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Locale;
 
 /**
  * Wrapper for marc4j that takes an InputStream with MARC in ISO 2709 and
@@ -140,11 +141,11 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
         fixControlfields = conf.getBoolean(CONF_FIX_CONTROLFIELDS, fixControlfields);
         controlfieldsDelimiter = conf.getString(CONF_CONTROLFIELDS_DELIMITER, controlfieldsDelimiter);
         usePermissive = conf.getBoolean(CONF_USE_PERMISSIVE, usePermissive);
-        log.debug(String.format("Constructed ISO 2709 filter with charset '%s', fixControlFields=%b, " 
-                                + "controlfieldDelimiter='%s' and usePermissive=%b",
-                                inputcharset == null ?
-                                "inferred from the InputStream" :
-                                inputcharset, fixControlfields, controlfieldsDelimiter, usePermissive));
+        log.debug(String.format(
+                Locale.ROOT, "Constructed ISO 2709 filter with charset '%s', fixControlFields=%b, "
+                             + "controlfieldDelimiter='%s' and usePermissive=%b",
+                inputcharset == null ? "inferred from the InputStream" :
+                        inputcharset, fixControlfields, controlfieldsDelimiter, usePermissive));
     }
 
     @Override
@@ -284,7 +285,7 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
         private void convertControlfields(Record record) {
             for (Object cfObject : record.getControlFields()) {
                 if (!(cfObject instanceof ControlField)) {
-                    throw new IllegalStateException(String.format(
+                    throw new IllegalStateException(String.format(Locale.ROOT,
                             "Expected ControlField, got %s", cfObject.getClass()));
                 }
                 ControlField cf = (ControlField) cfObject;
@@ -299,7 +300,7 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
                         //noinspection UnnecessaryContinue
                         continue; // leading or trailing delimiter
                     } else if (token.length() == 1) {
-                        log.debug(String.format(
+                        log.debug(String.format(Locale.ROOT,
                                 "Ignoring subfield definition of insufficient length %d in garbled controlfield."
                                 + " tag='%s', content='%s', token='%s'",
                                 token.length(), cf.getTag(), content, token));

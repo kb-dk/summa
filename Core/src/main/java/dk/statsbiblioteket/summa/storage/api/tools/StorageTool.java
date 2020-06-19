@@ -40,10 +40,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @SuppressWarnings("UseOfSystemOutOrSystemErr")
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -413,7 +410,7 @@ public class StorageTool {
         Record holdings = storage.getRecord("__holdings__", opts);
         String xml = holdings.getContentAsUTF8();
         System.out.println(xml);
-        System.err.println(String.format("Retrieved holdings in %sms", System.currentTimeMillis() - start));
+        System.err.println(String.format(Locale.ROOT, "Retrieved holdings in %sms", System.currentTimeMillis() - start));
         return 0;
     }
 
@@ -431,7 +428,7 @@ public class StorageTool {
         long start = System.currentTimeMillis();
         Record holdings = storage.getRecord("__statistics__", opts);
         System.out.println(holdings.getContentAsUTF8());
-        System.err.println(String.format("Retrieved stats in %sms", System.currentTimeMillis() - start));
+        System.err.println(String.format(Locale.ROOT, "Retrieved stats in %sms", System.currentTimeMillis() - start));
         return 0;
     }
 
@@ -463,7 +460,7 @@ public class StorageTool {
         System.err.flush();
         System.out.println(result);
         System.out.flush();
-        System.err.println(String.format("----------\nRan job '%s' in %sms",
+        System.err.println(String.format(Locale.ROOT, "----------\nRan job '%s' in %sms",
                                          jobName, System.currentTimeMillis() - start));
         return 1;
     }
@@ -498,7 +495,7 @@ public class StorageTool {
         System.err.flush();
         System.out.println(result);
         System.out.flush();
-        System.err.println(String.format("----------\nPerformed backup in %sms",
+        System.err.println(String.format(Locale.ROOT, "----------\nPerformed backup in %sms",
                                          System.currentTimeMillis() - start));
         return 1;
     }

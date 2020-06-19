@@ -1506,7 +1506,7 @@ public class TestExposedFacets extends TestCase {
                   + getTime(subSearchMS / RUNS) + "\n");
     for (int i = 0 ; i < Math.min(topDocs.totalHits, MAXHITS) ; i++) {
       int docID = topDocs.scoreDocs[i].doc;
-      result.append(String.format(
+      result.append(String.format(Locale.ROOT,
           "Hit #%d was doc #%d with field " + field + " %s\n",
           i, docID, ((BytesRef)((FieldDoc)topDocs.scoreDocs[i]).fields[0]).utf8ToString()));
     }
@@ -1518,6 +1518,6 @@ public class TestExposedFacets extends TestCase {
     }
     long seconds = Math.round(ms / 1000.0);
     long minutes = seconds / 60;
-    return String.format("%d:%02d minutes", minutes, seconds - minutes*60);
+    return String.format(Locale.ROOT, "%d:%02d minutes", minutes, seconds - minutes*60);
   }
 }

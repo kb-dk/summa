@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Stats-oriented base for building ObjectFilters.
@@ -147,14 +148,15 @@ public abstract class ObjectFilterBase implements ObjectFilter {
 
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace(String.format("%s processed %s, #%d, in %.1f ms using %s",
-                                    getName(), payload, getUpdateCount(), ms, this));
+            log.trace(String.format(
+                    Locale.ROOT, "%s processed %s, #%d, in %.1f ms using %s",
+                    getName(), payload, getUpdateCount(), ms, this));
         } else if (log.isDebugEnabled() && feedback) {
             if (showPullSizeStats || showProcessSizeStats) {
-                log.debug(String.format("%s processed Payload #%d, in %.1f ms, %s",
+                log.debug(String.format(Locale.ROOT, "%s processed Payload #%d, in %.1f ms, %s",
                                         getName(), getUpdateCount(), ms, getProcessStats()));
             } else {
-                log.debug(String.format("%s processed %s, #%d, in %.1f ms, %s",
+                log.debug(String.format(Locale.ROOT, "%s processed %s, #%d, in %.1f ms, %s",
                                         getName(), payload, getUpdateCount(), ms, getProcessStats()));
             }
         }
@@ -198,7 +200,7 @@ public abstract class ObjectFilterBase implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.info(String.format("Closing down %s with success=%b and final stats %s",
+        log.info(String.format(Locale.ROOT, "Closing down %s with success=%b and final stats %s",
                                getName(), success, getProcessStats()));
     }
 
@@ -211,13 +213,13 @@ public abstract class ObjectFilterBase implements ObjectFilter {
 
         sb.append("timing=(");
         if (showPullTimingStats && showProcessTimingStats) {
-            sb.append(String.format("%s, %s)", timingPull, timingProcess));
+            sb.append(String.format(Locale.ROOT, "%s, %s)", timingPull, timingProcess));
         }
         if (showPullTimingStats && !showProcessTimingStats) {
-            sb.append(String.format("%s)", timingPull));
+            sb.append(String.format(Locale.ROOT, "%s)", timingPull));
         }
         if (!showPullTimingStats && showProcessTimingStats) {
-            sb.append(String.format("%s)", timingProcess));
+            sb.append(String.format(Locale.ROOT, "%s)", timingProcess));
         }
         if (!showPullTimingStats && !showProcessTimingStats) {
             sb.append("N/A)");
@@ -225,13 +227,13 @@ public abstract class ObjectFilterBase implements ObjectFilter {
 
         sb.append(", size=(");
         if (showPullSizeStats && showProcessSizeStats) {
-            sb.append(String.format("%s, %s)", sizePull, sizeProcess));
+            sb.append(String.format(Locale.ROOT, "%s, %s)", sizePull, sizeProcess));
         }
         if (showPullSizeStats && !showProcessSizeStats) {
-            sb.append(String.format("%s)", sizePull));
+            sb.append(String.format(Locale.ROOT, "%s)", sizePull));
         }
         if (!showPullSizeStats && showProcessSizeStats) {
-            sb.append(String.format("%s)", sizeProcess));
+            sb.append(String.format(Locale.ROOT, "%s)", sizeProcess));
         }
         if (!showPullSizeStats && !showProcessSizeStats) {
             sb.append("N/A)");

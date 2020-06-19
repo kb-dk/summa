@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.search.api;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
+import java.util.Locale;
 
 /**
  * Search problems caused by the Query which does not affect general Searcher availability.
@@ -84,7 +85,7 @@ public class QueryException extends RemoteException {
         return component;
     }
     private String getComponent(QueryException e) {
-        return String.format("(%s%s)",
+        return String.format(Locale.ROOT, "(%s%s)",
                              component,
                              e.getCause() != null && e.getCause() instanceof QueryException
                              ? getComponent((QueryException)e.getCause()) : "");

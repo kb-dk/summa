@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -182,9 +183,9 @@ public class TestHierarchicalTermProvider extends TestCase {
     writer.close();
     System.out.println("");
     System.out.println(String.format(
-        "Created %d document index with %d tag references, maxTagsPerlevel=%d, "
-        + "maxLevel=%d in %sms at %s",
-        docCount, references, maxTagsPerLevel, maxLevel,
+            Locale.ROOT, "Created %d document index with %d tag references, maxTagsPerlevel=%d, "
+                         + "maxLevel=%d in %sms at %s",
+            docCount, references, maxTagsPerLevel, maxLevel,
         (System.nanoTime() - startTime) / 1000000, location.getAbsolutePath()));
     return references;
   }

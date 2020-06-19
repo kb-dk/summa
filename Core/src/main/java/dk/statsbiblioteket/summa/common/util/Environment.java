@@ -21,10 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,7 +81,7 @@ public class Environment {
                 expVal = defaultValue;
             }
             if (expVal == null) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "Unable to expand environment variable '%s', with no fallback defined", rawKey));
 //                System.out.println("Group " + matcher.group(1) + " input " + s);
                 matcher.appendReplacement(expanded, "");
@@ -94,7 +91,7 @@ public class Environment {
                     matcher.appendReplacement(expanded, Matcher.quoteReplacement(expVal));
                 } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException(String.format(
-                            "Exception appending replacement '%s' at pos %d in input String '%s'",
+                            Locale.ROOT, "Exception appending replacement '%s' at pos %d in input String '%s'",
                             expVal, matcher.regionStart(), s));
                 }
             }
@@ -268,7 +265,7 @@ public class Environment {
                      + "the JVM does not have bug #6707044 "
                      + "(see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044) for details");
             Runtime rt = Runtime.getRuntime();
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT,
                     "Summa version is %s. Xmx=%dMB, processors=%d, machineName?%s. All OK",
                     SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(), getMachineName()));
             javaVersion = version;
@@ -290,7 +287,7 @@ public class Environment {
                     + version);
         }
         Runtime rt = Runtime.getRuntime();
-        log.info(String.format(
+        log.info(String.format(Locale.ROOT,
                 "Java runtime version is %s, Summa version is %s. Xmx=%dMB, processors=%d, machineName=%s. All OK",
                 version, SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(),
                 getMachineName()));

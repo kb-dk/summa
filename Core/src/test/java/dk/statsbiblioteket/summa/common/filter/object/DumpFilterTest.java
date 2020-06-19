@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * DumpFilter Tester.
@@ -115,7 +116,7 @@ public class DumpFilterTest extends TestCase {
         log.debug("Content of XML-dump:\n" + Files.loadString(ex));
 
         Calendar calendar = Calendar.getInstance();
-        final String noIDPrefix = String.format("%1$tF_", calendar);
+        final String noIDPrefix = String.format(Locale.ROOT, "%1$tF_", calendar);
         File[] noIDFiles = OUT.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -126,7 +127,7 @@ public class DumpFilterTest extends TestCase {
                      2, noIDFiles.length);
         boolean foundStream = false;
         for (File noIDFile: noIDFiles) {
-            assertTrue(String.format(
+            assertTrue(String.format(Locale.ROOT,
                     "The no ID file '%s' should have length > 0", noIDFile),
                        noIDFile.length() > 0);
             foundStream |= noIDFile.toString().endsWith(".stream");

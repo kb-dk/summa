@@ -191,7 +191,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
         for (String structure: structures) {
             templates.add(generateTemplate(structure, random));
         }
-        log.info(String.format("initialize() finished analyzing %d samples and got %d unique terms in %s\n%s",
+        log.info(String.format(Locale.ROOT, "initialize() finished analyzing %d samples and got %d unique terms in %s\n%s",
                                profiler.getBeats(), terms.size(), profiler.getSpendTime(), stats));
     }
 
@@ -535,7 +535,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
     }
     @Override
     public void close(boolean success) {
-        log.info(String.format("Closing down %s with success=%b. Generated %d ALTO records at %f ms/record",
+        log.info(String.format(Locale.ROOT, "Closing down %s with success=%b. Generated %d ALTO records at %f ms/record",
                                this, success, delivered, delivered == 0 ? 0 : genTime * 1.0d / 1000000 / delivered));
         delivered = maxRecords;
     }
@@ -562,7 +562,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
 
     @Override
     public String toString() {
-        return String.format("AltoGeneratorFilter(id='%s', base='%s', seed=%d, randomTermChance=%f, createStream=%b, "
+        return String.format(Locale.ROOT, "AltoGeneratorFilter(id='%s', base='%s', seed=%d, randomTermChance=%f, createStream=%b, "
                              + "structures=%d/%d, terms=%d, delivered=%d/%d, hackedMode=%b)",
                              id, base, seed, randomTermChance, createStream,
                              structures.size(), maxStructures, terms.size(), delivered, maxRecords, hackedMode);

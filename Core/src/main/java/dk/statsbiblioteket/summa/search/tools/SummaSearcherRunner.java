@@ -26,6 +26,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * Helper class to launch a search engine from the command line.
  */
@@ -71,7 +73,7 @@ public class SummaSearcherRunner {
                 }
             }
         } catch (Throwable t) {
-            String message = String.format("Caught toplevel throwable in SummaSearcherRunner.main with arguments %s",
+            String message = String.format(Locale.ROOT, "Caught toplevel throwable in SummaSearcherRunner.main with arguments %s",
                                            Strings.join(args, ", "));
             Logging.fatal(log, "SummaSearcherRunner.main", message, t);
             System.err.println(message);

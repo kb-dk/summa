@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -77,7 +78,7 @@ public class IndexControllerTest extends TestCase {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 54);
         assertEquals("The timestamp should be properly formatted",
                      "20080417-215054", 
-                     String.format(IndexCommon.TIMESTAMP_FORMAT, t));
+                     String.format(Locale.ROOT, IndexCommon.TIMESTAMP_FORMAT, t));
     }
 }
 

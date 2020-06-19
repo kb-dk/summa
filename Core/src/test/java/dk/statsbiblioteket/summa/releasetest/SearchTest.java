@@ -272,7 +272,7 @@ public class SearchTest extends NoExitTestCase {
     private static void assertPaging(String message, DocumentResponse docs, int start, int pageSize) {
         List<String> expected = new ArrayList<>(pageSize);
         for (int page = start ; page < start + pageSize ; page++) {
-            expected.add("Jensen Hans " + String.format("%07d", page));
+            expected.add("Jensen Hans " + String.format(Locale.ROOT, "%07d", page));
         }
         assertEquals(message, Strings.join(expected), Strings.join(getContent(docs, "sort_verify")));
     }
@@ -507,7 +507,7 @@ public class SearchTest extends NoExitTestCase {
             @Override
             public Payload next() {
                 String id = "fagref:hj@example.com" + delivered;
-                String sortValue = String.format("Jensen Hans %07d", delivered);
+                String sortValue = String.format(Locale.ROOT, "Jensen Hans %07d", delivered);
                 sb.setLength(0);
 
                 sb.append("<fagref>\n");

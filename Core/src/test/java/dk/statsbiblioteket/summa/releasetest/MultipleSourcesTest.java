@@ -187,11 +187,11 @@ public class MultipleSourcesTest extends NoExitTestCase {
             assertNotNull("There must be a query for source " + source, query);
             Request request = new Request();
             request.put(DocumentSearcher.SEARCH_QUERY, query);
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "Verifying index prescence for source %s with query %s",
                     source, query));
             String result = searchClient.search(request).toXML();
-            log.trace(String.format(
+            log.trace(String.format(Locale.ROOT,
                     "Search result for query '%s' for source %s was:\n%s",
                     query, source, result));
             if (getSearchResultCount(result) == 0) {
@@ -355,7 +355,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
             sourceConf.set(MUXFilterFeeder.CONF_FILTER_NAME,
                            source + " transformer");
             sourceConf.set(MUXFilterFeeder.CONF_FILTER_BASES, source);*/
-/*            String xsltRelativeLocation = String.format(
+/*            String xsltRelativeLocation = String.format(Locale.ROOT,
                     "targets/%s/%1$s_index.xsl", source);
             if ("fagref".equals(source)) {
                 xsltRelativeLocation = "targets/fagreferent/fagref_index.xsl";
@@ -365,7 +365,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
                 xsltRelativeLocation = "targets/DanskReklameFilm/reklamefilm_index.xsl";
             }
             URL sourceXSLT = Resolver.getURL(xsltRelativeLocation);
-            assertNotNull(String.format(
+            assertNotNull(String.format(Locale.ROOT,
                     "The XSLT for source %s should exist at the relative "
                     + "location %s", source, xsltRelativeLocation), sourceXSLT);
             sourceConf.set(XMLTransformer.CONF_XSLT, sourceXSLT.getFile());*/

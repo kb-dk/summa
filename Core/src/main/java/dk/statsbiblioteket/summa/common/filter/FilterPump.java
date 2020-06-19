@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Sets up a chain of ObjectFilters and pumps the last filter until no more data
@@ -82,7 +83,7 @@ public class FilterPump extends StateThread implements Configurable {
                 if (!sequence.hasNext()) {
                     profiler.beat();
                     log.info(String.format(
-                            "Finished pumping '%s' %d times in %s, overall average speed was %s pumps/sec",
+                            Locale.ROOT, "Finished pumping '%s' %d times in %s, overall average speed was %s pumps/sec",
                             chainName, profiler.getBeats(), profiler.getSpendTime(), profiler.getBps(false)));
                     break;
                 }
@@ -119,7 +120,7 @@ public class FilterPump extends StateThread implements Configurable {
                                 Integer.toString((int) profiler.getBps(true));
         String overallAverage = profiler.getBps(false) < 10 ? Double.toString(profiler.getBps(false)) :
                                 Integer.toString((int) profiler.getBps(false));
-        String message = String.format(
+        String message = String.format(Locale.ROOT,
                 "%d pumps performed in %s, average speed for the last %d pumps was %s pumps/sec, overall average was "
                 + "%s pumps/sec, last pump took %s ms and delivered %s",
                 profiler.getBeats(), profiler.getSpendTime(), profiler.getBpsSpan(), currentAverage,
@@ -139,7 +140,7 @@ public class FilterPump extends StateThread implements Configurable {
         super.stop();
 
         sequence.close(true);
-        log.info(String.format("Filter pump %s stopped", getChainName()));
+        log.info(String.format(Locale.ROOT, "Filter pump %s stopped", getChainName()));
     }
 
     private void close(boolean success) {

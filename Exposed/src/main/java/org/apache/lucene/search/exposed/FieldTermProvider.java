@@ -280,7 +280,7 @@ public class FieldTermProvider extends TermProviderImpl {
     // TODO: Remove this
     log.debug("Chunk total sort for field " + getField(0) + ": "
               + ExposedUtil.time("terms", ordered.length, sortTime / 1000000));
-/*    System.out.println(String.format(
+/*    System.out.println(String.format(Locale.ROOT,
             "Sorted %d Terms in %s out of which %s (%s%%) was lookups and " +
                     "%s (%s%%) was collation key creation. " +
                    "The cache (%d terms) got %d requests with %d (%s%%) misses",
@@ -390,7 +390,7 @@ public class FieldTermProvider extends TermProviderImpl {
     System.arraycopy(sorted, 0, ordinals, 0, sorted.length);
 
     log.debug("Cache stats for chunkMerge for " + getDesignation() + ": " + cache.getStats());
-/*    System.out.println(String.format(
+/*    System.out.println(String.format(Locale.ROOT,
         "Heap merged %d sorted chunks of size %d (cache: %d, total terms: %s)" +
             " in %s with %d cache misses (%d combined for both sort passes)",
         chunkCount, chunkSize, sortCacheSize, ordinals.length,

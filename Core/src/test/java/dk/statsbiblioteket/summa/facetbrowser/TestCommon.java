@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+import org.junit.Test;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection", "deprecation"})
 @QAInfo(level = QAInfo.Level.NORMAL,

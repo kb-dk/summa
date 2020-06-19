@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Locale;
 
 /**
  * <p>Helper class to ease implementation of Summa ClientManager {@link Service}s.
@@ -84,9 +85,8 @@ public abstract class ServiceBase extends UnicastRemoteObject
         }
         if (id == null) {
             throw new ConfigurationException(String.format(
-                    "The property '%s' was not present and no service id was"
-                    + " specified in system properties '%s'. id could not be"
-                    + " determined",
+                    Locale.ROOT, "The property '%s' was not present and no service id was specified in system " +
+                                 "properties '%s'. id could not be determined",
                     Service.CONF_SERVICE_ID, Service.CONF_SERVICE_ID));
         }
 

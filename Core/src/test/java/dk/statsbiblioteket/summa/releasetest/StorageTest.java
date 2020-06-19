@@ -35,10 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -545,7 +542,7 @@ public class StorageTest extends NoExitTestCase {
         Profiler profiler = new Profiler(records);
         List<Record> recordList = new ArrayList<>(records);
         for (int batch = 0 ; batch < batches ; batch++) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "Running batch %d/%d with a total of %d MB",
                     batch+1, batches, records * recordSize / 1048576));
             recordList.clear();
@@ -558,11 +555,8 @@ public class StorageTest extends NoExitTestCase {
             }
             storage.flushAll(recordList);
         }
-        log.info(String.format(
-                "Ingested %d records of %d bytes in %s. Average speed: %s "
-                + "records/second",
-                records, recordSize,
-                profiler.getSpendTime(), profiler.getBps(false)));
+        log.info(String.format(Locale.ROOT, "Ingested %d records of %d bytes in %s. Average speed: %s records/second",
+                               records, recordSize, profiler.getSpendTime(), profiler.getBps(false)));
         storage.close();
         ReleaseHelper.cleanup();
         log.info("Finished scale-test");

@@ -524,7 +524,7 @@ Got 50001 ordered ordinals in 2673ms: ~18 terms/ms
         System.out.println("The 10 first actual hits:");
         dumpResult(actual.scoreDocs);
       }
-      assertEquals(String.format(
+      assertEquals(String.format(Locale.ROOT,
           "%s. The docID for hit#%d/%d should be correct. " +
               "Expected %d with term '%s', got %d with term '%s'",
           message, i+1, expected.scoreDocs.length, e.doc, ef, a.doc, af),

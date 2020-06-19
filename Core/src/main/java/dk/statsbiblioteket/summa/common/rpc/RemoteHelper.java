@@ -35,10 +35,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Utility class foor remote invocation.
@@ -95,8 +92,8 @@ public class RemoteHelper {
             reg.rebind(serviceName, remote);
             shutdownHook.registerService(registryPort, serviceName);
         } catch (NullPointerException e) {
-            throw new NullPointerException(String.format("NullPointerException while calling rebind(%s, %s", 
-                                                         serviceName, remote));
+            throw new NullPointerException(String.format(
+                    Locale.ROOT, "NullPointerException while calling rebind(%s, %s", serviceName, remote));
         }
 
         log.info(remote.getClass().getSimpleName() + " bound in registry on //localhost:" + registryPort + "/"
@@ -140,9 +137,9 @@ public class RemoteHelper {
             reg.unbind(serviceName);
             shutdownHook.unregisterService(registryPort, serviceName);
         } catch (NotBoundException e) {
-            log.warn(String.format("Service '%s' not bound in registry on port %d", serviceName, registryPort), e);
+            log.warn(String.format(Locale.ROOT, "Service '%s' not bound in registry on port %d", serviceName, registryPort), e);
         } catch (Exception e) {
-            log.warn(String.format("Unable to unbind service '%s' on port %d", serviceName, registryPort), e);
+            log.warn(String.format(Locale.ROOT, "Unable to unbind service '%s' on port %d", serviceName, registryPort), e);
         }
         try {
             log.info("Unexported service '" + serviceName + "' on port " + registryPort);
@@ -257,7 +254,7 @@ public class RemoteHelper {
                 url = new URL(uri);
             } catch (MalformedURLException e) {
                 log.warn("Malformed URL in codepath", e);
-                throw new InvalidCodeBaseException(String.format("Malformed url: %s, error was: %s", uri,
+                throw new InvalidCodeBaseException(String.format(Locale.ROOT, "Malformed url: %s, error was: %s", uri,
                                                                  e.getMessage()));
             }
 
@@ -267,7 +264,7 @@ public class RemoteHelper {
                 jar = Files.download(url, tmpDir, true);
             } catch (IOException e) {
                 log.warn("Unable to retrieve url", e);
-                throw new InvalidCodeBaseException(String.format("Unable to retrieve url %s: %s", url, e.getMessage()));
+                throw new InvalidCodeBaseException(String.format(Locale.ROOT, "Unable to retrieve url %s: %s", url, e.getMessage()));
             }
 
             /* validate that the contens looks like a .jar */
@@ -276,12 +273,12 @@ public class RemoteHelper {
 
                 File metaInf = new File(tmpDir, "META-INF");
                 if (!metaInf.exists()) {
-                    throw new InvalidCodeBaseException(String.format(
+                    throw new InvalidCodeBaseException(String.format(Locale.ROOT,
                             "The .jar-file %s does not contain a META-INF directory", url));
                 }
 
             } catch (IOException e) {
-                throw new InvalidCodeBaseException(String.format(
+                throw new InvalidCodeBaseException(String.format(Locale.ROOT,
                         "Failed to extract %s. The .jar file is possibly corrupt", url));
             }
 
@@ -455,7 +452,7 @@ public class RemoteHelper {
                         safeLogInfo("Shutdown hook: Unexporting " + serviceName + " from port " + registryPort);
                         unExportRemoteInterface(serviceName, registryPort);
                     } catch (IOException e) {
-                        safeLogWarn(String.format(
+                        safeLogWarn(String.format(Locale.ROOT,
                                 "Failed to unexport remote interface '%s' on port %d", serviceName, registryPort));
                     }
                 }

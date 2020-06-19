@@ -601,7 +601,7 @@ public class SolrResponseBuilder implements Configurable {
                     }
                     return true;
                 }
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "parseFacetRanges: Expected only elements with known name attributes, " +
                         "got element %s with name %s", current, name));
                 return false;
@@ -924,7 +924,7 @@ public class SolrResponseBuilder implements Configurable {
                 if (groupValue == null) {
                     log.warn("parseGroupedInnerList: Unable to locate groupValue for group '" + groupName + "'");
                 } else if (records == null || records.isEmpty()) {
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "parseGroupedInnerList: Got groupValue '%s' for group '%s' but no records",
                             groupValue, groupName));
                 } else {
@@ -1159,7 +1159,7 @@ public class SolrResponseBuilder implements Configurable {
         String[] elements = extracted.getString(field, "").split("\n");
         for (String element: elements) {
             if (!"".equals(element)) {
-                shortformat.append(String.format("%s<%s>%s</%s>\n", indent, tag, XMLUtil.encode(element), tag));
+                shortformat.append(String.format(Locale.ROOT, "%s<%s>%s</%s>\n", indent, tag, XMLUtil.encode(element), tag));
             }
         }
     }

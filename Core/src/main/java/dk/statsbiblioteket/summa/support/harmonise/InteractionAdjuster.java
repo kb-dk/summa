@@ -264,7 +264,7 @@ public class InteractionAdjuster implements Configurable {
             unsupportedQuery = new TermQuery(new Term(split[0],split[1]));
         }
 
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "Constructed adjuster with id='%s', enabled=%b, baseFactor=%f, baseAddition=%f, "
                 + "adjustingDocumentFields='%s', adjustingFacetFields='%s', tagAdjusters=%d, "
                 + "adjustResponseFieldsEnabled=%b, adjustResponseFacetsEnabled=%b",
@@ -796,7 +796,7 @@ public class InteractionAdjuster implements Configurable {
                 facetMap.getForward().entrySet()) {
             if (entry.getValue().size() > 1 && !warnedOnIncompleteFacetMap) {
                 warnedOnIncompleteFacetMap = true;
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "Encountered mapping from source '%s' to destinations '%s'. Multiple sources is not yet supported",
                         entry.getValue(), entry.getKey()));
             }

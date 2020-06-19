@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * This filter reverses the normal pull-flow for filters to push. It does not
@@ -92,7 +93,7 @@ public class PushFilter implements ObjectFilter {
      */
     public PushFilter(int maxPayloads, int maxBytes) {
         queue = new PayloadQueue(maxPayloads, maxBytes);
-        log.debug(String.format("Constructed PushFilter with queue max payloads %d and max payload bytes %d",
+        log.debug(String.format(Locale.ROOT, "Constructed PushFilter with queue max payloads %d and max payload bytes %d",
                                 maxPayloads, maxBytes));
     }
 

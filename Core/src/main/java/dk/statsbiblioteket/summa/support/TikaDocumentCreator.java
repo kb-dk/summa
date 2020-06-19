@@ -42,6 +42,7 @@ import org.xml.sax.ext.DefaultHandler2;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Locale;
 
 // TODO: Handle Tika Exceptions gracefully, optionally accepting the Payload
 /**
@@ -103,11 +104,10 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
 
             if (tikaConfUrl == null) {
                 throw new ConfigurationException(String.format(
-                        "Unable to find Tika configuration '%s'",
+                        Locale.ROOT, "Unable to find Tika configuration '%s'",
                         conf.getString(TikaFilter.CONF_TIKA_CONFIG)));
             } else {
-                log.debug(String.format("Using Tika configuration '%s'",
-                                        tikaConfUrl));
+                log.debug(String.format(Locale.ROOT, "Using Tika configuration '%s'", tikaConfUrl));
             }
 
             try {
@@ -294,7 +294,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                                            content, 1.0F);
                         innerPayload.getData().put(FIELD_TITLE, content);
                     } catch (IndexServiceException e) {
-                        throw new SAXException(String.format(
+                        throw new SAXException(String.format(Locale.ROOT,
                                 "Unable to add content to document for field "
                                 + "'%s'", FIELD_TITLE));
                     }
@@ -303,7 +303,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                         //noinspection DuplicateStringLiteralInspection
                         addToFreetext(descriptor, document, "dummy", content);
                     } catch (IndexServiceException e) {
-                        throw new SAXException(String.format(
+                        throw new SAXException(String.format(Locale.ROOT,
                                 "Unable to add freetext content to document "
                                 + "for '%s'", FIELD_TITLE));
                     }

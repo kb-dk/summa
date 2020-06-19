@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Sets up a simulated environment for testing raw search-performance.
@@ -124,8 +125,7 @@ public class SearchPerformance {
         for (int i = 0 ; i < threadCount; i++) {
             threads.add(new SearchPerformanceThread(mediator, getSearcher()));
         }
-        log.info(String.format("Constructed %d threads. Starting run",
-                               threads.size()));
+        log.info(String.format(Locale.ROOT, "Constructed %d threads. Starting run", threads.size()));
         mediator.start();
         for (SearchPerformanceThread thread: threads) {
             thread.start();
@@ -169,7 +169,7 @@ public class SearchPerformance {
         log.debug("dirType = " + dirType + ", readOnly = " + readOnly + ", location = " + location);
         if (location == null) {
             throw new IllegalArgumentException(
-                String.format("Unable to resolve '%s' to concrete index location", locStr));
+                String.format(Locale.ROOT, "Unable to resolve '%s' to concrete index location", locStr));
         }
         if (PARAM_DIR_FS.equals(dirType)) {
             log.debug("Creating FSDirectory(" + location + ")");

@@ -258,7 +258,7 @@ public class StorageWS {
         }
 
         totalTime = System.currentTimeMillis() -totalTime;
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
             "Finished realGetRecords() in %dms (query: %d, xmlify: %dms)",
             totalTime, time, xmlTime));
 
@@ -279,7 +279,7 @@ public class StorageWS {
     private String realGetRecord(
         String id, boolean expand, boolean legacyMerge) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format(
+            log.trace(String.format(Locale.ROOT,
                     "realGetRecord('%s', expand=%b, legacyMerge=%b)",
                     id, expand, legacyMerge));
         }
@@ -323,7 +323,7 @@ public class StorageWS {
             retXML = null;
         }
 
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "realGetRecord('%s', expand=%b, legacyMerge=%b) finished in %d"
                 + " ms (%dms spend on XML creation)", id, expand, legacyMerge, 
                          System.currentTimeMillis() - startTime,

@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -134,12 +135,12 @@ public class MUXFilterFeeder implements Runnable {
                 conf.getInt(CONF_QUEUE_MAXPAYLOADS, DEFAULT_QUEUE_MAXPAYLOADS),
                 conf.getInt(CONF_QUEUE_MAXBYTES, DEFAULT_QUEUE_MAXBYTES));
         if (conf.valueExists(CONF_QUEUE_OUT_LENGTH)) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "The configuration contained the deprecated key %s. "
                     + "Use %s instead", CONF_QUEUE_OUT_LENGTH, MUXFilter.CONF_OUTQUEUE_MAXPAYLOADS));
         }
         if (conf.valueExists(CONF_QUEUE_OUT_MAXBYTES)) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "The configuration contained the deprecated key %s. Use %s instead",
                     CONF_QUEUE_OUT_MAXBYTES, MUXFilter.CONF_OUTQUEUE_MAXBYTES));
         }
@@ -160,7 +161,7 @@ public class MUXFilterFeeder implements Runnable {
 
     private ObjectFilter createFilter(Configuration configuration) {
         Class<? extends ObjectFilter> filter = configuration.getClass(CONF_FILTER_CLASS, ObjectFilter.class);
-        log.debug(String.format("Got filter class %s. Commencing creation", filter));
+        log.debug(String.format(Locale.ROOT, "Got filter class %s. Commencing creation", filter));
         return Configuration.create(filter, configuration);
     }
 
@@ -174,7 +175,7 @@ public class MUXFilterFeeder implements Runnable {
             log.trace("Queueing " + payload + " in " + this);
         }
         if (!accepts(payload)) {
-            throw new IllegalArgumentException(String.format("%s does not accept %s", this, payload));
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "%s does not accept %s", this, payload));
         }
         pusher.add(payload);
     }
@@ -254,7 +255,7 @@ public class MUXFilterFeeder implements Runnable {
                         }
                     }
                 } catch (Exception e) {
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "Exception while calling next on filter '%s' in %s. Sleeping a bit, then retrying",
                             filter, this), e);
                     try {
@@ -269,7 +270,7 @@ public class MUXFilterFeeder implements Runnable {
             eofReached = true;
             out.uninterruptablePut(STOP);
         } catch (Exception e) {
-            log.error(String.format(
+            log.error(String.format(Locale.ROOT,
                     "Got unexpected exception in run-method for '%s'",
                     this), e);
         }

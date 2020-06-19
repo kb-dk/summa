@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Creates multiple copies of incoming Records, one for each base/idprefix combination.
@@ -104,7 +105,7 @@ public class TeeFilter extends MultiFilterBase {
 
     @Override
     public String toString() {
-        return String.format("TeeFilter(name='%s', bases=[%s], idPrefixes=[%s], referenceContext=%b)",
+        return String.format(Locale.ROOT, "TeeFilter(name='%s', bases=[%s], idPrefixes=[%s], referenceContext=%b)",
                              getName(), Strings.join(recordBases), Strings.join(idPrefixes), referenceContent);
     }
 }

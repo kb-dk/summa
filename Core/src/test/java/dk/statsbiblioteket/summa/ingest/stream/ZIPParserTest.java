@@ -32,6 +32,7 @@ import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -105,7 +106,7 @@ public class ZIPParserTest extends TestCase {
 
         tout.start();
 
-        log.debug(String.format("Feeder writing %dx%d bytes", BLOCK_COUNT, BLOCK_SIZE));
+        log.debug(String.format(Locale.ROOT, "Feeder writing %dx%d bytes", BLOCK_COUNT, BLOCK_SIZE));
         int next = EVERY;
         for (int bi = 0 ; bi < BLOCK_COUNT ; bi++) {
             pout.write(BLOCK);

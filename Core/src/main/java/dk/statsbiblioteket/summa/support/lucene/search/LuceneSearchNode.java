@@ -334,7 +334,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             log.debug("No explicit IndexDescriptor-setup defined. The index description will be loaded from the "
                       + "index-folder upon calls to open");
         } else {
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT,
                     "The property %s was defined, so the IndexDescriptor will not be taken from the index-folder. "
                     + "Note that this makes it hard to coordinate major updates to the IndexDescriptor in a production "
                     + "system",
@@ -357,7 +357,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             fsDirectoryT = DEFAULT_FSDIRECTORY;
         }
         fsDirectory = fsDirectoryT;
-        log.info(String.format("Constructed LuceneSearchNode(FSDirectory='%s')%s",
+        log.info(String.format(Locale.ROOT, "Constructed LuceneSearchNode(FSDirectory='%s')%s",
                                fsDirectory, exposedFeedback));
     }
 
@@ -377,7 +377,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
-            log.error(String.format(
+            log.error(String.format(Locale.ROOT,
                     "The key '%s' existed, but did not resolve to a sub configuration. The configuration for "
                     + "MoreLikeThis will be ignored", CONF_MORELIKETHIS_CONF), e);
             return;
@@ -426,7 +426,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             return;
         }
         if ("".equals(urlLocation.getFile())) {
-            throw new RemoteException(String.format(
+            throw new RemoteException(String.format(Locale.ROOT,
                     // TODO: Consider if the exception should be eaten
                     "Could not resolve file from location '%s'", location));
         }
@@ -447,9 +447,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                       + searcher.getIndexReader().maxDoc());
             createMoreLikeThis();
         } catch (CorruptIndexException e) {
-            throw new RemoteException(String.format("Corrupt index at '%s'", urlLocation), e);
+            throw new RemoteException(String.format(Locale.ROOT, "Corrupt index at '%s'", urlLocation), e);
         } catch (IOException e) {
-            throw new RemoteException(String.format("Could not create an IndexSearcher for '%s'", urlLocation), e);
+            throw new RemoteException(String.format(Locale.ROOT, "Could not create an IndexSearcher for '%s'", urlLocation), e);
         }
         log.debug("Open finished for location '" + location + "'. The searcher maxDoc is "
                   + searcher.getIndexReader().maxDoc());
@@ -474,7 +474,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         try {
             setDescriptor(new LuceneIndexDescriptor(urlLocation));
         } catch (IOException e) {
-            throw new RemoteException(String.format(
+            throw new RemoteException(String.format(Locale.ROOT,
                     "Unable to create LuceneIndexDescriptor from location '%s' resolved to URL '%s'",
                     location, urlLocation), e);
         }
@@ -535,7 +535,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
                 searcher.getIndexReader().close();
                 log.info("Successfully closed down IndexReader " + searcher.getIndexReader());
             } catch (IOException e) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "Could not close index-connection to '%s'. This will probably result in a resource-leak",
                         location), e);
             }
@@ -606,7 +606,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             responses.getTransient().put(QUERY_PARSER, parser);
             super.managedSearch(request, responses);
         } catch (StackOverflowError e) {
-            String message = String.format(
+            String message = String.format(Locale.ROOT,
                 "Caught StackOverflow at outer level during handling of lucene request %s:\n%s",
                 request.toString(true), reduceStackTrace(request, e));
             log.error(message, e);
@@ -684,7 +684,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         try {
             recordID = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, null);
             if (recordID == null) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "Got null when requesting String for key '%s'. This fails sanity-checking. "
                         + "Switching to plain query",
                         LuceneKeys.SEARCH_MORELIKETHIS_RECORDID));
@@ -692,7 +692,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             }
         } catch (final Exception e) {
             throw new ParseException(
-                    String.format("Exception while requesting String for '%s' with default value null",
+                    String.format(Locale.ROOT, "Exception while requesting String for '%s' with default value null",
                                 LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
                 private static final long serialVersionUID = 1L;
                 {
@@ -702,7 +702,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         }
         log.trace("constructing MoreLikeThis query for '" + recordID + "'");
         if ("".equals(recordID)) {
-            throw new ParseException(String.format("RecordID invalid. Expected something, got '%s'", recordID));
+            throw new ParseException(String.format(Locale.ROOT, "RecordID invalid. Expected something, got '%s'", recordID));
         }
         int docID;
         Query moreLikeThisQuery;
@@ -710,7 +710,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             TermQuery q = new TermQuery(new Term(IndexUtils.RECORD_FIELD, recordID));
             TopDocs recordDocs = searcher.search(q, null, 1);
             if (recordDocs.totalHits == 0) {
-                throw new RemoteException(String.format(
+                throw new RemoteException(String.format(Locale.ROOT,
                     "Unable to locate recordID '%s' in MoreLikeThis query", recordID));
             }
             // TODO: This really needs to be updated for storage use
@@ -720,7 +720,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             docID = recordDocs.scoreDocs[0].doc;
             moreLikeThisQuery = moreLikeThis.like(docID);
         } catch (IOException e) {
-            throw new RemoteException(String.format("Unable to create MoreLikeThis query for recordID '%s'",
+            throw new RemoteException(String.format(Locale.ROOT, "Unable to create MoreLikeThis query for recordID '%s'",
                                                     recordID), e);
         }
         if (log.isTraceEnabled()) {
@@ -843,14 +843,14 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             }
             return result;
         } catch (CorruptIndexException e) {
-            throw new IndexException(String.format("CorruptIndexException during search for query '%s'", query),
+            throw new IndexException(String.format(Locale.ROOT, "CorruptIndexException during search for query '%s'", query),
                                      location, e);
         } catch (RemoteException e) {
-            throw new RemoteException(String.format("Inner RemoteException during search for query '%s'", query), e);
+            throw new RemoteException(String.format(Locale.ROOT, "Inner RemoteException during search for query '%s'", query), e);
         } catch (IOException e) {
-            throw new IndexException(String.format("IOException during search for query '%s'", query), location, e);
+            throw new IndexException(String.format(Locale.ROOT, "IOException during search for query '%s'", query), location, e);
         } catch (Throwable t) {
-            throw new RemoteException(String.format("Exception during search for query '%s'", query), t);
+            throw new RemoteException(String.format(Locale.ROOT, "Exception during search for query '%s'", query), t);
         }
     }
 
@@ -920,13 +920,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             return null;
         }
         try {
-            return String.format(
+            return String.format(Locale.ROOT,
                     "    <explanation>\n<expandedquery>%s</expandedquery>\n"
                     + "    <score>%s</score></explanation>",
                     XMLUtil.encode(LuceneIndexUtils.queryToString(query)),
                     XMLUtil.encode(searcher.explain(query, docID).toString()));
         } catch (IOException e) {
-            return String.format(
+            return String.format(Locale.ROOT,
                 "Unable to return explanation for the inclusion of doc #%d in the search result due to %s",
                 docID, e.getMessage());
         }
@@ -980,16 +980,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             //noinspection AssignmentToNull
             luceneFilters = parseFilters(filters, request.getBoolean(DocumentKeys.SEARCH_FILTER_PURE_NEGATIVE, false));
         } catch (ParseException e) {
-            throw new RemoteException(String.format("Unable to parse filter '%s'", query), e);
+            throw new RemoteException(String.format(Locale.ROOT, "Unable to parse filter '%s'", query), e);
         }
         log.trace("Parsing collectDocID query '" + query + "'");
         try {
             luceneQuery = parseQuery(request, query);
         } catch (ParseException e) {
-            throw new RemoteException(String.format("Unable to parse query '%s'", query), e);
+            throw new RemoteException(String.format(Locale.ROOT, "Unable to parse query '%s'", query), e);
         }
         if (luceneQuery == null) {
-            throw new RemoteException(String.format("The query '%s' parsed to null", query));
+            throw new RemoteException(String.format(Locale.ROOT, "The query '%s' parsed to null", query));
         }
         return collectDocIDs(luceneQuery, luceneFilters);
     }
@@ -1005,7 +1005,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
             throw new RemoteException("Interrupted while requesting a DocIDCollector from the queue", e);
         }
         if (collector == null) {
-            throw new RemoteException(String.format("Timeout after %d milliseconds, while requesting a DocIDCollector",
+            throw new RemoteException(String.format(Locale.ROOT, "Timeout after %d milliseconds, while requesting a DocIDCollector",
                                                     COLLECTOR_REQUEST_TIMEOUT));
         }
         if (filters.isEmpty()) {
@@ -1084,16 +1084,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements Configurab
         try {
             q = parseQuery(query);
         } catch (ParseException e) {
-            throw new IOException(String.format("Exception parsing query '%s'", query), e);
+            throw new IOException(String.format(Locale.ROOT, "Exception parsing query '%s'", query), e);
         }
         Query f;
         try {
             f = parseAndJoinQueries(filters);
         } catch (ParseException e) {
-            throw new IOException(String.format("Exception parsing filter '%s'", query), e);
+            throw new IOException(String.format(Locale.ROOT, "Exception parsing filter '%s'", query), e);
         }
         if (q == null && f == null) {
-            throw new IOException(String.format("Could not parse either query '%s' nor filter '%s'",
+            throw new IOException(String.format(Locale.ROOT, "Could not parse either query '%s' nor filter '%s'",
                                                 query, Strings.join(filters)));
         }
 

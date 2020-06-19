@@ -6,6 +6,7 @@ import org.apache.lucene.util.OpenBitSet;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Counts tag occurrences in the given documents. This collector can be used as
@@ -24,7 +25,7 @@ public class TagCollectorMulti extends TagCollector {
       tagCounts = new int[map.getTagCount()];
     } catch (OutOfMemoryError e) {
       throw (OutOfMemoryError)new OutOfMemoryError(String.format(
-              "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMapMulti was %s",
+              Locale.ROOT, "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMapMulti was %s",
               map.getTagCount(), map.getTagCount() / (4*1048576), map.toString())).initCause(e);
     }
     log.debug("Constructed " + this);
@@ -85,7 +86,7 @@ public class TagCollectorMulti extends TagCollector {
       }
       sum += count;
     }
-    return String.format("TagCollectorMulti(%d potential tags, %d non-zero counts, total sum %d from %s",
+    return String.format(Locale.ROOT, "TagCollectorMulti(%d potential tags, %d non-zero counts, total sum %d from %s",
                          tagCounts.length, nonZero, sum, map.toString());
   }
   @Override

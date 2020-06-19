@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.Assert.*;
 
@@ -192,15 +193,16 @@ public class PostGreSQLStorageTest {
             profiler.beat();
             stats.process(last);
             if (profiler.getBeats() % 1000 == 0) {
-                System.out.println(String.format("************* Current speed: %.1f records/second. Stats: %s",
-                                                 profiler.getBps(true), stats));
+                System.out.println(String.format(
+                        Locale.ROOT, "************* Current speed: %.1f records/second. Stats: %s",
+                        profiler.getBps(true), stats));
             }
             if (profiler.getBeats() == maxRecords) {
                 break;
             }
         }
         storage.close();
-        System.out.println(String.format(
+        System.out.println(String.format(Locale.ROOT,
                 "Retrieved %d records in %.1f seconds at %.1f records/sec with last timestamp %d and stats %s",
                 profiler.getBeats(), profiler.getSpendMilliseconds()/1000.0, profiler.getBps(false),
                 last == null ? 0 : last.getModificationTime(), stats));

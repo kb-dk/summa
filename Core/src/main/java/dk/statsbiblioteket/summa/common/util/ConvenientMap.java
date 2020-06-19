@@ -164,7 +164,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         try {
             return Integer.parseInt(value.toString());
         } catch (Exception e) {
-            log.warn(String.format("Exception extracting int for key '%s', value '%s", key, value), e);
+            log.warn(String.format(Locale.ROOT, "Exception extracting int for key '%s', value '%s", key, value), e);
             return null;
         }
     }
@@ -186,7 +186,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         try {
             return Long.parseLong(value.toString());
         } catch (Exception e) {
-            log.warn(String.format("Exception extracting Long for key '%s', value '%s", key, value), e);
+            log.warn(String.format(Locale.ROOT, "Exception extracting Long for key '%s', value '%s", key, value), e);
             return null;
         }
     }
@@ -208,7 +208,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         try {
             return Double.parseDouble(value.toString());
         } catch (Exception e) {
-            log.warn(String.format("Exception extracting Double for key '%s', value '%s", key, value), e);
+            log.warn(String.format(Locale.ROOT, "Exception extracting Double for key '%s', value '%s", key, value), e);
             return null;
         }
     }
@@ -230,7 +230,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         try {
             return Float.parseFloat(value.toString());
         } catch (Exception e) {
-            log.warn(String.format("Exception extracting Float for key '%s', value '%s", key, value), e);
+            log.warn(String.format(Locale.ROOT, "Exception extracting Float for key '%s', value '%s", key, value), e);
             return null;
         }
     }
@@ -252,7 +252,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         try {
             return Short.parseShort(value.toString());
         } catch (Exception e) {
-            log.warn(String.format("Exception extracting Short for key '%s', value '%s", key, value), e);
+            log.warn(String.format(Locale.ROOT, "Exception extracting Short for key '%s', value '%s", key, value), e);
             return null;
         }
     }
@@ -274,7 +274,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         try {
             return Boolean.parseBoolean(value.toString());
         } catch (Exception e) {
-            log.warn(String.format("Exception extracting Boolean for key '%s', value '%s", key, value), e);
+            log.warn(String.format(Locale.ROOT, "Exception extracting Boolean for key '%s', value '%s", key, value), e);
             return null;
         }
     }
@@ -316,7 +316,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         } catch (NullPointerException e) {
             return defaultValues;
         } catch (IllegalArgumentException e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "The property %s was expected to be a list of Strings, but it was not. Using default %s instead",
                     key, defaultValues));
             return defaultValues;

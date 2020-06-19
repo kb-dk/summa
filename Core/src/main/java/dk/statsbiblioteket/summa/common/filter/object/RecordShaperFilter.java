@@ -32,6 +32,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -318,7 +319,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             throw new ConfigurationException("Storage must support sub configurations", e);
         } catch (NullPointerException e) {
             throw new ConfigurationException(String.format(
-                "Unable to extract sub configurations with key %s from configuration", CONF_META), e);
+                    Locale.ROOT, "Unable to extract sub configurations with key %s from configuration", CONF_META), e);
         }
         for (Configuration metaConf: confs) {
             metas.add(new Shaper(metaConf));
@@ -334,11 +335,11 @@ public class RecordShaperFilter extends ObjectFilterImpl {
 
         private Shaper(Configuration conf) {
             if (!conf.valueExists(CONF_META_KEY)) {
-                throw new ConfigurationException(String.format(
+                throw new ConfigurationException(String.format(Locale.ROOT,
                     "No value for mandatory key '%s' present", CONF_META_KEY));
             }
             if (!conf.valueExists(CONF_META_REGEXP)) {
-                throw new ConfigurationException(String.format(
+                throw new ConfigurationException(String.format(Locale.ROOT,
                     "No value for mandatory key '%s' present",
                     CONF_META_REGEXP));
             }
@@ -348,14 +349,14 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             try {
                 regexp = Pattern.compile(conf.getString(CONF_META_REGEXP));
             } catch (PatternSyntaxException e) {
-                throw new ConfigurationException(String.format(
+                throw new ConfigurationException(String.format(Locale.ROOT,
                     "Unable to parse pattern '%s'",
                     conf.getString(CONF_META_REGEXP)), e);
             }
             template = conf.getString(CONF_META_TEMPLATE, DEFAULT_META_TEMPLATE);
             limit = conf.getInt(CONF_META_LIMIT, DEFAULT_META_LIMIT);
             if (log.isTraceEnabled()) {
-                log.trace(String.format(
+                log.trace(String.format(Locale.ROOT,
                     "Shaper created with source='%s', destination='%s', limit=%d, regexp='%s', template='%s'",
                     source, destination, limit, regexp.pattern(), template));
             }
@@ -363,7 +364,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
 
         @Override
         public String toString() {
-            return String.format(
+            return String.format(Locale.ROOT,
                     "Shaper(source='%s', destination='%s', limit=%d, regexp='%s', template='%s')",
                     source, destination, limit, regexp.pattern(), template);
         }
@@ -378,7 +379,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 sourceString = RecordUtil.getString(record, source, limit);
             }
             if (sourceString == null) {
-                String message = String.format("Unable to get String from source '%s'", source);
+                String message = String.format(Locale.ROOT, "Unable to get String from source '%s'", source);
                 if (discardOnErrors) {
                     throw new PayloadException(message, payload);
                 }
@@ -388,7 +389,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
 
             Matcher matcher = regexp.matcher(sourceString);
             if (!matcher.find()) {
-                String message = String.format("Unable to match String with Pattern '%s'", regexp.pattern());
+                String message = String.format(Locale.ROOT, "Unable to match String with Pattern '%s'", regexp.pattern());
                 if (discardOnErrors) {
                     throw new PayloadException(message, payload);
                 }
@@ -400,7 +401,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             matcher.appendReplacement(buffer, template);
             String newText = buffer.toString().substring(matchPos);
             if (newText == null || "".equals(newText)) {
-                String message = String.format(
+                String message = String.format(Locale.ROOT,
                         "Match found with Pattern '%s' but no text was extracted using template '%s'",
                         regexp.pattern(), template);
                 if (discardOnErrors) {
@@ -410,7 +411,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 return;
             }
             if (log.isTraceEnabled()) {
-                log.trace(String.format(
+                log.trace(String.format(Locale.ROOT,
                     "Transformed %s to %s stored in %s for %s",
                     source, newText, destination, payload));
             }
@@ -521,7 +522,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             Payload payload, String type) throws PayloadException {
         Matcher matcher = assignment.getKey().matcher(input);
         if (!matcher.find()) {
-            String message = String.format(
+            String message = String.format(Locale.ROOT,
                     "Unable to match new %s with Pattern '%s'",
                     type, assignment.getKey());
             if (discardOnErrors) {
@@ -541,7 +542,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
         }
         String newText = buffer.toString().substring(matchPos);
         if (newText == null || "".equals(newText)) {
-            String message = String.format(
+            String message = String.format(Locale.ROOT,
                     getName() + "Match found for %s with Pattern '%s' but no text was extracted using template '%s'",
                     type, assignment.getKey(), assignment.getValue());
             if (discardOnErrors) {
@@ -551,7 +552,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             return null;
         }
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Found new '%s' '%s' for %s", type, newText, payload));
+            log.trace(String.format(Locale.ROOT, "Found new '%s' '%s' for %s", type, newText, payload));
         }
         return newText;
     }
@@ -574,7 +575,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
 
     @Override
     public String toString() {
-        return String.format("RecordShaperFilter(requirement=%s, copyMetas=%b, metas=[%s])",
+        return String.format(Locale.ROOT, "RecordShaperFilter(requirement=%s, copyMetas=%b, metas=[%s])",
                              metaRequirement, copyMeta, Strings.join(metas));
     }
 }

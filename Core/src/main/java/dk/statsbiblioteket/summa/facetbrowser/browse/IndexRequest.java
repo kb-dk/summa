@@ -112,7 +112,7 @@ public class IndexRequest implements Serializable {
         length = conf.getInt(CONF_INDEX_LENGTH, length);
         lengthLimit = conf.getInt(CONF_INDEX_LENGTHLIMIT, lengthLimit);
         minCount = conf.getInt(CONF_INDEX_MINCOUNT, minCount);
-        log.debug(String.format("Created default index request with caseSensitive=%b, delta=%d,"
+        log.debug(String.format(Locale.ROOT, "Created default index request with caseSensitive=%b, delta=%d,"
                                 + " length=%d, lengthLimit=%d, minCount=%d", 
                                 caseSensitive, delta, length, lengthLimit, minCount));
     }
@@ -126,7 +126,7 @@ public class IndexRequest implements Serializable {
         this.length = Math.min(length, lengthLimit);
         this.minCount = minCount;
         valid = true;
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "Created index request with field='%s', term='%s', caseSensitive=%b, delta=%d, length=%d", 
                 field, term, caseSensitive, delta, length));
     }

@@ -631,16 +631,16 @@ public class SearchWS implements ServletContextListener {
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
-            String mes = String.format("IOException performing JSON query '%s': %s", json, e.getMessage());
+            String mes = String.format(Locale.ROOT, "IOException performing JSON query '%s': %s", json, e.getMessage());
             log.warn(mes, e);
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         } catch (Exception e) {
-            String mes = String.format("Exception performing JSON query '%s': %s", json, e.getMessage());
+            String mes = String.format(Locale.ROOT, "Exception performing JSON query '%s': %s", json, e.getMessage());
             log.warn(mes, e);
             throw new RuntimeException(mes, e);
         }
         if (log.isDebugEnabled()) {
-            log.debug(String.format("directJSON(%s) finished in %s ms%s",
+            log.debug(String.format(Locale.ROOT, "directJSON(%s) finished in %s ms%s",
                                     json, System.currentTimeMillis() - startTime, getTiming(res)));
         }
         return pruneHighOrderUnicode("directJSON(query=" + req.getString(DocumentKeys.SEARCH_QUERY, "") + ")", retXML);
@@ -684,7 +684,7 @@ public class SearchWS implements ServletContextListener {
     public String simpleSearchSorted(
             String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format(
+            log.trace(String.format(Locale.ROOT,
                     "simpleSearchSorted(query='%s', numberOfRecords=%d, " +
                     "startIndex=%d, sortKey='%s', reverse=%b) entered",
                     query, numberOfRecords, startIndex, sortKey, reverse));
@@ -718,7 +718,7 @@ public class SearchWS implements ServletContextListener {
         final String PARAMS = "filter='%s', query='%s', numberOfRecords=%d, startIndex=%d, sortKey='%s', reverse=%b";
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug(String.format("filterSearchSorted(" + PARAMS + ") called",
+            log.debug(String.format(Locale.ROOT, "filterSearchSorted(" + PARAMS + ") called",
                                     filter, query, numberOfRecords, startIndex, sortKey, reverse));
         }
         long startTime = System.currentTimeMillis();
@@ -738,13 +738,13 @@ public class SearchWS implements ServletContextListener {
                         req.put(DocumentKeys.SEARCH_EXPLAIN, true);
                         continue;
                     }
-                    log.debug(String.format("Got unknown processing option '%s' in query '%s'", option, query));
+                    log.debug(String.format(Locale.ROOT, "Got unknown processing option '%s' in query '%s'", option, query));
                 }
             } else {
-                log.trace(String.format("No processing options for query '%s'", query));
+                log.trace(String.format(Locale.ROOT, "No processing options for query '%s'", query));
             }
         } catch (Exception e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Exception while extracting processing options from query "
                     + "'%s'. Options are skipped and the query left unchanged",
                     query));
@@ -776,20 +776,20 @@ public class SearchWS implements ServletContextListener {
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "IOException executing query '" + PARAMS + "'. Error was: %s",
                     filter, query, numberOfRecords, startIndex, sortKey, reverse, e.getMessage()), e);
-            String mes = String.format("IOException performing query: %s", e.getMessage());
+            String mes = String.format(Locale.ROOT, "IOException performing query: %s", e.getMessage());
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         } catch (Exception e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Exception executing query '" + PARAMS + "'. Error was: %s",
                     filter, query, numberOfRecords, startIndex, sortKey, reverse, e.getMessage()), e);
-            throw new RuntimeException(String.format("Exception performing query: %s", e.getMessage()));
+            throw new RuntimeException(String.format(Locale.ROOT, "Exception performing query: %s", e.getMessage()));
         }
 
         if (log.isDebugEnabled()) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "simpleSearchSorted(" + PARAMS + ") finished in %s ms%s",
                     filter, query, numberOfRecords, startIndex, sortKey, reverse,
                     System.currentTimeMillis() - startTime,  getTiming(res)));
@@ -812,7 +812,7 @@ public class SearchWS implements ServletContextListener {
             String returnMessage = "ping".equals(message) ? "pong" : message;
             returnMessage = returnMessage.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
             pingTime += System.currentTimeMillis();
-            final String pingResponse = String.format(
+            final String pingResponse = String.format(Locale.ROOT,
                     "<pingresponse >\n"
                     + "<message>%s</message>\n"
                     + "<ms>%d</ms>\n"
@@ -837,7 +837,7 @@ public class SearchWS implements ServletContextListener {
             log.debug("Performed ping for '" + message + "' in " + pingTime + "ms");
             return res.toXML();
         } catch (IOException e) {
-            String mes = String.format("Error pinging with message '%s': %s", message, e.getMessage());
+            String mes = String.format(Locale.ROOT, "Error pinging with message '%s': %s", message, e.getMessage());
             log.warn(mes, e);
             return  getErrorXML("PingResponse", mes, e);
         }

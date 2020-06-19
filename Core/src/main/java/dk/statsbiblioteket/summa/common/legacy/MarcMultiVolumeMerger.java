@@ -35,6 +35,7 @@ import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.net.URL;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Legacy multi volume handling of Marc2-like records (the DanMarc2 subset used
@@ -116,7 +117,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         super(conf);
         xsltLocation = Resolver.getURL(conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT));
         if (xsltLocation == null) {
-            throw new ConfigurationException(String.format(
+            throw new ConfigurationException(String.format(Locale.ROOT,
                     "Unable to get URL for property %s with content '%s",
                     CONF_MERGE_XSLT, conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT)));
         }
@@ -181,14 +182,14 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             return null;
         } else if (record.hasChildren() && record.getChildren() == null) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug(String.format(NO_RELATIVES, record.getId(), "children"));
+            log.debug(String.format(Locale.ROOT, NO_RELATIVES, record.getId(), "children"));
                 return null;
         } else if (record.hasChildren() && countNotDeleted(record.getChildren()) == 0) {
             log.trace("No non-deleted children for " + record.getId());
             return null;
         } else if (record.hasParents() && record.getParents() == null) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug(String.format(NO_RELATIVES, record.getId(), "parents"));
+            log.debug(String.format(Locale.ROOT, NO_RELATIVES, record.getId(), "parents"));
                 return null;
         } else if (record.hasParents() && countNotDeleted(record.getParents()) == 0) {
             log.trace("No non-deleted parents for " + record.getId());
@@ -352,7 +353,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
 
     @Override
     public String toString() {
-        return String.format("MarcMultiVolumeMerger(xslt=%s, namespace-stripping=%b, mergedRemoval=%b",
+        return String.format(Locale.ROOT, "MarcMultiVolumeMerger(xslt=%s, namespace-stripping=%b, mergedRemoval=%b",
                              xsltLocation, stripXMLNamespaces, removeMerged);
     }
 }

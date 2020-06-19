@@ -107,25 +107,25 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         // TODO: Guard against changing facets (subsequent calls to parse)
         Document dom = super.parse(xml);
         if (dom == null) {
-            throw new ParseException(String.format("The DOM from IndexDescriptor.parse(%s) was null", xml), -1);
+            throw new ParseException(String.format(Locale.ROOT, "The DOM from IndexDescriptor.parse(%s) was null", xml), -1);
         }
         NodeList facetNodes;
         try {
             Node facetNode = (Node)getXPath().evaluate(FACET_NODE_EXPR, dom, XPathConstants.NODE);
             if (facetNode == null) {
-                throw new ParseException(String.format(
+                throw new ParseException(String.format(Locale.ROOT,
                         "The XPath expression '%s' gave null. Apparently there are no facets defined in the "
                         + "IndexDescriptor",
                         FACET_NODE_EXPR), -1);
             }
             facetNodes = (NodeList)getXPath().evaluate(FACET_EXPR, facetNode, XPathConstants.NODESET);
         } catch (final XPathExpressionException e) {
-            throw new ParseException(String.format("Expressions '%s' and '%s' were  invalid",
+            throw new ParseException(String.format(Locale.ROOT, "Expressions '%s' and '%s' were  invalid",
                                                    FACET_NODE_EXPR, FACET_EXPR), -1) {
                 private static final long serialVersionUID = 89785489484L;
                 { initCause(e); } };
         } catch (final NullPointerException e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Unable to extracts facets with expressions '%s' and '%s'  with name spaces '%s' and '%s' "
                     + "from xml:\n%s",
                     FACET_NODE_EXPR, FACET_EXPR,
@@ -134,13 +134,13 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                     FACET_NAMESPACE_PREFIX + ":"
                     + getXPath().getNamespaceContext().getNamespaceURI(FACET_NAMESPACE_PREFIX),
                     xml), e);
-            throw new ParseException(String.format(
+            throw new ParseException(String.format(Locale.ROOT,
                     "Got NullPointerException while evaluating node with expressions '%s' and '%s' and dom '%s'",
                     FACET_NODE_EXPR, FACET_EXPR, dom), -1) {
                 private static final long serialVersionUID = 79877384469L;
                 { initCause(e); }};
         }
-        log.trace(String.format("Located %d facet nodes", facetNodes.getLength()));
+        log.trace(String.format(Locale.ROOT, "Located %d facet nodes", facetNodes.getLength()));
         Map<String, FacetStructure> facets = new LinkedHashMap<>(facetNodes.getLength());
         for (int id = 0 ; id < facetNodes.getLength(); id++) {
             FacetStructure facet = parseFacet(facetNodes.item(id), id);
@@ -181,7 +181,7 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                     && !sort.equals(FacetStructure.SORT_ALPHA_DESC)
                     && !sort.equals(FacetStructure.SORT_POPULARITY)
                     && !sort.equals(FacetStructure.SORT_POPULARITY_ASC)) {
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "Encountered unknown SORT value '%s' while parsing the node for Facet '%s' for field/group "
                             + "'%s'. Expected %s, %s, %s or %s",
                             sort, name, ref, FacetStructure.SORT_ALPHA, FacetStructure.SORT_ALPHA_DESC,
@@ -191,12 +191,12 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
                 if ("sortLocale".equals(attribute.getNodeName())) {
                 sortLocale = attribute.getNodeValue();
             } else {
-                    log.info(String.format("Unknown attribute '%s' in facet definition '%s'",
+                    log.info(String.format(Locale.ROOT, "Unknown attribute '%s' in facet definition '%s'",
                                            attribute.getNodeName(), name));
                 }
         }
         if (ref == null || "".equals(ref)) {
-            throw new ConfigurationException(String.format("No ref specified in facet '%s'", name));
+            throw new ConfigurationException(String.format(Locale.ROOT, "No ref specified in facet '%s'", name));
         }
         if (name == null || "".equals(name)) {
             name = ref;
@@ -204,7 +204,7 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         IndexField field = getField(ref);
         IndexGroup<IndexField> group = getGroup(ref);
         if (field == null && group == null) {
-            throw new ConfigurationException(String.format("No field or group defined for ref '%s' in facet '%s'",
+            throw new ConfigurationException(String.format(Locale.ROOT, "No field or group defined for ref '%s' in facet '%s'",
                                                            ref, name));
         }
         List<IndexField> fieldRefs = group == null ? Arrays.asList(field) :

@@ -29,6 +29,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 
@@ -88,9 +89,10 @@ public class WriterCallable implements Callable<Long> {
             throw e; // Rethrow to keep the concrete Exception
             // TODO: Consider signalling orderChangedSinceLastCommit
         } catch (Error e) {
-            String message = String.format("Encountered Error '%s' during protectedCall of %s to index. The index "
-                                           + "location was '%s'. JVM shutdown in %d seconds",
-                                           e.getMessage(), payload, writer.getDirectory(), 5);
+            String message = String.format(
+                    Locale.ROOT, "Encountered Error '%s' during protectedCall of %s to index. The index "
+                                 + "location was '%s'. JVM shutdown in %d seconds",
+                    e.getMessage(), payload, writer.getDirectory(), 5);
             Logging.fatal(log, "WriterCallable.call", message, e);
             System.err.println(message);
             e.printStackTrace(System.err);
@@ -155,7 +157,7 @@ public class WriterCallable implements Callable<Long> {
     }
 
     private void die(IOException e, String action) throws IOException {
-        String message = String.format(
+        String message = String.format(Locale.ROOT,
                 "Encountered IOException '%s' during %s of document to index. Offending payload was %s. The index "
                 + "location was '%s'. JVM shutdown in %d seconds",
                 e.getMessage(), action, payload, writer.getDirectory(), 5);

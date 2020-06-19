@@ -41,6 +41,7 @@ import org.apache.lucene.store.NIOFSDirectory;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Locale;
 import java.util.Random;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -242,7 +243,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
                         "index/fagref/fagref_IndexDescriptor.xml").getFile();
         File manConfLocation = File.createTempFile("configuration", ".xml");
         manConfLocation.deleteOnExit();
-        Files.saveString(String.format(DocumentCreatorTest.CREATOR_SETUP, descLocation), manConfLocation);
+        Files.saveString(String.format(Locale.ROOT, DocumentCreatorTest.CREATOR_SETUP, descLocation), manConfLocation);
         Configuration conf = new Configuration(new XStorage(manConfLocation));
 
         manipulator = new LuceneManipulator(conf);

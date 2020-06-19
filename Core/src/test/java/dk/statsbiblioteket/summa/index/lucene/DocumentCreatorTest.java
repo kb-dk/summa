@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -235,7 +236,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Files.saveString(SIMPLE_DESCRIPTOR, descriptorLocation);
         File confLocation = File.createTempFile("configuration", ".xml");
         confLocation.deleteOnExit();
-        Files.saveString(String.format(CREATOR_SETUP,
+        Files.saveString(String.format(Locale.ROOT, CREATOR_SETUP,
                                        "file://" + descriptorLocation.getAbsoluteFile().toString()), confLocation);
         assertTrue("The configuration should exist", descriptorLocation.getAbsoluteFile().exists());
 
