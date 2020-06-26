@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -90,7 +91,7 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
             log.warn("Unable to create folder '" + target.getParentFile() + "'");
         }
 
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), StandardCharsets.UTF_8));
         int exported = 0;
         while (true) {
             List<String> buffer = listSuggestions(exported, BATCH_SIZE);

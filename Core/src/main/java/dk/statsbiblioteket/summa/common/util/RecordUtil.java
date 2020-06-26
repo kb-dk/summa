@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.xml.stream.*;
 import javax.xml.stream.events.XMLEvent;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -504,14 +505,14 @@ public class RecordUtil {
                     writer.writeStartDocument("UTF-8", "1.0");
                     copyContent(reader, writer, record, true, -1);
                     writer.writeEndDocument();
-                    return sw.toString().getBytes("utf-8");
+                    return sw.toString().getBytes(StandardCharsets.UTF_8);
                 } else if (!type.equals(CONTENT_TYPE_STRING)) {
                     log.warn(String.format(Locale.ROOT,
                             "Encountered unknown content type '%s' for %s. Parsing as string", type, record));
                 }
             }
         }
-        return reader.getElementText().getBytes("utf-8");
+        return reader.getElementText().getBytes(StandardCharsets.UTF_8);
     }
 
     /**
@@ -1005,11 +1006,7 @@ public class RecordUtil {
         if (payload.getStream() == null) {
             return getReader(payload.getRecord(), source);
         }
-        try {
-            return new InputStreamReader(payload.getStream(), "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException("The utf-8 encoding was not supported", e);
-        }
+        return new InputStreamReader(payload.getStream(), StandardCharsets.UTF_8);
     }
 
     /**
@@ -1047,12 +1044,7 @@ public class RecordUtil {
                     record.setBase(value);
                     break;
                 case content:
-                    try {
-                        record.setContent(value.getBytes("utf-8"), false);
-                    } catch (UnsupportedEncodingException e) {
-                        throw new RuntimeException(
-                                "Exception while converting content to UTF-8 bytes for " + record, e);
-                    }
+                    record.setContent(value.getBytes(StandardCharsets.UTF_8), false);
                     break;
                 case xmlfull: throw new IllegalArgumentException(
                         "The part " + PART.xmlfull + " is unsupported as setting the full XMLTree does not make sense");
@@ -1093,11 +1085,7 @@ public class RecordUtil {
         if (PART.content.toString().equals(destination)) {
             record.setContent(value, false);
         }
-        try {
-            setString(record, new String(value, "utf-8"), destination);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Exception while converting value to UTF-8 bytes for " + record, e);
-        }
+        setString(record, new String(value, StandardCharsets.UTF_8), destination);
     }
 
     /**

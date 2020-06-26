@@ -34,6 +34,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
@@ -147,15 +148,10 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         Record record = payload.getRecord();
         String mergedContent = getMergedOrNull(record);
         if (mergedContent != null) {
-            try {
-                record.setContent(mergedContent.getBytes("utf-8"), false);
-                if (removeMerged) {
-                    record.setParents(null);
-                    record.setChildren(null);
-                }
-            } catch (UnsupportedEncodingException e) {
-                //noinspection DuplicateStringLiteralInspection
-                throw new IllegalArgumentException("utf-8 not supported");
+            record.setContent(mergedContent.getBytes(StandardCharsets.UTF_8), false);
+            if (removeMerged) {
+                record.setParents(null);
+                record.setChildren(null);
             }
         }
         return true;
@@ -268,12 +264,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             SaxonXSLT.transform(t, new ByteArrayInputStream(record.getContent()), out);
             byte[] transformed = out.toByteArray();
             BufferedReader read;
-            try {
-                read = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(transformed), "utf-8"));
-            } catch (UnsupportedEncodingException e) {
-                throw new TransformerException(
-                        "utf-8 not supported while transforming " + record, e);
-            }
+            read = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(transformed), StandardCharsets.UTF_8));
             String line;
             try {
                 while ((line = read.readLine()) != null) {

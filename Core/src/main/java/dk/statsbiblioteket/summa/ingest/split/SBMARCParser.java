@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -342,12 +343,7 @@ public class SBMARCParser extends MARCParser {
             return null;
         }
         Record record;
-        try {
-            record = new Record(id, base, xml.getBytes("utf-8"));
-        } catch (UnsupportedEncodingException e) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException("utf-8 not supported", e);
-        }
+        record = new Record(id, base, xml.getBytes(StandardCharsets.UTF_8));
         log.trace("Setting deleted-status for Record " + id + " to " + isDeleted);
         record.setDeleted(isDeleted);
 

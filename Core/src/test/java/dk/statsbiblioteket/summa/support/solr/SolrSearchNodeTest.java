@@ -50,6 +50,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -1074,17 +1075,13 @@ public class SolrSearchNodeTest extends TestCase {
                              + (int)profiler.getBps(true) + " Payloads/sec. Ready in "
                              + profiler.getTimeLeftAsString(true));
                 }
-                try {
-                    return new Payload(new Record(
-                            "doc" + count, "Dummy",
-                            ("<doc>\n"
-                             + "<field name=\"recordID\">doc" + count + "</field>\n"
-                             + "<field name=\"recordBase\">dummy</field>\n"
-                             + "<field name=\"title_org\">" + fuzzy + "</field>\n"
-                             + "</doc>\n").getBytes("utf-8")));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException("UTF-8 should be supported", e);
-                }
+                return new Payload(new Record(
+                        "doc" + count, "Dummy",
+                        ("<doc>\n"
+                         + "<field name=\"recordID\">doc" + count + "</field>\n"
+                         + "<field name=\"recordBase\">dummy</field>\n"
+                         + "<field name=\"title_org\">" + fuzzy + "</field>\n"
+                         + "</doc>\n").getBytes(StandardCharsets.UTF_8)));
             }
 
             @Override
@@ -1249,7 +1246,7 @@ public class SolrSearchNodeTest extends TestCase {
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
                     "doc" + i, "dummy", Resolver.getUTF8Content(
-                    "integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+                    "integration/solr/SolrSampleDocument" + i + ".xml").getBytes(StandardCharsets.UTF_8)));
             payload.getRecord().setDeleted(deleted);
             samples.add(payload);
         }
@@ -1282,7 +1279,7 @@ public class SolrSearchNodeTest extends TestCase {
             sb.append("<field name=\"double_test\">").append(random.nextDouble()*1000).append("</field>\n");
             sb.append("<field name=\"int_test\">").append(random.nextInt(1000)).append("</field>\n");
             sb.append("</doc>\n");
-            samples.add(new Payload(new Record("doc" + i, "dummy", sb.toString().getBytes("utf-8"))));
+            samples.add(new Payload(new Record("doc" + i, "dummy", sb.toString().getBytes(StandardCharsets.UTF_8))));
         }
         return new PayloadFeederHelper(samples);
     }

@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -483,14 +484,9 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         }
 
         private void appendToBuffer(String content) {
-            try {
-                byte[] bytes = content.getBytes("utf-8");
-                for (byte aByte : bytes) {
-                    buffer.add(aByte);
-                }
-            } catch (UnsupportedEncodingException e) {
-                //noinspection DuplicateStringLiteralInspection
-                throw new RuntimeException("utf-8 not supported", e);
+            byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+            for (byte aByte : bytes) {
+                buffer.add(aByte);
             }
 
         }

@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -106,7 +107,7 @@ public class LineInputStreamTest extends TestCase {
 
     private void assertLines(String source, String[] expected) throws Exception{
         ByteArrayInputStream in = new ByteArrayInputStream(
-                source.getBytes("utf-8"));
+                source.getBytes(StandardCharsets.UTF_8));
         LineInputStream lis = new LineInputStream(in);
         String line;
         int pos = 0;

@@ -31,6 +31,7 @@ import org.xml.sax.ext.DefaultHandler2;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -271,16 +272,12 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                     return;
                 }
             }
-            try {
-                Record record = new Record(id.toString(), // ID-modification is handled by parser
-                                           target.base, (HEADER + sw.toString()).getBytes("utf-8"));
-                //noinspection DuplicateStringLiteralInspection
-                log.debug("Produced " + record);
-                receiver.queueRecord(record);
-                prepareScanForNextRecord();
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("Unable to convert string to utf-8 bytes: '" + sw.toString() + "'", e);
-            }
+            Record record = new Record(id.toString(), // ID-modification is handled by parser
+                                       target.base, (HEADER + sw.toString()).getBytes(StandardCharsets.UTF_8));
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Produced " + record);
+            receiver.queueRecord(record);
+            prepareScanForNextRecord();
         }
     }
 

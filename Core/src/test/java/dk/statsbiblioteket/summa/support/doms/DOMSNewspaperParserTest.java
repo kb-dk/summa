@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,7 +52,7 @@ public class DOMSNewspaperParserTest extends TestCase {
 
     public void testTimestamps() throws IOException {
         final Record pageRecord = new Record("foo", "bar",
-                                       Files.loadString(Resolver.getFile(OLD_ALTO)).getBytes("utf-8"));
+                                       Files.loadString(Resolver.getFile(OLD_ALTO)).getBytes(StandardCharsets.UTF_8));
         final long ctime = System.currentTimeMillis() - 24*60*60*1000;
         final long mtime = ctime + 5*60*60*1000;
         pageRecord.setCreationTime(ctime);

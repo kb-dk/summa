@@ -41,6 +41,7 @@ import junit.framework.TestSuite;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -216,8 +217,8 @@ public class RelationResolverTest extends TestCase {
         Record parentR1 = new Record("internal_id1", "foo", new byte[0]);
         Record parentR2 = new Record("internal_id2", "foo", new byte[0]);
         Record parentR3 = new Record("internal_id3", "foo", new byte[0]);
-        Record teiR1 = new Record("TEIRecord1", "bar", TEI.getBytes("utf-8"));
-        Record teiR2 = new Record("TEIRecord2", "bar", TEI13.getBytes("utf-8"));
+        Record teiR1 = new Record("TEIRecord1", "bar", TEI.getBytes(StandardCharsets.UTF_8));
+        Record teiR2 = new Record("TEIRecord2", "bar", TEI13.getBytes(StandardCharsets.UTF_8));
 
         Configuration shaperConf = Configuration.newMemoryBased();
         shaperConf.set(RecordShaperFilter.CONF_DISCARD_ON_ERRORS, true);

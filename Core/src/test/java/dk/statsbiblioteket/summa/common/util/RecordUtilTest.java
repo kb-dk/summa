@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.xml.stream.*;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -60,7 +61,7 @@ public class RecordUtilTest extends TestCase {
     public void testSingleRecord() throws Exception {
         Record record = new Record(
                 "foo&<", "/>baze",
-                "Hello <![CDATA[&<]]> world".getBytes("utf-8"));
+                "Hello <![CDATA[&<]]> world".getBytes(StandardCharsets.UTF_8));
         String xml = RecordUtil.toXML(record);
         assertNotNull("The schema Record.xsd should be available",
                       schema.getFile());
@@ -74,16 +75,16 @@ public class RecordUtilTest extends TestCase {
     public void testRecordWithRelatives() throws Exception {
         Record record = new Record(
                 "middleman", "bar",
-                "<marc_xml_or_other_xml ...>Malcolm in the middle".getBytes("utf-8"));
+                "<marc_xml_or_other_xml ...>Malcolm in the middle".getBytes(StandardCharsets.UTF_8));
         Record parent = new Record(
                 "parent", "bar",
-                "<marc_xml_or_other_xml ...>I am a parent Record".getBytes("utf-8"));
+                "<marc_xml_or_other_xml ...>I am a parent Record".getBytes(StandardCharsets.UTF_8));
         Record child1 = new Record(
                 "child_1", "bar",
-                "<marc_xml_or_other_xml ...>I am a child".getBytes("utf-8"));
+                "<marc_xml_or_other_xml ...>I am a child".getBytes(StandardCharsets.UTF_8));
         Record child2 = new Record(
                 "child_2", "bar",
-                "<marc_xml_or_other_xml ...>I am another child".getBytes("utf-8"));
+                "<marc_xml_or_other_xml ...>I am another child".getBytes(StandardCharsets.UTF_8));
         record.setParents(Arrays.asList(parent));
         record.setChildren(Arrays.asList(child1, child2));
 
@@ -103,7 +104,7 @@ public class RecordUtilTest extends TestCase {
         Record record = new Record(
                 "middleman", "bar", // Plain
                 ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                + "<foo><bar/></foo>").getBytes("utf-8"));
+                + "<foo><bar/></foo>").getBytes(StandardCharsets.UTF_8));
         log.debug("Raw content for root:\n" + record.getContentAsUTF8());
         String xml = RecordUtil.toXML(record, false);
         log.debug("Got content for " + record + ":\n" + xml);
@@ -163,14 +164,14 @@ public class RecordUtilTest extends TestCase {
         Record record = new Record(
                 "middleman", "bar", // Plain
                 ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                + "<foo><bar/></foo>").getBytes("utf-8"));
+                + "<foo><bar/></foo>").getBytes(StandardCharsets.UTF_8));
         Record child1 = new Record(
                 "child_1", "bar", // BOM
                 ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                + "<zoo>kabloey &amp; kaflam</zoo>").getBytes("utf-8"));
+                + "<zoo>kabloey &amp; kaflam</zoo>").getBytes(StandardCharsets.UTF_8));
         Record child2 = new Record(
                 "child_2", "bar", // No declaration
-                "<subsub>&lt;</subsub>".getBytes("utf-8"));
+                "<subsub>&lt;</subsub>".getBytes(StandardCharsets.UTF_8));
         record.setChildren(Arrays.asList(child1));
         child1.setChildren(Arrays.asList(child2));
         return record;
@@ -235,7 +236,7 @@ public class RecordUtilTest extends TestCase {
             fail("Missing sample XML at " + TST + "'");
         }
         String xml = Resolver.getUTF8Content(TST.getAbsolutePath());
-        Record record = new Record("foo", "bar", xml.getBytes("utf-8"));
+        Record record = new Record("foo", "bar", xml.getBytes(StandardCharsets.UTF_8));
         MarcMultiVolumeMerger merger = getMerger();
         dk.statsbiblioteket.util.Profiler profiler = new Profiler(RUNS);
         for (int run = 0 ; run < RUNS ; run++) {

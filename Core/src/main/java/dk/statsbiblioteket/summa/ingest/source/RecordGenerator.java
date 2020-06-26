@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -579,12 +580,7 @@ public class RecordGenerator implements ObjectFilter {
         String id = expand(idTokens);
         String base = expand(baseTokens);
         String content = expand(contentTokens);
-        try {
-            return new Payload(new Record(id, base, content.getBytes("utf-8")));
-        } catch (UnsupportedEncodingException e) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException("utf-8 encoding not supported", e);
-        }
+        return new Payload(new Record(id, base, content.getBytes(StandardCharsets.UTF_8)));
     }
 
     /**

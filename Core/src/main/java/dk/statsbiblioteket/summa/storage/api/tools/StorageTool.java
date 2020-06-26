@@ -40,6 +40,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @SuppressWarnings("UseOfSystemOutOrSystemErr")
@@ -154,7 +155,7 @@ public class StorageTool {
         final String file = args[3];
         // TODO: Shortcut the unnecessary decode+encode of UTF-8 (this also allows arbitrary content)
         final String content = Files.loadString(new File(file));
-        Record record = new Record(recordID, recordBase, content.getBytes("utf-8"));
+        Record record = new Record(recordID, recordBase, content.getBytes(StandardCharsets.UTF_8));
         writer.flush(record);
         return 0;
     }
@@ -537,7 +538,7 @@ public class StorageTool {
         StreamResult input = new StreamResult();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         input.setOutputStream(out);
-        Source so = new StreamSource(new ByteArrayInputStream(xml.getBytes("utf-8")));
+        Source so = new StreamSource(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
 
         try {
             t.transform(so, input);

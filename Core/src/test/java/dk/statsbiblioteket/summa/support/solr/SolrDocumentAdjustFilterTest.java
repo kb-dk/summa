@@ -7,6 +7,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -57,7 +58,7 @@ public class SolrDocumentAdjustFilterTest {
                 SolrLenientTimestamp.CONF_FIELDS, "ts_change"
         ));
         adjuster.setSource(PayloadFeederHelper.createHelper(Collections.singletonList(
-                new Record("dummy", "dummy", SOLR1_IN.getBytes("utf-8")))));
+                new Record("dummy", "dummy", SOLR1_IN.getBytes(StandardCharsets.UTF_8)))));
         final String adjusted = adjuster.next().getRecord().getContentAsUTF8();
         Assert.assertEquals("The timestamps for the faulty selected fields should be corrected",
                             SOLR1_EXPECTED, adjusted);

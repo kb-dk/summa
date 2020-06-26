@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -737,7 +738,7 @@ public class DatabaseStorageTest extends StorageTestBase {
 
     private void testGetRecordsModifiedAfter(int records) throws Exception {
         final String BASE = "base1";
-        final byte[] DATA = "data".getBytes("utf-8");
+        final byte[] DATA = "data".getBytes(StandardCharsets.UTF_8);
 
         log.debug("Testing for " + records + " records");
         storage.clearBase(BASE);
@@ -754,7 +755,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         final int BULK_SIZE = 20000;
 
         final String BASE = "baseAfter";
-        final byte[] DATA = "data".getBytes("utf-8");
+        final byte[] DATA = "data".getBytes(StandardCharsets.UTF_8);
 
         storage.clearBase(BASE);
 
@@ -777,7 +778,7 @@ public class DatabaseStorageTest extends StorageTestBase {
 
     public void testGetRecordsModifiedAfterEdge() throws Exception {
         final String BASE = "baseAfter";
-        final byte[] DATA = "data".getBytes("utf-8");
+        final byte[] DATA = "data".getBytes(StandardCharsets.UTF_8);
 
         storage.clearBase(BASE);
         storage.flush(new Record("id_A", BASE, DATA));

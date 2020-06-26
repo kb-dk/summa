@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -124,12 +125,8 @@ public abstract class DOMSNewspaperBase extends ThreadedStreamParser {
             }
             Logging.logProcess(this.getClass().getSimpleName(), "Unable to locate ALTO. Passing content unmodified",
                                Logging.LogLevel.INFO, source);
-            try {
-                addToQueue(source, createRecord(
-                        source, source.getId() + NOALTO, base, content.getBytes("utf-8")));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("utf-8 not supported", e);
-            }
+            addToQueue(source, createRecord(
+                    source, source.getId() + NOALTO, base, content.getBytes(StandardCharsets.UTF_8)));
         } else {
             produceSegments(source, content, altoStart, altoEnd);
         }
@@ -192,9 +189,7 @@ public abstract class DOMSNewspaperBase extends ThreadedStreamParser {
         final String pre = originContent.substring(0, altoStart);
         final String post = originContent.substring(altoEnd);
         try {
-            addToQueue(origin, createRecord(origin, newID, base, (pre + innerXML + post).getBytes("utf-8")));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("utf-8 not supported", e);
+            addToQueue(origin, createRecord(origin, newID, base, (pre + innerXML + post).getBytes(StandardCharsets.UTF_8)));
         } catch (OutOfMemoryError e) {
             OutOfMemoryError error = new OutOfMemoryError(String.format(Locale.ROOT,
                     "OutOfMemoryError while creating and adding Record with origin=%s, id='%s', base='%s', " +

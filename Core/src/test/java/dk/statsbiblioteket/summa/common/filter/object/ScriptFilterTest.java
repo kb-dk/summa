@@ -24,6 +24,7 @@ import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -55,8 +56,8 @@ public class ScriptFilterTest extends TestCase {
 
     public void testSelectiveScripting() throws IOException, ScriptException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
-                new Payload(new Record("recA", "A", "foo".getBytes("utf-8"))),
-                new Payload(new Record("recB", "B", "foo".getBytes("utf-8")))
+                new Payload(new Record("recA", "A", "foo".getBytes(StandardCharsets.UTF_8))),
+                new Payload(new Record("recB", "B", "foo".getBytes(StandardCharsets.UTF_8)))
         ));
         ScriptFilter scripter = new ScriptFilter(Configuration.newMemoryBased(
                 ScriptFilter.CONF_SCRIPT_INLINE, "payload.getRecord().setId('processed');",

@@ -23,6 +23,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 /**
  * The old style index format for Summa must be transformed to SummaDocumentXML
@@ -45,7 +46,7 @@ public class LegacyTest extends TestCase {
     public String transform(String xmlResource, String id, URL xslt) throws
                                                                      Exception {
         String content = Streams.getUTF8Resource(xmlResource);
-        Record record = new Record(id, "dummy", content.getBytes("utf-8"));
+        Record record = new Record(id, "dummy", content.getBytes(StandardCharsets.UTF_8));
         Payload payload = new Payload(record);
 
         Configuration conf = Configuration.newMemoryBased();

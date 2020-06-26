@@ -24,6 +24,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -91,7 +92,7 @@ public class TeeFilterTest extends TestCase {
     }
 
     public void testDeleted() throws UnsupportedEncodingException {
-        Record delRecord = new Record("foo", "bar", "content".getBytes("utf-8"));
+        Record delRecord = new Record("foo", "bar", "content".getBytes(StandardCharsets.UTF_8));
         delRecord.setDeleted(true);
         PayloadFeederHelper feeder =  new PayloadFeederHelper(Collections.singletonList(new Payload(delRecord)));
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(

@@ -25,6 +25,7 @@ import junit.framework.TestSuite;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -110,7 +111,7 @@ public class RecordShaperFilterTest extends TestCase {
         String content = "<outer>" + contentInner + "</outer>";
         try {
             payloads.add(new Payload(new Record("dummyid", "dummybase",
-                                     content.getBytes("utf-8"))));
+                                     content.getBytes(StandardCharsets.UTF_8))));
         } catch (Exception e) {
             fail("No exception expected here");
         }
@@ -143,7 +144,7 @@ public class RecordShaperFilterTest extends TestCase {
         String content = "<outer>" + contentInner + "</outer>";
         try {
             payloads.add(new Payload(new Record("dummyid", "dummybase",
-                                            content.getBytes("utf-8"))));
+                                            content.getBytes(StandardCharsets.UTF_8))));
         } catch (Exception e) {
             fail("No exception expected here");
         }
@@ -173,7 +174,7 @@ public class RecordShaperFilterTest extends TestCase {
 
         List<Payload> payloads = new ArrayList<>(1);
         payloads.add(new Payload(new Record(
-            "id1", "base1", CONTENT.getBytes("utf-8"))));
+            "id1", "base1", CONTENT.getBytes(StandardCharsets.UTF_8))));
         RecordShaperFilter assigner = new RecordShaperFilter(conf);
         assigner.setSource(new PayloadFeederHelper(payloads));
         Record record = assigner.next().getRecord();
@@ -191,7 +192,7 @@ public class RecordShaperFilterTest extends TestCase {
         metaConf.set(RecordShaperFilter.CONF_META_TEMPLATE, "id:$1");
 
         ObjectFilter feeder = new PayloadFeederHelper(Collections.singletonList(
-                new Payload(new Record("only", "dummy", CONTENT.getBytes("utf-8")))));
+                new Payload(new Record("only", "dummy", CONTENT.getBytes(StandardCharsets.UTF_8)))));
         ObjectFilter shaper = new RecordShaperFilter(conf);
         shaper.setSource(feeder);
         Record record = shaper.next().getRecord();
@@ -231,9 +232,9 @@ public class RecordShaperFilterTest extends TestCase {
         partConf.set(RecordShaperFilter.CONF_META_TEMPLATE, "$1");
 
         Record small = new Record(
-            "small", "bar", "zoofoo7maz".getBytes("utf-8"));
+            "small", "bar", "zoofoo7maz".getBytes(StandardCharsets.UTF_8));
         Record large = new Record(
-            "large", "bar", "1234567890zoofoo7maz".getBytes("utf-8"));
+            "large", "bar", "1234567890zoofoo7maz".getBytes(StandardCharsets.UTF_8));
         ObjectFilter feeder = new PayloadFeederHelper(Arrays.asList(
             new Payload(small), new Payload(large)));
 
@@ -266,7 +267,7 @@ public class RecordShaperFilterTest extends TestCase {
             "small", "bar", (
                 "<alabast><isPartOfNewspaper xmlns=\"http://doms.statsbiblioteket.dk/relations/default/0/1/#\"" +
                 " rdf:resource=\"info:fedora/" + ID + "\"/>\n</alabast>").
-                getBytes("utf-8"));
+                getBytes(StandardCharsets.UTF_8));
         ObjectFilter feeder = new PayloadFeederHelper(Arrays.asList(new Payload(small)));
 
         ObjectFilter shaper = new RecordShaperFilter(shaperConf);

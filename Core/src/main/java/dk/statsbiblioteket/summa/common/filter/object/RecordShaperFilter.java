@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -454,11 +455,7 @@ public class RecordShaperFilter extends ObjectFilterImpl {
             //noinspection DuplicateStringLiteralInspection
             String newContent = getMatch(assignContent, content, payload, "content");
             if (newContent != null && !"".equals(newContent)) {
-                try {
-                    payload.getRecord().setContent(newContent.getBytes("utf-8"), false);
-                } catch (UnsupportedEncodingException e) {
-                    throw new PayloadException("Exception while converting content to UTF-8 bytes", e);
-                }
+                payload.getRecord().setContent(newContent.getBytes(StandardCharsets.UTF_8), false);
             }
         }
         int count = 0;
@@ -509,9 +506,9 @@ public class RecordShaperFilter extends ObjectFilterImpl {
                 md = MessageDigest.getInstance("MD5");                
             }
             md.reset();
-            md.update(text.getBytes("UTF-8"));
+            md.update(text.getBytes(StandardCharsets.UTF_8));
             return new BigInteger(1, md.digest()).toString(16);
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+        } catch (NoSuchAlgorithmException e) {
             log.error(e.getMessage(),e);
         }
         return text;

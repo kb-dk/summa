@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
@@ -56,6 +57,7 @@ public class ExposedPOC {
     writer.close(true);
   }
 
+  @SuppressWarnings("deprecation")
   private static void shell(
       String method, File location, String field, Locale locale, String defaultField, ExposedSettings.PRIORITY priority)
       throws IOException, InterruptedException, org.apache.lucene.queryparser.classic.ParseException {
@@ -109,7 +111,7 @@ public class ExposedPOC {
         + "The StandardAnalyser will be used and the default field is %s.\n"
         + "Finish with 'EXIT'.", method, field, defaultField));
     String query;
-    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
     org.apache.lucene.queryparser.classic.QueryParser qp =
         new org.apache.lucene.queryparser.classic.QueryParser(
             Version.LUCENE_47, defaultField, new WhitespaceAnalyzer(Version.LUCENE_47));

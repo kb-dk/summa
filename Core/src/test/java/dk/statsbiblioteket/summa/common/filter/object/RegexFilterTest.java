@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,7 +55,7 @@ public class RegexFilterTest extends TestCase {
             "<MetadataRecord><recordID>phonofile-0000123456789012</recordID><status>deleted</status></MetadataRecord>";
     public void testMultiLine() throws UnsupportedEncodingException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(new Payload(
-                new Record("foo", "bar", MULTI_SAMPLE.getBytes("utf-8")))));
+                new Record("foo", "bar", MULTI_SAMPLE.getBytes(StandardCharsets.UTF_8)))));
         RegexFilter regex = new RegexFilter(Configuration.newMemoryBased(
                 AbstractDiscardFilter.CONF_MARK, true,
                 PayloadMatcher.CONF_CONTENT_REGEX, new ArrayList<>(Arrays.asList(
@@ -97,7 +98,7 @@ public class RegexFilterTest extends TestCase {
         Payload noMatch = new Payload(new Record(
                 "noMatch", "dummy", new byte[10]));
         Payload recordMatchPayload = new Payload(new Record(
-                "recordMatch", "dummy", CONTENT_SAMPLE.getBytes("utf-8")));
+                "recordMatch", "dummy", CONTENT_SAMPLE.getBytes(StandardCharsets.UTF_8)));
         PayloadBufferFilter buf = prepareFilterChain(
                 matcher,
                 noMatch, recordMatchPayload);

@@ -42,6 +42,7 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.*;
 
@@ -907,7 +908,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         BufferedReader in;
         long rawCall = -System.currentTimeMillis();
         try {
-        	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+        	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
             String str;
 
             while ((str = in.readLine()) != null) {
@@ -927,7 +928,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                 "getData(host='%s', command='%s') for %s failed with error stream\n%s",
                 "http://" + host, command, getID(),
                 conn.getErrorStream() == null ? "N/A" :
-                        Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
+                        Strings.flush(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8)));
             log.warn(error, e);
             throw new IOException(error, e);
         }

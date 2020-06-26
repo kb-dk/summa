@@ -45,6 +45,7 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.security.Security;
 import java.security.SignatureException;
@@ -1070,7 +1071,7 @@ public class SummonSearchNode extends SolrSearchNode {
     private static String buildDigest(String key, String idString) throws SignatureException {
         try {
             String algorithm = "HmacSHA1";
-            Charset charset = Charset.forName("utf-8");
+            Charset charset = StandardCharsets.UTF_8;
             SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), algorithm);
             Mac mac = Mac.getInstance(algorithm);
             mac.init(signingKey);
@@ -1134,7 +1135,7 @@ public class SummonSearchNode extends SolrSearchNode {
         long rawCall = -System.currentTimeMillis();
         BufferedReader in;
         try {
-        	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+        	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
             String str;
         
             while ((str = in.readLine()) != null) {
@@ -1162,7 +1163,7 @@ public class SummonSearchNode extends SolrSearchNode {
                 "getData(target='%s', content='%s', date=%s, idstring='%s', sessionID=%s) failed with error stream\n%s",
                 target, content, date, idstring, sessionId,
                 conn.getErrorStream() == null ? "N/A" :
-                Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
+                Strings.flush(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8)));
             log.warn(error, e);
             throw new IOException(error, e);
         }

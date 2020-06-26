@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -80,7 +81,7 @@ public class SummonTestHelper {
                 + "being access key for the Summon API");
         }
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(SECRET), "utf-8"));
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(SECRET), StandardCharsets.UTF_8));
             id = br.readLine();
             key = br.readLine();
             br.close();

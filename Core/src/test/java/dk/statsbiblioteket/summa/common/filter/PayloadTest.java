@@ -22,6 +22,7 @@ import junit.framework.TestSuite;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 /**
@@ -109,7 +110,7 @@ public class PayloadTest extends TestCase {
                 + "<an>200516850</an>\n"
                 + "</rec>";
         Payload payload = new Payload(new Record(
-                "csa_something_other", "csa", inContent.getBytes("utf-8")));
+                "csa_something_other", "csa", inContent.getBytes(StandardCharsets.UTF_8)));
         payload.getData().put(
                 Payload.ORIGIN, "/home/example/data/csa/ssa/csu/hello.xml");
         String id = payload.getRecord().getId();
@@ -127,7 +128,7 @@ public class PayloadTest extends TestCase {
             String content = payload.getRecord().getContentAsUTF8();
             content = content.replace("<an>", "<an>" + subCSA + "_");
             content = content.replace("<CI>", "<CI>" + subCSA + "_");
-            payload.getRecord().setContent(content.getBytes("utf-8"), true);
+            payload.getRecord().setContent(content.getBytes(StandardCharsets.UTF_8), true);
         }
         String expected = "csa_csu_something_other";
         assertEquals("The ID should be as expected",

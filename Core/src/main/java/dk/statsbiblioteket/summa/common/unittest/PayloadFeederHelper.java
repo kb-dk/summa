@@ -28,6 +28,7 @@ import javax.rmi.CORBA.Util;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,7 +90,7 @@ public class PayloadFeederHelper implements ObjectFilter {
         int counter = startID;
         for (String inputFile: inputFiles) {
             payloads.add(new Payload(new Record(
-                "doc" + counter++, "dummy", Resolver.getUTF8Content(inputFile).getBytes("utf-8"))));
+                "doc" + counter++, "dummy", Resolver.getUTF8Content(inputFile).getBytes(StandardCharsets.UTF_8))));
         }
     }
 

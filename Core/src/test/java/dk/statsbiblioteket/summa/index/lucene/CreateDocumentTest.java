@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,7 +126,7 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
             log.debug("Creating payload for content at '" + xmlFile + "'");
             String content = Streams.getUTF8Resource(xmlFile);
             Record record = new Record("fagref:" + xmlFile, "fagref",
-                                       content.getBytes("utf-8"));
+                                       content.getBytes(StandardCharsets.UTF_8));
             payloads.add(new Payload(record));
         }
         log.debug("Number of payloads: " + payloads.size());

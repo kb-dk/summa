@@ -37,6 +37,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.*;
 
@@ -412,7 +413,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         }
 
         try {
-            return builder.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("utf-8"))));
+            return builder.parse(new InputSource(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))));
         } catch (SAXException e) {
             throw (ParseException) new ParseException(
                     "Could not create Document from xml '" + xml + "'", -1).initCause(e);

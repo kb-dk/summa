@@ -37,6 +37,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -2289,7 +2290,7 @@ public abstract class DatabaseStorage extends StorageBase {
             BaseStats.toXML(getStatsWithConnection(conn), writer);
             return new Record("__holdings__", "__private__", bytes.toByteArray());
         } else if ("__statistics__".equals(id)) {
-            return new Record("__statistics__", "__private__", getHumanStats().getBytes("utf-8"));
+            return new Record("__statistics__", "__private__", getHumanStats().getBytes(StandardCharsets.UTF_8));
         } else {
             log.debug(String.format(Locale.ROOT, "No such private record '%s'", id));
             return null;

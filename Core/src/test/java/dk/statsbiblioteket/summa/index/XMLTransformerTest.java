@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.zip.GZIPInputStream;
@@ -143,7 +144,7 @@ public class XMLTransformerTest extends TestCase {
 
         net.sf.saxon.Configuration saxonConf = new net.sf.saxon.Configuration();
         saxonConf.registerExtensionFunction(new ShiftLeft());
-        byte[] content = Streams.getUTF8Resource(ALTO).getBytes("utf-8");
+        byte[] content = Streams.getUTF8Resource(ALTO).getBytes(StandardCharsets.UTF_8);
 
                 TransformerFactory tfactory = TransformerFactory.newInstance();
         
@@ -195,7 +196,7 @@ public class XMLTransformerTest extends TestCase {
         );
         XMLTransformer transformer = new XMLTransformer(conf);
         String content = Strings.flush(new GZIPInputStream(Resolver.getURL(ALTO).openStream()));
-        final byte[] incoming = content.getBytes("utf-8");
+        final byte[] incoming = content.getBytes(StandardCharsets.UTF_8);
         Record record = new Record("alto", "xml", incoming);
 
         for (int i = 0 ; i < WARM ; i++) {
@@ -241,7 +242,7 @@ public class XMLTransformerTest extends TestCase {
         OpenTransformer transformer = new OpenTransformer(conf);
 
         String content = Streams.getUTF8Resource(SAMPLE);
-        Record record = new Record("4K", "xml", content.getBytes("utf-8"));
+        Record record = new Record("4K", "xml", content.getBytes(StandardCharsets.UTF_8));
         Payload payload = new Payload(record);
 
         try  {
@@ -271,7 +272,7 @@ public class XMLTransformerTest extends TestCase {
         OpenTransformer transformer = new OpenTransformer(conf);
 
         String content = Files.loadString(new File(SAMPLE));
-        Record record = new Record("empty", "xml", content.getBytes("utf-8"));
+        Record record = new Record("empty", "xml", content.getBytes(StandardCharsets.UTF_8));
         Payload payload = new Payload(record);
 
         transformer.process(payload);
@@ -289,7 +290,7 @@ public class XMLTransformerTest extends TestCase {
         OpenTransformer transformer = new OpenTransformer(conf);
 
         String content = Streams.getUTF8Resource(SAMPLE);
-        Record record = new Record("4K", "xml", content.getBytes("utf-8"));
+        Record record = new Record("4K", "xml", content.getBytes(StandardCharsets.UTF_8));
         Payload payload = new Payload(record);
 
         try  {
@@ -314,7 +315,7 @@ public class XMLTransformerTest extends TestCase {
         OpenTransformer transformer = new OpenTransformer(conf);
 
         String content = Streams.getUTF8Resource("index/webpage_xhtml-1.0-strict.xml");
-        Record record = new Record("validwebpage", "xhtml", content.getBytes("utf-8"));
+        Record record = new Record("validwebpage", "xhtml", content.getBytes(StandardCharsets.UTF_8));
         Payload payload = new Payload(record);
         transformer.process(payload);
         String transformed = payload.getRecord().getContentAsUTF8();
@@ -338,7 +339,7 @@ public class XMLTransformerTest extends TestCase {
         OpenTransformer transformer = new OpenTransformer(conf);
 
         String content = Streams.getUTF8Resource(source);
-        Record record = new Record("validwebpage", "xhtml", content.getBytes("utf-8"));
+        Record record = new Record("validwebpage", "xhtml", content.getBytes(StandardCharsets.UTF_8));
         Payload payload = new Payload(record);
         transformer.process(payload);
         String transformed = payload.getRecord().getContentAsUTF8();
@@ -354,7 +355,7 @@ public class XMLTransformerTest extends TestCase {
     public static final String GURLI = "index/fagref/gurli.margrethe.xml";
     public void testTransformation() throws Exception {
         String content = Streams.getUTF8Resource(GURLI);
-        Record record = new Record("fagref:gurli_margrethe", "fagref", content.getBytes("utf-8"));
+        Record record = new Record("fagref:gurli_margrethe", "fagref", content.getBytes(StandardCharsets.UTF_8));
         Payload payload = new Payload(record);
 
         Configuration conf = Configuration.newMemoryBased();
@@ -383,8 +384,8 @@ public class XMLTransformerTest extends TestCase {
     public void testTraversal() throws IOException, PayloadException {
         String gurli = Streams.getUTF8Resource(GURLI);
         String hans = Streams.getUTF8Resource(HANS);
-        Record gRecord = new Record("fagref:gurli_margrethe", "fagref", gurli.getBytes("utf-8"));
-        Record hRecord = new Record("fagref:hans_jensen", "fagref", hans.getBytes("utf-8"));
+        Record gRecord = new Record("fagref:gurli_margrethe", "fagref", gurli.getBytes(StandardCharsets.UTF_8));
+        Record hRecord = new Record("fagref:hans_jensen", "fagref", hans.getBytes(StandardCharsets.UTF_8));
         gRecord.setChildren(Arrays.asList(hRecord));
         Payload payload = new Payload(gRecord);
         Configuration conf = Configuration.newMemoryBased();

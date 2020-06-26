@@ -47,6 +47,7 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -419,7 +420,7 @@ public class XMLTransformer extends GraphFilter<Object> {
             try { // Special processing as RecordUtil.getStream does not support controlling content escaping
                 inner = RecordUtil.PART.xmlfull.toString().equals(source) && !escapeContentOnXmlFull ?
                         new StringReader(RecordUtil.toXML(record, false)) :
-                        new InputStreamReader(RecordUtil.getStream(record, source), "utf-8");
+                        new InputStreamReader(RecordUtil.getStream(record, source), StandardCharsets.UTF_8);
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalStateException("utf-8 should be supported", e);
             } catch (IOException e) {

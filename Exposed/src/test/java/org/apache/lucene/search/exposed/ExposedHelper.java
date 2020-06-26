@@ -11,6 +11,7 @@ import org.apache.lucene.search.IndexSearcher;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.*;
 
 public class ExposedHelper {
@@ -34,7 +35,8 @@ public class ExposedHelper {
                                                   10000, 15000, 20000, 30000, 40000, 50000, 75000,
                                                   100000, 150000, 200000, 300000, 400000, 500000, 750000};
 
-  public static final DecimalFormat ID_FORMAT = new DecimalFormat("00000000");
+  public static final DecimalFormat ID_FORMAT =
+          new DecimalFormat("00000000", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
   public ExposedHelper() {
     //deleteIndex();

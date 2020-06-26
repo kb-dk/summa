@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterBase;
 import dk.statsbiblioteket.summa.common.filter.object.XMLReplaceFilter;
@@ -274,7 +275,7 @@ public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
         ByteArrayInputStream stream = null;
         try {
             stream = new ByteArrayInputStream(
-                    XMLSplitterParserTest.multiXML.getBytes("utf-8")) {
+                    XMLSplitterParserTest.multiXML.getBytes(StandardCharsets.UTF_8)) {
                 private boolean closed = false;
                 @Override
                 public void close() throws IOException {

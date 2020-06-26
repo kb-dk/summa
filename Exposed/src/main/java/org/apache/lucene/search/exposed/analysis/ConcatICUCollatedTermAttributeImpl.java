@@ -20,6 +20,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttributeImpl;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Derivative of {@link org.apache.lucene.collation.tokenattributes.ICUCollatedTermAttributeImpl} that adds the original
@@ -51,12 +52,8 @@ public class ConcatICUCollatedTermAttributeImpl extends CharTermAttributeImpl {
     final String str = toString();
     collator.getRawCollationKey(str, key);
     byte[] strBytes;
-    try {
-      strBytes = str.getBytes("utf-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException("utf-8 must be supported", e);
-    }
-    final int bufferSize = strBytes.length +  key.size;
+      strBytes = str.getBytes(StandardCharsets.UTF_8);
+      final int bufferSize = strBytes.length +  key.size;
     if (buffer.length < bufferSize) {
       buffer = new byte[bufferSize];
     }

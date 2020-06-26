@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Simple conversion of Strings to and from bytes.
@@ -34,25 +35,16 @@ public class StringConverter implements ValueConverter<String> {
         if (log.isTraceEnabled()) {
             log.trace("Converting \"" + value + "\" to bytes");
         }
-        try {
-            return (value + "\n").getBytes("utf-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("utf-8 conversion failed for value '"
-                                       + value + "'", e);
-        }
+        return (value + "\n").getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
     public String bytesToValue(byte[] buffer, int length) {
-        try {
-            String result = new String(buffer, 0, length, "utf-8");
-            if (result.isEmpty()) {
-                return result;
-            }
-            return result.substring(0, result.length()-1); // Remove \n
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("utf-8 conversion failed", e);
+        String result = new String(buffer, 0, length, StandardCharsets.UTF_8);
+        if (result.isEmpty()) {
+            return result;
         }
+        return result.substring(0, result.length()-1); // Remove \n
     }
 }
 

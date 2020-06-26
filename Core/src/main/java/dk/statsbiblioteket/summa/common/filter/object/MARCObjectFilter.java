@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.List;
 
@@ -67,10 +68,10 @@ public abstract class MARCObjectFilter extends ObjectFilterImpl {
                 return false;
             }
             if (payload.getStream() != null) {
-                payload.setStream(new ByteArrayInputStream(adjusted.toXML().getBytes("utf-8")));
+                payload.setStream(new ByteArrayInputStream(adjusted.toXML().getBytes(StandardCharsets.UTF_8)));
                 //payload.setStream(new StringInputStream(adjusted.toXML()));
             } else {
-                payload.getRecord().setContent(adjusted.toXML().getBytes("utf-8"), false);
+                payload.getRecord().setContent(adjusted.toXML().getBytes(StandardCharsets.UTF_8), false);
             }
         } catch (XMLStreamException e) {
             throw new PayloadException("Invalid XML", e, payload);

@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -79,7 +80,7 @@ public abstract class AltoParser extends ThreadedStreamParser {
     @Override
     protected void protectedRun(Payload source) throws Exception {
         List<? extends AltoAnalyzerBase.Segment> segments = analyzer.getSegments(
-                new Alto(new InputStreamReader(source.getStream(), "utf-8"), (String)source.getData(Payload.ORIGIN)));
+                new Alto(new InputStreamReader(source.getStream(), StandardCharsets.UTF_8), (String)source.getData(Payload.ORIGIN)));
         for (AltoAnalyzerBase.Segment segment: segments) {
             if (segment.getId() == null) {
                 Logging.logProcess("AltoParser", "Received segment without ID: " + segment.toString() + ". Skipping",

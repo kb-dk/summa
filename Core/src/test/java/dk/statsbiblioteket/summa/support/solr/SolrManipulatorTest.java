@@ -41,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,7 +99,7 @@ public class SolrManipulatorTest extends TestCase {
 
     public void testFaultyIngest() throws Exception {
         ObjectFilter data = new PayloadFeederHelper(Arrays.asList(
-                new Payload(new Record("doc1", "dummy", "<doc>Invalid</doc>".getBytes("utf-8")))));
+                new Payload(new Record("doc1", "dummy", "<doc>Invalid</doc>".getBytes(StandardCharsets.UTF_8)))));
         ObjectFilter indexer = getIndexer();
         indexer.setSource(data);
         assertTrue("There should be a next for the indexer", indexer.hasNext());
@@ -249,7 +250,7 @@ public class SolrManipulatorTest extends TestCase {
                          + "    <field name=\"recordBase\">dummy</field>\n"
                          + "    <field name=\"title\">foo goo zoo</field>\n"
                          + "    <field name=\"fulltext\">bar</field>\n"
-                         + "</doc>").getBytes("utf-8"))),
+                         + "</doc>").getBytes(StandardCharsets.UTF_8))),
                 new Payload(new Record(
                         "doc_0_1", "dummy",
                         ("<doc>\n"
@@ -257,7 +258,7 @@ public class SolrManipulatorTest extends TestCase {
                          + "    <field name=\"recordBase\">dummy</field>\n"
                          + "    <field name=\"title\">bar</field>\n"
                          + "    <field name=\"fulltext\">foo</field>\n"
-                         + "</doc>").getBytes("utf-8"))),
+                         + "</doc>").getBytes(StandardCharsets.UTF_8))),
                 new Payload(new Record(
                         "doc_2_0", "dummy",
                         ("<doc>\n"
@@ -265,7 +266,7 @@ public class SolrManipulatorTest extends TestCase {
                          + "    <field name=\"recordBase\">dummy</field>\n"
                          + "    <field name=\"title\">foo moo doo foo</field>\n"
                          + "    <field name=\"fulltext\">bar</field>\n"
-                         + "</doc>").getBytes("utf-8"))),
+                         + "</doc>").getBytes(StandardCharsets.UTF_8))),
                 new Payload(new Record(
                         "doc_1_1", "dummy",
                         ("<doc>\n"
@@ -273,7 +274,7 @@ public class SolrManipulatorTest extends TestCase {
                          + "    <field name=\"recordBase\">dummy</field>\n"
                          + "    <field name=\"title\">foo</field>\n"
                          + "    <field name=\"fulltext\">foo</field>\n"
-                         + "</doc>").getBytes("utf-8")))
+                         + "</doc>").getBytes(StandardCharsets.UTF_8)))
         ));
 
         SearchNode searcher = getSearcher();
@@ -339,7 +340,7 @@ public class SolrManipulatorTest extends TestCase {
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
                     "doc" + i, "dummy",
-                    Resolver.getUTF8Content("integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+                    Resolver.getUTF8Content("integration/solr/SolrSampleDocument" + i + ".xml").getBytes(StandardCharsets.UTF_8)));
             payload.getRecord().setDeleted(deleted);
             samples.add(payload);
         }
@@ -371,20 +372,16 @@ public class SolrManipulatorTest extends TestCase {
             @Override
             public Payload next() {
                 int i = count.getAndIncrement() + 1;
-                try {
-                    Payload p = new Payload(new Record(
-                            "doc" + i, "dummy",
-                            ("<doc>\n"
-                             + "    <field name=\"recordID\">doc" + i + "</field>\n"
-                             + "    <field name=\"recordBase\">dummy</field>\n"
-                             + "    <field name=\"title\">Document " + i + "</field>\n"
-                             + "    <field name=\"fulltext\">Number " + i + " in the stream of sample documents.</field>\n"
-                             + "</doc>").getBytes("utf-8")));
-                    p.getRecord().setDeleted(deleted);
-                    return p;
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException("UTF-8 not supported", e);
-                }
+                Payload p = new Payload(new Record(
+                        "doc" + i, "dummy",
+                        ("<doc>\n"
+                         + "    <field name=\"recordID\">doc" + i + "</field>\n"
+                         + "    <field name=\"recordBase\">dummy</field>\n"
+                         + "    <field name=\"title\">Document " + i + "</field>\n"
+                         + "    <field name=\"fulltext\">Number " + i + " in the stream of sample documents.</field>\n"
+                         + "</doc>").getBytes(StandardCharsets.UTF_8)));
+                p.getRecord().setDeleted(deleted);
+                return p;
             }
 
             @Override

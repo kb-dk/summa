@@ -10,6 +10,7 @@ import junit.framework.TestSuite;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class StreamToContentFilterTest extends TestCase {
@@ -43,7 +44,7 @@ public class StreamToContentFilterTest extends TestCase {
 
     private void testStringCopy(String s) throws UnsupportedEncodingException {
         Payload in =
-            new Payload(new ByteArrayInputStream(s.getBytes("utf-8")));
+            new Payload(new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8)));
         ObjectFilter feeder = new PayloadFeederHelper(Arrays.asList(in));
         StreamToContentFilter copy =
             new StreamToContentFilter(Configuration.newMemoryBased(

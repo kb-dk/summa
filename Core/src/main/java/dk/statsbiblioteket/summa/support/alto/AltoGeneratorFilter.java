@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -245,11 +246,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
             if (createStream) {
                 return new Payload(new ReaderInputStream(new StringReader(alto.toString()), "utf-8"), id);
             }
-            try {
-                return new Payload(new Record(id, base, alto.toString().getBytes("utf-8")));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("utf-8 must be supported", e);
-            }
+            return new Payload(new Record(id, base, alto.toString().getBytes(StandardCharsets.UTF_8)));
         } finally {
             genTime += System.nanoTime();
         }
@@ -266,11 +263,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
             if (createStream) {
                 return new Payload(new ReaderInputStream(new StringReader(template.getRandomAlto(id)), "utf-8"), id);
             }
-            try {
-                return new Payload(new Record(id, base, template.getRandomAlto(id).getBytes("utf-8")));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("utf-8 must be supported", e);
-            }
+            return new Payload(new Record(id, base, template.getRandomAlto(id).getBytes(StandardCharsets.UTF_8)));
         } finally {
             genTime += System.nanoTime();
         }

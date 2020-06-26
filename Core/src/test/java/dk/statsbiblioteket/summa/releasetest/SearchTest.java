@@ -58,6 +58,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.text.Collator;
 import java.util.*;
@@ -529,11 +530,7 @@ public class SearchTest extends NoExitTestCase {
                 sb.append("    </emner>\n");
                 sb.append("</fagref>\n");
                 delivered++;
-                try {
-                    return new Payload(new Record(id, "fagref", sb.toString().getBytes("utf-8")));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException("UTF-8 should be supported", e);
-                }
+                return new Payload(new Record(id, "fagref", sb.toString().getBytes(StandardCharsets.UTF_8)));
             }
 
             @Override

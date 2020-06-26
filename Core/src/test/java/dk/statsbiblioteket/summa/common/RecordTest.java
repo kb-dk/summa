@@ -17,6 +17,7 @@ package dk.statsbiblioteket.summa.common;
 import dk.statsbiblioteket.util.Zips;
 import junit.framework.TestCase;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -113,7 +114,7 @@ public class RecordTest extends TestCase {
         r.setRawContent(data, true);
 
         assertEquals(orig, r.getContentAsUTF8());
-        assertTrue(Arrays.equals(orig.getBytes("utf-8"), r.getContent()));
+        assertTrue(Arrays.equals(orig.getBytes(StandardCharsets.UTF_8), r.getContent()));
 
         /* Run the tests twice to make sure that we don't have some
          * flip-flopping of the contentCompressed flag */
@@ -123,9 +124,9 @@ public class RecordTest extends TestCase {
 
     public void testCompressedContentII() throws Exception {
         String orig = "Summa pops my socks";
-        r.setContent(orig.getBytes("utf-8"), true);
+        r.setContent(orig.getBytes(StandardCharsets.UTF_8), true);
         assertEquals(orig, r.getContentAsUTF8());
-        r.setContent(orig.getBytes("utf-8"), false);
+        r.setContent(orig.getBytes(StandardCharsets.UTF_8), false);
         assertEquals(orig, r.getContentAsUTF8());
 
         byte[] data = Zips.gzipBuffer(orig.getBytes());

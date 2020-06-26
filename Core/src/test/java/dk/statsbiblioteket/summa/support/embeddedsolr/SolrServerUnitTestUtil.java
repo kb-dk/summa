@@ -15,6 +15,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class SolrServerUnitTestUtil {
             connection.setReadTimeout(10000); //10 secs, but only called once.
             connection.setConnectTimeout(10000); //10 secs, but only called once.
             connection.connect();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
 
             String line;
             while ((line = reader.readLine()) != null) {
@@ -116,7 +117,7 @@ public class SolrServerUnitTestUtil {
         for (int i = 0 ; i < files.length ; i++) {
             Record record = new Record(
                 //Doc1, doc 2. etc.. Actually in test this will be the real recordId in the index
-                "doc" + i, "test_base", Resolver.getUTF8Content(files[i]).getBytes("utf-8"));
+                "doc" + i, "test_base", Resolver.getUTF8Content(files[i]).getBytes(StandardCharsets.UTF_8));
             Payload payload = new Payload(record);
             payload.getRecord().setDeleted(false);
             samples.add(payload);
@@ -127,7 +128,7 @@ public class SolrServerUnitTestUtil {
     private static ObjectFilter getDataProviderFromDocs(String[] docs) throws IOException {
         List<Payload> samples = new ArrayList<>(docs.length);
         for (int i = 0 ; i < docs.length ; i++) {
-            Record record = new Record("doc" + i, "test_base", docs[i].getBytes("utf-8"));
+            Record record = new Record("doc" + i, "test_base", docs[i].getBytes(StandardCharsets.UTF_8));
             Payload payload = new Payload(record);
             payload.getRecord().setDeleted(false);
             samples.add(payload);
