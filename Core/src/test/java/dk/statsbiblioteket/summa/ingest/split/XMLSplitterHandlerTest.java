@@ -27,6 +27,7 @@ import org.xml.sax.Attributes;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -151,7 +152,7 @@ public class XMLSplitterHandlerTest extends TestCase implements
         handler.endElement("a", "record", "record");
 
         Record r = received.get(0);
-        String content = new String(r.getContent());
+        String content = new String(r.getContent(), StandardCharsets.UTF_8);
         assertTrue(content.contains("<![CDATA[test]]>"));
         assertTrue(content.contains("&amp;"));
     }

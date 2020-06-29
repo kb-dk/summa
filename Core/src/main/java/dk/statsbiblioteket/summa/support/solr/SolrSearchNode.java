@@ -877,7 +877,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         // http://www.xyzws.com/Javafaq/how-to-use-httpurlconnection-post-data-to-web-server/139
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setRequestProperty("Content-Length", "" + Integer.toString(params.getBytes().length));
+        conn.setRequestProperty("Content-Length", "" + Integer.toString(params.getBytes(StandardCharsets.UTF_8).length));
         conn.setUseCaches (false);
         conn.setDoInput(true);
         conn.setDoOutput(true);

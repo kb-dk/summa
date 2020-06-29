@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -210,7 +211,7 @@ public abstract class SearchNodeImpl implements SearchNode {
                 log.warn("Could not resolve '" + warmupData + "' to an URL. Skipping warmup");
                 return;
             }
-            BufferedReader in = new BufferedReader(new InputStreamReader(warmupDataURL.openStream()), BUFFER_SIZE);
+            BufferedReader in = new BufferedReader(new InputStreamReader(warmupDataURL.openStream(), StandardCharsets.UTF_8), BUFFER_SIZE);
             String query;
             while ((query = in.readLine()) != null &&
                    System.currentTimeMillis() < endTime) {

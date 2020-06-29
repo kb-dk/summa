@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -116,7 +117,7 @@ public class SummaDocumentToSolrDocumentTest extends TestCase {
     }
     private String transform(String path, String recordId) throws IOException {
         Payload summaDoc = new Payload(new Record(
-            recordId, "dummy", Resolver.getUTF8Content(path).getBytes()));
+            recordId, "dummy", Resolver.getUTF8Content(path).getBytes(StandardCharsets.UTF_8)));
         ObjectFilter input = new PayloadFeederHelper(Arrays.asList(summaDoc));
 
 /*        Configuration confTrans = Configuration.newMemoryBased(

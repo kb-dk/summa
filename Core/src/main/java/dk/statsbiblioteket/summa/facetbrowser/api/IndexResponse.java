@@ -29,6 +29,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -160,7 +161,8 @@ public class IndexResponse extends ResponseImpl {
         public int compare(Pair<String, Integer> o1, Pair<String, Integer> o2) {
             return collator == null ?
                    o1.getKey().compareToIgnoreCase(o2.getKey()) :
-                   collator.compare(o1.getKey().toLowerCase(), o2.getKey().toLowerCase());
+                    // TODO: Is it correct to use Locale.ROOT here. Should this be configurable?
+                   collator.compare(o1.getKey().toLowerCase(Locale.ROOT), o2.getKey().toLowerCase(Locale.ROOT));
         }
     }
 

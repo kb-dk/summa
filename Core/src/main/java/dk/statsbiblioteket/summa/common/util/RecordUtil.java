@@ -980,14 +980,14 @@ public class RecordUtil {
      */
     public static Reader getReader(Record record, String source) {
         if (PART.content.toString().equals(source)) {
-            return new InputStreamReader(new ByteArrayInputStream(record.getContent()));
+            return new InputStreamReader(new ByteArrayInputStream(record.getContent()), StandardCharsets.UTF_8);
         }
         return new StringReader(getString(record, source));
     }
 
     public static Reader getReader(Record record, PART source) {
         if (source == PART.content) {
-            return new InputStreamReader(new ByteArrayInputStream(record.getContent()));
+            return new InputStreamReader(new ByteArrayInputStream(record.getContent()), StandardCharsets.UTF_8);
         }
         return new StringReader(getString(record, source));
     }

@@ -26,6 +26,7 @@ import org.marc4j.marc.*;
 import org.marc4j.marc.impl.Verifier;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 /**
@@ -333,7 +334,7 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
     }
 
     private int parseRecordLength(byte[] leaderData) throws IOException {
-        InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(leaderData));
+        InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(leaderData), StandardCharsets.UTF_8);
         int length;
         char[] tmp = new char[5];
         isr.read(tmp);
@@ -346,7 +347,7 @@ public class FlexibleMarcStreamReader implements MarcReader, Iterator<Record> {
     }
 
     private void parseLeader(Leader ldr, byte[] leaderData) throws IOException {
-        InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(leaderData));
+        InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(leaderData), StandardCharsets.UTF_8);
         char[] tmp = new char[5];
         isr.read(tmp);
         // Skip over bytes for record length, ff we get here, its already been

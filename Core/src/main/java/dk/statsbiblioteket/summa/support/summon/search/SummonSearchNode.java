@@ -1072,7 +1072,7 @@ public class SummonSearchNode extends SolrSearchNode {
         try {
             String algorithm = "HmacSHA1";
             Charset charset = StandardCharsets.UTF_8;
-            SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), algorithm);
+            SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), algorithm);
             Mac mac = Mac.getInstance(algorithm);
             mac.init(signingKey);
             return new String(Base64.encodeBase64(mac.doFinal(idString.getBytes(charset))), charset);

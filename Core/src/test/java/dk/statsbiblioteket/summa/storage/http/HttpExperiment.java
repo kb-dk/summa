@@ -28,6 +28,7 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Experimental class used to play around with the HTTPServer shipped in
@@ -48,7 +49,7 @@ public class HttpExperiment extends TestCase {
             CharBuffer buf = CharBuffer.allocate(1024);
 
             InputStream is = t.getRequestBody();
-            new InputStreamReader(is).read(buf);
+            new InputStreamReader(is, StandardCharsets.UTF_8).read(buf);
             URI uri = t.getRequestURI();
 
 

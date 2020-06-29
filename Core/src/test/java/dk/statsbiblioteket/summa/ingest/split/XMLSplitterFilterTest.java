@@ -273,24 +273,19 @@ public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
             return null;
         }
         ByteArrayInputStream stream = null;
-        try {
-            stream = new ByteArrayInputStream(
-                    XMLSplitterParserTest.multiXML.getBytes(StandardCharsets.UTF_8)) {
-                private boolean closed = false;
-                @Override
-                public void close() throws IOException {
-                    if (closed) {
-                        return; // TODO: Check why close is called twice
-                    }
-                    closed = true;
-                    super.close();
-                    closeCount++;
+        stream = new ByteArrayInputStream(
+                XMLSplitterParserTest.multiXML.getBytes(StandardCharsets.UTF_8)) {
+            private boolean closed = false;
+            @Override
+            public void close() throws IOException {
+                if (closed) {
+                    return; // TODO: Check why close is called twice
                 }
-            };
-        } catch (UnsupportedEncodingException e) {
-            //noinspection CallToPrintStackTrace
-            e.printStackTrace();
-        }
+                closed = true;
+                super.close();
+                closeCount++;
+            }
+        };
         payloadCount--;
         return new Payload(stream);
     }

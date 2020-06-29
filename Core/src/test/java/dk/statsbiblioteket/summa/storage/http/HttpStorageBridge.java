@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -351,7 +352,7 @@ public class HttpStorageBridge extends TestCase implements Configurable {
             }
             String id = path[1];
             QueryOptions opts = parseQuery(query);
-            Record rec = RecordUtil.fromXML(new InputStreamReader(in));
+            Record rec = RecordUtil.fromXML(new InputStreamReader(in, StandardCharsets.UTF_8));
 
             if (!id.equals(rec.getId())) {
                 return dispatchBad(out, path, query,

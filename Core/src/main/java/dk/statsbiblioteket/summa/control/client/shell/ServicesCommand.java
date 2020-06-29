@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -86,7 +87,7 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
                     try {
                         String bdlSpec = client.getBundleSpec(service);
                         BundleSpecBuilder spec = BundleSpecBuilder.open(
-                                  new ByteArrayInputStream(bdlSpec.getBytes()));
+                                  new ByteArrayInputStream(bdlSpec.getBytes(StandardCharsets.UTF_8)));
                         bundleId = spec.getBundleId();
                     } catch (Exception e) {
                         bundleId = "Unknown";

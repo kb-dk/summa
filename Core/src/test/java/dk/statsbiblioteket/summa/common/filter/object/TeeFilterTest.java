@@ -112,8 +112,8 @@ public class TeeFilterTest extends TestCase {
 
     public void testParent() {
         PayloadFeederHelper feeder;
-        Record parent = new Record("originalParent", "originalBase", "content".getBytes());
-        Record childWithParent = new Record("originalChild", "originalBase", "content".getBytes());
+        Record parent = new Record("originalParent", "originalBase", "content".getBytes(StandardCharsets.UTF_8));
+        Record childWithParent = new Record("originalChild", "originalBase", "content".getBytes(StandardCharsets.UTF_8));
         childWithParent.setParents(Arrays.asList(parent));
         feeder = new PayloadFeederHelper(Arrays.asList(new Payload(childWithParent)));
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
@@ -190,8 +190,8 @@ public class TeeFilterTest extends TestCase {
     private PayloadFeederHelper getFeeder() {
         PayloadFeederHelper feeder;
         feeder = new PayloadFeederHelper(Arrays.asList(
-                new Payload(new Record("original1", "originalBase", "content".getBytes())),
-                new Payload(new Record("original2", "originalBase", "content".getBytes()))
+                new Payload(new Record("original1", "originalBase", "content".getBytes(StandardCharsets.UTF_8))),
+                new Payload(new Record("original2", "originalBase", "content".getBytes(StandardCharsets.UTF_8)))
         ));
         return feeder;
     }

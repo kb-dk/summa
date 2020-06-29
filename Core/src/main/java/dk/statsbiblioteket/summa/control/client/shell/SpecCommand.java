@@ -22,6 +22,7 @@ import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * {@link dk.statsbiblioteket.summa.common.shell.Command} implementation
@@ -83,8 +84,8 @@ public class SpecCommand extends RemoteCommand<ClientConnection> {
     }
 
     private void prettyPrint(String spec, ShellContext ctx) {
-        BundleSpecBuilder builder = BundleSpecBuilder.open(
-                                     new ByteArrayInputStream(spec.getBytes()));
+        BundleSpecBuilder builder =
+                BundleSpecBuilder.open(new ByteArrayInputStream(spec.getBytes(StandardCharsets.UTF_8)));
 
         String msg = builder.getDisplayString (hasOption("files"));
         ctx.info(msg);

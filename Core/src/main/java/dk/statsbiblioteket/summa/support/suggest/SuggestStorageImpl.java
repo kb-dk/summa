@@ -47,7 +47,7 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
         log.info(String.format(Locale.ROOT, "Importing suggestions from '%s'", in));
         long importStart = System.currentTimeMillis();
         InputStream inStream = in.openConnection().getInputStream();
-        InputStreamReader reader = new InputStreamReader(inStream);
+        InputStreamReader reader = new InputStreamReader(inStream, StandardCharsets.UTF_8);
         BufferedReader lines = new BufferedReader(reader);
         String line;
         ArrayList<String> buffer = new ArrayList<>(BATCH_SIZE);

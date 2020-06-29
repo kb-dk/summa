@@ -26,6 +26,7 @@ import javax.script.*;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
@@ -201,12 +202,12 @@ public class ScriptFilter extends ObjectFilterImpl {
      */
     public ScriptFilter(InputStream script, boolean compileScript, String scriptExtension)
                                            throws ScriptException, IOException {
-        this(new InputStreamReader(script), compileScript, scriptExtension);
+        this(new InputStreamReader(script, StandardCharsets.UTF_8), compileScript, scriptExtension);
     }
 
     public ScriptFilter(Configuration conf, InputStream script, boolean compileScript, String scriptExtension)
                                            throws ScriptException, IOException {
-        this(conf, new InputStreamReader(script), compileScript, scriptExtension);
+        this(conf, new InputStreamReader(script, StandardCharsets.UTF_8), compileScript, scriptExtension);
     }
 
     /**
@@ -227,7 +228,7 @@ public class ScriptFilter extends ObjectFilterImpl {
      */
     @SuppressWarnings("unused")
     public ScriptFilter(InputStream script) throws ScriptException, IOException {
-        this(new InputStreamReader(script), true, "js");
+        this(new InputStreamReader(script, StandardCharsets.UTF_8), true, "js");
     }
 
     /**
@@ -314,7 +315,7 @@ public class ScriptFilter extends ObjectFilterImpl {
         } else {
             assert conf.valueExists(CONF_SCRIPT_INLINE);
             log.debug("Using inlined script");
-            return new ByteArrayInputStream(conf.getString(CONF_SCRIPT_INLINE).getBytes());
+            return new ByteArrayInputStream(conf.getString(CONF_SCRIPT_INLINE).getBytes(StandardCharsets.UTF_8));
         }
     }
 

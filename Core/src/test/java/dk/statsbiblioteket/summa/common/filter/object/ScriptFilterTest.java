@@ -78,8 +78,8 @@ public class ScriptFilterTest extends TestCase {
                    new StringReader("payload.getRecord().setId('processed');"));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "test content 1".getBytes()),
-                       new Record("id2", "base1", "test content 2".getBytes()));
+                       new Record("id1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -94,8 +94,8 @@ public class ScriptFilterTest extends TestCase {
                    new StringReader("allowPayload = false;"));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "test content 1".getBytes()),
-                       new Record("id2", "base1", "test content 2".getBytes()));
+                       new Record("id1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -111,8 +111,8 @@ public class ScriptFilterTest extends TestCase {
                            "}"));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "test content 1".getBytes()),
-                       new Record("id2", "base1", "test content 2".getBytes()));
+                       new Record("id1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -135,9 +135,9 @@ public class ScriptFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "test content 1".getBytes()),
-                       new Record("id2", "base1", "test content 2".getBytes()),
-                       new Record("taboo", "base1", "test content".getBytes()));
+                       new Record("id1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)),
+                       new Record("taboo", "base1", "test content".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -152,7 +152,7 @@ public class ScriptFilterTest extends TestCase {
                                            Configuration.load("common/inline-js.xml"));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "test content 1".getBytes()));
+                       new Record("id1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -172,7 +172,7 @@ public class ScriptFilterTest extends TestCase {
                                   ("<root>\n"
                                    + "  <child1>Foo</child1>\n"
                                    + "  <child2>Bar</child2>\n"
-                                   + "</root>\n").getBytes()));
+                                   + "</root>\n").getBytes(StandardCharsets.UTF_8)));
         // Flush the filter chain
         while (buf.pump()) { }
 

@@ -27,6 +27,7 @@ import javax.script.*;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 
 /**
@@ -130,7 +131,7 @@ public class ScriptService extends ServiceBase {
         setStatus(Status.CODE.startingUp, "Configuring script service",
                   Logging.LogLevel.INFO);
 
-        Reader script = new InputStreamReader(readScript(conf));
+        Reader script = new InputStreamReader(readScript(conf), StandardCharsets.UTF_8);
 
         this.compileScript = conf.getBoolean(CONF_COMPILE,
                                              DEFAULT_COMPILE);
@@ -255,7 +256,7 @@ public class ScriptService extends ServiceBase {
             assert conf.valueExists(CONF_SCRIPT_INLINE);
             log.info("Using inlined script");
             return new ByteArrayInputStream(
-                                 conf.getString(CONF_SCRIPT_INLINE).getBytes());
+                                 conf.getString(CONF_SCRIPT_INLINE).getBytes(StandardCharsets.UTF_8));
         }
     }
 

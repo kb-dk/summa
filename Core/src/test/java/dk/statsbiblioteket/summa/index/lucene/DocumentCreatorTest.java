@@ -339,7 +339,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         return new Payload(new Record("dummy", "fooBase",
 //                                          SIMPLE_RECORD.getBytes("utf-8")));
         NAMESPACED_RECORD.getBytes(StandardCharsets.UTF_8)));
-        return null;
+//        return null;
     }
     @Override
     public void remove() {

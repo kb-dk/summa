@@ -85,8 +85,8 @@ public class StorageWSTest extends TestCase  {
     }
 
     public void testGetRecords() throws Exception {
-        Record r1 = new Record("id1", "base1", "data".getBytes());
-        Record r2 = new Record("id2", "base1", "data".getBytes());
+        Record r1 = new Record("id1", "base1", "data".getBytes(StandardCharsets.UTF_8));
+        Record r2 = new Record("id2", "base1", "data".getBytes(StandardCharsets.UTF_8));
 
         storage.flush(r1);
         storage.flush(r2);

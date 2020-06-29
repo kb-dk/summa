@@ -25,6 +25,7 @@ import dk.statsbiblioteket.util.Files;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,7 +70,7 @@ public class NotificationTest extends TestCase {
     static final String base1 = "base1";
     static final String base2 = "base2";
     static final String base3 = "base3";
-    static final byte[] testContent1 = "Summa rocks your socks!".getBytes();
+    static final byte[] testContent1 = "Summa rocks your socks!".getBytes(StandardCharsets.UTF_8);
 
     long testStartTime;
     Storage storage;

@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -232,7 +233,7 @@ public class URLRepository implements BundleRepository {
         URL url = new URL(baseUrl + "bundles.list");
         ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
         Streams.pipe(url.openStream(), out);
-        String bundleList = new String(out.toByteArray());
+        String bundleList = new String(out.toByteArray(), StandardCharsets.UTF_8);
         String[] bundles = bundleList.split("\\s");
 
         Pattern pat = Pattern.compile(regex);

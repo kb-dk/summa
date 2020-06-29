@@ -31,6 +31,7 @@ import org.apache.lucene.util.BytesRef;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @SuppressWarnings("ALL")
@@ -42,7 +43,7 @@ import java.util.List;
 public class Inspect {
     private static final String defaultIndex = "/space/512th";
 
-    private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+    private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
     private IndexReader ir;
     private static final long MAXSPEEDTIME = 1000 * 30;
     private List<String> fieldnames;

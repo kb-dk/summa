@@ -96,20 +96,20 @@ public class RecordTest extends TestCase {
 
     public void testSimpleContent () throws Exception {
         String orig = "Summa - the choice of GNU generation";
-        r.setRawContent(orig.getBytes());
+        r.setRawContent(orig.getBytes(StandardCharsets.UTF_8));
 
         assertEquals(orig, r.getContentAsUTF8());
-        assertTrue(Arrays.equals(orig.getBytes(), r.getContent()));
+        assertTrue(Arrays.equals(orig.getBytes(StandardCharsets.UTF_8), r.getContent()));
 
         /* Run the tests twice to make sure that we don't have some
          * flip-flopping of the contentCompressed flag */
         assertEquals(orig, r.getContentAsUTF8());
-        assertTrue(Arrays.equals(orig.getBytes(), r.getContent()));
+        assertTrue(Arrays.equals(orig.getBytes(StandardCharsets.UTF_8), r.getContent()));
     }
 
     public void testCompressedContent() throws Exception {
         String orig = "Summa rocks my socks";
-        byte[] data = Zips.gzipBuffer(orig.getBytes());
+        byte[] data = Zips.gzipBuffer(orig.getBytes(StandardCharsets.UTF_8));
 
         r.setRawContent(data, true);
 
@@ -119,7 +119,7 @@ public class RecordTest extends TestCase {
         /* Run the tests twice to make sure that we don't have some
          * flip-flopping of the contentCompressed flag */
         assertEquals(orig, r.getContentAsUTF8());
-        assertTrue(Arrays.equals(orig.getBytes(), r.getContent()));
+        assertTrue(Arrays.equals(orig.getBytes(StandardCharsets.UTF_8), r.getContent()));
     }
 
     public void testCompressedContentII() throws Exception {
@@ -129,18 +129,18 @@ public class RecordTest extends TestCase {
         r.setContent(orig.getBytes(StandardCharsets.UTF_8), false);
         assertEquals(orig, r.getContentAsUTF8());
 
-        byte[] data = Zips.gzipBuffer(orig.getBytes());
+        byte[] data = Zips.gzipBuffer(orig.getBytes(StandardCharsets.UTF_8));
         r.setRawContent(data, true);
         assertEquals(orig, r.getContentAsUTF8());
     }
 
     public void testEquals () throws Exception {
-        Record r1_1 = new Record("id1", "base1", "".getBytes());
-        Record r1_2 = new Record("id1", "base1", "".getBytes());
-        Record r2 = new Record("id2", "base1", "".getBytes());
+        Record r1_1 = new Record("id1", "base1", "".getBytes(StandardCharsets.UTF_8));
+        Record r1_2 = new Record("id1", "base1", "".getBytes(StandardCharsets.UTF_8));
+        Record r2 = new Record("id2", "base1", "".getBytes(StandardCharsets.UTF_8));
 
-        r1_1.setContent("Hello world".getBytes(), false);
-        r1_2.setContent("Hello world".getBytes(), true);
+        r1_1.setContent("Hello world".getBytes(StandardCharsets.UTF_8), false);
+        r1_2.setContent("Hello world".getBytes(StandardCharsets.UTF_8), true);
         assertEquals(r1_1, r1_2);
 
         r1_1.setParentIds(Arrays.asList("foo", "bar"));

@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -265,7 +266,7 @@ public class RecordReaderTest extends TestCase {
     public void testOne() throws Exception {
         Storage sto = createStorage();
         RecordReader r = new RecordReader(Configuration.newMemoryBased());
-        Record orig = new Record("test1", "base", "Hello".getBytes());
+        Record orig = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
         sto.flush(orig);
         //System.exit(1);
         waitForHasNext(r, timeout);
@@ -283,8 +284,8 @@ public class RecordReaderTest extends TestCase {
         Storage sto = createStorage();
         RecordReader r = new RecordReader(Configuration.newMemoryBased());
 
-        Record orig1 = new Record("test1", "base", "Hello".getBytes());
-        Record orig2 = new Record("test2", "base", "Hello".getBytes());
+        Record orig1 = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+        Record orig2 = new Record("test2", "base", "Hello".getBytes(StandardCharsets.UTF_8));
 
         sto.flushAll(Arrays.asList(orig1, orig2));
         waitForHasNext(r, timeout);
@@ -304,9 +305,9 @@ public class RecordReaderTest extends TestCase {
         Storage sto = createStorage();
         RecordReader r = new RecordReader(Configuration.newMemoryBased());
 
-        Record orig1 = new Record("test1", "base", "Hello".getBytes());
-        Record orig2 = new Record("test2", "base", "Hello".getBytes());
-        Record orig3 = new Record("test3", "base", "Hello".getBytes());
+        Record orig1 = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+        Record orig2 = new Record("test2", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+        Record orig3 = new Record("test3", "base", "Hello".getBytes(StandardCharsets.UTF_8));
 
         sto.flushAll(Arrays.asList(orig1, orig2, orig3));
         waitForHasNext(r, timeout);
@@ -338,9 +339,9 @@ public class RecordReaderTest extends TestCase {
         Storage sto = createStorage();
 
         try {
-            Record orig1 = new Record("test1", "base", "Hello".getBytes());
-            Record orig2 = new Record("test2", "base", "Hello".getBytes());
-            Record orig3 = new Record("test3", "base", "Hello".getBytes());
+            Record orig1 = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+            Record orig2 = new Record("test2", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+            Record orig3 = new Record("test3", "base", "Hello".getBytes(StandardCharsets.UTF_8));
 
             sto.flushAll(Arrays.asList(orig1, orig2));
             { // Implicit initial
@@ -387,9 +388,9 @@ public class RecordReaderTest extends TestCase {
         );
 
         try {
-            Record orig1 = new Record("test1", "base", "Hello".getBytes());
-            Record orig2 = new Record("test2", "base", "Hello".getBytes());
-            Record orig3 = new Record("test3", "base", "Hello".getBytes());
+            Record orig1 = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+            Record orig2 = new Record("test2", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+            Record orig3 = new Record("test3", "base", "Hello".getBytes(StandardCharsets.UTF_8));
 
             sto.flush(orig1);
             Thread.sleep(500);
@@ -436,8 +437,8 @@ public class RecordReaderTest extends TestCase {
         Storage sto = createStorage();
         Configuration readerConf = Configuration.newMemoryBased();
         try {
-            Record orig1 = new Record("test1", "base", "Hello".getBytes());
-            Record orig2 = new Record("test2", "base", "Hello".getBytes());
+            Record orig1 = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+            Record orig2 = new Record("test2", "base", "Hello".getBytes(StandardCharsets.UTF_8));
 
             sto.flushAll(Arrays.asList(orig1, orig2));
             { // Implicit initial
@@ -475,9 +476,9 @@ public class RecordReaderTest extends TestCase {
         Storage sto = createStorage();
         RecordReader r = new RecordReader(Configuration.newMemoryBased());
 
-        Record orig1 = new Record("test1", "base", "Hello".getBytes());
-        Record orig2 = new Record("test2", "base", "Hello".getBytes());
-        Record orig3 = new Record("test3", "base", "Hello".getBytes());
+        Record orig1 = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+        Record orig2 = new Record("test2", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+        Record orig3 = new Record("test3", "base", "Hello".getBytes(StandardCharsets.UTF_8));
 
         sto.flushAll(Arrays.asList(orig1, orig2, orig3));
         waitForHasNext(r, timeout);
@@ -496,7 +497,7 @@ public class RecordReaderTest extends TestCase {
         r.close(true);
 
         r = new RecordReader(Configuration.newMemoryBased());
-        Record orig4 = new Record("test4", "base", "Hello".getBytes());
+        Record orig4 = new Record("test4", "base", "Hello".getBytes(StandardCharsets.UTF_8));
         sto.flushAll(Arrays.asList(orig4));
         waitForHasNext(r, timeout);
 
@@ -507,7 +508,7 @@ public class RecordReaderTest extends TestCase {
         r.close(true);
 
         r = new RecordReader(Configuration.newMemoryBased());
-        Record orig4del = new Record("test4", "base", "Hello".getBytes());
+        Record orig4del = new Record("test4", "base", "Hello".getBytes(StandardCharsets.UTF_8));
         orig4del.setDeleted(true);
         sto.flushAll(Arrays.asList(orig4del));
         waitForHasNext(r, timeout);
@@ -528,7 +529,7 @@ public class RecordReaderTest extends TestCase {
         Thread thread = new Thread(probe, "RecordProbe");
         thread.start();
 
-        Record orig = new Record("test1", "base", "Hello".getBytes());
+        Record orig = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
         sto.flush(orig);
 
         // Wait for the probe to return, 10s
@@ -553,9 +554,9 @@ public class RecordReaderTest extends TestCase {
         Thread thread = new Thread(probe, "RecordProbe");
         thread.start();
 
-        Record orig1 = new Record("test1", "base", "Hello".getBytes());
-        Record orig2 = new Record("test2", "base", "Hello".getBytes());
-        Record orig3 = new Record("test3", "base", "Hello".getBytes());
+        Record orig1 = new Record("test1", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+        Record orig2 = new Record("test2", "base", "Hello".getBytes(StandardCharsets.UTF_8));
+        Record orig3 = new Record("test3", "base", "Hello".getBytes(StandardCharsets.UTF_8));
         sto.flushAll(Arrays.asList(orig1, orig2, orig3));
 
         // Wait for the probe to return, 10s
