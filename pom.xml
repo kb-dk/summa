@@ -28,7 +28,7 @@
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
     </ciManagement>
     <inceptionYear>2015</inceptionYear>
-    <url>http://summa.sourceforge.net/projects/summa/</url>
+    <url>https://github.com/statsbiblioteket/summa</url>
     <packaging>pom</packaging>
     <name>Summa</name>
 
