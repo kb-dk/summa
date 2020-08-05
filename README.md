@@ -13,6 +13,10 @@ and only high-priority bug fixes and features will be applied.
 
 Git: https://github.com/statsbiblioteket/summa
 
+## Requirements
+
+* Java 1.8 (only tested Oracle JVM)
+
 ## Building
 
 Summa is a complex collection of modules. The `Summix`-module merges
@@ -22,7 +26,7 @@ these into a single distribution called `summix`.
  project can only be done with `mvn -DskipTests package` :-(
 
 The distribution package can be found in `Summix/target/` and is to be used
-with the `SummaRise` project. See  
+with the `SummaRise` project.
 
 ### Callback JARS
 
