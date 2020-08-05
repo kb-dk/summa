@@ -46,9 +46,11 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import javax.crypto.spec.PSource;
 import javax.xml.stream.*;
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -62,6 +64,10 @@ import java.util.regex.Pattern;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+@Ignore
+/*
+ * Summon support has been halted and as this test requires a Summon subscription, it has been disabled
+ */
 public class SummonSearchNodeTest extends TestCase {
     private static Log log = LogFactory.getLog(SummonSearchNodeTest.class);
 

@@ -15,14 +15,15 @@
 package dk.statsbiblioteket.summa.ingest.source;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * RecordGenerator Tester.
@@ -31,26 +32,10 @@ import java.util.Arrays;
  * @since <pre>12/04/2008</pre>
  * @version 1.0
  */
-public class RecordGeneratorTest extends TestCase {
+public class RecordGeneratorTest {
     private static Log log = LogFactory.getLog(RecordGeneratorTest.class);
-    public RecordGeneratorTest(String name) {
-        super(name);
-    }
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public static Test suite() {
-        return new TestSuite(RecordGeneratorTest.class);
-    }
-
+    @Test
     public void testIncrementalNumber() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         String contentTemplate =
@@ -58,9 +43,11 @@ public class RecordGeneratorTest extends TestCase {
                 + "$INCREMENTAL_NUMBER[b]";
         conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE, contentTemplate);
         RecordGenerator generator = new RecordGenerator(conf);
-        assertEquals("Expansion of incrementalNumber should work",
-                     "00Foo!$Hey!?\n1", generator.expand(contentTemplate));
+        assertEquals("00Foo!$Hey!?\n1", generator.expand(contentTemplate),
+                     "Expansion of incrementalNumber should work");
     }
+
+    @Test
     public void testDumpAll() throws Exception {
         int RUNS = 3;
         Configuration conf = Configuration.newMemoryBased();

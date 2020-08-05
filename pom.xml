@@ -17,12 +17,13 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <!-- disabled until someone (Toke) has 1+ week for cleaning up -->
         <api.check.phase>none</api.check.phase>
+        <test.excludedGroups>slow,unstable,performance</test.excludedGroups>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>2.5.3-20181107</version>
+    <version>2.5.3-20181107-SNAPSHOT</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
@@ -77,17 +78,31 @@
 
     </modules>
 
+    <!-- https://mvnrepository.com/artifact/org.junit.vintage/junit-vintage-engine -->
+
     <!-- Summa dependencies -->
     <dependencies>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.14</version>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>5.6.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.6.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.10</version>
+            <version>4.13</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
         </dependency>
     </dependencies>
 
@@ -583,7 +598,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.9</version>
+                <version>2.22.2</version>
                 <configuration>
                     <testFailureIgnore>true</testFailureIgnore>
                     <enableAssertions>false</enableAssertions>

@@ -144,7 +144,6 @@ public class IndexBuilder {
 
         // Delete the old
         deleteDir(new File(INDEX_LOCATION));
-
         IndexWriterConfig iwConfig = new IndexWriterConfig(
             Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30));
         // TODO: Use compound file

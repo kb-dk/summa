@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -305,8 +306,8 @@ public class StorageWS implements ServletContextListener {
     private String realGetRecord(String id, boolean expand, boolean legacyMerge, boolean escapeContent) {
         if (log.isTraceEnabled()) {
             log.trace(String.format(Locale.ROOT,
-                    "realGetRecord('%s', expand=%b, legacyMerge=%b)",
-                    id, expand, legacyMerge));
+                                    "realGetRecord('%s', expand=%b, legacyMerge=%b)",
+                                    id, expand, legacyMerge));
         }
         long startTime = System.currentTimeMillis();
         long xmlTime = 0;

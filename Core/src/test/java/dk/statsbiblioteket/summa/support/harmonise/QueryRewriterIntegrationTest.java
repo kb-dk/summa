@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.junit.Ignore;
 
 import java.rmi.RemoteException;
 
@@ -25,6 +26,10 @@ import java.rmi.RemoteException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hsm")
+/*
+ * This class has been disabled as Summon-support has been halted
+ */
+@Ignore
 public class QueryRewriterIntegrationTest extends TestCase {
     private static Log log = LogFactory.getLog(QueryRewriterIntegrationTest.class);
 

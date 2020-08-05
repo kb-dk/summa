@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.gwsc;
+package dk.statsbiblioteket.summa.web.gwsc;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Locale;
 
 /**
  * Web service class, responsible for creating/starting web services. Also
