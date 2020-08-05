@@ -16,9 +16,10 @@ Git: https://github.com/statsbiblioteket/summa
 ## Building
 
 Summa is a complex collection of modules. The `Summix`-module merges
-these into a single distribution called `summix`. It can be build with
-the standard `mvn package`, but it takes 1 hour to run all the unit-tests,
-so `mvn -DskipTests package` might be considered.
+these into a single distribution called `summix`.
+ 
+ As several unit-tests can only pass in separate runs, building the
+ project can only be done with `mvn -DskipTests package` :-(
 
 The distribution package can be found in `Summix/target/` and is to be used
 with the `SummaRise` project. See  
