@@ -1,5 +1,4 @@
-Summa README
-------------
+# Summa README
 
 Summa is an open source search engine developed by the
 State and University Library of Denmark. It is released
@@ -9,9 +8,31 @@ This project is developed for internal use at State and University Library.
 While it is certainly possible to use it elsewhere, it is not very
 polished and documentation is lacking.
 
-Homepage: http://wiki.statsbiblioteket.dk/summa
+This project has End Of Life around 2022-24, depending on circumstances,
+and only high-priority bug fixes and features will be applied.
+
 Git: https://github.com/statsbiblioteket/summa
 
+## Building
+
+Summa is a complex collection of modules. The `Summix`-module merges
+these into a single distribution called `summix`. It can be build with
+the standard `mvn package`, but it takes 1 hour to run all the unit-tests,
+so `mvn -DskipTests package` might be considered.
+
+The distribution package can be found in `Summix/target/` and is to be used
+with the `SummaRise` project. See  
+
+### Callback JARS
+
+Summa uses XSLT callbacks for some data processing. In order to edit
+XSLTs using jEdit, these callbacks must be generated and enabled in
+jEdit.
+
+Run `./callbackJARS` to generate the XSLT callback JARS. The result is
+placed in the current folder.
+
+## Developer setup
 
 Running maven:
 Insert the following XML into the Maven2 settings file (under linux this i found
@@ -58,8 +79,3 @@ If you don't want to or can't use the repository from Statsbiblioteket non
 official jars are supplied in the checkout and can be installed into you local
 maven repository.
 
-Run the following command to create symbolic links that enables to create war
-files under the web module.
-$ cd Web; ./mkLinks.sh; cd ../;
-
-and run '$ mvn compile' from the projects root directory. 
