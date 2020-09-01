@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 @SuppressWarnings("UseOfSystemOutOrSystemErr")
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -406,15 +407,7 @@ public class StorageTool {
      * @throws IOException If error occur while communicatinh to storage.
      */
     private static int actionHoldings(StorageReaderClient storage) throws IOException {
-        StringMap meta = new StringMap();
-        meta.put("ALLOW_PRIVATE", "true");
-        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
-        long start = System.currentTimeMillis();
-        Record holdings = storage.getRecord("__holdings__", opts);
-        String xml = holdings.getContentAsUTF8();
-        System.out.println(xml);
-        System.err.println(String.format("Retrieved holdings in %sms", System.currentTimeMillis() - start));
-        return 0;
+        return privateCommand(storage, "holdings");
     }
 
     /**
@@ -425,15 +418,28 @@ public class StorageTool {
      * @throws IOException If error occur while communicatinh to storage.
      */
     private static int actionStatistics(StorageReaderClient storage) throws IOException {
+        return privateCommand(storage, "statistics");
+    }
+
+    private static int actionRelationStatistics(String[] args, StorageReaderClient reader) throws IOException {
+        if (args.length == 2 && "true".equals(args[1].toLowerCase(Locale.ENGLISH))) {
+            return privateCommand(reader, "relation_stats_extended");
+        } else {
+            return privateCommand(reader, "relation_stats");
+        }
+    }
+
+    private static int privateCommand(StorageReaderClient storage, String command) throws IOException {
         StringMap meta = new StringMap();
         meta.put("ALLOW_PRIVATE", "true");
         QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
         long start = System.currentTimeMillis();
-        Record holdings = storage.getRecord("__statistics__", opts);
+        Record holdings = storage.getRecord("__" + command + "__", opts);
         System.out.println(holdings.getContentAsUTF8());
-        System.err.println(String.format("Retrieved stats in %sms", System.currentTimeMillis() - start));
+        System.err.printf("Retrieved %s in %dms%n", command, System.currentTimeMillis() - start);
         return 0;
     }
+
 
     /**
      * This action runs a single batch job on the storage.
@@ -604,6 +610,8 @@ public class StorageTool {
                 + "\tclear base   (clear all records from base)\n"
                 + "\tholdings     (show information on the records in the storage - potentially very slow)\n"
                 + "\tstats        (show performance statistics)\n"
+                + "\trelation_stats [extended] (show statistics on relations. If extended is true, it can be very slow)\n"
+                + "\t                extended=true|false\n"
                 + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
                 + "\tbackup <destination>   (full copy of the running storage at the point of command execution)\n");
     }
@@ -690,6 +698,9 @@ public class StorageTool {
             case "stats":
                 exitCode = actionStatistics(reader);
                 break;
+            case "relation_stats":
+                exitCode = actionRelationStatistics(args, reader);
+                break;
             case "batchjob":
                 exitCode = actionBatchJob(args, writer);
                 break;
@@ -704,5 +715,6 @@ public class StorageTool {
         }
         System.exit(exitCode);
     }
+
 
 }

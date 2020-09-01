@@ -310,6 +310,27 @@ public abstract class StatementHandler {
         );
     }
 
+    public MiniConnectionPoolManager.StatementHandle getListRelations() {
+        return generateStatementHandle(
+            "SELECT " + DatabaseStorage.PARENT_ID_COLUMN +
+            ", " + DatabaseStorage.CHILD_ID_COLUMN +
+            " FROM " + DatabaseStorage.RELATIONS +
+            " ORDER BY " + DatabaseStorage.PARENT_ID_COLUMN +
+            ", " + DatabaseStorage.CHILD_ID_COLUMN
+        );
+    }
+
+    // Either parent OR child: Only one needed
+    public MiniConnectionPoolManager.StatementHandle getValidRelations() {
+        return generateStatementHandle(
+                "SELECT COUNT(*) FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE (rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                " OR rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                ") AND rec." + DatabaseStorage.DELETED_COLUMN + "=false"
+        );
+    }
+
     public MiniConnectionPoolManager.StatementHandle getBatchJob(QueryOptions options, String base) {
         return generateStatementHandle(getPagingStatement(
             "SELECT " + getColumns(options, true)

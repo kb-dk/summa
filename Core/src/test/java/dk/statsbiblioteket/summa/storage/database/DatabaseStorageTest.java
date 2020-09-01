@@ -1353,6 +1353,79 @@ public class DatabaseStorageTest extends StorageTestBase {
     }
 
     /**
+     * Test get __statistics__ object.
+     * @throws Exception If error.
+     */
+    public void testGetStatistics() throws Exception {
+        storage.flush(new Record(testId1, testBase1, testContent1));
+        storage.flush(new Record(testId2, testBase2, testContent1));
+
+        StringMap meta = new StringMap();
+        meta.put("ALLOW_PRIVATE", "true");
+        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
+        Record statistics = storage.getRecord("__statistics__", opts);
+        String response = statistics.getContentAsUTF8();
+
+        assertTrue("The result should contain '(all' but was\n'" + response + "'", response.contains("all("));
+
+        log.info(response);
+        // TODO assert equals
+    }
+
+    public void testSimpleRelationStatistics() throws Exception {
+        createRelationTestData();
+
+        assertEquals("Total relation rows: 7", storage.getRelationStats(false));
+    }
+
+    public void testExtendedRelationStatistics() throws Exception {
+        createRelationTestData();
+        String report = storage.getRelationStats(true);
+        for (String expected: new String[]{
+                "records (all): 6",
+                "records (non-deleted): 4",
+                "relations (all): 7",
+                "relations (either parent or child present): 6",
+                "relations (distinct parentIDs): 3",
+                "relations (distinct non-deleted parentIDs): 2",
+                "relations (distinct childIDs): 4",
+                "relations (distinct non-deleted childIDs): 2",
+        }) {
+            if (!report.contains(expected)) {
+                fail("Expected the report to contain '" + expected + "' but it was\n" + report);
+            }
+        }
+    }
+
+    private void createRelationTestData() throws IOException {
+        addRecord("parent1", "child1", "child2");
+        addRecord("parent2", "child1", "child2", "child3", "child4");
+        addRecord("parent3", "child1");
+
+        addRecord("child1");
+        addRecord("child2");
+        addRecord("child3");
+
+        deleteRecord("parent3");
+        deleteRecord("child3");
+    }
+
+    private Record addRecord(String id, String... childIDs) throws IOException {
+        Record r = new Record(id, "dummy", new byte[0]);
+        if (childIDs.length > 0) {
+            r.setChildIds(Arrays.asList(childIDs));
+        }
+        storage.flush(r);
+        return r;
+    }
+    private void deleteRecord(String id) throws IOException {
+        Record r = new Record(id, "dummy", new byte[0]);
+        r.setDeleted(true);
+        storage.flush(r);
+    } 
+
+
+    /**
      * Test get and set of modification time.
      * @throws Exception If error occur
      */

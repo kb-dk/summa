@@ -2290,11 +2290,165 @@ public abstract class DatabaseStorage extends StorageBase {
             return new Record("__holdings__", "__private__", bytes.toByteArray());
         } else if ("__statistics__".equals(id)) {
             return new Record("__statistics__", "__private__", getHumanStats().getBytes("utf-8"));
+        } else if ("__relation_stats__".equals(id)) {
+            return new Record("__relation_stats__", "__private__", getRelationStats(conn, false).getBytes("utf-8"));
+        } else if ("__relation_stats_extended__".equals(id)) {
+            return new Record("__relation_stats__", "__private__", getRelationStats(conn, true).getBytes("utf-8"));
         } else {
             log.debug(String.format("No such private record '%s'", id));
             return null;
         }
     }
+
+    /**
+     * Extract statistics on relations.
+     * @param extended if true, extended statistics is extracted. This is a lot more heavy than non-extended.
+     * @return human readable statistics on relations.
+     * @throws IOException if the statistics gathering failed.
+     */
+    public String getRelationStats(boolean extended) throws IOException {
+        try (Connection conn = getTransactionalConnection()) {
+            return getRelationStats(conn, extended);
+        } catch (SQLException e) {
+            String message = "getRelationStats(" + extended + "): SQLException requesting simple connection stats";
+            log.warn(message, e);
+            throw new IOException(message, e);
+        }
+    }
+
+    /**
+     * Extract statistics on relations.
+     * @param conn     an established connection to the Storage.
+     * @param extended if true, extended statistics is extracted. This is a lot more heavy than non-extended.
+     * @return human readable statistics on relations.
+     * @throws IOException if the statistics gathering failed.
+     */
+    public String getRelationStats(Connection conn, boolean extended) throws IOException {
+        try {
+            return extended ?
+                    getExtendedRelationStatsWithConnection(conn) :
+                    getSimpleRelationStatsWithConnection(conn);
+        } catch (SQLException e) {
+            String message = "SQLException requesting simple connection stats";
+            log.warn(message, e);
+            throw new IOException(message, e);
+        }
+    }
+
+    /**
+     * Return light relation statistics for a given connection.
+     *
+     * @param conn The connection.
+     * @return a human readable report of relations.
+     * @throws SQLException If error getting the SQL exception.
+     * @throws IOException  If error handling RMI.
+     */
+    private String getSimpleRelationStatsWithConnection(Connection conn) throws SQLException {
+        long startTime = System.currentTimeMillis();
+        String report = "Total relation rows: " + getRowCount(conn, RELATIONS);
+        log.debug(String.format("Extracted simple relations stats in %sms", System.currentTimeMillis() - startTime));
+        return report;
+    }
+
+    /**
+     * @param conn an existing connection to the database.
+     * @param table a table in the database.
+     * @return the number of rows in the given table (fast).
+     */
+    private long getRowCount(Connection conn, String table) throws SQLException {
+        final String query = "SELECT count(*) FROM " + table;
+        return getSingleLong(conn, query);
+    }
+
+    /**
+     * @param conn an existing connection to the database.
+     * @param table a table in the database.
+     * @param field the field to count uniques for.
+     * @return the number of unique values for a given field in the given table.
+     */
+    private long getDistinctCount(Connection conn, String table, String field) throws SQLException {
+        final String query = "SELECT COUNT(DISTINCT " + field + ") FROM " + table;
+        return getSingleLong(conn, query);
+    }
+
+    /**
+     * Takes a query, executes it and return a long extracted from the first result in the result set, at position 1.
+     * @param conn an existing connection to the database.
+     * @param query a query such as "SELECT COUNT(*) FROM footable".
+     * @return the first field in the first result.
+     * @throws SQLException if the query failed or there was no result.
+     */
+    private long getSingleLong(Connection conn, String query) throws SQLException {
+        Statement stmt = conn.createStatement();
+        log.debug("Getting resultset for '" + query + "'");
+        long st = System.currentTimeMillis();
+        log.debug("Got ResultSet for '" + query + "' in " + (System.currentTimeMillis() - st) + "ms");
+
+        try (ResultSet result = stmt.executeQuery(query)) {
+            if (result.next() && !result.isAfterLast()) {
+                return result.getLong(1);
+            }
+            String message = "No result trying to extract first field in first result for query '" + query + "'";
+            log.warn(message);
+            throw new SQLException(message);
+        }
+    }
+
+    /**
+     * Return heavy relation statistics for a given connection.
+     *
+     * @param conn The connection.
+     * @return a human readable report of relations.
+     * @throws SQLException If error getting the SQL exception.
+     * @throws IOException  If error handling RMI.
+     */
+    private String getExtendedRelationStatsWithConnection(Connection conn) throws SQLException {
+        long startTime = System.currentTimeMillis();
+
+        String NONDEL_PARENTS =
+                "SELECT COUNT(DISTINCT rel." + DatabaseStorage.PARENT_ID_COLUMN +
+                ") FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                " AND rec." + DatabaseStorage.DELETED_COLUMN + "=false";
+        String NONDEL_CHILDREN =
+                "SELECT COUNT(DISTINCT rel." + DatabaseStorage.CHILD_ID_COLUMN +
+                ") FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE rel." + DatabaseStorage.CHILD_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                " AND rec." + DatabaseStorage.DELETED_COLUMN + "=false";
+
+        List<String> report = new ArrayList<>();
+        try {
+            report.add("records (all): " + getRowCount(conn, RECORDS));
+            report.add("records (non-deleted): " + getSingleLong(
+                    conn, "SELECT COUNT(*) FROM " + RECORDS + " where " + DELETED_COLUMN + "=false"));
+            report.add("relations (all): " + getRowCount(conn, RELATIONS));
+            report.add("relations (either parent or child present): " + getValidRelationCount(conn));
+            report.add("relations (distinct parentIDs): " + getDistinctCount(conn, RELATIONS, PARENT_ID_COLUMN));
+            report.add("relations (distinct non-deleted parentIDs): " + getSingleLong(conn, NONDEL_PARENTS));
+            report.add("relations (distinct childIDs): " + getDistinctCount(conn, RELATIONS, CHILD_ID_COLUMN));
+            report.add("relations (distinct non-deleted childIDs): " + getSingleLong(conn, NONDEL_CHILDREN));
+        } catch (Exception e) {
+            String message = "Exception generating extended relations report: " + e.getMessage();
+            log.warn(message, e);
+            report.add("Exception generating extended relations report: " + e.getMessage());
+        }
+        log.debug("Extended relations report generated in " + (System.currentTimeMillis()-startTime) + "ms");
+        return Strings.join(report, "\n");
+    }
+
+    private long getValidRelationCount(Connection conn) throws SQLException {
+        String query =
+                "SELECT COUNT(*) FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE (rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                " OR rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                ") AND rec." + DatabaseStorage.DELETED_COLUMN + "=false";
+
+        return getSingleLong(conn, query);
+    }
+
 
     private String getHumanStats() {
         // TODO: When sbutil 0.5.51 comes out, pretty-print timing with newlines as separator
