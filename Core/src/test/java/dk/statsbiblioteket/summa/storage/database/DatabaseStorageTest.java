@@ -1380,15 +1380,24 @@ public class DatabaseStorageTest extends StorageTestBase {
 
     public void testExtendedRelationStatistics() throws Exception {
         createRelationTestData();
+        {
+            assertRelationTestData();
+            Record parent5 = storage.getRecord("parent5", null);
+            Record child5 = storage.getRecord("child5", null);
+            // Although the records are marked as deleted, the relations are still there
+            assertEquals("The number of children for parent5 should match", 1, parent5.getChildren().size());
+            assertEquals("The number of parents for child5 should match", 1, child5.getParents().size());
+        }
+
         String report = storage.getRelationStats(true);
         for (String expected: new String[]{
-                "records (all): 6",
-                "records (non-deleted): 4",
-                "relations (all): 7",
-                "relations (either parent or child present): 6",
-                "relations (distinct parentIDs): 3",
-                "relations (distinct non-deleted parentIDs): 2",
-                "relations (distinct childIDs): 4",
+                "records (all): 9",
+                "records (non-deleted): 5",
+                "relations (all): 9",
+                "relations (either parent or child present): 7",
+                "relations (distinct parentIDs): 5",
+                "relations (distinct non-deleted parentIDs): 3",
+                "relations (distinct childIDs): 5",
                 "relations (distinct non-deleted childIDs): 2",
         }) {
             if (!report.contains(expected)) {
@@ -1401,14 +1410,51 @@ public class DatabaseStorageTest extends StorageTestBase {
         addRecord("parent1", "child1", "child2");
         addRecord("parent2", "child1", "child2", "child3", "child4");
         addRecord("parent3", "child1");
+        addRecord("parent4", "child4");
+        addRecord("parent5", "child5");
 
         addRecord("child1");
         addRecord("child2");
         addRecord("child3");
+        // Note: No child4
+        addRecord("child5");
 
         deleteRecord("parent3");
+        deleteRecord("parent4");
         deleteRecord("child3");
+        deleteRecord("child5");
     }
+
+    private void assertRelationTestData() throws IOException {
+        final QueryOptions qo = new QueryOptions(null, null, 10, 10, null);
+        
+        Record parent1 = storage.getRecord("parent1", qo);
+        Record parent2 = storage.getRecord("parent2", qo);
+        Record parent3 = storage.getRecord("parent3", qo);
+        Record parent4 = storage.getRecord("parent4", qo);
+
+        assertEquals("The number of children for parent1 should match", 2, parent1.getChildren().size());
+        assertEquals("The number of children for parent2 should match", 3, parent2.getChildren().size());
+        assertTrue("parent3 should be marked as deleted", parent3.isDeleted());
+        assertEquals("The number of children for parent3 should match", 1, parent3.getChildren().size());
+        assertTrue("parent4 should be marked as deleted", parent4.isDeleted());
+
+        Record child1 = storage.getRecord("child1", qo);
+        Record child2 = storage.getRecord("child2", qo);
+        Record child3 = storage.getRecord("child3", qo);
+        Record child4 = storage.getRecord("child4", qo);
+        Record child5 = storage.getRecord("child5", qo);
+
+        assertEquals("The number of parents for child1 should match", 3, child1.getParents().size());
+        assertEquals("The number of parents for child2 should match", 2, child2.getParents().size());
+        assertEquals("The number of parents for child3 should match", 1, child3.getParents().size());
+        assertTrue("child3 should be marked as deleted", child3.isDeleted());
+        assertNull("child4 should not exist", child4);
+        assertTrue("child5 should be marked as deleted", child5.isDeleted());
+
+        // No check for parent4 and child4 ad the result depends on whether relations has been cleared
+    }
+
 
     private Record addRecord(String id, String... childIDs) throws IOException {
         Record r = new Record(id, "dummy", new byte[0]);
