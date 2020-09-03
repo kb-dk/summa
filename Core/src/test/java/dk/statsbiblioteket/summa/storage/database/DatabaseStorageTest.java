@@ -1393,11 +1393,11 @@ public class DatabaseStorageTest extends StorageTestBase {
         for (String expected: new String[]{
                 "records (all): 9",
                 "records (non-deleted): 5",
-                "relations (all): 9",
+                "relations (all): 10",
                 "relations (either parent or child present): 7",
-                "relations (distinct parentIDs): 5",
+                "relations (distinct parentIDs): 6",
                 "relations (distinct non-deleted parentIDs): 3",
-                "relations (distinct childIDs): 5",
+                "relations (distinct childIDs): 6",
                 "relations (distinct non-deleted childIDs): 2",
         }) {
             if (!report.contains(expected)) {
@@ -1406,23 +1406,40 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
+    public void testClearRelations() throws IOException {
+        createRelationTestData();
+        assertRelationTestData();
+        // parent4 and record4
+        assertEquals("Clearing with requirement none_valid should remove the correct amount of relations",
+                     3, storage.clearRelations(DatabaseStorage.REMOVAL_REQUIREMENT.none_valid));
+    }
+
     private void createRelationTestData() throws IOException {
         addRecord("parent1", "child1", "child2");
-        addRecord("parent2", "child1", "child2", "child3", "child4");
-        addRecord("parent3", "child1");
-        addRecord("parent4", "child4");
+        addRecord("parent2", "child1", "child2", "child3", "child4"); // child4 will never exist
+        addRecord("parent3", "child1"); // parent will be marked as deleted
+        addRecord("parent4", "child4"); // parent will be marked as deleted, child will never exist
         addRecord("parent5", "child5");
+        addRecord("parent6", "child6"); // Both parent & child will be fully removed from records
+        addRecord("parent7", "child7"); // Both parent & child will be marked as deleted
 
         addRecord("child1");
         addRecord("child2");
         addRecord("child3");
         // Note: No child4
         addRecord("child5");
+        addRecord("child7");
 
-        deleteRecord("parent3");
-        deleteRecord("parent4");
-        deleteRecord("child3");
-        deleteRecord("child5");
+        markAsDeleted("parent3");
+        markAsDeleted("parent4");
+        markAsDeleted("parent7");
+        markAsDeleted("child3");
+        markAsDeleted("child5");
+        markAsDeleted("child7");
+
+        //
+        storage.deleteRecord("parent6");
+        storage.deleteRecord("child6");
     }
 
     private void assertRelationTestData() throws IOException {
@@ -1432,18 +1449,24 @@ public class DatabaseStorageTest extends StorageTestBase {
         Record parent2 = storage.getRecord("parent2", qo);
         Record parent3 = storage.getRecord("parent3", qo);
         Record parent4 = storage.getRecord("parent4", qo);
+        Record parent6 = storage.getRecord("parent6", qo);
+        Record parent7 = storage.getRecord("parent7", qo);
 
         assertEquals("The number of children for parent1 should match", 2, parent1.getChildren().size());
         assertEquals("The number of children for parent2 should match", 3, parent2.getChildren().size());
         assertTrue("parent3 should be marked as deleted", parent3.isDeleted());
         assertEquals("The number of children for parent3 should match", 1, parent3.getChildren().size());
         assertTrue("parent4 should be marked as deleted", parent4.isDeleted());
+        assertNull("parent6 should not exist", parent6);
+        assertTrue("parent7 should be marked as deleted", parent7.isDeleted());
 
         Record child1 = storage.getRecord("child1", qo);
         Record child2 = storage.getRecord("child2", qo);
         Record child3 = storage.getRecord("child3", qo);
         Record child4 = storage.getRecord("child4", qo);
         Record child5 = storage.getRecord("child5", qo);
+        Record child6 = storage.getRecord("child6", qo);
+        Record child7 = storage.getRecord("child7", qo);
 
         assertEquals("The number of parents for child1 should match", 3, child1.getParents().size());
         assertEquals("The number of parents for child2 should match", 2, child2.getParents().size());
@@ -1451,6 +1474,8 @@ public class DatabaseStorageTest extends StorageTestBase {
         assertTrue("child3 should be marked as deleted", child3.isDeleted());
         assertNull("child4 should not exist", child4);
         assertTrue("child5 should be marked as deleted", child5.isDeleted());
+        assertNull("child6 should not exist", child6);
+        assertTrue("child7 should be marked as deleted", child7.isDeleted());
 
         // No check for parent4 and child4 ad the result depends on whether relations has been cleared
     }
@@ -1464,7 +1489,7 @@ public class DatabaseStorageTest extends StorageTestBase {
         storage.flush(r);
         return r;
     }
-    private void deleteRecord(String id) throws IOException {
+    private void markAsDeleted(String id) throws IOException {
         Record r = new Record(id, "dummy", new byte[0]);
         r.setDeleted(true);
         storage.flush(r);

@@ -2382,9 +2382,9 @@ public abstract class DatabaseStorage extends StorageBase {
         Statement stmt = conn.createStatement();
         log.debug("Getting resultset for '" + query + "'");
         long st = System.currentTimeMillis();
-        log.debug("Got ResultSet for '" + query + "' in " + (System.currentTimeMillis() - st) + "ms");
 
         try (ResultSet result = stmt.executeQuery(query)) {
+            log.debug("Got ResultSet for '" + query + "' in " + (System.currentTimeMillis() - st) + "ms");
             if (result.next() && !result.isAfterLast()) {
                 return result.getLong(1);
             }
@@ -2392,6 +2392,21 @@ public abstract class DatabaseStorage extends StorageBase {
             log.warn(message);
             throw new SQLException(message);
         }
+    }
+
+    /**
+     * Takes a SQL statement and executes it, ignoring output.
+     * @param conn an existing connection to the database.
+     * @param statement the SQL statement to execute.
+     * @throws SQLException if the query failed or there was no result.
+     */
+    private void executeStatement(Connection conn, String statement) throws SQLException {
+        Statement stmt = conn.createStatement();
+        log.debug("Executing SQL statement '" + statement + "'");
+        long st = System.currentTimeMillis();
+
+        stmt.executeUpdate(statement);
+        log.debug("Executed statement '" + statement + "' in " + (System.currentTimeMillis() - st) + "ms");
     }
 
     /**
@@ -2436,6 +2451,107 @@ public abstract class DatabaseStorage extends StorageBase {
         }
         log.debug("Extended relations report generated in " + (System.currentTimeMillis()-startTime) + "ms");
         return Strings.join(report, "\n");
+    }
+
+    public enum REMOVAL_REQUIREMENT {
+        only_parent_valid, only_child_valid, only_one_valid, none_valid
+    }
+
+    /**
+     * Delete the record with recordID from the {@link #RECORDS} database.
+     * Relations are not updated.
+     * @param recordID the ID for the record to delete.
+     * @throws IOException wrapper for any SQLExceptions thrown during delete.
+     */
+    public void deleteRecord(String recordID) throws IOException {
+        try (Connection conn = getTransactionalConnection()) {
+            PreparedStatement delete = conn.prepareStatement("DELETE FROM " + RECORDS + " WHERE " + ID_COLUMN + "=?");
+            delete.setString(1, recordID);
+            delete.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            String message = "deleteRecord(" + recordID + ") encountered a SQLException";
+            log.warn(message, e);
+            throw new IOException(message, e);
+        }
+    }
+    /**
+     * Clear all relations where the removalRequirement is satisfied.
+      * @param removalRequirement thr grounds for removal of a relation.
+     * @return the number of relations that were removed.
+     */
+    public long clearRelations(REMOVAL_REQUIREMENT removalRequirement) throws IOException {
+        try (Connection conn = getTransactionalConnection()) {
+            return clearRelations(conn, removalRequirement);
+        } catch (SQLException e) {
+            String message = "clearRelations(" + removalRequirement + ") encountered a SQLException";
+            log.warn(message, e);
+            throw new IOException(message, e);
+        }
+    }
+    /**
+     * Clear all relations where the removalRequirement is satisfied.
+      * @param removalRequirement thr grounds for removal of a relation.
+     * @return the number of relations that were removed.
+     */
+    private long clearRelations(Connection conn, REMOVAL_REQUIREMENT removalRequirement) throws SQLException {
+        // TODO: Add check for isDeleted
+        final String REL = DatabaseStorage.RELATIONS;
+        final String RECORDS = DatabaseStorage.RECORDS;
+        final String PARENT = DatabaseStorage.PARENT_ID_COLUMN;
+        final String CHILD = DatabaseStorage.CHILD_ID_COLUMN;
+        final String ID = DatabaseStorage.ID_COLUMN;
+        final String DELETED = DatabaseStorage.DELETED_COLUMN;
+
+        final String NONE =
+                "delete " +
+                "from " + REL + " rel " +
+                "where exists ( " +
+                "    select 1 " +
+                "    from ( " +
+                "    select " + PARENT + ", " + CHILD + ", parent_deleted, child_deleted " +
+                "       from " + REL + " as orig " +
+                "                left join (select " + ID + ", " + DELETED + " as parent_deleted from " + RECORDS + ") as join1 on join1." + ID + " = " + PARENT + " " +
+                "                left join (select " + ID + ", " + DELETED + " as child_deleted from " + RECORDS + ") as join2 on join2." + ID + " = orig." + CHILD +
+                "    ) as joined " +
+                "    where (rel." + PARENT + "=joined." + PARENT + " and rel." + CHILD + "=joined." + CHILD + ") and (" +
+                "   ((parent_deleted or parent_deleted is null) and (child_deleted or child_deleted is null))))";
+
+        final String CHILD_ONLY =
+                "DELETE FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE (NOT rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                ") AND rel." + DatabaseStorage.CHILD_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN;
+        String PARENT_ONLY =
+                "DELETE FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                "AND (NOT rel." + DatabaseStorage.CHILD_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                ")";
+
+        final long preDelete = getRowCount(conn, RELATIONS);
+        switch (removalRequirement) {
+            case none_valid: {
+                executeStatement(conn, NONE);
+                break;
+            }
+            case only_child_valid: {
+                executeStatement(conn, CHILD_ONLY);
+                break;
+            }
+            case only_parent_valid: {
+                executeStatement(conn, PARENT_ONLY);
+                break;
+            }
+            case only_one_valid: {
+                executeStatement(conn, CHILD_ONLY);
+                executeStatement(conn, PARENT_ONLY);
+                break;
+            }
+            default: throw new UnsupportedOperationException(
+                    "The removal requirement '" + removalRequirement + " is not supported");
+        }
+        return preDelete-getRowCount(conn, RELATIONS);
     }
 
     private long getValidRelationCount(Connection conn) throws SQLException {
