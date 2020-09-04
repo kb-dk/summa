@@ -37,6 +37,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -2289,11 +2290,22 @@ public abstract class DatabaseStorage extends StorageBase {
             BaseStats.toXML(getStatsWithConnection(conn), writer);
             return new Record("__holdings__", "__private__", bytes.toByteArray());
         } else if ("__statistics__".equals(id)) {
-            return new Record("__statistics__", "__private__", getHumanStats().getBytes("utf-8"));
+            return new Record("__statistics__", "__private__", getHumanStats().getBytes(StandardCharsets.UTF_8));
         } else if ("__relation_stats__".equals(id)) {
-            return new Record("__relation_stats__", "__private__", getRelationStats(conn, false).getBytes("utf-8"));
+            return new Record("__relation_stats__", "__private__", getRelationStats(conn, false).getBytes(StandardCharsets.UTF_8));
         } else if ("__relation_stats_extended__".equals(id)) {
-            return new Record("__relation_stats__", "__private__", getRelationStats(conn, true).getBytes("utf-8"));
+            return new Record("__relation_stats__", "__private__", getRelationStats(conn, true).getBytes(StandardCharsets.UTF_8));
+        } else if (id != null && id.startsWith("__relation_cleanup_")) {
+            String rrS = id.substring("__relation_cleanup_".length(), id.length()-2);
+            try {
+                REMOVAL_REQUIREMENT rr = REMOVAL_REQUIREMENT.valueOf(rrS);
+                return new Record(id, "__private__",
+                                  ("Cleared " + clearRelations(rr) + " relations").getBytes(StandardCharsets.UTF_8));
+            } catch (IllegalArgumentException e) {
+                String message = "Unknown clean up requirement '" + rrS + "'";
+                log.warn(message, e);
+                return new Record(id, "__private__", (message).getBytes(StandardCharsets.UTF_8));
+            }
         } else {
             log.debug(String.format("No such private record '%s'", id));
             return null;
@@ -2503,7 +2515,10 @@ public abstract class DatabaseStorage extends StorageBase {
         final String ID = DatabaseStorage.ID_COLUMN;
         final String DELETED = DatabaseStorage.DELETED_COLUMN;
 
-        final String NONE =
+        // Creates a virtual table with [parent, child, parent_deleted, child_deleted], where the deleted-entries are
+        // null if no matching Record could be found.
+        //language=PostgreSQL
+        final String BASE =
                 "delete " +
                 "from " + REL + " rel " +
                 "where exists ( " +
@@ -2514,38 +2529,28 @@ public abstract class DatabaseStorage extends StorageBase {
                 "                left join (select " + ID + ", " + DELETED + " as parent_deleted from " + RECORDS + ") as join1 on join1." + ID + " = " + PARENT + " " +
                 "                left join (select " + ID + ", " + DELETED + " as child_deleted from " + RECORDS + ") as join2 on join2." + ID + " = orig." + CHILD +
                 "    ) as joined " +
-                "    where (rel." + PARENT + "=joined." + PARENT + " and rel." + CHILD + "=joined." + CHILD + ") and (" +
-                "   ((parent_deleted or parent_deleted is null) and (child_deleted or child_deleted is null))))";
+                "    where (rel." + PARENT + "=joined." + PARENT + " and rel." + CHILD + "=joined." + CHILD + ") and (";
 
-        final String CHILD_ONLY =
-                "DELETE FROM " + DatabaseStorage.RELATIONS + " rel " +
-                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
-                " WHERE (NOT rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
-                ") AND rel." + DatabaseStorage.CHILD_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN;
-        String PARENT_ONLY =
-                "DELETE FROM " + DatabaseStorage.RELATIONS + " rel " +
-                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
-                " WHERE rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
-                "AND (NOT rel." + DatabaseStorage.CHILD_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
-                ")";
+        final String NONE = "((parent_deleted or parent_deleted is null) and (child_deleted or child_deleted is null))";
+        final String PVAL = "(parent_deleted=false and (child_deleted or child_deleted is null))";
+        final String CVAL = "((parent_deleted or parent_deleted is null) and child_deleted=false)";
 
         final long preDelete = getRowCount(conn, RELATIONS);
         switch (removalRequirement) {
             case none_valid: {
-                executeStatement(conn, NONE);
+                executeStatement(conn, BASE + NONE + "))");
                 break;
             }
             case only_child_valid: {
-                executeStatement(conn, CHILD_ONLY);
+                executeStatement(conn, BASE + NONE + " or " + CVAL + "))");
                 break;
             }
             case only_parent_valid: {
-                executeStatement(conn, PARENT_ONLY);
+                executeStatement(conn, BASE + NONE + " or " + PVAL + "))");
                 break;
             }
             case only_one_valid: {
-                executeStatement(conn, CHILD_ONLY);
-                executeStatement(conn, PARENT_ONLY);
+                executeStatement(conn, BASE + NONE + " or " + PVAL + " or " + CVAL + "))");
                 break;
             }
             default: throw new UnsupportedOperationException(

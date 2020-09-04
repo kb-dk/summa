@@ -429,6 +429,10 @@ public class StorageTool {
         }
     }
 
+    private static int actionRelationCleanup(String[] args, StorageReaderClient reader) throws IOException {
+        return privateCommand(reader, "relation_cleanup_" + (args.length == 2 ? args[1] : "none_valid"));
+    }
+
     private static int privateCommand(StorageReaderClient storage, String command) throws IOException {
         StringMap meta = new StringMap();
         meta.put("ALLOW_PRIVATE", "true");
@@ -610,8 +614,9 @@ public class StorageTool {
                 + "\tclear base   (clear all records from base)\n"
                 + "\tholdings     (show information on the records in the storage - potentially very slow)\n"
                 + "\tstats        (show performance statistics)\n"
-                + "\trelation_stats [extended] (show statistics on relations. If extended is true, it can be very slow)\n"
-                + "\t                extended=true|false\n"
+                + "\trelation_stats [extended=false] (show statistics on relations. Slow if extended=true)\n"
+                + "\trelation_cleanup [condition=none_valid] (clean up of relations)\n"
+                + "\t                  condition=none_valid|only_parent_valid|only_child_valid|only_one_valid\n"
                 + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
                 + "\tbackup <destination>   (full copy of the running storage at the point of command execution)\n");
     }
@@ -700,6 +705,9 @@ public class StorageTool {
                 break;
             case "relation_stats":
                 exitCode = actionRelationStatistics(args, reader);
+                break;
+            case "relation_cleanup":
+                exitCode = actionRelationCleanup(args, reader);
                 break;
             case "batchjob":
                 exitCode = actionBatchJob(args, writer);
