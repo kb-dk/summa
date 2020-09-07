@@ -429,6 +429,15 @@ public class StorageTool {
         }
     }
 
+    private static int actionDumpToFile(String[] args, StorageReaderClient reader) throws IOException {
+        if (args.length == 1) {
+            throw new IllegalArgumentException("A path must be stated");
+        }
+        String path = args[1];
+        boolean dumpDeleted = args.length == 3 && Boolean.parseBoolean(args[2]);
+        return privateCommand(reader, "dump_to_file_" + dumpDeleted + "_" + path);
+    }
+
     private static int actionRelationCleanup(String[] args, StorageReaderClient reader) throws IOException {
         return privateCommand(reader, "relation_cleanup_" + (args.length == 2 ? args[1] : "none_valid"));
     }
@@ -438,8 +447,13 @@ public class StorageTool {
         meta.put("ALLOW_PRIVATE", "true");
         QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
         long start = System.currentTimeMillis();
-        Record holdings = storage.getRecord("__" + command + "__", opts);
-        System.out.println(holdings.getContentAsUTF8());
+        String prID = "__" + command + "__";
+        Record holdings = storage.getRecord(prID, opts);
+        if (holdings == null) {
+            System.err.println("Unable to retrieve private record '" + prID + "'");
+        } else {
+            System.out.println(holdings.getContentAsUTF8());
+        }
         System.err.printf("Retrieved %s in %dms%n", command, System.currentTimeMillis() - start);
         return 0;
     }
@@ -611,12 +625,15 @@ public class StorageTool {
                 + "\txslt <record_id> <xslt_url> [expand]\n"
                 + "\tdump [base [maxrecords [format]]]   (dump storage on stdout)\n"
                 + "\t                        format=content|meta|full\n"
+                + "\tdump_to_file <destination> [deleted] (dump storage to file system at the server)\n"
+                + "\t              destination=absolute folder path on the server. The folder must not exist\n"
+                + "\t                            deleted=true|false. If false, records marked as deleted are skipped.\n"
                 + "\tclear base   (clear all records from base)\n"
                 + "\tholdings     (show information on the records in the storage - potentially very slow)\n"
                 + "\tstats        (show performance statistics)\n"
-                + "\trelation_stats [extended=false] (show statistics on relations. Slow if extended=true)\n"
-                + "\trelation_cleanup [condition=none_valid] (clean up of relations)\n"
-                + "\t                  condition=none_valid|only_parent_valid|only_child_valid|only_one_valid\n"
+                + "\trelation_stats [extended] (show statistics on relations. Slow if extended: true)\n"
+                + "\trelation_cleanup [condition] (clean up of relations)\n"
+                + "\t                  condition: none_valid(default)|only_parent_valid|only_child_valid|only_one_valid\n"
                 + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
                 + "\tbackup <destination>   (full copy of the running storage at the point of command execution)\n");
     }
@@ -694,6 +711,9 @@ public class StorageTool {
             case "dump":
                 exitCode = actionDump(args, reader);
                 break;
+            case "dump_to_file":
+                exitCode = actionDumpToFile(args, reader);
+                break;
             case "clear":
                 exitCode = actionClear(args, writer);
                 break;
@@ -723,6 +743,5 @@ public class StorageTool {
         }
         System.exit(exitCode);
     }
-
 
 }

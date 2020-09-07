@@ -34,6 +34,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -1559,4 +1562,11 @@ public class DatabaseStorageTest extends StorageTestBase {
         storage.close();
     }
 
+    public void testDumpDatabase() throws IOException {
+        final Path DEST = Files.createTempDirectory("h2_dump_test");
+        Files.delete(DEST);
+        createRelationTestData();
+        log.info(storage.dumpToFilesystem(DEST.toString(), true));
+        log.info("Finished dumping test h2 to " + DEST);
+    }
 }

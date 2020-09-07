@@ -21,8 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.StringWriter;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Takes care of construction and re-use of statements for databases.
@@ -509,7 +508,7 @@ public abstract class StatementHandler {
         return records.toString();
     }
 
-    private String attributeToField(QueryOptions.ATTRIBUTES attribute) {
+    public static String attributeToField(QueryOptions.ATTRIBUTES attribute) {
         switch (attribute) {
             case ID:               return DatabaseStorage.ID_COLUMN;
             case BASE:             return DatabaseStorage.BASE_COLUMN;
@@ -526,4 +525,5 @@ public abstract class StatementHandler {
                 "The QueryOptions attribute '" + attribute + "' is unknown");
         }
     }
+
 }

@@ -43,6 +43,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An abstract implementation of a SQL database driven extension of {@link StorageBase}.
@@ -525,7 +527,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private final boolean pruneRelativesOnGet;
     private boolean useOptimizations;
 
-    private StatementHandler statementHandler;
+    protected StatementHandler statementHandler;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
     /**
      * Used by {@link #getRecord(String, QueryOptions)} and {@link #getRecords(List, QueryOptions)}.
@@ -577,7 +579,6 @@ public abstract class DatabaseStorage extends StorageBase {
     protected static final Timing timingGetModificationTime = timing.getChild("GetModificationTime");
     protected static final Timing timingGetStats = timing.getChild("GetStats");
     protected static final Timing timingInvalidateStats = timing.getChild("InvalidateStats");
-
     /**
      * A variation of {@link QueryOptions} used to keep track of recursion
      * depths for expanding children and parents.
@@ -866,7 +867,7 @@ public abstract class DatabaseStorage extends StorageBase {
      *
      * @return database connection from connection pool.
      */
-    private Connection getTransactionalConnection()   {
+    public Connection getTransactionalConnection()   {
 
         try{
             Connection conn = getConnection();
@@ -2296,7 +2297,7 @@ public abstract class DatabaseStorage extends StorageBase {
         } else if ("__relation_stats_extended__".equals(id)) {
             return new Record("__relation_stats__", "__private__", getRelationStats(conn, true).getBytes(StandardCharsets.UTF_8));
         } else if (id != null && id.startsWith("__relation_cleanup_")) {
-            String rrS = id.substring("__relation_cleanup_".length(), id.length()-2);
+            String rrS = id.substring("__relation_cleanup_".length(), id.length() - 2);
             try {
                 REMOVAL_REQUIREMENT rr = REMOVAL_REQUIREMENT.valueOf(rrS);
                 return new Record(id, "__private__",
@@ -2306,11 +2307,23 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.warn(message, e);
                 return new Record(id, "__private__", (message).getBytes(StandardCharsets.UTF_8));
             }
+        } else if (id != null && id.startsWith("__dump_to_file_")) {
+            Matcher matcher = DTF_PATTERN.matcher(id);
+            if (!matcher.matches()) {
+                return new Record(id, "__private__",
+                                  ("Error: Unable to parse dump to file command '" + id + "'").
+                                          getBytes(StandardCharsets.UTF_8));
+            }
+            String dest = matcher.group(1);
+            boolean dumpDeleted = Boolean.parseBoolean(matcher.group(2));
+            return new Record(id, "__private__",
+                              dumpToFilesystem(dest, dumpDeleted).getBytes(StandardCharsets.UTF_8));
         } else {
             log.debug(String.format("No such private record '%s'", id));
             return null;
         }
     }
+    private final Pattern DTF_PATTERN = Pattern.compile("__dump_to_file_([a-z]+)_(.*)_");
 
     /**
      * Extract statistics on relations.
@@ -2367,7 +2380,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param table a table in the database.
      * @return the number of rows in the given table (fast).
      */
-    private long getRowCount(Connection conn, String table) throws SQLException {
+    public long getRowCount(Connection conn, String table) throws SQLException {
         final String query = "SELECT count(*) FROM " + table;
         return getSingleLong(conn, query);
     }
@@ -2378,7 +2391,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param field the field to count uniques for.
      * @return the number of unique values for a given field in the given table.
      */
-    private long getDistinctCount(Connection conn, String table, String field) throws SQLException {
+    public long getDistinctCount(Connection conn, String table, String field) throws SQLException {
         final String query = "SELECT COUNT(DISTINCT " + field + ") FROM " + table;
         return getSingleLong(conn, query);
     }
@@ -5311,6 +5324,37 @@ public abstract class DatabaseStorage extends StorageBase {
         r.setParents(Collections.singletonList(p));
         p.setChildren(Collections.singletonList(r));
         records.add(r);
+    }
+
+    /**
+     * Implementation specific dump of the full database. If possible, the dump should be in the same format as the
+     * database itself (e.g. a H2 database dump should itself be a H2 database, directly usable as Storage).
+     * @param dest absolute path to a folder on the file system. The folder will be created.
+     * @param dumpDeleted if true, records marked as deleted are also dumped.
+     * @return status information on the dump..
+     * @throws IOException if the database could not be dumped.
+     */
+    public String dumpToFilesystem(String dest, boolean dumpDeleted) throws IOException {
+        return "Error: dumpToFilesystem not implemented for " + this.getClass().getCanonicalName();
+    }
+
+
+    /**
+     * @return all the record fields in the same order as {@link QueryOptions.ATTRIBUTES}.
+     */
+    public static List<String> getAllRecordFields() {
+        List<String> all = new ArrayList<>();
+        for (QueryOptions.ATTRIBUTES attribute: QueryOptions.ATTRIBUTES.values()) {
+            all.add(StatementHandler.attributeToField(attribute));
+        }
+        return all;
+    }
+
+    /**
+     * @return all the relation fields.
+     */
+    public static List<String> getAllRelationFields() {
+        return Arrays.asList(PARENT_ID_COLUMN, CHILD_ID_COLUMN);
     }
 
     @Override
