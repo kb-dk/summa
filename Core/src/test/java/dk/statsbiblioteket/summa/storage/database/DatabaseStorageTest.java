@@ -864,6 +864,25 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
+    public void testGetRecordNoParentResolve() throws IOException {
+        StringMap meta = new StringMap();
+        addRecord("P1", "C1");
+        addRecord("C1");
+        QueryOptions opts = new QueryOptions(null, null, 10, 0, meta);
+
+        {
+            Record parent = storage.getRecord("P1", opts);
+            assertNotNull("Requesting with parent ID 'P1' should work", parent);
+            assertEquals("The number of child records should match", 1, parent.getChildren().size());
+        }
+
+        {
+            Record child = storage.getRecord("C1", opts);
+            assertNotNull("Requesting with child ID 'C1' should work", child);
+            assertNull("There should be no parent records", child.getParents());
+        }
+    }
+
     public void testGetChildWithParentDirect() throws Exception {
         Record r1 = new Record(testId1, testBase1, testContent1);
         Record r2 = new Record(testId2, testBase1, testContent1);
