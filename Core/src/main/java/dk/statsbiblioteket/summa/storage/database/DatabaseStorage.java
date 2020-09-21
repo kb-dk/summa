@@ -2075,7 +2075,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
             Record record = getRecordWithConnection(id, options, conn);
             profiler.beat();
-            String m = "Finished getRecord(" + id + ", ...) " + (record == null ? "without" : "with")
+            String m = "Finished getRecord(" + id + ", " + options + ") " + (record == null ? "without" : "with")
                        + " result in " + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(m);
             recordlog.info(m);
@@ -2252,6 +2252,8 @@ public abstract class DatabaseStorage extends StorageBase {
                 final long expandNS = System.nanoTime();
                 expandRelationsWithConnection(record, options, conn);
                 timingExpandRelationsWithConnection.addNS(System.nanoTime()-expandNS);
+                timingExpandRelationsWithConnection.update();
+
 //                log.debug("getRecordWithConnection***: Expand in " + (System.nanoTime()-expand)/M + "ms");
 
             } finally {
@@ -2284,7 +2286,6 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private Record getPrivateRecord(Connection conn, String id) throws IOException {
         log.debug(String.format("Fetching private record '%s'", id));
-
         if ("__holdings__".equals(id)) {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             OutputStreamWriter writer = new OutputStreamWriter(bytes);
@@ -2314,8 +2315,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                   ("Error: Unable to parse dump to file command '" + id + "'").
                                           getBytes(StandardCharsets.UTF_8));
             }
-            String dest = matcher.group(1);
-            boolean dumpDeleted = Boolean.parseBoolean(matcher.group(2));
+            boolean dumpDeleted = Boolean.parseBoolean(matcher.group(1));
+            String dest = matcher.group(2);
             return new Record(id, "__private__",
                               dumpToFilesystem(dest, dumpDeleted).getBytes(StandardCharsets.UTF_8));
         } else {
@@ -5365,6 +5366,39 @@ public abstract class DatabaseStorage extends StorageBase {
                              iterators.size(), useLazyRelations, usePagingModel, pageSize,
                              pageSizeUpdate, expandRelativesLists, defaultGetOptions,
                              pruneRelativesOnGet, Strings.join(basesWithStoredRelations, ","), getIterationStats());
+    }
+
+
+    /**
+     * Recreate the indexes for the table, cleaning up cruft.
+     * Note: Request performance might suffer temendously during this operation.
+     * @return
+     */
+    public String recreateIndexes() throws IOException {
+        try (Connection conn = getConnection()) {
+            return deleteIndexes(conn) + "\n" + createIndexes(conn);
+        } catch (SQLException e) {
+            throw new IOException("SQLException attempting to delete and create indexes", e);
+        }
+    }
+
+    private String createIndexes(Connection conn) {
+
+        return "createIndexes not implemented yet";
+    }
+
+    private String deleteIndexes(Connection conn) throws SQLException {
+        StringBuilder sb = new StringBuilder();
+        log.info("Dropping existing indexes on the " + RECORDS + " table");
+        for (String index: new String[]{
+                "i", "m", "b", "bdi", // Records
+                "p", "c", "pc"}) {    // Relations
+            long startTime = System.currentTimeMillis();
+            this.executeStatement(conn, "DROP INDEX IF EXISTS " + index);
+            sb.append("Dropped index ").append(index).append(" in ").
+                    append(System.currentTimeMillis() - startTime).append("ms");
+        }
+        return sb.toString();
     }
 
 }

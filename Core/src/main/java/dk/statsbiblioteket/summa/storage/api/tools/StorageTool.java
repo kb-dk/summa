@@ -101,7 +101,7 @@ public class StorageTool {
      * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating to storage.
      */
-    private static int actionGet(String[] argv, StorageReaderClient storage, boolean expand) throws IOException {
+    private static int actionGet(String[] argv, StorageReaderClient storage, Boolean expand) throws IOException {
         if (argv.length == 1) {
             System.err.println("You must specify at least one record id to the 'get' action");
             return 1;
@@ -614,8 +614,9 @@ public class StorageTool {
         System.err.println("USAGE:\n\tstorage-tool.sh <action> [arg]...");
         System.err.println(
                 "Actions:\n"
-                + "\tget  <record_id>+\n"
-                + "\tget_expand  <record_id>+\n"
+                + "\tget <record_id>+ (get record, expanding parent/childs based on default expansion for the storage)\n"
+                + "\tget_single  <record_id>+ (get record, no parent/child expansion)\n"
+                + "\tget_expand  <record_id>+ (get record, expanding parent/childs)\n"
                 + "\tput <record_id> <record_base> <file>\n"
                 + "\tdelete  <record_id>\n"
                 + "\tpeek [base] [max_count=5]\n"
@@ -625,15 +626,16 @@ public class StorageTool {
                 + "\txslt <record_id> <xslt_url> [expand]\n"
                 + "\tdump [base [maxrecords [format]]]   (dump storage on stdout)\n"
                 + "\t                        format=content|meta|full\n"
-                + "\tdump_to_file <destination> [deleted] (dump storage to file system at the server)\n"
-                + "\t              destination=absolute folder path on the server. The folder must not exist\n"
-                + "\t                            deleted=true|false. If false, records marked as deleted are skipped.\n"
+                //                + "\tdump_to_file <destination> [deleted] (dump storage to file system at the server)\n"
+                //                + "\t              destination=absolute folder path on the server. The folder must not exist\n"
+                //                + "\t                            deleted=true|false. If false, records marked as deleted are skipped.\n"
                 + "\tclear base   (clear all records from base)\n"
                 + "\tholdings     (show information on the records in the storage - potentially very slow)\n"
                 + "\tstats        (show performance statistics)\n"
-                + "\trelation_stats [extended] (show statistics on relations. Slow if extended: true)\n"
-                + "\trelation_cleanup [condition] (clean up of relations)\n"
-                + "\t                  condition: none_valid(default)|only_parent_valid|only_child_valid|only_one_valid\n"
+                // Stats disables for now af they are extremely slow with H2
+                //                + "\trelation_stats [extended] (show statistics on relations. Slow if extended: true)\n"
+                //                + "\trelation_cleanup [condition] (clean up of relations)\n"
+                //                + "\t                  condition: none_valid(default)|only_parent_valid|only_child_valid|only_one_valid\n"
                 + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
                 + "\tbackup <destination>   (full copy of the running storage at the point of command execution)\n");
     }
@@ -685,6 +687,9 @@ public class StorageTool {
         int exitCode;
         switch (action) {
             case "get":
+                exitCode = actionGet(args, reader, null);
+                break;
+            case "get_single":
                 exitCode = actionGet(args, reader, false);
                 break;
             case "get_expand":

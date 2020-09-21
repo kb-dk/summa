@@ -91,9 +91,23 @@ public class StorageWSTest extends TestCase {
         System.out.println(recXML.replace(">", ">\n"));
     }
 
-    public void testGetRecords() {
+    public void disabledtestGetRecordsSB() {
 //        final String ID = "oai:open-archive.highwire.org:vetrec:174/18/456";
 //        final String ID = "oai:doaj-articles:3a087332fac5eed3a0e5a4c1bba3c8ac";
+        final String ID = "sb_pure_ddfmxd:5357";
+        StorageWS.conf =  Configuration.newMemoryBased(
+            //ConnectionConsumer.CONF_RPC_TARGET, "//mars:56600/aulhub",
+            ConnectionConsumer.CONF_RPC_TARGET, "//localhost:57000/sb-storage",
+            RecordUtil.CONF_ESCAPE_CONTENT, false
+        );
+        StorageWS storage = new StorageWS();
+        String recXML = storage.getRecords(new String[]{ID});
+        assertTrue("A record should be returned", recXML.contains("<record"));
+        System.out.println(recXML.replace(">", ">\n"));
+    }
+
+    // Requires a local 
+    public void testGetRecordsDOMS() {
         final String ID = "sb_pure_ddfmxd:5357";
         StorageWS.conf =  Configuration.newMemoryBased(
             //ConnectionConsumer.CONF_RPC_TARGET, "//mars:56600/aulhub",
