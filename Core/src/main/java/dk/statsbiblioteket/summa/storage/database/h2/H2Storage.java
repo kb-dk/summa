@@ -446,12 +446,13 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      * bigger than the pageSize of the result sets
      */
     private void setMaxMemoryRows() {
+        int maxMemoryRows = getPageSize() * 3;
+        log.debug("setMaxMemoryRows called with limit " + maxMemoryRows + ", getting connection...");
         Connection conn = getConnection();
         Statement stmt = null;
         try {
             // There might be several rows per record if the records has
             // relations. There will be one extra row per relation
-            int maxMemoryRows = getPageSize() * 3;
             log.debug("Setting MAX_MEMORY_ROWS to " + maxMemoryRows);
             stmt = conn.createStatement();
             stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);

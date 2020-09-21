@@ -1457,8 +1457,8 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     @Override
     public synchronized long getRecordsModifiedAfter(long mtime, String base, QueryOptions options) throws IOException {
-        log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime + ", '" + base + "', " +
-                  (options != null ? options : defaultGetOptions == null ? null : "defaultGetOptions=" + defaultGetOptions) +
+        log.debug("getRecordsModifiedAfter(" + mtime + ", '" + base + "', " +
+                  (options != null ? options : "defaultOptions: " + defaultGetOptions) +
                   ").");
         if (options == null) {
             options = defaultGetOptions;
@@ -1576,7 +1576,7 @@ public abstract class DatabaseStorage extends StorageBase {
         StatementHandle handle;
         PreparedStatement stmt;
         log.debug("getRecordsModifiedAfterCursor(" + mtime + ", '" + base + "', " +
-                  (options != null ? options : defaultGetOptions == null ? null : "defaultGetOptions=" + defaultGetOptions) +
+                  (options != null ? options : "defaultGetOptions: " + defaultGetOptions) +
                   ").");
         if (options == null) {
             options = defaultGetOptions;
