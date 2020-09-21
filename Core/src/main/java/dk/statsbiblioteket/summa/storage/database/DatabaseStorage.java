@@ -1457,7 +1457,12 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     @Override
     public synchronized long getRecordsModifiedAfter(long mtime, String base, QueryOptions options) throws IOException {
-        log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime + ", '" + base + "', " + options + ").");
+        log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime + ", '" + base + "', " +
+                  (options != null ? options : defaultGetOptions == null ? null : "defaultGetOptions=" + defaultGetOptions) +
+                  ").");
+        if (options == null) {
+            options = defaultGetOptions;
+        }
         timingGetRecordsModifiedAfter.start();
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
@@ -1570,7 +1575,12 @@ public abstract class DatabaseStorage extends StorageBase {
 
         StatementHandle handle;
         PreparedStatement stmt;
-        log.debug("getRecordsModifiedAfterCursor(" + mtime + ", '" + base + "', " + options + ").");
+        log.debug("getRecordsModifiedAfterCursor(" + mtime + ", '" + base + "', " +
+                  (options != null ? options : defaultGetOptions == null ? null : "defaultGetOptions=" + defaultGetOptions) +
+                  ").");
+        if (options == null) {
+            options = defaultGetOptions;
+        }
 
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
