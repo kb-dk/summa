@@ -20,3 +20,4 @@ else
 fi
 echo "svn copy svn+ssh://${ID}@svn.code.sf.net/p/summa/code/trunk svn+ssh://${ID}@svn.code.sf.net/p/summa/code/tags/${VERSION} -m \"Release ${VERSION}\""
 
+echo "Warning: This does not update the sub-sub modules under Web. This should be implemented"

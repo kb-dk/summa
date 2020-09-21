@@ -5,6 +5,9 @@
 echo -n "MD5 sum: "
 md5sum Summix/target/*.zip
 
-scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/hubsolr/summix-storage
-scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/summonsolr/summix-storage
-scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/sbsolr/summix-storage
+for SITE in doms mediehub aviser; do
+    scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/${SITE}/summix-storage
+done
+#scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/hubsolr/summix-storage
+#scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/summonsolr/summix-storage
+#scp Summix/target/*.zip summatst@mars:/home/summatst/summarise/sites/sbsolr/summix-storage

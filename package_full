@@ -1,4 +1,5 @@
 mvn clean
+rm -r target/ */target/ */target/ Web/Modules/SummaWeb/target
 source ~/bin/jdk18
 mvn -DskipTests -Dmaven.javadoc.skip=true package
 md5sum Summix/target/summix-*.zip
