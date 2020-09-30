@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tika.io.IOExceptionWithCause;
 
 import java.io.*;
 import java.util.*;
@@ -114,7 +115,12 @@ public class XStorage implements ConfigurationStorage {
             log.warn("Property file '" + configurationFile + "' does not exist. Creating new file");
             syncStorageFile();
         } else {
-            xprops.load(configurationFile.getAbsoluteFile().toString(), false, false);
+            String confFile = configurationFile.getAbsoluteFile().toString();
+            try {
+                xprops.load(confFile, false, false);
+            } catch (Exception e) {
+                throw new IOException("Exception calling XProperties.load(" + confFile + ")", e);
+            }
         }
     }
 
