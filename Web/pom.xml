@@ -18,8 +18,8 @@
             <module>Modules/Storage</module> 
             <module>Modules/Status</module> 
         <module>Modules/Website</module>         
-         <module>Modules/Hub</module> 
-    <module>Modules/SummaWeb</module>-->
+         <module>Modules/Hub</module>-->
+    <module>Modules/SummaWeb</module>
     </modules>
 
     <!-- <build>
