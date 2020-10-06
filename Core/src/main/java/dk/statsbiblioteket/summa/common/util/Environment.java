@@ -269,7 +269,7 @@ public class Environment {
                      + "(see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044) for details");
             Runtime rt = Runtime.getRuntime();
             log.info(String.format(
-                    "Summa version is %s. Xmx=%dMB, processors=%d, machineName?%s. All OK",
+                    "Summa version is %s. Xmx=%dMB, processors=%d, machineName=%s. All OK",
                     SummaConstants.getVersion(), rt.maxMemory()/1048576, rt.availableProcessors(), getMachineName()));
             javaVersion = version;
             return version;
