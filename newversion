@@ -1,8 +1,25 @@
 #!/bin/bash
 # Updates the Maven versions in modules based on the super pom.xml
 
-mvn -N versions:update-child-modules
-VERSION=`cat pom.xml | grep -A 1 "<artifactId>summa" | tr '\n' ' ' | sed 's/.*<version>\([^>]\+\)<\/version>.*/\1/'`
+MAIN_VERSION=`cat pom.xml | grep -A 1 "<artifactId>summa" | tr '\n' ' ' | sed 's/.*<version>\([^>]\+\)<\/version>.*/\1/'`
+: ${VERSION:="$1"}
+: ${VERSION:="$MAIN_VERSION"}
+
+if [[ "$MAIN_VERSION" != "$VERSION" ]]; then
+    echo "Setting version $VERSION for main module"
+    mvn versions:set -DnewVersion=$VERSION
+fi
+echo "Updating child modules from main module version $VERSION"
+mvn -N versions:update-child-modules -DprocessAllModules=true -DgroupId='*'
+
+echo ""
+echo "*** Important!"
+echo "Due to hithero unresolved Maven problems with parent-POM-resolving the version for"
+echo "the following pom.xml files cannot be updated automatically. Please open these"
+echo "POMs and set the version to $VERSION"
+echo $(find Web/Modules/ -iname pom.xml | tr '\n' ' ')
+echo ""
+echo ""
 echo "*** Proposed actions (not performed automatically):"
 echo "git commit -m \"Bumped to $VERSION\" pom.xml */pom.xml */*/pom.xml"
 
