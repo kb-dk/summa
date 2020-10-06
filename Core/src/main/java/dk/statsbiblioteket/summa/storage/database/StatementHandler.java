@@ -21,8 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.StringWriter;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Takes care of construction and re-use of statements for databases.
@@ -310,6 +309,27 @@ public abstract class StatementHandler {
         );
     }
 
+    public MiniConnectionPoolManager.StatementHandle getListRelations() {
+        return generateStatementHandle(
+            "SELECT " + DatabaseStorage.PARENT_ID_COLUMN +
+            ", " + DatabaseStorage.CHILD_ID_COLUMN +
+            " FROM " + DatabaseStorage.RELATIONS +
+            " ORDER BY " + DatabaseStorage.PARENT_ID_COLUMN +
+            ", " + DatabaseStorage.CHILD_ID_COLUMN
+        );
+    }
+
+    // Either parent OR child: Only one needed
+    public MiniConnectionPoolManager.StatementHandle getValidRelations() {
+        return generateStatementHandle(
+                "SELECT COUNT(*) FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE (rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                " OR rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                ") AND rec." + DatabaseStorage.DELETED_COLUMN + "=false"
+        );
+    }
+
     public MiniConnectionPoolManager.StatementHandle getBatchJob(QueryOptions options, String base) {
         return generateStatementHandle(getPagingStatement(
             "SELECT " + getColumns(options, true)
@@ -488,7 +508,7 @@ public abstract class StatementHandler {
         return records.toString();
     }
 
-    private String attributeToField(QueryOptions.ATTRIBUTES attribute) {
+    public static String attributeToField(QueryOptions.ATTRIBUTES attribute) {
         switch (attribute) {
             case ID:               return DatabaseStorage.ID_COLUMN;
             case BASE:             return DatabaseStorage.BASE_COLUMN;
@@ -505,4 +525,5 @@ public abstract class StatementHandler {
                 "The QueryOptions attribute '" + attribute + "' is unknown");
         }
     }
+
 }

@@ -35,6 +35,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -862,6 +864,25 @@ public class DatabaseStorageTest extends StorageTestBase {
         }
     }
 
+    public void testGetRecordNoParentResolve() throws IOException {
+        StringMap meta = new StringMap();
+        addRecord("P1", "C1");
+        addRecord("C1");
+        QueryOptions opts = new QueryOptions(null, null, 10, 0, meta);
+
+        {
+            Record parent = storage.getRecord("P1", opts);
+            assertNotNull("Requesting with parent ID 'P1' should work", parent);
+            assertEquals("The number of child records should match", 1, parent.getChildren().size());
+        }
+
+        {
+            Record child = storage.getRecord("C1", opts);
+            assertNotNull("Requesting with child ID 'C1' should work", child);
+            assertNull("There should be no parent records", child.getParents());
+        }
+    }
+
     public void testGetChildWithParentDirect() throws Exception {
         Record r1 = new Record(testId1, testBase1, testContent1);
         Record r2 = new Record(testId2, testBase1, testContent1);
@@ -1354,6 +1375,185 @@ public class DatabaseStorageTest extends StorageTestBase {
     }
 
     /**
+     * Test get __statistics__ object.
+     * @throws Exception If error.
+     */
+    public void testGetStatistics() throws Exception {
+        storage.flush(new Record(testId1, testBase1, testContent1));
+        storage.flush(new Record(testId2, testBase2, testContent1));
+
+        StringMap meta = new StringMap();
+        meta.put("ALLOW_PRIVATE", "true");
+        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
+        Record statistics = storage.getRecord("__statistics__", opts);
+        String response = statistics.getContentAsUTF8();
+
+        assertTrue("The result should contain '(all' but was\n'" + response + "'", response.contains("all("));
+
+        log.info(response);
+        // TODO assert equals
+    }
+
+    public void testSimpleRelationStatistics() throws Exception {
+        createRelationTestData();
+
+        assertEquals("Total relation rows: 7", storage.getRelationStats(false));
+    }
+
+    public void testExtendedRelationStatistics() throws Exception {
+        createRelationTestData();
+        {
+            assertRelationTestData();
+            Record parent5 = storage.getRecord("parent5", null);
+            Record child5 = storage.getRecord("child5", null);
+            // Although the records are marked as deleted, the relations are still there
+            assertEquals("The number of children for parent5 should match", 1, parent5.getChildren().size());
+            assertEquals("The number of parents for child5 should match", 1, child5.getParents().size());
+        }
+
+        String report = storage.getRelationStats(true);
+        // TODO: Check why it is not "relations (either parent or child present): 8"
+        for (String expected: new String[]{
+                "records (all): 11",
+                "records (non-deleted): 5",
+                "relations (all): 11",
+                "relations (either parent or child present): 7",
+                "relations (distinct parentIDs): 7",
+                "relations (distinct non-deleted parentIDs): 3",
+                "relations (distinct childIDs): 7",
+                "relations (distinct non-deleted childIDs): 2",
+        }) {
+            if (!report.contains(expected)) {
+                fail("Expected the report to contain '" + expected + "' but it was\n" + report);
+            }
+        }
+    }
+
+    public void testClearRelations_NoneValid() throws IOException {
+        createRelationTestData();
+        assertRelationTestData();
+        // parent4 and record4
+        assertEquals("Clearing should remove the correct amount of relations",
+                     3, storage.clearRelations(DatabaseStorage.REMOVAL_REQUIREMENT.none_valid));
+        assertRelationTestData();
+    }
+
+    public void testClearRelations_OnlyParentValid() throws IOException {
+        createRelationTestData();
+        assertRelationTestData();
+        assertEquals("Clearing should remove the correct amount of relations",
+                     6, storage.clearRelations(DatabaseStorage.REMOVAL_REQUIREMENT.only_parent_valid));
+        assertRelationTestData();
+    }
+
+    public void testClearRelations_OnlyChildValid() throws IOException {
+        createRelationTestData();
+        assertRelationTestData();
+        assertEquals("Clearing should remove the correct amount of relations",
+                     4, storage.clearRelations(DatabaseStorage.REMOVAL_REQUIREMENT.only_child_valid));
+        assertRelationTestData();
+    }
+
+    public void testClearRelations_OnlyOneValid() throws IOException {
+        createRelationTestData();
+        assertRelationTestData();
+        assertEquals("Clearing should remove the correct amount of relations",
+                     7, storage.clearRelations(DatabaseStorage.REMOVAL_REQUIREMENT.only_one_valid));
+        assertRelationTestData();
+    }
+
+    private void createRelationTestData() throws IOException {
+        addRecord("parent1", "child1", "child2");
+        addRecord("parent2", "child1", "child2", "child3", "child4"); // child4 will never exist, child3 will be marked as deleted
+        addRecord("parent3", "child1"); // Parent will be marked as deleted
+        addRecord("parent4", "child4"); // Parent will be marked as deleted, child will never exist
+        addRecord("parent5", "child5"); // Child will be marked as deleted
+        addRecord("parent6", "child6"); // Both parent & child will be fully removed from records
+        addRecord("parent7", "child7"); // Both parent & child will be marked as deleted
+
+        addRecord("child1");
+        addRecord("child2");
+        addRecord("child3"); // Will be marked as deleted
+        // Note: No child4
+        addRecord("child5"); // Will be marked as deleted
+        addRecord("child6"); // Will be removed
+        addRecord("child7"); // Will be marked as deleted
+
+        markAsDeleted("parent3");
+        markAsDeleted("parent4");
+        markAsDeleted("parent7");
+
+        markAsDeleted("child3");
+        markAsDeleted("child5");
+        markAsDeleted("child7");
+
+        storage.deleteRecord("parent6");
+        storage.deleteRecord("child6");
+    }
+
+    private void assertRelationTestData() throws IOException {
+        final QueryOptions qo = new QueryOptions(null, null, 10, 10, null);
+        
+        Record parent1 = storage.getRecord("parent1", qo);
+        Record parent2 = storage.getRecord("parent2", qo);
+        Record parent3 = storage.getRecord("parent3", qo);
+        Record parent4 = storage.getRecord("parent4", qo);
+        Record parent6 = storage.getRecord("parent6", qo);
+        Record parent7 = storage.getRecord("parent7", qo);
+
+        assertEquals("The number of children for parent1 should match", 2, parent1.getChildren().size());
+        if (parent2.getChildren().size() != 2 && parent2.getChildren().size() != 3) {
+            fail("The number of children for parent2 should be 2 or 3, depending on relation clean up, but was " +
+                 parent2.getChildren().size());
+        }
+        assertTrue("parent3 should be marked as deleted", parent3.isDeleted());
+        // Depends on clean up status
+        //assertEquals("The number of children for parent3 should match", 1, parent3.getChildren().size());
+        assertTrue("parent4 should be marked as deleted", parent4.isDeleted());
+        assertNull("parent6 should not exist", parent6);
+        assertTrue("parent7 should be marked as deleted", parent7.isDeleted());
+
+        Record child1 = storage.getRecord("child1", qo);
+        Record child2 = storage.getRecord("child2", qo);
+        Record child3 = storage.getRecord("child3", qo);
+        Record child4 = storage.getRecord("child4", qo);
+        Record child5 = storage.getRecord("child5", qo);
+        Record child6 = storage.getRecord("child6", qo);
+        Record child7 = storage.getRecord("child7", qo);
+
+        if (child1.getParents().size() != 3 && child1.getParents().size() != 2) {
+            fail("The number of parents for child1 should be 2 or 3, depending on relation clean up, but was " +
+                 child1.getParents().size());
+        }
+        assertEquals("The number of parents for child2 should match", 2, child2.getParents().size());
+        // Depends on clean status
+        //assertEquals("The number of parents for child3 should match", 1, child3.getParents().size());
+        assertTrue("child3 should be marked as deleted", child3.isDeleted());
+        assertNull("child4 should not exist", child4);
+        assertTrue("child5 should be marked as deleted", child5.isDeleted());
+        assertNull("child6 should not exist", child6);
+        assertTrue("child7 should be marked as deleted", child7.isDeleted());
+
+        // No check for parent4 and child4 ad the result depends on whether relations has been cleared
+    }
+
+
+    private Record addRecord(String id, String... childIDs) throws IOException {
+        Record r = new Record(id, "dummy", new byte[0]);
+        if (childIDs.length > 0) {
+            r.setChildIds(Arrays.asList(childIDs));
+        }
+        storage.flush(r);
+        return r;
+    }
+    private void markAsDeleted(String id) throws IOException {
+        Record r = new Record(id, "dummy", new byte[0]);
+        r.setDeleted(true);
+        storage.flush(r);
+    } 
+
+
+    /**
      * Test get and set of modification time.
      * @throws Exception If error occur
      */
@@ -1381,4 +1581,11 @@ public class DatabaseStorageTest extends StorageTestBase {
         storage.close();
     }
 
+    public void testDumpDatabase() throws IOException {
+        final Path DEST = Files.createTempDirectory("h2_dump_test");
+        Files.delete(DEST);
+        createRelationTestData();
+        log.info(storage.dumpToFilesystem(DEST.toString(), true));
+        log.info("Finished dumping test h2 to " + DEST);
+    }
 }

@@ -41,7 +41,11 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 
 @SuppressWarnings("UseOfSystemOutOrSystemErr")
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -98,7 +102,7 @@ public class StorageTool {
      * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating to storage.
      */
-    private static int actionGet(String[] argv, StorageReaderClient storage, boolean expand) throws IOException {
+    private static int actionGet(String[] argv, StorageReaderClient storage, Boolean expand) throws IOException {
         if (argv.length == 1) {
             System.err.println("You must specify at least one record id to the 'get' action");
             return 1;
@@ -404,15 +408,7 @@ public class StorageTool {
      * @throws IOException If error occur while communicatinh to storage.
      */
     private static int actionHoldings(StorageReaderClient storage) throws IOException {
-        StringMap meta = new StringMap();
-        meta.put("ALLOW_PRIVATE", "true");
-        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
-        long start = System.currentTimeMillis();
-        Record holdings = storage.getRecord("__holdings__", opts);
-        String xml = holdings.getContentAsUTF8();
-        System.out.println(xml);
-        System.err.println(String.format(Locale.ROOT, "Retrieved holdings in %sms", System.currentTimeMillis() - start));
-        return 0;
+        return privateCommand(storage, "holdings");
     }
 
     /**
@@ -423,15 +419,46 @@ public class StorageTool {
      * @throws IOException If error occur while communicatinh to storage.
      */
     private static int actionStatistics(StorageReaderClient storage) throws IOException {
+        return privateCommand(storage, "statistics");
+    }
+
+    private static int actionRelationStatistics(String[] args, StorageReaderClient reader) throws IOException {
+        if (args.length == 2 && "true".equals(args[1].toLowerCase(Locale.ENGLISH))) {
+            return privateCommand(reader, "relation_stats_extended");
+        } else {
+            return privateCommand(reader, "relation_stats");
+        }
+    }
+
+    private static int actionDumpToFile(String[] args, StorageReaderClient reader) throws IOException {
+        if (args.length == 1) {
+            throw new IllegalArgumentException("A path must be stated");
+        }
+        String path = args[1];
+        boolean dumpDeleted = args.length == 3 && Boolean.parseBoolean(args[2]);
+        return privateCommand(reader, "dump_to_file_" + dumpDeleted + "_" + path);
+    }
+
+    private static int actionRelationCleanup(String[] args, StorageReaderClient reader) throws IOException {
+        return privateCommand(reader, "relation_cleanup_" + (args.length == 2 ? args[1] : "none_valid"));
+    }
+
+    private static int privateCommand(StorageReaderClient storage, String command) throws IOException {
         StringMap meta = new StringMap();
         meta.put("ALLOW_PRIVATE", "true");
         QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
         long start = System.currentTimeMillis();
-        Record holdings = storage.getRecord("__statistics__", opts);
-        System.out.println(holdings.getContentAsUTF8());
-        System.err.println(String.format(Locale.ROOT, "Retrieved stats in %sms", System.currentTimeMillis() - start));
+        String prID = "__" + command + "__";
+        Record response = storage.getRecord(prID, opts);
+        if (response == null) {
+            System.err.println("Unable to retrieve private record '" + prID + "'");
+        } else {
+            System.out.println(response.getContentAsUTF8());
+        }
+        System.err.printf("Retrieved %s in %dms%n", command, System.currentTimeMillis() - start);
         return 0;
     }
+
 
     /**
      * This action runs a single batch job on the storage.
@@ -588,8 +615,9 @@ public class StorageTool {
         System.err.println("USAGE:\n\tstorage-tool.sh <action> [arg]...");
         System.err.println(
                 "Actions:\n"
-                + "\tget  <record_id>+\n"
-                + "\tget_expand  <record_id>+\n"
+                + "\tget <record_id>+ (get record, expanding parent/childs based on default expansion for the storage)\n"
+                + "\tget_single  <record_id>+ (get record, no parent/child expansion)\n"
+                + "\tget_expand  <record_id>+ (get record, expanding parent/childs)\n"
                 + "\tput <record_id> <record_base> <file>\n"
                 + "\tdelete  <record_id>\n"
                 + "\tpeek [base] [max_count=5]\n"
@@ -599,9 +627,16 @@ public class StorageTool {
                 + "\txslt <record_id> <xslt_url> [expand]\n"
                 + "\tdump [base [maxrecords [format]]]   (dump storage on stdout)\n"
                 + "\t                        format=content|meta|full\n"
+                //                + "\tdump_to_file <destination> [deleted] (dump storage to file system at the server)\n"
+                //                + "\t              destination=absolute folder path on the server. The folder must not exist\n"
+                //                + "\t                            deleted=true|false. If false, records marked as deleted are skipped.\n"
                 + "\tclear base   (clear all records from base)\n"
                 + "\tholdings     (show information on the records in the storage - potentially very slow)\n"
                 + "\tstats        (show performance statistics)\n"
+                // Stats disables for now af they are extremely slow with H2
+                //                + "\trelation_stats [extended] (show statistics on relations. Slow if extended: true)\n"
+                //                + "\trelation_cleanup [condition] (clean up of relations)\n"
+                //                + "\t                  condition: none_valid(default)|only_parent_valid|only_child_valid|only_one_valid\n"
                 + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
                 + "\tbackup <destination>   (full copy of the running storage at the point of command execution)\n");
     }
@@ -653,6 +688,9 @@ public class StorageTool {
         int exitCode;
         switch (action) {
             case "get":
+                exitCode = actionGet(args, reader, null);
+                break;
+            case "get_single":
                 exitCode = actionGet(args, reader, false);
                 break;
             case "get_expand":
@@ -679,6 +717,9 @@ public class StorageTool {
             case "dump":
                 exitCode = actionDump(args, reader);
                 break;
+            case "dump_to_file":
+                exitCode = actionDumpToFile(args, reader);
+                break;
             case "clear":
                 exitCode = actionClear(args, writer);
                 break;
@@ -687,6 +728,12 @@ public class StorageTool {
                 break;
             case "stats":
                 exitCode = actionStatistics(reader);
+                break;
+            case "relation_stats":
+                exitCode = actionRelationStatistics(args, reader);
+                break;
+            case "relation_cleanup":
+                exitCode = actionRelationCleanup(args, reader);
                 break;
             case "batchjob":
                 exitCode = actionBatchJob(args, writer);

@@ -43,6 +43,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An abstract implementation of a SQL database driven extension of {@link StorageBase}.
@@ -525,7 +527,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private final boolean pruneRelativesOnGet;
     private boolean useOptimizations;
 
-    private StatementHandler statementHandler;
+    protected StatementHandler statementHandler;
     private final Profiler profiler = new Profiler(Integer.MAX_VALUE, 100);
     /**
      * Used by {@link #getRecord(String, QueryOptions)} and {@link #getRecords(List, QueryOptions)}.
@@ -577,7 +579,6 @@ public abstract class DatabaseStorage extends StorageBase {
     protected static final Timing timingGetModificationTime = timing.getChild("GetModificationTime");
     protected static final Timing timingGetStats = timing.getChild("GetStats");
     protected static final Timing timingInvalidateStats = timing.getChild("InvalidateStats");
-
     /**
      * A variation of {@link QueryOptions} used to keep track of recursion
      * depths for expanding children and parents.
@@ -866,7 +867,7 @@ public abstract class DatabaseStorage extends StorageBase {
      *
      * @return database connection from connection pool.
      */
-    private Connection getTransactionalConnection()   {
+    public Connection getTransactionalConnection()   {
 
         try{
             Connection conn = getConnection();
@@ -1456,7 +1457,12 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     @Override
     public synchronized long getRecordsModifiedAfter(long mtime, String base, QueryOptions options) throws IOException {
-        log.debug("DatabaseStorage.getRecordsModifiedAfter(" + mtime + ", '" + base + "', " + options + ").");
+        log.debug("getRecordsModifiedAfter(" + mtime + ", '" + base + "', " +
+                  (options != null ? options : "defaultOptions: " + defaultGetOptions) +
+                  ").");
+        if (options == null) {
+            options = defaultGetOptions;
+        }
         timingGetRecordsModifiedAfter.start();
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
@@ -1569,7 +1575,12 @@ public abstract class DatabaseStorage extends StorageBase {
 
         StatementHandle handle;
         PreparedStatement stmt;
-        log.debug("getRecordsModifiedAfterCursor(" + mtime + ", '" + base + "', " + options + ").");
+        log.debug("getRecordsModifiedAfterCursor(" + mtime + ", '" + base + "', " +
+                  (options != null ? options : "defaultGetOptions: " + defaultGetOptions) +
+                  ").");
+        if (options == null) {
+            options = defaultGetOptions;
+        }
 
         if (!hasMTime(options)) {
             throw new IllegalArgumentException(
@@ -2074,7 +2085,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
             Record record = getRecordWithConnection(id, options, conn);
             profiler.beat();
-            String m = "Finished getRecord(" + id + ", ...) " + (record == null ? "without" : "with")
+            String m = "Finished getRecord(" + id + ", " + options + ") " + (record == null ? "without" : "with")
                        + " result in " + (System.currentTimeMillis() - startTime) + "ms. " + getRequestStats();
             log.debug(m);
             recordlog.info(m);
@@ -2251,6 +2262,8 @@ public abstract class DatabaseStorage extends StorageBase {
                 final long expandNS = System.nanoTime();
                 expandRelationsWithConnection(record, options, conn);
                 timingExpandRelationsWithConnection.addNS(System.nanoTime()-expandNS);
+                timingExpandRelationsWithConnection.update();
+
 //                log.debug("getRecordWithConnection***: Expand in " + (System.nanoTime()-expand)/M + "ms");
 
             } finally {
@@ -2283,7 +2296,6 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private Record getPrivateRecord(Connection conn, String id) throws IOException {
         log.debug(String.format(Locale.ROOT, "Fetching private record '%s'", id));
-
         if ("__holdings__".equals(id)) {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             OutputStreamWriter writer = new OutputStreamWriter(bytes);
@@ -2291,11 +2303,297 @@ public abstract class DatabaseStorage extends StorageBase {
             return new Record("__holdings__", "__private__", bytes.toByteArray());
         } else if ("__statistics__".equals(id)) {
             return new Record("__statistics__", "__private__", getHumanStats().getBytes(StandardCharsets.UTF_8));
+        } else if ("__relation_stats__".equals(id)) {
+            return new Record("__relation_stats__", "__private__", getRelationStats(conn, false).getBytes(StandardCharsets.UTF_8));
+        } else if ("__relation_stats_extended__".equals(id)) {
+            return new Record("__relation_stats__", "__private__", getRelationStats(conn, true).getBytes(StandardCharsets.UTF_8));
+        } else if (id != null && id.startsWith("__relation_cleanup_")) {
+            String rrS = id.substring("__relation_cleanup_".length(), id.length() - 2);
+            try {
+                REMOVAL_REQUIREMENT rr = REMOVAL_REQUIREMENT.valueOf(rrS);
+                return new Record(id, "__private__",
+                                  ("Cleared " + clearRelations(rr) + " relations").getBytes(StandardCharsets.UTF_8));
+            } catch (IllegalArgumentException e) {
+                String message = "Unknown clean up requirement '" + rrS + "'";
+                log.warn(message, e);
+                return new Record(id, "__private__", (message).getBytes(StandardCharsets.UTF_8));
+            }
+        } else if (id != null && id.startsWith("__dump_to_file_")) {
+            Matcher matcher = DTF_PATTERN.matcher(id);
+            if (!matcher.matches()) {
+                return new Record(id, "__private__",
+                                  ("Error: Unable to parse dump to file command '" + id + "'").
+                                          getBytes(StandardCharsets.UTF_8));
+            }
+            boolean dumpDeleted = Boolean.parseBoolean(matcher.group(1));
+            String dest = matcher.group(2);
+            return new Record(id, "__private__",
+                              dumpToFilesystem(dest, dumpDeleted).getBytes(StandardCharsets.UTF_8));
         } else {
             log.debug(String.format(Locale.ROOT, "No such private record '%s'", id));
             return null;
         }
     }
+    private final Pattern DTF_PATTERN = Pattern.compile("__dump_to_file_([a-z]+)_(.*)_");
+
+    /**
+     * Extract statistics on relations.
+     * @param extended if true, extended statistics is extracted. This is a lot more heavy than non-extended.
+     * @return human readable statistics on relations.
+     * @throws IOException if the statistics gathering failed.
+     */
+    public String getRelationStats(boolean extended) throws IOException {
+        try (Connection conn = getTransactionalConnection()) {
+            return getRelationStats(conn, extended);
+        } catch (SQLException e) {
+            String message = "getRelationStats(" + extended + "): SQLException requesting simple connection stats";
+            log.warn(message, e);
+            throw new IOException(message, e);
+        }
+    }
+
+    /**
+     * Extract statistics on relations.
+     * @param conn     an established connection to the Storage.
+     * @param extended if true, extended statistics is extracted. This is a lot more heavy than non-extended.
+     * @return human readable statistics on relations.
+     * @throws IOException if the statistics gathering failed.
+     */
+    public String getRelationStats(Connection conn, boolean extended) throws IOException {
+        try {
+            return extended ?
+                    getExtendedRelationStatsWithConnection(conn) :
+                    getSimpleRelationStatsWithConnection(conn);
+        } catch (SQLException e) {
+            String message = "SQLException requesting simple connection stats";
+            log.warn(message, e);
+            throw new IOException(message, e);
+        }
+    }
+
+    /**
+     * Return light relation statistics for a given connection.
+     *
+     * @param conn The connection.
+     * @return a human readable report of relations.
+     * @throws SQLException If error getting the SQL exception.
+     * @throws IOException  If error handling RMI.
+     */
+    private String getSimpleRelationStatsWithConnection(Connection conn) throws SQLException {
+        long startTime = System.currentTimeMillis();
+        String report = "Total relation rows: " + getRowCount(conn, RELATIONS);
+        log.debug(String.format("Extracted simple relations stats in %sms", System.currentTimeMillis() - startTime));
+        return report;
+    }
+
+    /**
+     * @param conn an existing connection to the database.
+     * @param table a table in the database.
+     * @return the number of rows in the given table (fast).
+     */
+    public long getRowCount(Connection conn, String table) throws SQLException {
+        final String query = "SELECT count(*) FROM " + table;
+        return getSingleLong(conn, query);
+    }
+
+    /**
+     * @param conn an existing connection to the database.
+     * @param table a table in the database.
+     * @param field the field to count uniques for.
+     * @return the number of unique values for a given field in the given table.
+     */
+    public long getDistinctCount(Connection conn, String table, String field) throws SQLException {
+        final String query = "SELECT COUNT(DISTINCT " + field + ") FROM " + table;
+        return getSingleLong(conn, query);
+    }
+
+    /**
+     * Takes a query, executes it and return a long extracted from the first result in the result set, at position 1.
+     * @param conn an existing connection to the database.
+     * @param query a query such as "SELECT COUNT(*) FROM footable".
+     * @return the first field in the first result.
+     * @throws SQLException if the query failed or there was no result.
+     */
+    private long getSingleLong(Connection conn, String query) throws SQLException {
+        Statement stmt = conn.createStatement();
+        log.debug("Getting resultset for '" + query + "'");
+        long st = System.currentTimeMillis();
+
+        try (ResultSet result = stmt.executeQuery(query)) {
+            log.debug("Got ResultSet for '" + query + "' in " + (System.currentTimeMillis() - st) + "ms");
+            if (result.next() && !result.isAfterLast()) {
+                return result.getLong(1);
+            }
+            String message = "No result trying to extract first field in first result for query '" + query + "'";
+            log.warn(message);
+            throw new SQLException(message);
+        }
+    }
+
+    /**
+     * Takes a SQL statement and executes it, ignoring output.
+     * @param conn an existing connection to the database.
+     * @param statement the SQL statement to execute.
+     * @throws SQLException if the query failed or there was no result.
+     */
+    private void executeStatement(Connection conn, String statement) throws SQLException {
+        Statement stmt = conn.createStatement();
+        log.debug("Executing SQL statement '" + statement + "'");
+        long st = System.currentTimeMillis();
+
+        stmt.executeUpdate(statement);
+        log.debug("Executed statement '" + statement + "' in " + (System.currentTimeMillis() - st) + "ms");
+    }
+
+    /**
+     * Return heavy relation statistics for a given connection.
+     *
+     * @param conn The connection.
+     * @return a human readable report of relations.
+     * @throws SQLException If error getting the SQL exception.
+     * @throws IOException  If error handling RMI.
+     */
+    private String getExtendedRelationStatsWithConnection(Connection conn) throws SQLException {
+        long startTime = System.currentTimeMillis();
+
+        String NONDEL_PARENTS =
+                "SELECT COUNT(DISTINCT rel." + DatabaseStorage.PARENT_ID_COLUMN +
+                ") FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                " AND rec." + DatabaseStorage.DELETED_COLUMN + "=false";
+        String NONDEL_CHILDREN =
+                "SELECT COUNT(DISTINCT rel." + DatabaseStorage.CHILD_ID_COLUMN +
+                ") FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE rel." + DatabaseStorage.CHILD_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                " AND rec." + DatabaseStorage.DELETED_COLUMN + "=false";
+
+        List<String> report = new ArrayList<>();
+        try {
+            report.add("records (all): " + getRowCount(conn, RECORDS));
+            report.add("records (non-deleted): " + getSingleLong(
+                    conn, "SELECT COUNT(*) FROM " + RECORDS + " where " + DELETED_COLUMN + "=false"));
+            report.add("relations (all): " + getRowCount(conn, RELATIONS));
+            report.add("relations (either parent or child present): " + getValidRelationCount(conn));
+            report.add("relations (distinct parentIDs): " + getDistinctCount(conn, RELATIONS, PARENT_ID_COLUMN));
+            report.add("relations (distinct non-deleted parentIDs): " + getSingleLong(conn, NONDEL_PARENTS));
+            report.add("relations (distinct childIDs): " + getDistinctCount(conn, RELATIONS, CHILD_ID_COLUMN));
+            report.add("relations (distinct non-deleted childIDs): " + getSingleLong(conn, NONDEL_CHILDREN));
+        } catch (Exception e) {
+            String message = "Exception generating extended relations report: " + e.getMessage();
+            log.warn(message, e);
+            report.add("Exception generating extended relations report: " + e.getMessage());
+        }
+        log.debug("Extended relations report generated in " + (System.currentTimeMillis()-startTime) + "ms");
+        return Strings.join(report, "\n");
+    }
+
+    public enum REMOVAL_REQUIREMENT {
+        only_parent_valid, only_child_valid, only_one_valid, none_valid
+    }
+
+    /**
+     * Delete the record with recordID from the {@link #RECORDS} database.
+     * Relations are not updated.
+     * @param recordID the ID for the record to delete.
+     * @throws IOException wrapper for any SQLExceptions thrown during delete.
+     */
+    public void deleteRecord(String recordID) throws IOException {
+        try (Connection conn = getTransactionalConnection()) {
+            PreparedStatement delete = conn.prepareStatement("DELETE FROM " + RECORDS + " WHERE " + ID_COLUMN + "=?");
+            delete.setString(1, recordID);
+            delete.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            String message = "deleteRecord(" + recordID + ") encountered a SQLException";
+            log.warn(message, e);
+            throw new IOException(message, e);
+        }
+    }
+    /**
+     * Clear all relations where the removalRequirement is satisfied.
+      * @param removalRequirement thr grounds for removal of a relation.
+     * @return the number of relations that were removed.
+     */
+    public long clearRelations(REMOVAL_REQUIREMENT removalRequirement) throws IOException {
+        try (Connection conn = getTransactionalConnection()) {
+            return clearRelations(conn, removalRequirement);
+        } catch (SQLException e) {
+            String message = "clearRelations(" + removalRequirement + ") encountered a SQLException";
+            log.warn(message, e);
+            throw new IOException(message, e);
+        }
+    }
+    /**
+     * Clear all relations where the removalRequirement is satisfied.
+      * @param removalRequirement thr grounds for removal of a relation.
+     * @return the number of relations that were removed.
+     */
+    private long clearRelations(Connection conn, REMOVAL_REQUIREMENT removalRequirement) throws SQLException {
+        // TODO: Add check for isDeleted
+        final String REL = DatabaseStorage.RELATIONS;
+        final String RECORDS = DatabaseStorage.RECORDS;
+        final String PARENT = DatabaseStorage.PARENT_ID_COLUMN;
+        final String CHILD = DatabaseStorage.CHILD_ID_COLUMN;
+        final String ID = DatabaseStorage.ID_COLUMN;
+        final String DELETED = DatabaseStorage.DELETED_COLUMN;
+
+        // Creates a virtual table with [parent, child, parent_deleted, child_deleted], where the deleted-entries are
+        // null if no matching Record could be found.
+        //language=PostgreSQL
+        final String BASE =
+                "delete " +
+                "from " + REL + " rel " +
+                "where exists ( " +
+                "    select 1 " +
+                "    from ( " +
+                "    select " + PARENT + ", " + CHILD + ", parent_deleted, child_deleted " +
+                "       from " + REL + " as orig " +
+                "                left join (select " + ID + ", " + DELETED + " as parent_deleted from " + RECORDS + ") as join1 on join1." + ID + " = " + PARENT + " " +
+                "                left join (select " + ID + ", " + DELETED + " as child_deleted from " + RECORDS + ") as join2 on join2." + ID + " = orig." + CHILD +
+                "    ) as joined " +
+                "    where (rel." + PARENT + "=joined." + PARENT + " and rel." + CHILD + "=joined." + CHILD + ") and (";
+
+        final String NONE = "((parent_deleted or parent_deleted is null) and (child_deleted or child_deleted is null))";
+        final String PVAL = "(parent_deleted=false and (child_deleted or child_deleted is null))";
+        final String CVAL = "((parent_deleted or parent_deleted is null) and child_deleted=false)";
+
+        final long preDelete = getRowCount(conn, RELATIONS);
+        switch (removalRequirement) {
+            case none_valid: {
+                executeStatement(conn, BASE + NONE + "))");
+                break;
+            }
+            case only_child_valid: {
+                executeStatement(conn, BASE + NONE + " or " + CVAL + "))");
+                break;
+            }
+            case only_parent_valid: {
+                executeStatement(conn, BASE + NONE + " or " + PVAL + "))");
+                break;
+            }
+            case only_one_valid: {
+                executeStatement(conn, BASE + NONE + " or " + PVAL + " or " + CVAL + "))");
+                break;
+            }
+            default: throw new UnsupportedOperationException(
+                    "The removal requirement '" + removalRequirement + " is not supported");
+        }
+        return preDelete-getRowCount(conn, RELATIONS);
+    }
+
+    private long getValidRelationCount(Connection conn) throws SQLException {
+        String query =
+                "SELECT COUNT(*) FROM " + DatabaseStorage.RELATIONS + " rel " +
+                " LEFT JOIN " + DatabaseStorage.RECORDS + " rec " +
+                " WHERE (rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                " OR rel." + DatabaseStorage.PARENT_ID_COLUMN + "=" + "rec." + DatabaseStorage.ID_COLUMN +
+                ") AND rec." + DatabaseStorage.DELETED_COLUMN + "=false";
+
+        return getSingleLong(conn, query);
+    }
+
 
     private String getHumanStats() {
         // TODO: When sbutil 0.5.51 comes out, pretty-print timing with newlines as separator
@@ -5039,6 +5337,37 @@ public abstract class DatabaseStorage extends StorageBase {
         records.add(r);
     }
 
+    /**
+     * Implementation specific dump of the full database. If possible, the dump should be in the same format as the
+     * database itself (e.g. a H2 database dump should itself be a H2 database, directly usable as Storage).
+     * @param dest absolute path to a folder on the file system. The folder will be created.
+     * @param dumpDeleted if true, records marked as deleted are also dumped.
+     * @return status information on the dump..
+     * @throws IOException if the database could not be dumped.
+     */
+    public String dumpToFilesystem(String dest, boolean dumpDeleted) throws IOException {
+        return "Error: dumpToFilesystem not implemented for " + this.getClass().getCanonicalName();
+    }
+
+
+    /**
+     * @return all the record fields in the same order as {@link QueryOptions.ATTRIBUTES}.
+     */
+    public static List<String> getAllRecordFields() {
+        List<String> all = new ArrayList<>();
+        for (QueryOptions.ATTRIBUTES attribute: QueryOptions.ATTRIBUTES.values()) {
+            all.add(StatementHandler.attributeToField(attribute));
+        }
+        return all;
+    }
+
+    /**
+     * @return all the relation fields.
+     */
+    public static List<String> getAllRelationFields() {
+        return Arrays.asList(PARENT_ID_COLUMN, CHILD_ID_COLUMN);
+    }
+
     @Override
     public String toString() {
         return String.format(Locale.ROOT, "DatabaseStorage(#iterators=%d, useLazyRelations=%b, usePagingModel=%b, pageSize=%d, "
@@ -5047,6 +5376,39 @@ public abstract class DatabaseStorage extends StorageBase {
                              iterators.size(), useLazyRelations, usePagingModel, pageSize,
                              pageSizeUpdate, expandRelativesLists, defaultGetOptions,
                              pruneRelativesOnGet, Strings.join(basesWithStoredRelations, ","), getIterationStats());
+    }
+
+
+    /**
+     * Recreate the indexes for the table, cleaning up cruft.
+     * Note: Request performance might suffer temendously during this operation.
+     * @return
+     */
+    public String recreateIndexes() throws IOException {
+        try (Connection conn = getConnection()) {
+            return deleteIndexes(conn) + "\n" + createIndexes(conn);
+        } catch (SQLException e) {
+            throw new IOException("SQLException attempting to delete and create indexes", e);
+        }
+    }
+
+    private String createIndexes(Connection conn) {
+
+        return "createIndexes not implemented yet";
+    }
+
+    private String deleteIndexes(Connection conn) throws SQLException {
+        StringBuilder sb = new StringBuilder();
+        log.info("Dropping existing indexes on the " + RECORDS + " table");
+        for (String index: new String[]{
+                "i", "m", "b", "bdi", // Records
+                "p", "c", "pc"}) {    // Relations
+            long startTime = System.currentTimeMillis();
+            this.executeStatement(conn, "DROP INDEX IF EXISTS " + index);
+            sb.append("Dropped index ").append(index).append(" in ").
+                    append(System.currentTimeMillis() - startTime).append("ms");
+        }
+        return sb.toString();
     }
 
 }
