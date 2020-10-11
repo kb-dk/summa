@@ -61,10 +61,21 @@ public class PostGreSQLStorageTest {
     public static final String MARS_DOMS = "storage/postgresql_mars_doms.xml";
     //public static final String PS = "/home/te/projects/summa/Core/src/test/resources/storage/postgresql_ps3.xml";
     public static final String PS = "storage/postgresql_ps4.xml";
+    public static final String LOCAL_DOMS = "storage/postgresql_localhost.xml";
+
+    /**
+     * If the how-to in the main README.md for summa is followed, this test should be able to run
+     * @throws IOException
+     */
+    @Test
+    public void testLocalhost() throws IOException {
+        testConnection(LOCAL_DOMS, 0L, 1899, true);
+    }
+
 
 
     @SuppressWarnings("ConstantConditions")
-    @Test
+    //@Test
     public void TEGAviserTestPS3() throws Exception {
         
       final String BASE = "aviser";
@@ -83,37 +94,37 @@ public class PostGreSQLStorageTest {
 // Performing optimized getRecordsModifiedAfter with mTime=1567064417441415168, base=aviser, pageSize=500
 // Performing optimized getRecordsModifiedAfter with mTime=1494469087068, base=aviser, pageSize=500
     
-    @Test
+    //@Test
     public void testConnectionMarsOptimized() throws IOException {
         testConnection(MARS_AVISER, 0L, 1899, true);
     }
 
-    @Test
+    //@Test
     public void testConnectionPS3_ZeroOptimized() throws IOException { // Fast (760 records/sec, average=72KB)
         testConnection(PS, 0L, 899, true);
     }
-    @Test
+    //@Test
     public void testConnectionPS3_ZeroNonOptimized() throws IOException { // Fast (760 records/sec, average=72KB)
         testConnection(PS, 0L, 899, false);
     }
 
-    @Test
+    //@Test
     public void testConnectionPS3_after7500_Optimized() throws IOException { // Fast (760 records/sec, average=43KB)
         final long mTime = UniqueTimestampGenerator.systemTime(1520795047176437760L);
         testConnection(PS, mTime, 9899, true);
     }
 
-    @Test
+    //@Test
     public void testConnectionPS3_after30K_Optimized() throws IOException { // Fast (760 records/sec, average=43KB)
         testConnection(PS, 1450346305158L, 4899, true);
     }
 
-    @Test
+    //@Test
     public void testConnectionPS3LateOptimized() throws IOException {
         // 20170511-042519.068
         testConnection(PS, 1494469519068L - 60 * 60 * 24 * 5, 899, true);
     }
-    @Test
+    //@Test
     public void testConnectionPS3LateNonOptimized() throws IOException { // Slow (14 records/sec, average=83KB)
         // 20170511-042519.068
         testConnection(PS, 1494469519068L - 60 * 60 * 24 * 5, 899, false);
@@ -122,22 +133,22 @@ public class PostGreSQLStorageTest {
 
     // Unwarmed: Retrieved 1000 records in 196.7 seconds at 5.1 records/sec with last timestamp 1494472231463 and stats read(records=1000(compressed=1000), average=75KB, smallest=(size=3KB, ID=doms_newspaperCollection:uuid:b64f049a-b6b7-4a94-b1b4-f32940c749c6), largest=(size=281KB, ID=doms_newspaperCollection:uuid:b87a9d5c-087c-4d8f-bb2e-bba8ab92963f), last=(size=37KB, ID=doms_newspaperCollection:uuid:a0f816cc-e763-4a78-a453-4899fe0a9de4))
     // Warmed_ Retrieved 1000 records in 165.6 seconds at 6.0 records/sec with last timestamp 1494472231463 and stats read(records=1000(compressed=1000), average=75KB, smallest=(size=3KB, ID=doms_newspaperCollection:uuid:b64f049a-b6b7-4a94-b1b4-f32940c749c6), largest=(size=281KB, ID=doms_newspaperCollection:uuid:b87a9d5c-087c-4d8f-bb2e-bba8ab92963f), last=(size=37KB, ID=doms_newspaperCollection:uuid:a0f816cc-e763-4a78-a453-4899fe0a9de4))
-    @Test
+    //@Test
     public void testConnectionPS3YearBackOptimized() throws IOException {
         testConnection(PS, 1494469519068L - 60 * 60 * 24 * 365, 899, true);
     }
     // Warmed: Retrieved 1000 records in 155.1 seconds at 6.4 records/sec with last timestamp 1494472231463 and stats read(records=1000(compressed=1000), average=75KB, smallest=(size=3KB, ID=doms_newspaperCollection:uuid:b64f049a-b6b7-4a94-b1b4-f32940c749c6), largest=(size=281KB, ID=doms_newspaperCollection:uuid:b87a9d5c-087c-4d8f-bb2e-bba8ab92963f), last=(size=37KB, ID=doms_newspaperCollection:uuid:a0f816cc-e763-4a78-a453-4899fe0a9de4))
-    @Test
+    //@Test
     public void testConnectionPS3YearBackNonOptimized() throws IOException {
         testConnection(PS, 1494469519068L - 60 * 60 * 24 * 365, 899, false);
     }
 
-    @Test
+    //@Test
     public void testConnectionPS3One() throws IOException { // Is it the specifying of a timestamp that is the problem?
         testConnection(PS, 1L, 899, true);
     }
 
-    @Test
+    //@Test
     public void testStatsConnectionReleaseBase() throws IOException, SQLException {
         PostGreSQLStorage storage = getDeveloperTestStorage(MARS_DOMS, true);
 
@@ -155,7 +166,7 @@ public class PostGreSQLStorageTest {
         storage.close();
     }
 
-    /*@Test
+    /*//@Test
     public void testClear() throws IOException, SQLException {
         PostGreSQLStorage storage = getDeveloperTestStorage(MARS_DOMS, true);
 
