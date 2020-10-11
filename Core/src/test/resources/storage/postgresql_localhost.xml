@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- Config file belonging to PostGreSQLStorageTest for developers that has followed the PostgreSQL setup guide
+     in the main README.md for the summa project -->
+
+<properties>
+
+    <entry key="database.driver.url">jdbc:postgresql://localhost:5432/summa_doms</entry>
+    <entry key="summa.storage.database.username">summa_doms</entry>
+    <entry key="summa.storage.database.password">summa_doms</entry>
+
+    <entry key="summa.storage.database.createnew">false</entry>
+    <entry key="summa.storage.database.forcenew">false</entry>
+
+    <entry key="storage.relations.touch">child</entry>
+    <entry key="storage.relations.clear">parent</entry>
+
+    <entry key="databasestorage.relatives.expandidlist">false</entry>
+
+    <entry key="queryoptions.filter.deleted">null</entry>
+    <entry key="queryoptions.filter.indexable">null</entry>
+    <entry key="queryoptions.child.depth">-1</entry>
+    <entry key="queryoptions.parent.depth">-1</entry>
+    <!-- Not META, CHILDREN -->
+    <entry key="queryoptions.attributes">ID, BASE, DELETED, INDEXABLE, HAS_RELATIONS, CONTENT, CREATIONTIME, MODIFICATIONTIME, PARENTS</entry>
+
+</properties>
