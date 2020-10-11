@@ -15,7 +15,7 @@ Git: https://github.com/statsbiblioteket/summa
 
 ## Requirements
 
-* Java 1.8 (only tested Oracle JVM)
+* Java 1.8 (tested using Oracle JVM and OpenJDK)
 
 ## Building
 
@@ -84,3 +84,28 @@ If you don't want to or can't use the repository from Statsbiblioteket non
 official jars are supplied in the checkout and can be installed into you local
 maven repository.
 
+## A note on storage
+
+Summa is capable of using different database backends. It has build-in support for
+creating and using H2, a database that uses local files under the user account.
+H2 is used for unit-tests and works well for smaller production systems.
+
+Scaling into multi-million records or relations, H2 has been tricky to work with.
+For larger installations, PostgreSQL has been used successfully for years at kb.dk.
+
+### Setting up PostgreSQL for Summa
+
+1. Find a guide such as [How to install PostgreSQL on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart)
+and follow that.
+2. Create a user and a database named `summa_doms` or similar descriptive name
+```sql
+$ sudo -u postgres psql
+CREATE ROLE summa_doms with PASSWORD 'summa_doms' login;
+CREATE DATABASE summa_doms;
+GRANT ALL ON DATABASE summa_doms TO summa_doms;
+exit
+```
+3. Create the relevant tables in the database
+```shell script    
+sudo -u postgres psql -v ON_ERROR_STOP=1 -1 -f ./Core/src/main/resources/storage/database/h2/create_summa_database.ddl summa_doms
+```
