@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.storage.api.tools;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.SummaConstants;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -83,13 +84,21 @@ public class StorageTool {
                 output.println(RecordUtil.toXML(rec, false));
                 return;
             } catch (IOException e) {
-                throw new RuntimeException("Exception generating XML representation for record " + rec);
+                throw new RuntimeException("Exception generating XML representation for record " + rec, e);
             }
         }
-        output.println(rec.toString(true));
+        try {
+            output.println(rec.toString(true));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception calling plain toString on record " + rec, e);
+        }
 
         if (withContents) {
-            output.println(rec.getContentAsUTF8());
+            try {
+                output.println(rec.getContentAsUTF8());
+            } catch (Exception e) {
+                throw new RuntimeException("Exception calling getContentAsUTF8 on record " + rec, e);
+            }
         }
     }
 
@@ -117,7 +126,11 @@ public class StorageTool {
         System.err.println("Got " + recs.size() + " records in " + (System.currentTimeMillis() - startTime) + " ms");
 
         for (Record r : recs) {
-            printRecord(r, true, expand);
+            try {
+                printRecord(r, true, true); // We always expand here as the getRecord handles the optional expand
+            } catch (Exception e) {
+                throw new IOException("Exception printing record '" + r + "'", e);
+            }
             System.out.println("===================");
         }
         return 0;
@@ -422,6 +435,19 @@ public class StorageTool {
         return privateCommand(storage, "statistics");
     }
 
+    /**
+     * Print the version of Storage-Tool as well as the Storage version.
+     *
+     * @param storage The storage reader client.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
+     * @throws IOException If error occur while communicatinh to storage.
+     */
+    private static int actionVersions(StorageReaderClient storage) throws IOException {
+        System.out.println("Storage-Tool version: " + SummaConstants.getVersion());
+        System.out.print("Remote Storage version: ");
+        return privateCommand(storage, "version");
+    }
+
     private static int actionRelationStatistics(String[] args, StorageReaderClient reader) throws IOException {
         if (args.length == 2 && "true".equals(args[1].toLowerCase(Locale.ENGLISH))) {
             return privateCommand(reader, "relation_stats_extended");
@@ -632,6 +658,7 @@ public class StorageTool {
                 //                + "\t                            deleted=true|false. If false, records marked as deleted are skipped.\n"
                 + "\tclear base   (clear all records from base)\n"
                 + "\tholdings     (show information on the records in the storage - potentially very slow)\n"
+                + "\tversion      (show the version of StorageTool and remote Storage)\n"
                 + "\tstats        (show performance statistics)\n"
                 // Stats disables for now af they are extremely slow with H2
                 //                + "\trelation_stats [extended] (show statistics on relations. Slow if extended: true)\n"
@@ -729,6 +756,9 @@ public class StorageTool {
             case "stats":
                 exitCode = actionStatistics(reader);
                 break;
+            case "version":
+                exitCode = actionVersions(reader);
+                break;
             case "relation_stats":
                 exitCode = actionRelationStatistics(args, reader);
                 break;
@@ -749,5 +779,4 @@ public class StorageTool {
         }
         System.exit(exitCode);
     }
-
 }
