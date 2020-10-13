@@ -69,7 +69,7 @@ public class PostGreSQLStorageTest {
      */
     @Test
     public void testLocalhost() throws IOException {
-        testConnection(LOCAL_DOMS, 0L, 1899, true);
+        testConnection(LOCAL_DOMS, 0L, 1899, true, "doms_reklamefilm");
     }
 
 
@@ -178,8 +178,11 @@ public class PostGreSQLStorageTest {
 
     private double testConnection(String postgreSQLSetup, long firstTimestamp, int maxRecords, boolean useOptimizations)
             throws IOException {
-        final String BASE = "aviser";
-
+        return testConnection(postgreSQLSetup, firstTimestamp, maxRecords, useOptimizations, "aviser");
+    }
+    private double testConnection(
+            String postgreSQLSetup, long firstTimestamp, int maxRecords, boolean useOptimizations, String base)
+            throws IOException {
         PostGreSQLStorage storage = getDeveloperTestStorage(postgreSQLSetup, useOptimizations);
         if (storage == null) {
             return 0D;
@@ -188,7 +191,7 @@ public class PostGreSQLStorageTest {
 //        BaseStats.toXML(storage.getStats(), sw);
 //        System.out.println(sw.toString());
 
-        final long iteratorKey = storage.getRecordsModifiedAfter(firstTimestamp, BASE, getQueryOptions());
+        final long iteratorKey = storage.getRecordsModifiedAfter(firstTimestamp, base, getQueryOptions());
         Iterator<Record> recordIterator = new StorageIterator(storage, iteratorKey, 100, false);
         assertTrue("There should be at least 1 result",
                    recordIterator.hasNext());
