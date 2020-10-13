@@ -16,6 +16,7 @@ package dk.statsbiblioteket.summa.storage.database;
 
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.SummaConstants;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
@@ -876,7 +877,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
         catch(Exception e){
             System.out.println(e);
-            throw new RuntimeException("Error with database connection properties");
+            throw new RuntimeException("Error with database connection properties", e);
         }
 
     }
@@ -1488,7 +1489,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
 
             } catch (Exception e) {
-                throw new IOException("Unable to construct optimized cursor for base " + base);
+                throw new IOException("Unable to construct optimized cursor for base " + base, e);
             }
         } else {
             log.info(String.format(Locale.ROOT,
@@ -2301,6 +2302,8 @@ public abstract class DatabaseStorage extends StorageBase {
             OutputStreamWriter writer = new OutputStreamWriter(bytes);
             BaseStats.toXML(getStatsWithConnection(conn), writer);
             return new Record("__holdings__", "__private__", bytes.toByteArray());
+        } else if ("__version__".equals(id)) {
+            return new Record("__version__", "__private__", SummaConstants.getVersion().getBytes(StandardCharsets.UTF_8));
         } else if ("__statistics__".equals(id)) {
             return new Record("__statistics__", "__private__", getHumanStats().getBytes(StandardCharsets.UTF_8));
         } else if ("__relation_stats__".equals(id)) {
