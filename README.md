@@ -96,16 +96,42 @@ For larger installations, PostgreSQL has been used successfully for years at kb.
 ### Setting up PostgreSQL for Summa
 
 1. Find a guide such as [How to install PostgreSQL on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart)
-and follow that.
+and follow that (under ubuntu it is simply `sudo apt install postgresql postgresql-contrib`).
 2. Create a user and a database named `summa_doms` or similar descriptive name
 ```sql
 $ sudo -u postgres psql
 CREATE ROLE summa_doms with PASSWORD 'summa_doms' login;
 CREATE DATABASE summa_doms;
 GRANT ALL ON DATABASE summa_doms TO summa_doms;
-exit
+\q
 ```
 3. Create the relevant tables in the database
-```shell script    
-sudo -u postgres psql -v ON_ERROR_STOP=1 -1 -f ./Core/src/main/resources/storage/database/h2/create_summa_database.ddl summa_doms
+```shell script 
+psql postgresql://summa_doms:summa_doms@localhost:5432 -v ON_ERROR_STOP=1 -1 -f ./Core/src/main/resources/storage/database/h2/create_summa_database.ddl summa_doms
 ```
+
+### Migrating from H2
+
+H2 does not scale well, especially not when it comes to relations.
+
+H2 has a command [script](http://h2database.com/javadoc/org/h2/tools/Script.html#main_String...)
+for exporting the full content of the database to a SQL-file. Sample run for the
+SummaRise/doms installation:
+
+```shell script
+java -cp summix/lib/h2-1.4.188.jar org.h2.tools.Script  -url "jdbc:h2:$(pwd)/storage/doms/summa_h2storage" -user "" - password "" -script h2_doms_dump.sql
+```
+
+the resulting SQL file also holds commands for setting up the database and has its
+own syntax for blobs (in H2 is `X'deadbeef'` while it is `'\xdeadbeef` in PostgreSQL).
+In order to clean up the blobs and only keep the `INSERT` commands and their 
+arguments, do something like
+
+```shell script
+sed "s/X'/'\\\\x/g" h2_doms_dump.sql | grep "^[I(]" > postgres_doms_insert.sql
+``` 
+
+Import into PostgreSQL can be done with
+```shell script
+psql postgresql://summa_doms:summa_doms@localhost:5432 -v ON_ERROR_STOP=1 -1 -f postgres_doms_insert.sql
+``` 
