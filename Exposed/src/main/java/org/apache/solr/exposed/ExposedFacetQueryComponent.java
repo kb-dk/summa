@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import static org.apache.solr.exposed.ExposedFacetParams.*;
 
@@ -271,8 +272,9 @@ public class ExposedFacetQueryComponent extends QueryComponent {
     if (ExposedSettings.useSparseCollector != useSparse || ExposedSettings.forceSparseCollector != forceSparse ||
         Math.abs(TagCollectorSparse.DEFAULT_SPARSE_FACTOR - sparseFactor) > 0.0001 ||
         ExposedSettings.useCompactCollectors != useCompact) {
-      log.info(String.format("Changing sparse tag counter policy to use=%b, force=%b, factor=%f, compact=%b",
-                             useSparse, forceSparse, sparseFactor, useCompact));
+      log.info(String.format(
+              Locale.ROOT, "Changing sparse tag counter policy to use=%b, force=%b, factor=%f, compact=%b",
+              useSparse, forceSparse, sparseFactor, useCompact));
       poolFactory.purgeAllCollectors();
       ExposedSettings.useSparseCollector = useSparse;
       ExposedSettings.forceSparseCollector = forceSparse;
@@ -283,7 +285,8 @@ public class ExposedFacetQueryComponent extends QueryComponent {
 
   private void setupFacetMapPolicy(boolean useSingle, boolean forceSingle) {
     if (FacetMapFactory.attemptSingle != useSingle || FacetMapFactory.forceSingle != forceSingle) {
-      log.info(String.format("Changing FacetMap single policy to use=%b, force=%b", useSingle, forceSingle));
+      log.info(String.format(
+              Locale.ROOT, "Changing FacetMap single policy to use=%b, force=%b", useSingle, forceSingle));
       poolFactory.clear();
       FacetMapFactory.attemptSingle = useSingle;
       FacetMapFactory.forceSingle = forceSingle;

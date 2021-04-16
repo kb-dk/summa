@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The default implementation of IndexController. It is basically an aggregator
@@ -235,9 +236,9 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         try {
             indexLocation = Resolver.getPersistentFile(indexRoot);
         } catch (Exception e) {
-            throw new ConfigurationException(String.format("Exception resolving '%s' to absolute path", indexRoot), e);
+            throw new ConfigurationException(String.format(Locale.ROOT, "Exception resolving '%s' to absolute path", indexRoot), e);
         }
-        log.debug(String.format("Using indexRoot '%s' at location '%s'",
+        log.debug(String.format(Locale.ROOT, "Using indexRoot '%s' at location '%s'",
                                 indexRoot.toString(), indexLocation.getAbsolutePath()));
         List<Configuration> manipulatorConfs;
         try {
@@ -281,7 +282,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         log.debug("Manipulators created");
 
         if (!conf.valueExists(IndexDescriptor.CONF_DESCRIPTOR)) {
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT,
                     "No setup %s for IndexDescriptor specified. No descriptor-XML will be stored with the index",
                     IndexDescriptor.CONF_DESCRIPTOR));
         } else {
@@ -506,15 +507,16 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
                 requestCommit = requestCommit | manipulator.update(payload);
                 newOrderChanged = newOrderChanged || manipulator.isOrderChangedSinceLastCommit();
             } catch (Exception e) {
-                String message = String.format("IOException for manipulator #%d (%s) while indexing",
-                                               manipulatorPosition + 1, manipulator);
+                String message = String.format(
+                        Locale.ROOT, "IOException for manipulator #%d (%s) while indexing",
+                        manipulatorPosition + 1, manipulator);
                 Logging.logProcess(getClass().getSimpleName(), message, Logging.LogLevel.WARN, payload, e);
                 if (manipulatorPosition == 0) {
                     updatesSinceLastCommit--;
                     updatesSinceLastConsolidate--;
                 }
                 if (log.isDebugEnabled()) {
-                    log.debug(String.format(
+                    log.debug(String.format(Locale.ROOT,
                         "Failed indexing %s with content\n%s", payload,
                         payload.getRecord() == null ? "NA" : payload.getRecord().getContentAsUTF8()));
                 }
@@ -595,7 +597,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
         updatesSinceLastConsolidate = 0;
         commitsSinceLastConsolidate = 0;
         orderChangedSinceLastCommit = false;
-        log.info(String.format("consolidate() finished in %d ms", System.currentTimeMillis() - startTime));
+        log.info(String.format(Locale.ROOT, "consolidate() finished in %d ms", System.currentTimeMillis() - startTime));
     }
 
     /**
@@ -618,7 +620,7 @@ public class IndexControllerImpl extends StateThread implements IndexManipulator
     @Override
     public synchronized void close() throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "close() called with consolidateOnClose %b, updatesSinceLastconsolidate %d, updatesSinceLastCommit %d "
                 + "and received Payloads %d",
                 consolidateOnClose, updatesSinceLastConsolidate, updatesSinceLastCommit, profiler.getBeats()));

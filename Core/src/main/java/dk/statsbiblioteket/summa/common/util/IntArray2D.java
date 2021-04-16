@@ -18,6 +18,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * A space-efficient flexible-size 2-dimensional int array implementation.
  * Java's standard int[][] works by having an array with pointers to int-arrays.
@@ -211,7 +213,7 @@ public class IntArray2D {
     private void checkPos(final int position) {
         if (position >= size) {
             throw new ArrayIndexOutOfBoundsException(String.format(
-                    "The primary array has size %d, while the requested position was %d", size, position));
+                    Locale.ROOT, "The primary array has size %d, while the requested position was %d", size, position));
         }
     }
 

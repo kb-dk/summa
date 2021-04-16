@@ -161,9 +161,9 @@ public class AltoDuplicateTest extends TestCase {
             long startTime = System.nanoTime();
             System.out.println("# Processing " + source);
             List<List<File>> duplicated = findPotentialDuplicates(new File[]{source}, FIRST_MIN_CHARS);
-            System.out.println(String.format("\n# Found %d duplicate text blocks from source %s in %s seconds",
+            System.out.println(String.format(Locale.ROOT, "\n# Found %d duplicate text blocks from source %s in %s seconds",
                                              duplicated.size(), source, (System.nanoTime()-startTime)/1000000000L));
-            System.out.println(String.format(
+            System.out.println(String.format(Locale.ROOT,
                     "# Min %d blocks of %d chars, %d blocks of %d chars and %d%% blocks of any chars",
                     FIRST_MIN_DUPLICATES, FIRST_MIN_CHARS, SECOND_MIN_BLOCK_MATCHES_PER_PAGE, SECOND_MIN_CHARS,
                     (int)(SECOND_MIN_BLOCK_FRACTION_MATCHES_PER_PAGE*100)));
@@ -177,7 +177,7 @@ public class AltoDuplicateTest extends TestCase {
             int dup = 1;
             for (List<File> entries: duplicated) {
                 System.out.println("");
-                String finalDest = String.format("%s/%02d", superGroup, dup);
+                String finalDest = String.format(Locale.ROOT, "%s/%02d", superGroup, dup);
                 if (dup > MAX_OUTPUT_GROUPS) {
                     System.out.print("# ");
                 }

@@ -15,6 +15,7 @@ import org.apache.lucene.util.BytesRef;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class TestFacetMap extends TestCase {
 
@@ -66,8 +67,8 @@ public class TestFacetMap extends TestCase {
     collector.clear();
     clearTime += System.currentTimeMillis();
     System.out.println(String.format(
-        "Run %2d (sparse=%5b): count=%4dms, clearAvg=%4dms, totalAvg=%4d",
-        run, collector instanceof TagCollectorSparse, collectTime, clearTime, collectTime + clearTime));
+            Locale.ROOT, "Run %2d (sparse=%5b): count=%4dms, clearAvg=%4dms, totalAvg=%4d",
+            run, collector instanceof TagCollectorSparse, collectTime, clearTime, collectTime + clearTime));
   }
 
   private long collect(TagCollector tagCollector, FacetMap map, int collects) throws IOException {

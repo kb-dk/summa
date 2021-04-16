@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -235,7 +236,7 @@ public class RecordGenerator implements ObjectFilter {
         Matcher matcher = PATTERN_GENERIC.matcher(template);
         while (matcher.find()) {
             if (log.isTraceEnabled()) {
-                log.trace(String.format("Parser matched generic pattern at pos(%d, %d) with content '%s'",
+                log.trace(String.format(Locale.ROOT, "Parser matched generic pattern at pos(%d, %d) with content '%s'",
                                         matcher.start(1), matcher.end(1), matcher.group(1)));
             }
             if (matcher.start(1) > lastEnd) {
@@ -310,7 +311,7 @@ public class RecordGenerator implements ObjectFilter {
             if ("ms".equals(unit)) {
                 return Long.toString(System.currentTimeMillis());
             } else if ("iso".equals(unit)) {
-                return String.format("%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS.%1$tL", System.currentTimeMillis());
+                return String.format(Locale.ROOT, "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS.%1$tL", System.currentTimeMillis());
             } else {
                 throw new IllegalArgumentException(
                         "The unit '" + unit + "' for " + CONTENT_TIMESTAMP + " is not supported");
@@ -522,7 +523,7 @@ public class RecordGenerator implements ObjectFilter {
 
     @Override
     public void close(boolean success) {
-        log.info(String.format("Closing down with success %b, spend %s generating %d Records at an average of "
+        log.info(String.format(Locale.ROOT, "Closing down with success %b, spend %s generating %d Records at an average of "
                                + "%s Records/sec in total, %s Records/sec for the last %d Records",
                                success, profiler.getSpendTime(), generatedRecords,
                                profiler.getBps(), profiler.getBps(true), profiler.getBpsSpan()));
@@ -579,12 +580,7 @@ public class RecordGenerator implements ObjectFilter {
         String id = expand(idTokens);
         String base = expand(baseTokens);
         String content = expand(contentTokens);
-        try {
-            return new Payload(new Record(id, base, content.getBytes("utf-8")));
-        } catch (UnsupportedEncodingException e) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException("utf-8 encoding not supported", e);
-        }
+        return new Payload(new Record(id, base, content.getBytes(StandardCharsets.UTF_8)));
     }
 
     /**

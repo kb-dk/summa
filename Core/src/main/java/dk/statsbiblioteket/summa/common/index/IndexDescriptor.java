@@ -37,6 +37,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.*;
 
@@ -203,7 +204,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         if (absoluteLocationString != null) {
             absoluteLocation = Resolver.getURL(absoluteLocationString);
             if (absoluteLocation == null) {
-                throw new IOException(String.format("Could not resolve property %s with value '%s'", 
+                throw new IOException(String.format(Locale.ROOT, "Could not resolve property %s with value '%s'",
                                                     CONF_ABSOLUTE_LOCATION, absoluteLocationString));
             }
         }
@@ -288,7 +289,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         try {
             content = Resolver.getUTF8Content(url);
         } catch (IOException e) {
-            throw new IOException(String.format("Unable to get content from URL '%s', resolved from '%s'", url, 
+            throw new IOException(String.format(Locale.ROOT, "Unable to get content from URL '%s', resolved from '%s'", url,
                                                 locationRoot), e);
         }
         String tokens[] = content.split("\n");
@@ -335,7 +336,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
      * @return a base field from the given name.
      */
     protected F createBaseField(String baseFieldName) {
-        log.debug(String.format("createBaseField(%s) called", baseFieldName));
+        log.debug(String.format(Locale.ROOT, "createBaseField(%s) called", baseFieldName));
         if (baseFieldName.equals(IndexField.SUMMA_DEFAULT) || baseFieldName.equals(IndexUtils.RECORD_FIELD)
             || baseFieldName.equals(IndexUtils.RECORD_BASE) || baseFieldName.equals(NUMBER)) {
             return createNewField(baseFieldName, true, true);
@@ -350,7 +351,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
             return createNewField(baseFieldName, false, true);
         }
 
-        throw new IllegalArgumentException(String.format("The base field '%s' is unknown", baseFieldName));
+        throw new IllegalArgumentException(String.format(Locale.ROOT, "The base field '%s' is unknown", baseFieldName));
     }
 
     private F createNewField(String name, boolean index, boolean store) {
@@ -412,7 +413,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         }
 
         try {
-            return builder.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("utf-8"))));
+            return builder.parse(new InputSource(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))));
         } catch (SAXException e) {
             throw (ParseException) new ParseException(
                     "Could not create Document from xml '" + xml + "'", -1).initCause(e);
@@ -848,7 +849,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
             }
         }
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Could not locate a group based on name '%s' and language '%s'",
+            log.trace(String.format(Locale.ROOT, "Could not locate a group based on name '%s' and language '%s'",
                                     groupName, language));
         }
         return null;
@@ -881,7 +882,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
      */
     public static void copySetupToSubConfigurations(Configuration conf, List<Configuration> subConfs) {
         if (!conf.valueExists(CONF_DESCRIPTOR)) {
-            log.debug(String.format("No %s found in configuration. No copy of the index "
+            log.debug(String.format(Locale.ROOT, "No %s found in configuration. No copy of the index "
                                     + "descriptor setup is done", CONF_DESCRIPTOR));
             return;
         }
@@ -892,7 +893,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements Configura
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format("Unable to extract %s from configuration",
+            throw new ConfigurationException(String.format(Locale.ROOT, "Unable to extract %s from configuration",
                                                            CONF_DESCRIPTOR), e);
         }
         for (Configuration subConf : subConfs) {

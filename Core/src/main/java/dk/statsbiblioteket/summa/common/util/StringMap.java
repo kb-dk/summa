@@ -18,6 +18,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -108,11 +109,7 @@ public class StringMap extends HashMap<String, String> {
      * @return a utf-8 encoded byte-array formal.
      */
     public byte[] toFormalBytes() {
-        try {
-            return toFormal().getBytes("utf-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Could not convert utf-8 bytes", e);
-        }
+        return toFormal().getBytes(StandardCharsets.UTF_8);
     }
 
     protected static String escape(String raw) {
@@ -153,10 +150,6 @@ public class StringMap extends HashMap<String, String> {
      *               if formal is null or empty.
      */
     public static StringMap fromFormal(byte[] formal) {
-        try {
-            return formal == null || formal.length == 0 ? null : fromFormal(new String(formal, "utf-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Could not convert utf-8 bytes", e);
-        }
+        return formal == null || formal.length == 0 ? null : fromFormal(new String(formal, StandardCharsets.UTF_8));
     }
 }

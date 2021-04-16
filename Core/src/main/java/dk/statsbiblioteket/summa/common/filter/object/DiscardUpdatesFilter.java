@@ -22,10 +22,7 @@ import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -199,7 +196,7 @@ public class DiscardUpdatesFilter extends AbstractDiscardFilter {
 
     @Override
     public String toString() {
-        return String.format("DiscardUpdatesFilter(policy=%s, source=%s, regexp=\"%s\", template=\"%s\", super=%s)",
+        return String.format(Locale.ROOT, "DiscardUpdatesFilter(policy=%s, source=%s, regexp=\"%s\", template=\"%s\", super=%s)",
                              policy, source, regexp, template, super.toString());
     }
 }

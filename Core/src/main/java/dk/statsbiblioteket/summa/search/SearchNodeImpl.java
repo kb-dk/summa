@@ -29,9 +29,11 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -148,6 +150,7 @@ public abstract class SearchNodeImpl implements SearchNode {
         idsAction = MAX_ACTION.valueOf(
                 conf.getString(CONF_DOCUMENT_IDS_ACTION, DEFAULT_DOCUMENT_IDS_ACTION.toString()));
         log.info(String.format(
+                Locale.ROOT,
                 "Constructed SearchNodeImpl(" + this.getClass().getSimpleName() + ") with concurrentSearches %d, "
                 + "warmupData length '%s', warmupMaxTime %d, searchWhileOpening %s, idsMax=%d, idsAction=%s)",
                 concurrentSearches, warmupData == null ? 0 : warmupData.length(), warmupMaxTime, searchWhileOpening,
@@ -208,7 +211,7 @@ public abstract class SearchNodeImpl implements SearchNode {
                 log.warn("Could not resolve '" + warmupData + "' to an URL. Skipping warmup");
                 return;
             }
-            BufferedReader in = new BufferedReader(new InputStreamReader(warmupDataURL.openStream()), BUFFER_SIZE);
+            BufferedReader in = new BufferedReader(new InputStreamReader(warmupDataURL.openStream(), StandardCharsets.UTF_8), BUFFER_SIZE);
             String query;
             while ((query = in.readLine()) != null &&
                    System.currentTimeMillis() < endTime) {
@@ -219,11 +222,11 @@ public abstract class SearchNodeImpl implements SearchNode {
             log.debug("Warmup finished with warm-up data from '" + warmupData + "' in "
                       + (System.currentTimeMillis() - startTime) + " ms and " + searchCount + " searches");
         } catch (RemoteException e) {
-            log.error(String.format("RemoteException performing warmup with data from '%s'", warmupData), e);
+            log.error(String.format(Locale.ROOT, "RemoteException performing warmup with data from '%s'", warmupData), e);
         } catch (IOException e) {
             log.warn("Exception reading the content from '" + warmupData + "' for warmup", e);
         } catch (Exception e) {
-            log.error(String.format("Exception performing warmup with data from '%s'", warmupData), e);
+            log.error(String.format(Locale.ROOT, "Exception performing warmup with data from '%s'", warmupData), e);
         }
     }
 
@@ -271,7 +274,7 @@ public abstract class SearchNodeImpl implements SearchNode {
                 log.trace("open: acquiring " + slots.getOverallPermits() + " slots");
                 if (!slots.tryAcquire(slots.getOverallPermits(), OPEN_TIMEOUT, TimeUnit.MILLISECONDS)) {
                     //noinspection DuplicateStringLiteralInspection
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "open(%s): Unable to acquire all slots within %d milliseconds. Re-creating slot-semaphore",
                             location, OPEN_TIMEOUT));
                     slots = new ChangingSemaphore(0);
@@ -317,11 +320,11 @@ public abstract class SearchNodeImpl implements SearchNode {
         // it does not matter that the shutdown is unclean
 /*        try {
             if (log.isTraceEnabled()) {
-                log.trace(String.format("close: acquiring %d slots", slots.getOverallPermits()));
+                log.trace(String.format(Locale.ROOT, "close: acquiring %d slots", slots.getOverallPermits()));
             }
             if (!slots.tryAcquire(slots.getOverallPermits(), CLOSE_TIMEOUT, TimeUnit.MILLISECONDS)) {
                 //noinspection DuplicateStringLiteralInspection
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "close: Unable to acquire all slots within %d milliseconds. Re-creating slot-semaphore",
                         CLOSE_TIMEOUT));
                 slots = new ChangingSemaphore(0);
@@ -372,7 +375,7 @@ public abstract class SearchNodeImpl implements SearchNode {
         try {
             // TODO: Consider timeout for slot acquirement
             if (!slots.tryAcquire(1, searcherAvailabilityTimeout, TimeUnit.MILLISECONDS)) {
-                throw new RemoteException(String.format(
+                throw new RemoteException(String.format(Locale.ROOT,
                         "Time-limit of %d milliseconds exceeded", searcherAvailabilityTimeout));
             }
         } catch (InterruptedException e) {
@@ -485,7 +488,7 @@ public abstract class SearchNodeImpl implements SearchNode {
         return warmupData;
     }
     public void setWarmupData(String warmupData) {
-        log.debug(String.format("setWarmupData(%s) called", warmupData));
+        log.debug(String.format(Locale.ROOT, "setWarmupData(%s) called", warmupData));
         this.warmupData = warmupData;
     }
 
@@ -493,7 +496,7 @@ public abstract class SearchNodeImpl implements SearchNode {
         return warmupMaxTime;
     }
     public void setWarmupMaxTime(int warmupMaxTime) {
-        log.debug(String.format("setWarmupMaxTime(%d ms) called", warmupMaxTime));
+        log.debug(String.format(Locale.ROOT, "setWarmupMaxTime(%d ms) called", warmupMaxTime));
         this.warmupMaxTime = warmupMaxTime;
     }
 
@@ -501,7 +504,7 @@ public abstract class SearchNodeImpl implements SearchNode {
         return concurrentSearches;
     }
     public synchronized void setMaxConcurrentSearches(int maxConcurrentSearches) {
-        log.debug(String.format("setMaxConcurrentSearches(%d) called", maxConcurrentSearches));
+        log.debug(String.format(Locale.ROOT, "setMaxConcurrentSearches(%d) called", maxConcurrentSearches));
         concurrentSearches = maxConcurrentSearches;
         if (slots.getOverallPermits() != 0) { // Race-condition here?
             slots.setOverallPermits(concurrentSearches);

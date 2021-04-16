@@ -24,6 +24,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.*;
@@ -157,7 +158,7 @@ public class SearchPerformanceMediator {
             File location = Resolver.getFile(conf.getString(
                     CONF_INDEX_DESCRIPTOR, DEFAULT_INDEX_DESCRIPTOR));
             if (location == null) {
-                throw new IllegalArgumentException(String.format(
+                throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "Unable to resolve the location '%s' to a file",
                         conf.getString(CONF_INDEX_DESCRIPTOR,
                                        DEFAULT_INDEX_DESCRIPTOR)));
@@ -206,14 +207,14 @@ public class SearchPerformanceMediator {
     }
 
     public void stop() throws IOException {
-        String end = String.format(
+        String end = String.format(Locale.ROOT,
                 "Tested %d queries (%d hits). In %d seconds. Average "
                 + "queries/second: %.1f. Total time used: %s. Threads: %d. "
                 + "One searcher/thread: %b",
-                queries.length, hitCount.get(),
+                                   queries.length, hitCount.get(),
                 (System.currentTimeMillis() - startTime) / 1000,
-                profiler.getBps(false), profiler.getSpendTime(),
-                threads, !shared);
+                                   profiler.getBps(false), profiler.getSpendTime(),
+                                   threads, !shared);
         write(end);
         output.close();
         System.out.println(end);
@@ -268,7 +269,7 @@ public class SearchPerformanceMediator {
             throw new IOException("Unable to resolve '" + location
                                   + "' to a File", e);
         }
-        log.debug(String.format("Got %d queries from '%s'",
+        log.debug(String.format(Locale.ROOT, "Got %d queries from '%s'",
                                 queries.length, location));
         return queries;
     }

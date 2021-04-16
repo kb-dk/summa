@@ -22,6 +22,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -119,6 +120,7 @@ public class DiscardDOMSFilter extends AbstractDiscardFilter {
         logDiscards = false; // We do more detailed logging in this class
 
         log.info(String.format(
+                Locale.ROOT,
                 "Created DOMS discarder with date=['%s', '%s'], pre=['%s', %d], middle==['%s', %d], post==['%s', %d]",
                 getPS(datePattern), dateLastValid, getPS(gapPrePattern), gapPreMax,
                 getPS(gapMiddlePattern), gapMiddleMax, getPS(gapPostPattern), gapPostMax));
@@ -161,7 +163,7 @@ public class DiscardDOMSFilter extends AbstractDiscardFilter {
         }
         if (last.compareTo(dateLastValid) > 0) {
             Logging.logProcess("DiscardDOMSFilter",
-                               String.format("Discarding record as date '%s' > '%s'. Process time was %dms, #dates=%d",
+                               String.format(Locale.ROOT, "Discarding record as date '%s' > '%s'. Process time was %dms, #dates=%d",
                                              last, dateLastValid, System.currentTimeMillis()-startTime, matches),
                                Logging.LogLevel.DEBUG, payload);
             return true;
@@ -181,7 +183,7 @@ public class DiscardDOMSFilter extends AbstractDiscardFilter {
                 int gap = Integer.valueOf(matcher.group(1));
                 if (gap > gapMax) {
                     Logging.logProcess("DiscardDOMSFilter",
-                                       String.format("Discarding record due to %s gap %d > %d. Process time was %dms, ",
+                                       String.format(Locale.ROOT, "Discarding record due to %s gap %d > %d. Process time was %dms, ",
                                                      fixType, gap, gapMax, System.currentTimeMillis()-startTime),
                                        Logging.LogLevel.DEBUG, payload);
                     return true;

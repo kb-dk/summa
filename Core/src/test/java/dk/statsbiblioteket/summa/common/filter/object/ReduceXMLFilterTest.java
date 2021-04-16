@@ -27,6 +27,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -71,7 +72,7 @@ public class ReduceXMLFilterTest extends TestCase {
             lims.add(limits[i + 1] + " " + limits[i]);
         }
         ObjectFilter feeder = new PayloadFeederHelper(Arrays.asList(new Payload(
-                new Record("sample", "dummy", input.getBytes("utf-8")))));
+                new Record("sample", "dummy", input.getBytes(StandardCharsets.UTF_8)))));
         ObjectFilter reducer = new ReduceXMLFilter(Configuration.newMemoryBased(
                 ReduceXMLFilter.CONF_LIMITS, lims,
                 ReduceXMLFilter.CONF_ONLY_CHECK_ELEMENT_PATHS, onlyElementMatch,

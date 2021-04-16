@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * A simple manipulator that keeps track of the IndexDescriptor and store
@@ -46,9 +47,10 @@ public class DescriptorManipulator implements IndexManipulator {
 
     public DescriptorManipulator(Configuration conf) {
         if (!conf.valueExists(IndexDescriptor.CONF_DESCRIPTOR)) {
-            log.warn(String.format("The IndexDescriptor-setup with key '%s' was not defined. "
-                                   + "No descriptor-XML will be stored with the index-data", 
-                                   IndexDescriptor.CONF_DESCRIPTOR));
+            log.warn(String.format(
+                    Locale.ROOT, "The IndexDescriptor-setup with key '%s' was not defined. "
+                                 + "No descriptor-XML will be stored with the index-data",
+                    IndexDescriptor.CONF_DESCRIPTOR));
             return;
         }
         Configuration descriptorConf;
@@ -58,8 +60,8 @@ public class DescriptorManipulator implements IndexManipulator {
             throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ConfigurationException(String.format("Unable to extract sub configuration %s", 
-                                                           IndexDescriptor.CONF_DESCRIPTOR), e);
+            throw new ConfigurationException(String.format(
+                    Locale.ROOT, "Unable to extract sub configuration %s", IndexDescriptor.CONF_DESCRIPTOR), e);
         }
         try {
             descriptor = new StoringIndexDescriptor(descriptorConf);
@@ -71,7 +73,7 @@ public class DescriptorManipulator implements IndexManipulator {
 
     @Override
     public void open(File indexRoot) throws IOException {
-        log.debug(String.format("open(%s) called. Setting this as destination for the IndexDescriptor", indexRoot));
+        log.debug(String.format(Locale.ROOT, "open(%s) called. Setting this as destination for the IndexDescriptor", indexRoot));
         this.indexRoot = indexRoot;
     }
 
@@ -94,28 +96,28 @@ public class DescriptorManipulator implements IndexManipulator {
             return;
         }
         if (descriptor == null) {
-            log.warn(String.format("No descriptor available. Unable to store IndexDescriptor to '%s'", indexRoot));
+            log.warn(String.format(Locale.ROOT, "No descriptor available. Unable to store IndexDescriptor to '%s'", indexRoot));
             return;
         }
         if (descriptor.getXml() == null) {
-            log.warn(String.format("No descriptor XML available. Unable to store IndexDescriptor to '%s'", indexRoot));
+            log.warn(String.format(Locale.ROOT, "No descriptor XML available. Unable to store IndexDescriptor to '%s'", indexRoot));
             return;
         }
         File descFile = new File(indexRoot, IndexDescriptor.DESCRIPTOR_FILENAME);
         if (descFile.exists()) {
             log.debug("Removing existing IndexDescriptor at '" + descFile + "'");
             if (!descFile.delete()) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "Unable to remove '%s'. This might mean that it is not possible to update the IndexDescriptor",
                         descFile));
             }
         }
         Files.saveString(descriptor.getXml(), descFile);
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Stored IndexDescriptor to '%s':\n%s",
+            log.trace(String.format(Locale.ROOT, "Stored IndexDescriptor to '%s':\n%s",
                                     descFile, descriptor.getXml()));
         } else if (log.isDebugEnabled()) {
-            log.debug(String.format("Stored IndexDescriptor of size %d to '%s'",
+            log.debug(String.format(Locale.ROOT, "Stored IndexDescriptor of size %d to '%s'",
                                     descriptor.getXml().length(), descFile));
         }
     }

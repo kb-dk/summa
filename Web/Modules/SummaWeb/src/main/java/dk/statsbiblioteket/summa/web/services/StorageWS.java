@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -286,7 +287,7 @@ public class StorageWS implements ServletContextListener {
         }
 
         totalTime = System.currentTimeMillis() -totalTime;
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
             "Finished realGetRecords(%d ids) in %dms (query: %dms, xmlify: %dms, escapeContent=%b)",
             ids.size(), totalTime, time, xmlTime, escapeContent));
 
@@ -304,9 +305,9 @@ public class StorageWS implements ServletContextListener {
      */
     private String realGetRecord(String id, boolean expand, boolean legacyMerge, boolean escapeContent) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format(
-                    "realGetRecord('%s', expand=%b, legacyMerge=%b)",
-                    id, expand, legacyMerge));
+            log.trace(String.format(Locale.ROOT,
+                                    "realGetRecord('%s', expand=%b, legacyMerge=%b)",
+                                    id, expand, legacyMerge));
         }
         long startTime = System.currentTimeMillis();
         long xmlTime = 0;
@@ -346,7 +347,7 @@ public class StorageWS implements ServletContextListener {
             retXML = null;
         }
 
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "realGetRecord('%s', expand=%b, legacyMerge=%b, escapeContent=%b) finished in %d ms " +
                 "(%dms spend on XML creation)",
                 id, expand, legacyMerge, escapeContent, System.currentTimeMillis() - startTime, xmlTime));

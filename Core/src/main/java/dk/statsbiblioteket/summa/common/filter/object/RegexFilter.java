@@ -20,6 +20,8 @@ import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * An {@link ObjectFilter} that can black- or white list payloads based on
  * their ids, record base- and/or content. It can be configured to check lists
@@ -59,7 +61,7 @@ public class RegexFilter extends AbstractDiscardFilter {
     }
 
     private boolean parseIsInclusive(Configuration conf) {
-        String mode = conf.getString(CONF_MODE, DEFAULT_MODE).toLowerCase();
+        String mode = conf.getString(CONF_MODE, DEFAULT_MODE).toLowerCase(Locale.ENGLISH);
         log.debug("Found mode: " + mode);
 
         //noinspection DuplicateStringLiteralInspection

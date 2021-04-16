@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -77,8 +78,9 @@ public abstract class GraphFilter<T> extends ObjectFilterImpl {
             throw new ConfigurationException(
                     "The requirement value '" + r + "' is not known. Valid values are origin, all, none and one");
         }
-        log.debug(String.format("GraphFilter %s constructed with visitParents=%b, visitChildren=%b", getName(),
-                                visitParents, visitChildren));
+        log.debug(String.format(
+                Locale.ROOT, "GraphFilter %s constructed with visitParents=%b, visitChildren=%b", getName(),
+                visitParents, visitChildren));
     }
 
     @Override

@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -89,7 +90,7 @@ public class DiscardDOMSFilterTest extends TestCase {
     private void testGeneric(Configuration conf, String input, boolean isDeleted) throws IOException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
                 new Payload(new Record("doms_radioTVCollection_dummy_0", "doms_radiotv",
-                                       Files.loadString(new File(input)).getBytes()))));
+                                       Files.loadString(new File(input)).getBytes(StandardCharsets.UTF_8)))));
         DiscardDOMSFilter domsDiscarder = new DiscardDOMSFilter(conf);
         domsDiscarder.setSource(feeder);
         long startTime = System.currentTimeMillis();

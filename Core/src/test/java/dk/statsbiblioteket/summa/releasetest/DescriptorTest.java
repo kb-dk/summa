@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Arrays;
+import java.util.Locale;
 
 
 /**
@@ -155,7 +156,7 @@ public class DescriptorTest extends NoExitTestCase {
                                    String facet, String query) throws IOException {
         String res = searcher.search(SearchTest.simpleRequest(query)).toXML();
         if (!res.contains("<facet name=\"" + facet + "\">")) {
-            fail(String.format("Search for '%s' with facet '%s' did not produce any facets. Result was:\n%s",
+            fail(String.format(Locale.ROOT, "Search for '%s' with facet '%s' did not produce any facets. Result was:\n%s",
                                query, facet, res));
         }
         log.debug("Search for '" + query + "' gave:\n" + res);
@@ -212,7 +213,7 @@ public class DescriptorTest extends NoExitTestCase {
         String oldLocation = searcher.getIndexLocation();
         index(indexFullConf, basicDescriptor);
         searcher.checkIndex();
-        assertFalse(String.format(
+        assertFalse(String.format(Locale.ROOT,
                 "The old index location '%s' should differ from the new index " 
                 + "location", oldLocation),
                 oldLocation.equals(searcher.getIndexLocation()));
@@ -226,7 +227,7 @@ public class DescriptorTest extends NoExitTestCase {
         index(indexFullConf, extraDescriptor);
         log.debug("Verifying that new index contains new facet");
         searcher.checkIndex();
-        assertFalse(String.format(
+        assertFalse(String.format(Locale.ROOT,
                 "The old index location from basic descriptor '%s' should differ from the new index location",
                 oldLocation),
                 oldLocation.equals(searcher.getIndexLocation()));

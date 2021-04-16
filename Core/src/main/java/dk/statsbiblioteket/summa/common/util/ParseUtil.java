@@ -26,6 +26,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.StringWriter;
 import java.text.ParseException;
+import java.util.Locale;
 
 /**
  * convenience methods for parsing using XPath.
@@ -111,7 +112,8 @@ public class ParseUtil {
         }
             nodeValue = xPath.evaluate(path, node);
         } catch (XPathExpressionException e) {
-            throw (ParseException) new ParseException(String.format("Invalid expression '%s'", path), -1).initCause(e);
+            throw (ParseException) new ParseException(String.format(
+                    Locale.ROOT, "Invalid expression '%s'", path), -1).initCause(e);
         }
         if (nodeValue == null) {
             //noinspection DuplicateStringLiteralInspection

@@ -26,6 +26,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -73,7 +74,7 @@ public class ZIPParser extends ThreadedStreamParser {
         super(conf);
         filePattern = Pattern.compile(conf.getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
 //        processingTimeout = conf.getInt(CONF_PROCESSING_TIMEOUT, DEFAULT_PROCESSING_TIMEOUT);
-        log.info(String.format("Created ZIPParser with file pattern '%s'", conf.getString(CONF_FILE_PATTERN,
+        log.info(String.format(Locale.ROOT, "Created ZIPParser with file pattern '%s'", conf.getString(CONF_FILE_PATTERN,
                                                                                           DEFAULT_FILE_PATTERN)));
     }
 
@@ -121,7 +122,7 @@ public class ZIPParser extends ThreadedStreamParser {
         log.debug("Ending processing of " + source + " with running=" + running);
         zip.close();
         // TODO: Check if Payload should be closed here
-        log.debug(String.format("Processed %d ZIP entries from %s", matching, source));
+        log.debug(String.format(Locale.ROOT, "Processed %d ZIP entries from %s", matching, source));
     }
 
     /**

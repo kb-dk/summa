@@ -26,6 +26,7 @@ import org.apache.lucene.search.*;
 
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,8 +73,7 @@ public class LuceneBooster {
             //noinspection FloatingPointEquality
             if (field.getQueryBoost() != IndexField.DEFAULT_BOOST) {
                 log.debug(String.format(
-                        "Extracted query time boost %s for field '%s' from "
-                        + "index descriptor",
+                        Locale.ROOT, "Extracted query time boost %s for field '%s' from index descriptor",
                         field.getQueryBoost(), field.getName()));
                 descriptorBoosts.put(field.getName(), field.getQueryBoost()); 
             }

@@ -33,6 +33,7 @@ import org.apache.lucene.util.Version;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -143,7 +144,6 @@ public class IndexBuilder {
 
         // Delete the old
         deleteDir(new File(INDEX_LOCATION));
-
         IndexWriterConfig iwConfig = new IndexWriterConfig(
             Version.LUCENE_30, new StandardAnalyzer(Version.LUCENE_30));
         // TODO: Use compound file
@@ -161,7 +161,7 @@ public class IndexBuilder {
             }
             int j = 0;
             for (String[] comic : comics) {
-                String id = String.format("%d-%d", i, j);
+                String id = String.format(Locale.ROOT, "%d-%d", i, j);
                 Document doc = createDocument(comic, id);
                 writer.addDocument(doc);
                 j++;
@@ -234,7 +234,7 @@ public class IndexBuilder {
     }
 
     public static File versionFile() {
-        return new File(String.format("%s/%s", INDEX_LOCATION, VERSION));
+        return new File(String.format(Locale.ROOT, "%s/%s", INDEX_LOCATION, VERSION));
     }
 
     // http://javaalmanac.com/egs/java.io/DeleteDir.html

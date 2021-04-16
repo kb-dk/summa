@@ -100,7 +100,7 @@ public class Alto {
                         try {
                             measurementUnit = MEASUREMENT_UNIT.valueOf(unit);
                         } catch (IllegalArgumentException e) {
-                            throw new IllegalArgumentException(String.format(
+                            throw new IllegalArgumentException(String.format(Locale.ROOT,
                                     "The MeasurementUnit '%s' is unknown. Only the following units are accepted: %s",
                                     unit, Strings.join(MEASUREMENT_UNIT.values())), e);
                         }
@@ -153,7 +153,7 @@ public class Alto {
             }
         });
         if (log.isDebugEnabled()) {
-            log.debug(String.format("Successfully parsed alto XML in %dms, fileName='%s', #pages=%d",
+            log.debug(String.format(Locale.ROOT, "Successfully parsed alto XML in %dms, fileName='%s', #pages=%d",
                                     System.currentTimeMillis() - startTime, filename, layout.size()));
         }
         timing.stop();

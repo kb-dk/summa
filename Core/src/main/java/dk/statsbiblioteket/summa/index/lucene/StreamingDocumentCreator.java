@@ -37,6 +37,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 import java.text.ParseException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -179,8 +180,8 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
         int eventType = reader.getEventType();
         if (eventType != XMLEvent.START_DOCUMENT) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ParseException(String.format("The first element was not start, it was %s",
-                                                   XMLUtil.eventID2String(eventType)), 0);
+            throw new ParseException(String.format(
+                    Locale.ROOT, "The first element was not start, it was %s", XMLUtil.eventID2String(eventType)), 0);
         }
 
         if (!reader.hasNext()) {
@@ -193,12 +194,12 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
             && SUMMA_DOCUMENT.equals(reader.getLocalName())
             && SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI()))) {
             try {
-                throw new ParseException(String.format(
+                throw new ParseException(String.format(Locale.ROOT,
                     "processHeader: The start element should be %s:%s, but was %s:%s",
                     SUMMA_NAMESPACE, SUMMA_DOCUMENT, reader.getName().getNamespaceURI(), reader.getLocalName()),
                                          reader.getLocation().getCharacterOffset());
             } catch (IllegalStateException e) {
-                throw new IllegalStateException(String.format(
+                throw new IllegalStateException(String.format(Locale.ROOT,
                     "processHeader: Unable to construct ParseException. Expected StartElement %s:%s, got %s",
                     SUMMA_NAMESPACE, SUMMA_DOCUMENT, XMLUtil.eventID2String(eventType)), e);
             }
@@ -245,7 +246,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
 
         // Fields
         if (!reader.hasNext()) {
-            throw new ParseException(String.format("Expected content in %s", record),
+            throw new ParseException(String.format(Locale.ROOT, "Expected content in %s", record),
                                      reader.getLocation().getCharacterOffset());
         }
         while(reader.hasNext()) {
@@ -286,7 +287,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
             }
             if (!(SUMMA_FIELD.equals(reader.getLocalName()) &&
                   SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI()))) {
-                log.debug(String.format(
+                log.debug(String.format(Locale.ROOT,
                         "The expected element was %s:%s, but the received was %s:%s. Ignoring element",
                         SUMMA_NAMESPACE, SUMMA_FIELD, reader.getName().getNamespaceURI(), reader.getLocalName()));
                 continue;
@@ -294,7 +295,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase<org.apache.luc
             // <field name="author" boost="2.0">Jens Hansen</field>
             String fieldName = getAttributeValue(reader, SUMMA_NAMESPACE, SUMMA_NAME);
             if (fieldName == null) {
-                throw new ParseException(String.format("Field without name-attribute in %s", record),
+                throw new ParseException(String.format(Locale.ROOT, "Field without name-attribute in %s", record),
                                          reader.getLocation().getCharacterOffset());
             }
 

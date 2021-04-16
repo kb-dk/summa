@@ -243,7 +243,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>> extends ResponseI
         }
         if (!(otherResponse instanceof FacetResult)) {
             //noinspection ProhibitedExceptionThrown
-            throw new ClassCastException(String.format("Expected a FacetResult, but go '%s'", 
+            throw new ClassCastException(String.format(Locale.ROOT, "Expected a FacetResult, but go '%s'",
                                                        otherResponse.getClass().getName()));
         }
         FacetResult other = (FacetResult) otherResponse;

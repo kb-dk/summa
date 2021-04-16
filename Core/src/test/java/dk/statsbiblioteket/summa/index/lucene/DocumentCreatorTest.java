@@ -44,8 +44,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -152,7 +154,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
                      + "<cdataed><![CDATA[<]]></cdataed>\n"
                      + "</outer>";
         org.w3c.dom.Document dom = domBuilder.parse(
-                new ByteArrayInputStream(XML.getBytes("utf-8")));
+                new ByteArrayInputStream(XML.getBytes(StandardCharsets.UTF_8)));
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         assertEquals("The content of entitied should be unencoded",
@@ -235,7 +237,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Files.saveString(SIMPLE_DESCRIPTOR, descriptorLocation);
         File confLocation = File.createTempFile("configuration", ".xml");
         confLocation.deleteOnExit();
-        Files.saveString(String.format(CREATOR_SETUP,
+        Files.saveString(String.format(Locale.ROOT, CREATOR_SETUP,
                                        "file://" + descriptorLocation.getAbsoluteFile().toString()), confLocation);
         assertTrue("The configuration should exist", descriptorLocation.getAbsoluteFile().exists());
 
@@ -269,7 +271,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
     }
 
     public void testBoost() throws Exception {
-        Payload payload = new Payload(new Record("dummy", "dummy", NAMESPACED_RECORD.getBytes("utf-8")));
+        Payload payload = new Payload(new Record("dummy", "dummy", NAMESPACED_RECORD.getBytes(StandardCharsets.UTF_8)));
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(payload));
         Configuration conf = getCreatorConf();
         ObjectFilter creator = new StreamingDocumentCreator(conf);
@@ -296,8 +298,8 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
     }
 
     public void testEnrichedRecord() throws Exception {
-        Record parent = new Record("parent", "foo", NAMESPACED_RECORD.getBytes("utf-8"));
-        Record child = new Record("child", "foo", CHILD_RECORD.getBytes("utf-8"));
+        Record parent = new Record("parent", "foo", NAMESPACED_RECORD.getBytes(StandardCharsets.UTF_8));
+        Record child = new Record("child", "foo", CHILD_RECORD.getBytes(StandardCharsets.UTF_8));
         parent.setChildren(Arrays.asList(child));
 
         testEnrichedRecord(new Payload(parent), true, new String[]{"Foo bar", "Kazam", "Subway"});
@@ -334,15 +336,10 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
     }
     @Override
     public Payload next() {
-        try {
-            return new Payload(new Record("dummy", "fooBase",
+        return new Payload(new Record("dummy", "fooBase",
 //                                          SIMPLE_RECORD.getBytes("utf-8")));
-            NAMESPACED_RECORD.getBytes("utf-8")));
-        } catch (UnsupportedEncodingException e) {
-            //noinspection CallToPrintStackTrace
-            e.printStackTrace();
-        }
-        return null;
+        NAMESPACED_RECORD.getBytes(StandardCharsets.UTF_8)));
+//        return null;
     }
     @Override
     public void remove() {

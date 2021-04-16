@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Handles full dumps for a given base into a given Storage. When all data has
@@ -86,7 +87,7 @@ public class FullDumpFilter extends ObjectFilterImpl {
     public FullDumpFilter(Configuration conf) {
         super(conf);
         if (!conf.valueExists(CONF_BASE)) {
-            throw new ConfigurationException(String.format("The entry %s is mandatory but not present", CONF_BASE));
+            throw new ConfigurationException(String.format(Locale.ROOT, "The entry %s is mandatory but not present", CONF_BASE));
         }
         base = conf.getString(CONF_BASE);
         minRecords = conf.getInt(CONF_MIN_RECORDS, minRecords);
@@ -94,7 +95,7 @@ public class FullDumpFilter extends ObjectFilterImpl {
         try {
             startupTimestamp = getStartupTimestamp(conf);
         } catch (IOException e) {
-            throw new ConfigurationException(String.format(
+            throw new ConfigurationException(String.format(Locale.ROOT,
                     "Exception while trying to retrieve last modified timestamp for base '%s' from '%s'",
                     base, conf.getString(ConnectionConsumer.CONF_RPC_TARGET, "N/A")), e);
         }
@@ -118,34 +119,34 @@ public class FullDumpFilter extends ObjectFilterImpl {
     public void close(boolean success) {
         super.close(success);
         if (!success) {
-            log.warn(String.format("close(false): The close-script '%s' for base %s will not be called",
+            log.warn(String.format(Locale.ROOT, "close(false): The close-script '%s' for base %s will not be called",
                                    script, base));
         } else if (received == 0) {
-            log.info(String.format("close(true): No Record received for base %s. "
+            log.info(String.format(Locale.ROOT, "close(true): No Record received for base %s. "
                                    + "The close-script '%s' will not be called",
                                    base, script));
         } else if (received < minRecords) {
-            log.warn(String.format("close(true): %d Records received, but %d is required in "
+            log.warn(String.format(Locale.ROOT, "close(true): %d Records received, but %d is required in "
                                    + "order to run the script '%s'",
                                    received, minRecords, script));
         } else {
-            log.info(String.format("close(true): %d Records received, calling script '%s' on "
+            log.info(String.format(Locale.ROOT, "close(true): %d Records received, calling script '%s' on "
                                    + "base '%s' for Records with timestamp <= %s",
-                                   received, script, base, String.format(ISO_TIME, startupTimestamp)));
+                                   received, script, base, String.format(Locale.ROOT, ISO_TIME, startupTimestamp)));
             try {
                 // +1 as batch maxMTime is <, not <=
                 String result = writer.batchJob(script, base, 0, startupTimestamp + 1, null);
                 if (log.isTraceEnabled()) {
-                    log.trace(String.format("Script '%s' successfully executed with output '%s'",
+                    log.trace(String.format(Locale.ROOT, "Script '%s' successfully executed with output '%s'",
                                             script, result));
                 } else {
-                    log.info(String.format("Script '%s' successfully executed with %d lines in the output",
+                    log.info(String.format(Locale.ROOT, "Script '%s' successfully executed with %d lines in the output",
                                            script, countLines(result)));
 
                 }
             } catch (IOException e) {
-                String message = String.format("Exception while calling script '%s' on base '%s' with endTime %s",
-                                               script, base, String.format(ISO_TIME, startupTimestamp));
+                String message = String.format(Locale.ROOT, "Exception while calling script '%s' on base '%s' with endTime %s",
+                                               script, base, String.format(Locale.ROOT, ISO_TIME, startupTimestamp));
                 log.error(message, e);
                 throw new RuntimeException(message, e);
             }

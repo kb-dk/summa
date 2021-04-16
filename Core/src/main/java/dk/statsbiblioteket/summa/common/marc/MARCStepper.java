@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -64,7 +65,7 @@ public class MARCStepper {
         // Positioned at startDocument
         int eventType = xml.getEventType();
         if (eventType != XMLEvent.START_DOCUMENT) {
-            throw new ParseException(String.format("The first element should be start, it was %s",
+            throw new ParseException(String.format(Locale.ROOT, "The first element should be start, it was %s",
                                                    XMLUtil.eventID2String(eventType)), 0);
         }
         final AtomicInteger processed = new AtomicInteger(0);
@@ -119,7 +120,7 @@ public class MARCStepper {
                     } else {
                         if (!encounteredUnexpectedStart) {
                             encounteredUnexpectedStart = true;
-                            log.warn(String.format(
+                            log.warn(String.format(Locale.ROOT,
                                     "Unexpected start-tag '%s' while parsing MARC. This is the first time this"
                                     + " has been encountered. Further encounters will be logged on debug",
                                     xml.getLocalName()));
@@ -129,11 +130,11 @@ public class MARCStepper {
                     }
                     break;
                 case XMLEvent.END_ELEMENT :
-                    log.warn(String.format("Unexpected end-tag '%s' while parsing MARC", xml.getLocalName()));
+                    log.warn(String.format(Locale.ROOT, "Unexpected end-tag '%s' while parsing MARC", xml.getLocalName()));
                     break;
                 case XMLEvent.CHARACTERS :
                     if (!isBlank(xml.getText())) {
-                        log.warn(String.format("Unexpected text '%s' while parsing MARC", xml.getText()));
+                        log.warn(String.format(Locale.ROOT, "Unexpected text '%s' while parsing MARC", xml.getText()));
                     }
                     callback.strayCharacters(xml.getText());
                     break;
@@ -141,7 +142,7 @@ public class MARCStepper {
                     callback.comment(xml.getText());
                     break;
                 default:
-                    log.warn(String.format("Unexpended event %s", XMLUtil.eventID2String(eventType)));
+                    log.warn(String.format(Locale.ROOT, "Unexpended event %s", XMLUtil.eventID2String(eventType)));
             }
         }
         if (!callback.running()) {

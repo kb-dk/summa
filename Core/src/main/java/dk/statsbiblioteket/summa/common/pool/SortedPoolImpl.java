@@ -25,6 +25,7 @@ import java.io.*;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Locale;
 
 /**
  * Partial implementation of SortedPool to provide open and save.
@@ -71,12 +72,12 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
             checkLocation(location, poolName);
         } catch (IOException e) {
             throw new IllegalArgumentException(String.format(
-                    "setBaseData: Unable to create folder '%s' for pool '%s'", location, poolName), e);
+                    Locale.ROOT, "setBaseData: Unable to create folder '%s' for pool '%s'", location, poolName), e);
         }
         this.location = location;
         this.poolName = poolName;
         this.readOnly = readOnly;
-        log.trace(String.format(
+        log.trace(String.format(Locale.ROOT,
                 "Assigned base data location '%s', pool name '%s' and readOnly %s", location, poolName, readOnly));
     }
 
@@ -121,9 +122,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
     // FIXME: The use of an Object-Stream pollutes the raw bytes
     protected long[] loadIndex() throws IOException {
         checkBase();
-        log.debug(String.format("Loading indexes for pool '%s' at location '%s'", poolName, location));
+        log.debug(String.format(Locale.ROOT, "Loading indexes for pool '%s' at location '%s'", poolName, location));
         if (!location.exists()) {
-            throw new IOException(String.format("The folder '%s' for pool '%s' does not exist", location, poolName));
+            throw new IOException(String.format(Locale.ROOT, "The folder '%s' for pool '%s' does not exist", location, poolName));
         }
 
         FileInputStream indexIn = new FileInputStream(new File(location, poolName + INDEX_POSTFIX));
@@ -131,12 +132,12 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
         ObjectInputStream index = new ObjectInputStream(indexBuf);
         int version = index.readInt();
         if (version != VERSION) {
-            throw new IOException(String.format(
+            throw new IOException(String.format(Locale.ROOT,
                     "The version for the pool '%s' at location '%s' was %d. This loader only supports version %d", 
                     poolName, location, version, VERSION));
         }
         int size = index.readInt();
-        log.debug(String.format("Starting load of %d index data (longs)", size));
+        log.debug(String.format(Locale.ROOT, "Starting load of %d index data (longs)", size));
         long[] indexData = new long[size];
         long feedback = Math.max(size / 100, 1);
         Profiler profiler = new Profiler();
@@ -153,7 +154,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
         index.close();
         indexBuf.close();
         indexIn.close();
-        log.debug(String.format("Finished loading of %d index data from pool '%s' at location '%s' in %s", 
+        log.debug(String.format(Locale.ROOT, "Finished loading of %d index data from pool '%s' at location '%s' in %s",
                                 size, poolName, location, profiler.getSpendTime()));
         return indexData;
     }
@@ -161,9 +162,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
     protected void checkLocation(File location, String poolName) throws IOException {
         if (!location.exists()) {
             if (!location.mkdirs()) {
-                throw new IOException(String.format("Unable to create folder '%s' for pool '%s'", location, poolName));
+                throw new IOException(String.format(Locale.ROOT, "Unable to create folder '%s' for pool '%s'", location, poolName));
             }
-            log.debug(String.format("Created folder '%s' for pool '%s'", location, poolName));
+            log.debug(String.format(Locale.ROOT, "Created folder '%s' for pool '%s'", location, poolName));
         }
     }
 
@@ -185,7 +186,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
             author = "te",
             comment = "Windows uses file locking, so this might work bad when overwriting existing files")
     public void store(File location, String poolName) throws IOException {
-        log.debug(String.format("Storing pool '%s' to location '%s'", poolName, location));
+        log.debug(String.format(Locale.ROOT, "Storing pool '%s' to location '%s'", poolName, location));
         checkLocation(location, poolName);
         File tmpIndex = new File(getIndexFile().toString() + ".tmp");
         File tmpValues = new File(getValueFile().toString() + ".tmp");
@@ -229,11 +230,11 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
         indexBuf.close();
         indexOut.close();
         remove(getIndexFile(), "old index");
-        log.trace(String.format("store: Renaming index '%s' to '%s'", tmpIndex, getIndexFile()));
+        log.trace(String.format(Locale.ROOT, "store: Renaming index '%s' to '%s'", tmpIndex, getIndexFile()));
         Files.move(tmpIndex, getIndexFile(), true);
 
         remove(getValueFile(), "old values");
-        log.trace(String.format("store: Renaming values '%s' to '%s'", tmpValues, getValueFile()));
+        log.trace(String.format(Locale.ROOT, "store: Renaming values '%s' to '%s'", tmpValues, getValueFile()));
         Files.move(tmpValues, getValueFile(), true);
         log.debug("Finished storing pool '" + poolName + "' to location '" + location + "'");
     }
@@ -263,9 +264,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
 
     protected void remove(File file, String description) throws IOException {
         if (file.exists()) {
-            log.debug(String.format("Removing %s file '%s'", description, file));
+            log.debug(String.format(Locale.ROOT, "Removing %s file '%s'", description, file));
             if (!file.delete()) {
-                throw new IOException(String.format("Unable to delete %s file '%s'", description, file));
+                throw new IOException(String.format(Locale.ROOT, "Unable to delete %s file '%s'", description, file));
             }
         }
     }
@@ -297,7 +298,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
             }
             last = current;
         }
-        log.debug(String.format("Removed %d duplicates from a total of %d values in %dms",
+        log.debug(String.format(Locale.ROOT, "Removed %d duplicates from a total of %d values in %dms",
                                 initial - size(), initial, System.currentTimeMillis() - startTime));
     }
 
@@ -407,7 +408,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>> extends AbstractLi
         removeDuplicates();
         duplicateTime = System.currentTimeMillis() - duplicateTime;
         //noinspection DuplicateStringLiteralInspection
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "cleanup of %s finished for %d elements in %dms (%dms for sort, %dms for duplicate removal)",
                 poolName, size(), System.currentTimeMillis() - startTime, sortTime, duplicateTime));
     }

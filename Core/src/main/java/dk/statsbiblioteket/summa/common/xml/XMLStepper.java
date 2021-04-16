@@ -58,7 +58,7 @@ public class XMLStepper {
                     return;
                 }
                 if (!currentTag.equals(tagStack.get(tagStack.size()-1))) {
-                    throw new IllegalStateException(String.format(
+                    throw new IllegalStateException(String.format(Locale.ROOT,
                             "Encountered end tag '%s' where '%s' from the stack %s were expected",
                             currentTag, tagStack.get(tagStack.size()-1), Strings.join(tagStack, ", ")));
                 }
@@ -238,7 +238,7 @@ public class XMLStepper {
                         }
                     } else { // callback handled the element so we do not pipe the END_ELEMENT
                         if (XMLStreamReader.END_ELEMENT != in.getEventType()) {
-                            throw new IllegalStateException(String.format(
+                            throw new IllegalStateException(String.format(Locale.ROOT,
                                     "Callback for %s returned true, but did not position the XML stream at "
                                     + "END_ELEMENT. Current eventType is %s",
                                     Strings.join(elementStack, ", "), XMLUtil.eventID2String(in.getEventType())));
@@ -257,7 +257,7 @@ public class XMLStepper {
                     }
                     String element = in.getLocalName();
                     if (!element.equals(elementStack.get(elementStack.size()-1))) {
-                        throw new IllegalStateException(String.format(
+                        throw new IllegalStateException(String.format(Locale.ROOT,
                                 "Encountered end tag '%s' where '%s' from the stack %s were expected",
                                 element, elementStack.get(elementStack.size()-1), Strings.join(elementStack, ", ")));
                     }

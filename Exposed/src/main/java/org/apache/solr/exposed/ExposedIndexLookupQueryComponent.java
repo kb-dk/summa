@@ -205,7 +205,7 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
                                          NamedComparator.ORDER.locale;
     String term = params.get(ELOOKUP_TERM, "");
     if (!params.getBool(ELOOKUP_CASE_SENSITIVE, ELOOKUP_DEFAULT_CASE_SENSITIVE)) {
-        term = term.toLowerCase();
+        term = term.toLowerCase(Locale.ENGLISH);
     }
     FacetRequestGroup facetGroup = new FacetRequestGroup(
       eGroup, facetOrder, false, locale == null ? null : locale.toString(),
@@ -303,8 +303,8 @@ public class ExposedIndexLookupQueryComponent extends QueryComponent {
     }
     @Override
     public int compare(LookupTag o1, LookupTag o2) {
-      String t1 = o1.getTerm().toLowerCase();
-      String t2 = o2.getTerm().toLowerCase();
+      String t1 = o1.getTerm().toLowerCase(Locale.ENGLISH);
+      String t2 = o2.getTerm().toLowerCase(Locale.ENGLISH);
       return collator == null ? t1.compareTo(t2) : collator.compare(t1, t2);
     }
   }

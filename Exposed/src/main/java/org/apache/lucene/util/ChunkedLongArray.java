@@ -85,7 +85,7 @@ public class ChunkedLongArray {
       try {
         chunks.add(new long[chunkLength]);
       } catch (OutOfMemoryError e) {
-        throw new OutOfMemoryError(String.format(
+        throw new OutOfMemoryError(String.format(Locale.ROOT,
             "OOM (%s) while allocating long[%d] (%dMB) in addition to the existing %d chunks (%d entries, %dMB). %s",
             e.toString(), chunkLength, 1L*chunkLength*8/1048576, chunks.size(), size(),
             1L*chunks.size()*chunkLength*8/1048576, memStats()));
@@ -228,11 +228,9 @@ public class ChunkedLongArray {
     return chunks.size()*chunkLength;
   }
 
-  private static final Locale locale = new Locale("en");
   public static String memStats() {
       Runtime r = Runtime.getRuntime();
-      return String.format(
-          locale,
+      return String.format(Locale.ENGLISH,
           "Allocated memory: %s, Allocated unused memory: %s, Heap memory used: %s, Max memory: %s",
           reduce(r.totalMemory()), reduce(r.freeMemory()),
           reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed()), reduce(r.maxMemory())

@@ -276,7 +276,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
                     gv = cgv;
 
                 } else if(!gv.equals(cgv)) {
-                    log.warn(String.format("setGroupField(%s): Different groupValues encountered: '%s' and '%s'",
+                    log.warn(String.format(Locale.ROOT, "setGroupField(%s): Different groupValues encountered: '%s' and '%s'",
                                            groupField, gv, cgv));
                 }
             }
@@ -591,7 +591,7 @@ public class DocumentResponse extends ResponseImpl implements DocumentKeys {
     public void merge(Response otherO) {
         log.trace("merge called");
         if (!(otherO instanceof DocumentResponse)) {
-            throw new IllegalArgumentException(String.format("Expected response of class '%s' but got '%s'",
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "Expected response of class '%s' but got '%s'",
                                                              getClass().toString(), otherO.getClass().toString()));
         }
         super.merge(otherO);

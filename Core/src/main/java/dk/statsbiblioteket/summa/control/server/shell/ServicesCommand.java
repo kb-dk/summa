@@ -23,6 +23,7 @@ import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -117,7 +118,7 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
                 try {
                     String bdlSpec = client.getBundleSpec(serviceId);
                     BundleSpecBuilder spec = BundleSpecBuilder.open(
-                            new ByteArrayInputStream(bdlSpec.getBytes()));
+                            new ByteArrayInputStream(bdlSpec.getBytes(StandardCharsets.UTF_8)));
                     bundleId = spec.getBundleId();
                 } catch (Exception e) {
                     bundleId = "Unknown";

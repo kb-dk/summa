@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 
+import java.util.Locale;
 import java.util.Properties;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -97,9 +98,9 @@ public class TransformCallbackTest extends TestCase {
     }
 
     public static String getMessage(String bundle, String locale, String key) {
-        return String.format(
-                "Resolved getMessage to bundle %s, locale %s and key %s",
-                bundle, locale, key);
+        return String.format(Locale.ROOT,
+                             "Resolved getMessage to bundle %s, locale %s and key %s",
+                             bundle, locale, key);
     }
 
 private static class MessageDefinition extends ExtensionFunctionDefinition {

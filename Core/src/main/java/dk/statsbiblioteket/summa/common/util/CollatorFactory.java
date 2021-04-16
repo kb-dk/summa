@@ -64,7 +64,7 @@ public class CollatorFactory {
      */
     private static Collator fixCollator(Collator collator, boolean check) {
         if (!(collator instanceof RuleBasedCollator)) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "fixCollator expected a RuleBasedCollator but got %s. Unable to update Collator",
                     collator.getClass()));
             return collator;
@@ -97,7 +97,7 @@ public class CollatorFactory {
     public static Collator adjustAASorting(Collator collator) {
         String AA = ", AA , Aa , aA , aa";
         if (!(collator instanceof RuleBasedCollator)) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "adjustAASorting expected a RuleBasedCollator but got %s. Unable to update Collator",
                     collator.getClass()));
             return collator;

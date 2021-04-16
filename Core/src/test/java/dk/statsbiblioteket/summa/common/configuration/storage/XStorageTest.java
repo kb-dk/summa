@@ -147,4 +147,14 @@ public class XStorageTest extends ConfigurationStorageTestCase {
         assertEquals("Multi-value multi String should return the right number of Strings",
                      2, conf.getStrings("multi_line").size());
     }
+
+    public void testDirectXPropertiesLoad() throws IOException {
+        File MISCSTORAGELOCATION =
+                Resolver.getFile("common/configurationFiles/misc_storage.xml").getAbsoluteFile();
+        XProperties xprops = new XProperties();
+        xprops.load(MISCSTORAGELOCATION.getAbsoluteFile().toString(), false, false);
+    }
+    public void testDirectXPropertiesLoad2() throws IOException {
+        new XProperties("common/configurationFiles/misc_storage.xml");
+    }
 }

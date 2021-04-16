@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 /**
@@ -120,8 +121,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
 
         assertBaseCount("base1", 0);
 
-        Record r1 = new Record("id1", "base1", "data".getBytes());
-        Record r2 = new Record("id2", "base1", "data".getBytes());
+        Record r1 = new Record("id1", "base1", "data".getBytes(StandardCharsets.UTF_8));
+        Record r2 = new Record("id2", "base1", "data".getBytes(StandardCharsets.UTF_8));
 
         filter = new UpdateFromFilldumpFilterTestClass(
                 storage, Configuration.newMemoryBased(
@@ -142,8 +143,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
     public void testInsertExtraRecord() throws Exception {
         createTestStorage();
 
-        Record rec1 = new Record("id1", "base", "data".getBytes());
-        Record rec2 = new Record("id2", "base", "data".getBytes());
+        Record rec1 = new Record("id1", "base", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec2 = new Record("id2", "base", "data".getBytes(StandardCharsets.UTF_8));
         storage.flush(rec1);
         assertBaseCount("base", 1);
 
@@ -164,8 +165,8 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
     public void testSameFullDump() throws Exception {
         createTestStorage();
 
-        Record rec1 = new Record("id1", "base", "data".getBytes());
-        Record rec2 = new Record("id2", "base", "data".getBytes());
+        Record rec1 = new Record("id1", "base", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec2 = new Record("id2", "base", "data".getBytes(StandardCharsets.UTF_8));
         storage.flush(rec1);
         storage.flush(rec2);
         assertBaseCount("base", 2);
@@ -188,10 +189,10 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
     public void testMissingInDump() throws Exception {
         createTestStorage();
 
-        Record rec1 = new Record("id1", "base", "data".getBytes());
+        Record rec1 = new Record("id1", "base", "data".getBytes(StandardCharsets.UTF_8));
         rec1.setDeleted(false);
         rec1.setIndexable(true);
-        Record rec2 = new Record("id2", "base", "data".getBytes());
+        Record rec2 = new Record("id2", "base", "data".getBytes(StandardCharsets.UTF_8));
         rec2.setDeleted(false);
         rec2.setIndexable(true);
 
@@ -223,10 +224,10 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
     public void testDifferentBases() throws Exception {
         createTestStorage();
 
-        Record rec1 = new Record("id1", "base1", "data".getBytes());
-        Record rec2 = new Record("id2", "base1", "data".getBytes());
-        Record rec3 = new Record("id3", "base2", "data".getBytes());
-        Record rec4 = new Record("id4", "base3", "data".getBytes());
+        Record rec1 = new Record("id1", "base1", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec2 = new Record("id2", "base1", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec3 = new Record("id3", "base2", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec4 = new Record("id4", "base3", "data".getBytes(StandardCharsets.UTF_8));
 
         storage.flush(rec1);
         storage.flush(rec2);
@@ -258,9 +259,9 @@ public class UpdateFromFulldumpFilterTest  extends TestCase {
     public void testAlreadyDeletedPost() throws Exception {
         createTestStorage();
 
-        Record rec1 = new Record("id1", "base1", "data".getBytes());
-        Record rec2 = new Record("id2", "base1", "data".getBytes());
-        Record rec3 = new Record("id3", "base1", "data".getBytes());
+        Record rec1 = new Record("id1", "base1", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec2 = new Record("id2", "base1", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec3 = new Record("id3", "base1", "data".getBytes(StandardCharsets.UTF_8));
         rec2.setDeleted(true);
         rec2.setIndexable(false);
 

@@ -15,6 +15,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
@@ -56,22 +57,23 @@ public class ExposedPOC {
     writer.close(true);
   }
 
+  @SuppressWarnings("deprecation")
   private static void shell(
       String method, File location, String field, Locale locale, String defaultField, ExposedSettings.PRIORITY priority)
       throws IOException, InterruptedException, org.apache.lucene.queryparser.classic.ParseException {
-    System.out.println(String.format(
+    System.out.println(String.format(Locale.ROOT,
         "Testing sorted search for index at '%s' with sort on field %s with " +
             "locale %s, using sort-method %s, priority %s. Heap: %s",
         location, field, locale, method, priority, getHeap()));
     ExposedSettings.priority = priority;
 
     org.apache.lucene.index.IndexReader reader = ExposedIOFactory.getReader(location);
-    System.out.println(String.format(
+    System.out.println(String.format(Locale.ROOT,
         "Opened index of size %s from %s. the indes has %d documents and %s deletions. Heap: %s",
         readableSize(calculateSize(location)), location, reader.maxDoc(),
         reader.hasDeletions() ? "some" : " no", getHeap()));
 
-/*    System.out.println(String.format(
+/*    System.out.println(String.format(Locale.ROOT,
         "Creating %s Sort for field %s with locale %s... Heap: %s",
         method, field, locale, getHeap()));
   */
@@ -97,19 +99,19 @@ public class ExposedPOC {
     }
     long sortTime = System.nanoTime() - startTimeSort;
 
-    System.out.println(String.format(
+    System.out.println(String.format(Locale.ROOT,
         "Created %s Sort for field %s in %s. Heap: %s",
         method, field, nsToString(sortTime), getHeap()));
 
     IndexSearcher searcher = new IndexSearcher(reader);
 
-    System.out.println(String.format(
+    System.out.println(String.format(Locale.ROOT,
         "\nFinished initializing %s structures for field %s.\n"
         + "Write standard Lucene queries to experiment with sorting speed.\n"
         + "The StandardAnalyser will be used and the default field is %s.\n"
         + "Finish with 'EXIT'.", method, field, defaultField));
     String query;
-    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
     org.apache.lucene.queryparser.classic.QueryParser qp =
         new org.apache.lucene.queryparser.classic.QueryParser(
             Version.LUCENE_47, defaultField, new WhitespaceAnalyzer(Version.LUCENE_47));
@@ -139,14 +141,14 @@ public class ExposedPOC {
 //            q.weight(searcher), null, 20, sort, true);
         TopFieldDocs topDocs = searcher.search(q, 20, sort);
         long searchTime = System.nanoTime() - startTimeSearch;
-        System.out.println(String.format(
+        System.out.println(String.format(Locale.ROOT,
             "The search for '%s' got %d hits in %s (+ %s for query parsing). Showing %d hits.",
             query, topDocs.totalHits, nsToString(searchTime), nsToString(queryTime),
             (int)Math.min(topDocs.totalHits, MAX_HITS)));
         long startTimeDisplay = System.nanoTime();
         for (int i = 0 ; i < Math.min(topDocs.totalHits, MAX_HITS) ; i++) {
           int docID = topDocs.scoreDocs[i].doc;
-          System.out.println(String.format(
+          System.out.println(String.format(Locale.ROOT,
               "Hit #%d was doc #%d with %s:%s",
               i, docID, field, ((BytesRef)((FieldDoc)topDocs.scoreDocs[i]).fields[0]).utf8ToString()));
         }

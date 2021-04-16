@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -478,11 +479,7 @@ public class Record implements Serializable, Comparable {
      * @return content encoded as UTF8.
      */
     public String getContentAsUTF8() {
-        try {
-            return new String(getContent(), "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Could not convert uning utf-8", e);
-        }
+        return new String(getContent(), StandardCharsets.UTF_8);
     }
 
     /**
@@ -921,7 +918,7 @@ public class Record implements Serializable, Comparable {
         }
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(timestamp);
-        return String.format("%1$tF %1$tT", calendar);
+        return String.format(Locale.ROOT, "%1$tF %1$tT", calendar);
     }
 
     /**

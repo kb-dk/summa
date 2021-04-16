@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -182,7 +183,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
             // TODO: Enable this
             //           extractor.dumpStats(indexLocation, dumpLocation);
             statLocations.add(dumpLocation);
-            log.debug(String.format("Extracted stats from '%s' to '%s'", indexLocation, dumpLocation));
+            log.debug(String.format(Locale.ROOT, "Extracted stats from '%s' to '%s'", indexLocation, dumpLocation));
         }
         File mergedRoot = new File(indexLocations.get(0).getParentFile().
                 getParentFile().getParentFile(), TermStat.TERMSTAT_PERSISTENT_NAME);
@@ -192,7 +193,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         // Version
         Files.saveString(Long.toString(System.currentTimeMillis()), new File(concreteMerge, IndexCommon.VERSION_FILE));
 
-        log.debug(String.format("Merged %d stat sources into '%s'", statLocations.size(), concreteMerge));
+        log.debug(String.format(Locale.ROOT, "Merged %d stat sources into '%s'", statLocations.size(), concreteMerge));
         return concreteMerge;
     }
 
@@ -206,11 +207,11 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         for (int i = 0; i < 3; i++) {
             int searchID = 0;
             for (SummaSearcher searcher : searchers) {
-                log.info(String.format(
+                log.info(String.format(Locale.ROOT,
                         "Search with searcher %d for 'bar%d' gave the result:\n%s", searchID++,
                         i + 1, search(searcher, "bar" + (i + 1))));
             }
-            log.info(String.format("Aggregated searching for 'bar%d' gave the result:\n%s",
+            log.info(String.format(Locale.ROOT, "Aggregated searching for 'bar%d' gave the result:\n%s",
                                    i + 1, search(aggregator, "bar" + (i + 1))));
         }
 
@@ -303,18 +304,18 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     public static void assertResult(
             String message, SummaSearcher searcher, String query, List<String> recordIDs) throws IOException {
         String result = search(searcher, query);
-        log.debug(String.format("The result for query '%s' was:\n%s", query, result));
+        log.debug(String.format(Locale.ROOT, "The result for query '%s' was:\n%s", query, result));
         // <field name="recordID">foo2</field>
         int lastPos = -1;
         String lastID = null;
         for (String recordID : recordIDs) {
-            int pos = result.indexOf(String.format("<field name=\"recordID\">%s</field>", recordID));
+            int pos = result.indexOf(String.format(Locale.ROOT, "<field name=\"recordID\">%s</field>", recordID));
             if (pos == -1) {
-                fail(String.format("%s. The id '%s' could not be located in the result for query '%s'. "
+                fail(String.format(Locale.ROOT, "%s. The id '%s' could not be located in the result for query '%s'. "
                                    + "The result was:\n%s", message, recordID, query, result));
             }
             if (pos < lastPos) {
-                fail(String.format("%s. The id '%s' was found at position %d, which is less than position %d from the "
+                fail(String.format(Locale.ROOT, "%s. The id '%s' was found at position %d, which is less than position %d from the "
                                    + "previous id '%s' in query '%s'. The result was:\n%s",
                                    message, recordID, pos, lastPos, lastID, query, result));
             }

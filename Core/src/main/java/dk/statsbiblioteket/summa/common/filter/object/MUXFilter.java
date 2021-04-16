@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The MUXFilter divides incoming Payloads among one or more ObjectFilters
@@ -131,7 +132,7 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
                 conf.getInt(CONF_OUTQUEUE_MAXPAYLOADS, DEFAULT_OUTQUEUE_MAXPAYLOADS),
                 conf.getInt(CONF_OUTQUEUE_MAXBYTES, DEFAULT_OUTQUEUE_MAXBYTES));
         if (!conf.valueExists(CONF_FILTERS)) {
-            throw new Configurable.ConfigurationException(String.format(
+            throw new Configurable.ConfigurationException(String.format(Locale.ROOT,
                     "A value for the key %s must exist in the Configuration",
                     CONF_FILTERS));
         }
@@ -141,7 +142,7 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format(
+            throw new ConfigurationException(String.format(Locale.ROOT,
                     "Unable to extract Filter configurations from key %s",
                     CONF_FILTERS), e);
         }
@@ -164,9 +165,8 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
         profiler.pause();
         setStatsDefaults(conf, true, true, true, false);
 
-        log.info(String.format(
-            "Constructed MUXFilter '%s' with %d feeders, allow unmatched: %b",
-            name, feeders.size(), allowUnmatched));
+        log.info(String.format(Locale.ROOT, "Constructed MUXFilter '%s' with %d feeders, allow unmatched: %b",
+                               name, feeders.size(), allowUnmatched));
     }
 
     @Override
@@ -321,18 +321,18 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
     @Override
     public synchronized void setSource(Filter source) {
         if (!(source instanceof ObjectFilter)) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                     "The source must be an Objectfilter. Got '%s'",
                     source.getClass()));
         }
         if (this.source == source) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "The source %s is already assigned. No change is done and no new Threads are started",
                     source));
             return;
         }
         if (this.source != null) {
-            log.error(String.format(
+            log.error(String.format(Locale.ROOT,
                     "The source %s is already specified. A new thread will be started for source %s, but correctness "
                     + "is not guaranteed",
                     this.source, source));
@@ -348,7 +348,7 @@ public class MUXFilter extends ObjectFilterBase implements Runnable {
     // TODO: Consider signalling to encloding FilterChain or similar
     // TODO: Consider shutting down the JVM
 /*    public void uncaughtException(Thread t, Throwable e) {
-        log.fatal(String.format(
+        log.fatal(String.format(Locale.ROOT,
                 "Uncaught Exception in %s. Terminating processing by "
                 + "sending close(false) to source, sending EOF to "
                 + "feeders and emptying the source. Some Payloads will "

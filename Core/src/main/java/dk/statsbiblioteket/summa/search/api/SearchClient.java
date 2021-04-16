@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * A helper class utilizing a stateless connection to a search engine exposing
@@ -208,7 +209,7 @@ public class SearchClient implements Configurable, SummaSearcher {
 
     @Override
     public String toString() {
-        return String.format("SearchClient(enabled=%b, server='%s' (%s)",
+        return String.format(Locale.ROOT, "SearchClient(enabled=%b, server='%s' (%s)",
                              enabled, server, rmi == null ? "REST" :
                 "RMI, readTimeout=" + timeoutConnect + "ms, readTimeout=" + timeoutRead + "ms");
     }

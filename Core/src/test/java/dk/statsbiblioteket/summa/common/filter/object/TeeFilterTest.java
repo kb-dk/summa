@@ -24,6 +24,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -91,7 +92,7 @@ public class TeeFilterTest extends TestCase {
     }
 
     public void testDeleted() throws UnsupportedEncodingException {
-        Record delRecord = new Record("foo", "bar", "content".getBytes("utf-8"));
+        Record delRecord = new Record("foo", "bar", "content".getBytes(StandardCharsets.UTF_8));
         delRecord.setDeleted(true);
         PayloadFeederHelper feeder =  new PayloadFeederHelper(Collections.singletonList(new Payload(delRecord)));
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
@@ -111,8 +112,8 @@ public class TeeFilterTest extends TestCase {
 
     public void testParent() {
         PayloadFeederHelper feeder;
-        Record parent = new Record("originalParent", "originalBase", "content".getBytes());
-        Record childWithParent = new Record("originalChild", "originalBase", "content".getBytes());
+        Record parent = new Record("originalParent", "originalBase", "content".getBytes(StandardCharsets.UTF_8));
+        Record childWithParent = new Record("originalChild", "originalBase", "content".getBytes(StandardCharsets.UTF_8));
         childWithParent.setParents(Arrays.asList(parent));
         feeder = new PayloadFeederHelper(Arrays.asList(new Payload(childWithParent)));
         ObjectFilter tee = new TeeFilter(Configuration.newMemoryBased(
@@ -189,8 +190,8 @@ public class TeeFilterTest extends TestCase {
     private PayloadFeederHelper getFeeder() {
         PayloadFeederHelper feeder;
         feeder = new PayloadFeederHelper(Arrays.asList(
-                new Payload(new Record("original1", "originalBase", "content".getBytes())),
-                new Payload(new Record("original2", "originalBase", "content".getBytes()))
+                new Payload(new Record("original1", "originalBase", "content".getBytes(StandardCharsets.UTF_8))),
+                new Payload(new Record("original2", "originalBase", "content".getBytes(StandardCharsets.UTF_8)))
         ));
         return feeder;
     }

@@ -38,6 +38,7 @@ import org.apache.lucene.util.Version;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Random;
 
 // TODO: Change this to LuceneTestCase but ensure Flex
@@ -379,9 +380,8 @@ public class TestHierarchicalFacetsPerformance extends TestCase {
     writer.close();
     System.out.println("");
     System.out.println(String.format(
-        "Created %d document index with " + references
-            + " tag references in %sms at %s", docCount,
-        (System.nanoTime() - startTime) / 1000000, location.getAbsolutePath()));
+            Locale.ROOT, "Created %d document index with %d tag references in %sms at %s", docCount, references,
+            (System.nanoTime() - startTime) / 1000000, location.getAbsolutePath()));
     return references;
   }
 

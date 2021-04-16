@@ -25,6 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
@@ -145,7 +146,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         //noinspection DuplicateStringLiteralInspection
         log.debug("open(" + streamPayload + ") called");
         if (!empty) {
-            throw new IllegalStateException(String.format(
+            throw new IllegalStateException(String.format(Locale.ROOT,
                     "Already parsing %s when open(%s) was called",
                     sourcePayload, streamPayload));
         }
@@ -188,15 +189,17 @@ public abstract class ThreadedStreamParser implements StreamParser {
                     setError(e);
                     if (shutdownOnException) {
                         String message = String.format(
+                                Locale.ROOT,
                                 "Exception in protectedRun of %s with origin '%s'. Shutting down the JVM in %dms",
                                 sourcePayload, sourcePayload.getData(Payload.ORIGIN), SHUTDOWN_DELAY);
                         Logging.fatal(log, "ThreadedStreamParser", message, e);
                         Logging.logProcess("ThreadedStreamParser", message, Logging.LogLevel.WARN, sourcePayload, e);
                         new DeferredSystemExit(1, SHUTDOWN_DELAY);
                     } else {
-                        String message = String.format("Exception caught from protectedRun of %s with origin '%s'",
-                                                       sourcePayload, sourcePayload.getData(Payload.ORIGIN));
-                        log.warn(String.format("%s in '%s'. Stopping processing", message, this), e);
+                        String message = String.format(
+                                Locale.ROOT, "Exception caught from protectedRun of %s with origin '%s'",
+                                sourcePayload, sourcePayload.getData(Payload.ORIGIN));
+                        log.warn(String.format(Locale.ROOT, "%s in '%s'. Stopping processing", message, this), e);
                         Logging.logProcess("ThreadedStreamParser", message, Logging.LogLevel.WARN, sourcePayload, e);
                         // We don't close in a 'finally' clause because we shouldn't
                         // clean up if the JVM raises an Error type throwable
@@ -235,7 +238,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
     }
 
     private void setError(Throwable e) {
-        log.error(String.format("Encountered error during processing of %s", sourcePayload), e);
+        log.error(String.format(Locale.ROOT, "Encountered error during processing of %s", sourcePayload), e);
         lastError = e;
     }
 
@@ -265,7 +268,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
                 }
             }
             if (toDeliver == null) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "Timed out while waiting for Payload. This is bad as a thread is probably still processing %s. "
                         + "The queue is marked as empty in order to accept new Payloads, but this might lead to missed "
                         + "Payloads",
@@ -318,7 +321,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
      */
     protected void addToQueue(Record record) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format(
+            log.trace(String.format(Locale.ROOT,
                     "Wrapping Record %s as Payload and adding it to the queue",
                     record));
         }
@@ -339,7 +342,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
      */
     protected void addToQueue(Payload payload) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Adding %s to queue", payload));
+            log.trace(String.format(Locale.ROOT, "Adding %s to queue", payload));
         }
         queueCount++;
         uninterruptiblePut(payload);

@@ -37,6 +37,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -155,7 +156,7 @@ public class SolrSearchDualTestBase extends TestCase {
                 c += "    <field name=\"" + pairT[0] + "\">" + pairT[1] + "</field>\n";
             }
             c += "</doc>\n";
-            samples.add(new Payload(new Record("doc" + i, "dummy", c.getBytes("utf-8"))));
+            samples.add(new Payload(new Record("doc" + i, "dummy", c.getBytes(StandardCharsets.UTF_8))));
         }
         return new PayloadFeederHelper(samples);
     }
@@ -180,7 +181,7 @@ public class SolrSearchDualTestBase extends TestCase {
                     ("<doc boost=\"" + boost + "\"><field name=\"recordID\">doc" + i + "</field>\n"
                      + "   <field name=\"recordBase\">backend" + backend + "</field>\n"
                      + "   <field name=\"fulltext\">" + sb.toString() + " c" + i + "</field>\n"
-                     + "   <field name=\"" + field + "\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
+                     + "   <field name=\"" + field + "\">" + terms.get(i) + "</field></doc>").getBytes(StandardCharsets.UTF_8))));
         }
         return new PayloadFeederHelper(samples);
     }

@@ -164,7 +164,7 @@ public class AltoDuplicateFinder {
             for (Set<File> group: groups) {
                 memberCount += group.size();
             }
-            System.out.println(String.format(
+            System.out.println(String.format(Locale.ROOT,
                     "#   Duplicate isolation %d/%d for %d ALTOs in %d groups with rule %s",
                     r+1, requirements.size(), memberCount, groups.size(), requirements.get(r)));
             List<Set<File>> reduced = new ArrayList<>();
@@ -175,14 +175,14 @@ public class AltoDuplicateFinder {
         }
 
         if (groups.isEmpty()) {
-            System.out.println(String.format(
+            System.out.println(String.format(Locale.ROOT,
                     "#   No groups satisfying all given requirements. Analysis time %d seconds",
                     (System.nanoTime()-startTime)/1000000000L));
             return;
         }
 
         final int outGroups = Math.min(maxGroups, groups.size());
-        System.out.println(String.format(
+        System.out.println(String.format(Locale.ROOT,
                 "#   Listing %d/%d groups of ALTOs with duplicate text blocks from source %s. " +
                 "Analysis time %s seconds",
                 outGroups, groups.size(), source, (System.nanoTime()-startTime)/1000000000L));
@@ -196,11 +196,11 @@ public class AltoDuplicateFinder {
         int dup = 1;
         for (Set<File> entries: groups) {
             System.out.println("");
-            String finalDest = String.format("%s/%02d", superGroup, dup);
+            String finalDest = String.format(Locale.ROOT, "%s/%02d", superGroup, dup);
             if (dup > maxGroups) {
                 System.out.print("# ");
             }
-            System.out.println(String.format(
+            System.out.println(String.format(Locale.ROOT,
                     "#   Group %d/%d with %d/%d ALTOs",
                     dup, groups.size(), Math.min(entries.size(), maxGroupSize), entries.size()));
             if (dup > maxGroups) {
@@ -288,7 +288,7 @@ public class AltoDuplicateFinder {
                     keep.add(files.get(g1));
                     keep.add(files.get(g2));
                     if (verbose) {
-                        System.out.println(String.format(
+                        System.out.println(String.format(Locale.ROOT,
                                 "#   Matched %d blocks (min %d, max %d) of min %d chars for %s and %s",
                                 s1.size(), minBlocks, maxBlockCount, requirement.minTextSize,
                                 files.get(g1).getName(), files.get(g2).getName()));
@@ -310,7 +310,7 @@ public class AltoDuplicateFinder {
                         }
                     }
                 } else if (verbose) {
-                    System.out.println(String.format(
+                    System.out.println(String.format(Locale.ROOT,
                             "#   Non-match with %d blocks (min %d, max %d) of min %d chars for %s and %s",
                             s1.size(), minBlocks, maxBlockCount, requirement.minTextSize,
                             files.get(g1).getName(), files.get(g2).getName()));

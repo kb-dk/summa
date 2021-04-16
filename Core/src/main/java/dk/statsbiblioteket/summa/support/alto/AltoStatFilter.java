@@ -233,7 +233,7 @@ public class AltoStatFilter extends ObjectFilterImpl {
         sb.append("Processed lines: ").append(lineCount).append("\n");
         sb.append("Matches:\n");
         for (Map.Entry<Pattern, HashMap<String, Integer>> entry: matches.entrySet()) {
-            sb.append(String.format("  Regexp %s had %d unique matches:\n",
+            sb.append(String.format(Locale.ROOT, "  Regexp %s had %d unique matches:\n",
                                     entry.getKey().pattern(), entry.getValue().size()));
             // We want this sorted by occurrence
             List<FlexiblePair<String, Integer>> matches =
@@ -244,7 +244,7 @@ public class AltoStatFilter extends ObjectFilterImpl {
             }
             Collections.sort(matches);
             for (FlexiblePair<String, Integer> match: matches) {
-                sb.append(String.format("  %8d: %s\n", match.getValue(), match.getKey()));
+                sb.append(String.format(Locale.ROOT, "  %8d: %s\n", match.getValue(), match.getKey()));
             }
         }
         return sb.toString();

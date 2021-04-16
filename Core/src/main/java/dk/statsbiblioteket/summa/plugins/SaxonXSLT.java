@@ -43,6 +43,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -72,16 +73,16 @@ public class SaxonXSLT {
             transformer = getTransformerFactory().newTransformer(new StreamSource(in, xslt.toString()));
             transformer.setErrorListener(getErrorListener());
         } catch (TransformerException e) {
-            throw new TransformerException(String.format(
+            throw new TransformerException(String.format(Locale.ROOT,
                     "Unable to instantiate Transformer, a system configuration error for XSLT at '%s'", xslt), e);
         } catch (MalformedURLException e) {
             throw new TransformerException(String.format(
-                    "The URL to the XSLT is not a valid URL: '%s'", xslt), e);
+                    Locale.ROOT, "The URL to the XSLT is not a valid URL: '%s'", xslt), e);
         } catch (IOException e) {
-            throw new TransformerException(String.format(
+            throw new TransformerException(String.format(Locale.ROOT,
                     "Unable to open the XSLT resource due to IOException '%s'", xslt), e);
         } catch (Exception e) {
-            throw new TransformerException(String.format("Unable to open the XSLT resource '%s'", xslt), e);
+            throw new TransformerException(String.format(Locale.ROOT, "Unable to open the XSLT resource '%s'", xslt), e);
         } finally {
             try {
                 if (in != null) {

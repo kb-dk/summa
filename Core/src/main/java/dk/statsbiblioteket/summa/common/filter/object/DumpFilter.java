@@ -18,6 +18,7 @@ import org.bouncycastle.util.io.Streams;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -164,8 +165,8 @@ public class DumpFilter extends ObjectFilterImpl {
         feedback = false; // No timestats on dump
         setStatsDefaults(conf, false, false, false, false);
         log.info(String.format(
-                "Created DumpFilter '%s' with base='%s', id='%s', dumpNonRecords=%b, maxDumps=%d, maxBaseDumps=%d, " +
-                "resetMaxDumpsMS=%d",
+                Locale.ROOT, "Created DumpFilter '%s' with base='%s', id='%s', dumpNonRecords=%b, maxDumps=%d, " +
+                             "maxBaseDumps=%d, resetMaxDumpsMS=%d",
                 getName(), conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP), conf.getString(CONF_IDEXP, DEFAULT_IDEXP),
                 dumpNonRecords, maxDumps, maxBaseDumps, resetReceivedDumpsMS));
     }
@@ -249,11 +250,11 @@ public class DumpFilter extends ObjectFilterImpl {
             out = new FileOutputStream(outFile);
             Streams.pipeAll(new ByteArrayInputStream(record.getContent(false)), out);
         } catch (FileNotFoundException e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Unable to create an output stream for %s with name '%s'",
                     record.getId(), outFile));
         } catch (IOException e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Unable to dump raw content from %s to '%s'",
                     record.getId(), outFile));
         }
@@ -266,7 +267,7 @@ public class DumpFilter extends ObjectFilterImpl {
         try {
             out = new FileOutputStream(outFile);
         } catch (FileNotFoundException e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Unable to create an output stream for %s with name '%s'",
                     payload, outFile));
             return;

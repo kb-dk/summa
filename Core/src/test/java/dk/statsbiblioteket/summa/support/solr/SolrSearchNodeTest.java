@@ -50,11 +50,9 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -502,7 +500,7 @@ public class SolrSearchNodeTest extends TestCase {
     private void assertPaging(String message, DocumentResponse docs, int start, int pageSize) {
         List<String> expected = new ArrayList<>(pageSize);
         for (int page = start ; page < start + pageSize ; page++) {
-            expected.add("doc" + String.format("%07d", page));
+            expected.add("doc" + String.format(Locale.ROOT, "%07d", page));
         }
         assertEquals(message, Strings.join(expected), Strings.join(getContent(docs, "recordID")));
     }
@@ -831,7 +829,7 @@ public class SolrSearchNodeTest extends TestCase {
     public void testFacetLimit(int docCount) throws Exception {
         String[][] EXPECTED_ALPHA = new String[docCount+1][2];
         for (int i = 0 ; i < docCount ; i++) {
-            EXPECTED_ALPHA[i][0] = "document" + String.format("%07d", i);
+            EXPECTED_ALPHA[i][0] = "document" + String.format(Locale.ROOT, "%07d", i);
             EXPECTED_ALPHA[i][1] = "1";
         }
         // 200 is the hard limit and we ask for 201, so the solr-part is for the next facet in the result
@@ -848,7 +846,7 @@ public class SolrSearchNodeTest extends TestCase {
             ));
             try {
                 for (int i = 0 ; i < docCount ; i++) {
-                    String docID = "Document_" + String.format("%07d", i);
+                    String docID = "Document_" + String.format(Locale.ROOT, "%07d", i);
                     assertHits("There should be a hit for 'title_org:" + docID + "'",
                                searcher, DocumentKeys.SEARCH_QUERY, "title_org:" + docID);
                 }
@@ -1077,17 +1075,13 @@ public class SolrSearchNodeTest extends TestCase {
                              + (int)profiler.getBps(true) + " Payloads/sec. Ready in "
                              + profiler.getTimeLeftAsString(true));
                 }
-                try {
-                    return new Payload(new Record(
-                            "doc" + count, "Dummy",
-                            ("<doc>\n"
-                             + "<field name=\"recordID\">doc" + count + "</field>\n"
-                             + "<field name=\"recordBase\">dummy</field>\n"
-                             + "<field name=\"title_org\">" + fuzzy + "</field>\n"
-                             + "</doc>\n").getBytes("utf-8")));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException("UTF-8 should be supported", e);
-                }
+                return new Payload(new Record(
+                        "doc" + count, "Dummy",
+                        ("<doc>\n"
+                         + "<field name=\"recordID\">doc" + count + "</field>\n"
+                         + "<field name=\"recordBase\">dummy</field>\n"
+                         + "<field name=\"title_org\">" + fuzzy + "</field>\n"
+                         + "</doc>\n").getBytes(StandardCharsets.UTF_8)));
             }
 
             @Override
@@ -1252,7 +1246,7 @@ public class SolrSearchNodeTest extends TestCase {
         for (int i = 1 ; i <= SAMPLES ; i++) {
             Payload payload = new Payload(new Record(
                     "doc" + i, "dummy", Resolver.getUTF8Content(
-                    "integration/solr/SolrSampleDocument" + i + ".xml").getBytes("utf-8")));
+                    "integration/solr/SolrSampleDocument" + i + ".xml").getBytes(StandardCharsets.UTF_8)));
             payload.getRecord().setDeleted(deleted);
             samples.add(payload);
         }
@@ -1266,13 +1260,13 @@ public class SolrSearchNodeTest extends TestCase {
         for (int i = 0 ; i < docCount ; i++) {
             sb.setLength(0);
             sb.append("<doc>\n");
-            sb.append("<field name=\"recordID\">doc").append(String.format("%07d", i)).append("</field>\n");
+            sb.append("<field name=\"recordID\">doc").append(String.format(Locale.ROOT, "%07d", i)).append("</field>\n");
             sb.append("<field name=\"recordBase\">dummy").append(i%3).append("</field>\n");
             sb.append("<field name=\"sort_year_asc\">").
                     append(Integer.toString(random.nextInt(2014))).append("</field>\n");
-            sb.append("<field name=\"title_org\">Document_").append(String.format("%07d", i)).append("</field>\n");
-            //            sb.append("<field name=\"sort_title\">Document_").append(String.format("%07d", i)).append("</field>\n");
-//            sb.append("<field name=\"lma\">sort_").append(String.format("%07d", i)).append("</field>\n");
+            sb.append("<field name=\"title_org\">Document_").append(String.format(Locale.ROOT, "%07d", i)).append("</field>\n");
+            //            sb.append("<field name=\"sort_title\">Document_").append(String.format(Locale.ROOT, "%07d", i)).append("</field>\n");
+//            sb.append("<field name=\"lma\">sort_").append(String.format(Locale.ROOT, "%07d", i)).append("</field>\n");
             sb.append("<field name=\"fulltext\">Some very simple Solr sample document.</field>\n");
             sb.append("<field name=\"lma_long\">03_all</field>\n");
             if ((i & 0x01) == 0) {
@@ -1285,14 +1279,14 @@ public class SolrSearchNodeTest extends TestCase {
             sb.append("<field name=\"double_test\">").append(random.nextDouble()*1000).append("</field>\n");
             sb.append("<field name=\"int_test\">").append(random.nextInt(1000)).append("</field>\n");
             sb.append("</doc>\n");
-            samples.add(new Payload(new Record("doc" + i, "dummy", sb.toString().getBytes("utf-8"))));
+            samples.add(new Payload(new Record("doc" + i, "dummy", sb.toString().getBytes(StandardCharsets.UTF_8))));
         }
         return new PayloadFeederHelper(samples);
     }
 
     private String getTimestamp(Random random) {
         //  2007-03-06T00:00:00Z
-        return String.format("201%d-%02d-%02dT00:00:00Z", random.nextInt(10), random.nextInt(13), random.nextInt(31));
+        return String.format(Locale.ROOT, "201%d-%02d-%02dT00:00:00Z", random.nextInt(10), random.nextInt(13), random.nextInt(31));
     }
 
     private IndexController getIndexer() throws IOException {

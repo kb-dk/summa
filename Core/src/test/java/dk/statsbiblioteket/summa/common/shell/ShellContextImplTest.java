@@ -19,6 +19,8 @@ import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Silent shell context, used for running one or more command(s) in a silent
@@ -48,7 +50,11 @@ public class ShellContextImplTest extends TestCase {
             fail("Exception thrown when creating ConsoleReader");
         }
         byteArrayOutput = new ByteArrayOutputStream();
-        outputStream = new PrintStream(byteArrayOutput);
+        try {
+            outputStream = new PrintStream(byteArrayOutput, true, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("utf-8 not supported. This should newer happen", e);
+        }
 
     }
 

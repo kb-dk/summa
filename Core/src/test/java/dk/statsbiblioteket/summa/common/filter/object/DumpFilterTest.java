@@ -29,9 +29,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * DumpFilter Tester.
@@ -89,7 +91,7 @@ public class DumpFilterTest extends TestCase {
                 new Payload(new ByteArrayInputStream(new byte[10])),
                 new Payload(new Record(
                         "¤%&&:id-flam87:", "mybase",
-                        "<myxml>My content</myxml>".getBytes("utf-8")))
+                        "<myxml>My content</myxml>".getBytes(StandardCharsets.UTF_8)))
         );
         ObjectFilter feeder = new PayloadFeederHelper(payloads);
         ObjectFilter dumpFilter = new DumpFilter(conf);
@@ -115,7 +117,7 @@ public class DumpFilterTest extends TestCase {
         log.debug("Content of XML-dump:\n" + Files.loadString(ex));
 
         Calendar calendar = Calendar.getInstance();
-        final String noIDPrefix = String.format("%1$tF_", calendar);
+        final String noIDPrefix = String.format(Locale.ROOT, "%1$tF_", calendar);
         File[] noIDFiles = OUT.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -126,7 +128,7 @@ public class DumpFilterTest extends TestCase {
                      2, noIDFiles.length);
         boolean foundStream = false;
         for (File noIDFile: noIDFiles) {
-            assertTrue(String.format(
+            assertTrue(String.format(Locale.ROOT,
                     "The no ID file '%s' should have length > 0", noIDFile),
                        noIDFile.length() > 0);
             foundStream |= noIDFile.toString().endsWith(".stream");
@@ -141,8 +143,8 @@ public class DumpFilterTest extends TestCase {
                 DumpFilter.CONF_DUMP_STREAMS, true,
                 DumpFilter.CONF_DUMP_XML, true,
                 DumpFilter.CONF_DUMP_XML, true);
-        Record origin = new Record("¤%&&:id-flam87:", "mybase", "<myxml>Origin</myxml>".getBytes("utf-8"));
-        Record parent = new Record("parentID", "mybase", "<myxml>Parent</myxml>".getBytes("utf-8"));
+        Record origin = new Record("¤%&&:id-flam87:", "mybase", "<myxml>Origin</myxml>".getBytes(StandardCharsets.UTF_8));
+        Record parent = new Record("parentID", "mybase", "<myxml>Parent</myxml>".getBytes(StandardCharsets.UTF_8));
         origin.setChildren(Arrays.asList(parent));
         List<Payload> payloads = Arrays.asList(new Payload(origin));
         ObjectFilter feeder = new PayloadFeederHelper(payloads);

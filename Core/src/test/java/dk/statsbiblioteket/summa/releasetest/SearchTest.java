@@ -58,6 +58,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.text.Collator;
 import java.util.*;
@@ -272,7 +273,7 @@ public class SearchTest extends NoExitTestCase {
     private static void assertPaging(String message, DocumentResponse docs, int start, int pageSize) {
         List<String> expected = new ArrayList<>(pageSize);
         for (int page = start ; page < start + pageSize ; page++) {
-            expected.add("Jensen Hans " + String.format("%07d", page));
+            expected.add("Jensen Hans " + String.format(Locale.ROOT, "%07d", page));
         }
         assertEquals(message, Strings.join(expected), Strings.join(getContent(docs, "sort_verify")));
     }
@@ -507,7 +508,7 @@ public class SearchTest extends NoExitTestCase {
             @Override
             public Payload next() {
                 String id = "fagref:hj@example.com" + delivered;
-                String sortValue = String.format("Jensen Hans %07d", delivered);
+                String sortValue = String.format(Locale.ROOT, "Jensen Hans %07d", delivered);
                 sb.setLength(0);
 
                 sb.append("<fagref>\n");
@@ -529,11 +530,7 @@ public class SearchTest extends NoExitTestCase {
                 sb.append("    </emner>\n");
                 sb.append("</fagref>\n");
                 delivered++;
-                try {
-                    return new Payload(new Record(id, "fagref", sb.toString().getBytes("utf-8")));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException("UTF-8 should be supported", e);
-                }
+                return new Payload(new Record(id, "fagref", sb.toString().getBytes(StandardCharsets.UTF_8)));
             }
 
             @Override

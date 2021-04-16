@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class XMLSplitterParserTest extends TestCase {
@@ -205,7 +206,7 @@ public class XMLSplitterParserTest extends TestCase {
         Configuration conf = getBasicConfiguration();
         XMLSplitterParser parser = new XMLSplitterParser(conf);
         ByteArrayInputStream stream =
-                new ByteArrayInputStream(singleXML.getBytes("utf-8"));
+                new ByteArrayInputStream(singleXML.getBytes(StandardCharsets.UTF_8));
         byte[] b = new byte[1000];
 
         parser.open(new Payload(stream));
@@ -229,7 +230,7 @@ public class XMLSplitterParserTest extends TestCase {
         Configuration conf = getBasicConfiguration();
         XMLSplitterParser parser = new XMLSplitterParser(conf);
         ByteArrayInputStream stream =
-                new ByteArrayInputStream(multiXML.getBytes("utf-8"));
+                new ByteArrayInputStream(multiXML.getBytes(StandardCharsets.UTF_8));
 
         parser.open(new Payload(stream));
         assertTrue("parser should have something",
@@ -255,7 +256,7 @@ public class XMLSplitterParserTest extends TestCase {
         conf.set(XMLSplitterFilter.CONF_ID_ELEMENT, "nearlyempty#sometag");
         XMLSplitterParser parser = new XMLSplitterParser(conf);
         ByteArrayInputStream stream =
-                new ByteArrayInputStream(noNameXML.getBytes("utf-8"));
+                new ByteArrayInputStream(noNameXML.getBytes(StandardCharsets.UTF_8));
 
         parser.open(new Payload(stream));
         assertTrue("parser should have something",

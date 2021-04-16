@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,7 +55,7 @@ public class RegexFilterTest extends TestCase {
             "<MetadataRecord><recordID>phonofile-0000123456789012</recordID><status>deleted</status></MetadataRecord>";
     public void testMultiLine() throws UnsupportedEncodingException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(new Payload(
-                new Record("foo", "bar", MULTI_SAMPLE.getBytes("utf-8")))));
+                new Record("foo", "bar", MULTI_SAMPLE.getBytes(StandardCharsets.UTF_8)))));
         RegexFilter regex = new RegexFilter(Configuration.newMemoryBased(
                 AbstractDiscardFilter.CONF_MARK, true,
                 PayloadMatcher.CONF_CONTENT_REGEX, new ArrayList<>(Arrays.asList(
@@ -97,7 +98,7 @@ public class RegexFilterTest extends TestCase {
         Payload noMatch = new Payload(new Record(
                 "noMatch", "dummy", new byte[10]));
         Payload recordMatchPayload = new Payload(new Record(
-                "recordMatch", "dummy", CONTENT_SAMPLE.getBytes("utf-8")));
+                "recordMatch", "dummy", CONTENT_SAMPLE.getBytes(StandardCharsets.UTF_8)));
         PayloadBufferFilter buf = prepareFilterChain(
                 matcher,
                 noMatch, recordMatchPayload);
@@ -158,8 +159,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "test content 1".getBytes()),
-                       new Record("id2", "base1", "test content 2".getBytes()));
+                       new Record("id1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -197,8 +198,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "test content 1a and test content 1b".getBytes()),
-                       new Record("id2", "base1", "test content 2".getBytes()));
+                       new Record("id1", "base1", "test content 1a and test content 1b".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -210,8 +211,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "test content 1".getBytes()),
-                       new Record("id2", "base1", "test content 2".getBytes()));
+                       new Record("id1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -224,8 +225,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("good1", "base1", "test content 1".getBytes()),
-                       new Record("bad2", "base1", "test content 2".getBytes()));
+                       new Record("good1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("bad2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -299,8 +300,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("good1", "base1", "test content 1".getBytes()),
-                       new Record("bad2", "base1", "test content 2".getBytes()));
+                       new Record("good1", "base1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("bad2", "base1", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -314,8 +315,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "goodBase", "test content 1".getBytes()),
-                       new Record("id2", "badBase", "test content 2".getBytes()));
+                       new Record("id1", "goodBase", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "badBase", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -329,8 +330,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "goodBase", "test content 1".getBytes()),
-                       new Record("id2", "badBase", "test content 2".getBytes()));
+                       new Record("id1", "goodBase", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "badBase", "test content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -344,8 +345,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "good content 1".getBytes()),
-                       new Record("id2", "base1", "bad content 2".getBytes()));
+                       new Record("id1", "base1", "good content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "bad content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -359,8 +360,8 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "base1", "good content 1".getBytes()),
-                       new Record("id2", "base1", "bad content 2".getBytes()));
+                       new Record("id1", "base1", "good content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "base1", "bad content 2".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -374,10 +375,10 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "good1", "test content 1".getBytes()),
-                       new Record("id2", "bad2",  "bad content 2".getBytes()),
-                       new Record("id3", "bad3",  "bad content 3".getBytes()),
-                       new Record("id4", "base4", "good content 4".getBytes()));
+                       new Record("id1", "good1", "test content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "bad2",  "bad content 2".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id3", "bad3",  "bad content 3".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id4", "base4", "good content 4".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -392,10 +393,10 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1", "good1", "good content 1".getBytes()),
-                       new Record("id2", "bad2",  "bad content 2".getBytes()),
-                       new Record("id3", "bad3",  "good content 3".getBytes()),
-                       new Record("id4", "good4", "bad content 4".getBytes()));
+                       new Record("id1", "good1", "good content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2", "bad2",  "bad content 2".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id3", "bad3",  "good content 3".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id4", "good4", "bad content 4".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -413,10 +414,10 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("id1",  "base1", "content 1".getBytes()),
-                       new Record("id2",  "base1", "content 2".getBytes()),
-                       new Record("bad1", "base1", "content 3".getBytes()),
-                       new Record("bad2", "base1", "content 4".getBytes()));
+                       new Record("id1",  "base1", "content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id2",  "base1", "content 2".getBytes(StandardCharsets.UTF_8)),
+                       new Record("bad1", "base1", "content 3".getBytes(StandardCharsets.UTF_8)),
+                       new Record("bad2", "base1", "content 4".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -436,10 +437,10 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
-                       new Record("good1",  "base1", "content 1".getBytes()),
-                       new Record("good2",  "base1", "content 2".getBytes()),
-                       new Record("id3", "base1", "content 3".getBytes()),
-                       new Record("id4", "base1", "content 4".getBytes()));
+                       new Record("good1",  "base1", "content 1".getBytes(StandardCharsets.UTF_8)),
+                       new Record("good2",  "base1", "content 2".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id3", "base1", "content 3".getBytes(StandardCharsets.UTF_8)),
+                       new Record("id4", "base1", "content 4".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}
@@ -462,12 +463,12 @@ public class RegexFilterTest extends TestCase {
 
         PayloadBufferFilter buf = prepareFilterChain(
                 filter,
-                new Record("good1", "base1", "content 1".getBytes()),
+                new Record("good1", "base1", "content 1".getBytes(StandardCharsets.UTF_8)),
                 new Record("oai:doaj-articles:b37e5a0253e3ca1090ee7b6268050a44",
-                           "base1", "content 2".getBytes()),
+                           "base1", "content 2".getBytes(StandardCharsets.UTF_8)),
                 new Record("oai:pangaea.de:doi:10.1594/PANGAEA.712421",
-                           "base1", "content 3".getBytes()),
-                new Record("good2", "base1", "content 4".getBytes()));
+                           "base1", "content 3".getBytes(StandardCharsets.UTF_8)),
+                new Record("good2", "base1", "content 4".getBytes(StandardCharsets.UTF_8)));
 
         // Flush the filter chain
         while (buf.pump()){}

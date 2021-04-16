@@ -24,6 +24,7 @@ import org.w3c.dom.NodeList;
 import java.io.StringWriter;
 import java.text.ParseException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -208,9 +209,7 @@ public class IndexGroup<F extends IndexField> {
                 if (fieldNameNode == null
                     || "".equals(fieldNameNode.getNodeValue())) {
                     //noinspection DuplicateStringLiteralInspection
-                    log.warn(String.format(
-                            "Undefined field name in group '%s'. Skipping",
-                            name));
+                    log.warn(String.format(Locale.ROOT, "Undefined field name in group '%s'. Skipping", name));
                     continue;
                 }
                 String fieldRef = fieldNameNode.getNodeValue();
@@ -219,8 +218,7 @@ public class IndexGroup<F extends IndexField> {
                 F field = fieldProvider.getField(fieldRef);
                 if (field == null) {
                     throw new ParseException(String.format(
-                            "The field '%s' in group '%s' did not exist",
-                            fieldRef, name), -1);
+                            Locale.ROOT, "The field '%s' in group '%s' did not exist", fieldRef, name), -1);
                 }
                 addField(field);
             }

@@ -24,7 +24,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * This filter converts dumps from XLibris Aleph library system to MARC-XML.
@@ -194,7 +196,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         super(conf);
         idDelimiter = conf.getString(CONF_ID_DELIMITER, idDelimiter);
         inputCharset = conf.getString(CONF_CHARSET, inputCharset);
-        log.debug(String.format("Created filter with delimiter='%s', input charset='%s'", idDelimiter, inputCharset));
+        log.debug(String.format(Locale.ROOT, "Created filter with delimiter='%s', input charset='%s'", idDelimiter, inputCharset));
     }
 
     /**
@@ -387,7 +389,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                         ind1 = fieldTag.substring(3, 4);
                         ind2 = fieldTag.substring(4, 5);
                     } catch (StringIndexOutOfBoundsException e) {
-                        log.warn(String.format("StringIndexOutOfBounds while extracting ind1 and ind2 from fieldTag "
+                        log.warn(String.format(Locale.ROOT, "StringIndexOutOfBounds while extracting ind1 and ind2 from fieldTag "
                                                + "'%s' from line '%s' from %s",
                                                fieldTag, line, debugID), e);
                         isOK = false;
@@ -405,7 +407,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                 fieldTag = fieldTag.substring(0, 3);
             } else {
                 // TODO: Add this to content-log instead of general log
-                log.warn(String.format("Aleph field '%s' from line '%s' in %s did not have length >= 3",
+                log.warn(String.format(Locale.ROOT, "Aleph field '%s' from line '%s' in %s did not have length >= 3",
                                        fieldTag, line, debugID));
             }
 
@@ -472,7 +474,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                     }
                     bufferPos = 0;
                 } else {
-                    log.warn(String.format("Skipping Aleph record %s from %s containing errors:\n%s",
+                    log.warn(String.format(Locale.ROOT, "Skipping Aleph record %s from %s containing errors:\n%s",
                                            lastAlephID, debugID, buffer));
                 }
             }
@@ -482,14 +484,9 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         }
 
         private void appendToBuffer(String content) {
-            try {
-                byte[] bytes = content.getBytes("utf-8");
-                for (byte aByte : bytes) {
-                    buffer.add(aByte);
-                }
-            } catch (UnsupportedEncodingException e) {
-                //noinspection DuplicateStringLiteralInspection
-                throw new RuntimeException("utf-8 not supported", e);
+            byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+            for (byte aByte : bytes) {
+                buffer.add(aByte);
             }
 
         }

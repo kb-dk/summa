@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -122,11 +123,11 @@ public class ProgressTracker {
 
         if (log.isDebugEnabled()) {
             log.debug(String.format(
-                    "Storing progress in '%s' (%d records has been extracted so far, last timestamp: %s)",
-                    progressFile, numUpdates-1, String.format(ISO_TIME, lastExternalUpdate)));
+                    Locale.ROOT, "Storing progress in '%s' (%d records has been extracted so far, last timestamp: %s)",
+                    progressFile, numUpdates-1, String.format(Locale.ROOT, ISO_TIME, lastExternalUpdate)));
         }
         try {
-            Files.saveString(String.format(TIMESTAMP_FORMAT, lastExternalUpdate), progressFile);
+            Files.saveString(String.format(Locale.ROOT, TIMESTAMP_FORMAT, lastExternalUpdate), progressFile);
         } catch (IOException e) {
             log.error("close(true): Unable to store progress in file '" + progressFile + "': " + e.getMessage(), e);
 
@@ -153,7 +154,7 @@ public class ProgressTracker {
             try {
                 long startTime = getTimestamp(progressFile, Files.loadString(progressFile));
                 try {
-                    log.info(String.format(
+                    log.info(String.format(Locale.ROOT,
                             "Extracted timestamp " + ISO_TIME + " from '%2$s'. This will be adjusted with %3$dms",
                             startTime, progressFile, offset));
                 } catch (Exception e) {
@@ -179,7 +180,7 @@ public class ProgressTracker {
     }
     public String getLastUpdateStr() {
         try {
-            return String.format(ISO_TIME, lastExternalUpdate);
+            return String.format(Locale.ROOT, ISO_TIME, lastExternalUpdate);
         } catch (Exception e) {
             log.warn("Could not output properly formatted timestamp for " + lastExternalUpdate + " ms");
             return "N/A";
@@ -244,7 +245,7 @@ public class ProgressTracker {
 
     @Override
     public String toString() {
-        return String.format(
+        return String.format(Locale.ROOT,
                 "ProgressTracker(batchSize=%d, graceTime=%d, progressFile='%s', updates=%d, lastExternalUpdate=%s)",
                 batchSize, graceTime, progressFile, numUpdates, getLastUpdateStr());
     }

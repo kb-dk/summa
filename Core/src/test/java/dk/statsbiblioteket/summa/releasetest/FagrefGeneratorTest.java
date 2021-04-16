@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection", "ObjectToString", "UseOfSystemOutOrSystemErr"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -81,6 +82,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
             profiler.beat();
         }
         System.out.println(String.format(
+                Locale.ROOT,
                 "Generated %d fagref test records in %s with an average speed of %s records/second",
                 RUNS, profiler.getSpendTime(), profiler.getBps()));
     }

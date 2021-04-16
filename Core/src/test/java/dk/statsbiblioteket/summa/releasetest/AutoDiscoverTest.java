@@ -49,6 +49,7 @@ import org.apache.lucene.store.NIOFSDirectory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -117,7 +118,7 @@ public class AutoDiscoverTest extends NoExitTestCase {
         assertTrue("The input file " + src + " should exist", src.exists());
         File dest = new File(INGEST_FOLDER, file + ".gz");
         FileOutputStream out = new FileOutputStream(dest);
-        out.write(Zips.gzipBuffer(Files.loadString(src).getBytes("utf-8")));
+        out.write(Zips.gzipBuffer(Files.loadString(src).getBytes(StandardCharsets.UTF_8)));
         out.close();
     }
 

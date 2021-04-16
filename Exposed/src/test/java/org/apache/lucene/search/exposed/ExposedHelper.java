@@ -11,10 +11,8 @@ import org.apache.lucene.search.IndexSearcher;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
 
 public class ExposedHelper {
   static final char[] CHARS = // Used for random content
@@ -37,7 +35,8 @@ public class ExposedHelper {
                                                   10000, 15000, 20000, 30000, 40000, 50000, 75000,
                                                   100000, 150000, 200000, 300000, 400000, 500000, 750000};
 
-  public static final DecimalFormat ID_FORMAT = new DecimalFormat("00000000");
+  public static final DecimalFormat ID_FORMAT =
+          new DecimalFormat("00000000", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
 
   public ExposedHelper() {
     //deleteIndex();
@@ -75,7 +74,7 @@ public class ExposedHelper {
     }
     long seconds = Math.round(ms / 1000.0);
     long minutes = seconds / 60;
-    return String.format("%d:%02d minutes", minutes, seconds - (minutes * 60));
+    return String.format(Locale.ROOT, "%d:%02d minutes", minutes, seconds - (minutes * 60));
   }
 
   public static class Pair implements Comparable<Pair> {
@@ -227,7 +226,7 @@ public class ExposedHelper {
     writer.commit();
     writer.close();
     System.out.println("");
-    System.out.println(String.format(
+    System.out.println(String.format(Locale.ROOT,
         "Created %d document index with %d fields with average term length %d and total size %s in %sms at %s",
         docCount, fields.size() + 2, fieldContentLength / 2, readableSize(calculateSize(location)),
         (System.nanoTime() - startTime) / 1000000, location.getAbsolutePath()));
@@ -303,7 +302,7 @@ public class ExposedHelper {
     }
 //    writer.optimize();
     writer.close();
-    System.out.println(String.format(
+    System.out.println(String.format(Locale.ROOT,
         "\nCreated %d document index with total size %s in %sms at %s",
         docCount, readableSize(calculateSize(location)),
         (System.nanoTime() - startTime) / 1000000, location.getAbsolutePath()));

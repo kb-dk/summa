@@ -46,9 +46,11 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import javax.crypto.spec.PSource;
 import javax.xml.stream.*;
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -62,6 +64,10 @@ import java.util.regex.Pattern;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+@Ignore
+/*
+ * Summon support has been halted and as this test requires a Summon subscription, it has been disabled
+ */
 public class SummonSearchNodeTest extends TestCase {
     private static Log log = LogFactory.getLog(SummonSearchNodeTest.class);
 
@@ -488,7 +494,7 @@ public class SummonSearchNodeTest extends TestCase {
             String expected = EXPECTED_IDs.get(i);
             String returned = idPairs.get(i).getKey();
             String originating = idPairs.get(i).getValue();
-            String concat = String.format(
+            String concat = String.format(Locale.ROOT,
                     "requested='%s', expected='%s', returned='%s', originating='%s'",
                     requested, expected, returned, originating);
             assertEquals("The originating ID should be as requested. " + concat, requested, originating);
@@ -1199,21 +1205,21 @@ public class SummonSearchNodeTest extends TestCase {
             try {
                 List<String> ids = getAttributes(summon, req, "id", false);
                 searchTime += System.currentTimeMillis();
-                log.info(String.format("Test %d/%d. Got %d hits with connect time %dms for '%s' in %dms",
+                log.info(String.format(Locale.ROOT, "Test %d/%d. Got %d hits with connect time %dms for '%s' in %dms",
                                        run+1, RUNS, ids.size(), summon.getLastConnectTime(), query, searchTime));
                 success++;
             } catch (Exception e) {
                 searchTime += System.currentTimeMillis();
                 if (e instanceof IllegalArgumentException) {
-                    log.warn(String.format("Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
+                    log.warn(String.format(Locale.ROOT, "Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
                                            "time %d due to illegal argument (probably a faulty query)",
                                            run+1, RUNS, query, searchTime, summon.getLastConnectTime()));
                 } else if (e.getMessage().contains("java.net.SocketTimeoutException: connect timed out")) {
-                    log.warn(String.format("Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
+                    log.warn(String.format(Locale.ROOT, "Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
                                            "time %d due to connect timeout",
                                            run+1, RUNS, query, searchTime, summon.getLastConnectTime()));
                 } else {
-                    log.error(String.format("Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
+                    log.error(String.format(Locale.ROOT, "Test %d/%d. Unable to get a result from '%s' in %d ms with connect " +
                                             "time %d due to unexpected exception",
                                             run+1, RUNS, query, searchTime, summon.getLastConnectTime()), e);
                 }
@@ -1227,7 +1233,7 @@ public class SummonSearchNodeTest extends TestCase {
                 }
             }
         }
-        log.info(String.format("Successfully performed %d/%d queries with max connect time %dms",
+        log.info(String.format(Locale.ROOT, "Successfully performed %d/%d queries with max connect time %dms",
                                success, RUNS, maxConnectTime));
         summon.close();
     }
@@ -1992,7 +1998,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertTrue("The number of results for a search for '" + QUERY + "' within holdings (" + confInside
                    + ") should be less that outside holdings (" + confOutside + ")",
                    countInside < countOutside);
-        log.info(String.format("The search for '%s' gave %d hits within holdings and %d hits in total",
+        log.info(String.format(Locale.ROOT, "The search for '%s' gave %d hits within holdings and %d hits in total",
                                QUERY, countInside, countOutside));
 
         int countSearchTweak = countResults(responsesSearchTweak);
@@ -2259,7 +2265,7 @@ public class SummonSearchNodeTest extends TestCase {
         assertEquals("The number of hits for '" + query1 + "' and '" + query2 + "' should be equal",
                      rawScores.size(), weightedScores.size());
         for (int i = 0 ; i < rawScores.size() ; i++) {
-            assertTrue(String.format(
+            assertTrue(String.format(Locale.ROOT,
                     "The scores at position %d were %s and %s. Max difference allowed is %s. "
                     + "All scores for '%s' and '%s':\n%s\n%s",
                     i, rawScores.get(i), weightedScores.get(i), maxDifference,
@@ -2558,13 +2564,13 @@ public class SummonSearchNodeTest extends TestCase {
         for (String[] facetQuery: FACET_QUERIES) {
             String q = facetQuery[0];
             String ff = facetQuery[1] + ":\"" + facetQuery[2] + "\"";
-            log.debug(String.format("Searching for query '%s' with facet filter '%s'", q, ff));
+            log.debug(String.format(Locale.ROOT, "Searching for query '%s' with facet filter '%s'", q, ff));
             long queryCount = getHitCount(
                     summon,
                     DocumentKeys.SEARCH_QUERY, q,
                     DocumentKeys.SEARCH_FILTER, ff,
                     SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
-            assertTrue(String.format("There should be at least 1 hit for query '%s' with facet filter '%s'", q, ff),
+            assertTrue(String.format(Locale.ROOT, "There should be at least 1 hit for query '%s' with facet filter '%s'", q, ff),
                        queryCount > 0);
         }
     }
@@ -2587,8 +2593,8 @@ public class SummonSearchNodeTest extends TestCase {
                     summon,
                     DocumentKeys.SEARCH_QUERY, q,
                     SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
-            log.debug(String.format("Searching for query '%s' with no facet filter gave %d hits'", q, queryCount));
-            assertTrue(String.format("There should be at least 1 hit for query '%s' with no facet filter", q),
+            log.debug(String.format(Locale.ROOT, "Searching for query '%s' with no facet filter gave %d hits'", q, queryCount));
+            assertTrue(String.format(Locale.ROOT, "There should be at least 1 hit for query '%s' with no facet filter", q),
                        queryCount > 0);
 
             long filteredCount = getHitCount(
@@ -2596,10 +2602,10 @@ public class SummonSearchNodeTest extends TestCase {
                     DocumentKeys.SEARCH_QUERY, q,
                     DocumentKeys.SEARCH_FILTER, ff,
                     SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
-            log.debug(String.format("Searching for query '%s' with facet filter '%s' gave %d hits",
+            log.debug(String.format(Locale.ROOT, "Searching for query '%s' with facet filter '%s' gave %d hits",
                                     q, ff, filteredCount));
 
-            assertTrue(String.format("There should not be the same number of hits with and without filtering for " +
+            assertTrue(String.format(Locale.ROOT, "There should not be the same number of hits with and without filtering for " +
                                      "query '%s' with facet filter '%s but there were %d hits'", q, ff, queryCount),
                        queryCount != filteredCount);
         }
@@ -2622,8 +2628,8 @@ public class SummonSearchNodeTest extends TestCase {
                 summon,
                 DocumentKeys.SEARCH_QUERY, "foo",
                 SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
-        log.debug(String.format("Searching for query '%s' with no special params gave %d hits'", q, queryCount));
-        assertTrue(String.format("There should be at least 1 hit for query '%s' with no special params", q),
+        log.debug(String.format(Locale.ROOT, "Searching for query '%s' with no special params gave %d hits'", q, queryCount));
+        assertTrue(String.format(Locale.ROOT, "There should be at least 1 hit for query '%s' with no special params", q),
                    queryCount > 0);
 
         long filteredCount = getHitCount(
@@ -2631,11 +2637,11 @@ public class SummonSearchNodeTest extends TestCase {
                 DocumentKeys.SEARCH_QUERY, q,
                 "summonparam.s.cmd", "addFacetValueFilters(IsScholarly,true)",
                 SolrSearchNode.SEARCH_SOLR_FILTER_IS_FACET, "true");
-        log.debug(String.format("Searching for query '%s' with special param " +
+        log.debug(String.format(Locale.ROOT, "Searching for query '%s' with special param " +
                                 "summonparam.s.cmd=addFacetValueFilters(IsScholarly,true) gave %d hits",
                                 q, filteredCount));
 
-        assertTrue(String.format("There should not be the same number of hits for special param " +
+        assertTrue(String.format(Locale.ROOT, "There should not be the same number of hits for special param " +
                                  "summonparam.s.cmd=addFacetValueFilters(IsScholarly,true) with and without " +
                                  "filtering for query '%s' but there were %d hits'", q, queryCount),
                    queryCount != filteredCount);

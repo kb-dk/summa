@@ -83,21 +83,21 @@ public class ArchiveReader extends FileSystemReader {
         String rootString = conf.getString(CONF_ROOT_FOLDER);
         if ("".equals(rootString)) {
             throw new Configurable.ConfigurationException(
-                    String.format("No root. This must be specified with %s", CONF_ROOT_FOLDER));
+                    String.format(Locale.ROOT, "No root. This must be specified with %s", CONF_ROOT_FOLDER));
         }
         log.trace("Got root-property '" + rootString + "'");
         TFile root = new TFile(rootString).getAbsoluteFile();
-        log.debug(String.format("Setting root to '%s' from value '%s'", root, rootString));
+        log.debug(String.format(Locale.ROOT, "Setting root to '%s' from value '%s'", root, rootString));
 
         if (!root.exists()) {
             //noinspection DuplicateStringLiteralInspection
-            log.warn(String.format("Root '%s'' does not exist. No files will be read", root));
+            log.warn(String.format(Locale.ROOT, "Root '%s'' does not exist. No files will be read", root));
             provider = new EmptyProvider();
         } else if (root.isFile()) {
-            log.debug(String.format("Root '%s' is a single regular file", root));
+            log.debug(String.format(Locale.ROOT, "Root '%s' is a single regular file", root));
             provider = new SingleFile(null, root, false, realPostfix);
         } else {
-            log.debug(String.format("Root '%s' is a folder or an archive", root));
+            log.debug(String.format(Locale.ROOT, "Root '%s' is a folder or an archive", root));
             provider = new FileContainer(null, root, false, realPostfix, filePattern, reverseSort);
         }
 
@@ -107,7 +107,7 @@ public class ArchiveReader extends FileSystemReader {
 
     @Override
     public void setSource(Filter source) {
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedOperationException(String.format(Locale.ROOT,
                 "A %s must be positioned at the start of a filter chain", getClass().getName()));
     }
 
@@ -229,7 +229,7 @@ public class ArchiveReader extends FileSystemReader {
                 log.debug("No renaming of '" + root + "' as postfix is empty");
                 return;
             }
-            log.debug(String.format("%s: Renaming '%s' with completed postfix '%s'", this.getClass().getSimpleName(),
+            log.debug(String.format(Locale.ROOT, "%s: Renaming '%s' with completed postfix '%s'", this.getClass().getSimpleName(),
                                     root.getAbsolutePath(), postfix));
             // We use File instead of TFile for rename to avoid folder creation
             File newFile = new File(root.getPath() + postfix);
@@ -248,7 +248,7 @@ public class ArchiveReader extends FileSystemReader {
                          + "might leave non-renamed files", e);
             }
             if (!new File(root.getPath()).renameTo(newFile)) {
-                log.warn(String.format("Unable to rename '%s' to '%s'", root, newFile));
+                log.warn(String.format(Locale.ROOT, "Unable to rename '%s' to '%s'", root, newFile));
             } else {
                 isRenamed = true;
                 if (root.exists()) {
@@ -313,7 +313,7 @@ public class ArchiveReader extends FileSystemReader {
 
         private static TFile check(TFile root) {
             if (!root.isFile()) {
-                throw new IllegalArgumentException(String.format("The TFile '%s' was not a regular file", root));
+                throw new IllegalArgumentException(String.format(Locale.ROOT, "The TFile '%s' was not a regular file", root));
             }
             return root;
         }

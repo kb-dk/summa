@@ -6,6 +6,7 @@ import org.apache.lucene.util.packed.PackedInts;
 import org.apache.lucene.util.packed.PackedUtil;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Sparse collector where search results with #tags below the stated threshold uses a faster extraction and clearing
@@ -44,7 +45,7 @@ public class TagCollectorSparsePacked extends TagCollector {
       tagCounts = PackedUtil.getFastMutable(map.getTagCount(), PackedInts.bitsRequired(map.getMaxTagOccurrences()));
     } catch (OutOfMemoryError e) {
       throw (OutOfMemoryError)new OutOfMemoryError(String.format(
-              "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMap was %s",
+              Locale.ROOT, "OOM while trying to allocate int[%d] for tag counts ~ %dMB. FacetMap was %s",
               map.getTagCount(), map.getTagCount() / (4*1048576), map.toString())).initCause(e);
     }
     this.sparseFactor = sparseFactor;
@@ -53,7 +54,7 @@ public class TagCollectorSparsePacked extends TagCollector {
     try {
       updated = PackedUtil.getFastMutable(sparseSize, PackedInts.bitsRequired(map.getTagCount()));
     } catch (OutOfMemoryError e) {
-      throw (OutOfMemoryError)new OutOfMemoryError(String.format(
+      throw (OutOfMemoryError)new OutOfMemoryError(String.format(Locale.ROOT,
               "OOM while trying to allocate int[%d] for tag updates ~ %dMB. FacetMap was %s",
               sparseSize, sparseSize / (4*1048576), map.toString())).initCause(e);
     }
@@ -177,7 +178,7 @@ public class TagCollectorSparsePacked extends TagCollector {
       }
       sum += count;
     }
-    return String.format("TagCollectorSparsePacked(%dMB, %d potential tags, %d non-zero counts, total sum %d from %s",
+    return String.format(Locale.ROOT, "TagCollectorSparsePacked(%dMB, %d potential tags, %d non-zero counts, total sum %d from %s",
                          getMemoryUsage()/1048576, tagCounts.size(), nonZero, sum, map.toString());
   }
 

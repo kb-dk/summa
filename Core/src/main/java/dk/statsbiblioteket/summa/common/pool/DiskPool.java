@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.WeakHashMap;
 
 /**
@@ -111,19 +112,19 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             author = "te",
             comment = "Verify that valueCount is correct after load")
     public boolean open(File location, String poolName, boolean readOnly, boolean forceNew) throws IOException {
-        log.debug(String.format("open(%s, %s, %b, %b) called", location, poolName, readOnly, forceNew));
+        log.debug(String.format(Locale.ROOT, "open(%s, %s, %b, %b) called", location, poolName, readOnly, forceNew));
         if (values != null) {
-            log.warn(String.format("Opening new pool without previous close of '%s'. Attempting close", location));
+            log.warn(String.format(Locale.ROOT, "Opening new pool without previous close of '%s'. Attempting close", location));
             try {
                 values.close();
             } catch (IOException e) {
-                log.warn(String.format("IOException closing previous pool for '%s'", location), e);
+                log.warn(String.format(Locale.ROOT, "IOException closing previous pool for '%s'", location), e);
             }
         }
         setBaseData(location, poolName, readOnly);
         if (!getIndexFile().exists() || !getValueFile().exists()) {
             if (!forceNew) {
-                log.trace(String.format(
+                log.trace(String.format(Locale.ROOT,
                         "Index data: %spresent, value data: %spresent. A new pool '%s' will be created at '%s'",
                         getIndexFile().exists() ?
                         "" :
@@ -132,7 +133,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             }
         }
         if (forceNew) {
-            log.debug(String.format("creating new pool '%s' at '%s'", poolName, location));
+            log.debug(String.format(Locale.ROOT, "creating new pool '%s' at '%s'", poolName, location));
             //noinspection DuplicateStringLiteralInspection
             remove(getValueFile(), "existing values");
             if (!getValueFile().createNewFile()) {
@@ -153,7 +154,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     @Override
     public void store() throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.debug(String.format("Storing pool '%s' to location '%s'", poolName, location));
+        log.debug(String.format(Locale.ROOT, "Storing pool '%s' to location '%s'", poolName, location));
         File tmpIndex = new File(getIndexFile().toString() + ".tmp");
         remove(tmpIndex, "previously stored temporary index");
 
@@ -167,20 +168,20 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         for (int i = 0; i < size(); i++) {
             index.writeLong(indexes[i]);
         }
-        log.trace(String.format("Stored all indexes for '%s', closing streams", poolName));
+        log.trace(String.format(Locale.ROOT, "Stored all indexes for '%s', closing streams", poolName));
         index.flush();
         index.close();
         indexBuf.close();
         indexOut.close();
         //noinspection DuplicateStringLiteralInspection
-        log.trace(String.format("store: Renaming index '%s' to '%s'", tmpIndex, getIndexFile()));
+        log.trace(String.format(Locale.ROOT, "store: Renaming index '%s' to '%s'", tmpIndex, getIndexFile()));
         //noinspection DuplicateStringLiteralInspection
         remove(getIndexFile(), "old index");
         if (!tmpIndex.renameTo(getIndexFile())) {
             log.warn("Unable to rename '" + tmpIndex + "' to '" + getIndexFile() + "'");
         }
 
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "Finished storing pool '%s' with %d values to location '%s'",
                 poolName, size(), location));
 //        log.debug("Values file: " + values.getFile() + ": " + values.getFile().length() + " bytes"); // TODO: Remove
@@ -192,9 +193,9 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     }
 
     private void connectToValues() throws IOException {
-        log.trace(String.format("connecToValues(%s) called", getValueFile()));
+        log.trace(String.format(Locale.ROOT, "connecToValues(%s) called", getValueFile()));
         if (values != null) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "connecToValues(%s) observed that values are already assigned", getValueFile()));
         }
         values = new LineReader(getValueFile(), readOnly ? "r" : "rw");
@@ -228,7 +229,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                 //              values.write(87); // Hack to ensure writer is at EOF
                 values.close();
             } catch (IOException e) {
-                log.warn(String.format("Exception while attempting close for pool '%s' at '%s'",
+                log.warn(String.format(Locale.ROOT, "Exception while attempting close for pool '%s' at '%s'",
                                        poolName, location), e);
             }
         }
@@ -259,7 +260,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     @Override
     public E set(int index, E element) {
         if (index < 0 || index >= size()) {
-            throw new ArrayIndexOutOfBoundsException(String.format("The index %d for %s was not between 0 and %d", 
+            throw new ArrayIndexOutOfBoundsException(String.format(Locale.ROOT, "The index %d for %s was not between 0 and %d",
                                                                    index, element, valueCount));
         }
         E e = get(index);
@@ -291,7 +292,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                 values.seek(pos);
                 values.write(setBytes);
             } catch (IOException e1) {
-                throw new RuntimeException(String.format(
+                throw new RuntimeException(String.format(Locale.ROOT,
                         "Unable to store value '%s' at file-position %d for '%s' in '%s'",
                         element, pos, poolName, location), e1);
             }
@@ -329,7 +330,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         try {
             System.arraycopy(indexes, position + 1, indexes, position, size() - position + 1);
         } catch (ArrayIndexOutOfBoundsException ex) {
-            throw new ArrayIndexOutOfBoundsException(String.format(
+            throw new ArrayIndexOutOfBoundsException(String.format(Locale.ROOT,
                     "Exception performing System.arraycopy(indexes, %d, indexes"
                     + ", %d, %d) with indexes.length=%d and valueCount=%d",
                     position + 1, position, size() - position + 1, indexes.length, valueCount));
@@ -341,7 +342,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     @Override
     public E get(int position) {
         if (position < 0 || position >= size()) {
-            throw new ArrayIndexOutOfBoundsException(String.format("The position %d was not between 0 and %d", 
+            throw new ArrayIndexOutOfBoundsException(String.format(Locale.ROOT, "The position %d was not between 0 and %d",
                                                                    position, size()));
         }
         return getValue(indexes[position]);
@@ -359,7 +360,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             cache.put(reference, value);
             return value;
         } catch (IOException e) {
-            throw new IllegalStateException(String.format(
+            throw new IllegalStateException(String.format(Locale.ROOT,
                     "No value present at position %d with length %d in file '%s' for pool '%s'",
                     getValuePosition(reference), getValueLength(reference), location, poolName), e);
         }
@@ -372,7 +373,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
 
     @Override
     public void clear() {
-        log.debug(String.format("Clear called for pool '%s' at '%s'", poolName, location));
+        log.debug(String.format(Locale.ROOT, "Clear called for pool '%s' at '%s'", poolName, location));
         valueCount = 0;
         indexes = new long[DEFAULT_SIZE];
         cache.clear();
@@ -381,14 +382,14 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             try {
                 values.close();
             } catch (IOException e) {
-                log.warn(String.format("Could not close reader for pool '%s' at '%s'", poolName, location));
+                log.warn(String.format(Locale.ROOT, "Could not close reader for pool '%s' at '%s'", poolName, location));
             }
         }
         try {
             //noinspection DuplicateStringLiteralInspection
             remove(getValueFile(), "existing values");
         } catch (IOException e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "As '%s' could not be removed, the clearing of '%s' might fail", getValueFile(), poolName));
         }
         try {
@@ -396,13 +397,13 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                 log.warn("clear(): The file '" + getValueFile() + "' already existed");
             }
         } catch (IOException e) {
-            throw new RuntimeException(String.format("Unable to create file '%s' for pool '%s",
+            throw new RuntimeException(String.format(Locale.ROOT, "Unable to create file '%s' for pool '%s",
                                                      getValueFile(), poolName), e);
         }
         try {
             connectToValues();
         } catch (IOException e) {
-            throw new RuntimeException(String.format("Unable to connect to file '%s' for pool '%s", getValueFile(), 
+            throw new RuntimeException(String.format(Locale.ROOT, "Unable to connect to file '%s' for pool '%s", getValueFile(),
                                                      poolName), e);
         }
     }

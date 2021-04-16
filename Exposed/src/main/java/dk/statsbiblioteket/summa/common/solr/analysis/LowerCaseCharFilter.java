@@ -20,6 +20,7 @@ import org.apache.lucene.util.Version;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Solr's {@link org.apache.lucene.analysis.core.LowerCaseFilter} converted to a
@@ -45,9 +46,9 @@ public class LowerCaseCharFilter extends CharFilter {
             // This assumes that the number of chars is always equal for upper- and lower-case codepoints.
             // The Solr code makes this assumption, but it would be nice to verify if it is true.
             int oldI = i;
-            i += Character.toChars(
+            i += Character.toChars(     
                     Character.toLowerCase(
-                        charUtils.codePointAt(sBuf, i-off)), cbuf, i);
+                            charUtils.codePointAt(sBuf, i-off)), cbuf, i);
             if (oldI == i) {
                 throw new IllegalStateException(
                     "Converting char at position " + i + " (" + cbuf[i] + ") did not cause progress to the position");

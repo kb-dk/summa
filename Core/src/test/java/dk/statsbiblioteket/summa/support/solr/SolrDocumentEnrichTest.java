@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.*;
 
@@ -39,7 +40,7 @@ public class SolrDocumentEnrichTest {
     @Test
     public void testNoChange() throws UnsupportedEncodingException {
         SolrDocumentEnrich enricher = new SolrDocumentEnrich(Configuration.newMemoryBased());
-        Record record = new Record("dummy", "dummy", SIMPLE.getBytes("utf-8"));
+        Record record = new Record("dummy", "dummy", SIMPLE.getBytes(StandardCharsets.UTF_8));
         assertFalse("The enricher should not be active", enricher.adjust(new Payload(record)));
     }
 
@@ -48,7 +49,7 @@ public class SolrDocumentEnrichTest {
         SolrDocumentEnrich enricher = new SolrDocumentEnrich(Configuration.newMemoryBased(
                 SolrDocumentEnrich.CONF_DATA_ENTRIES, "SRT:srt" // SRTProcessor.SRT_KEY
         ));
-        Payload payload = new Payload(new Record("dummy", "dummy", SIMPLE.getBytes("utf-8")));
+        Payload payload = new Payload(new Record("dummy", "dummy", SIMPLE.getBytes(StandardCharsets.UTF_8)));
         payload.getObjectData().put(SRTProcessor.SRT_KEY, SRT_CONTENT);
         assertTrue("The enricher should process the Record", enricher.adjust(payload));
         String processed = RecordUtil.getString(payload);
@@ -61,7 +62,7 @@ public class SolrDocumentEnrichTest {
         SolrDocumentEnrich enricher = new SolrDocumentEnrich(Configuration.newMemoryBased(
                 SolrDocumentEnrich.CONF_ELEMENTS, SolrDocumentEnrich.ELEMENTS.recordID.toString()
         ));
-        Record record = new Record("dummyID", "dummy", SIMPLE.getBytes("utf-8"));
+        Record record = new Record("dummyID", "dummy", SIMPLE.getBytes(StandardCharsets.UTF_8));
         assertTrue("The enricher should process the Record", enricher.adjust(new Payload(record)));
         assertTrue("The result should contain the recordID", record.getContentAsUTF8().contains(
                 "<doc>\n<field name=\"recordID\">dummyID</field>\n<field name=\"foo\">bar</field></doc>"
@@ -73,7 +74,7 @@ public class SolrDocumentEnrichTest {
         SolrDocumentEnrich enricher = new SolrDocumentEnrich(Configuration.newMemoryBased(
                 SolrDocumentEnrich.CONF_ELEMENTS, SolrDocumentEnrich.ELEMENTS.recordID.toString()
         ));
-        Record record = new Record("dummyID", "dummy", EXTRA.getBytes("utf-8"));
+        Record record = new Record("dummyID", "dummy", EXTRA.getBytes(StandardCharsets.UTF_8));
         assertTrue("The enricher should process the Record", enricher.adjust(new Payload(record)));
         assertTrue("The result should contain the recordID", record.getContentAsUTF8().contains(
                 "<doc boost=\"5\">\n<field name=\"recordID\">dummyID</field>\n<field name=\"foo\">bar</field></doc>"
@@ -86,7 +87,7 @@ public class SolrDocumentEnrichTest {
         SolrDocumentEnrich enricher = new SolrDocumentEnrich(Configuration.newMemoryBased(
                 SolrDocumentEnrich.CONF_ELEMENTS, SolrDocumentEnrich.ELEMENTS.mtime.toString()
         ));
-        Record record = new Record("dummyID", "dummy", SIMPLE.getBytes("utf-8"));
+        Record record = new Record("dummyID", "dummy", SIMPLE.getBytes(StandardCharsets.UTF_8));
         record.setModificationTime(now);
         assertTrue("The enricher should process the Record", enricher.adjust(new Payload(record)));
         assertTrue("The result should contain the field mtime", record.getContentAsUTF8().contains(

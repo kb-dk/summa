@@ -20,6 +20,7 @@ package org.apache.lucene.util.packed;
 import org.apache.lucene.store.DataOutput;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * A PackedInts that grows to accommodate any legal data that is added.
@@ -84,11 +85,11 @@ public class GrowingMutable extends PackedInts.Mutable {
                         long valueMin, long valueMax, boolean optimizeSpeed) {
     if (indexMin > indexMax) {
       throw new IllegalArgumentException(String.format(
-        "indexMin(%d) must be <= indexMax(%d)", indexMin, indexMax));
+              Locale.ROOT, "indexMin(%d) must be <= indexMax(%d)", indexMin, indexMax));
     }
     if (valueMin > valueMax) {
       throw new IllegalArgumentException(String.format(
-        "valueMin(%d) must be <= valueMax(%d)", valueMin, valueMax));
+              Locale.ROOT, "valueMin(%d) must be <= valueMax(%d)", valueMin, valueMax));
     }
     this.indexMin = indexMin;
     this.indexMax = indexMax;

@@ -1,5 +1,7 @@
 package org.apache.lucene.util.packed;
 
+import java.util.Locale;
+
 /**
  * Special purpose pair of PackedInts structures.
  */
@@ -46,12 +48,12 @@ public class PackedPair {
           secondariesGet = "N/A";
         }
         throw new ArrayIndexOutOfBoundsException(String.format(
-            "ArrayIndexOutOfBounds in destination{size=%d}.set(offsets" +
-            "{length=%d}[(int)primaries{size=%d}.get(i{=%d}){=%s}]++, " +
-            "secondaryOffset{=%d} + secondaries{size=%d}.get(i{=%d}){=%s})",
-            destination.size(), offsets.length, primaries.size(), i,
-            primariesGet, secondaryOffset, secondaries.size(), i,
-            secondariesGet));
+                Locale.ROOT, "ArrayIndexOutOfBounds in destination{size=%d}.set(offsets" +
+                             "{length=%d}[(int)primaries{size=%d}.get(i{=%d}){=%s}]++, " +
+                             "secondaryOffset{=%d} + secondaries{size=%d}.get(i{=%d}){=%s})",
+                destination.size(), offsets.length, primaries.size(), i,
+                primariesGet, secondaryOffset, secondaries.size(), i,
+                secondariesGet));
       }
     }
   }

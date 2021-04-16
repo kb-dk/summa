@@ -2,6 +2,8 @@ package org.apache.lucene.util;
 
 import org.apache.lucene.util.packed.PackedInts;
 
+import java.util.Locale;
+
 /**
  * Specialized high performance expandable list of integer pairs that can be sorted on both primary and secondary key.
  * </p><p>
@@ -183,12 +185,12 @@ s   * @param secondary secondary value.
           pairs.size(), PackedInts.bitsRequired(max), 0);
     } catch (OutOfMemoryError e) {
       throw new OutOfMemoryError(String.format(
-          "OOM (%s) while preparing for indirects extraction by calling " +
-          "PackedInts.getMutable(%d, %d) with estimated"
-          + " heap requirement %dMB based on %s. %s",
-          e.toString(), pairs.size(), PackedInts.bitsRequired(max),
-          1L*pairs.size()*PackedInts.bitsRequired(max)/8/1048576,
-          pairs, ChunkedLongArray.memStats()));
+              Locale.ROOT, "OOM (%s) while preparing for indirects extraction by calling " +
+                           "PackedInts.getMutable(%d, %d) with estimated"
+                           + " heap requirement %dMB based on %s. %s",
+              e.toString(), pairs.size(), PackedInts.bitsRequired(max),
+              1L*pairs.size()*PackedInts.bitsRequired(max)/8/1048576,
+              pairs, ChunkedLongArray.memStats()));
     }
     for (int i = 0 ; i < pairs.size() ; i++) {
       result.set(i, getSecondary(i));

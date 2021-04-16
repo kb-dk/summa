@@ -28,6 +28,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 /**
  * Extracts text sans XML-tags. The primary usage is for highlighting.
@@ -112,7 +114,8 @@ public class SnippetFilter extends ObjectFilterImpl {
             skipBreaker = null;
         }
         buffer = new StringBuffer(Math.min(10000, maxLength));
-        log.info(String.format("Constructed SnippetFilter with maxLength=%d, destination=%s", maxLength, destination));
+        log.info(String.format(
+                Locale.ROOT, "Constructed SnippetFilter with maxLength=%d, destination=%s", maxLength, destination));
     }
 
     // State for the snippet generator
@@ -134,13 +137,9 @@ public class SnippetFilter extends ObjectFilterImpl {
         }
 
         Reader in;
-        try {
-            in = payload.getStream() != null ?
-                 new InputStreamReader(payload.getStream(), "utf-8") :
-                 new StringReader(payload.getRecord().getContentAsUTF8());
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UTF-8 not supported", e);
-        }
+        in = payload.getStream() != null ?
+             new InputStreamReader(payload.getStream(), StandardCharsets.UTF_8) :
+             new StringReader(payload.getRecord().getContentAsUTF8());
         skipsLeft = skipFirst;
         skipBreakPos = 0;
         buffer.setLength(0);
@@ -185,20 +184,12 @@ public class SnippetFilter extends ObjectFilterImpl {
         Logging.logProcess("SnippetFilter", "Assigning snippet of length " + buffer.length() + " to " + destination,
                            Logging.LogLevel.TRACE, payload);
         if (DESTINATION_CONTENT.equals(destination)) {
-            try {
-                payload.getRecord().setContent(buffer.toString().getBytes("utf-8"), false);
-                return true;
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("UTF-8 not supported", e);
-            }
+            payload.getRecord().setContent(buffer.toString().getBytes(StandardCharsets.UTF_8), false);
+            return true;
         }
         if (DESTINATION_STREAM.equals(destination)) {
-            try {
-                payload.setStream(new ByteArrayInputStream(buffer.toString().getBytes("utf-8")));
-                return true;
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("UTF-8 not supported", e);
-            }
+            payload.setStream(new ByteArrayInputStream(buffer.toString().getBytes(StandardCharsets.UTF_8)));
+            return true;
         }
         if (payload.getStream() != null) {
             payload.getData().put(destination, buffer.toString());

@@ -12,10 +12,7 @@ import org.apache.lucene.util.packed.PackedIntWrapper;
 import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Single pass FacetMapMulti builder that uses long[]s to hold all termID-docID
@@ -82,12 +79,13 @@ public class FacetMapSingleLongFactory {
         PackedInts.Reader i2o = indirectToOrdinal.getPacked();
         ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2o);
         log.debug(String.format(
-              "Assigning indirects for %d unique terms, %d references, extracted in %d ms, to %s: %s",
-              localUniqueTerms, pairs.size()-pairsStartSize, localTime,
-              ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(), i2o));
+                Locale.ROOT, "Assigning indirects for %d unique terms, %d references, extracted in %d ms, to %s: %s",
+                localUniqueTerms, pairs.size()-pairsStartSize, localTime,
+                ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(), i2o));
       } else {
-        log.debug(String.format("Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
-                                providers.get(i).getClass()));
+        log.debug(String.format(
+                Locale.ROOT, "Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
+                providers.get(i).getClass()));
       }
 /*      { // Sanity test
         PackedInts.Mutable i2o = indirectToOrdinal.getPacked();
@@ -183,7 +181,7 @@ public class FacetMapSingleLongFactory {
     }
 //    System.out.println("\n");
 
-    log.info(String.format(
+    log.info(String.format(Locale.ROOT,
           "Extracted doc2in and refs %s from %d pairs for %d docIDs in %d seconds (%d of these seconds used for " +
           "counting docID frequencies and creating doc2in structure)",
           refs, pairs.size(), docCount, (System.currentTimeMillis()-startTime)/1000, countTime/1000));

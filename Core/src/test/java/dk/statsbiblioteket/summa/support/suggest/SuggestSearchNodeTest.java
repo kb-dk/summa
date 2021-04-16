@@ -29,6 +29,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class SuggestSearchNodeTest extends TestCase {
@@ -59,8 +60,8 @@ public class SuggestSearchNodeTest extends TestCase {
         node.open(storageRoot.toString());
         File storageFolder = new File(storageRoot,
                                      SuggestSearchNode.SUGGEST_FOLDER);
-        assertTrue(String.format(
-                "The storage folder '%s' should exist", storageFolder),
+        assertTrue(String.format(Locale.ROOT,
+                                 "The storage folder '%s' should exist", storageFolder),
                    storageFolder.exists());
         node.close();
     }
@@ -162,7 +163,7 @@ public class SuggestSearchNodeTest extends TestCase {
 
         node.search(request, responses);
         String xml = responses.toXML();
-        assertTrue(String.format("The string '%s' should be in the result:\n%s",
+        assertTrue(String.format(Locale.ROOT, "The string '%s' should be in the result:\n%s",
                                  expected, xml),
                    xml.contains(expected));
         log.debug("Got xml for prefix '" + prefix + "':\n" + xml);

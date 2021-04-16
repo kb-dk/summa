@@ -27,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -78,15 +79,16 @@ public class SummaEntityResolver implements EntityResolver2 {
         }
         if (conf != null && conf.valueExists(CONF_RESOURCE_MAP)) {
             for (String resource : conf.getStrings(CONF_RESOURCE_MAP)) {
-                String tokens[] = resource.split(" ");
+                String[] tokens = resource.split(" ");
                 if (tokens.length != 2) {
                     throw new IllegalArgumentException(String.format(
-                            "Expected two strings separated by space from property %s. Got '%s'",
+                            Locale.ROOT, "Expected two strings separated by space from property %s. Got '%s'",
                             CONF_RESOURCE_MAP, resource));
                 }
             }
         }
-        log.debug(String.format("Finished creating SummaEntityResolver with %d resources", this.resources.size()));
+        log.debug(String.format(Locale.ROOT, "Finished creating SummaEntityResolver with %d resources",
+                                this.resources.size()));
         if (this.resources.isEmpty()) {
             log.warn("No resources specified for the SummaEntityResolver");
         }
@@ -117,7 +119,7 @@ public class SummaEntityResolver implements EntityResolver2 {
         }
         URL source = Resolver.getURL(resource);
         if (source == null) {
-            throw new FileNotFoundException(String.format("Unable to get URL for '%s'", resource));
+            throw new FileNotFoundException(String.format(Locale.ROOT, "Unable to get URL for '%s'", resource));
         }
         return new InputSource(source.openStream());
     }

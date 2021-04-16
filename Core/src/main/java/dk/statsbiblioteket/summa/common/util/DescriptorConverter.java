@@ -29,10 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Converts an old-style SearchDescriptor to proper Summa Index Descriptor XML.
@@ -107,15 +104,15 @@ public class DescriptorConverter {
         return children;
     }
 
-    private Node getNamedChild(Node node, String childName) {
+    private Node getNamedChild(Node node, String childName) throws IllegalStateException {
         List<Node> children = getNamedChildren(node, childName);
         if (children.size() > 1) {
             throw new IllegalStateException(String.format(
-                    "Got %d children answering to the name '%s'. Expected 1",
+                    Locale.ROOT, "Got %d children answering to the name '%s'. Expected 1",
                     children.size(), childName));
         }
         if (children.isEmpty()) {
-            throw new IllegalStateException(String.format(
+            throw new IllegalStateException(String.format(Locale.ROOT,
                     "Got 0 children answering to the name '%s'. Expected 1",
                     childName));
         }
@@ -137,12 +134,12 @@ public class DescriptorConverter {
     }
     private void processGroup(Node group, StringWriter out) {
         String name = getAttributeContent(group, "name");
-        out.append(String.format("    <group name=\"%s\">\n", name));
+        out.append(String.format(Locale.ROOT, "    <group name=\"%s\">\n", name));
         processAliases(group, out);
         elements.add(name);
         for (Node field: getNamedChildren(getNamedChild(
                 group, "fields"), "field")) {
-            out.append(String.format(
+            out.append(String.format(Locale.ROOT,
                     "      <field ref=\"%s\"/>\n",
                     getAttributeContent(field, "name")));
         }
@@ -152,7 +149,7 @@ public class DescriptorConverter {
     private void processAliases(Node node, StringWriter out) {
         for (Node alias: getNamedChildren(node, "alias")) {
             String name = alias.getTextContent();
-            out.append(String.format(
+            out.append(String.format(Locale.ROOT,
                     "      <alias name=\"%s\" lang=\"%s\"/>\n",
                     name, getAttributeContent(alias, "xml:lang")));
             if (elements.contains(name)) {
@@ -179,12 +176,12 @@ public class DescriptorConverter {
 
     private void processField(Node field, StringWriter out) {
         String name = getAttributeContent(field, "name");
-        out.append(String.format(
+        out.append(String.format(Locale.ROOT,
                 "    <field name=\"%s\" parent=\"%s\"",
                 name,
                 getNamedChild(field, "type").getTextContent()));
         if (!resetBoosts) {
-            out.append(String.format(" boost=\"%s\"", getNamedChild(
+            out.append(String.format(Locale.ROOT, " boost=\"%s\"", getNamedChild(
                     field, "boost").getTextContent()));
         }
         if ("true".equals(getAttributeContent(field, "isRepeated"))) {
@@ -197,12 +194,12 @@ public class DescriptorConverter {
         processAliases(field, out);
         elements.add(name);
         if (dumpResolver) {
-            out.append(String.format(
+            out.append(String.format(Locale.ROOT,
                     "      <!-- resolver: %s -->\n",
                     getNamedChild(field, "resolver").getTextContent()));
         }
         if (dumpAnalyzer) {
-            out.append(String.format(
+            out.append(String.format(Locale.ROOT,
                     "      <!-- analyzer: %s -->\n",
                     getNamedChild(field, "analyzer").getTextContent()));
         }

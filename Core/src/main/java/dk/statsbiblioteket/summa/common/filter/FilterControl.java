@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * This class creates a given number of filter chains and pumps contents
@@ -93,8 +94,8 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException("Configuration Storage doesn't support sub configurations");
         } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format("Could not locate a list of chain-Configurations at key %s",
-                                                           CONF_CHAINS), e);
+            throw new ConfigurationException(String.format(
+                    Locale.ROOT, "Could not locate a list of chain-Configurations at key %s", CONF_CHAINS), e);
         }
         pumps = new ArrayList<>(chainConfs.size());
         for (Configuration chainConf : chainConfs) {
@@ -103,7 +104,7 @@ public class FilterControl extends StateThread implements Configurable, FilterCh
                 log.debug("Created chain '" + pump + "'");
                 pumps.add(pump);
             } catch (Exception e) {
-                throw new ConfigurationException(String.format(
+                throw new ConfigurationException(String.format(Locale.ROOT,
                         "Error creating chain '%s': " + e.getMessage(), chainConf), e);
             }
         }

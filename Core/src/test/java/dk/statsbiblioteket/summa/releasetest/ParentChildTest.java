@@ -40,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * The purpose of this test is to test handling of parent-child relations with
@@ -198,7 +199,7 @@ public class ParentChildTest extends NoExitTestCase {
         Request request = new Request();
         request.put(DocumentSearcher.SEARCH_QUERY, query);
         String result = searchClient.search(request).toXML();
-        log.trace(String.format("Search result for query '%s' was:\n%s", query, result));
+        log.trace(String.format(Locale.ROOT, "Search result for query '%s' was:\n%s", query, result));
         return result;
     }
 

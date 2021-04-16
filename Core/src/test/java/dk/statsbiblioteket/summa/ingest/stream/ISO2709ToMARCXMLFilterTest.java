@@ -31,6 +31,7 @@ import org.marc4j.*;
 import org.marc4j.marc.Record;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -193,11 +194,11 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         byte[] head = new byte[4000];
         assertTrue("Stream should contain something",
                    xmlPayload.getStream().read(head) > 0);
-        log.info("First 4000 UTF8:\n" + new String(head, "utf8"));
+        log.info("First 4000 UTF8:\n" + new String(head, StandardCharsets.UTF_8));
         log.info("\nCounting lines with '<record>'");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(
-                xmlPayload.getStream(), "utf-8"));
+                xmlPayload.getStream(), StandardCharsets.UTF_8));
         String line;
         int recordCount = 0;
         try {

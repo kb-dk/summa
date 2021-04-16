@@ -21,10 +21,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.storage.StorageUtils;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Timing;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.h2.jdbcx.JdbcDataSource;
@@ -32,10 +36,13 @@ import org.h2.tools.Server;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.sql.*;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -156,8 +163,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
 
         if (!location.equals(location.getAbsoluteFile())) {
-            log.debug(String.format("Transforming relative location '%s' to absolute location'%s'",
-                                    location, location.getAbsoluteFile()));
+            log.debug(String.format(
+                    Locale.ROOT, "Transforming relative location '%s' to absolute location'%s'",
+                    location, location.getAbsoluteFile()));
             location = location.getAbsoluteFile();
         }
 
@@ -439,12 +447,13 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      * bigger than the pageSize of the result sets
      */
     private void setMaxMemoryRows() {
+        int maxMemoryRows = getPageSize() * 3;
+        log.debug("setMaxMemoryRows called with limit " + maxMemoryRows + ", getting connection...");
         Connection conn = getConnection();
         Statement stmt = null;
         try {
             // There might be several rows per record if the records has
             // relations. There will be one extra row per relation
-            int maxMemoryRows = getPageSize() * 3;
             log.debug("Setting MAX_MEMORY_ROWS to " + maxMemoryRows);
             stmt = conn.createStatement();
             stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
@@ -647,6 +656,252 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         } finally {
             closeConnection(conn);
         }
+    }
+
+    @Override
+    public String dumpToFilesystem(String dest, boolean dumpDeleted) throws IOException {
+        Timing rootT = new Timing("dumpToFilesystem");
+        rootT.start();
+
+        Timing initT = rootT.getChild("initDestination");
+        initT.start();
+        Path destPath = Paths.get(dest);
+        if (destPath.toFile().exists()) {
+            throw new IOException("The destination folder '" + dest + "' for dumpToFilesystem already exists");
+        }
+        if (!destPath.toFile().mkdirs()) {
+            throw new IOException("The destination folder '" + dest + "' for dumpToFilesystem could not be created");
+        }
+        log.info("Creating H2 database at '" +dest + "'");
+        DatabaseStorage destStorage = (DatabaseStorage) StorageFactory.createStorage(Configuration.newMemoryBased(
+                Storage.CONF_CLASS, H2Storage.class,
+                DatabaseStorage.CONF_LOCATION, destPath.toFile(),
+                H2Storage.CONF_H2_SERVER_PORT, serverPort+10,
+                DatabaseStorage.CONF_EXPAND_RELATIVES_ID_LIST, true
+        ));
+        initT.stop();
+
+        Timing dumpT = rootT.getChild("copyEntries");
+        dumpT.start();
+
+        try (Connection connRead = getConnection();
+             Connection connWrite = destStorage.getTransactionalConnection()) {
+            log.info("Requesting record and relations count from old database");
+            final long recordCount = getRowCount(connRead, RECORDS);
+            final long relationCount = getRowCount(connRead, RELATIONS);
+            log.info(String.format(Locale.ENGLISH, "Dumping %d records and %d relations to '%s'",
+                                   recordCount, relationCount, dest));
+
+            log.info(String.format(Locale.ENGLISH, "Starting dump of %d records", recordCount));
+            dumpRecords(connRead, connWrite, dumpDeleted, dumpT, recordCount);
+            dumpRelations(connRead, connWrite, dumpT, relationCount);
+        } catch (SQLException e) {
+            String message = "SQLException encountered during dump";
+            log.error(message, e);
+            throw new IOException(message, e);
+        } finally {
+            dumpT.stop();
+            log.info("Closing H2 database at '" + dest + "'");
+            Timing closeT = rootT.getChild("close");
+            closeT.start();
+            destStorage.close();
+            closeT.stop();
+        }
+        rootT.stop();
+        log.info(String.format(Locale.ENGLISH, "Finished dumpToFilesystem(%s, %b) in %d seconds. Full stats:\n%s",
+                               dest, dumpDeleted, rootT.getMS()/1000, rootT.toString(false, false)));
+        return rootT.toString(false, true);
+    }
+
+    private void dumpRecords(
+            Connection connRead, Connection connWrite, boolean dumpDeleted, Timing dumpT, long recordCount)
+            throws SQLException {
+        final int pageSize = 1000;
+        log.info(String.format(Locale.ENGLISH, "Dumping %d records in pages of %d", recordCount, pageSize));
+        Timing recordsT = dumpT.getChild("copyRecords");
+        recordsT.start();
+        Timing readT = recordsT.getChild("readRecords");
+        Timing writeT = recordsT.getChild("writeRecords");
+        Timing writeCT = recordsT.getChild("writeCommits");
+
+        //language=PostgreSQL
+        String sqlRecordsReadBase =
+                "SELECT "
+                + DatabaseStorage.ID_COLUMN + ", "
+                + DatabaseStorage.BASE_COLUMN + ", "
+                + DatabaseStorage.DELETED_COLUMN + ", "
+                + DatabaseStorage.INDEXABLE_COLUMN + ", "
+                + DatabaseStorage.HAS_RELATIONS_COLUMN + ", "
+                + DatabaseStorage.DATA_COLUMN + ", "
+                + DatabaseStorage.CTIME_COLUMN + ", "
+                + DatabaseStorage.MTIME_COLUMN + ", "
+                + DatabaseStorage.META_COLUMN
+                + " FROM " + DatabaseStorage.RECORDS;
+        if (!dumpDeleted) {
+            sqlRecordsReadBase += " WHERE " + DELETED_COLUMN + "=false";
+        }
+        sqlRecordsReadBase += " ORDER BY " + DatabaseStorage.MTIME_COLUMN;
+
+        //language=PostgreSQL
+        String sqlRecordsWrite =
+                "INSERT INTO " + DatabaseStorage.RECORDS + " ("
+                + DatabaseStorage.ID_COLUMN + ", "
+                + DatabaseStorage.BASE_COLUMN + ", "
+                + DatabaseStorage.DELETED_COLUMN + ", "
+                + DatabaseStorage.INDEXABLE_COLUMN + ", "
+                + DatabaseStorage.HAS_RELATIONS_COLUMN + ", "
+                + DatabaseStorage.DATA_COLUMN + ", "
+                + DatabaseStorage.CTIME_COLUMN + ", "
+                + DatabaseStorage.MTIME_COLUMN + ", "
+                + DatabaseStorage.META_COLUMN
+                + ") VALUES (?,?,?,?,?,?,?,?,?)";
+
+        long dumped = 0;
+        while (dumped < recordCount) {
+            String sqlRecordsRead = sqlRecordsReadBase +
+                                    " LIMIT " + pageSize + " OFFSET " + dumped;
+            log.trace("Executing query " + sqlRecordsRead);
+            try (
+
+                    PreparedStatement staRecordsRead = connRead.prepareStatement(
+                            sqlRecordsRead, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                    ResultSet resRecordsRead = staRecordsRead.executeQuery();
+                    PreparedStatement staRecordsWrite = connWrite.prepareStatement(sqlRecordsWrite);
+            ) {
+                readT.start();
+                if (!resRecordsRead.next()) {
+                    log.warn("No records available after " + dumped + " records dumped");
+                    readT.stop();
+                    if (dumped > 0) {
+                        readT.addUpdates(-1);
+                    }
+                    break;
+                }
+                readT.stop();
+                readT.addUpdates(-1); // First read is just to initialize the result set
+
+                log.trace("Extracting results form " + sqlRecordsRead);
+                while (true) {
+                    writeT.start();
+                    staRecordsWrite.setString(1, resRecordsRead.getString(1)); // id
+                    staRecordsWrite.setString(2, resRecordsRead.getString(2)); // base
+
+                    staRecordsWrite.setInt(3, resRecordsRead.getInt(3)); // isDeleted
+                    staRecordsWrite.setInt(4, resRecordsRead.getInt(4)); // isIndexable
+                    staRecordsWrite.setInt(5, resRecordsRead.getInt(5)); // hasRelations
+
+                    staRecordsWrite.setBytes(6, resRecordsRead.getBytes(6)); // data
+
+                    staRecordsWrite.setLong(7, resRecordsRead.getLong(7)); // ctime
+                    staRecordsWrite.setLong(8, resRecordsRead.getLong(8)); // mtime
+
+                    staRecordsWrite.setBytes(9, resRecordsRead.getBytes(9)); // Meta
+
+                    staRecordsWrite.executeUpdate();
+                    writeT.stop();
+                    dumped++;
+
+                    readT.start();
+                    if (!resRecordsRead.next()) {
+                        readT.stop();
+                        break;
+                    }
+                    readT.stop();
+                }
+                String state = writeT.getUpdates() + "/" + recordCount;
+                writeCT.start();
+                connWrite.commit();
+                writeCT.stop();
+                log.info("Record dump status " + state + ": " + recordsT.toString(false));
+            }
+        }
+        log.info("Final commit for record dump");
+        writeCT.start();
+        connWrite.commit();
+        writeCT.stop();
+        
+        recordsT.stop();
+        log.info("Record dump status: " + recordsT.toString(false));
+    }
+
+    private void dumpRelations(
+            Connection connRead, Connection connWrite, Timing dumpT, long relationCount)
+            throws SQLException {
+        final int pageSize = 1000;
+        Timing relationsT = dumpT.getChild("copyRelations");
+        relationsT.start();
+        Timing readT = relationsT.getChild("readRelations");
+        Timing writeT = relationsT.getChild("writeRelations");
+        Timing writeCT = relationsT.getChild("writeCommits");
+
+        //language=PostgreSQL
+        String sqlRelationsReadBase =
+                "SELECT "
+                + DatabaseStorage.PARENT_ID_COLUMN + ", "
+                + DatabaseStorage.CHILD_ID_COLUMN
+                + " FROM " + DatabaseStorage.RELATIONS
+                + " ORDER BY " + DatabaseStorage.PARENT_ID_COLUMN + ", "
+                + DatabaseStorage.CHILD_ID_COLUMN;
+
+        //language=PostgreSQL
+        String sqlRelationsWrite =
+                "INSERT INTO " + DatabaseStorage.RELATIONS + " ("
+                + DatabaseStorage.PARENT_ID_COLUMN + ", "
+                + DatabaseStorage.CHILD_ID_COLUMN
+                + ") VALUES (?,?)";
+
+        long dumped = 0;
+        while (dumped < relationCount) {
+            String sqlRelationsRead = sqlRelationsReadBase +
+                                      " LIMIT " + pageSize + " OFFSET " + dumped;
+            log.trace("Executing query " + sqlRelationsRead);
+
+            try (
+                    PreparedStatement staRelationsRead = connRead.prepareStatement(sqlRelationsRead);
+                    ResultSet resRelationsRead = staRelationsRead.executeQuery();
+                    PreparedStatement staRelationsWrite = connWrite.prepareStatement(sqlRelationsWrite);
+            ) {
+                readT.start();
+                if (!resRelationsRead.next()) {
+                    log.warn("No relations available after " + dumped + " records dumped");
+                    readT.stop();
+                    if (dumped > 0 ) {
+                        readT.addUpdates(-1);
+                    }
+                    break;
+                }
+                readT.stop();
+                readT.addUpdates(-1); // First read is just to initialize the result set
+
+                log.trace("Extracting results form " + sqlRelationsRead);
+                while (true) {
+                    writeT.start();
+                    staRelationsWrite.setString(1, resRelationsRead.getString(1)); // parentID
+                    staRelationsWrite.setString(2, resRelationsRead.getString(2)); // childID
+                    staRelationsWrite.executeUpdate();
+                    writeT.stop();
+                    dumped++;
+
+                    readT.start();
+                    if (!resRelationsRead.next()) {
+                        readT.stop();
+                        break;
+                    }
+                    readT.stop();
+                }
+                String state = writeT.getUpdates() + "/" + relationCount;
+                writeCT.start();
+                connWrite.commit();
+                writeCT.stop();
+                log.info("Relations dump status " + state + ": " + relationsT.toString(false));
+            }
+        }
+        log.info("Final commit for relation dump");
+        writeCT.start();
+        connWrite.commit();
+        writeCT.stop();
+        relationsT.stop();
+        log.info("Relation dump status: " + relationsT.toString(false));
     }
 
 }

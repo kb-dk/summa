@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -54,7 +55,7 @@ public class AggregatingStorageTest extends TestCase {
     String testId2 = "testId2";
     String testId3 = "testId3";
     String testId4 = "testId4";
-    byte[] testContent1 = "Summa rocks your socks!".getBytes();
+    byte[] testContent1 = "Summa rocks your socks!".getBytes(StandardCharsets.UTF_8);
     List<Configuration> storageConfs;
     Storage storage;
 

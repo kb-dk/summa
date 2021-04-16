@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Constructs a tree of SearchNodes from properties. It is expected that
@@ -66,7 +67,7 @@ public class SearchNodeFactory {
         try {
             searchNodeClassName = conf.getString(CONF_NODE_CLASS);
         } catch (NullPointerException e) {
-            throw new RemoteException(String.format(
+            throw new RemoteException(String.format(Locale.ROOT,
                     "The property '%s' could not be located in properties",
                     CONF_NODE_CLASS), e);
         }
@@ -112,7 +113,7 @@ public class SearchNodeFactory {
             throw new RemoteException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             throw new RemoteException(String.format(
-                    "Could not extract the sub configuration '%s'", key), e);
+                    Locale.ROOT, "Could not extract the sub configuration '%s'", key), e);
         }
         return createSearchNode(sub);
     }
@@ -139,7 +140,7 @@ public class SearchNodeFactory {
         } catch (SubConfigurationsNotSupportedException e) {
             throw new Configurable.ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
-            throw new Configurable.ConfigurationException(String.format(
+            throw new Configurable.ConfigurationException(String.format(Locale.ROOT,
                     "Could not extract a list of XProperties for SearchNodes from configuration with key '%s'",
                     CONF_NODES), e);
         }

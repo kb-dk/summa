@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
@@ -106,11 +107,7 @@ public class SolrLenientTimestamp implements SolrDocumentAdjustFilter.Adjuster {
         if (adjusted) {
             correctedRecords.incrementAndGet();
             enriched.append(oldContent.substring(lastEnd));
-            try {
-                record.setContent(enriched.toString().getBytes("utf-8"), false);
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("UTF-8 should be available everywhere", e);
-            }
+            record.setContent(enriched.toString().getBytes(StandardCharsets.UTF_8), false);
         }
         return adjusted;
     }
@@ -144,7 +141,7 @@ public class SolrLenientTimestamp implements SolrDocumentAdjustFilter.Adjuster {
             }
         }
         // 1868-05-01T00:00:00.000Z
-        return String.format("%04d-%02d-%02d%s", year, month, day, timestamp.substring(10));
+        return String.format(Locale.ROOT, "%04d-%02d-%02d%s", year, month, day, timestamp.substring(10));
     }
     private final StringBuilder enriched = new StringBuilder();
 

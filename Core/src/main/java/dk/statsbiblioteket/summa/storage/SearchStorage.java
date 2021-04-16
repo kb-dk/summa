@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -211,11 +212,7 @@ public class SearchStorage implements Storage {
         for (DocumentResponse.Record doc: documents.getRecords()) {
             StringWriter sw = new StringWriter();
             doc.toXML(sw, "");
-            try {
-                records.add(new Record(doc.getId(), recordBase, sw.toString().getBytes("utf-8")));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("utf-8 not supported", e);
-            }
+            records.add(new Record(doc.getId(), recordBase, sw.toString().getBytes(StandardCharsets.UTF_8)));
         }
         return records;
     }

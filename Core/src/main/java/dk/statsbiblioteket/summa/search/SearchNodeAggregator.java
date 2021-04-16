@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.*;
 
 /**
@@ -64,7 +65,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
     }
     public SearchNodeAggregator(Configuration conf, List<SearchNode> nodes) throws RemoteException {
         sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
-        log.info(String.format(
+        log.info(String.format(Locale.ROOT,
                 "Constructed %s SearchNodeAggregator with %d SearchNodes",
                 sequential ? "sequential" : "parallel", nodes.size()));
         for (SearchNode node: nodes) {
@@ -108,7 +109,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements Searc
 
     @Override
     public void open(final String location) throws RemoteException {
-        log.debug(String.format("open(%s) called", location));
+        log.debug(String.format(Locale.ROOT, "open(%s) called", location));
         doTask(new Closure() {
             @Override
             public void action(SearchNode node) throws RemoteException {

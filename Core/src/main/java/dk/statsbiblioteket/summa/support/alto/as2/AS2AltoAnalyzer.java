@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -162,7 +163,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
             segments.add(segment);
         }
         if (log.isDebugEnabled()) {
-            log.debug(String.format("Created %d segments with base paperName '%s' (constructed from '%s')",
+            log.debug(String.format(Locale.ROOT, "Created %d segments with base paperName '%s' (constructed from '%s')",
                                     segments.size(), ID_PREFIX + paperName, rawDesignation));
         }
         return segments;
@@ -219,7 +220,7 @@ public class AS2AltoAnalyzer extends AltoAnalyzerBase<AS2AltoAnalyzer.AS2Segment
 
     @Override
     public String toString() {
-        return String.format(
+        return String.format(Locale.ROOT,
                 "AS2AltoAnalyzer(paperIDPattern='%s', paperIDReplacement='%s', urlPattern='%s', urlReplacement='%s', "
                 + "minBlocks=%d, minTextLength=%d)",
                 paperIDPattern.pattern(), paperIDReplacement, urlPattern.pattern(), urlReplacement,

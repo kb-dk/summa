@@ -38,10 +38,7 @@ import org.apache.lucene.search.TermRangeQuery;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Rewrites queries textually based on term statistics for given targets.
@@ -254,7 +251,7 @@ public class TermStatQueryRewriter implements Configurable {
                     numDocs += t.getDocCount();
                 }
                 if (log.isTraceEnabled()) {
-                    log.trace(String.format("rewrite: target='%s', term='%s', df=%f, docCount=%f",
+                    log.trace(String.format(Locale.ROOT, "rewrite: target='%s', term='%s', df=%f, docCount=%f",
                                             target.getID(), term, docFreq, numDocs));
                 }
 

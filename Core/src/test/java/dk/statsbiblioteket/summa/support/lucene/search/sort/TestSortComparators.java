@@ -29,6 +29,7 @@ import org.apache.lucene.search.SortField;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -98,11 +99,11 @@ public class TestSortComparators extends TestCase {
         Thread.sleep(200);
         long initialMem = Runtime.getRuntime().totalMemory()
                    - Runtime.getRuntime().freeMemory();
-        log.info(String.format(
+        log.info(String.format(Locale.ROOT,
                 "Measuring memory usage for different sorters. Term count = %d,"
                 + " max term length = %d, sort buffer (for multipass) = %d KB. "
                 + "Initial memory usage: %d KB",
-                TERM_COUNT, TERM_MAX_LENGTH, SORT_BUFFER / 1024,
+                               TERM_COUNT, TERM_MAX_LENGTH, SORT_BUFFER / 1024,
                 initialMem / 1024));
         // TODO assert
         long lucene = SortHelper.performSortedSearch(
@@ -111,7 +112,7 @@ public class TestSortComparators extends TestCase {
         long exposed = SortHelper.performSortedSearch(
             index, "all:all", 10, getExposedFactory(
                 SortHelper.SORT_FIELD));
-        System.out.println(String.format(
+        System.out.println(String.format(Locale.ROOT,
             "initial = %d KB, lucene overhead = %d KB, "
             + "exposed overhead = %d KB",
             initialMem / 1024,

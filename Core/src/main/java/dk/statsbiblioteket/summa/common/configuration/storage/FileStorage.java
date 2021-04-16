@@ -109,7 +109,7 @@ public class FileStorage implements ConfigurationStorage {
             return new File(url.toURI());
         } catch (URISyntaxException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException(String.format("Unable to convert URL '%s' to URI", url));
+            throw new RuntimeException(String.format(Locale.ROOT, "Unable to convert URL '%s' to URI", url));
         }
     }
 

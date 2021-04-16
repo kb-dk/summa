@@ -23,6 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import java.util.Locale;
+
 /**
  * IndexUtils is a set of static common used methods used for manipulating or
  * building the index.
@@ -61,7 +63,7 @@ public class IndexUtils {
             author = "te")
     public static void assignBasicProperties(Payload payload) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format("assignBasicProperties(%s)", payload));
+            log.trace(String.format(Locale.ROOT, "assignBasicProperties(%s)", payload));
         }
         if (payload.getData(Payload.LUCENE_DOCUMENT) == null) {
             String message = "No Document present, so no basic properties can be assigned";
@@ -89,7 +91,7 @@ public class IndexUtils {
 
     public static void assignSingleField(Document document, Payload payload, String field, String term) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Assigning %s:%s to %s", field, term, payload));
+            log.trace(String.format(Locale.ROOT, "Assigning %s:%s to %s", field, term, payload));
         }
         String[] fields = document.getValues(field);
         if (fields != null && fields.length > 1) {

@@ -147,7 +147,7 @@ public class CollectorPool {
     } while (retries++ < maxRetries);
     if (retries == maxRetries) {
       throw new MissingResourceException(
-          String.format(
+          String.format(Locale.ROOT,
               "Tried acquiring TagCollector from %s %d times @ %dms. Filled collectors: %d/%d, fresh collectors: %d/%d,"
               + " active collectors: %d",
               this, retries, retryDelay,

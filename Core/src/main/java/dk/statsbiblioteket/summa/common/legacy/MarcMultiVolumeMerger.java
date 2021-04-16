@@ -34,7 +34,9 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Legacy multi volume handling of Marc2-like records (the DanMarc2 subset used
@@ -116,7 +118,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         super(conf);
         xsltLocation = Resolver.getURL(conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT));
         if (xsltLocation == null) {
-            throw new ConfigurationException(String.format(
+            throw new ConfigurationException(String.format(Locale.ROOT,
                     "Unable to get URL for property %s with content '%s",
                     CONF_MERGE_XSLT, conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT)));
         }
@@ -146,15 +148,10 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         Record record = payload.getRecord();
         String mergedContent = getMergedOrNull(record);
         if (mergedContent != null) {
-            try {
-                record.setContent(mergedContent.getBytes("utf-8"), false);
-                if (removeMerged) {
-                    record.setParents(null);
-                    record.setChildren(null);
-                }
-            } catch (UnsupportedEncodingException e) {
-                //noinspection DuplicateStringLiteralInspection
-                throw new IllegalArgumentException("utf-8 not supported");
+            record.setContent(mergedContent.getBytes(StandardCharsets.UTF_8), false);
+            if (removeMerged) {
+                record.setParents(null);
+                record.setChildren(null);
             }
         }
         return true;
@@ -181,14 +178,14 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             return null;
         } else if (record.hasChildren() && record.getChildren() == null) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug(String.format(NO_RELATIVES, record.getId(), "children"));
+            log.debug(String.format(Locale.ROOT, NO_RELATIVES, record.getId(), "children"));
                 return null;
         } else if (record.hasChildren() && countNotDeleted(record.getChildren()) == 0) {
             log.trace("No non-deleted children for " + record.getId());
             return null;
         } else if (record.hasParents() && record.getParents() == null) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug(String.format(NO_RELATIVES, record.getId(), "parents"));
+            log.debug(String.format(Locale.ROOT, NO_RELATIVES, record.getId(), "parents"));
                 return null;
         } else if (record.hasParents() && countNotDeleted(record.getParents()) == 0) {
             log.trace("No non-deleted parents for " + record.getId());
@@ -267,12 +264,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             SaxonXSLT.transform(t, new ByteArrayInputStream(record.getContent()), out);
             byte[] transformed = out.toByteArray();
             BufferedReader read;
-            try {
-                read = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(transformed), "utf-8"));
-            } catch (UnsupportedEncodingException e) {
-                throw new TransformerException(
-                        "utf-8 not supported while transforming " + record, e);
-            }
+            read = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(transformed), StandardCharsets.UTF_8));
             String line;
             try {
                 while ((line = read.readLine()) != null) {
@@ -352,7 +344,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
 
     @Override
     public String toString() {
-        return String.format("MarcMultiVolumeMerger(xslt=%s, namespace-stripping=%b, mergedRemoval=%b",
+        return String.format(Locale.ROOT, "MarcMultiVolumeMerger(xslt=%s, namespace-stripping=%b, mergedRemoval=%b",
                              xsltLocation, stripXMLNamespaces, removeMerged);
     }
 }

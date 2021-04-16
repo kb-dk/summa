@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.support.summon.search.SummonTestHelper;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class SearchStorageTest extends TestCase {
@@ -49,7 +50,7 @@ public class SearchStorageTest extends TestCase {
                 RMISearcherProxy.CONF_BACKEND, FakeSearcher.class.getCanonicalName()
         ));
         fakeStorage = new FakeStorage(Arrays.asList(
-                new Record("someRecord", "fakeBase", "<myXML>content</myXML>".getBytes("utf-8"))));
+                new Record("someRecord", "fakeBase", "<myXML>content</myXML>".getBytes(StandardCharsets.UTF_8))));
         searchStorage = new SearchStorage(Configuration.newMemoryBased(
                 SearchStorage.CONF_ID_FIELD, "recordID",
                 ConnectionConsumer.CONF_RPC_TARGET,

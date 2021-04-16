@@ -24,6 +24,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -69,7 +70,7 @@ public class JStorage implements ConfigurationStorage {
         }
 
         try {
-            eval(new InputStreamReader(in));
+            eval(new InputStreamReader(in, StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new ConfigurationStorageException("Error reading resource '" + resource + "': " + e.getMessage(), e);
         }
@@ -86,7 +87,7 @@ public class JStorage implements ConfigurationStorage {
     public JStorage(URL url) throws IOException {
         this();
         try {
-            eval(new InputStreamReader(url.openStream()));
+            eval(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new ConfigurationStorageException("Error reading " + url + ": " + e.getMessage(), e);
         }
@@ -464,7 +465,7 @@ public class JStorage implements ConfigurationStorage {
         // TODO maybe used shell from Common module.
         try {
             JStorage js = new JStorage(args[0]);
-            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+            BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
             String cmd;
             while (true) {
                 System.out.print("> ");

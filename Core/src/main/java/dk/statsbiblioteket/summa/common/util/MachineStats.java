@@ -126,7 +126,7 @@ public class MachineStats implements Runnable {
         gcBeforeLog = conf.getBoolean(CONF_GC_BEFORE_LOG, gcBeforeLog);
         gcSleepMS = conf.getInt(CONF_GC_SLEEP_MS, gcSleepMS);
         this.designation = designation;
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "Constructed MachineStatsFilter(logIntervalPings=%d, logIntervalMS=%d, gcBeforeLog=%b, gcSleepMS=%d, "
                 + "designation='%s')",
                 logIntervalPings, logIntervalMS, gcBeforeLog, gcSleepMS,
@@ -193,7 +193,6 @@ public class MachineStats implements Runnable {
         log.debug("run() finished");
     }
 
-    private static final Locale locale = new Locale("en");
     private void doStat() {
         if (gcBeforeLog) {
             log.trace("Requesting gc");
@@ -217,14 +216,13 @@ public class MachineStats implements Runnable {
 
     public String getPingStats() {
         return String.format(
-                locale,
-                "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f, %s",
+                Locale.ENGLISH, "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f, %s",
                 designation, receivedPings, profiler.getSpendTime(), profiler.getBps(true), stats());
     }
 
     public static String stats() {
         Runtime r = Runtime.getRuntime();
-        return String.format(locale, "Allocated memory: %s, Allocated unused memory: %s, "
+        return String.format(Locale.ENGLISH, "Allocated memory: %s, Allocated unused memory: %s, "
                                      + "Heap memory used: %s, Max memory: %s, "
                                      + "Threads: %d, "
                                      + "Load average: %s, %s",

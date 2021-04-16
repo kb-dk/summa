@@ -90,7 +90,7 @@ public class Structure implements Configurable, Serializable {
         } else if (conf.valueExists(CONF_FACETS)) {
             defineFacetsFromConfiguration(conf);
         } else {
-            throw new ConfigurationException(String.format("Either %s or %s must be specified", 
+            throw new ConfigurationException(String.format(Locale.ROOT, "Either %s or %s must be specified",
                                                            IndexDescriptor.CONF_DESCRIPTOR, CONF_FACETS));
         }
 
@@ -102,14 +102,14 @@ public class Structure implements Configurable, Serializable {
         if (descriptorLocation == null) {
             throw new IllegalArgumentException("Got null as descriptor URL in constructor");
         }
-        log.debug(String.format("Constructing Structure from IndexDescriptor at location '%s'", descriptorLocation));
+        log.debug(String.format(Locale.ROOT, "Constructing Structure from IndexDescriptor at location '%s'", descriptorLocation));
         try {
             FacetIndexDescriptor descriptor = new FacetIndexDescriptor(descriptorLocation);
             facets = descriptor.getFacets();
             descriptor.close();
             freezeFacets();
         } catch (IOException e) {
-            throw new ConfigurationException(String.format("Unable to construct facet structure from location '%s'", 
+            throw new ConfigurationException(String.format(Locale.ROOT, "Unable to construct facet structure from location '%s'",
                                                            descriptorLocation), e);
         }
     }
@@ -170,7 +170,7 @@ public class Structure implements Configurable, Serializable {
             throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (NullPointerException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ConfigurationException(String.format("Unable to extract sub configuration %s", 
+            throw new ConfigurationException(String.format(Locale.ROOT, "Unable to extract sub configuration %s",
                                                            IndexDescriptor.CONF_DESCRIPTOR), e);
         }
         try {
@@ -189,11 +189,11 @@ public class Structure implements Configurable, Serializable {
         } catch (SubConfigurationsNotSupportedException e) {
             throw new ConfigurationException("Storage doesn't support sub configurations", e);
         } catch (ClassCastException e) {
-            throw new ConfigurationException(String.format(
+            throw new ConfigurationException(String.format(Locale.ROOT,
                     "Could not extract a list of Configurations from configuration with key '%s' due to a "
                     + "ClassCastException", CONF_FACETS), e);
         } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format("Could not access Configuration for key '%s'", 
+            throw new ConfigurationException(String.format(Locale.ROOT, "Could not access Configuration for key '%s'",
                                                            CONF_FACETS), e);
         }
         facets = new LinkedHashMap<>(facetConfs.size());
@@ -202,7 +202,7 @@ public class Structure implements Configurable, Serializable {
             try {
                 FacetStructure fc = new FacetStructure(facetConf, facetID++);
                 if (facets.containsKey(fc.getName())) {
-                    log.warn(String.format("Facets already contain a FacetStructure named "
+                    log.warn(String.format(Locale.ROOT, "Facets already contain a FacetStructure named "
                                            + "'%s'. The old structure will be replaced", fc.getName()));
                 }
                 log.trace("Adding Facet '" + fc.getName() + "' to facets");
@@ -269,7 +269,7 @@ public class Structure implements Configurable, Serializable {
                 return entry.getValue();
             }
         }
-        throw new NullPointerException(String.format("Could not locate Facet with ID %d", facetID));
+        throw new NullPointerException(String.format(Locale.ROOT, "Could not locate Facet with ID %d", facetID));
     }
 
     /**
@@ -283,11 +283,11 @@ public class Structure implements Configurable, Serializable {
             return facets.get(facetName).getFacetID();
         } catch (NullPointerException e) {
             if (facets == null) {
-                throw new IllegalStateException(String.format(
+                throw new IllegalStateException(String.format(Locale.ROOT,
                         "The facets list was null when performing lookup of facet '%s'", facetName), e);
             } else {
                 //noinspection unchecked
-                throw new IllegalArgumentException(String.format(
+                throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "The facet '%s' did not exist in the facet-list %s",
                         facetName, Logs.expand(new ArrayList<>(facets.keySet()), 20)), e);
             }
@@ -381,20 +381,20 @@ public class Structure implements Configurable, Serializable {
             FacetStructure otherFacet = otherEntries.next().getValue();
 
             if (!thisFacet.getName().equals(otherFacet.getName())) {
-                log.debug(String.format("absorb(): The facets at position %d (counting from 0)"
+                log.debug(String.format(Locale.ROOT, "absorb(): The facets at position %d (counting from 0)"
                                         + " did not have the same name: '%s' vs. '%s'",
                                         counter, thisFacet.getName(), otherFacet.getName()));
                 return false;
             }
             if (!Strings.join(thisFacet.getFields(), ", ").equals(Strings.join(otherFacet.getFields(), ", "))) {
-                log.debug(String.format("absorb(): The fields for facet '%s' were not the same: '%s' vs. '%s'",
+                log.debug(String.format(Locale.ROOT, "absorb(): The fields for facet '%s' were not the same: '%s' vs. '%s'",
                                         thisFacet.getName(), Strings.join(thisFacet.getFields(), ", "),
                                         Strings.join(otherFacet.getFields(), ", ")));
                 return false;
             }
             if ((thisFacet.getLocale() == null && otherFacet.getLocale() != null)
                 || (thisFacet.getLocale() != null && !thisFacet.getLocale().equals(otherFacet.getLocale()))) {
-                log.debug(String.format("absorb(): The sortLocales for facet '%s' were not the same: '%s' vs. '%s'",
+                log.debug(String.format(Locale.ROOT, "absorb(): The sortLocales for facet '%s' were not the same: '%s' vs. '%s'",
                                         thisFacet.getName(), thisFacet.getLocale(), otherFacet.getLocale()));
             }
             counter++;
@@ -407,7 +407,7 @@ public class Structure implements Configurable, Serializable {
         if (!verbose) {
             return toString();
         }
-        return String.format("Structure(%s)", join(getFacetList(), ", "));
+        return String.format(Locale.ROOT, "Structure(%s)", join(getFacetList(), ", "));
     }
 
     // TODO: Should be Strings.join, but it fails?

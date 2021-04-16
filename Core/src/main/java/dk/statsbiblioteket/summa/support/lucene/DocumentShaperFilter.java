@@ -32,6 +32,7 @@ import org.apache.lucene.document.Document;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -114,6 +115,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
                                 new ArrayList<String>(0);
         if (templates.size() != patterns.size()) {
             log.debug(String.format(
+                    Locale.ROOT,
                     "Creating default templates as the length of the patterns-list was %d and the length of the "
                     + "templates-list was %d", patterns.size(), templates.size()));
             templates = new ArrayList<>(patterns.size());
@@ -123,7 +125,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
             }
         }
         if (contents.size() != patterns.size()) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "Creating default contents as the length of the patterns-list was %d and the length of the "
                     + "contents-list was %d", patterns.size(), contents.size()));
             contents = new ArrayList<>(patterns.size());
@@ -138,7 +140,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
                     Pattern.compile(patterns.get(i)), templates.get(i),
                     DEFAULT_FIELD_CONTENT.equals(contents.get(i)) ? null : contents.get(i)));
         }
-        log.debug(String.format("Created filter with %d keys", keys.size()));
+        log.debug(String.format(Locale.ROOT, "Created filter with %d keys", keys.size()));
     }
 
     @Override
@@ -180,7 +182,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
             return false;
         }
         if (log.isTraceEnabled()) {
-            log.trace(String.format(
+            log.trace(String.format(Locale.ROOT,
                     "assign(%s, ..., (%s, %s, %s), %s, %s) called",
                     record, key.getKey(), key.getValue1(), key.getValue2(), metaKey, content.toString()));
         }
@@ -189,13 +191,13 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
             return false;
         }
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Assigning field '%s' with content '%s' to %s with content-template '%s'",
+            log.trace(String.format(Locale.ROOT, "Assigning field '%s' with content '%s' to %s with content-template '%s'",
                                     fieldName, content, record,
                                     key.getValue2() == null ? DEFAULT_FIELD_CONTENT : key.getValue2()));
         }
         String c = content.toString();
         if (c == null) {
-            log.debug(String.format("Null from content.toString() in assign for field '%s' to %s",
+            log.debug(String.format(Locale.ROOT, "Null from content.toString() in assign for field '%s' to %s",
                                     fieldName, record));
             return false;
         }
@@ -216,7 +218,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
         try {
             addFieldToDocument(descriptor, document, fieldName, c, 1.0F);
         } catch (IndexServiceException e) {
-            throw new PayloadException(String.format("Unable to add field '%s' with content '%s' to document for %s",
+            throw new PayloadException(String.format(Locale.ROOT, "Unable to add field '%s' with content '%s' to document for %s",
                                                      fieldName, content.toString(), record), e);
         }
         return true;
@@ -243,7 +245,7 @@ public class DocumentShaperFilter extends DocumentCreatorBase<Document> {
         matcher.appendReplacement(buffer, template);
         String newText = buffer.toString().substring(matchPos);
         if (newText == null || "".equals(newText)) {
-            log.warn(String.format("'%s' matched '%s' but the template '%s' did not give any result",
+            log.warn(String.format(Locale.ROOT, "'%s' matched '%s' but the template '%s' did not give any result",
                                    pattern.pattern(), template, key));
             return null;
         }

@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.gwsc;
+package dk.statsbiblioteket.summa.web.gwsc;
 
 import javax.xml.namespace.QName;
 import javax.xml.rpc.*;

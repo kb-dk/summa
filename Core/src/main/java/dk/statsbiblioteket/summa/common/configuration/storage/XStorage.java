@@ -20,6 +20,7 @@ import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tika.io.IOExceptionWithCause;
 
 import java.io.*;
 import java.util.*;
@@ -114,7 +115,12 @@ public class XStorage implements ConfigurationStorage {
             log.warn("Property file '" + configurationFile + "' does not exist. Creating new file");
             syncStorageFile();
         } else {
-            xprops.load(configurationFile.getAbsoluteFile().toString(), false, false);
+            String confFile = configurationFile.getAbsoluteFile().toString();
+            try {
+                xprops.load(confFile, false, false);
+            } catch (Exception e) {
+                throw new IOException("Exception calling XProperties.load(" + confFile + ")", e);
+            }
         }
     }
 
@@ -158,7 +164,7 @@ public class XStorage implements ConfigurationStorage {
         try {
             return (Serializable) xprops.getObject(key);
         } catch (ClassCastException e) {
-            throw new ClassCastException(String.format(
+            throw new ClassCastException(String.format(Locale.ROOT,
                     "Unable to cast the value for key '%s' to Serializable, got object of class %s",
                     key, xprops.getObject(key).getClass().getName()));
         } catch (NullPointerException e) {
@@ -184,7 +190,7 @@ public class XStorage implements ConfigurationStorage {
             try {
                 tempMap.put((String) entry.getKey(), (Serializable) entry.getValue());
             } catch (ClassCastException e) {
-                throw new ClassCastException(String.format(
+                throw new ClassCastException(String.format(Locale.ROOT,
                         "Unable to cast '%s' of class %s to String and '%s' of class %s to Serializable",
                         entry.getKey(), entry.getKey().getClass(), entry.getValue(), entry.getValue().getClass()));
             }
@@ -305,14 +311,14 @@ public class XStorage implements ConfigurationStorage {
                 storages.add(new XStorage((XProperties)sub));
                 return storages;
             }
-            throw new IOException(String.format("The value for '%s' was of class '%s'. Expected List",
+            throw new IOException(String.format(Locale.ROOT, "The value for '%s' was of class '%s'. Expected List",
                                                 key, sub.getClass()));
         }
         List list = (List) sub;
         List<ConfigurationStorage> storages = new ArrayList<>(list.size());
         for (Object o : list) {
             if (!(o instanceof XProperties)) {
-                throw new IOException(String.format(
+                throw new IOException(String.format(Locale.ROOT,
                         "A class in the list for '%s' was '%s'. Expected XProperties", key, o.getClass()));
             }
             storages.add(new XStorage((XProperties) o));
@@ -330,10 +336,10 @@ public class XStorage implements ConfigurationStorage {
      */
     private static File nextAvailableConfigurationFile() throws IOException {
         int count = 0;
-        File f = new File(String.format(DEFAULT_RESOURCE, count));
+        File f = new File(String.format(Locale.ROOT, DEFAULT_RESOURCE, count));
         while (f.exists()) {
             count++;
-            f = new File(String.format(DEFAULT_RESOURCE, count));
+            f = new File(String.format(Locale.ROOT, DEFAULT_RESOURCE, count));
         }
         return f;
     }

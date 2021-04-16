@@ -74,7 +74,7 @@ public class ResponseCollection extends TimerImpl
     public synchronized String toXML() {
         StringWriter sw = new StringWriter(5000);
         sw.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
-        sw.append(String.format("<responsecollection %s=\"%s\" %s=\"%s\">\n",
+        sw.append(String.format(Locale.ROOT, "<responsecollection %s=\"%s\" %s=\"%s\">\n",
                                 ResponseImpl.TIMING, getTiming(), ResponseImpl.MACHINE, Environment.getMachineName()));
         // TODO: We really want to thate the namespace!
 //        sw.append("<responsecollection xmlns:\"http://statsbiblioteket.dk/summa/2009/SearchResponse\">\n");

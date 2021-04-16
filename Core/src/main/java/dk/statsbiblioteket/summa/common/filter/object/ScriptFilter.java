@@ -26,6 +26,8 @@ import javax.script.*;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 /**
  * An {@link ObjectFilter} processing incoming payloads in some scripting
@@ -200,12 +202,12 @@ public class ScriptFilter extends ObjectFilterImpl {
      */
     public ScriptFilter(InputStream script, boolean compileScript, String scriptExtension)
                                            throws ScriptException, IOException {
-        this(new InputStreamReader(script), compileScript, scriptExtension);
+        this(new InputStreamReader(script, StandardCharsets.UTF_8), compileScript, scriptExtension);
     }
 
     public ScriptFilter(Configuration conf, InputStream script, boolean compileScript, String scriptExtension)
                                            throws ScriptException, IOException {
-        this(conf, new InputStreamReader(script), compileScript, scriptExtension);
+        this(conf, new InputStreamReader(script, StandardCharsets.UTF_8), compileScript, scriptExtension);
     }
 
     /**
@@ -226,7 +228,7 @@ public class ScriptFilter extends ObjectFilterImpl {
      */
     @SuppressWarnings("unused")
     public ScriptFilter(InputStream script) throws ScriptException, IOException {
-        this(new InputStreamReader(script), true, "js");
+        this(new InputStreamReader(script, StandardCharsets.UTF_8), true, "js");
     }
 
     /**
@@ -265,7 +267,7 @@ public class ScriptFilter extends ObjectFilterImpl {
             return conf.getString(CONF_SCRIPT_LANG, DEFAULT_SCRIPT_LANG);
         } else {
             throw new ConfigurationException(String.format(
-                    "No URL or inlined script defined. Please set one of the %s or %s properties for this filter",
+                    Locale.ROOT, "No URL or inlined script defined. Please set one of the %s or %s properties for this filter",
                     CONF_SCRIPT_URL, CONF_SCRIPT_INLINE));
         }
     }
@@ -278,14 +280,14 @@ public class ScriptFilter extends ObjectFilterImpl {
     private static InputStream readScript(Configuration conf) {
         if (!conf.valueExists(CONF_SCRIPT_URL)
             && !conf.valueExists(CONF_SCRIPT_INLINE)) {
-            throw new ConfigurationException(String.format(
+            throw new ConfigurationException(String.format(Locale.ROOT,
                     "No URL or inlined script defined. Please set one of the %s or %s properties for this filter",
                     CONF_SCRIPT_URL, CONF_SCRIPT_INLINE));
         }
 
         if (conf.valueExists(CONF_SCRIPT_URL)) {
             if (conf.valueExists(CONF_SCRIPT_INLINE)) {
-                log.error(String.format(
+                log.error(String.format(Locale.ROOT,
                         "Both an inlined script and a script URL are defined. Please use only one of %s or %s. "
                         + "Using script from %s",
                         CONF_SCRIPT_URL, CONF_SCRIPT_INLINE, conf.getString(CONF_SCRIPT_URL)));
@@ -303,17 +305,17 @@ public class ScriptFilter extends ObjectFilterImpl {
 
                 return url.openStream();
             } catch (MalformedURLException e) {
-                throw new ConfigurationException(String.format(
+                throw new ConfigurationException(String.format(Locale.ROOT,
                         "Malformed URL in %s: %s", CONF_SCRIPT_URL, e.getMessage()), e);
             } catch (IOException e) {
-                throw new ConfigurationException(String.format(
+                throw new ConfigurationException(String.format(Locale.ROOT,
                         "Unable to read script data from URL '%s': %s",
                         conf.getString(CONF_SCRIPT_URL), e.getMessage()), e);
             }
         } else {
             assert conf.valueExists(CONF_SCRIPT_INLINE);
             log.debug("Using inlined script");
-            return new ByteArrayInputStream(conf.getString(CONF_SCRIPT_INLINE).getBytes());
+            return new ByteArrayInputStream(conf.getString(CONF_SCRIPT_INLINE).getBytes(StandardCharsets.UTF_8));
         }
     }
 

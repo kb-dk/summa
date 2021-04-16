@@ -21,6 +21,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.BitUtil;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * On an abstract level, ingesting is just a chain of filters. In the beginning
@@ -135,11 +136,7 @@ public abstract class StreamFilter extends InputStream implements Configurable,
          */
         public InputStream appendHeader(InputStream content) {
             byte[] idBytes;
-            try {
-                idBytes = id.getBytes("utf-8");
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("utf-8 encoding not supported", e);
-            }
+            idBytes = id.getBytes(StandardCharsets.UTF_8);
             byte[] idSizeBytes = BitUtil.longToBytes(idBytes.length);
             byte[] contentSizeBytes = BitUtil.longToBytes(contentLength);
 

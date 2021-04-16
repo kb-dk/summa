@@ -28,10 +28,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -223,9 +225,7 @@ public class HttpStorageBridge extends TestCase implements Configurable {
         // Print URL query args
         while (query.hasNext()) {
             QueryToken tok = query.next();
-            w.println(String.format(
-                  "  <arg name=\"%s\" value=\"%s\"/>",
-                  tok.getKey(), tok.getValue()));
+            w.println(String.format(Locale.ROOT, "  <arg name=\"%s\" value=\"%s\"/>", tok.getKey(), tok.getValue()));
         }
         query.reset();
 
@@ -352,7 +352,7 @@ public class HttpStorageBridge extends TestCase implements Configurable {
             }
             String id = path[1];
             QueryOptions opts = parseQuery(query);
-            Record rec = RecordUtil.fromXML(new InputStreamReader(in));
+            Record rec = RecordUtil.fromXML(new InputStreamReader(in, StandardCharsets.UTF_8));
 
             if (!id.equals(rec.getId())) {
                 return dispatchBad(out, path, query,

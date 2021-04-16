@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -94,13 +95,13 @@ public class MarcMultiVolumeMergerTest extends TestCase implements ObjectFilter 
     private Record createRecord(String filename) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         return new Record(filename, "Dummy", Resolver.getUTF8Content(
-                "common/horizon/" + filename).getBytes("utf-8"));
+                "common/horizon/" + filename).getBytes(StandardCharsets.UTF_8));
     }
 
     private Record createAlephRecord(String filename) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         return new Record(filename, "aleph", Resolver.getUTF8Content(
-                "common/aleph/" + filename).getBytes("utf-8"));
+                "common/aleph/" + filename).getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

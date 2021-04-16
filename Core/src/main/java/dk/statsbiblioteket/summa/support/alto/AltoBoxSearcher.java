@@ -248,7 +248,7 @@ public class AltoBoxSearcher extends SearchNodeImpl {
                         } else {
                             String transformedID = transform(hlEntry.getKey(), idPattern, idTemplate);
                             if (transformedID.isEmpty()) {
-                                log.warn(String.format(
+                                log.warn(String.format(Locale.ROOT,
                                         "Discarding recordID '%s' as regexp '%s' and template '%s' gave empty result",
                                         hlEntry.getKey(), idPattern.pattern(), idTemplate));
                             } else {

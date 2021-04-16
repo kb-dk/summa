@@ -22,6 +22,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Locale;
 
 /**
  * A generic Priority Queue. This Queue supports a max capacity.
@@ -70,6 +71,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
     public PriorityQueue(Comparator<T> comparator, int initialCapacity, int maxCapacity) {
         if (maxCapacity < initialCapacity) {
             throw new IllegalArgumentException(String.format(
+                    Locale.ROOT,
                     "The max capacity (%d) must be larger than or equal to the initial capacity (%d)",
                     maxCapacity, initialCapacity));
         }
@@ -106,12 +108,12 @@ public class PriorityQueue<T extends Comparable<? super T>> {
     public void setValues(T[] values, int size, boolean reuseArray,
                           int maxCapacity) {
         if (size > values.length) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                     "The size (%d) must be equal to or smaller than the length of values (%d)",
                     size, values.length));
         }
         if (maxCapacity < size) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                     "The maxCapacity (%d) must be equal to or greater than size (%d)",
                     maxCapacity, size));
         }

@@ -90,7 +90,7 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
 
     @Override
     protected LuceneIndexField createBaseField(String baseFieldName) {
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "createBaseField(%s) for LuceneIndexDescriptor called",
                 baseFieldName));
         if (baseFieldName.equals(IndexField.SUMMA_DEFAULT)) {
@@ -195,7 +195,7 @@ public class LuceneIndexDescriptor extends IndexDescriptor<LuceneIndexField> {
                              new SummaNumberAnalyzer());
         }
 
-        throw new IllegalArgumentException(String.format(
+        throw new IllegalArgumentException(String.format(Locale.ROOT,
                 "The base field '%s' is unknown by the LuceneIndexDescriptor",
                 baseFieldName));
     }

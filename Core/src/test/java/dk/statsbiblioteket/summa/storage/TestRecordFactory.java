@@ -17,6 +17,8 @@ package dk.statsbiblioteket.summa.storage;
 import dk.statsbiblioteket.summa.common.Record;
 import junit.framework.*;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * A test-helper tool for creating dummy records
  */
@@ -37,8 +39,7 @@ public class TestRecordFactory extends TestCase {
      */
     public static Record next () {
         recordId++;
-        return new Record (""+ recordId, recordBase,
-                           recordContent.getBytes());
+        return new Record (""+ recordId, recordBase, recordContent.getBytes(StandardCharsets.UTF_8));
 
     }
 

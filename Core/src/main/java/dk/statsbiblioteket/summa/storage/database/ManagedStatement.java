@@ -46,6 +46,11 @@ public class ManagedStatement implements PreparedStatement {
     }
 
     @Override
+    public String toString() {
+        return "ManagedStatement(" + stmt + ")";
+    }
+
+    @Override
     public ResultSet executeQuery() throws SQLException {
         return stmt.executeQuery();
     }

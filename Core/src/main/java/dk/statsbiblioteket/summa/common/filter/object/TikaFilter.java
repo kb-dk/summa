@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A {@link Filter} passing an input stream through Apache Tika's automatic
@@ -172,7 +173,7 @@ public class TikaFilter extends ObjectFilterImpl {
                 log.debug("No origin for payload, using md5 checksum instead");
                 try {
                     byte[] idDigest = Checksums.md5(new ByteArrayInputStream(recordContent));
-                    recordId = new String(idDigest);
+                    recordId = new String(idDigest, StandardCharsets.UTF_8);
                 } catch (IOException e) {
                     throw new PayloadException("Failed to calculate record id: " + e.getMessage(), e);
                 }

@@ -11,6 +11,7 @@ import org.apache.lucene.util.packed.PackedInts;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Locale;
 
 /**
  * Highly specialized factory for single field, single value, popularity ordered facet.
@@ -65,8 +66,9 @@ public class FacetMapSingleFactory extends FacetMapTripleFactory {
       ((GroupTermProvider)provider).setOrderedOrdinals(new IdentityReader((int) provider.getOrdinalTermCount()));
       log.debug("Assigning identity ordered ordinals to " + ((GroupTermProvider)provider).getRequest().getFieldNames());
     } else {
-      log.debug(String.format("Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
-                              provider.getClass()));
+      log.debug(String.format(
+              Locale.ROOT, "Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
+              provider.getClass()));
     }
     fillTime += System.currentTimeMillis();
     log.info("Finished construction with tag fill (" + docCount + " documents) and maxOccurrences " + maxOccurences

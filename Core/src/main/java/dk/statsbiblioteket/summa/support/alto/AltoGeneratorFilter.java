@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -191,7 +192,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
         for (String structure: structures) {
             templates.add(generateTemplate(structure, random));
         }
-        log.info(String.format("initialize() finished analyzing %d samples and got %d unique terms in %s\n%s",
+        log.info(String.format(Locale.ROOT, "initialize() finished analyzing %d samples and got %d unique terms in %s\n%s",
                                profiler.getBeats(), terms.size(), profiler.getSpendTime(), stats));
     }
 
@@ -245,11 +246,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
             if (createStream) {
                 return new Payload(new ReaderInputStream(new StringReader(alto.toString()), "utf-8"), id);
             }
-            try {
-                return new Payload(new Record(id, base, alto.toString().getBytes("utf-8")));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("utf-8 must be supported", e);
-            }
+            return new Payload(new Record(id, base, alto.toString().getBytes(StandardCharsets.UTF_8)));
         } finally {
             genTime += System.nanoTime();
         }
@@ -266,11 +263,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
             if (createStream) {
                 return new Payload(new ReaderInputStream(new StringReader(template.getRandomAlto(id)), "utf-8"), id);
             }
-            try {
-                return new Payload(new Record(id, base, template.getRandomAlto(id).getBytes("utf-8")));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("utf-8 must be supported", e);
-            }
+            return new Payload(new Record(id, base, template.getRandomAlto(id).getBytes(StandardCharsets.UTF_8)));
         } finally {
             genTime += System.nanoTime();
         }
@@ -535,7 +528,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
     }
     @Override
     public void close(boolean success) {
-        log.info(String.format("Closing down %s with success=%b. Generated %d ALTO records at %f ms/record",
+        log.info(String.format(Locale.ROOT, "Closing down %s with success=%b. Generated %d ALTO records at %f ms/record",
                                this, success, delivered, delivered == 0 ? 0 : genTime * 1.0d / 1000000 / delivered));
         delivered = maxRecords;
     }
@@ -562,7 +555,7 @@ public class AltoGeneratorFilter implements ObjectFilter {
 
     @Override
     public String toString() {
-        return String.format("AltoGeneratorFilter(id='%s', base='%s', seed=%d, randomTermChance=%f, createStream=%b, "
+        return String.format(Locale.ROOT, "AltoGeneratorFilter(id='%s', base='%s', seed=%d, randomTermChance=%f, createStream=%b, "
                              + "structures=%d/%d, terms=%d, delivered=%d/%d, hackedMode=%b)",
                              id, base, seed, randomTermChance, createStream,
                              structures.size(), maxStructures, terms.size(), delivered, maxRecords, hackedMode);

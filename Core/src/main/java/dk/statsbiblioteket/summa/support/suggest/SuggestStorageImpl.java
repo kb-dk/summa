@@ -20,8 +20,10 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Default implementation of import and export of suggestions.
@@ -42,10 +44,10 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
 
     @Override
     public void importSuggestions(URL in) throws IOException {
-        log.info(String.format("Importing suggestions from '%s'", in));
+        log.info(String.format(Locale.ROOT, "Importing suggestions from '%s'", in));
         long importStart = System.currentTimeMillis();
         InputStream inStream = in.openConnection().getInputStream();
-        InputStreamReader reader = new InputStreamReader(inStream);
+        InputStreamReader reader = new InputStreamReader(inStream, StandardCharsets.UTF_8);
         BufferedReader lines = new BufferedReader(reader);
         String line;
         ArrayList<String> buffer = new ArrayList<>(BATCH_SIZE);
@@ -66,7 +68,7 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
             addSuggestions(buffer.iterator());
         }
         lines.close();
-        log.info(String.format("Finished importing %d suggestions in %ds",
+        log.info(String.format(Locale.ROOT, "Finished importing %d suggestions in %ds",
                                counter, (System.currentTimeMillis() - importStart) / MILLI_IN_SECOND));
     }
 
@@ -74,9 +76,9 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
     public void exportSuggestions(File target) throws IOException {
         long exportStart = System.currentTimeMillis();
         target = target.getAbsoluteFile();
-        log.info(String.format("Exporting suggestions to '%s'", target));
+        log.info(String.format(Locale.ROOT, "Exporting suggestions to '%s'", target));
         if (target.isFile()) {
-            log.info(String.format("Deleting old export '%s'", target));
+            log.info(String.format(Locale.ROOT, "Deleting old export '%s'", target));
             if (!target.delete()) {
                 log.warn("Unable to delete '" + target + "'");
             }
@@ -89,7 +91,7 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
             log.warn("Unable to create folder '" + target.getParentFile() + "'");
         }
 
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), "utf-8"));
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(target), StandardCharsets.UTF_8));
         int exported = 0;
         while (true) {
             List<String> buffer = listSuggestions(exported, BATCH_SIZE);
@@ -103,7 +105,7 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
             }
         }
         out.close();
-        log.info(String.format("Exported %d suggestions to '%s' in %ds",
+        log.info(String.format(Locale.ROOT, "Exported %d suggestions to '%s' in %ds",
                                exported, target, (System.currentTimeMillis() - exportStart) / MILLI_IN_SECOND));
     }
 }

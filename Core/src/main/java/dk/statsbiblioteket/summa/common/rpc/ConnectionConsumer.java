@@ -23,6 +23,8 @@ import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * A generic base class for applications wanting to consume a single connection
  * managed by a {@link ConnectionManager}.
@@ -156,14 +158,14 @@ public class ConnectionConsumer<E> implements Configurable {
         connMan = new ConnectionManager<>(connFact);
         connId = conf.getString(CONF_RPC_TARGET, defaultVendor);
         if (connId == null) {
-            throw new ConfigurationException(String.format("%s not set. No RPC vendor", CONF_RPC_TARGET));
+            throw new ConfigurationException(String.format(Locale.ROOT, "%s not set. No RPC vendor", CONF_RPC_TARGET));
         }
         conn = null;
         connFact.setInitialGraceTimeMS(conf.getInt(CONF_INITIAL_GRACE_TIME, DEFAULT_INITIAL_GRACE_TIME));
         connFact.setInitialNumRetries(conf.getInt(CONF_INITIAL_RETRIES, DEFAULT_INITIAL_RETRIES));
         connFact.setSubsequentGraceTimeMS(conf.getInt(CONF_SUBSEQUENT_GRACE_TIME, DEFAULT_SUBSEQUENT_GRACE_TIME));
         connFact.setSubsequentNumRetries(conf.getInt(CONF_SUBSEQUENT_RETRIES, DEFAULT_SUBSEQUENT_RETRIES));
-        log.debug(String.format("Created ConnectionConsumer '%s' for %s", this, connId));
+        log.debug(String.format(Locale.ROOT, "Created ConnectionConsumer '%s' for %s", this, connId));
     }
 
 

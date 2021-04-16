@@ -15,6 +15,7 @@
 package dk.statsbiblioteket.summa.storage.api.tools;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.SummaConstants;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -40,10 +41,12 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 @SuppressWarnings("UseOfSystemOutOrSystemErr")
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -81,13 +84,21 @@ public class StorageTool {
                 output.println(RecordUtil.toXML(rec, false));
                 return;
             } catch (IOException e) {
-                throw new RuntimeException("Exception generating XML representation for record " + rec);
+                throw new RuntimeException("Exception generating XML representation for record " + rec, e);
             }
         }
-        output.println(rec.toString(true));
+        try {
+            output.println(rec.toString(true));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception calling plain toString on record " + rec, e);
+        }
 
         if (withContents) {
-            output.println(rec.getContentAsUTF8());
+            try {
+                output.println(rec.getContentAsUTF8());
+            } catch (Exception e) {
+                throw new RuntimeException("Exception calling getContentAsUTF8 on record " + rec, e);
+            }
         }
     }
 
@@ -100,7 +111,7 @@ public class StorageTool {
      * @return 0 if everything happened without errors, non-zero value if error occur.
      * @throws IOException If error occur while communicating to storage.
      */
-    private static int actionGet(String[] argv, StorageReaderClient storage, boolean expand) throws IOException {
+    private static int actionGet(String[] argv, StorageReaderClient storage, Boolean expand) throws IOException {
         if (argv.length == 1) {
             System.err.println("You must specify at least one record id to the 'get' action");
             return 1;
@@ -115,7 +126,11 @@ public class StorageTool {
         System.err.println("Got " + recs.size() + " records in " + (System.currentTimeMillis() - startTime) + " ms");
 
         for (Record r : recs) {
-            printRecord(r, true, expand);
+            try {
+                printRecord(r, true, true); // We always expand here as the getRecord handles the optional expand
+            } catch (Exception e) {
+                throw new IOException("Exception printing record '" + r + "'", e);
+            }
             System.out.println("===================");
         }
         return 0;
@@ -157,7 +172,7 @@ public class StorageTool {
         final String file = args[3];
         // TODO: Shortcut the unnecessary decode+encode of UTF-8 (this also allows arbitrary content)
         final String content = Files.loadString(new File(file));
-        Record record = new Record(recordID, recordBase, content.getBytes("utf-8"));
+        Record record = new Record(recordID, recordBase, content.getBytes(StandardCharsets.UTF_8));
         writer.flush(record);
         return 0;
     }
@@ -406,15 +421,7 @@ public class StorageTool {
      * @throws IOException If error occur while communicatinh to storage.
      */
     private static int actionHoldings(StorageReaderClient storage) throws IOException {
-        StringMap meta = new StringMap();
-        meta.put("ALLOW_PRIVATE", "true");
-        QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
-        long start = System.currentTimeMillis();
-        Record holdings = storage.getRecord("__holdings__", opts);
-        String xml = holdings.getContentAsUTF8();
-        System.out.println(xml);
-        System.err.println(String.format("Retrieved holdings in %sms", System.currentTimeMillis() - start));
-        return 0;
+        return privateCommand(storage, "holdings");
     }
 
     /**
@@ -425,15 +432,59 @@ public class StorageTool {
      * @throws IOException If error occur while communicatinh to storage.
      */
     private static int actionStatistics(StorageReaderClient storage) throws IOException {
+        return privateCommand(storage, "statistics");
+    }
+
+    /**
+     * Print the version of Storage-Tool as well as the Storage version.
+     *
+     * @param storage The storage reader client.
+     * @return 0 if everything happened without errors, non-zero value if error occur.
+     * @throws IOException If error occur while communicatinh to storage.
+     */
+    private static int actionVersions(StorageReaderClient storage) throws IOException {
+        System.out.println("Storage-Tool version: " + SummaConstants.getVersion());
+        System.out.print("Remote Storage version: ");
+        return privateCommand(storage, "version");
+    }
+
+    private static int actionRelationStatistics(String[] args, StorageReaderClient reader) throws IOException {
+        if (args.length == 2 && "true".equals(args[1].toLowerCase(Locale.ENGLISH))) {
+            return privateCommand(reader, "relation_stats_extended");
+        } else {
+            return privateCommand(reader, "relation_stats");
+        }
+    }
+
+    private static int actionDumpToFile(String[] args, StorageReaderClient reader) throws IOException {
+        if (args.length == 1) {
+            throw new IllegalArgumentException("A path must be stated");
+        }
+        String path = args[1];
+        boolean dumpDeleted = args.length == 3 && Boolean.parseBoolean(args[2]);
+        return privateCommand(reader, "dump_to_file_" + dumpDeleted + "_" + path);
+    }
+
+    private static int actionRelationCleanup(String[] args, StorageReaderClient reader) throws IOException {
+        return privateCommand(reader, "relation_cleanup_" + (args.length == 2 ? args[1] : "none_valid"));
+    }
+
+    private static int privateCommand(StorageReaderClient storage, String command) throws IOException {
         StringMap meta = new StringMap();
         meta.put("ALLOW_PRIVATE", "true");
         QueryOptions opts = new QueryOptions(null, null, 0, 0, meta);
         long start = System.currentTimeMillis();
-        Record holdings = storage.getRecord("__statistics__", opts);
-        System.out.println(holdings.getContentAsUTF8());
-        System.err.println(String.format("Retrieved stats in %sms", System.currentTimeMillis() - start));
+        String prID = "__" + command + "__";
+        Record response = storage.getRecord(prID, opts);
+        if (response == null) {
+            System.err.println("Unable to retrieve private record '" + prID + "'");
+        } else {
+            System.out.println(response.getContentAsUTF8());
+        }
+        System.err.printf("Retrieved %s in %dms%n", command, System.currentTimeMillis() - start);
         return 0;
     }
+
 
     /**
      * This action runs a single batch job on the storage.
@@ -463,7 +514,7 @@ public class StorageTool {
         System.err.flush();
         System.out.println(result);
         System.out.flush();
-        System.err.println(String.format("----------\nRan job '%s' in %sms",
+        System.err.println(String.format(Locale.ROOT, "----------\nRan job '%s' in %sms",
                                          jobName, System.currentTimeMillis() - start));
         return 1;
     }
@@ -498,7 +549,7 @@ public class StorageTool {
         System.err.flush();
         System.out.println(result);
         System.out.flush();
-        System.err.println(String.format("----------\nPerformed backup in %sms",
+        System.err.println(String.format(Locale.ROOT, "----------\nPerformed backup in %sms",
                                          System.currentTimeMillis() - start));
         return 1;
     }
@@ -540,7 +591,7 @@ public class StorageTool {
         StreamResult input = new StreamResult();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         input.setOutputStream(out);
-        Source so = new StreamSource(new ByteArrayInputStream(xml.getBytes("utf-8")));
+        Source so = new StreamSource(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
 
         try {
             t.transform(so, input);
@@ -590,8 +641,9 @@ public class StorageTool {
         System.err.println("USAGE:\n\tstorage-tool.sh <action> [arg]...");
         System.err.println(
                 "Actions:\n"
-                + "\tget  <record_id>+\n"
-                + "\tget_expand  <record_id>+\n"
+                + "\tget <record_id>+ (get record, expanding parent/childs based on default expansion for the storage)\n"
+                + "\tget_single  <record_id>+ (get record, no parent/child expansion)\n"
+                + "\tget_expand  <record_id>+ (get record, expanding parent/childs)\n"
                 + "\tput <record_id> <record_base> <file>\n"
                 + "\tdelete  <record_id>\n"
                 + "\tpeek [base] [max_count=5]\n"
@@ -601,9 +653,17 @@ public class StorageTool {
                 + "\txslt <record_id> <xslt_url> [expand]\n"
                 + "\tdump [base [maxrecords [format]]]   (dump storage on stdout)\n"
                 + "\t                        format=content|meta|full\n"
+                //                + "\tdump_to_file <destination> [deleted] (dump storage to file system at the server)\n"
+                //                + "\t              destination=absolute folder path on the server. The folder must not exist\n"
+                //                + "\t                            deleted=true|false. If false, records marked as deleted are skipped.\n"
                 + "\tclear base   (clear all records from base)\n"
                 + "\tholdings     (show information on the records in the storage - potentially very slow)\n"
+                + "\tversion      (show the version of StorageTool and remote Storage)\n"
                 + "\tstats        (show performance statistics)\n"
+                // Stats disables for now af they are extremely slow with H2
+                //                + "\trelation_stats [extended] (show statistics on relations. Slow if extended: true)\n"
+                //                + "\trelation_cleanup [condition] (clean up of relations)\n"
+                //                + "\t                  condition: none_valid(default)|only_parent_valid|only_child_valid|only_one_valid\n"
                 + "\tbatchjob <jobname> [base] [minMtime] [maxMtime]   (empty base string means all bases)\n"
                 + "\tbackup <destination>   (full copy of the running storage at the point of command execution)\n");
     }
@@ -655,6 +715,9 @@ public class StorageTool {
         int exitCode;
         switch (action) {
             case "get":
+                exitCode = actionGet(args, reader, null);
+                break;
+            case "get_single":
                 exitCode = actionGet(args, reader, false);
                 break;
             case "get_expand":
@@ -681,6 +744,9 @@ public class StorageTool {
             case "dump":
                 exitCode = actionDump(args, reader);
                 break;
+            case "dump_to_file":
+                exitCode = actionDumpToFile(args, reader);
+                break;
             case "clear":
                 exitCode = actionClear(args, writer);
                 break;
@@ -689,6 +755,15 @@ public class StorageTool {
                 break;
             case "stats":
                 exitCode = actionStatistics(reader);
+                break;
+            case "version":
+                exitCode = actionVersions(reader);
+                break;
+            case "relation_stats":
+                exitCode = actionRelationStatistics(args, reader);
+                break;
+            case "relation_cleanup":
+                exitCode = actionRelationCleanup(args, reader);
                 break;
             case "batchjob":
                 exitCode = actionBatchJob(args, writer);
@@ -704,5 +779,4 @@ public class StorageTool {
         }
         System.exit(exitCode);
     }
-
 }

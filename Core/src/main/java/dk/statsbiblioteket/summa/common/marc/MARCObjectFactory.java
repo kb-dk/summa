@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Takes an InputStream and generates MARCObjects from it.
@@ -91,7 +92,7 @@ public class MARCObjectFactory {
             @Override
             public void startDataField(String tag, String id, String ind1, String ind2) {
                 if (dataField != null) {
-                    throw new IllegalStateException(String.format(
+                    throw new IllegalStateException(String.format(Locale.ROOT,
                         "Structural error: DataField already exists. Conflicting fields are %s and %s",
                         dataField.getTag(), tag));
                 }
@@ -101,11 +102,11 @@ public class MARCObjectFactory {
             @Override
             public void subField(String fieldTag, String fieldId, String subCode, String subContent) {
                 if (dataField == null) {
-                    throw new IllegalStateException(String.format(
+                    throw new IllegalStateException(String.format(Locale.ROOT,
                         "SubField for field %s encountered, but no startDataField has been called", fieldTag));
                 }
                 if (!fieldTag.equals(dataField.getTag())) {
-                    throw new IllegalStateException(String.format(
+                    throw new IllegalStateException(String.format(Locale.ROOT,
                         "SubField for field %s encountered, but existing field is %s", fieldTag, dataField.getTag()));
                 }
                 dataField.getSubFields().add(new MARCObject.SubField(subCode, subContent));

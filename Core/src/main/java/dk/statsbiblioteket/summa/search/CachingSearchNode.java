@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Wrapper that provides caching of Search responses.
@@ -88,7 +89,7 @@ public class CachingSearchNode extends ArrayList<SearchNode> implements SearchNo
 
     @Override
     public void open(final String location) throws RemoteException {
-        log.debug(String.format("open(%s) called", location));
+        log.debug(String.format(Locale.ROOT, "open(%s) called", location));
         subNode.open(location);
     }
     @Override

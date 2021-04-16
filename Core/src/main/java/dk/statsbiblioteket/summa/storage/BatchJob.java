@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import javax.script.*;
 import java.io.*;
 import java.net.URL;
+import java.util.Locale;
 
 /**
  * Encapsulation of a scripted batch job run on a subset of the storage.
@@ -97,8 +98,9 @@ public class BatchJob {
         engine = scriptMan.getEngineByExtension(extension);
 
         if (engine == null) {
-            throw new ScriptException(String.format("No scripting engine for extension '%s' found for '%s'",
-                                                    extension, jobName));
+            throw new ScriptException(String.format(
+                    Locale.ROOT, "No scripting engine for extension '%s' found for '%s'",
+                    extension, jobName));
         }
 
         outBuffer = new StringWriter();

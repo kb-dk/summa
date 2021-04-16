@@ -30,10 +30,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.*;
 import java.nio.BufferOverflowException;
-import java.util.AbstractList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Persistent structure for TermStats from an index. The structure must be
@@ -162,8 +159,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
         }
         synchronized (this) {
             closeExisting();
-            log.info(String.format("Opening TermStats at '%s' as readonly",
-                                   location));
+            log.info(String.format(Locale.ROOT, "Opening TermStats at '%s' as readonly", location));
             persistent = new LineReader(realFile, "r");
             persistent.setBufferSize(bufferSize);
             boolean result = openMeta();
@@ -207,13 +203,13 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             minDocumentFrequency = Long.parseLong(DOM.selectString(dom,"termstatmeta/mindocumentfrequency", "0"));
             columns = DOM.selectString(dom,"termstatmeta/columns").split(" *, *");
             source = DOM.selectString(dom, "termstatmeta/source");
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                 "Extracted docCount %d, termCount %d, mdf %d, columns '%s' and source '%s'  from '%s'",
                 docCount, termCount, minDocumentFrequency,
                 Strings.join(columns, ", "), source, metaFile));
             return true;
         } catch (Exception e) {
-            log.error(String.format(
+            log.error(String.format(Locale.ROOT,
                 "Unable to open '%s' which holds the docCount. Count will be 0, which will lead to wonky ranking",
                 metaFile), e);
             return false;
@@ -297,7 +293,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             this.columns = columns;
             if (!location.exists()) {
                 if (!location.mkdirs()) {
-                    throw new IOException(String.format("Unable to create the folder '%s'", location));
+                    throw new IOException(String.format(Locale.ROOT, "Unable to create the folder '%s'", location));
                 }
             }
 
@@ -341,7 +337,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
 
     private void storeMeta() throws IOException {
         File metaFile = getFile(persistent.getFile().getParentFile(), ".meta");
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
             "StoreMeta called, storing in '%s' with docCount=%d, termCount=%d, mdf=%d, columns=%s",
             metaFile, docCount, termCount, minDocumentFrequency, Strings.join(columns, ", ")));
         XMLOutputFactory xmlFactory = XMLOutputFactory.newInstance();
@@ -354,7 +350,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             xmlOut.writeStartElement("doccount");
             xmlOut.writeCharacters(Long.toString(getDocCount()));
             if (getDocCount() == 0) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                     "docCount for source '%s' was 0. Unless the index has no terms, this is normally an error",
                     getSource()));
             }
@@ -362,7 +358,7 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             xmlOut.writeStartElement("termcount");
             xmlOut.writeCharacters(Long.toString(getTermCount()));
             if (getDocCount() == 0) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                     "termCount for source '%s' was 0. Unless the index is empty, this is normally an error", getSource()));
             }
             xmlOut.writeEndElement();
@@ -604,11 +600,11 @@ public class TermStat extends AbstractList<TermEntry> implements Configurable {
             try {
                 return persistent.readLine();
             } catch (IllegalArgumentException e) {
-                throw new RuntimeException(String.format(
+                throw new RuntimeException(String.format(Locale.ROOT,
                     "Illegal argument after seeking to position %d and reading line for index %d in '%s'",
                     lookupTable[index], index, getDataFile()), e);
             } catch (BufferOverflowException e) {
-                throw new RuntimeException(String.format(
+                throw new RuntimeException(String.format(Locale.ROOT,
                     "Buffer overflow after seeking to position %d and reading line for index %d in '%s'",
                     lookupTable[index], index, getDataFile()), e);
             } catch (IOException e) {

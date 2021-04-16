@@ -197,7 +197,7 @@ public class TermStatClientTest extends TestCase {
             TermEntry current = termStat.get(i);
             if (oldEntry != null
                 && oldEntry.getTerm().compareTo(current.getTerm()) > 0) {
-                fail(String.format(
+                fail(String.format(Locale.ROOT,
                     "Entry #%d and #%d were '%s' and '%s', but the order should be reversed",
                     i-1, i, oldEntry.getTerm(), current.getTerm()));
             }

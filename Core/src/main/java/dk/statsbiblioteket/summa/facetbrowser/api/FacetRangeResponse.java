@@ -136,11 +136,11 @@ public class FacetRangeResponse extends ResponseImpl implements List<FacetRangeR
 
         public void merge(FacetRange other) {
             if (!getField().equals(other.getField())) {
-                throw new IllegalArgumentException(String.format(
+                throw new IllegalArgumentException(String.format(Locale.ROOT,
                         "This field is '%s' but the other field is '%s'", getField(), other.getField()));
             }
             if (!(eq(getStart(), other.getStart()) && eq(getEnd(), other.getEnd()) && eq(getGap(), other.getGap()))) {
-                log.warn(String.format(
+                log.warn(String.format(Locale.ROOT,
                         "Accepting inequality in arguments start=%s %s, end=%s %s, gap=%s %s",
                         getStart(), other.getStart(), getEnd(), other.getEnd(), getGap(), other.getGap()));
             }

@@ -24,10 +24,7 @@ import org.apache.lucene.store.NIOFSDirectory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -47,7 +44,7 @@ public class LuceneTestHelper extends TestCase {
             assertEquals("The id '" + ids[i] + "' should be present in the index",
                          ids[i], actualIDs.get(i));
         }
-        assertEquals(String.format("The number of checked ids in %s should match", location),
+        assertEquals(String.format(Locale.ROOT, "The number of checked ids in %s should match", location),
                      ids.length, actualIDs.size());
     }
     /**
@@ -68,7 +65,7 @@ public class LuceneTestHelper extends TestCase {
             assertEquals("The id '" + ids[i] + "' should be present in the index",
                          ids[i], actualIDs.get(i));
         }
-        assertEquals(String.format("The number of checked ids in %s should match", location),
+        assertEquals(String.format(Locale.ROOT, "The number of checked ids in %s should match", location),
                      ids.length, actualIDs.size());
     }
 

@@ -30,6 +30,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -106,7 +107,7 @@ public class MARCXMLCopyFilter extends MARCObjectFilter {
     }
 
     private byte[] getMARC(MARCObject marcObject) throws UnsupportedEncodingException, XMLStreamException {
-        return marcObject.toXML().getBytes("utf-8");
+        return marcObject.toXML().getBytes(StandardCharsets.UTF_8);
     }
 
     private byte[] getDirectSumma(Payload payload, MARCObject marcObject) throws XMLStreamException,
@@ -147,7 +148,7 @@ public class MARCXMLCopyFilter extends MARCObjectFilter {
         xml.writeCharacters("\n");
 
         xml.flush();
-        return sw.toString().getBytes("utf-8");
+        return sw.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     private static final Pattern VALID_FIELD = Pattern.compile("[-a-zA-Z0-9_.]+");

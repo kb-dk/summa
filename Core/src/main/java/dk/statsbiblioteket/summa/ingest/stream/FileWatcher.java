@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 
 /**
@@ -135,7 +136,7 @@ public class FileWatcher extends FileReader implements Runnable {
 
     @Override
     public void close(boolean success) {
-        log.debug(String.format("close(%b) called", success));
+        log.debug(String.format(Locale.ROOT, "close(%b) called", success));
         doRun = false;
         super.close(success);
         toDeliver = END_PAYLOAD;

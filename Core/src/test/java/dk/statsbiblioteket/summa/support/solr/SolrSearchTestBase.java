@@ -30,6 +30,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,7 +90,7 @@ public class SolrSearchTestBase extends TestCase {
                 "doc" + i, "dummy",
                 ("<doc><field name=\"recordID\">doc" + i + "</field>\n"
                  + "   <field name=\"recordBase\">myBase</field>\n"
-                 + "   <field name=\"" + field + "\">" + terms.get(i) + "</field></doc>").getBytes("utf-8"))));
+                 + "   <field name=\"" + field + "\">" + terms.get(i) + "</field></doc>").getBytes(StandardCharsets.UTF_8))));
         }
         return new PayloadFeederHelper(samples);
     }

@@ -195,7 +195,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         urlField = conf.getString(CONF_URL_FIELD, DEFAULT_URL_FIELD);
         String[] pros = conf.getString(CONF_PROVIDER_FIELD, DEFAULT_PROVIDER_FIELD).split("[*]");
         if (pros.length != 2) {
-            throw new ConfigurationException(String.format(
+            throw new ConfigurationException(String.format(Locale.ROOT,
                     "The value '%s' from %s must be field*tag, for example %s",
                     conf.getString(CONF_PROVIDER_FIELD, DEFAULT_PROVIDER_FIELD),
                     CONF_PROVIDER_FIELD, DEFAULT_PROVIDER_FIELD));
@@ -317,7 +317,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 subFields.add(new MARCObject.SubField(COMMENT_SUBFIELD, comment));
             }
             if (needsPassword(response)) {
-                Logging.logProcess("ETSSStatusFilter.enrich", String.format(
+                Logging.logProcess("ETSSStatusFilter.enrich", String.format(Locale.ROOT,
                         "Username/password requirements for lookupURI '%s'. Marking sub field", lookupURI),
                                    Logging.LogLevel.DEBUG, recordID);
                 subFields.add(new MARCObject.SubField(PASSWORD_SUBFIELD, PASSWORD_CONTENT));
@@ -325,7 +325,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 return;
             }
         }
-        Logging.logProcess("ETSSStatusFilter.enrich", String.format(
+        Logging.logProcess("ETSSStatusFilter.enrich", String.format(Locale.ROOT,
                 "No requirements for lookupURI '%s'. Marking sub field as not needing password", lookupURI),
                            Logging.LogLevel.DEBUG, recordID);
         doesNotNeedPassword.add(lookupURI);
@@ -379,7 +379,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 return null;
             }
             if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                throw new IOException(String.format(
+                throw new IOException(String.format(Locale.ROOT,
                     "Expected return code %d, got %d for '%s' with call %s",
                     HttpStatus.SC_OK, httpResponse.getStatusLine().getStatusCode(), recordID, lookupURI));
             }
@@ -532,7 +532,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
         for (String idField: idFields) {
             String[] tokens = idField.split("[*]");
             if (tokens.length != 2) {
-                String message = String.format("ID-fields in property %s must be field*subfield, such as 022*a, " +
+                String message = String.format(Locale.ROOT, "ID-fields in property %s must be field*subfield, such as 022*a, " +
                                                "but '%s' from the list '%s' was encountered",
                                                CONF_ID_FIELDS, idField, Strings.join(idFields));
                 log.error(message);
@@ -545,7 +545,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
                 String raw = sub.length > 1 && "f".equals(sub[1]) ?
                         flatten(subField.getContent()) :
                         subField.getContent();
-//                log.info(String.format("*** replaceAll on '%s' with '%s' using regexp '%s' yields '%s'",
+//                log.info(String.format(Locale.ROOT, "*** replaceAll on '%s' with '%s' using regexp '%s' yields '%s'",
 //                                       raw, idReplacement, idPattern.pattern(),
 //                                       idPattern.matcher(raw).replaceAll(idReplacement)));
                 return idPattern.matcher(raw).replaceAll(idReplacement);
@@ -569,7 +569,7 @@ public class ETSSStatusFilter extends MARCObjectFilter {
 
     // Retrodigitized Journals -> retrodigitizedjournals
     String normaliseProvider(String content) {
-//        log.info(String.format("normalizing '%s' with a replaceAll(%s) using regexp '%s' with result '%s'",
+//        log.info(String.format(Locale.ROOT, "normalizing '%s' with a replaceAll(%s) using regexp '%s' with result '%s'",
 //                               content, providerReplacement, providerPattern.pattern(),
 //                               providerPattern.matcher(content).replaceAll(providerReplacement)));
         return flatten(providerPattern.matcher(content).replaceAll(providerReplacement));

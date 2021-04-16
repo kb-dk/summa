@@ -25,6 +25,8 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 /**
  * Convenience methods for XSLT-handling.
@@ -48,7 +50,7 @@ public class XSLTUtil {
      * @return a Transformer based on the given XSLT.
      */
     public static Transformer createTransformer(String xsltLocation) throws
-                                                          TransformerException {
+            TransformerException, NullPointerException {
 
         log.debug("Requesting and compiling XSLT from '" + xsltLocation + "'");
 
@@ -59,35 +61,29 @@ public class XSLTUtil {
             URL url = Resolver.getURL(xsltLocation);
             if (url == null) {
                 throw new NullPointerException(String.format(
-                        "Unable to resolve '%s' to URL", xsltLocation));
+                        Locale.ROOT, "Unable to resolve '%s' to URL", xsltLocation));
             }
             in = url.openStream();
             transformer = tfactory.newTransformer(
                     new StreamSource(in, url.toString()));
         } catch (MalformedURLException e) {
             throw new TransformerException(String.format(
-                    "The URL to the XSLT is not a valid URL: '%s'",
-                    xsltLocation), e);
+                    Locale.ROOT, "The URL to the XSLT is not a valid URL: '%s'", xsltLocation), e);
         } catch (IOException e) {
             throw new TransformerException(String.format(
-                    "Unable to open the XSLT resource '%s', check the "
-                    + "destination", xsltLocation), e);
+                    Locale.ROOT, "Unable to open the XSLT resource '%s', check the destination", xsltLocation), e);
         } catch (TransformerConfigurationException e) {
             throw new TransformerException(String.format(
-                    "Wrongly configured transformer for XSLT at '%s'",
-                    xsltLocation), e);
+                    Locale.ROOT, "Wrongly configured transformer for XSLT at '%s'", xsltLocation), e);
         } catch (TransformerException e) {
-            throw new TransformerException(
-                    "Unable to instantiate Transformer, a system configuration"
-                    + " error?", e);
+            throw new TransformerException("Unable to instantiate Transformer, a system configuration error?", e);
         } finally {
             try {
                 if (in != null) {
                     in.close();
                 }
             } catch (IOException e) {
-                log.warn("Non-fatal IOException while closing stream to '"
-                         + xsltLocation + "'");
+                log.warn("Non-fatal IOException while closing stream to '" + xsltLocation + "'");
             }
         }
         return transformer;
@@ -114,17 +110,11 @@ public class XSLTUtil {
         transformer.transform(so, input);
         byte[] output = out.toByteArray();
         if (log.isTraceEnabled()) {
-            try {
-                log.trace(String.format(
-                        "Performed transformation in %s ms.\n*** Input:\n%s\n\n"
-                        + "*** Output:\n%s",
-                        (System.nanoTime() - startNano)/1000000f,
-                        new String(content, "utf-8"),
-                        new String(output, "utf-8")));
-            } catch (UnsupportedEncodingException e1) {
-                //noinspection DuplicateStringLiteralInspection
-                throw new TransformerException("utf-8 not supported");
-            }
+            log.trace(String.format(Locale.ROOT,
+                    "Performed transformation in %s ms.\n*** Input:\n%s\n\n*** Output:\n%s",
+                    (System.nanoTime() - startNano)/1000000f,
+                    new String(content, StandardCharsets.UTF_8),
+                    new String(output, StandardCharsets.UTF_8)));
         } else if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.debug("Transformed " + content.length + " bytes to "

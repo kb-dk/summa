@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -146,7 +147,7 @@ public class AnalyzerTest extends TestCase {
         List<Payload> payloads = new ArrayList<>(DOCS.length);
         for (String doc: DOCS) {
             String content = Resolver.getUTF8Content("integration/analyzer/" + doc);
-            Record record = new Record(doc, "dummyBase", content.getBytes("utf-8"));
+            Record record = new Record(doc, "dummyBase", content.getBytes(StandardCharsets.UTF_8));
             Payload payload = new Payload(record);
             payloads.add(payload);
         }

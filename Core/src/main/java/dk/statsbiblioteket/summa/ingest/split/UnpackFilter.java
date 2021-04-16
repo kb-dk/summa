@@ -288,7 +288,7 @@ public class UnpackFilter implements ObjectFilter {
     @Override
     public void close(boolean success) {
         if (source == null) {
-            log.warn(String.format("close(%b): Cannot close as no source is specified", success));
+            log.warn(String.format(Locale.ROOT, "close(%b): Cannot close as no source is specified", success));
         } else {
             while (!active.isEmpty()) {
                 active.pop().getValue().stop();

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -83,7 +84,7 @@ public class TermEntry implements Comparable<TermEntry> {
     public TermEntry(String persistent, String[] headings) {
         String tokens[] = persistent.split("\t");
         if (tokens.length != headings.length) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                 "The persistent String '%s' was split in %d tokens. "
                 + "Expected %d tokens due to heading '%s'",
                 persistent, tokens.length, headings.length,
@@ -102,7 +103,7 @@ public class TermEntry implements Comparable<TermEntry> {
 
     private void check(String term, long[] stats, String[] headings) {
         if (term == null || "".equals(term)) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                     "Term must be defined, but it was '%s'", term));
         }
         if (stats.length + 1 != headings.length) {
@@ -242,7 +243,7 @@ public class TermEntry implements Comparable<TermEntry> {
      */
     public void absorb(TermEntry other) {
         if (!term.equals(other.getTerm())) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                     "The term must match. This term was '%s', other "
                     + "term was '%s'", term, other.getTerm()));
         }
@@ -268,8 +269,8 @@ public class TermEntry implements Comparable<TermEntry> {
     public TermEntry add(TermEntry other, String[] combinedHeadings) {
         if (!term.equals(other.getTerm())) {
             throw new IllegalArgumentException(String.format(
-                    "The term must match. This term was '%s', other "
-                    + "term was '%s'", term, other.getTerm()));
+                    Locale.ROOT,
+                    "The term must match. This term was '%s', other term was '%s'", term, other.getTerm()));
         }
         long[] newStats = new long[stats.length + other.getStats().length];
         System.arraycopy(stats, 0, newStats, 0, stats.length);

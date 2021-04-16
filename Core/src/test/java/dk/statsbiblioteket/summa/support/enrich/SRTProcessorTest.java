@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -70,7 +71,7 @@ public class SRTProcessorTest {
     public List<String> getProcessedSRT(String xpath, String xml) throws UnsupportedEncodingException {
 
         PayloadFeederHelper feeder = new PayloadFeederHelper(ImmutableList.of(new Payload(
-                new Record("dummyID", "dummyBase", xml.getBytes("utf-8")))));
+                new Record("dummyID", "dummyBase", xml.getBytes(StandardCharsets.UTF_8)))));
         SRTProcessor srtProcessor = new SRTProcessor(Configuration.newMemoryBased(
                 SRTProcessor.CONF_SRT_FAKE_XPATH, xpath
         ));

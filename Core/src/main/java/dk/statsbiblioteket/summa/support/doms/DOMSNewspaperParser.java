@@ -307,7 +307,7 @@ public class DOMSNewspaperParser extends DOMSNewspaperBase {
 
     @Override
     public String toString() {
-        return String.format(
+        return String.format(Locale.ROOT,
                 "DOMSNewspaperSplitter(minBlocks=%d, minWords=%d, hyphenMode=%s, keepRelatives=%b)",
                 minBlocks, minWords, hyphenMode, keepRelatives);
     }
@@ -339,7 +339,7 @@ public class DOMSNewspaperParser extends DOMSNewspaperBase {
             throw new PayloadException("Unable to parse input as XML", e, payload);
         }
         if (log.isDebugEnabled()) {
-            log.debug(String.format("Located inner ALTO from %d to %d (%d bytes) in %s",
+            log.debug(String.format(Locale.ROOT, "Located inner ALTO from %d to %d (%d bytes) in %s",
                                     altoStart, altoEnd, altoEnd - altoStart, payload.getId()));
         }
         //produceSegments(payload, content, altoStart, altoEnd);

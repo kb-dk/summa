@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -47,9 +48,9 @@ public class MD5 {
     public static String md5sum (String text) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(text.getBytes("UTF-8"));
+            md.update(text.getBytes(StandardCharsets.UTF_8));
             return new BigInteger(1, md.digest()).toString(16);
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+        } catch (NoSuchAlgorithmException e) {
             log.error(e.getMessage(),e);
         }
         return "";

@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -124,11 +125,11 @@ public class QuerySanitizer implements Configurable {
         fixTrailingQuestionmarks = conf.getBoolean(CONF_FIX_TRAILING_QUESTIONMARKS, false);
         SMART_QUOTES = generateSmartQuotePattern(conf.getString(CONF_SMARTQUOTES, DEFAULT_SMARTQUOTES));
 
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "Created QuerySanitizer with smartquotes:%s, quotes:%s, parentheses:%s, qualifiers:%s, " +
                 "exclamations:%s, regexps:%s, , questionmarks:%s",
-                fixSmartQuotes, fixQuotes, fixParentheses, fixQualifiers,
-                fixExclamations, fixRegexps, fixTrailingQuestionmarks));
+                                fixSmartQuotes, fixQuotes, fixParentheses, fixQualifiers,
+                                fixExclamations, fixRegexps, fixTrailingQuestionmarks));
     }
 
     private Pattern generateSmartQuotePattern(String quoteChars) {

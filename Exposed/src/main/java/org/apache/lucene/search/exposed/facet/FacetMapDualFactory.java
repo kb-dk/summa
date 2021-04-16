@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 /**
  *
@@ -77,11 +78,13 @@ public class FacetMapDualFactory extends FacetMapTripleFactory {
         // Not at all OO
 //        PackedInts.Reader i2o = indirectToOrdinal.getPacked();
         ((GroupTermProvider)providers.get(i)).setOrderedOrdinals(i2oReader);
-        log.debug(String.format("Assigning ordered ordinals to %s: %s",
-                                ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(), i2oReader));
+        log.debug(String.format(
+                Locale.ROOT, "Assigning ordered ordinals to %s: %s",
+                ((GroupTermProvider)providers.get(i)).getRequest().getFieldNames(), i2oReader));
       } else {
-        log.debug(String.format("Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
-                                providers.get(i).getClass()));
+        log.debug(String.format(
+                Locale.ROOT, "Hoped for GroupTermProvider, but got %s. Collected ordered ordinals are discarded",
+                providers.get(i).getClass()));
       }
 
       indirectStarts[i] = start;

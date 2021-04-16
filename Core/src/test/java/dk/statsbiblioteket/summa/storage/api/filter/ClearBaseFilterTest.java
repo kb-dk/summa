@@ -32,9 +32,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
+import java.util.Locale;
 
 /**
  * Unit tests for {@link ClearBaseFilter}
@@ -103,7 +105,7 @@ public class ClearBaseFilterTest extends TestCase {
     @SuppressWarnings("StatementWithEmptyBody")
     public void testNoBases() throws Exception {
         filter = new ClearBaseFilter(Configuration.newMemoryBased());
-        chain = prepareFilterChain(filter, new Record("id", "base", "data".getBytes()));
+        chain = prepareFilterChain(filter, new Record("id", "base", "data".getBytes(StandardCharsets.UTF_8)));
 
         while (chain.pump()) {
         }
@@ -115,7 +117,7 @@ public class ClearBaseFilterTest extends TestCase {
     public void testOneBaseOneRecord() throws Exception {
         createTestStorage();
 
-        Record rec = new Record("id", "base", "data".getBytes());
+        Record rec = new Record("id", "base", "data".getBytes(StandardCharsets.UTF_8));
         storage.flush(rec);
         assertBaseCount("base", 1);
 
@@ -132,8 +134,8 @@ public class ClearBaseFilterTest extends TestCase {
     public void testOneBaseTwoRecords() throws Exception {
         createTestStorage();
 
-        Record rec1 = new Record("id1", "base", "data".getBytes());
-        Record rec2 = new Record("id2", "base", "data".getBytes());
+        Record rec1 = new Record("id1", "base", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec2 = new Record("id2", "base", "data".getBytes(StandardCharsets.UTF_8));
         storage.flush(rec1);
         storage.flush(rec2);
         assertBaseCount("base", 2);
@@ -158,15 +160,15 @@ public class ClearBaseFilterTest extends TestCase {
         cal.set(Calendar.HOUR_OF_DAY, 16);
         cal.set(Calendar.MINUTE, 9);
         cal.set(Calendar.SECOND, 32);
-        log.info(String.format(ProgressTracker.TIMESTAMP_FORMAT, cal));
+        log.info(String.format(Locale.ROOT, ProgressTracker.TIMESTAMP_FORMAT, cal));
     }
 
     public void testPayloadMatcher() throws Exception {
         createTestStorage();
 
-        Record rec1 = new Record("id1", "base", "data".getBytes());
-        Record rec11 = new Record("id11", "base", "data".getBytes());
-        Record rec2 = new Record("id2", "base", "data".getBytes());
+        Record rec1 = new Record("id1", "base", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec11 = new Record("id11", "base", "data".getBytes(StandardCharsets.UTF_8));
+        Record rec2 = new Record("id2", "base", "data".getBytes(StandardCharsets.UTF_8));
         storage.flush(rec1);
         storage.flush(rec11);
         storage.flush(rec2);

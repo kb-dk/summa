@@ -175,14 +175,14 @@ public class MemoryStorage implements ConfigurationStorage {
         try {
             Object sub = get(key);
             if (!(sub instanceof MemoryStorage)) {
-                throw new IOException(String.format(
+                throw new IOException(String.format(Locale.ROOT,
                         "The value for '%s' was of class '%s'. Expected MemoryStorage",
                         key, sub.getClass()));
             }
 
             return (MemoryStorage) sub;
         } catch (NullPointerException e) {
-            throw new IOException(String.format("Could not locate value for key '%s'", key));
+            throw new IOException(String.format(Locale.ROOT, "Could not locate value for key '%s'", key));
         }
     }
 
@@ -237,7 +237,7 @@ public class MemoryStorage implements ConfigurationStorage {
                 return storages;
             }
             //noinspection DuplicateStringLiteralInspection
-            throw new IOException(String.format("The value for '%s' was of class '%s'. Expected List",
+            throw new IOException(String.format(Locale.ROOT, "The value for '%s' was of class '%s'. Expected List",
                                                 key, sub.getClass()));
         }
         List list = (List) sub;
@@ -245,7 +245,7 @@ public class MemoryStorage implements ConfigurationStorage {
         for (Object o : list) {
             if (!(o instanceof MemoryStorage)) {
                 //noinspection DuplicateStringLiteralInspection
-                throw new IOException(String.format(
+                throw new IOException(String.format(Locale.ROOT,
                         "A class in the list for '%s' was '%s'. Expected MemoryStorage",
                         key, o.getClass()));
             }

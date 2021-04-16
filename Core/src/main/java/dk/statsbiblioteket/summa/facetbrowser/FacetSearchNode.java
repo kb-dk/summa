@@ -54,6 +54,7 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -131,11 +132,11 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             log.debug("The Structure will be derived from IndexDescriptor XML in the index folders upon calls to "
                       + "open(...)");
         } else {
-            log.info(String.format(
+            log.info(String.format(Locale.ROOT,
                 "The property %s was defined, so the IndexDescriptor will not be taken from the index-folder. "
                 + "Note that this makes it hard to coordinate major updates to the IndexDescriptor in a production "
                 + "system",
-                IndexDescriptor.CONF_DESCRIPTOR));
+                    IndexDescriptor.CONF_DESCRIPTOR));
             Structure structure = new Structure(conf);
             initStructures(structure);
         }
@@ -166,16 +167,16 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         URL urlLocation = Resolver.getURL(location + "/" + IndexDescriptor.DESCRIPTOR_FILENAME);
         Structure newStructure = new Structure(urlLocation);
         if (structure != null && structure.absorb(newStructure)) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                 "Only minor facet changes detected in the IndexDescriptor from '%s'. Major re-initialization skipped",
                 urlLocation));
             return;
         }
-        log.info(String.format("Performing major initialization based on '%s'",
+        log.info(String.format(Locale.ROOT, "Performing major initialization based on '%s'",
                                urlLocation));
         initStructures(newStructure);
         if (log.isDebugEnabled()) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                 "Facets after updateDescription(%s): %s",
                 location, Strings.join(structure.getFacetNames(), ", ")));
         }
@@ -438,7 +439,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         DocIDCollector collectedIDs = null;
         if (o != null) {
             if (!(o instanceof DocIDCollector)) {
-                throw new RemoteException(String.format(
+                throw new RemoteException(String.format(Locale.ROOT,
                     "Found transient data for key '%s'. Expected class %s, but got %s", DocumentSearcher.DOCIDS,
                     DocIDCollector.class.getName(), o.getClass().getName()));
             }

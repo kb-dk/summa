@@ -26,10 +26,7 @@ import org.apache.solr.common.params.FacetParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -74,7 +71,7 @@ public class SolrRequestAdjuster {
             Set<String> adjustedQueryFields = fieldMap.getForward().get(queryField);
             if (adjustedQueryFields != null) {
                 if (adjustedQueryFields.size() != 1) {
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "The requested default query field '%s' expanded to %d fields (%s). Only 1 is allowed",
                             queryField, adjustedQueryFields.size(), Strings.join(adjustedQueryFields)));
                 }
@@ -115,7 +112,7 @@ public class SolrRequestAdjuster {
             for (String mappedField: mappedFields) {
                 String mappedKey = "f." + mappedField + (tokens.length == 2 ? "" : tokens[2]);
                 if (request.get(mappedKey) != null) {
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "Mapping '%s' to '%s' in Solr request but the destination key already exists."
                             + "The destination key will be overwritten", key, mappedKey));
                     request.remove(mappedKey);

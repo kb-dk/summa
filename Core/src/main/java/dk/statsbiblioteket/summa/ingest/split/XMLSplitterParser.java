@@ -27,6 +27,7 @@ import org.xml.sax.SAXNotSupportedException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.util.Locale;
 
 /**
  * Splits a XML document into pieces, validates and handles namespaces.
@@ -79,9 +80,9 @@ public class XMLSplitterParser extends ThreadedStreamParser implements XMLSplitt
         } catch (ParserConfigurationException e) {
             throw new RuntimeException("Could not instantiate SAXParser due to configuration exception", e);
         } catch (SAXNotRecognizedException e) {
-            throw new IllegalArgumentException(String.format("SAXProperty %s not recognized", LEXICAL_HANDLER), e);
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "SAXProperty %s not recognized", LEXICAL_HANDLER), e);
         } catch (SAXNotSupportedException e) {
-            throw new IllegalArgumentException(String.format("SAXProperty %s not supported", LEXICAL_HANDLER), e);
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "SAXProperty %s not supported", LEXICAL_HANDLER), e);
         } catch (SAXException e) {
             throw new RuntimeException("Could not instantiate SAXParser", e);
         }
@@ -116,7 +117,7 @@ public class XMLSplitterParser extends ThreadedStreamParser implements XMLSplitt
         //try {
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace(String.format("Produced record in %.5f ms: %s. queueing",
+            log.trace(String.format(Locale.ROOT, "Produced record in %.5f ms: %s. queueing",
                                     (System.nanoTime() - lastRecordStart) / oneMiliSecond, record));
         }
         addToQueue(record);

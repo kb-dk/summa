@@ -27,10 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Take a fulldump and treat it as a update, where non-existing records should
@@ -155,7 +152,7 @@ public class UpdateFromFulldumpFilter extends ObjectFilterImpl{
                                                    DEFAULT_NUMBER_OF_RECORDS_FROM_STORAGE);
 
         ids = new HashSet<>();
-        log.debug(String.format("Initialized with base '%s', maxNumberDeletes %d, numberOfRecordsFromStorage %d",
+        log.debug(String.format(Locale.ROOT, "Initialized with base '%s', maxNumberDeletes %d, numberOfRecordsFromStorage %d",
                                 base, maxNumberDeletes, numberOfRecordsFromStorage));
     }
 

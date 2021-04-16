@@ -34,10 +34,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Uses an external SummaSearcher to resolve relations for the given Payload.
@@ -153,15 +150,16 @@ public class RelationResolver extends ObjectFilterImpl {
         assignAsParents = conf.getBoolean(CONF_ASSIGN_PARENTS, DEFAULT_ASSIGN_PARENTS);
         assignAsChildren = conf.getBoolean(CONF_ASSIGN_CHILDREN, DEFAULT_ASSIGN_CHILDREN);
         if (assignAsParents && assignAsChildren) {
-            log.warn(String.format("Both %s and %s is true. This normally does not make sense. "
+            log.warn(String.format(Locale.ROOT, "Both %s and %s is true. This normally does not make sense. "
                                    + "It creates cycles in the Storage which is not a well-tested",
                                    CONF_ASSIGN_PARENTS, CONF_ASSIGN_CHILDREN));
         }
         if (!assignAsParents && !assignAsChildren) {
-            log.warn(String.format("Both %s and %s is false. No assignment will be performed, "
-                                   + "making this filter inactive except for side-effects such as "
-                                   + "validation and search-testing",
-                                   CONF_ASSIGN_PARENTS, CONF_ASSIGN_CHILDREN));
+            log.warn(String.format(
+                    Locale.ROOT, "Both %s and %s is false. No assignment will be performed, "
+                                 + "making this filter inactive except for side-effects such as "
+                                 + "validation and search-testing",
+                    CONF_ASSIGN_PARENTS, CONF_ASSIGN_CHILDREN));
         }
         discardNonmatched = conf.getBoolean(CONF_NONMATCHED_DISCARD, DEFAULT_NONMATCHED_DISCARD);
         if (metaKeys == null || metaKeys.isEmpty()) {
@@ -189,7 +187,7 @@ public class RelationResolver extends ObjectFilterImpl {
         }
         searcher = createSearchClient(conf);
         quote = conf.getBoolean(CONF_SEARCH_QUOTE, DEFAULT_SEARCH_QUOTE);
-        log.info(String.format("Created RelationResolver with searcher '%s', searchField '%s', "
+        log.info(String.format(Locale.ROOT, "Created RelationResolver with searcher '%s', searchField '%s', "
                                + "quote %b, maxHits %d, metaKey '%s', discard non-matched %b and "
                                + "non-matching folder '%s'",
                                conf.getString(ConnectionConsumer.CONF_RPC_TARGET), searchField, quote, maxHits,

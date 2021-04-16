@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -117,14 +118,14 @@ public class ReplaceFilterTest extends TestCase {
         rules.put(target, "");
         ReplaceFactory factory = new ReplaceFactory(rules);
         InputStream source =
-                new ByteArrayInputStream((target + "foo").getBytes("utf-8"));
-        Reader sourceReader = new InputStreamReader(source, "utf-8");
+                new ByteArrayInputStream((target + "foo").getBytes(StandardCharsets.UTF_8));
+        Reader sourceReader = new InputStreamReader(source, StandardCharsets.UTF_8);
         InputStream processed = new ReaderInputStream(
                 factory.getReplacer(sourceReader), "utf-8");
         ByteArrayOutputStream out = new ByteArrayOutputStream(100);
         Streams.pipe(processed, out);
         assertEquals("The result of the removal should be correct",
-                     "foo", new String(out.toByteArray(), "utf-8"));
+                     "foo", new String(out.toByteArray(), StandardCharsets.UTF_8));
     }
 
     public void testLongTarget() throws Exception {
@@ -169,12 +170,12 @@ public class ReplaceFilterTest extends TestCase {
                                Configuration conf) throws Exception {
         List<Payload> payloads = new ArrayList<>(3);
         payloads.add(new Payload(new Record(
-                "Dummy1", "Dummy", input.getBytes("utf-8"))));
+                "Dummy1", "Dummy", input.getBytes(StandardCharsets.UTF_8))));
         payloads.add(new Payload(
-                new ByteArrayInputStream(input.getBytes("utf-8"))));
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))));
         payloads.add(new Payload(
-                new ByteArrayInputStream(input.getBytes("utf-8")),
-                new Record("Dummy2", "Dummy", input.getBytes("utf-8"))));
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)),
+                new Record("Dummy2", "Dummy", input.getBytes(StandardCharsets.UTF_8))));
         PayloadFeederHelper feeder = new PayloadFeederHelper(payloads);
         ReplaceFilter replaceFilter = new ReplaceFilter(conf);
         replaceFilter.setSource(feeder);

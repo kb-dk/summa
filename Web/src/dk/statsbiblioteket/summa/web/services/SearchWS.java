@@ -633,13 +633,13 @@ public class SearchWS {
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
-            String mes = String.format(
+            String mes = String.format(Locale.ROOT,
                 "Error performing JSON query '%s': %s", json, e.getMessage());
             log.warn(mes, e);
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
         if (log.isDebugEnabled()) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                 "directJSON(%s) finished in %s ms%s",
                 json, System.currentTimeMillis() - startTime,
                  getTiming(res)));
@@ -673,7 +673,7 @@ public class SearchWS {
                                      int startIndex, String sortKey,
                                      boolean reverse) {
         if (log.isTraceEnabled()) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "simpleSearchSorted(query='%s', numberOfRecords=%d, "
                     + "startIndex=%d, sortKey='%s', reverse=%b) entered",
                     query, numberOfRecords, startIndex, sortKey, reverse));
@@ -710,7 +710,7 @@ public class SearchWS {
                               + "startIndex=%d, sortKey='%s', reverse=%b";
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug(String.format("filterSearchSorted(" + PARAMS + ") called",
+            log.debug(String.format(Locale.ROOT, "filterSearchSorted(" + PARAMS + ") called",
                                     filter, query, numberOfRecords, startIndex,
                                     sortKey, reverse));
         }
@@ -733,16 +733,16 @@ public class SearchWS {
                         req.put(DocumentKeys.SEARCH_EXPLAIN, true);
                         continue;
                     }
-                    log.debug(String.format(
+                    log.debug(String.format(Locale.ROOT,
                             "Got unknown processing option '%s' in query '%s'",
                             option, query));
                 }
             } else {
-                log.trace(String.format("No processing options for query '%s'",
+                log.trace(String.format(Locale.ROOT, "No processing options for query '%s'",
                                         query));
             }
         } catch (Exception e) {
-            log.error(String.format(
+            log.error(String.format(Locale.ROOT,
                     "Exception while extracting processing options from query "
                     + "'%s'. Options are skipped and the query left unchanged",
                     query));
@@ -774,17 +774,17 @@ public class SearchWS {
             log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Error executing query '" + PARAMS + "'. Error was: %s",
                     filter, query, numberOfRecords, startIndex,
                     sortKey, reverse, e.getMessage()), e);
-            String mes = String.format("Error performing query: %s", 
+            String mes = String.format(Locale.ROOT, "Error performing query: %s",
                                                                 e.getMessage());
             retXML = getErrorXML(DocumentResponse.NAME, mes, e);
         }
 
         if (log.isDebugEnabled()) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                 "simpleSearchSorted(" + PARAMS + ") finished in %s ms%s",
                 filter, query, numberOfRecords, startIndex, sortKey, reverse,
                 System.currentTimeMillis() - startTime,  getTiming(res)));
@@ -808,7 +808,7 @@ public class SearchWS {
             returnMessage = returnMessage.replace("&", "&amp;").
                 replace("<", "&lt;").replace(">", "&gt;");
             pingTime += System.currentTimeMillis();
-            final String pingResponse = String.format(
+            final String pingResponse = String.format(Locale.ROOT,
                 "<pingresponse >\n"
                 + "<message>%s</message>\n"
                 + "<ms>%d</ms>\n"
@@ -834,7 +834,7 @@ public class SearchWS {
                 "Performed ping for '" + message + "' in " + pingTime + "ms");
             return res.toXML();
         } catch (IOException e) {
-            String mes = String.format("Error pinging with message '%s': %s",
+            String mes = String.format(Locale.ROOT, "Error pinging with message '%s': %s",
                                        message, e.getMessage());
             log.error(mes, e);
             return  getErrorXML("PingResponse", mes, e);

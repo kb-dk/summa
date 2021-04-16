@@ -353,7 +353,7 @@ public class PagingSearchNode extends ArrayList<SearchNode> implements SearchNod
 
     @Override
     public void open(final String location) throws RemoteException {
-        log.debug(String.format("open(%s) called", location));
+        log.debug(String.format(Locale.ROOT, "open(%s) called", location));
         subNode.open(location);
     }
     @Override

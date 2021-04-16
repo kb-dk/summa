@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 
 /**
@@ -131,7 +132,7 @@ public class StreamController implements ObjectFilter {
                     log.trace("makePayload(): Source hasNext, calling source.next()");
                     streamPayload = source.next();
                     if (streamPayload == null) {
-                        log.warn(String.format("Got null Payload from source %s after hasNext() == true", source));
+                        log.warn(String.format(Locale.ROOT, "Got null Payload from source %s after hasNext() == true", source));
                         continue;
                     }
 
@@ -232,12 +233,12 @@ public class StreamController implements ObjectFilter {
     @Override
     public final void close(boolean success) {
         if (source == null) {
-            log.warn(String.format("close(%b): Cannot close as no source is specified", success));
+            log.warn(String.format(Locale.ROOT, "close(%b): Cannot close as no source is specified", success));
             return;
         }
         parser.stop();
         source.close(success);
-        log.info(String.format(
+        log.info(String.format(Locale.ROOT,
                 "Close(%b) called for %s with %d produced Payloads at %.1f payloads/second or %.1f ms/payload",
                 success, parser, profiler.getBeats(), profiler.getBps(false),
                 profiler.getBps(false) > 0.0 ? 1.0/profiler.getBps(false)*1000 : 0));

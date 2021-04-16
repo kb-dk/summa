@@ -29,6 +29,7 @@ import org.apache.solr.exposed.ExposedIndexLookupParams;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -80,7 +81,7 @@ public class SBSolrSearchNode extends SolrSearchNode {
         efacetHandlerID = conf.getString(CONF_EFACET_HANDLER, DEFAULT_EFACET_HANDLER);
         didYouMeanHandlerID = conf.getString(CONF_DIDYOUMEAN_HANDLER, DEFAULT_DIDYOUMEAN_HANDLER);
 
-        log.info(String.format("Created SBSolrSearchNode(eFacets=%s)", useEfacet ? efacetHandlerID : "no"));
+        log.info(String.format(Locale.ROOT, "Created SBSolrSearchNode(eFacets=%s)", useEfacet ? efacetHandlerID : "no"));
     }
 
     @Override

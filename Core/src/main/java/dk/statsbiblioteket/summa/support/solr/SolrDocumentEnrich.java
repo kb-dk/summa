@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -139,11 +140,7 @@ public class SolrDocumentEnrich implements SolrDocumentAdjustFilter.Adjuster {
         addElements(record);
         addDataEntries(payload);
         enriched.append(oldContent.substring(contentStart));
-        try {
-            record.setContent(enriched.toString().getBytes("utf-8"), false);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("UTF-8 should be available everywhere", e);
-        }
+        record.setContent(enriched.toString().getBytes(StandardCharsets.UTF_8), false);
         return true;
     }
 

@@ -22,6 +22,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.IOException;
 import java.net.NoRouteToHostException;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * A helper class utilizing a stateless connection to a storage service exposing
@@ -71,7 +72,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage> imp
             storage.flush(record, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException(String.format("flush(%s) failed: %s", record, t.getMessage()), t);
+            throw new IOException(String.format(Locale.ROOT, "flush(%s) failed: %s", record, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
@@ -94,7 +95,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage> imp
             storage.flushAll(records, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException(String.format("flushAll(%s) failed: %s", records, t.getMessage()), t);
+            throw new IOException(String.format(Locale.ROOT, "flushAll(%s) failed: %s", records, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
@@ -117,7 +118,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage> imp
             storage.clearBase(base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException(String.format("clearBase(%s) failed: %s", base, t.getMessage()), t);
+            throw new IOException(String.format(Locale.ROOT, "clearBase(%s) failed: %s", base, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
@@ -135,7 +136,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage> imp
             return storage.batchJob(jobName, base, minMtime, maxMtime, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException(String.format("batchJob(%s, %s) failed: %s", jobName, base, t.getMessage()), t);
+            throw new IOException(String.format(Locale.ROOT, "batchJob(%s, %s) failed: %s", jobName, base, t.getMessage()), t);
         } finally {
             releaseConnection();
         }

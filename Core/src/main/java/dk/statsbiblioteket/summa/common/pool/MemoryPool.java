@@ -26,10 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * The MemoryPool stores all values in RAM. No connection to any underlying
@@ -60,24 +57,24 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                   + ", " + forceNew + ") called");
         setBaseData(location, poolName, readOnly);
         if (forceNew) {
-            log.debug(String.format("Force creating new pool '%s' at '%s'",
+            log.debug(String.format(Locale.ROOT, "Force creating new pool '%s' at '%s'",
                                     poolName, location));
             values = new ArrayList<>(DEFAULT_SIZE);
             return false;
         }
         if (!(getIndexFile().exists() && getValueFile().exists())) {
-            log.debug(String.format("No existing data for '%s' at '%s'. "
-                                    + "Creating new pool", poolName, location));
+            log.debug(String.format(
+                    Locale.ROOT, "No existing data for '%s' at '%s'. Creating new pool", poolName, location));
             values = new ArrayList<>(DEFAULT_SIZE);
             return false;
         }
-        log.trace(String.format("Attempting load of index for '%s' from '%s'",
+        log.trace(String.format(Locale.ROOT, "Attempting load of index for '%s' from '%s'",
                                 poolName, getIndexFile()));
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "Loading index and values for pool '%s' at '%s'",
                 poolName, getIndexFile()));
         long[] index = loadIndex();
-        log.debug(String.format("Index loaded for pool '%s' at '%s'",
+        log.debug(String.format(Locale.ROOT, "Index loaded for pool '%s' at '%s'",
                                 poolName, getIndexFile()));
 
         LineReader lr = new LineReader(getValueFile(), "r");
@@ -89,7 +86,7 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             add(readValue(lr, element));
             profiler.beat();
         }
-        log.debug(String.format("Loaded values for '%s' from '%s' in %s",
+        log.debug(String.format(Locale.ROOT, "Loaded values for '%s' from '%s' in %s",
                                 poolName, getValueFile(),
                                 profiler.getSpendTime()));
         lr.close();

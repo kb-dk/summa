@@ -21,6 +21,8 @@ import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Locale;
+
 /**
  * Helper class used to instantiate the correct {@link SummaSearcher} given a {@link Configuration}
  */
@@ -45,7 +47,7 @@ public class SummaSearcherFactory {
         try {
             seacherClass = conf.getClass(SummaSearcher.CONF_CLASS, SummaSearcher.class, defaultClass);
         } catch (Exception e) {
-            throw new Configurable.ConfigurationException(String.format(
+            throw new Configurable.ConfigurationException(String.format(Locale.ROOT,
                     "Could not get searcher class from property %s", SummaSearcher.CONF_CLASS), e);
         }
 
@@ -56,7 +58,7 @@ public class SummaSearcherFactory {
             log.info("Finished instantiating " + searcher);
             return searcher;
         } catch (Exception e) {
-            String message = String.format("Failed to instantiate searcher class %s", seacherClass);
+            String message = String.format(Locale.ROOT, "Failed to instantiate searcher class %s", seacherClass);
             Logging.fatal(log, "SummaSearcherFactory", message, e);
             throw new Configurable.ConfigurationException(message, e);
         }

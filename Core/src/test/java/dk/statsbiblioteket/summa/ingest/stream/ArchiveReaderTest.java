@@ -24,6 +24,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -192,7 +193,7 @@ public class ArchiveReaderTest extends TestCase {
         TFile zip = new TFile("testarchive_" + entryCount + "_" + batch + (nestedZIPs ? "_nested" : "") + ".zip");
         try {
             createTestArchive(zip, entryCount, batch, nestedZIPs);
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "Iterating with %s of size %dMB, containing %d entries (batch size %d), %susing nested archives",
                     zip.getPath(), zip.length() / 1048576, entryCount, batch, nestedZIPs ? "" : "not "));
             checkArchive(zip, entryCount, batch, nestedZIPs);

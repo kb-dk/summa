@@ -42,6 +42,7 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.util.*;
 
@@ -421,7 +422,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         try {
             barrierSearch(request, responses);
         } catch (StackOverflowError e) {
-            String message = String.format(
+            String message = String.format(Locale.ROOT,
                 "Caught StackOverflow at outer level during handling of Solr request %s:\n%s",
                 request.toString(true), reduceStackTrace(request, e));
             log.error(message, e);
@@ -527,7 +528,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             solrResponse = sums.getKey();
             solrTiming = sums.getValue();
         } catch (StackOverflowError e) {
-            String message = String.format("Caught StackOverflow while performing Solr request %s:\n%s",
+            String message = String.format(Locale.ROOT, "Caught StackOverflow while performing Solr request %s:\n%s",
                                            request.toString(true), reduceStackTrace(request, e));
             log.error(message, e);
             throw new RemoteException("SolrSearchNode.barrierSearch: " + message);
@@ -556,7 +557,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             }
             throw new RemoteException(message, e);
         } catch (StackOverflowError e) {
-            String message = String.format(
+            String message = String.format(Locale.ROOT,
                 "Caught StackOverflow while building response for Solr request %s\nReduced stack trace:\n%s\n"
                 + "Reduced raw Solr response:\n%s",
                 request.toString(true), reduceStackTrace(request, e),
@@ -876,7 +877,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         // http://www.xyzws.com/Javafaq/how-to-use-httpurlconnection-post-data-to-web-server/139
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setRequestProperty("Content-Length", "" + Integer.toString(params.getBytes().length));
+        conn.setRequestProperty("Content-Length", "" + Integer.toString(params.getBytes(StandardCharsets.UTF_8).length));
         conn.setUseCaches (false);
         conn.setDoInput(true);
         conn.setDoOutput(true);
@@ -907,7 +908,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         BufferedReader in;
         long rawCall = -System.currentTimeMillis();
         try {
-        	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+        	in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
             String str;
 
             while ((str = in.readLine()) != null) {
@@ -923,11 +924,11 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         } catch (Exception e) {
             rawCall += System.currentTimeMillis();
             lastDataTime = rawCall;
-            String error = String.format(
+            String error = String.format(Locale.ROOT,
                 "getData(host='%s', command='%s') for %s failed with error stream\n%s",
                 "http://" + host, command, getID(),
                 conn.getErrorStream() == null ? "N/A" :
-                        Strings.flush(new InputStreamReader(conn.getErrorStream(), "UTF-8")));
+                        Strings.flush(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8)));
             log.warn(error, e);
             throw new IOException(error, e);
         }
@@ -1047,7 +1048,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
             if (dest.containsKey(entry.getKey())) {
                 // TODO: Find fuller list of single value
                 if ("q".equals(entry.getKey())) {
-                    log.warn(String.format(
+                    log.warn(String.format(Locale.ROOT,
                             "The solr params contained q='%s' while the explicit params contained q='%s'. "
                             + "The solr param will overwrite the explicit param",
                             Strings.join(entry.getValue()), Strings.join(dest.get(entry.getKey()))));
@@ -1109,7 +1110,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     // TODO: Extend this
     public String toString() {
 
-        return String.format("SolrSearchNode(id=%s, recordCache=%s, host=%s, rest=%s)",
+        return String.format(Locale.ROOT, "SolrSearchNode(id=%s, recordCache=%s, host=%s, rest=%s)",
                              getID(), cacheType, host, restCall);
     }
 }

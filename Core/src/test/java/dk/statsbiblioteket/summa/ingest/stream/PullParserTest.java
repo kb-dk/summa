@@ -28,6 +28,7 @@ import dk.statsbiblioteket.util.Streams;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -59,7 +60,7 @@ public class PullParserTest extends TestCase {
                 Resolver.getURL("ingest/filereader/dummyA.xml").toString() + "\n"
                 + Resolver.getURL("ingest/filereader/dummyC.xml").toString();
         Payload sourcePayload = new Payload(
-                new ByteArrayInputStream(urls.getBytes("utf-8")));
+                new ByteArrayInputStream(urls.getBytes(StandardCharsets.UTF_8)));
         PayloadFeederHelper feeder = new PayloadFeederHelper(
                 Arrays.asList(sourcePayload));
         puller.setSource(feeder);

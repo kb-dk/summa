@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package dk.statsbiblioteket.gwsc;
+package dk.statsbiblioteket.summa.web.gwsc;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
@@ -30,9 +30,12 @@ import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Locale;
 
 /**
  * Web service class, responsible for creating/starting web services. Also
@@ -120,7 +123,7 @@ public class WebServices {
             return new FileInputStream(new File(resource.toURI()));
         } catch (URISyntaxException e) {
             //noinspection DuplicateStringLiteralInspection
-            throw new RuntimeException(String.format("Unable to convert the URL '%s' to URI", resource), e);
+            throw new RuntimeException(String.format(Locale.ROOT, "Unable to convert the URL '%s' to URI", resource), e);
         }
     }
 
@@ -379,7 +382,7 @@ public class WebServices {
         BufferedReader in;
         in = dummy != null && dummy.length == 2 ?
              new BufferedReader(new InputStreamReader(conn.getInputStream(), dummy[1])) :
-             new BufferedReader(new InputStreamReader(conn.getInputStream()));
+             new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
         String temp;
         while ((temp = in.readLine()) != null){
             response += temp + "\n";

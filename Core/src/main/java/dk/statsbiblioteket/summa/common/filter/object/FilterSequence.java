@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Wraps a sequence of ObjectFilters - in the Composite Pattern this would be a node.
@@ -89,9 +90,9 @@ public class FilterSequence extends ObjectFilterBase {
                 filterNames = conf.getStrings(CONF_FILTERS);
             } catch (Exception e2) {
                 throw new ConfigurationException(String.format(
-                        "No Filters specified in property %s for FilterSequence", CONF_FILTERS), e);
+                        Locale.ROOT, "No Filters specified in property %s for FilterSequence", CONF_FILTERS), e);
             }
-            throw new ConfigurationException(String.format(
+            throw new ConfigurationException(String.format(Locale.ROOT,
                     "A list of Strings was specified in the property %s. A list of xproperties with filter-setups was "
                     + "expected. Maybe an old configuration-file hasn't been updated to the list-of-xproperties style? "
                     + "Encountered Strings was %s",
@@ -117,7 +118,7 @@ public class FilterSequence extends ObjectFilterBase {
             try {
                 if (!filterConf.getBoolean(CONF_FILTER_ENABLED, DEFAULT_FILTER_ENABLED)) {
                     //noinspection DuplicateStringLiteralInspection
-                    log.debug(String.format("Skipping %s filter of class %s as it is not enabled",
+                    log.debug(String.format(Locale.ROOT, "Skipping %s filter of class %s as it is not enabled",
                                             filterConf.getString(Filter.CONF_FILTER_NAME, "unknown"),
                                             filterConf.getString(CONF_FILTER_CLASS, "unknown")));
                     continue;
@@ -131,7 +132,7 @@ public class FilterSequence extends ObjectFilterBase {
                 lastFilter = filter;
                 filters.add(lastFilter);
             } catch (Exception e) {
-                throw new IOException(String.format("Could not create filter '%s'", filterConf), e);
+                throw new IOException(String.format(Locale.ROOT, "Could not create filter '%s'", filterConf), e);
             }
         }
         if (filters.isEmpty()) {

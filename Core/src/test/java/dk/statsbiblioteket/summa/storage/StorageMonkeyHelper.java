@@ -26,10 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -152,7 +149,7 @@ public class StorageMonkeyHelper  {
                                 int jobSize,
                                 int minFlushSize, int maxFlushSize) {
         if (deletes > news) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(String.format(Locale.ROOT,
                     "The number of deletes was %d while the number of news was "
                     + "%d. the number of deletes must be less than or equal to "
                     + "news", deletes, news));

@@ -11,6 +11,7 @@ import junit.framework.TestSuite;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -53,7 +54,7 @@ public class SnippetFilterTest extends TestCase {
     public String filter(Configuration conf, String input)
                                            throws UnsupportedEncodingException {
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
-            new Payload(new ByteArrayInputStream(input.getBytes("utf-8")))));
+            new Payload(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)))));
         conf.set(SnippetFilter.CONF_DESTINATION, "hest");
         conf.set(SnippetFilter.CONF_PRESERVE_STREAM, true);
         SnippetFilter snipper = new SnippetFilter(conf);

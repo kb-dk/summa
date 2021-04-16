@@ -25,7 +25,6 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.database.postgresql.PostGreSQLStorage;
 import dk.statsbiblioteket.util.Profiler;
@@ -35,10 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -133,8 +129,6 @@ public class StorageTest extends NoExitTestCase {
         assertNull(not_found);
 
     }
-
-
 
     public void testClearParentTouchChildrenWhenUpdate() throws Exception {
         // Top node: Lademanns leksikon
@@ -507,6 +501,7 @@ public class StorageTest extends NoExitTestCase {
         ));
     }
 
+    // FIXME: This only runs if it is the first test executed from this class
     public void testStorageWatcher() throws Exception {
         final String STORAGE_NAME = "watcher_storage";
         Storage storage = ReleaseHelper.startStorage(STORAGE_NAME);
@@ -545,7 +540,7 @@ public class StorageTest extends NoExitTestCase {
         Profiler profiler = new Profiler(records);
         List<Record> recordList = new ArrayList<>(records);
         for (int batch = 0 ; batch < batches ; batch++) {
-            log.debug(String.format(
+            log.debug(String.format(Locale.ROOT,
                     "Running batch %d/%d with a total of %d MB",
                     batch+1, batches, records * recordSize / 1048576));
             recordList.clear();
@@ -558,16 +553,14 @@ public class StorageTest extends NoExitTestCase {
             }
             storage.flushAll(recordList);
         }
-        log.info(String.format(
-                "Ingested %d records of %d bytes in %s. Average speed: %s "
-                + "records/second",
-                records, recordSize,
-                profiler.getSpendTime(), profiler.getBps(false)));
+        log.info(String.format(Locale.ROOT, "Ingested %d records of %d bytes in %s. Average speed: %s records/second",
+                               records, recordSize, profiler.getSpendTime(), profiler.getBps(false)));
         storage.close();
         ReleaseHelper.cleanup();
         log.info("Finished scale-test");
     }
 
+    // FIXME: This only runs if it is the first test executed from this class
     public void testRecordReader() throws Exception {
         final String STORAGE_ID = "recordreader_storage";
         Storage storage = IndexTest.createSampleStorage(STORAGE_ID);
@@ -592,14 +585,16 @@ public class StorageTest extends NoExitTestCase {
 
         reader = new RecordReader(conf);
         assertTrue("The second reader should have something", reader.hasNext());
-        int newPumps = 0;
+        int reads = 0;
         while (reader.hasNext()) {
             Payload payload = reader.next();
-            log.trace("Pump #" + ++newPumps + " completed. Got " + payload);
+            log.trace("Next #" + ++reads + " completed. Got " + payload);
         }
-        log.debug("newPumps was " + newPumps);
-        assertEquals("Pump-round 1 & 2 should give the same number",
-                     pumps, newPumps);
+        log.debug("newPumps was " + reads);
+
+        // The last pumps return false, but it still pumped
+        assertEquals("Pump()+1 and next() should give the same number",
+                     pumps+1, reads);
         reader.close(true);
 
         conf.set(RecordReader.CONF_START_FROM_SCRATCH, false);

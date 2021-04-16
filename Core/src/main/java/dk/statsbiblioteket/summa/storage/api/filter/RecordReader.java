@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.NoSuchElementException;
 
 /**
@@ -414,6 +415,7 @@ public class RecordReader extends ObjectFilterBase implements StorageChangeListe
         }
         if (recordIterator == null) {
             log.debug(String.format(
+                    Locale.ROOT,
                     "Creating initial record iterator for Records modified after " + ProgressTracker.ISO_TIME,
                     lastRecordTimestamp));
 
@@ -434,7 +436,7 @@ public class RecordReader extends ObjectFilterBase implements StorageChangeListe
             return false;
         }
         // We have an iterator but it is empty
-        log.debug(String.format(
+        log.debug(String.format(Locale.ROOT,
                 "Updating record iterator for Records modified after " + ProgressTracker.ISO_TIME,
                 lastRecordTimestamp));
 
@@ -594,9 +596,9 @@ public class RecordReader extends ObjectFilterBase implements StorageChangeListe
 
                 // TODO: Avoid sending the duplicate record
                 log.info("Stopping further Record requests as the Record " + payload.getId() + " has timestamp" +
-                         String.format(ProgressTracker.ISO_TIME, lastRecordTimestamp) + ", which is later than " +
+                         String.format(Locale.ROOT, ProgressTracker.ISO_TIME, lastRecordTimestamp) + ", which is later than " +
                          " System time when the first record was received "
-                         + String.format(ProgressTracker.ISO_TIME, firstRecordReceivedTime)
+                         + String.format(Locale.ROOT, ProgressTracker.ISO_TIME, firstRecordReceivedTime)
                          + ". The current Record will be the last");
                 markEof();
             }
@@ -605,7 +607,7 @@ public class RecordReader extends ObjectFilterBase implements StorageChangeListe
 
             if (log.isTraceEnabled()) {
                 log.trace("next(): Got lastModified timestamp " +
-                          String.format(ProgressTracker.ISO_TIME, payload.getRecord().getLastModified())
+                          String.format(Locale.ROOT, ProgressTracker.ISO_TIME, payload.getRecord().getLastModified())
                           + " for " + payload);
             }
 
@@ -701,13 +703,13 @@ public class RecordReader extends ObjectFilterBase implements StorageChangeListe
 
     @Override
     public String toString() {
-        return String.format(
+        return String.format(Locale.ROOT,
                 "RecordReader(startFromScratch=%b, storage=%s, bases=%s, startMTime=%s, progress=%s, "
                 + "maxRecords=%d, maxSeconds=%d, batchSize=%d, loadDate=%b, stayAlive=%b, "
                 + "stopOnNewer=%b, allowPartialDeliveries=%b, readRecords=%d, continueOffset=%dms, "
                 + "stats=%s)",
                 startFromScratch, storage, base == null || "".equals(base) ? "*" : base,
-                String.format(ProgressTracker.ISO_TIME, lastRecordTimestamp), progressTracker,
+                String.format(Locale.ROOT, ProgressTracker.ISO_TIME, lastRecordTimestamp), progressTracker,
                 maxReadRecords, maxReadSeconds, batchSize, loadData, storageWatcher != null,
                 stopOnNewer, allowPartialDeliveries, sizeProcess.getRecordCount(), continueOffset, getProcessStats());
     }

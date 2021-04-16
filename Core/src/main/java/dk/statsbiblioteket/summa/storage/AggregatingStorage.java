@@ -191,7 +191,7 @@ public class AggregatingStorage extends StorageBase {
                 log.debug("Iterkey for '" + reader.toString() + "' is '" + subKey);
                 // TODO Better collision handling
                 if (iterators.containsKey(subKey)) {
-                    throw new RuntimeException(String.format("Internal error. Iterator key collision '%s'", subKey));
+                    throw new RuntimeException(String.format(Locale.ROOT, "Internal error. Iterator key collision '%s'", subKey));
                 }
 
                 // Calculate the merger's iterKey as the sum the children's
@@ -1013,7 +1013,7 @@ public class AggregatingStorage extends StorageBase {
     @Override
     public String batchJob(String jobName, String base, long minMtime, long maxMtime,
                            QueryOptions options) throws IOException {
-        log.debug(String.format("Batch job '%s' on '%s", jobName, base));
+        log.debug(String.format(Locale.ROOT, "Batch job '%s' on '%s", jobName, base));
 
         if (base != null) {
             StorageWriterClient writer = getSubStorageWriter(base);
@@ -1032,7 +1032,7 @@ public class AggregatingStorage extends StorageBase {
                     result = sub.batchJob(jobName, base, minMtime, maxMtime, options);
                 } catch (Throwable t) {
                     log.error("batchJob: Exception while running '" + jobName + "'", t);
-                    result = String.format("ERROR(%s): %s", sub.getVendorId(), t.getMessage());
+                    result = String.format(Locale.ROOT, "ERROR(%s): %s", sub.getVendorId(), t.getMessage());
                 }
                 results.add(result);
             }

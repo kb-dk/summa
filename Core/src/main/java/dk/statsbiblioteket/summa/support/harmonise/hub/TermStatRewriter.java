@@ -186,7 +186,7 @@ public class TermStatRewriter implements Configurable, RequestAdjuster {
                     numDocs += t.getDocCount();
                 }
                 if (log.isTraceEnabled()) {
-                    log.trace(String.format("rewrite: target='%s', term='%s', df=%f, docCount=%f",
+                    log.trace(String.format(Locale.ROOT, "rewrite: target='%s', term='%s', df=%f, docCount=%f",
                                             target.getID(), term, docFreq, numDocs));
                 }
 

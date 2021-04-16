@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -100,7 +101,7 @@ public class MARC21SlimTweaker extends ObjectFilterImpl {
         controlfields = Pattern.compile(conf.getString(CONF_CONTROLFIELDS, DEFAULT_CONTROLFIELDS));
         subfieldFix = conf.getBoolean(CONF_SUBFIELD_FIX, subfieldFix);
         subfieldSeparator = conf.getString(CONF_SUBFIELD_SEPARATOR, subfieldSeparator);
-        log.debug(String.format("Created MARC21SlimTweaker(controlFields='%s', subfieldfix=%b, subfieldSeparator='%s')",
+        log.debug(String.format(Locale.ROOT, "Created MARC21SlimTweaker(controlFields='%s', subfieldfix=%b, subfieldSeparator='%s')",
                                 controlfields.pattern(), subfieldFix, subfieldSeparator));
     }
 

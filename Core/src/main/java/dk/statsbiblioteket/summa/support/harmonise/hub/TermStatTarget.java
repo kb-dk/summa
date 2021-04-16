@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * The target encapsulates a TermStat component to deliver document frequencies.
@@ -169,7 +170,7 @@ public class TermStatTarget implements Configurable {
 
     @Override
     public String toString() {
-        return String.format("TermStatTarget(id=%s, componentID=%s, termStatFile=%s, fallbackDF=%d, weight=%s)",
+        return String.format(Locale.ROOT, "TermStatTarget(id=%s, componentID=%s, termStatFile=%s, fallbackDF=%d, weight=%s)",
                              id, componentID, termstatLocation, fallbackDF, weight);
     }
 

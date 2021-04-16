@@ -29,9 +29,11 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Locale;
 
 /**
  * The result of an index-lookup, suitable for later merging and sorting.
@@ -74,7 +76,7 @@ public class IndexResponse extends ResponseImpl {
      */
     public void addTerm(Pair<String, Integer> term) {
         if (log.isTraceEnabled()) {
-            log.trace(String.format("Adding term '%s' to field '%s'", term, request.getField()));
+            log.trace(String.format(Locale.ROOT, "Adding term '%s' to field '%s'", term, request.getField()));
         }
         if (term.getKey() == null) {
             log.warn("addTerm was called with null as term. Modifying to the String 'null'");
@@ -110,7 +112,7 @@ public class IndexResponse extends ResponseImpl {
     public void merge(Response other) {
         log.trace("Index-lookup merge called");
         if (!(other instanceof IndexResponse)) {
-            throw new IllegalArgumentException(String.format("Expected index response of class '%s' but got '%s'",
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "Expected index response of class '%s' but got '%s'",
                                                              getClass().toString(), other.getClass().toString()));
         }
         super.merge(other);
@@ -159,7 +161,8 @@ public class IndexResponse extends ResponseImpl {
         public int compare(Pair<String, Integer> o1, Pair<String, Integer> o2) {
             return collator == null ?
                    o1.getKey().compareToIgnoreCase(o2.getKey()) :
-                   collator.compare(o1.getKey().toLowerCase(), o2.getKey().toLowerCase());
+                    // TODO: Is it correct to use Locale.ROOT here. Should this be configurable?
+                   collator.compare(o1.getKey().toLowerCase(Locale.ROOT), o2.getKey().toLowerCase(Locale.ROOT));
         }
     }
 

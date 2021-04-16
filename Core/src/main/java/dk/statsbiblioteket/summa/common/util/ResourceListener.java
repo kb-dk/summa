@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Locale;
 
 /**
  * Periodically fetches the content of a given URL and calls
@@ -81,7 +82,7 @@ public abstract class ResourceListener implements Runnable {
         try {
             newContent = Resolver.getUTF8Content(location);
         } catch (IOException e) {
-            lastException = new IOException(String.format("Exception fetching '%s'", location), e);
+            lastException = new IOException(String.format(Locale.ROOT, "Exception fetching '%s'", location), e);
             return false;
         }
         if (newContent == null) {

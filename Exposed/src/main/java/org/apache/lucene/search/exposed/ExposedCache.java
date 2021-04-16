@@ -108,7 +108,7 @@ public class ExposedCache implements IndexReader.ReaderClosedListener {
       String currentConcat = concatFields.get(field);
       if (concat != null && currentConcat == null || concat == null && currentConcat != null
           || concat != null && !concat.equals(currentConcat)) {
-        throw new IllegalArgumentException(String.format(
+        throw new IllegalArgumentException(String.format(Locale.ROOT,
             "The fields for the group %s did not have the same concat flags. " +
             "First field '%s' had concat=%s, the field '%s' has concat=%s",
             groupName, fieldNames.get(0), concat, field, concatFields.get(field)));

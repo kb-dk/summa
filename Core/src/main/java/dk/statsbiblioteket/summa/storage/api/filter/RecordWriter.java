@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.NoRouteToHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Connects to a Storage and ingests received Records into the storage.
@@ -241,7 +242,7 @@ public class RecordWriter extends ObjectFilterImpl {
                 String stats = records.size() + " records of total size " + batchByteSize / 1024 + "KB, last recordID:'"
                                + (records.isEmpty() ? "N/A" : records.get(records.size()-1).getId()) + "'";
                 if (log.isDebugEnabled()) {
-                    log.debug(String.format("Committing %s.", stats));
+                    log.debug(String.format(Locale.ROOT, "Committing %s.", stats));
                 }
                 long start = System.nanoTime();
                 timingSend.start();
@@ -251,7 +252,7 @@ public class RecordWriter extends ObjectFilterImpl {
                 totalBatchesCommitted++;
                 totalRecordsCommitted += records.size();
                 if (statusEvery != 0 && totalBatchesCommitted % statusEvery == 0 || log.isDebugEnabled()) {
-                    final String message =String.format(
+                    final String message =String.format(Locale.ROOT,
                             "Committed %s in %.1fms. Last commit was %dms ago. %s",
                             stats, (System.nanoTime() - start) / 1000000D,
                             (System.nanoTime() - lastCommit) / 1000000, getBatchProcessStats());
@@ -341,7 +342,7 @@ public class RecordWriter extends ObjectFilterImpl {
         feedback = false;
         log.trace("Constructing RecordWriter");
         if (conf.valueExists(DEPRECATED_CONF_STORAGE)) {
-            log.warn(String.format(
+            log.warn(String.format(Locale.ROOT,
                     "Old Storage address configuration detected. The key %s has been replaced by %s",
                     DEPRECATED_CONF_STORAGE, ConnectionConsumer.CONF_RPC_TARGET));
         }
@@ -431,7 +432,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
     @Override
     public void close(boolean success) {
-        log.info(String.format("close(%s) with eofReached == %b called", success, eofReached));
+        log.info(String.format(Locale.ROOT, "close(%s) with eofReached == %b called", success, eofReached));
         boolean initialEofReached = eofReached;
         if (initialEofReached && success) {
             log.info(
@@ -443,9 +444,9 @@ public class RecordWriter extends ObjectFilterImpl {
             }
         }
         try {
-            log.info(String.format("close(%s): Closing super (which closes source)", success));
+            log.info(String.format(Locale.ROOT, "close(%s): Closing super (which closes source)", success));
             super.close(success);
-            log.info(String.format("close(%s): super closed without any known problems", success));
+            log.info(String.format(Locale.ROOT, "close(%s): super closed without any known problems", success));
         } finally {
             if (!(initialEofReached && success)) {
                 log.info("Waiting for batch jobs to be committed");

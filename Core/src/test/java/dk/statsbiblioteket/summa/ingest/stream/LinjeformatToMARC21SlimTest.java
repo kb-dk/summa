@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class LinjeformatToMARC21SlimTest extends TestCase {
@@ -96,7 +97,7 @@ public class LinjeformatToMARC21SlimTest extends TestCase {
 
     public void testConforming() throws Exception {
         Payload sourcePayload = new Payload(
-                new ByteArrayInputStream(CONFORMING.getBytes()));
+                new ByteArrayInputStream(CONFORMING.getBytes(StandardCharsets.UTF_8)));
         PayloadFeederHelper feeder = new PayloadFeederHelper(
                 Arrays.asList(sourcePayload));
         Configuration conf = Configuration.newMemoryBased(
@@ -117,7 +118,7 @@ public class LinjeformatToMARC21SlimTest extends TestCase {
 
     public void testNonConforming() throws Exception {
         Payload sourcePayload = new Payload(
-                new ByteArrayInputStream(NON_CONFORMING.getBytes()));
+                new ByteArrayInputStream(NON_CONFORMING.getBytes(StandardCharsets.UTF_8)));
         PayloadFeederHelper feeder = new PayloadFeederHelper(
                 Arrays.asList(sourcePayload));
         Configuration conf = Configuration.newMemoryBased(
