@@ -5,7 +5,7 @@
     <parent>
         <groupId>dk.statsbiblioteket.summa</groupId>
         <artifactId>summa</artifactId>
-        <version>2.5.3-20181107</version>
+        <version>2.5.4-20210909</version>
     </parent>
 
     <artifactId>summa-sbsolr</artifactId>
