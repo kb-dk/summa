@@ -4,7 +4,9 @@
 mvn -N versions:update-child-modules
 VERSION=`cat pom.xml | grep -A 1 "<artifactId>summa" | tr '\n' ' ' | sed 's/.*<version>\([^>]\+\)<\/version>.*/\1/'`
 echo "*** Proposed actions (not performed automatically):"
-echo "git commit -m \"Bumped to $VERSION\" pom.xml */pom.xml */*/pom.xml"
+echo "git commit -m \"Bumped to $VERSION\" pom.xml */pom.xml */*/pom.xml Web/Modules/SummaWeb/pom.xml"
+echo ""
+echo "TODO: Manually upgrade Web/Modules/SummaWeb/pom.xml (why?)"
 
 if [ "." != ".`echo $VERSION | grep SNAPSHOT`" ]; then
     exit
