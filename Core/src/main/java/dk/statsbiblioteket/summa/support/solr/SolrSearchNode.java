@@ -959,9 +959,16 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         int startPage = Math.max(0, startIndex); // Solr pages exactly as Lucene
         //int startPage = Math.max(0, maxRecords == 0 ? 0 : (startIndex-1) / maxRecords);
         Map<String, List<String>> queryMap = new HashMap<>();
-        // TODO: Handle solr fl key case
-        if (request.containsKey(DocumentKeys.SEARCH_RESULT_FIELDS)) {
-            Set<String> fl = new HashSet<>(request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS));
+        List<String> flSumma = request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS, (List<String>)null);
+        List<String> flSolr = request.getStrings(SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", (List<String>)null);
+        if (flSumma != null && flSolr != null) {
+            log.warn("Both " + DocumentKeys.SEARCH_RESULT_FIELDS + "=" + flSumma + " and " +
+                     SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl" + "=" + flSolr + ". Keeping first one");
+        }
+        List<String> flSelected = flSumma != null ? flSumma : flSolr; // fl can be null and that is valid
+
+        if (flSelected != null) {
+            Set<String> fl = new HashSet<>(flSelected);
             if (sortKey != null) {
                 fl.add(sortKey); // In order to return the value of the sortKey as part of the response
             }
@@ -1044,6 +1051,9 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
 
     private void append(Map<String, List<String>> src, Map<String, List<String>> dest) {
         for (Map.Entry<String, List<String>> entry: src.entrySet()) {
+            if ((SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl").equals(entry.getKey())) {
+                continue; // fl is handled in buildsolrQuery
+            }
             if (dest.containsKey(entry.getKey())) {
                 // TODO: Find fuller list of single value
                 if ("q".equals(entry.getKey())) {

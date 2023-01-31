@@ -48,6 +48,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.crypto.spec.PSource;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.rmi.RemoteException;
@@ -107,6 +108,19 @@ public class SolrSearchNodeTest extends TestCase {
 
         String PHRASE = "Solr sample document";
         assertTrue("The result should contain the phrase '" + PHRASE + "'", responses.toXML().contains(PHRASE));
+    }
+
+    public void testSortWithFieldListSolrParam() throws Exception {
+        performBasicIngest();
+        ResponseCollection responses = search(new Request(
+                DocumentKeys.SEARCH_QUERY, "fulltext:first",
+                DocumentKeys.SEARCH_SORTKEY, "recordID",
+                SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "title_org fulltext"
+        ));
+        DocumentResponse documents = ((DocumentResponse)responses.iterator().next());
+        DocumentResponse.Record record = documents.getRecords().get(0);
+        assertTrue("There should be at most 3 fields in the record but there was " + record.size(),
+                   record.size() <= 3);
     }
 
     public void testSleep() throws Exception {
@@ -328,13 +342,61 @@ public class SolrSearchNodeTest extends TestCase {
             DocumentResponse docs = (DocumentResponse)responses.iterator().next();
             // TODO: Grep for sortKey != null
             for (DocumentResponse.Record record: docs.getRecords()) {
-                System.out.print("Record: " + record + ":");
-                for (DocumentResponse.Field field: record) {
-                    System.out.print(" " + field.getName() + "=\"" + field.getContent() + "\"");
-                }
-                System.out.println();
+                printRecord(record);
             }
         }
+    }
+
+    public void testSortingPlusFieldList() throws Exception {
+        final int RECORDS = 100;
+        ingestFacets(RECORDS);
+        SearchNode searcher = getSearcher();
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy*",
+                    DocumentKeys.SEARCH_SORTKEY, "sort_year_asc",
+                    DocumentKeys.SEARCH_MAX_RECORDS, 10,
+                    DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, sort_title"
+            ), responses);
+            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            for (DocumentResponse.Record record: docs.getRecords()) {
+                assertFalse("The number of returned fields should not exceed the 2 explicit result fields " +
+                            "plus 1 sort field, but there were " + record.size(), record.size() > 3);
+                //printRecord(record);
+            }
+        }
+    }
+
+    public void testSortingPlusFieldListSolrParam() throws Exception {
+        final int RECORDS = 100;
+        ingestFacets(RECORDS);
+        SearchNode searcher = getSearcher();
+        {
+            ResponseCollection responses = new ResponseCollection();
+            searcher.search(new Request(
+                    DocumentKeys.SEARCH_QUERY, "recordBase:dummy*",
+                    DocumentKeys.SEARCH_SORTKEY, "sort_year_asc",
+                    DocumentKeys.SEARCH_MAX_RECORDS, 10,
+                    // Should have same effect as SEARCH_RESULT_FIELDS
+                    SolrSearchNode.CONF_SOLR_PARAM_PREFIX + "fl", "recordID, sort_title"
+                    //DocumentKeys.SEARCH_RESULT_FIELDS, "recordID, sort_title"
+            ), responses);
+            DocumentResponse docs = (DocumentResponse)responses.iterator().next();
+            for (DocumentResponse.Record record: docs.getRecords()) {
+                assertFalse("The number of returned fields should not exceed the 2 explicit result fields " +
+                            "plus 1 sort field, but there were " + record.size(), record.size() > 3);
+                printRecord(record);
+            }
+        }
+    }
+
+    private void printRecord(DocumentResponse.Record record) {
+        System.out.print("Record: " + record + ":");
+        for (DocumentResponse.Field field: record) {
+            System.out.print(" " + field.getName() + "=\"" + field.getContent() + "\"");
+        }
+        System.out.println();
     }
 
     public void testGroupSorting() throws Exception {
