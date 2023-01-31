@@ -233,6 +233,7 @@ public class DOMSNewspaperParser extends DOMSNewspaperBase {
                 segmentXML.writeCharacters("\n");
 
                 segmentXML.writeStartElement("illustrations");
+                segmentXML.writeAttribute("count", Long.toString(alto.getIllustrations().size()));
                 segmentXML.writeComment("Shared among all segments on the same page");
                 segmentXML.writeCharacters("\n");
                 for (Alto.Illustration illustration: alto.getIllustrations()) {
