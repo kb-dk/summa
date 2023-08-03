@@ -8,7 +8,7 @@
     </parent>
 
     <properties>
-        <solr_lucene_version>4.8.1</solr_lucene_version>
+        <solr_lucene_version>4.10.4</solr_lucene_version>
         <sbutil_version>0.5.56</sbutil_version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
