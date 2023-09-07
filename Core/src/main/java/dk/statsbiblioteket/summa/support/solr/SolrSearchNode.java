@@ -260,6 +260,16 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     public static final String CONF_RECORD_CACHE_LIMIT = "solr.recordcache.limit";
     public static final int DEFAULT_RECORD_CACHE_LIMIT = 1000;
 
+
+    /**
+     * The EdismaxQParser in Solr 9 does not handle {@code (+"foo")} or {@code (-"foo")} when {@code op=AND}.
+     * Enabling the hack inserts a space after {@code (} if the following characters are {@code +"} or {@code -"}.
+     * <p>
+     * This error is (at least) present in Solr 9.0.0 -> 9.3.0, inclusive.
+     */
+    public static final String CONF_SOLR9_QUERY_HACK = "solr.solr9.queryhack";
+    public static final boolean DEFAULT__SOLR9_QUERY_HACK = Boolean.TRUE;
+
     //    private static final DateFormat formatter =
     //        new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
     protected SolrResponseBuilder responseBuilder;
@@ -282,6 +292,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
     protected final boolean emptyQueryNoSearch;
     protected final boolean emptyFilterNoSearch;
     protected final boolean mltEnabled;
+    protected final boolean solr9QueryHack;
 
     protected final CACHE_TYPE cacheType;
     protected final TimeSensitiveCache<String, DocumentResponse.Record> recordCache;
@@ -323,6 +334,7 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
         emptyQueryNoSearch = conf.getBoolean(CONF_EMPTY_QUERY_NO_SEARCH, DEFAULT_EMPTY_QUERY_NO_SEARCH);
         emptyFilterNoSearch = conf.getBoolean(CONF_EMPTY_FILTER_NO_SEARCH, DEFAULT_EMPTY_FILTER_NO_SEARCH);
         mltEnabled = conf.getBoolean(CONF_MLT_ENABLED, DEFAULT_MLT_ENABLED);
+        solr9QueryHack = conf.getBoolean(CONF_SOLR9_QUERY_HACK, DEFAULT__SOLR9_QUERY_HACK);
 
         cacheType = CACHE_TYPE.valueOf(conf.getString(CONF_RECORD_CACHE, DEFAULT_RECORD_CACHE.toString()));
         switch (cacheType) {
@@ -1008,7 +1020,16 @@ public class SolrSearchNode extends SearchNodeImpl  { // TODO: implements Docume
                 }
             }
         }
+
         if (query != null) { // We allow missing query
+            if (solr9QueryHack) {
+                String hacked = query.replace("(+\"", "( +\"").replace("(-\"", "( -\"");
+                if (!hacked.equals(query)) {
+                    log.debug("Compensated for Solr 9 query parser bug by converting query to '{" + hacked + "}'");
+                    query = hacked;
+                }
+            }
+
             queryMap.put("q", Arrays.asList(query));
         }
 
