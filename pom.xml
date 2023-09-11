@@ -17,7 +17,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dk.statsbiblioteket.summa</groupId>
     <artifactId>summa</artifactId>
-    <version>2.7.4-20230201-SNAPSHOT</version>
+    <version>2.7.5-20230911</version>
     <ciManagement>
         <system>hudson</system>
         <url>http://sbforge.statsbiblioteket.dk/hudson/view/Summa/</url>
