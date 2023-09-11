@@ -3,6 +3,7 @@ rm -r target/ */target/ Web/Modules/SummaWeb/target
 source ~/bin/jdk18
 mvn -DskipTests -Dmaven.javadoc.skip=true clean package
 md5sum Summix/target/summix-*.zip
+cp Summix/target/summix-*.zip /tmp
 if [ "." != ".$1" ]; then
    ./push $@
 fi

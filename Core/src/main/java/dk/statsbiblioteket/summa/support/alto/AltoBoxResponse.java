@@ -200,6 +200,12 @@ public class AltoBoxResponse extends ResponseImpl {
         public String getContent() {
             return content;
         }
+
+        public String toString() {
+            return String.format(Locale.ROOT,
+                    "AltoBox(content='%s', x=%.3f, y=%.3f, w=%.3f, h=%.3f, wc=%s, cc='%s', rel=%b)",
+                    content, hpos, vpos, width, height, wc, cc, relative);
+        }
     }
 
     @Override
