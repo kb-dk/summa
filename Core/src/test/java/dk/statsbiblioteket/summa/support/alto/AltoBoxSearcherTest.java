@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * A very poor test as it relies on instances running at Statsbiblioteket's test machine.
@@ -77,6 +78,20 @@ public class AltoBoxSearcherTest extends TestCase {
 
         testHighlightHelper("Single-line",searcher, query, expected);
     }
+
+    public void testHighlightSolr9Local() throws IOException {
+        final String query = "hest";
+        SummaSearcher searcher = getSolr9MixServer();
+        //SummaSearcher searcher = getSolr9LocalSearcher();
+        //SummaSearcher searcher = getSolr9ShadowProdSearcher();
+        if (searcher == null) {
+            return;
+        }
+        String[] expected = new String[]{"Hest"};
+
+        testHighlightHelper("Single-line",searcher, query, expected);
+    }
+
 
     // Uses production index. Not a good thing. (in a rainbow world) make a proper test
     public void disabled_testHighlightHyphenationWordsProductionKhader() throws IOException {
@@ -124,6 +139,7 @@ public class AltoBoxSearcherTest extends TestCase {
         testHighlightHelper("Multi-line",searcher, query, expected);
     }
 
+    // http://localhost:50001/solr/aviser.2.devel/select?hl.field=fulltext_org&hl.method=original&hl=true&indent=true&q.op=OR&q=falk%20daniel&rows=1
     // Returns the content of boxes
     private String testHighlightHelper(
             String designation, SummaSearcher searcher, String query, String[] expected) throws IOException {
@@ -136,8 +152,10 @@ public class AltoBoxSearcherTest extends TestCase {
                                                   + "[0-9abcdef]{4}-[0-9abcdef]{4}-[0-9abcdef]{12}).*",
                 AltoBoxSearcher.SEARCH_ID_TEMPLATE, "$1",
                 "solrparam.hl", true,
+                // solr 9 changed the default to "unified" which requires offsets to be enabled
+                "solrparam.hl.method", "original", // https://solr.apache.org/guide/solr/latest/query-guide/highlighting.html
                 "solrparam.hl.fl", "fulltext_org",
-                "solrparam.hl.snippets", 20
+                "solrparam.hl.snippets", 229
         ));
         for (Response response: responses) {
             if (response instanceof DocumentResponse) {
@@ -163,7 +181,10 @@ public class AltoBoxSearcherTest extends TestCase {
                 break;
             }
         }
-        assertTrue(designation + ": One of the boxes should contain [" + Strings.join(expected) + "]", match);
+        assertTrue(designation + ": There were " + boxes.size() + " boxes. One of the boxes should contain [" +
+                Strings.join(expected) + "] but the boxes contained [" +
+                boxes.stream().map(box -> box.content).collect(Collectors.joining(", ")) +
+                "]", match);
 
         StringBuilder sb = new StringBuilder();
         sb.append("[");
@@ -444,11 +465,34 @@ public class AltoBoxSearcherTest extends TestCase {
         //return getDevelSearcher("mars", 56708, "/aviser/sbsolr/select", "aviser-storage");
     }
     private SummaSearcher getStageSearcher() throws IOException {
-//        return getFullStackWithTest("rhea", 50001, "/solr/aviser.p.20170228/select",
-//                                    "rhea", 56700, "aviser-storage");
-        return getFullStackWithTest("rhea", 50001, "/solr/aviser.1.stage/select",
+        return getFullStackWithTest("rhea", 50001, "/solr/aviser.s.20190409/select",
                                     "rhea", 56700, "aviser-storage");
+//        return getFullStackWithTest("rhea", 50001, "/solr/aviser.1.stage/select",
+//                                    "rhea", 56700, "aviser-storage");
     }
+
+    // Port forwarding does not work for RMI :-(
+    private SummaSearcher getSolr9ShadowProdSearcher() throws IOException {
+        // http://rhea:50006/solr/#/aviser.1.prod/query?q=strudsehest&q.op=OR&indent=true
+
+        // ssh -L 127.0.0.1:50100:rhea.statsbiblioteket.dk:50100 -L 127.0.0.1:50110:rhea.statsbiblioteket.dk:50110 develro@rhea.statsbiblioteket.dk
+        return getFullStackWithTest("rhea", 50006, "/solr/aviser.1.prod/select",
+                                    "localhost", 50100, "aviser-storage");
+//        return getFullStackWithTest("rhea", 50001, "/solr/aviser.1.stage/select",
+//                                    "rhea", 56700, "aviser-storage");
+    }
+    // Remember to start the Summarise/aviser with production-PostgresQL for Storage from rhea:summa2/aviser2
+    private SummaSearcher getSolr9MixServer() throws IOException {
+        // http://rhea:50006/solr/#/aviser.1.prod/query?q=strudsehest&q.op=OR&indent=true
+        return getFullStackWithTest("rhea", 50006, "/solr/aviser.1.prod/select",
+                                    "localhost", 56700, "aviser-storage");
+    }
+    private SummaSearcher getSolr9LocalSearcher() throws IOException {
+        // http://localhost:50001/solr/aviser.2.devel/select?indent=true&q.op=OR&q=falk%20daniel
+        return getFullStackWithTest("localhost", 50001, "/solr/aviser.2.devel/select",
+                                    "localhost", 56700, "aviser-storage");
+    }
+
 
     // Not available due to tightened firewall rules
     private SummaSearcher getProd3TunnelSearcher() throws IOException {
