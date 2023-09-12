@@ -59,7 +59,7 @@ public class StorageTool {
      * @param rec          The record to print.
      * @param withContents True if this record should be printed with its content false otherwise.
      */
-    public static void printRecord(Record rec, boolean withContents, boolean expand) {
+    public static void printRecord(Record rec, boolean withContents, Boolean expand) {
         printRecord(rec, System.out, withContents, expand);
     }
 
@@ -70,14 +70,14 @@ public class StorageTool {
      * @param out          The output stream.
      * @param withContents True if this record should be printed with its content false otherwise.
      */
-    public static void printRecord(Record rec, OutputStream out, boolean withContents, boolean expand) {
+    public static void printRecord(Record rec, OutputStream out, boolean withContents, Boolean expand) {
         PrintWriter output = new PrintWriter(out, true);
 
         if (rec == null) {
             output.println("Record is 'null'");
             return;
         }
-        if (expand) {
+        if (Boolean.TRUE.equals(expand)) {
             try {
                 output.println(RecordUtil.toXML(rec, false));
                 return;
